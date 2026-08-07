@@ -577,14 +577,22 @@ live database, driving the real HTTP endpoints rather than the library:
 - The **old password is refused** afterwards and the new one is accepted
 - `LIMITS.auth` returns 429 on the eleventh request in the window
 
-The visual system has been reviewed on screen — typeface, scale, spacing,
-lowercase mark. That is rendering, not interaction.
+The React layer has since been driven end to end in a real browser (Edge, via
+`playwright-core`): sign-up, onboarding, the capture box, TMDB search, the intent
+sheet, optimistic add, undo, the resolve flow, return counts and the `/me` tabs.
+No console errors, no overflow at 320px, no stray use of the accent.
 
-Still unverified: the input box, the intent sheet, optimistic rollback and the
-tab navigation. Nothing has been typed into the capture box and no entry has been
-resolved through the UI. And no deployment exists. §12 wants each phase shipped
-to Vercel before the next starts. Neon is in `eu-west-2` (London), so Vercel's
-function region should be `lhr1`.
+That run found the one bug nothing else could have: the intent sheet rendered
+behind the search dropdown and could not be clicked, so nothing could be added
+at all. Typecheck, lint, build and all 21 server assertions passed throughout.
+Fixed in `a4bd90b` — **a passing data layer says nothing about whether the
+product works.**
+
+Still unverified: anything on hardware, and the visual design of the signed-in
+app, which no human has seen — there is no account to sign in with, so every
+visual judgement so far has been of `/sign-in`. And no deployment exists. §12
+wants each phase shipped to Vercel before the next starts. Neon is in
+`eu-west-2` (London), so Vercel's function region should be `lhr1`.
 
 Re-verify with:
 
