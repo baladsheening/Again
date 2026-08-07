@@ -16,8 +16,8 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
 
-  // Phase 1
-  TMDB_API_KEY: z.string().optional(),
+  // Phase 1. The Read Access Token (Bearer), not the v3 API key — see .env.example.
+  TMDB_READ_ACCESS_TOKEN: z.string().optional(),
 
   // Phase 5
   VAPID_PRIVATE_KEY: z.string().optional(),
