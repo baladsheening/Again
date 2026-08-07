@@ -8,7 +8,7 @@ import type { FilmSearchResult } from '@/lib/domain'
 /**
  * The only module that knows TMDB's response shape. Everything downstream sees
  * `FilmSearchResult` and `FilmDetails`, so replacing the catalogue is a change
- * to this file rather than to the app (see DECISIONS.md).
+ * to this file rather than to the app (see docs/decisions.md).
  *
  * `server-only`: §10 requires the credential never reach a client bundle.
  */

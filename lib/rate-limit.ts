@@ -14,7 +14,7 @@ import { env } from '@/lib/env'
  * fine in development and **is not real protection in production**, where
  * serverless instances each get their own memory and an attacker simply lands
  * on a different one. `assertRateLimitConfigured()` is called at the point of
- * deploy readiness; see DECISIONS.md.
+ * deploy readiness; see docs/decisions.md.
  */
 
 export type Limit = { requests: number; windowSeconds: number }

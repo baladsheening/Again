@@ -6,11 +6,16 @@ Section references (§n) point at the build spec, which is the complete brief.
 Where it is silent, prefer the simplest thing that works and flag the decision
 rather than inventing scope.
 
-This file holds the rules for building. **`DECISIONS.md` holds the reasoning
-behind them, the choices that deviate from or extend the brief, and the
-questions nobody has answered yet.** Read it before changing anything that looks
-arbitrary — most of it is waiting on a trigger rather than on someone's opinion.
-Add to it when you make a call the brief did not make.
+This file holds the rules for building. Two companions:
+
+- **`docs/decisions.md`** — the reasoning behind these rules, the choices that
+  deviate from or extend the brief, and the questions nobody has answered yet.
+  Read it before changing anything that looks arbitrary; most of it is waiting
+  on a trigger rather than on someone's opinion. Add to it when you make a call
+  the brief did not make.
+- **`docs/plan.md`** — the §12 build order, current state, and the
+  carry-forward register: things decided in one phase that must land in a
+  specific later one. Update it as phases move.
 
 ## The rule that holds everything up (§3)
 
