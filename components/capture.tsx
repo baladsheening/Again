@@ -137,7 +137,15 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
     })
   }
 
-  const showResults = visibleResults.length > 0 || (searching && trimmed.length >= 2)
+  /**
+   * `!chosen` is load bearing. Picking a film opens the intent sheet but leaves
+   * `query` and `results` untouched, so without this the dropdown stays open —
+   * and it is `absolute z-10` while the sheet is in normal flow underneath, so
+   * it covers the sheet completely and swallows every click meant for it. The
+   * list is a picker; once something is picked it has no reason to be there.
+   */
+  const showResults =
+    !chosen && (visibleResults.length > 0 || (searching && trimmed.length >= 2))
 
   return (
     <div className="flex flex-col gap-4">
