@@ -1,16 +1,38 @@
 import 'server-only'
 
-import { and, desc, eq, inArray, ne } from 'drizzle-orm'
+import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 
 import { db } from './client'
-import { entries, items, type Entry, type Item } from './schema'
+import { entries, items, profiles, type Entry, type Item } from './schema'
 import type { SessionUser } from './session'
+import { err, ok, type Result } from './result'
+import { runOverlap } from '@/lib/overlap'
+import { specFor } from '@/lib/vocabulary'
+import type { EntryCard, EntrySource, Intent } from '@/lib/domain'
 
 /** §5 Views. `archive` is deliberately absent from `PublicView` — see below. */
 export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive'
 export type PublicView = 'live' | 'go_back_tos' | 'fixtures'
 
 export type EntryWithItem = { entry: Entry; item: Item }
+
+/**
+ * Reduce a row to what a view needs (§10, and the Next.js data-security
+ * guide). `user_id`, `source_user_id` and the timestamps stay on the server.
+ */
+export function toEntryCard({ entry, item }: EntryWithItem): EntryCard {
+  const metadata = (item.metadata ?? {}) as { posterPath?: string | null }
+  return {
+    id: entry.id,
+    kind: item.kind,
+    intent: entry.intent,
+    state: entry.state,
+    title: item.title,
+    year: item.year,
+    posterPath: metadata.posterPath ?? null,
+    returnCount: entry.returnCount,
+  }
+}
 
 const PAGE_SIZE = 50
 
@@ -59,6 +81,208 @@ export async function listMyEntries(
     .offset(offset)
 
   return rows
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Mutations                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/** How long a freshly created entry can be taken back (§5.1). */
+export const UNDO_WINDOW_MS = 10_000
+
+/**
+ * Add a want.
+ *
+ * Idempotent (§10): adding the same item twice under one intent is a no-op, not
+ * a duplicate row and not a second notification. `created` tells the caller
+ * which happened, and overlap only runs when something actually changed.
+ *
+ * Entry write and notification rows share one transaction, so they never
+ * partially apply (§10).
+ */
+export async function addEntry(
+  sessionUser: SessionUser,
+  input: {
+    itemId: string
+    intent: Intent
+    source?: EntrySource
+    sourceUserId?: string | null
+  },
+): Promise<Result<{ entry: Entry; created: boolean }>> {
+  return db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(entries)
+      .values({
+        userId: sessionUser.id,
+        itemId: input.itemId,
+        intent: input.intent,
+        state: 'want',
+        source: input.source ?? 'self',
+        sourceUserId: input.sourceUserId ?? null,
+      })
+      .onConflictDoNothing({
+        target: [entries.userId, entries.itemId, entries.intent],
+      })
+      .returning()
+
+    if (!inserted) {
+      const [existing] = await tx
+        .select()
+        .from(entries)
+        .where(
+          and(
+            eq(entries.userId, sessionUser.id),
+            eq(entries.itemId, input.itemId),
+            eq(entries.intent, input.intent),
+          ),
+        )
+        .limit(1)
+
+      if (!existing) return err('conflict', 'Could not add that.')
+      return ok({ entry: existing, created: false })
+    }
+
+    await fireOverlap(tx, sessionUser, inserted)
+    return ok({ entry: inserted, created: true })
+  })
+}
+
+/**
+ * Resolve a want (§8). `keep` answers the single question — *Go back?* for an
+ * experience, *Keeping it?* for an object.
+ *
+ * Yes lands it in go-back-tos or fixtures depending on kind + intent; no lands
+ * it in `done`, which is private to its owner forever after (§5.3). Nothing is
+ * deleted either way (§5.1).
+ */
+export async function resolveEntry(
+  sessionUser: SessionUser,
+  entryId: string,
+  keep: boolean,
+): Promise<Result<Entry>> {
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ entry: entries, item: items })
+      .from(entries)
+      .innerJoin(items, eq(items.id, entries.itemId))
+      .where(and(eq(entries.id, entryId), eq(entries.userId, sessionUser.id)))
+      .limit(1)
+
+    if (!current) return err('not_found', 'No such entry.')
+    if (current.entry.state !== 'want') {
+      return err('conflict', 'That has already been resolved.')
+    }
+
+    const spec = specFor(current.item.kind, current.entry.intent)
+    const state = keep ? spec.landsIn : ('done' as const)
+
+    const [updated] = await tx
+      .update(entries)
+      .set({
+        state,
+        resolvedAt: new Date(),
+        // An experience you would go back to has been had once, by definition.
+        returnCount: keep && spec.returnCountable ? 1 : 0,
+      })
+      .where(eq(entries.id, entryId))
+      .returning()
+
+    // §6 runs on any state change. A want·own becoming a fixture is what makes
+    // the lend match fire for someone who wants to see it.
+    await fireOverlap(tx, sessionUser, updated)
+
+    return ok(updated)
+  })
+}
+
+/**
+ * *Been back again.* Manual, one tap, no check-ins, no location (§8).
+ *
+ * No overlap run: the state has not changed, only the count, and §6 fires on
+ * insert and state change. Re-notifying everyone each time you rewatch
+ * something would be exactly the noise the notification budget forbids.
+ */
+export async function incrementReturn(
+  sessionUser: SessionUser,
+  entryId: string,
+): Promise<Result<Entry>> {
+  const [updated] = await db
+    .update(entries)
+    .set({ returnCount: sql`${entries.returnCount} + 1` })
+    .where(
+      and(
+        eq(entries.id, entryId),
+        eq(entries.userId, sessionUser.id),
+        eq(entries.state, 'go_back_to'),
+      ),
+    )
+    .returning()
+
+  if (!updated) return err('not_found', 'No such go-back-to.')
+  return ok(updated)
+}
+
+/**
+ * The one exception to "nothing is ever deleted" (§5.1): a 10-second undo on
+ * creation, for typos. Bounded by `created_at` in SQL rather than trusted from
+ * the client, and it will not touch anything already resolved.
+ *
+ * Phase 3 note: once push delivery exists, the worker must not fire inside this
+ * window, or an undone typo will still have buzzed someone's phone.
+ */
+export async function undoEntry(
+  sessionUser: SessionUser,
+  entryId: string,
+): Promise<Result<null>> {
+  const [deleted] = await db
+    .delete(entries)
+    .where(
+      and(
+        eq(entries.id, entryId),
+        eq(entries.userId, sessionUser.id),
+        eq(entries.state, 'want'),
+        sql`${entries.createdAt} > now() - make_interval(secs => ${UNDO_WINDOW_MS / 1000})`,
+      ),
+    )
+    .returning()
+
+  if (!deleted) return err('not_found', 'Too late to undo that.')
+  return ok(null)
+}
+
+/** Shared by add and resolve so the §6 call site is identical in both. */
+async function fireOverlap(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  sessionUser: SessionUser,
+  entry: Entry,
+) {
+  const [me] = await tx
+    .select({ handle: profiles.handle })
+    .from(profiles)
+    .where(eq(profiles.id, sessionUser.id))
+    .limit(1)
+
+  const [item] = await tx
+    .select({ id: items.id, title: items.title })
+    .from(items)
+    .where(eq(items.id, entry.itemId))
+    .limit(1)
+
+  if (!me || !item) return
+
+  await runOverlap(
+    tx,
+    {
+      userId: entry.userId,
+      handle: me.handle,
+      intent: entry.intent,
+      state: entry.state,
+      source: entry.source,
+      sourceUserId: entry.sourceUserId,
+      returnCount: entry.returnCount,
+    },
+    item,
+  )
 }
 
 /**

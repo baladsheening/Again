@@ -45,8 +45,20 @@ export type { Result, ErrorCode } from './result'
 
 export { getMyProfile, getProfileByHandle, createProfile } from './profiles'
 
-export { listMyEntries, listEntriesForOtherUser } from './entries'
+export {
+  listMyEntries,
+  listEntriesForOtherUser,
+  addEntry,
+  resolveEntry,
+  incrementReturn,
+  undoEntry,
+  UNDO_WINDOW_MS,
+  toEntryCard,
+} from './entries'
 export type { OwnerView, PublicView, EntryWithItem, Page } from './entries'
+
+export { upsertItem } from './items'
+export type { ItemInput } from './items'
 
 export { getSwap } from './swaps'
 export type { SwapView } from './swaps'

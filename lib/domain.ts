@@ -35,3 +35,31 @@ export type NotificationKind =
   | 'swap_invite'
   | 'swap_revealed'
   | 'landed'
+
+/**
+ * A search hit, already reduced to what the app stores. The TMDB response shape
+ * stops at the edge of `lib/tmdb.ts` — nothing downstream knows what a
+ * `poster_path` or a `release_date` is.
+ */
+export type FilmSearchResult = {
+  externalId: string
+  title: string
+  year: number | null
+  posterPath: string | null
+}
+
+/**
+ * What a list row needs and nothing else. Entry rows carry `user_id`,
+ * `source_user_id` and timestamps that no view uses — passing whole database
+ * records to Client Components is how private fields leak.
+ */
+export type EntryCard = {
+  id: string
+  kind: Kind
+  intent: Intent
+  state: EntryState
+  title: string
+  year: number | null
+  posterPath: string | null
+  returnCount: number
+}

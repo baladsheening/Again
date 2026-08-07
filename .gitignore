@@ -44,3 +44,6 @@ again.pdf
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# dev server output
+dev.log
