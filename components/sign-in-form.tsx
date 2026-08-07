@@ -46,7 +46,7 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
+    <form onSubmit={submit} className="flex flex-col gap-3">
       {mode === 'sign-up' && (
         <Field label="Name" value={name} onChange={setName} autoComplete="name" />
       )}
@@ -76,7 +76,7 @@ export function SignInForm() {
       <button
         type="submit"
         disabled={busy}
-        className="border-rule hover:border-text mt-2 rounded border px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
+        className="border-rule hover:border-text mt-1 rounded-md border px-4 py-2 text-sm transition-colors disabled:opacity-50"
       >
         {busy
           ? 'One moment…'
@@ -89,7 +89,7 @@ export function SignInForm() {
 
       {message && <p className="text-muted text-sm">{message}</p>}
 
-      <div className="text-muted flex flex-wrap gap-4 text-xs">
+      <div className="text-muted flex flex-wrap gap-3.5 text-xs">
         {mode !== 'sign-in' && (
           <Switch onClick={() => setMode('sign-in')}>Sign in with a password</Switch>
         )}
@@ -135,7 +135,7 @@ function Field({
 }) {
   const id = `field-${label.toLowerCase()}`
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-muted text-xs">
         {label}
       </label>
@@ -146,7 +146,7 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         required={required}
-        className="bg-surface border-rule focus:border-muted rounded-lg border px-3 py-2.5 text-[15px] outline-none transition-colors"
+        className="bg-surface border-rule focus:border-muted rounded-md border px-3 py-2 outline-none transition-colors"
       />
       {hint && <p className="text-muted text-xs">{hint}</p>}
     </div>

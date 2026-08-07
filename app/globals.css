@@ -39,10 +39,27 @@
     scroll-behavior: smooth;
   }
 
+  /**
+   * Tight and dense (§11: type is the entire design). The richness here has to
+   * come from type and spacing, because §2 rules out the imagery that usually
+   * carries a dark interface.
+   *
+   * Scale:  heading 24/500/-0.01em · body 15/400 · secondary 14/400 muted
+   *         label 12/400 muted · meta 12/400 muted
+   */
   body {
     font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
 
   /* Visible keyboard focus, unannounced quality floor (§11). */
@@ -80,6 +97,13 @@
  * The signature element (§11): the return count beside each go-back-to. It is
  * the only thing here no competitor has, and the go-back-tos list orders by it.
  * Mono numeral, quiet weight, large enough to read as the point.
+ *
+ * Mono is kept scarce on purpose. §11 says the accent "stops meaning anything
+ * the second it's used for decoration", and the same logic governs the
+ * typeface: if mono is on every label it becomes texture rather than signal.
+ * It belongs on return counts and timestamps, and on the handle input — where
+ * disambiguating l/1/I is functional, given §10's homoglyph concern — and
+ * nowhere else.
  */
 @utility return-count {
   font-family: var(--font-mono);

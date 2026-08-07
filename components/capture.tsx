@@ -140,7 +140,7 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
   const showResults = visibleResults.length > 0 || (searching && trimmed.length >= 2)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* --- input ------------------------------------------------------- */}
       <div className="relative">
         <label htmlFor="capture" className="sr-only">
@@ -162,26 +162,26 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
           spellCheck={false}
           // The placeholder does the teaching on a brand new account (§8).
           placeholder="A film you want to see"
-          className="bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-lg border px-4 py-3.5 text-[15px] outline-none transition-colors"
+          className="bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-md border px-3.5 py-3 outline-none transition-colors"
         />
 
         {showResults && (
           <ul
             role="listbox"
             aria-label="Search results"
-            className="bg-surface border-rule absolute z-10 mt-2 w-full overflow-hidden rounded-lg border"
+            className="bg-surface border-rule absolute z-10 mt-1.5 w-full overflow-hidden rounded-md border"
           >
             {visibleResults.map((film) => (
               <li key={film.externalId} role="option" aria-selected={false}>
                 <button
                   type="button"
                   onClick={() => setChosen(film)}
-                  className="hover:bg-bg/60 flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors"
+                  className="hover:bg-bg/60 flex w-full items-center gap-3 px-3 py-2 text-left transition-colors"
                 >
                   <Poster posterPath={film.posterPath} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm">{film.title}</span>
-                    <span className="text-muted block font-mono text-xs">
+                    <span className="text-muted block text-xs">
                       {film.year ?? '—'}
                     </span>
                   </span>
@@ -273,8 +273,8 @@ function IntentSheet({
       <div className="flex items-center gap-3">
         <Poster posterPath={film.posterPath} />
         <div className="min-w-0">
-          <p className="truncate text-[15px]">{film.title}</p>
-          <p className="text-muted font-mono text-xs">{film.year ?? '—'}</p>
+          <p className="truncate">{film.title}</p>
+          <p className="text-muted text-xs">{film.year ?? '—'}</p>
         </div>
       </div>
 

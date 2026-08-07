@@ -11,13 +11,18 @@ export function OnboardingForm() {
   )
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
+    <form action={formAction} className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
         <label htmlFor="handle" className="text-muted text-xs">
           Handle
         </label>
-        <div className="bg-surface border-rule focus-within:border-muted flex items-center rounded-lg border px-3 transition-colors">
-          <span className="text-muted font-mono text-[15px]">@</span>
+        {/*
+          Mono here is functional rather than decorative, so it survives the
+          scarcity rule: a handle is an identifier, and telling l from 1 from I
+          is exactly what §10's homoglyph concern is about.
+        */}
+        <div className="bg-surface border-rule focus-within:border-muted flex items-center rounded-md border px-3 transition-colors">
+          <span className="text-muted font-mono">@</span>
           <input
             id="handle"
             name="handle"
@@ -25,7 +30,7 @@ export function OnboardingForm() {
             autoFocus
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-transparent py-2.5 pl-1 font-mono text-[15px] outline-none"
+            className="flex-1 bg-transparent py-2 pl-1 font-mono outline-none"
           />
         </div>
         <p className="text-muted text-xs">
@@ -33,7 +38,7 @@ export function OnboardingForm() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         <label htmlFor="displayName" className="text-muted text-xs">
           Name <span className="opacity-60">(optional)</span>
         </label>
@@ -41,14 +46,14 @@ export function OnboardingForm() {
           id="displayName"
           name="displayName"
           autoComplete="name"
-          className="bg-surface border-rule focus:border-muted rounded-lg border px-3 py-2.5 text-[15px] outline-none transition-colors"
+          className="bg-surface border-rule focus:border-muted rounded-md border px-3 py-2 outline-none transition-colors"
         />
       </div>
 
       <button
         type="submit"
         disabled={pending}
-        className="border-rule hover:border-text mt-2 rounded border px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
+        className="border-rule hover:border-text mt-1 rounded-md border px-4 py-2 text-sm transition-colors disabled:opacity-50"
       >
         {pending ? 'One moment…' : 'Continue'}
       </button>

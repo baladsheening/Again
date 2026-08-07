@@ -22,13 +22,13 @@ export function Nav({ handle }: { handle: string }) {
     <header className="border-rule border-b">
       <nav
         aria-label="Main"
-        className="mx-auto flex w-full max-w-2xl items-center gap-6 px-5 py-4"
+        className="mx-auto flex w-full max-w-xl items-center gap-5 px-5 py-3"
       >
-        <Link href="/" className="text-[15px] font-medium tracking-tight">
+        <Link href="/" className="font-medium">
           Again
         </Link>
 
-        <div className="flex flex-1 items-center gap-5">
+        <div className="flex flex-1 items-center gap-4">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -43,7 +43,8 @@ export function Nav({ handle }: { handle: string }) {
           ))}
         </div>
 
-        <span className="text-muted font-mono text-xs">@{handle}</span>
+        {/* Sans, not mono: a displayed handle is a name, not data (§11). */}
+        <span className="text-muted text-xs">@{handle}</span>
 
         <button
           type="button"

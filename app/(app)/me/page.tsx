@@ -39,8 +39,8 @@ export default async function MePage({ searchParams }: PageProps<'/me'>) {
   const entries = await listMyEntries(sessionUser, view)
 
   return (
-    <div className="flex flex-col gap-6">
-      <nav aria-label="Collections" className="border-rule flex gap-5 border-b pb-3">
+    <div className="flex flex-col gap-4">
+      <nav aria-label="Collections" className="border-rule flex gap-4 border-b pb-2.5">
         {TABS.map((tab) => (
           <Link
             key={tab.view}

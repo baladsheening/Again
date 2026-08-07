@@ -42,16 +42,16 @@ export function EntryRow({ card, pending = false }: { card: EntryCard; pending?:
 
   return (
     <li
-      className={`border-rule flex flex-col gap-3 border-b py-4 ${busy ? 'opacity-50' : ''}`}
+      className={`border-rule flex flex-col border-b py-3 ${busy ? 'opacity-50' : ''}`}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3">
         <Poster posterPath={card.posterPath} />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="truncate text-[15px] leading-snug">{card.title}</p>
-          <p className="text-muted font-mono text-xs">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className="truncate leading-snug">{card.title}</p>
+          <p className="text-muted text-xs">
             {card.year ?? '—'}
-            <span className="mx-2 opacity-40">/</span>
+            <span className="mx-1.5 opacity-40">/</span>
             {spec.wantLabel}
           </p>
 
