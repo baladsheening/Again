@@ -40,13 +40,22 @@ export default async function MePage({ searchParams }: PageProps<'/me'>) {
 
   return (
     <div className="flex flex-col gap-4">
-      <nav aria-label="Collections" className="border-rule flex gap-4 border-b pb-2.5">
+      {/*
+        Wraps rather than scrolls. The four labels come to roughly 290px at
+        14px, which overflows a 320px screen once the gutter is taken off, and a
+        horizontally scrolling strip with no affordance just hides a tab. gap-y
+        is 3 rather than 2 so the wrapped rows' tap areas do not meet.
+      */}
+      <nav
+        aria-label="Collections"
+        className="border-rule flex flex-wrap gap-x-4 gap-y-3 border-b pb-2.5"
+      >
         {TABS.map((tab) => (
           <Link
             key={tab.view}
             href={tab.view === 'live' ? '/me' : `/me?view=${tab.view}`}
             aria-current={view === tab.view ? 'page' : undefined}
-            className={`text-sm transition-colors ${
+            className={`tap-target text-sm transition-colors ${
               view === tab.view ? 'text-text' : 'text-muted hover:text-text'
             }`}
           >

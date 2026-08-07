@@ -162,7 +162,10 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
           spellCheck={false}
           // The placeholder does the teaching on a brand new account (§8).
           placeholder="A film you want to see"
-          className="bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-md border px-3.5 py-3 outline-none transition-colors"
+          // Deliberately taller than the form fields — it is the one thing on
+          // the page (§8). `input-text` rather than a literal size so it still
+          // clears iOS Safari's 16px zoom threshold on touch.
+          className="bg-surface border-rule placeholder:text-muted focus:border-muted input-text w-full rounded-md border px-3.5 py-3 leading-5 outline-none transition-colors pointer-coarse:leading-6"
         />
 
         {showResults && (
@@ -180,7 +183,7 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
                 >
                   <Poster posterPath={film.posterPath} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm">{film.title}</span>
+                    <span className="block truncate text-[13px]">{film.title}</span>
                     <span className="text-muted block text-xs">
                       {film.year ?? '—'}
                     </span>
@@ -189,7 +192,7 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
               </li>
             ))}
             {visibleResults.length === 0 && searching && (
-              <li className="text-muted px-3 py-2.5 text-sm">Looking…</li>
+              <li className="text-muted px-3 py-2.5 text-[13px]">Looking…</li>
             )}
           </ul>
         )}
@@ -205,7 +208,9 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
           <button
             type="button"
             onClick={undoAdd}
-            className="hover:text-text shrink-0 underline underline-offset-4 transition-colors"
+            // A ten-second window (§5). Missing it because the target was
+            // 30px wide is not a recoverable mistake.
+            className="hover:text-text tap-target shrink-0 underline underline-offset-4 transition-colors"
           >
             Undo
           </button>

@@ -13,7 +13,7 @@ export function OnboardingForm() {
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <label htmlFor="handle" className="text-muted text-xs">
+        <label htmlFor="handle" className="text-muted text-[12.5px]">
           Handle
         </label>
         {/*
@@ -22,7 +22,7 @@ export function OnboardingForm() {
           is exactly what §10's homoglyph concern is about.
         */}
         <div className="bg-surface border-rule focus-within:border-muted flex items-center rounded-md border px-3 transition-colors">
-          <span className="text-muted font-mono">@</span>
+          <span className="text-muted input-text font-mono">@</span>
           <input
             id="handle"
             name="handle"
@@ -30,7 +30,7 @@ export function OnboardingForm() {
             autoFocus
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-transparent py-2 pl-1 font-mono outline-none"
+            className="control-box input-text flex-1 bg-transparent pl-1 font-mono outline-none"
           />
         </div>
         <p className="text-muted text-xs">
@@ -39,21 +39,21 @@ export function OnboardingForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="displayName" className="text-muted text-xs">
+        <label htmlFor="displayName" className="text-muted text-[12.5px]">
           Name <span className="opacity-60">(optional)</span>
         </label>
         <input
           id="displayName"
           name="displayName"
           autoComplete="name"
-          className="bg-surface border-rule focus:border-muted rounded-md border px-3 py-2 outline-none transition-colors"
+          className="bg-surface border-rule focus:border-muted control-box input-text rounded-md border px-3 outline-none transition-colors"
         />
       </div>
 
       <button
         type="submit"
         disabled={pending}
-        className="border-rule hover:border-text mt-1 rounded-md border px-4 py-2 text-sm transition-colors disabled:opacity-50"
+        className="border-rule hover:border-text control-box mt-1 rounded-md border px-4 text-[13.5px] transition-colors disabled:opacity-50"
       >
         {pending ? 'One moment…' : 'Continue'}
       </button>

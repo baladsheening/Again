@@ -1,7 +1,19 @@
 import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
+import { IBM_Plex_Mono, IBM_Plex_Sans, Ojuju } from 'next/font/google'
 
 import './globals.css'
+
+/**
+ * The wordmark, and only the wordmark (§11 is silent on the name itself).
+ * Static single weight — only the mark uses this, so the variable range is
+ * payload nobody spends. See docs/decisions.md.
+ */
+const ojuju = Ojuju({
+  variable: '--font-ojuju',
+  subsets: ['latin'],
+  weight: '500',
+  display: 'swap',
+})
 
 /** §11: IBM Plex Sans for interface and body. Avoid Inter. */
 const plexSans = IBM_Plex_Sans({
@@ -25,7 +37,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: 'Again',
-  description: 'What you would go back to, and what you have not tried yet.',
+  description: 'What would you try, and try again?',
 }
 
 export const viewport: Viewport = {
@@ -41,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${plexSans.variable} ${plexMono.variable} h-full`}
+      className={`${plexSans.variable} ${plexMono.variable} ${ojuju.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>

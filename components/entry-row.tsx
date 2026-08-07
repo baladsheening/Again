@@ -60,26 +60,32 @@ export function EntryRow({ card, pending = false }: { card: EntryCard; pending?:
               type="button"
               onClick={() => setAsking(true)}
               disabled={busy}
-              className="text-muted hover:text-text mt-2 self-start text-sm underline underline-offset-4 transition-colors"
+              className="text-muted hover:text-text tap-target mt-2 self-start text-sm underline underline-offset-4 transition-colors"
             >
               {spec.resolveAction}
             </button>
           )}
 
+          {/*
+            gap-5 rather than gap-4 on touch: Yes and No both carry a 44px hit
+            area, and at gap-4 the two expansions meet in the middle. This is the
+            one place in the app where a mistap does something you cannot undo
+            after ten seconds, so the gap is not cosmetic.
+          */}
           {asking && (
-            <div className="mt-2 flex items-center gap-4">
+            <div className="mt-2 flex flex-wrap items-center gap-4 pointer-coarse:gap-5">
               <span className="text-sm">{spec.question}</span>
               <button
                 type="button"
                 onClick={() => resolve(true)}
-                className="border-rule hover:border-text rounded border px-3 py-1 text-sm transition-colors"
+                className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors"
               >
                 Yes
               </button>
               <button
                 type="button"
                 onClick={() => resolve(false)}
-                className="text-muted hover:text-text text-sm transition-colors"
+                className="text-muted hover:text-text tap-target text-sm transition-colors"
               >
                 No
               </button>
@@ -91,7 +97,7 @@ export function EntryRow({ card, pending = false }: { card: EntryCard; pending?:
               type="button"
               onClick={beenBack}
               disabled={busy}
-              className="text-muted hover:text-text mt-2 self-start text-sm underline underline-offset-4 transition-colors"
+              className="text-muted hover:text-text tap-target mt-2 self-start text-sm underline underline-offset-4 transition-colors"
             >
               {spec.returnAgainLabel}
             </button>

@@ -29,6 +29,8 @@
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* counts are data, and the one number in the product that can't be inflated */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  /* the wordmark and nothing else — see the `wordmark` utility below */
+  --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
@@ -45,7 +47,15 @@
    * carries a dark interface.
    *
    * Scale:  heading 24/500/-0.01em · body 15/400 · secondary 14/400 muted
-   *         label 12/400 muted · meta 12/400 muted
+   *         input 14/400 · search result 13/400
+   *         field label 12.5/400 muted · hint 12/400 muted · meta 12/400 muted
+   *
+   * Settled by eye over several passes rather than derived from a ratio. Half
+   * sizes appear where a whole step was too much — they are fine, since browsers
+   * lay type out at subpixel precision and only the rasterised glyph snaps.
+   *
+   * Caveat recorded in docs/decisions.md: iOS Safari zooms on focus for any
+   * input under 16px, and 15 is still under it.
    */
   body {
     font-family: var(--font-sans);
@@ -94,6 +104,101 @@
 }
 
 /**
+ * ---------------------------------------------------------------------------
+ * Screen correctness (§10: responsive from 320px up).
+ * ---------------------------------------------------------------------------
+ */
+
+/**
+ * The horizontal page gutter. Every page container wears this instead of
+ * `px-5`.
+ *
+ * `max()` rather than an addition, because in landscape on a notched phone the
+ * safe-area inset is larger than the design gutter and should *replace* it. Add
+ * them and the content is shoved into the middle of the screen on exactly the
+ * devices with least room.
+ */
+@utility gutter {
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+}
+
+/**
+ * Clearance below the last thing on a page, on top of whatever padding the page
+ * already sets. Additive here, unlike the gutter: the home indicator sits *over*
+ * the viewport, so its inset has to be added to the design spacing rather than
+ * competing with it, or content ends up correctly spaced from the screen edge
+ * and underneath the indicator anyway.
+ */
+@utility safe-bottom {
+  padding-bottom: calc(var(--safe-bottom-base, 0px) + env(safe-area-inset-bottom));
+}
+
+/**
+ * The height contract for form controls. Inputs and the submit button both wear
+ * it, which is what lets them carry different font sizes and still line up in
+ * the inline sign-in row — height is line-height plus padding, and both terms
+ * are pinned here.
+ *
+ * On a coarse pointer it grows to clear the 44px touch-target floor:
+ * 24 + 22 + 2 = 48px, against 38px for a mouse.
+ */
+@utility control-box {
+  line-height: 20px;
+  padding-block: 0.5rem;
+
+  @media (pointer: coarse) {
+    line-height: 24px;
+    padding-block: 0.6875rem;
+  }
+}
+
+/**
+ * A 44×44 minimum hit area for small text controls, added *without* changing
+ * layout — the whole resolve flow is plain text buttons around 20px tall, and
+ * padding them to 44px would blow the list spacing apart on every screen to fix
+ * a problem that only exists on touch.
+ *
+ * The pseudo-element is transparent, centred on the control, and never smaller
+ * than the control itself. Mind the gap when placing two of these side by side:
+ * the areas will overlap and steal each other's taps if the visible controls sit
+ * closer than the expansion.
+ */
+@utility tap-target {
+  position: relative;
+
+  @media (pointer: coarse) {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      width: 100%;
+      height: 100%;
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+}
+
+/**
+ * Input text. The 16px on touch is not a style choice — iOS Safari zooms the
+ * viewport on focus for any field below 16px, and it does not zoom back out.
+ * The other way to stop it is `maximum-scale=1` on the viewport, which kills
+ * pinch zoom for everyone and is an accessibility failure, so it is not on the
+ * table. The type scale therefore differs by input device, which is the honest
+ * trade: 14px reads better with a mouse, 16px is the price of a touchscreen.
+ */
+@utility input-text {
+  font-size: 14px;
+
+  @media (pointer: coarse) {
+    font-size: 16px;
+  }
+}
+
+/**
  * The signature element (§11): the return count beside each go-back-to. It is
  * the only thing here no competitor has, and the go-back-tos list orders by it.
  * Mono numeral, quiet weight, large enough to read as the point.
@@ -112,4 +217,23 @@
   line-height: 1;
   font-weight: 400;
   color: var(--color-text);
+}
+
+/**
+ * The wordmark. Newsreader, and the same scarcity rule that governs the accent
+ * and the mono: it appears on the name of the app and nowhere else. Not on page
+ * headings, not on section titles. A display face used twice is a signature;
+ * used everywhere it is a theme.
+ *
+ * Only the 500 cut is loaded, so a stray `font-bold` here would synthesise a
+ * fake bold rather than fail visibly. Keep the weight in this utility.
+ */
+@utility wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  /* Lowercase here, not in the JSX: the mark must render identically in the nav
+     and on sign-in, and a text-transform cannot drift the way two strings can. */
+  text-transform: lowercase;
+  letter-spacing: -0.005em;
+  line-height: 1;
 }

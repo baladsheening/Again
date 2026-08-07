@@ -16,7 +16,8 @@ done because the code exists.
 | Phase | Scope | State |
 |---|---|---|
 | 0 — foundations | Neon, Drizzle schema + migrations, Better Auth, `lib/db/` convention | **Built, verified against live DB. Not deployed.** |
-| 1 — single player | Profiles, input box, entries, live list, resolve flow, return counts, visual system | **Built, server verified. React layer unverified. Not deployed.** |
+| 0.5 — account recovery | Password reset, auth rate limiting, `lib/email.ts` | **Built, verified end to end against the dev server and live DB. Blocked on an email provider before it works in production.** |
+| 1 — single player | Profiles, input box, entries, live list, resolve flow, return counts, visual system | **Built, server verified. Visual system reviewed on screen. React interaction paths still unverified. Not deployed.** |
 | 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | Not started |
 | 3 — overlap | Trigger + notification rows, `/notifications`, `/overlap` picker. In-app only | Not started |
 | 4 — swap | Full flow, blind commit enforced in the data layer, `landed` | Not started |
@@ -33,13 +34,17 @@ that is fast to build.
 - [ ] **Upstash credentials.** Rate limiting is written and wired but falls back
       to an in-process Map, which is not protection in serverless. §10 lists it
       as non-negotiable from the first commit. This is the only item on that
-      list currently unmet.
+      list currently unmet — and it now guards sign-in, sign-up and password
+      reset, so the fallback is protecting the account boundary, not just the
+      TMDB proxy.
 - [ ] **Vercel function region `lhr1`**, to match Neon in `eu-west-2`.
 - [ ] **`BETTER_AUTH_URL`** set to the deployed URL — it cannot be known until
       the first build finishes, so this is a deploy-then-set-then-redeploy.
-- [ ] **Email provider** (Resend or Postmark). Magic link logs to console in
-      development and throws in production, so nobody can sign in by link on a
-      real deployment until this is chosen.
+- [ ] **Email provider** (Resend or Postmark). Password reset goes through
+      `lib/email.ts`, which logs in development and throws in production. Until
+      it is chosen, a deployed user who forgets their password has no way back
+      into their account. The hardest of the four — the others degrade the
+      deployment, this one loses accounts.
 
 ---
 
@@ -86,12 +91,49 @@ not an oversight — the reasoning is in `docs/decisions.md`.
       logo, less prominent than your own branding.
 - [ ] iOS requires home-screen install for push to work — surface that clearly
       in settings rather than hiding it (§12).
+- [ ] **Inputs are 14px, and iOS Safari zooms on focus below 16px.** Pre-dates
+      this — the 15px body already crossed the line — but it first becomes
+      visible when the app is on a phone. Fix is 16px inputs, *not*
+      `maximum-scale=1`, which kills pinch zoom.
+
+### Correct on every screen — built, not yet verified on hardware
+
+The reasoning is in `docs/decisions.md`; five utilities in `app/globals.css`
+carry it. Built and confirmed in the compiled CSS:
+
+- [x] **Safe-area insets** — `gutter` and `safe-bottom` on every page container,
+      plus `env(safe-area-inset-top)` on the nav header so the rule reaches the
+      screen edge while its content clears the notch.
+- [x] **iOS zoom on focus** — `input-text` is 14px, 16px on a coarse pointer.
+      The type scale now differs by input device; that was the design decision.
+- [x] **Touch targets** — `control-box` grows to 48px on touch; `tap-target`
+      gives a 44×44 hit area to text controls without moving layout. Yes/No
+      widens to `gap-5` on touch so the two areas cannot overlap.
+- [x] **The nav at 320px** — handle truncates, everything else `shrink-0`. The
+      `/me` tabs wrap rather than scroll.
+- [x] **Landscape with the keyboard up** — `my-auto` on an inner wrapper instead
+      of `justify-center`, so overflowing content stays reachable.
+
+- [ ] **Verify on real devices.** Still outstanding and still the point. Nothing
+      in this app has ever run on a phone. Specifically worth checking by hand:
+      that iOS genuinely stops zooming on focus, that the notch and home
+      indicator are clear in both orientations, and that Yes/No cannot be
+      mistapped with a thumb.
 
 ### Unscheduled
 
-- [ ] The React layer of Phase 1 — input box, intent sheet, optimistic
-      rollback, tab navigation — has never been exercised. Needs a human or a
-      browser.
+- [ ] **The React layer of Phase 1 still has not been exercised** — input box,
+      intent sheet, optimistic rollback, tab navigation. The pages have been
+      looked at and the visual system judged on screen, but that is rendering,
+      not interaction. Nothing has been typed into the capture box and no entry
+      has been resolved through the UI.
+- [ ] **`/settings` does not exist.** Three things now want it: TMDB attribution
+      (a licence condition), the iOS install note, and changing a password you
+      *do* know — reset only serves the case where you have forgotten it, so a
+      signed-in user currently has no way to change their password at all.
+- [ ] **Reset rate limiting is per IP, not per email address.** A distributed
+      attacker could still fill one person's inbox. The fix means reading the
+      request body in `app/api/auth/[...all]/route.ts`; deliberately not built.
 
 ---
 

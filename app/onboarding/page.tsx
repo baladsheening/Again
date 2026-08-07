@@ -9,16 +9,22 @@ export default async function OnboardingPage() {
   if (await getMyProfile(sessionUser)) redirect('/')
 
   return (
-    <main className="mx-auto flex w-full max-w-xs flex-1 flex-col justify-center gap-7 px-5 py-12">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-medium">Pick a handle</h1>
-        <p className="text-muted text-sm">
-          This is how people find you. There is no directory and no search for
-          strangers — someone reaches your page because you gave them the handle.
-        </p>
-      </div>
+    <main
+      className="gutter safe-bottom mx-auto flex w-full max-w-xs flex-1 flex-col py-12"
+      style={{ '--safe-bottom-base': '3rem' } as React.CSSProperties}
+    >
+      {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
+      <div className="my-auto flex w-full flex-col gap-7">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-medium">Pick a handle</h1>
+          <p className="text-muted text-sm">
+            This is how people find you. There is no directory and no search for
+            strangers — someone reaches your page because you gave them the handle.
+          </p>
+        </div>
 
-      <OnboardingForm />
+        <OnboardingForm />
+      </div>
     </main>
   )
 }

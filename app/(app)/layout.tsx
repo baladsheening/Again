@@ -21,7 +21,12 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
   return (
     <>
       <Nav handle={profile.handle} />
-      <main className="mx-auto w-full max-w-xl flex-1 px-5 py-6">{children}</main>
+      <main
+        className="gutter safe-bottom mx-auto w-full max-w-xl flex-1 py-6"
+        style={{ '--safe-bottom-base': '1.5rem' } as React.CSSProperties}
+      >
+        {children}
+      </main>
     </>
   )
 }
