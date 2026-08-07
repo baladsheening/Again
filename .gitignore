@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# the build spec. ignored so `git add -A` cannot publish it to a public repo by
+# accident — delete this line if you want it committed deliberately
+again.pdf
+
 # vercel
 .vercel
 
