@@ -39,8 +39,14 @@ export type {
 /*  adapter resolves fields by property name, so these must not be renamed.    */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * `advanced.database.generateId: 'uuid'` in lib/auth.ts makes Better Auth issue
+ * `values (default, ...)` and let Postgres mint the id, so these four tables
+ * need `gen_random_uuid()` as a column default. Without it every insert fails
+ * a not-null constraint on `id`.
+ */
 export const user = pgTable('user', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
@@ -52,7 +58,7 @@ export const user = pgTable('user', {
 export const session = pgTable(
   'session',
   {
-    id: uuid('id').primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     expiresAt: timestamp('expiresAt', { withTimezone: true }).notNull(),
     token: text('token').notNull().unique(),
     createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),
@@ -69,7 +75,7 @@ export const session = pgTable(
 export const account = pgTable(
   'account',
   {
-    id: uuid('id').primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     accountId: text('accountId').notNull(),
     providerId: text('providerId').notNull(),
     userId: uuid('userId')
@@ -91,7 +97,7 @@ export const account = pgTable(
 export const verification = pgTable(
   'verification',
   {
-    id: uuid('id').primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     identifier: text('identifier').notNull(),
     value: text('value').notNull(),
     expiresAt: timestamp('expiresAt', { withTimezone: true }).notNull(),
