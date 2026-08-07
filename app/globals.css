@@ -46,9 +46,21 @@
    * come from type and spacing, because §2 rules out the imagery that usually
    * carries a dark interface.
    *
-   * Scale:  heading 24/500/-0.01em · body 15/400 · secondary 14/400 muted
-   *         input 14/400 · search result 13/400
+   * Scale:  wordmark 36 · heading 24/500/-0.01em · body 15/400
+   *         secondary 14/400 muted · input 14/400 · search result 13/400
    *         field label 12.5/400 muted · hint 12/400 muted · meta 12/400 muted
+   *
+   * The line under the wordmark is plain secondary text — 14/400 muted, the
+   * same tier as any other supporting sentence. Making it a distinct tier was
+   * tried at length (larger, brighter, italic) and each attempt either argued
+   * with the mark or bought a font file for one sentence. The 36px wordmark
+   * directly above it is doing the hierarchy already.
+   *
+   * It should hold one line, since a tagline that reflows between the stacked
+   * and inline layouts stops reading as one thought. That is handled by the
+   * auth pages being `max-w-sm` rather than by shrinking the type: 320px left
+   * 280px after the gutter, narrower than the sentence and narrower than any
+   * phone made in years.
    *
    * Settled by eye over several passes rather than derived from a ratio. Half
    * sizes appear where a whole step was too much — they are fine, since browsers

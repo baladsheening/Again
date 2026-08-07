@@ -13,7 +13,7 @@ export default async function SignInPage() {
   // which is worse than the stacked one.
   return (
     <main
-      className="gutter safe-bottom mx-auto flex w-full max-w-xs flex-1 flex-col py-12 min-[560px]:max-w-[42.5rem]"
+      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12 min-[560px]:max-w-[42.5rem]"
       style={{ '--safe-bottom-base': '3rem' } as React.CSSProperties}
     >
       {/*
@@ -32,8 +32,15 @@ export default async function SignInPage() {
           uses a physical direction, so this stays correct under `dir="rtl"`.
         */}
         <div className="flex flex-col gap-4 text-start">
-          <h1 className="wordmark text-[2.125rem]">Again</h1>
-          <p className="text-muted text-sm">What would you try, and try again?</p>
+          <h1 className="wordmark text-[2.25rem]">Again</h1>
+          {/*
+            Holding this on one line is what set the stacked container to
+            `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the
+            gutter — narrower than the sentence, and narrower than any phone
+            made in years. Shrinking the type to fit 280px was the wrong lever;
+            the container was the thing that was wrong.
+          */}
+          <p className="text-muted text-sm">Things to try. Things to do again.</p>
         </div>
 
         <SignInForm />

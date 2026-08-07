@@ -37,7 +37,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: 'Again',
-  description: 'What would you try, and try again?',
+  description: 'Things to try. Things to do again.',
 }
 
 export const viewport: Viewport = {

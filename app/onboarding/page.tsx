@@ -10,7 +10,7 @@ export default async function OnboardingPage() {
 
   return (
     <main
-      className="gutter safe-bottom mx-auto flex w-full max-w-xs flex-1 flex-col py-12"
+      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12"
       style={{ '--safe-bottom-base': '3rem' } as React.CSSProperties}
     >
       {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
