@@ -39,15 +39,16 @@ track becomes mutual, scoped to that one pair. Second caller, same module — it
 does not scatter the logic, which is what §3 cares about. Belongs in Phase 2,
 when tracking is built.
 
-### The 10-second undo cannot un-send a push
+### Rate limiting is not real without Upstash
 
-§10 mandates optimistic UI on add. §6 fires overlap on insert. §5 allows a
-10-second undo for typos. As written, a mistyped entry writes the row, notifies
-both sides, and *then* gets undone.
+`lib/rate-limit.ts` falls back to an in-process `Map` when
+`UPSTASH_REDIS_REST_URL` is unset. That is fine locally and **is not protection
+in production**: each serverless instance gets its own memory, so an attacker
+simply lands on a different one.
 
-**Proposed fix, not yet built:** optimistic UI shows the row instantly, the
-actual insert lands after the undo window closes. No perceived lag, nothing to
-retract. Belongs in Phase 1, with the entry mutation.
+§10 lists rate limiting as non-negotiable from the first commit, and the code is
+there — but the backing store is not. `rateLimitIsDurable()` reports which mode
+is live. Needs Upstash credentials before any real deployment.
 
 ### Swap landing versus the unique constraint
 
@@ -125,6 +126,25 @@ query.
 The unique constraint stays on `(kind, external_id)` as §5 specifies — one
 canonical row per real thing. Widening it is a decision to take at migration
 time along with a deduplication strategy, not a guess to bake in now.
+
+### The 10-second undo deletes rather than defers
+
+§10 mandates optimistic UI on add, §6 fires overlap on insert, and §5 allows a
+10-second undo for typos. The obvious reading is a race: a mistyped entry
+writes, notifies both sides, and *then* gets undone.
+
+Two ways out. Defer the insert until the window closes — but then closing the
+tab within ten seconds silently loses the add, and the capture tool drops
+captures. Or write immediately and let undo delete, which §5.1 already sanctions
+as the one exception to "nothing is ever deleted."
+
+**Took the second.** `undoEntry` bounds the deletion in SQL by `created_at`
+rather than trusting a timestamp from the client, and will not touch anything
+already resolved.
+
+This is safe today because notifications are in-app only until Phase 3. **Phase 3
+must ensure the push worker does not fire inside the undo window**, or an undone
+typo will still have buzzed someone's phone. Noted in `undoEntry`.
 
 ### `lib/domain.ts` split out of the schema
 
@@ -246,9 +266,26 @@ Phase 0 was checked against the live Neon database, not just compiled:
 - Sign-up creates a uuid user, persists the session to Postgres, and stores a
   hashed credential account
 
-Not yet verified: anything in Phases 1–5, and no deployment exists. §12 wants
-each phase shipped to Vercel before the next starts. Neon is in
-`eu-west-2` (London), so Vercel's function region should be `lhr1`.
+Phase 1 was checked through a temporary route handler driving the real
+data-access layer in the real Next runtime — 21 assertions, all passing.
+Browser tooling was unavailable, so the React layer is **not** verified; the
+harness covered everything behind it:
+
+- `upsertItem` idempotent; `addEntry` twice is a no-op, not a second row
+- The same item under a second intent is allowed, so the two wants stay
+  independent — the property the dual-intent architecture exists to prove
+- *Seen it → Go back? Yes* lands `go_back_to` with `return_count` 1; *Been back
+  again* increments; a second resolve is rejected
+- *Got it → Keeping it? Yes* lands `fixture` with no return count
+- A go-back-to appears in live (§5.2) and a fixture does not (§5)
+- *Go back? No* lands `done`, which is absent from live and present in the
+  owner's archive (§5.3)
+- The undo window deletes; `toEntryCard` exposes no `user_id`
+
+Still unverified: the input box, the intent sheet, optimistic rollback and the
+tab navigation, all of which need a human or a browser. And no deployment
+exists. §12 wants each phase shipped to Vercel before the next starts. Neon is
+in `eu-west-2` (London), so Vercel's function region should be `lhr1`.
 
 Re-verify with:
 
