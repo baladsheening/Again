@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/**
+ * §11. Matte black, legible text, known icons. Text-first, no imagery beyond
+ * small poster thumbnails. Type is therefore the entire design.
+ *
+ * There is no light theme. The palette is the design, and it is one palette.
+ */
+@theme {
+  /* near-black, not #000 — pure black reads as glass and pulls too hard on OLED */
+  --color-bg: #0e0e10;
+  /* cards, input field */
+  --color-surface: #16161a;
+  /* slightly warm off-white; cuts halation on long text */
+  --color-text: #e8e8e6;
+  /* secondary, timestamps, counts of other people */
+  --color-muted: #8a8a85;
+  /* hairlines */
+  --color-rule: #26262b;
+  /**
+   * amber. Used ONLY for overlap state.
+   *
+   * Not on buttons, not on links, not on the active tab. It marks the one
+   * moment the app exists for, and it stops meaning anything the second it is
+   * used for decoration.
+   */
+  --color-accent: #e0a458;
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  /* counts are data, and the one number in the product that can't be inflated */
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    /* Respected throughout (§10, §11). */
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible keyboard focus, unannounced quality floor (§11). */
+  :focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  hr {
+    border-color: var(--color-rule);
+  }
+
+  ::selection {
+    background-color: var(--color-text);
+    color: var(--color-bg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/**
+ * The signature element (§11): the return count beside each go-back-to. It is
+ * the only thing here no competitor has, and the go-back-tos list orders by it.
+ * Mono numeral, quiet weight, large enough to read as the point.
+ */
+@utility return-count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.375rem;
+  line-height: 1;
+  font-weight: 400;
+  color: var(--color-text);
+}
