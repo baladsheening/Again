@@ -1,0 +1,1 @@
+ALTER TABLE "items" ADD COLUMN "external_source" text DEFAULT 'tmdb' NOT NULL;

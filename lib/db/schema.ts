@@ -132,6 +132,19 @@ export const items = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     kind: text('kind').$type<Kind>().notNull(),
+    /**
+     * Which catalogue `external_id` came from. Not in the §5 schema — added
+     * because `kind` otherwise implies the provider by convention alone
+     * (film→TMDB, book→Open Library), and a convention is not something you
+     * can query. If films ever move off TMDB this makes the change a backfill
+     * rather than an exercise in working out what a column of integers means.
+     *
+     * The unique constraint below is deliberately left on (kind, external_id)
+     * as §5 specifies: one canonical row per real thing. If a provider
+     * migration ever happens, widening it is a decision to take then, with a
+     * deduplication strategy — not a guess to bake in now.
+     */
+    externalSource: text('external_source').notNull().default('tmdb'),
     /** TMDB id for films. Namespaced by `kind`. */
     externalId: text('external_id').notNull(),
     title: text('title').notNull(),

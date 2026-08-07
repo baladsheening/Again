@@ -15,6 +15,13 @@
       "when": 1786095936142,
       "tag": "0001_breezy_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786100218089,
+      "tag": "0002_curved_jigsaw",
+      "breakpoints": true
     }
   ]
 }
