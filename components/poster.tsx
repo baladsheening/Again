@@ -19,10 +19,12 @@ import { posterUrl } from '@/lib/posters'
  * proportion of a thing meant to be looked at. A square at this size reads as a
  * marker beside a line of text, which is the job.
  *
- * The source is 2:3, so `object-cover` centre-crops it — losing the top and
- * bottom of the artwork, which on a film poster is usually sky and the billing
- * block. If a crop ever looks wrong it is `object-top` that fixes it, not a
- * different ratio.
+ * The source is 2:3, so it has to be cropped. `object-top` rather than the
+ * default centre: a film poster puts its subject in the upper half and its
+ * billing block along the bottom, so a centred crop takes a slice through the
+ * middle and keeps type nobody can read at 32px. Anchoring to the top keeps the
+ * face or the key image, which is the only thing that makes a thumbnail this
+ * small worth having.
  *
  * `w92` is TMDB's smallest poster and still covers 32px at 2x, so nothing
  * changes about what is fetched.
@@ -45,7 +47,7 @@ export function Poster({ posterPath }: { posterPath: string | null }) {
       alt=""
       width={32}
       height={32}
-      className="bg-surface size-8 shrink-0 rounded-md object-cover"
+      className="bg-surface size-8 shrink-0 rounded-md object-cover object-top"
       // Decorative: the title next to it is the accessible name.
       aria-hidden
     />
