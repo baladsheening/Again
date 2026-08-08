@@ -236,7 +236,14 @@
 @utility return-count {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 1.375rem;
+  /*
+    18px, down from 22px. At 22 it was the largest thing on the row by some way
+    and read as a headline rather than a fact — and it no longer has to carry the
+    live list, where it was competing with the title for attention. It still
+    wants to be the biggest thing in its own column: §11 asks for large enough to
+    read as the point, not large enough to be the point.
+  */
+  font-size: 1.125rem;
   line-height: 1;
   font-weight: 400;
   color: var(--color-text);

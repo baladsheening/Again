@@ -67,23 +67,26 @@ export function EntryRow({
         <Poster posterPath={card.posterPath} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <p className="truncate leading-snug">{card.title}</p>
+          {/*
+            Year on the title's line. `items-baseline` so the two sit on one
+            baseline despite the size difference, and `shrink-0` on the year so a
+            long title truncates into the ellipsis rather than squeezing the one
+            piece of information that is always short.
+          */}
+          <p className="flex min-w-0 items-baseline gap-2 leading-snug">
+            <span className="truncate">{card.title}</span>
+            <span className="text-muted shrink-0 text-xs">{card.year ?? '—'}</span>
+          </p>
+
           {/*
             The want label states an intention, so it goes when the intention is
             met. It used to render on every state: "Want to see" sat under a
             go-back-to beside its return count, and under an archived film nobody
-            wants any more. The separator goes with it rather than leaving a
-            dangling slash.
+            wants any more. A resolved row now has no second line at all.
           */}
-          <p className="text-muted text-xs">
-            {card.year ?? '—'}
-            {card.state === 'want' && (
-              <>
-                <span className="mx-1.5 opacity-40">/</span>
-                {spec.wantLabel}
-              </>
-            )}
-          </p>
+          {card.state === 'want' && (
+            <p className="text-muted text-xs">{spec.wantLabel}</p>
+          )}
 
           {card.state === 'want' && !asking && (
             <button
@@ -122,7 +125,13 @@ export function EntryRow({
             </div>
           )}
 
-          {satisfied && spec.returnAgainLabel && (
+          {/*
+            Only where the count is. This increments the return count, and the
+            count now lives on the go-back-tos collection — offered in the live
+            list it would change a number that is not on screen, which is a tap
+            with no feedback at all.
+          */}
+          {view === 'go_back_tos' && satisfied && spec.returnAgainLabel && (
             <button
               type="button"
               onClick={beenBack}
