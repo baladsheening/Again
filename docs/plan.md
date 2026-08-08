@@ -196,7 +196,27 @@ Still in the dev database: one abandoned `reset-test-…@example.com` row from
 cleared; that one was missed. Harmless, and unremoved because nothing is deleted
 here without asking.
 
-### 3. Deploy to Vercel
+### 3. Deploy to Vercel — **done, 8 August**
+
+**Live at `https://again-msaef.vercel.app`**, imported from GitHub so every push
+to `main` deploys from here on. Verified from outside: `/sign-in` renders,
+`/` and `/me` both redirect to it while signed out, and `X-Vercel-Id` reports
+`lhr1` — `vercel.json` took effect.
+
+**The build succeeding is itself the credential check.** `scripts/preflight.mjs`
+fails a production build without Upstash, without Resend, or with a localhost
+`BETTER_AUTH_URL`. It passed, so all three are set correctly in the project.
+`BETTER_AUTH_URL` was set to the predicted domain before the first build rather
+than after it, so the deploy-then-set-then-redeploy dance never happened.
+
+⚠ **Production and development share one Neon database.** `DATABASE_URL` was
+copied from `.env.local`, so the account made locally works on the live site and
+anything added on either appears on both. Fine for one person; wants separating
+before anyone else joins, or a stray test row becomes real data.
+
+Original instructions, kept for the next deploy:
+
+### 3b. Deploy to Vercel — how
 
 Import `baladsheening/Again` in the Vercel dashboard. `main` is already at the
 branch tip, so it deploys as it stands, and every later branch gets a preview —
@@ -214,7 +234,23 @@ the build run, then correct it and redeploy if it came out different. Between th
 two builds auth does not work — nobody has the URL, so the cost is zero, but do
 it in one sitting.
 
-### 4. Verify on a phone
+### 4. Verify on a phone — **started**
+
+8 August: loaded on iPhone Safari and looks right. That is the first time any of
+this has rendered on hardware, and it clears the crudest failure — that the
+layout simply breaks on a real screen.
+
+The five things actually worth testing are still untested, because each needs a
+deliberate action rather than a look. In likelihood order:
+
+- [ ] **Tap into a field.** Does Safari zoom and stay zoomed? The 16px-on-touch
+      rule exists for this and has never been exercised.
+- [ ] **Yes/No with a thumb**, on the resolve question. The one mistap in the app
+      that cannot be undone after ten seconds.
+- [ ] **Landscape with the keyboard up** — is the top of the form still
+      reachable?
+- [ ] **Notch and home indicator**, both orientations.
+- [ ] **The `/me` tabs at narrow width** — wrap, or fall off the edge?
 
 Has to follow the deploy, which is why it is not folded into step 1. The whole
 responsive layer was reasoned from specs and confirmed in compiled CSS, and has
