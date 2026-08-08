@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { posterUrl } from '@/lib/posters'
 
@@ -13,32 +13,23 @@ import { posterUrl } from '@/lib/posters'
  * §11 allows small poster thumbnails and no other imagery, so this is the only
  * picture in the product.
  *
- * **A 32px rounded square**, arrived at from 46×69 in three steps. At the
- * original size the poster was taller than the text beside it and the eye went
- * to the artwork first, which inverts §11 — type is the design, and the poster
- * exists to help you recognise a title you already know, not to sell it to you.
- *
- * Square rather than 2:3 because poster-shaped *reads* as a poster: it is the
- * proportion of a thing meant to be looked at. A square at this size reads as a
- * marker beside a line of text, which is the job.
- *
- * The source is 2:3, so it has to be cropped. `object-top` rather than the
- * default centre: a film poster puts its subject in the upper half and its
- * billing block along the bottom, so a centred crop takes a slice through the
- * middle and keeps type nobody can read at 32px.
+ * **A 32px rounded square.** At the original 46×69 the poster was taller than
+ * the text beside it and the eye went to the artwork first, which inverts §11 —
+ * type is the design, and the poster exists to help you recognise a title you
+ * already know. Square rather than 2:3 because poster-shaped *reads* as a
+ * poster; `object-top` because a film poster puts its subject in the upper half
+ * and its billing block along the bottom.
  *
  * The thumbnail fetches `w154` and the expanded view `original`. Sizes and the
  * arithmetic behind them are in `lib/posters.ts`.
  */
 
-const MAX_SCALE = 4
+/** How long a tap waits to find out whether it was the first half of a double. */
+const DOUBLE_TAP_MS = 260
+/** Two taps count as one gesture only if they land near each other. */
+const DOUBLE_TAP_SLOP = 32
 const SETTLE_MS = 300
-
-/** Distance between the first two touches, for pinch. */
-function spread(touches: TouchList) {
-  const [a, b] = [touches[0]!, touches[1]!]
-  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
-}
+const SETTLE_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
 
@@ -46,10 +37,10 @@ const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(mi
  * Apple's rubber band, as used by every scroll view on the platform:
  * `(1 − 1/(x·c/d + 1))·d`, with `c = 0.55`.
  *
- * Past the boundary the finger keeps moving and the image keeps following, but
- * by ever less — the resistance grows with the overshoot and the result
- * asymptotes at the container's own dimension, so it can never be dragged into
- * nowhere. Below the boundary it is the identity function and costs nothing.
+ * Past the edge the finger keeps moving and the image keeps following, but by
+ * ever less — resistance grows with the overshoot and the result asymptotes at
+ * the container's own dimension, so it can never be dragged into nowhere. Inside
+ * the edge it is the identity function and costs nothing.
  */
 function rubber(offset: number, limit: number, dimension: number) {
   const over = Math.abs(offset) - limit
@@ -76,146 +67,154 @@ export function Poster({
   const imageRef = useRef<HTMLImageElement>(null)
   const previousThemeColor = useRef<string | null>(null)
 
-  const [zoom, setZoom] = useState({ scale: 1, x: 0, y: 0 })
-  /** Turns the transition on only for the spring back, never during a drag. */
-  const [settling, setSettling] = useState(false)
-
   /*
-    The live transform. A ref rather than state so the touch handlers can read
-    the current value without the effect re-subscribing on every frame; `setZoom`
-    exists purely to render it.
+    The transform lives in a ref and is painted straight onto the element. No
+    component state is involved in a drag at all: a React render per touchmove is
+    sixty reconciliations a second to set one style property, and it is the
+    difference between the image tracking your finger and lagging behind it.
   */
-  const zoomRef = useRef({ scale: 1, x: 0, y: 0 })
+  const view = useRef({ scale: 1, x: 0, y: 0 })
 
-  const gesture = useRef({
-    mode: 'none' as 'none' | 'pinch' | 'pan',
-    startSpread: 0,
-    startScale: 1,
-    startX: 0,
-    startY: 0,
-    originX: 0,
-    originY: 0,
-    /** Stops a pinch or a drag from also counting as the tap that closes. */
-    moved: false,
-  })
-
-  /*
-    Why this component does its own pinch-zoom at all.
-
-    On iOS a pinch zooms the *visual viewport* — the whole page, with the dialog
-    merely sitting on top of it. Closing then revealed the list behind still
-    magnified, and there is no way to put that back: `visualViewport.scale` is
-    read-only, and the `maximum-scale=1` meta trick has been ignored since iOS
-    10, when Apple deliberately stopped sites disabling zoom.
-
-    So the page must never zoom in the first place. `touch-action: none` plus
-    `preventDefault` keeps the gesture inside this element — and having taken it,
-    the view owes the user the zoom it was for.
-
-    Listeners are attached by hand rather than through React's props because they
-    need `{ passive: false }`; a passive listener cannot preventDefault, and the
-    browser would zoom the page regardless.
-  */
   useEffect(() => {
     const stage = stageRef.current
     if (!stage) return
 
-    /** How far the image may be moved before it is showing its own edge. */
+    const drag = { active: false, startX: 0, startY: 0, originX: 0, originY: 0, moved: false }
+    const tap = { last: 0, x: 0, y: 0, timer: 0 as number | ReturnType<typeof setTimeout> }
+
+    function paint(transition = false) {
+      const image = imageRef.current
+      if (!image) return
+      const { scale, x, y } = view.current
+      image.style.transition = transition ? `transform ${SETTLE_MS}ms ${SETTLE_EASE}` : 'none'
+      image.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+    }
+
+    /** How far the image may travel before it shows its own edge. */
     function limits() {
       const image = imageRef.current
       if (!image || !stage) return { x: 0, y: 0 }
-      const { scale } = zoomRef.current
+      const { scale } = view.current
       return {
         x: Math.max(0, (image.offsetWidth * scale - stage.clientWidth) / 2),
         y: Math.max(0, (image.offsetHeight * scale - stage.clientHeight) / 2),
       }
     }
 
-    function apply(next: { scale: number; x: number; y: number }) {
-      zoomRef.current = next
-      setZoom(next)
+    /*
+      What "full size" means, computed rather than picked.
+
+      The larger of two things: the scale that fills the screen edge to edge, and
+      the scale at which one source pixel lands on one device pixel. The first
+      removes the letterboxing you can see; the second is the point past which
+      the poster is being enlarged rather than revealed, and beyond it a zoom
+      only makes the image softer — which was the whole complaint about w500.
+
+      Capped at 3 so a very large source cannot zoom absurdly, floored at 1.4 so
+      the gesture always does something visible.
+    */
+    function fullScale() {
+      const image = imageRef.current
+      if (!image || !stage) return 2
+      const cover = Math.max(
+        stage.clientWidth / image.offsetWidth,
+        stage.clientHeight / image.offsetHeight,
+      )
+      const oneToOne =
+        image.naturalWidth / (image.offsetWidth * (window.devicePixelRatio || 1))
+      return clamp(Math.max(cover, oneToOne), 1.4, 3)
+    }
+
+    function settle() {
+      const bound = limits()
+      view.current.x = clamp(view.current.x, -bound.x, bound.x)
+      view.current.y = clamp(view.current.y, -bound.y, bound.y)
+      paint(true)
+    }
+
+    function toggleZoom() {
+      view.current =
+        view.current.scale > 1
+          ? { scale: 1, x: 0, y: 0 }
+          : { scale: fullScale(), x: 0, y: 0 }
+      paint(true)
     }
 
     function onTouchStart(e: TouchEvent) {
-      const g = gesture.current
-      const z = zoomRef.current
-      setSettling(false)
-
-      if (e.touches.length === 2) {
-        g.mode = 'pinch'
-        g.startSpread = spread(e.touches)
-        g.startScale = z.scale
-      } else if (e.touches.length === 1 && z.scale > 1) {
-        g.mode = 'pan'
-        g.startX = e.touches[0]!.clientX
-        g.startY = e.touches[0]!.clientY
-      } else {
-        g.mode = 'none'
+      /*
+        Two fingers do nothing but get swallowed. Pinch is deliberately absent —
+        and it still has to be prevented, because an unhandled pinch zooms the
+        *page*, and iOS gives no way to put page zoom back afterwards.
+      */
+      if (e.touches.length !== 1) {
+        e.preventDefault()
+        drag.active = false
+        return
       }
 
-      g.originX = z.x
-      g.originY = z.y
-      g.moved = false
+      drag.active = view.current.scale > 1
+      drag.startX = e.touches[0]!.clientX
+      drag.startY = e.touches[0]!.clientY
+      drag.originX = view.current.x
+      drag.originY = view.current.y
+      drag.moved = false
+      if (drag.active) paint(false) // cancel any spring mid-flight
     }
 
     function onTouchMove(e: TouchEvent) {
-      const g = gesture.current
-      if (g.mode === 'none' || !stage) return
       e.preventDefault()
-      g.moved = true
+      if (!drag.active || e.touches.length !== 1 || !stage) return
 
-      if (g.mode === 'pinch' && e.touches.length === 2) {
-        const scale = clamp(
-          g.startScale * (spread(e.touches) / g.startSpread),
-          1,
-          MAX_SCALE,
-        )
-        apply({ scale, x: g.originX, y: g.originY })
-        return
-      }
+      const dx = e.touches[0]!.clientX - drag.startX
+      const dy = e.touches[0]!.clientY - drag.startY
+      if (Math.hypot(dx, dy) > 4) drag.moved = true
 
-      if (g.mode === 'pan' && e.touches.length === 1) {
-        const bound = limits()
-        apply({
-          ...zoomRef.current,
-          x: rubber(
-            g.originX + (e.touches[0]!.clientX - g.startX),
-            bound.x,
-            stage.clientWidth,
-          ),
-          y: rubber(
-            g.originY + (e.touches[0]!.clientY - g.startY),
-            bound.y,
-            stage.clientHeight,
-          ),
-        })
-      }
+      const bound = limits()
+      view.current.x = rubber(drag.originX + dx, bound.x, stage.clientWidth)
+      view.current.y = rubber(drag.originY + dy, bound.y, stage.clientHeight)
+      paint(false)
     }
 
     function onTouchEnd(e: TouchEvent) {
+      /*
+        Stops the browser synthesising `click` and `dblclick` from this touch.
+        Without it every tap schedules a close twice — once here and once from
+        the mouse fallback below — and a double-tap cancels only one of them, so
+        the poster zooms and then dismisses itself.
+      */
+      e.preventDefault()
       if (e.touches.length > 0) return
-      gesture.current.mode = 'none'
 
-      // Spring back to whatever is legal now — which also covers a pinch that
-      // ended smaller, since shrinking tightens the bounds the pan sits inside.
-      const z = zoomRef.current
-      const scale = z.scale <= 1.01 ? 1 : z.scale
-      zoomRef.current = { ...z, scale }
-      const bound = limits()
-      const settled = {
-        scale,
-        x: clamp(z.x, -bound.x, bound.x),
-        y: clamp(z.y, -bound.y, bound.y),
+      if (drag.moved) {
+        drag.active = false
+        settle()
+        return
       }
+      drag.active = false
 
-      if (settled.x === z.x && settled.y === z.y && settled.scale === z.scale) {
-        zoomRef.current = settled
+      /*
+        A tap. Whether it closes or zooms cannot be known until the double-tap
+        window has passed, so the close is scheduled and cancelled by a second
+        tap. That puts 260ms on dismissing the poster, which is the price of
+        double-tap existing at all.
+      */
+      const touch = e.changedTouches[0]
+      if (!touch) return
+      const now = Date.now()
+      const near =
+        Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) < DOUBLE_TAP_SLOP
+
+      if (now - tap.last < DOUBLE_TAP_MS && near) {
+        clearTimeout(tap.timer)
+        tap.last = 0
+        toggleZoom()
         return
       }
 
-      setSettling(true)
-      apply(settled)
-      setTimeout(() => setSettling(false), SETTLE_MS)
+      tap.last = now
+      tap.x = touch.clientX
+      tap.y = touch.clientY
+      tap.timer = setTimeout(() => dialogRef.current?.close(), DOUBLE_TAP_MS)
     }
 
     // Safari's own gesture events fire alongside touch events; left alone they
@@ -231,12 +230,36 @@ export function Poster({
     stage.addEventListener('gesturestart', blockGesture, opts)
     stage.addEventListener('gesturechange', blockGesture, opts)
 
+    // A pointer device has no touch events: click closes, double-click zooms.
+    function onDoubleClick() {
+      clearTimeout(tap.timer)
+      toggleZoom()
+    }
+    function onClick() {
+      tap.timer = setTimeout(() => dialogRef.current?.close(), DOUBLE_TAP_MS)
+    }
+    stage.addEventListener('dblclick', onDoubleClick)
+    stage.addEventListener('click', onClick)
+
+    /** Reset when the dialog closes, so it always reopens at rest. */
+    function onClose() {
+      clearTimeout(tap.timer)
+      view.current = { scale: 1, x: 0, y: 0 }
+      paint(false)
+    }
+    const dialog = dialogRef.current
+    dialog?.addEventListener('close', onClose)
+
     return () => {
+      clearTimeout(tap.timer)
       stage.removeEventListener('touchstart', onTouchStart)
       stage.removeEventListener('touchmove', onTouchMove)
       stage.removeEventListener('touchend', onTouchEnd)
       stage.removeEventListener('gesturestart', blockGesture)
       stage.removeEventListener('gesturechange', blockGesture)
+      stage.removeEventListener('dblclick', onDoubleClick)
+      stage.removeEventListener('click', onClick)
+      dialog?.removeEventListener('close', onClose)
     }
   }, [])
 
@@ -248,31 +271,14 @@ export function Poster({
     so the token stays defined only in app/layout.tsx.
   */
   function setThemeColor(value: string) {
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', value)
-  }
-
-  function rest() {
-    zoomRef.current = { scale: 1, x: 0, y: 0 }
-    setZoom(zoomRef.current)
-    setSettling(false)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value)
   }
 
   function open() {
     previousThemeColor.current =
-      document
-        .querySelector('meta[name="theme-color"]')
-        ?.getAttribute('content') ?? null
+      document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? null
     setThemeColor('#000000')
-    rest()
     dialogRef.current?.showModal()
-  }
-
-  /** Fires for every way out: the tap, Escape, and the back gesture. */
-  function onDialogClose() {
-    if (previousThemeColor.current) setThemeColor(previousThemeColor.current)
-    rest()
   }
 
   if (!src) {
@@ -299,16 +305,6 @@ export function Poster({
 
   if (!expandable || !large || !title) return thumbnail
 
-  /*
-    §2 keeps imagery to poster thumbnails, and a full-size view sits at the edge
-    of that — a judgement call recorded rather than smuggled in. The thumbnail is
-    32px because it was shrunk three times, and at that size you cannot tell what
-    you are looking at; the affordance is a consequence of that, not new appetite
-    for pictures. No new data, no new source, the same poster.
-
-    Native <dialog> rather than a hand-rolled overlay: showModal() brings focus
-    trapping, Escape to close, inertness of the page behind, and a ::backdrop.
-  */
   return (
     <>
       <button
@@ -322,22 +318,19 @@ export function Poster({
 
       <dialog
         ref={dialogRef}
-        onClose={onDialogClose}
+        onClose={() => {
+          if (previousThemeColor.current) setThemeColor(previousThemeColor.current)
+        }}
         /*
           True black, not `--color-bg`. §11's matte black is the right ground for
-          type; this is the one surface in the product that is not type, and a
-          poster wants nothing behind it. Deliberately off-palette, only here.
-
-          Full-bleed rather than a centred box, so the black reaches every edge
-          and there is nowhere to tap that is not the poster or its ground.
+          type; this is the one surface in the product that is not type. Full
+          bleed, so black reaches every edge and there is nowhere to tap that is
+          not the poster or its ground.
         */
         className="bg-transparent backdrop:bg-black m-0 h-full max-h-none w-full max-w-none p-0"
       >
         <div
           ref={stageRef}
-          onClick={() => {
-            if (!gesture.current.moved) dialogRef.current?.close()
-          }}
           className="flex h-full w-full touch-none items-center justify-center overflow-hidden bg-black"
         >
           <Image
@@ -347,12 +340,6 @@ export function Poster({
             width={2000}
             height={3000}
             draggable={false}
-            style={{
-              transform: `translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.scale})`,
-              transition: settling
-                ? `transform ${SETTLE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
-                : undefined,
-            }}
             className="max-h-full max-w-full object-contain"
           />
         </div>
