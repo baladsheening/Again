@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 
 import { posterUrl } from '@/lib/posters'
 
@@ -20,35 +20,13 @@ import { posterUrl } from '@/lib/posters'
  * poster; `object-top` because a film poster puts its subject in the upper half
  * and its billing block along the bottom.
  *
- * The thumbnail fetches `w154` and the expanded view `original`. Sizes and the
- * arithmetic behind them are in `lib/posters.ts`.
- */
-
-/** How long a tap waits to find out whether it was the first half of a double. */
-const DOUBLE_TAP_MS = 260
-/** Two taps count as one gesture only if they land near each other. */
-const DOUBLE_TAP_SLOP = 32
-const SETTLE_MS = 300
-const SETTLE_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
-
-const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
-
-/**
- * Apple's rubber band, as used by every scroll view on the platform:
- * `(1 − 1/(x·c/d + 1))·d`, with `c = 0.55`.
+ * Tapping one opens it full-bleed on black. Tap anywhere to close, and that is
+ * the whole interaction — pinch-zoom, double-tap zoom, panning and rubber
+ * banding were all built and all removed on 8 August. See docs/decisions.md.
  *
- * Past the edge the finger keeps moving and the image keeps following, but by
- * ever less — resistance grows with the overshoot and the result asymptotes at
- * the container's own dimension, so it can never be dragged into nowhere. Inside
- * the edge it is the identity function and costs nothing.
+ * The thumbnail fetches `w154` and the expanded view `original`, which is the
+ * largest TMDB has. Sizes and the arithmetic are in `lib/posters.ts`.
  */
-function rubber(offset: number, limit: number, dimension: number) {
-  const over = Math.abs(offset) - limit
-  if (over <= 0) return offset
-  const damped = (1 - 1 / ((over * 0.55) / dimension + 1)) * dimension
-  return Math.sign(offset) * (limit + damped)
-}
-
 export function Poster({
   posterPath,
   title,
@@ -63,218 +41,14 @@ export function Poster({
   const large = posterUrl(posterPath, 'original')
 
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
   const previousThemeColor = useRef<string | null>(null)
-
-  /*
-    The transform lives in a ref and is painted straight onto the element. No
-    component state is involved in a drag at all: a React render per touchmove is
-    sixty reconciliations a second to set one style property, and it is the
-    difference between the image tracking your finger and lagging behind it.
-  */
-  const view = useRef({ scale: 1, x: 0, y: 0 })
-
-  useEffect(() => {
-    const stage = stageRef.current
-    if (!stage) return
-
-    const drag = { active: false, startX: 0, startY: 0, originX: 0, originY: 0, moved: false }
-    const tap = { last: 0, x: 0, y: 0, timer: 0 as number | ReturnType<typeof setTimeout> }
-
-    function paint(transition = false) {
-      const image = imageRef.current
-      if (!image) return
-      const { scale, x, y } = view.current
-      image.style.transition = transition ? `transform ${SETTLE_MS}ms ${SETTLE_EASE}` : 'none'
-      image.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
-    }
-
-    /** How far the image may travel before it shows its own edge. */
-    function limits() {
-      const image = imageRef.current
-      if (!image || !stage) return { x: 0, y: 0 }
-      const { scale } = view.current
-      return {
-        x: Math.max(0, (image.offsetWidth * scale - stage.clientWidth) / 2),
-        y: Math.max(0, (image.offsetHeight * scale - stage.clientHeight) / 2),
-      }
-    }
-
-    /*
-      What "full size" means.
-
-      **3× at minimum**, because the first attempt at this was too clever. It
-      took the larger of the scale that fills the screen and the scale at which
-      one source pixel lands on one device pixel, on the reasoning that anything
-      beyond the latter enlarges the poster rather than revealing it. Both
-      numbers are small on a phone: a 2:3 poster already fills a 390px screen
-      edge to edge, so "fill" is 1.44×, and a 2000px source at 3× DPR is 1.71×.
-      The gesture was correct and did almost nothing.
-
-      So the ceiling goes. Past roughly 1.7× the image is being upscaled and the
-      top of the zoom is a little soft — that is the deliberate trade for a zoom
-      you can actually feel, and it is what every photo viewer does.
-
-      It still rises above 3 for a source that can carry it, and it can never be
-      less than the scale that fills the screen.
-    */
-    function fullScale() {
-      const image = imageRef.current
-      if (!image || !stage) return 3
-      const cover = Math.max(
-        stage.clientWidth / image.offsetWidth,
-        stage.clientHeight / image.offsetHeight,
-      )
-      const oneToOne =
-        image.naturalWidth / (image.offsetWidth * (window.devicePixelRatio || 1))
-      return clamp(Math.max(cover, oneToOne, 3), 3, 4)
-    }
-
-    function settle() {
-      const bound = limits()
-      view.current.x = clamp(view.current.x, -bound.x, bound.x)
-      view.current.y = clamp(view.current.y, -bound.y, bound.y)
-      paint(true)
-    }
-
-    function toggleZoom() {
-      view.current =
-        view.current.scale > 1
-          ? { scale: 1, x: 0, y: 0 }
-          : { scale: fullScale(), x: 0, y: 0 }
-      paint(true)
-    }
-
-    function onTouchStart(e: TouchEvent) {
-      /*
-        Two fingers do nothing but get swallowed. Pinch is deliberately absent —
-        and it still has to be prevented, because an unhandled pinch zooms the
-        *page*, and iOS gives no way to put page zoom back afterwards.
-      */
-      if (e.touches.length !== 1) {
-        e.preventDefault()
-        drag.active = false
-        return
-      }
-
-      drag.active = view.current.scale > 1
-      drag.startX = e.touches[0]!.clientX
-      drag.startY = e.touches[0]!.clientY
-      drag.originX = view.current.x
-      drag.originY = view.current.y
-      drag.moved = false
-      if (drag.active) paint(false) // cancel any spring mid-flight
-    }
-
-    function onTouchMove(e: TouchEvent) {
-      e.preventDefault()
-      if (!drag.active || e.touches.length !== 1 || !stage) return
-
-      const dx = e.touches[0]!.clientX - drag.startX
-      const dy = e.touches[0]!.clientY - drag.startY
-      if (Math.hypot(dx, dy) > 4) drag.moved = true
-
-      const bound = limits()
-      view.current.x = rubber(drag.originX + dx, bound.x, stage.clientWidth)
-      view.current.y = rubber(drag.originY + dy, bound.y, stage.clientHeight)
-      paint(false)
-    }
-
-    function onTouchEnd(e: TouchEvent) {
-      /*
-        Stops the browser synthesising `click` and `dblclick` from this touch.
-        Without it every tap schedules a close twice — once here and once from
-        the mouse fallback below — and a double-tap cancels only one of them, so
-        the poster zooms and then dismisses itself.
-      */
-      e.preventDefault()
-      if (e.touches.length > 0) return
-
-      if (drag.moved) {
-        drag.active = false
-        settle()
-        return
-      }
-      drag.active = false
-
-      /*
-        A tap. Whether it closes or zooms cannot be known until the double-tap
-        window has passed, so the close is scheduled and cancelled by a second
-        tap. That puts 260ms on dismissing the poster, which is the price of
-        double-tap existing at all.
-      */
-      const touch = e.changedTouches[0]
-      if (!touch) return
-      const now = Date.now()
-      const near =
-        Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) < DOUBLE_TAP_SLOP
-
-      if (now - tap.last < DOUBLE_TAP_MS && near) {
-        clearTimeout(tap.timer)
-        tap.last = 0
-        toggleZoom()
-        return
-      }
-
-      tap.last = now
-      tap.x = touch.clientX
-      tap.y = touch.clientY
-      tap.timer = setTimeout(() => dialogRef.current?.close(), DOUBLE_TAP_MS)
-    }
-
-    // Safari's own gesture events fire alongside touch events; left alone they
-    // zoom the page even once the touch handlers have preventDefaulted.
-    function blockGesture(e: Event) {
-      e.preventDefault()
-    }
-
-    const opts = { passive: false } as const
-    stage.addEventListener('touchstart', onTouchStart, opts)
-    stage.addEventListener('touchmove', onTouchMove, opts)
-    stage.addEventListener('touchend', onTouchEnd, opts)
-    stage.addEventListener('gesturestart', blockGesture, opts)
-    stage.addEventListener('gesturechange', blockGesture, opts)
-
-    // A pointer device has no touch events: click closes, double-click zooms.
-    function onDoubleClick() {
-      clearTimeout(tap.timer)
-      toggleZoom()
-    }
-    function onClick() {
-      tap.timer = setTimeout(() => dialogRef.current?.close(), DOUBLE_TAP_MS)
-    }
-    stage.addEventListener('dblclick', onDoubleClick)
-    stage.addEventListener('click', onClick)
-
-    /** Reset when the dialog closes, so it always reopens at rest. */
-    function onClose() {
-      clearTimeout(tap.timer)
-      view.current = { scale: 1, x: 0, y: 0 }
-      paint(false)
-    }
-    const dialog = dialogRef.current
-    dialog?.addEventListener('close', onClose)
-
-    return () => {
-      clearTimeout(tap.timer)
-      stage.removeEventListener('touchstart', onTouchStart)
-      stage.removeEventListener('touchmove', onTouchMove)
-      stage.removeEventListener('touchend', onTouchEnd)
-      stage.removeEventListener('gesturestart', blockGesture)
-      stage.removeEventListener('gesturechange', blockGesture)
-      stage.removeEventListener('dblclick', onDoubleClick)
-      stage.removeEventListener('click', onClick)
-      dialog?.removeEventListener('close', onClose)
-    }
-  }, [])
 
   /*
     iOS tints the status-bar strip from the `theme-color` meta, which is
     `#0e0e10`. Without this the top of the screen stays matte black while the
-    rest of the expanded view is true black — a seam exactly where the poster is
-    trying not to have an edge. The previous value is read rather than hardcoded,
-    so the token stays defined only in app/layout.tsx.
+    rest of the view is true black — a seam exactly where the poster is trying
+    not to have an edge. The previous value is read rather than hardcoded, so the
+    token stays defined only in app/layout.tsx.
   */
   function setThemeColor(value: string) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value)
@@ -336,16 +110,28 @@ export function Poster({
         className="bg-transparent backdrop:bg-black m-0 h-full max-h-none w-full max-w-none p-0"
       >
         <div
-          ref={stageRef}
-          className="flex h-full w-full touch-none items-center justify-center overflow-hidden bg-black"
+          onClick={() => dialogRef.current?.close()}
+          /*
+            `touch-none` is the one piece of the zoom work worth keeping, and it
+            is a class rather than code. It stops the browser doing its own
+            pinch and double-tap zoom on this element — which matters because an
+            unhandled pinch zooms the *page*, and iOS offers no way to put page
+            zoom back: `visualViewport.scale` is read-only and the
+            `maximum-scale` meta has been ignored since iOS 10.
+
+            Without it, pinching the poster and closing left the list behind
+            magnified with no way back short of reloading.
+          */
+          className="flex h-full w-full touch-none items-center justify-center bg-black"
         >
           <Image
-            ref={imageRef}
             src={large}
             alt={`Poster for ${title}`}
             width={2000}
             height={3000}
             draggable={false}
+            // Contained, never enlarged: a 2000px source shown across ~390 CSS
+            // px is a downscale, which is the sharpest a screen can render it.
             className="max-h-full max-w-full object-contain"
           />
         </div>
