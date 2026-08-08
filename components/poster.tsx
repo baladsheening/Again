@@ -101,15 +101,12 @@ export function Poster({
         // hunting for a close button would be the only difficult part.
         onClick={() => dialogRef.current?.close()}
         /*
-          Opaque, not the 90% it was. At 90% the page showed faintly through and
-          the poster sat against a slightly lit grey, which softened its edges —
-          the thing you open this to avoid.
-
-          `bg-bg` rather than pure `#000`: §11's matte black is `--color-bg`, and
-          the two are indistinguishable behind an image. A second black would be
-          a palette token added for no visible gain.
+          True black, not the app's `--color-bg`. §11's matte black is `#0e0e10`
+          and is the right ground for type; this is the one surface in the
+          product that is not type, and a poster wants nothing behind it at all.
+          Deliberately off-palette, and only here.
         */
-        className="bg-transparent backdrop:bg-bg m-auto max-h-[85dvh] max-w-[90vw] p-0"
+        className="bg-transparent backdrop:bg-black m-auto max-h-[85dvh] max-w-[90vw] p-0"
       >
         <Image
           src={large}
