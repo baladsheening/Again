@@ -8,8 +8,18 @@
 
 const CDN = 'https://image.tmdb.org/t/p'
 
-/** §11 allows small poster thumbnails and nothing more, so w92 is the size. */
-export function posterUrl(posterPath: string | null, size: 'w92' | 'w154' = 'w92') {
+/**
+ * `w92` is the default because §11 allows small poster thumbnails and nothing
+ * more, and 92px covers the 32px square at 2x.
+ *
+ * `w500` exists for one purpose: the tap-to-expand view, added 8 August. Still
+ * TMDB's CDN, still no proxy, and deliberately not `original` — a poster at full
+ * resolution is a several-megabyte download to look at something on a phone.
+ */
+export function posterUrl(
+  posterPath: string | null,
+  size: 'w92' | 'w154' | 'w500' = 'w92',
+) {
   if (!posterPath) return null
   return `${CDN}/${size}${posterPath}`
 }

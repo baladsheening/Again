@@ -72,7 +72,7 @@ export function EntryRow({
         is its own flex row, and everything else stacks below it.
       */}
       <div className="flex items-center gap-3">
-        <Poster posterPath={card.posterPath} />
+        <Poster posterPath={card.posterPath} title={card.title} expandable />
 
         {/*
           One flowing line: the title in full, then a middle dot, then the year.
