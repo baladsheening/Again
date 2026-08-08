@@ -13,8 +13,12 @@ import { env } from '@/lib/env'
  * ⚠ Without Upstash configured this falls back to an in-process Map. That is
  * fine in development and **is not real protection in production**, where
  * serverless instances each get their own memory and an attacker simply lands
- * on a different one. `assertRateLimitConfigured()` is called at the point of
- * deploy readiness; see docs/decisions.md.
+ * on a different one.
+ *
+ * `scripts/preflight.mjs` fails a production build when the credentials are
+ * missing, which is the enforcement: the fallback is undetectable once deployed,
+ * so the gate has to sit before the deploy rather than inside it. See
+ * docs/decisions.md.
  */
 
 export type Limit = { requests: number; windowSeconds: number }

@@ -50,6 +50,18 @@ simply lands on a different one.
 there — but the backing store is not. `rateLimitIsDurable()` reports which mode
 is live. Needs Upstash credentials before any real deployment.
 
+**Enforced as of 8 August 2026:** `scripts/preflight.mjs` fails a production
+build when the credentials are missing. The gate has to sit *before* the deploy,
+because the fallback is undetectable after it — the app looks healthy, responds
+normally, and simply does not limit anything. Previews and local builds print the
+same findings and carry on. This is the enforcement, not the fix: the credentials
+themselves are still outstanding, and this entry stays open until they exist.
+
+The comment in `lib/rate-limit.ts` previously said `assertRateLimitConfigured()`
+was "called at the point of deploy readiness". No such function was ever written,
+and `rateLimitIsDurable()` has no callers either — the file described a guard it
+did not have. The comment now names the script that does the work.
+
 This got more serious once auth started going through it. `LIMITS.auth` guards
 sign-in, sign-up and password reset, so the in-process fallback is now standing
 in front of the account boundary and an emailed bearer token, not only the TMDB
@@ -69,6 +81,46 @@ loop in the product.
 **Current intent:** on-conflict-do-nothing, existing row and its `source`
 untouched. Flagged rather than decided. Belongs in Phase 4.
 
+### Groups
+
+Raised 8 August 2026, explicitly to be kept rather than built: *people will want
+groups — one for family, one for each friend group — and members of a group
+should see each other's names rather than handles.*
+
+**Not in the brief at all.** §5 has one relation, `tracks`, and it is a mutual
+pair. There is no object between a person and their people.
+
+It is not obviously out of scope either, which is why it is here rather than
+dismissed. §2 excludes group *chat*, feeds and public discovery — sociality as
+content. A group as a **visibility scope** is a different thing, and §13 already
+assumes the shape: *"one friend group, a dozen people who already talk about
+films"*, and *"two hundred people in twelve clusters produces constant
+overlap"*. The clusters are in the design; they are just implicit, expressed as
+a dense mesh of mutual tracks rather than named.
+
+**What would have to be true for this to be right:** that a group does something
+tracks cannot. Two candidates, neither yet tested against a real list —
+
+- **Scoping what is visible.** Different lists to family and to friends. This is
+  the one that cannot be built out of tracks, because a track is all-or-nothing.
+- **Naming a cluster** so overlap can say where it came from.
+
+**The risk, stated plainly.** Groups are an administrative surface: creating,
+naming, inviting, leaving, who can add whom. That is a lot of product for
+something whose value shows up only at a density the app has never had. §12's
+checkpoint for Phase 2 is *two accounts on two devices seeing each other
+correctly* — one pair, not twelve. Building the group object before the pair
+works is the definition of the wrong order.
+
+**Decision for now: keep, do not build.** Revisit when there are enough real
+users that a single undifferentiated list of people is visibly wrong — which is
+also the first moment there is any evidence about what a group should do.
+
+**The identity half is separate and is happening sooner.** "Names for people who
+know you, handles for strangers" needs settling in Phase 2, when `/u/[handle]`
+is built, and is carried forward in `docs/plan.md`. It does not require groups:
+a mutual track is already a workable definition of knowing someone.
+
 ### Notification copy for the counterpart side
 
 §6 gives exact copy for `convergence` and for the guide-holder's side of
@@ -77,12 +129,6 @@ untouched. Flagged rather than decided. Belongs in Phase 4.
 
 **Invented, and marked as invented** in `notificationCopy` in `lib/overlap.ts`.
 Worth a read-through by whoever owns the voice.
-
-### No email provider
-
-`lib/email.ts` logs in development and throws in production. Resend and Postmark
-are both fine; nobody has picked. Password reset is the only caller, and until a
-provider exists a deployed user who forgets their password cannot get back in.
 
 ---
 
@@ -607,6 +653,100 @@ scrollable; a transform-based correction would not have.
 **Nothing here is measured on hardware.** The numbers come from the box model —
 line-height plus padding plus border, per control. The Phase 5 phone pass is where
 they get confirmed or corrected.
+
+### Resend, over its REST API
+
+**Decided 8 August 2026.** Resend and Postmark were both acceptable and the
+choice sat open for a week. Resend, for one reason that outweighed the rest:
+`onboarding@resend.dev` sends with no domain, no DNS and no approval, so password
+reset is live on the deployment immediately. Postmark's sender signatures need
+clearing first, which would have left the deploy with reset still broken — and
+reset being broken is the condition this whole phase exists to end.
+
+⚠ **That sender only delivers to the address owning the Resend account.** It is
+enough to prove the flow end to end and it is not enough for a second person, who
+would hit a 403 that throws on our side and looks like silence on theirs. A
+verified domain in `EMAIL_FROM` is required before anyone else signs up, and
+`scripts/preflight.mjs` prints this as a notice on every build until it is set.
+
+**Called over `fetch`, not the `resend` package** — the same trade as
+`lib/rate-limit.ts` and Upstash. §10 wants a written reason for every dependency;
+this is one POST with three headers against a stable API, and the SDK's whole
+contribution would be `await resend.emails.send`.
+
+**It does not fail open, and `lib/rate-limit.ts` does.** The two sit next to each
+other and look alike, so the difference is worth stating. A limiter outage should
+not take the app down — failing open costs a few minutes of lapsed limits. An
+email failure has no equivalent: swallow it and Better Auth returns success, the
+UI says check your inbox, and the account is gone. So `sendEmail` throws.
+
+**What would change this:** volume, or deliverability trouble. Postmark remains
+the stronger transactional reputation, and moving is one function.
+
+### The want label leaves the row once the want is resolved
+
+`components/entry-row.tsx` renders `spec.wantLabel` unconditionally in the
+metadata line, and one `EntryRow` serves all four `/me` tabs. So "Want to see"
+appears under a go-back-to that already has a return count of 1 and a *Been back
+again* button, and under an archived `done` — a film that was seen, that nobody
+is going back to, and that nobody wants.
+
+**Decided 8 August 2026: render it only while `state = 'want'`.**
+
+The defence for the current behaviour is real but narrow. §5.2 says a go-back-to
+is still a want, which is why the live view is `state in ('want','go_back_to')`
+— so the label is not *false* on a go-back-to. It is false on `done` and on
+`fixture`, where nothing is wanted at all, and on the live list it is redundant
+with the thing beside it.
+
+Nothing replaces it, because two things already carry the state. The tab names
+the collection on three of the four views. And on the live list — the only view
+that mixes `want` with `go_back_to` — the return count is the difference, which
+is precisely the load §11 puts on it when it calls the count the signature
+element of the product. A word saying "want" next to a numeral saying "you have
+been back once" is the label competing with the signature.
+
+**What would change this:** the live list gaining a third state, or the count
+being cut. Neither is planned.
+
+This is a label, not a state change. `done` stays archived and owner-only,
+`fixture` stays reachable only from the `own` intent, and §5.2 is untouched.
+
+### A private one-line note, and why it is not a review
+
+**Decided 8 August 2026:** an entry may carry a short note written by its owner,
+readable by nobody else.
+
+§4 bans the word `review` outright and `no-restricted-syntax` fails the build on
+the identifier. §2 puts comments, scores and stars out of scope. The question was
+whether this is that thing under another name.
+
+It is not, and the test is not the length of the text but who it is for. A review
+is addressed to an audience: it is published, it accumulates, it ranks, and its
+existence changes what other people pick. This note is addressed to the person
+who wrote it — *the one with the long tracking shot*, *saw this with Dad* — and
+it is invisible to everyone else, so none of that machinery can start. Nothing is
+published, nothing is scored, nothing is aggregated, and no one else's decision
+can be moved by it. Remove the audience and the objection goes with it.
+
+It also serves the state the product otherwise says least about. `done` is a
+private archive nobody can see; a note is the only reason to open it.
+
+**Constraints, all of which are the point:**
+
+- **The identifier is `note`.** Not `review`, not `comment`. The lint rule is
+  correct and stays.
+- **Owner only, enforced in `lib/db/`** (§3). Never in
+  `listEntriesForOtherUser`, never in overlap, never in an aggregate. Carried
+  forward to Phase 2 in `docs/plan.md`, because the shared projection gets
+  written there and a leaked column is exactly the failure §5 cannot detect.
+- **One nullable text column on `entries`**, bounded by Zod at the boundary
+  (§10). Bounded because an unbounded text field is how a note becomes an essay
+  and an essay becomes a review with an audience of one, then two.
+
+**What would change this:** any request to show a note to anyone but its author.
+That is not an extension of this decision, it is the reversal of it — the whole
+argument above is the privacy.
 
 ---
 

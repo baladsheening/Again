@@ -19,6 +19,16 @@ const schema = z.object({
   // Phase 1. The Read Access Token (Bearer), not the v3 API key — see .env.example.
   TMDB_READ_ACCESS_TOKEN: z.string().optional(),
 
+  /*
+    Phase 0.5. Optional here and required at deploy time by scripts/preflight.mjs,
+    because development deliberately runs without them: with no key, reset links
+    print to the terminal, which is currently the only way into an account.
+
+    EMAIL_FROM is not `.email()` — it carries a display name, "Again <you@…>".
+  */
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+
   // Phase 5
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
