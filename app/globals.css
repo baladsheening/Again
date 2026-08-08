@@ -233,21 +233,15 @@
  * disambiguating l/1/I is functional, given §10's homoglyph concern — and
  * nowhere else.
  */
-@utility return-count {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  /*
-    18px, down from 22px. At 22 it was the largest thing on the row by some way
-    and read as a headline rather than a fact — and it no longer has to carry the
-    live list, where it was competing with the title for attention. It still
-    wants to be the biggest thing in its own column: §11 asks for large enough to
-    read as the point, not large enough to be the point.
-  */
-  font-size: 1.125rem;
-  line-height: 1;
-  font-weight: 400;
-  color: var(--color-text);
-}
+/*
+  `return-count` was here — mono, tabular, 18px. The count it styled was removed
+  on 8 August (docs/decisions.md), and a utility with no callers is a class
+  waiting to be reapplied by someone who does not know why it existed.
+
+  The mono face keeps its other homes: timestamps, and the handle input where
+  disambiguating l/1/I is functional. It is no longer the type of the signature
+  element, because there is no longer a signature element.
+*/
 
 /**
  * The wordmark. Newsreader, and the same scarcity rule that governs the accent

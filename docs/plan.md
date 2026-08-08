@@ -515,6 +515,16 @@ not an oversight — the reasoning is in `docs/decisions.md`.
 
 ### Phase 3
 
+- [ ] **`guide` has no evidence behind it any more.** §6 specifies *"{name} wants
+      to see {title}. You've been back n times."* The return count was removed on
+      8 August, so the copy now reads *"…You would go back to it."* — the same
+      claim with nothing supporting it. `guide` exists to say *you are the person
+      to talk to about this*, and the number was why that was true of you rather
+      than of anyone else who had seen the film.
+
+      Decide before Phase 3 ships: accept the weaker sentence, find another
+      signal, or bring the count back for this one purpose. The column still
+      exists, so the third option costs a migration of nothing.
 - [ ] **The push worker must not fire inside the 10-second undo window.** Undo
       currently deletes the row, which is fine while notifications are in-app
       only. Once push exists, an undone typo would still buzz someone's phone.

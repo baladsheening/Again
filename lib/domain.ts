@@ -61,5 +61,4 @@ export type EntryCard = {
   title: string
   year: number | null
   posterPath: string | null
-  returnCount: number
 }

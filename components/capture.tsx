@@ -107,7 +107,6 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
         title: film.title,
         year: film.year,
         posterPath: film.posterPath,
-        returnCount: 0,
       })
 
       const result = await addFilmAction({ externalId: film.externalId, intent })

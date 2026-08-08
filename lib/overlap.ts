@@ -24,7 +24,6 @@ type Counterpart = {
   state: EntryState
   source: string
   sourceUserId: string | null
-  returnCount: number
 }
 
 /**
@@ -51,8 +50,7 @@ async function findMutualCounterparts(
       e.intent         as "intent",
       e.state          as "state",
       e.source         as "source",
-      e.source_user_id as "sourceUserId",
-      e.return_count   as "returnCount"
+      e.source_user_id as "sourceUserId"
     from tracks outbound
     join tracks inbound
       on inbound.follower_id = outbound.followed_id
@@ -78,7 +76,6 @@ type Side = {
   state: EntryState
   source: string
   sourceUserId: string | null
-  returnCount: number
 }
 
 /**
@@ -106,8 +103,13 @@ export type Match = {
   recipientId: string
   /** The other party, named in the copy. */
   counterpartId: string
-  /** Return count of the go-back-to holder, for `guide` copy. */
-  returnCount?: number
+  /**
+   * Which side of a `guide` event this is. Was `returnCount`, which doubled as
+   * the discriminator and as the number in the copy — both went when the count
+   * did (8 August). The two sides still need telling apart: one person wants the
+   * thing, the other is the one who would go back to it.
+   */
+  guideHolder?: boolean
 }
 
 const isWantSee = (s: Side) => s.intent === 'see' && s.state === 'want'
@@ -147,10 +149,9 @@ export function classify(u: Side, v: Side): Match[] {
           kind: 'guide',
           recipientId: guide.userId,
           counterpartId: wanter.userId,
-          returnCount: guide.returnCount,
+          guideHolder: true,
         },
-        // No `returnCount`: the wanter's copy is the other side of the event,
-        // and "you've been back n times" is not true of them.
+        // The wanter's side of the same event: they are not the guide.
         { kind: 'guide', recipientId: wanter.userId, counterpartId: guide.userId },
       ]
     }
@@ -210,7 +211,7 @@ export async function runOverlap(
             : (byId.get(m.counterpartId)?.displayName ??
               byId.get(m.counterpartId)?.handle ??
               'Someone'),
-        ...(m.returnCount !== undefined ? { returnCount: m.returnCount } : {}),
+        ...(m.guideHolder ? { guideHolder: true } : {}),
       },
     })),
   )
@@ -229,16 +230,28 @@ export async function runOverlap(
  */
 export function notificationCopy(
   kind: NotificationKind,
-  p: { counterpartName: string; title: string; returnCount?: number },
+  p: { counterpartName: string; title: string; guideHolder?: boolean },
 ): string {
   switch (kind) {
     case 'convergence':
       return `You and ${p.counterpartName} both want to see ${p.title}.`
+    /*
+      §6 gives the guide-holder's line as "…You've been back n times." The count
+      was removed on 8 August, so the sentence cannot be written — and it would
+      have read "back 0 times", since the column survives at its default and
+      nothing increments it any more.
+
+      What replaces it keeps the point of the notification: you are the person
+      who would go back to this, and someone you track has just said they want
+      it. The evidence is weaker without a number. **This is the clearest cost of
+      removing the count and wants a read-through before Phase 3 ships** — see
+      docs/plan.md.
+    */
     case 'guide':
-      return p.returnCount !== undefined
-        ? `${p.counterpartName} wants to see ${p.title}. You've been back ${p.returnCount} times.`
+      return p.guideHolder
+        ? `${p.counterpartName} wants to see ${p.title}. You would go back to it.`
         : // Not specified in the brief — the wanter's side of the same event.
-          `${p.counterpartName} has been back to ${p.title}.`
+          `${p.counterpartName} would go back to ${p.title}.`
     case 'lend':
       return `${p.counterpartName} has a copy of ${p.title}.`
     case 'swap_invite':

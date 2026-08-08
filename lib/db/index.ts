@@ -50,7 +50,6 @@ export {
   listEntriesForOtherUser,
   addEntry,
   resolveEntry,
-  incrementReturn,
   undoEntry,
   UNDO_WINDOW_MS,
   toEntryCard,

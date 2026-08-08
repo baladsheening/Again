@@ -26,27 +26,18 @@ export type IntentSpec = {
   question: string
   /** Where "yes" lands it. "No" always lands in `done`. */
   landsIn: Extract<EntryState, 'go_back_to' | 'fixture'>
-  /** Experiences count returns; objects do not. */
-  returnCountable: boolean
-  /**
-   * The increment action, for things that have one.
-   *
-   * Mirrors `resolveAction` rather than inventing a phrase: you tap *Seen it* the
-   * first time and *Seen it again* every time after, so the second action teaches
-   * itself from the first. The old wording, "Been back again", was the same
-   * sentence for a film, a book and a place, and read as a stock phrase rather
-   * than a description of what you had done.
-   */
-  returnAgainLabel?: string
-  /**
-   * Names the return count in words: "Seen 3 times". Paired with
-   * `returnCountable`, and the reason the count is not labelled in the component
-   * — §4 says the wording is derived from kind + intent here, never written into
-   * a component, or "seen" would be hardcoded on a table that also holds books
-   * and places.
-   */
-  countLabel?: string
 }
+
+/*
+  `returnCountable`, `returnAgainLabel` and `countLabel` were here. All three
+  described the return count, which was removed on 8 August — see
+  docs/decisions.md.
+
+  `landsIn` carries what is left of the distinction they encoded. A kind+intent
+  landing in `go_back_to` is an experience you can repeat; one landing in
+  `fixture` is a thing you own. That was the real difference; counting was one
+  expression of it, not the fact itself.
+*/
 
 /**
  * A kind gets two intents where consumption and possession can come apart, and
@@ -63,16 +54,12 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       resolveAction: 'Seen it',
       question: 'Go back?',
       landsIn: 'go_back_to',
-      returnCountable: true,
-      returnAgainLabel: 'Seen it again',
-      countLabel: 'Seen',
     },
     own: {
       wantLabel: 'Want a copy',
       resolveAction: 'Got it',
       question: 'Keeping it?',
       landsIn: 'fixture',
-      returnCountable: false,
     },
   },
   book: {
@@ -81,16 +68,12 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       resolveAction: 'Read it',
       question: 'Go back?',
       landsIn: 'go_back_to',
-      returnCountable: true,
-      returnAgainLabel: 'Read it again',
-      countLabel: 'Read',
     },
     own: {
       wantLabel: 'Want a copy',
       resolveAction: 'Got it',
       question: 'Keeping it?',
       landsIn: 'fixture',
-      returnCountable: false,
     },
   },
   place: {
@@ -99,9 +82,6 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       resolveAction: 'Been',
       question: 'Go back?',
       landsIn: 'go_back_to',
-      returnCountable: true,
-      returnAgainLabel: 'Been again',
-      countLabel: 'Been',
     },
   },
   object: {
@@ -110,7 +90,6 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       resolveAction: 'Got it',
       question: 'Keeping it?',
       landsIn: 'fixture',
-      returnCountable: false,
     },
   },
 }

@@ -2,10 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
-import {
-  incrementReturnAction,
-  resolveEntryAction,
-} from '@/app/actions/entries'
+import { resolveEntryAction } from '@/app/actions/entries'
 // Type-only, so it is erased at compile time and `server-only` never reaches
 // the client bundle. @/lib/db is the sanctioned entry point (eslint bans the
 // client and schema modules, not this).
@@ -14,16 +11,18 @@ import type { EntryCard } from '@/lib/domain'
 import { specFor } from '@/lib/vocabulary'
 import { TickIcon } from './icon-tick'
 import { Poster } from './poster'
-import { ReturnCount } from './return-count'
 
 /**
  * One row of the live list, plus the resolve flow (§8): a single tap to
  * resolve, then a single question. No check-ins, no location, no rating.
  *
- * `view` is which collection the row is being shown in, and three things depend
- * on it. The row cannot infer it from `card.state`, because a go-back-to appears
- * in two places — the live list, where it needs distinguishing from an unwatched
- * want, and its own tab, where everything around it is the same thing.
+ * `view` is which collection the row is being shown in. A go-back-to appears in
+ * two places — the live list, where it needs distinguishing from an unwatched
+ * want, and its own tab, where everything around it is the same thing — so the
+ * row cannot infer its context from `card.state`.
+ *
+ * **There is no return count and no increment.** Both were removed on 8 August;
+ * `docs/decisions.md` carries the reasoning and what it costs.
  */
 export function EntryRow({
   card,
@@ -51,13 +50,6 @@ export function EntryRow({
     })
   }
 
-  function beenBack() {
-    setError(null)
-    startTransition(async () => {
-      const result = await incrementReturnAction(card.id)
-      if (!result.ok) setError(result.message)
-    })
-  }
 
   return (
     <li
@@ -135,39 +127,18 @@ export function EntryRow({
             </div>
           )}
 
-          {/*
-            Only where the count is. This increments the return count, and the
-            count now lives on the go-back-tos collection — offered in the live
-            list it would change a number that is not on screen, which is a tap
-            with no feedback at all.
-          */}
-          {view === 'go_back_tos' && satisfied && spec.returnAgainLabel && (
-            <button
-              type="button"
-              onClick={beenBack}
-              disabled={busy}
-              className="text-muted hover:text-text tap-target mt-2 self-start text-sm underline underline-offset-4 transition-colors"
-            >
-              {spec.returnAgainLabel}
-            </button>
-          )}
-
           {error && <p className="text-muted mt-1 text-xs">{error}</p>}
         </div>
 
         {/*
-          The count belongs to its own collection, where a column of numerals
-          sorted by size explains itself. The tick does the work in the live
-          list, where the question is only "have I watched this or not".
+          The tick marks a want that has been satisfied, in the live list where
+          it sits among wants that have not been. On the go-back-tos tab there is
+          nothing to distinguish — everything there is the same thing.
         */}
-        {view === 'go_back_tos' && satisfied && (
-          <ReturnCount count={card.returnCount} label={spec.countLabel} />
-        )}
-
         {view === 'live' && satisfied && (
           <span className="text-muted flex shrink-0 items-center">
             <TickIcon />
-            <span className="sr-only">{spec.countLabel ?? 'Resolved'}</span>
+            <span className="sr-only">{spec.resolveAction}</span>
           </span>
         )}
       </div>

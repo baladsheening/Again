@@ -683,6 +683,59 @@ UI says check your inbox, and the account is gone. So `sendEmail` throws.
 **What would change this:** volume, or deliverability trouble. Postmark remains
 the stronger transactional reputation, and moving is one function.
 
+### The return count is removed, and §11 loses its signature element
+
+**Decided 8 August 2026**, against the brief and knowingly. §11: *"The signature
+element is the return count beside each go-back-to — mono numeral, quiet weight,
+large enough to read as the point."* There is no longer a return count.
+
+It went in stages over an hour, and the stages matter because each one was
+reasonable and the destination was not obviously where they led. The count was
+moved off the live list, because a bare numeral beside an unwatched film explains
+nothing. The increment button followed it, because an action that changes a
+number you cannot see is a tap into the void. Then: *"still not sure about it.
+Don't think it has a purpose."* Renamed first — *Seen it again* rather than *Been
+back again* — and that did not rescue it. Removed.
+
+**The case for removing it.** Nobody was going to tap it. It is self-reporting
+about something you did somewhere else, weeks earlier, with nothing prompting
+you and no consequence if you do not. §8 made that manual deliberately — the
+alternative is check-ins, which is a different product — but deliberate is not
+the same as used, and a number that only ever reads `1` is worse than no number:
+it looks like data and is an artefact of the resolve step.
+
+**What it cost, itemised, because none of it is free:**
+
+- **The go-back-tos tab lost its sort key.** It ranked by how many times you had
+  been back — the one ordering in the app that reflected the strength of a
+  preference rather than its recency. It now falls back to most recently
+  resolved.
+- **`guide` lost its evidence.** §6 specifies the copy *"{name} wants to see
+  {title}. You've been back n times."* That sentence cannot be written. It now
+  reads *"…You would go back to it."* — the same claim without the weight behind
+  it. `guide` exists to say *you are the person to talk to about this*, and the
+  number was the reason it was true of you and not of someone else. **This is
+  the sharpest cost and it is unresolved**, carried into Phase 3.
+- **The mono face lost its main job.** §11 gave IBM Plex Mono to return counts
+  and timestamps. It keeps timestamps and the handle input; it is no longer the
+  type of anything that matters.
+- **A go-back-to is now binary.** Been back once and been back eleven times are
+  the same row. §1's distinction between *liked it* and *returns to it* survives
+  only as the state itself.
+
+**What was kept.** The `go_back_to` state, which was never the same thing as the
+count — it says *I would return to this*, and that is intact. The `return_count`
+column also survives, unread and unwritten, holding whatever it held. §5's
+"nothing is ever deleted" is about entries rather than columns, but dropping it
+would destroy the only counts anyone recorded, for tidiness. Restoring the
+feature means restoring three files and a CSS utility; restoring the data means
+nothing, if the column is gone.
+
+**What would change this back:** evidence that people do record returns when
+asked — or `guide` proving unconvincing in Phase 3 without a number behind it,
+which is the first place the absence will actually be felt rather than reasoned
+about.
+
 ### The want label leaves the row once the want is resolved
 
 `components/entry-row.tsx` renders `spec.wantLabel` unconditionally in the

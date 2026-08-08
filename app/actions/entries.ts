@@ -6,7 +6,6 @@ import { headers } from 'next/headers'
 
 import {
   addEntry,
-  incrementReturn,
   requireSessionUser,
   resolveEntry,
   undoEntry,
@@ -96,20 +95,6 @@ export async function resolveEntryAction(
   }
 
   const result = await resolveEntry(sessionUser, entryId, keep)
-  if (!result.ok) return { ok: false, message: result.message }
-
-  refresh()
-  return { ok: true, value: null }
-}
-
-export async function incrementReturnAction(entryId: string): Promise<ActionResult> {
-  const sessionUser = await requireSessionUser()
-
-  if (!entryIdSchema.safeParse(entryId).success) {
-    return { ok: false, message: 'Unknown entry.' }
-  }
-
-  const result = await incrementReturn(sessionUser, entryId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()

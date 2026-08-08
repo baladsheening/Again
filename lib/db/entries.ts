@@ -30,7 +30,6 @@ export function toEntryCard({ entry, item }: EntryWithItem): EntryCard {
     title: item.title,
     year: item.year,
     posterPath: metadata.posterPath ?? null,
-    returnCount: entry.returnCount,
   }
 }
 
@@ -55,9 +54,14 @@ function stateFilter(view: OwnerView) {
 }
 
 function orderFor(view: OwnerView) {
-  // Go-back-tos rank by how many times you actually have been back (§1).
+  /*
+    Go-back-tos used to rank by how many times you had been back (§1). The count
+    was removed on 8 August, so the ranking falls back to its own tiebreaker:
+    most recently resolved first. See docs/decisions.md — the sort key going is
+    part of what removing the count cost.
+  */
   if (view === 'go_back_tos') {
-    return [desc(entries.returnCount), desc(entries.resolvedAt)]
+    return [desc(entries.resolvedAt)]
   }
 
   /*
@@ -196,12 +200,7 @@ export async function resolveEntry(
 
     const [updated] = await tx
       .update(entries)
-      .set({
-        state,
-        resolvedAt: new Date(),
-        // An experience you would go back to has been had once, by definition.
-        returnCount: keep && spec.returnCountable ? 1 : 0,
-      })
+      .set({ state, resolvedAt: new Date() })
       .where(eq(entries.id, entryId))
       .returning()
 
@@ -213,33 +212,15 @@ export async function resolveEntry(
   })
 }
 
-/**
- * *Seen it again*, and the equivalent per kind. Manual, one tap, no check-ins,
- * no location (§8). The label lives in `lib/vocabulary.ts`; this is the write.
- *
- * No overlap run: the state has not changed, only the count, and §6 fires on
- * insert and state change. Re-notifying everyone each time you rewatch
- * something would be exactly the noise the notification budget forbids.
- */
-export async function incrementReturn(
-  sessionUser: SessionUser,
-  entryId: string,
-): Promise<Result<Entry>> {
-  const [updated] = await db
-    .update(entries)
-    .set({ returnCount: sql`${entries.returnCount} + 1` })
-    .where(
-      and(
-        eq(entries.id, entryId),
-        eq(entries.userId, sessionUser.id),
-        eq(entries.state, 'go_back_to'),
-      ),
-    )
-    .returning()
+/*
+  `incrementReturn` was here. It was the only writer of `return_count`, and both
+  it and the count were removed on 8 August — see docs/decisions.md.
 
-  if (!updated) return err('not_found', 'No such go-back-to.')
-  return ok(updated)
-}
+  The column survives, unread and unwritten, holding whatever it held. §5 says
+  nothing is ever deleted, and while that rule is about entries rather than
+  columns, dropping it would destroy the only counts anyone has recorded for the
+  sake of tidiness. It costs nothing to leave.
+*/
 
 /**
  * The one exception to "nothing is ever deleted" (§5.1): a 10-second undo on
@@ -298,7 +279,6 @@ async function fireOverlap(
       state: entry.state,
       source: entry.source,
       sourceUserId: entry.sourceUserId,
-      returnCount: entry.returnCount,
     },
     item,
   )
