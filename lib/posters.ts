@@ -12,19 +12,26 @@ const CDN = 'https://image.tmdb.org/t/p'
  * `w92` is the default because §11 allows small poster thumbnails and nothing
  * more, and 92px covers the 32px square at 2x.
  *
- * `w780` is the tap-to-expand view. It was `w500` for about ten minutes and
- * looked soft, because 500 was chosen against the file size rather than against
- * the size it renders at: the expanded poster fills ~350 CSS px on a phone, and
- * a 3x screen wants ~1050 real pixels for that. 500 was being stretched to
- * double. A retina laptop asked for ~934 and got the same 500.
+ * `original` is the tap-to-expand view. It went `w500` → `w780` → here, and the
+ * first two were soft for the same reason: the size was picked against the
+ * download rather than against the size it renders at. The expanded poster fills
+ * ~350 CSS px on a phone, and a 3x screen wants ~1050 real pixels for that.
  *
- * `w780` is TMDB's largest fixed poster width, so `original` is the only step
- * up — and that is the full production file, often several megabytes, which is a
- * lot to glance at something on mobile data. Still their CDN, still no proxy.
+ * **Full resolution costs this project nothing**, which is what settled it:
+ *
+ * - **No database growth.** Postgres stores `poster_path`, a ~32-character
+ *   string in `items.metadata`. No image byte has ever been in the database.
+ * - **No egress of ours.** The browser fetches from TMDB's CDN directly. That is
+ *   §3's no-proxy rule, held up by `images.unoptimized` in next.config.ts —
+ *   without it `next/image` would route every poster through `/_next/image` and
+ *   the bandwidth would become the app's.
+ *
+ * The cost falls on whoever taps it: measured originals run 0.8–1.5MB. That is
+ * a real amount on mobile data, and it is spent only on a deliberate tap.
  */
 export function posterUrl(
   posterPath: string | null,
-  size: 'w92' | 'w154' | 'w780' = 'w92',
+  size: 'w92' | 'w154' | 'original' = 'w92',
 ) {
   if (!posterPath) return null
   return `${CDN}/${size}${posterPath}`
