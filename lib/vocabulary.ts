@@ -28,7 +28,15 @@ export type IntentSpec = {
   landsIn: Extract<EntryState, 'go_back_to' | 'fixture'>
   /** Experiences count returns; objects do not. */
   returnCountable: boolean
-  /** The increment action, for things that have one. */
+  /**
+   * The increment action, for things that have one.
+   *
+   * Mirrors `resolveAction` rather than inventing a phrase: you tap *Seen it* the
+   * first time and *Seen it again* every time after, so the second action teaches
+   * itself from the first. The old wording, "Been back again", was the same
+   * sentence for a film, a book and a place, and read as a stock phrase rather
+   * than a description of what you had done.
+   */
   returnAgainLabel?: string
   /**
    * Names the return count in words: "Seen 3 times". Paired with
@@ -56,7 +64,7 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       question: 'Go back?',
       landsIn: 'go_back_to',
       returnCountable: true,
-      returnAgainLabel: 'Been back again',
+      returnAgainLabel: 'Seen it again',
       countLabel: 'Seen',
     },
     own: {
@@ -74,7 +82,7 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       question: 'Go back?',
       landsIn: 'go_back_to',
       returnCountable: true,
-      returnAgainLabel: 'Been back again',
+      returnAgainLabel: 'Read it again',
       countLabel: 'Read',
     },
     own: {
@@ -92,7 +100,7 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       question: 'Go back?',
       landsIn: 'go_back_to',
       returnCountable: true,
-      returnAgainLabel: 'Been back again',
+      returnAgainLabel: 'Been again',
       countLabel: 'Been',
     },
   },

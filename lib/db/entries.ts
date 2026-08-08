@@ -214,7 +214,8 @@ export async function resolveEntry(
 }
 
 /**
- * *Been back again.* Manual, one tap, no check-ins, no location (§8).
+ * *Seen it again*, and the equivalent per kind. Manual, one tap, no check-ins,
+ * no location (§8). The label lives in `lib/vocabulary.ts`; this is the write.
  *
  * No overlap run: the state has not changed, only the count, and §6 fires on
  * insert and state change. Re-notifying everyone each time you rewatch
