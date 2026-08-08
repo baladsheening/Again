@@ -102,27 +102,33 @@ export function Poster({
     }
 
     /*
-      What "full size" means, computed rather than picked.
+      What "full size" means.
 
-      The larger of two things: the scale that fills the screen edge to edge, and
-      the scale at which one source pixel lands on one device pixel. The first
-      removes the letterboxing you can see; the second is the point past which
-      the poster is being enlarged rather than revealed, and beyond it a zoom
-      only makes the image softer — which was the whole complaint about w500.
+      **3× at minimum**, because the first attempt at this was too clever. It
+      took the larger of the scale that fills the screen and the scale at which
+      one source pixel lands on one device pixel, on the reasoning that anything
+      beyond the latter enlarges the poster rather than revealing it. Both
+      numbers are small on a phone: a 2:3 poster already fills a 390px screen
+      edge to edge, so "fill" is 1.44×, and a 2000px source at 3× DPR is 1.71×.
+      The gesture was correct and did almost nothing.
 
-      Capped at 3 so a very large source cannot zoom absurdly, floored at 1.4 so
-      the gesture always does something visible.
+      So the ceiling goes. Past roughly 1.7× the image is being upscaled and the
+      top of the zoom is a little soft — that is the deliberate trade for a zoom
+      you can actually feel, and it is what every photo viewer does.
+
+      It still rises above 3 for a source that can carry it, and it can never be
+      less than the scale that fills the screen.
     */
     function fullScale() {
       const image = imageRef.current
-      if (!image || !stage) return 2
+      if (!image || !stage) return 3
       const cover = Math.max(
         stage.clientWidth / image.offsetWidth,
         stage.clientHeight / image.offsetHeight,
       )
       const oneToOne =
         image.naturalWidth / (image.offsetWidth * (window.devicePixelRatio || 1))
-      return clamp(Math.max(cover, oneToOne), 1.4, 3)
+      return clamp(Math.max(cover, oneToOne, 3), 3, 4)
     }
 
     function settle() {
