@@ -10,11 +10,14 @@ import { posterUrl } from '@/lib/posters'
  * §11 allows small poster thumbnails and no other imagery, so this is the only
  * picture in the product.
  *
- * **32×48, down from 46×69.** At the larger size it was taller than the text
- * beside it and the eye went to the artwork first, which inverts §11 — type is
- * the design, and the poster is there to help you recognise a title you already
- * know, not to sell it to you. The 2:3 ratio is fixed by the source material;
- * `w92` still covers 32px at 2x, so nothing changes about what is fetched.
+ * **24×36, down from 46×69 in two steps.** At the original size the poster was
+ * taller than the text beside it and the eye went to the artwork first, which
+ * inverts §11 — type is the design, and the poster is there to help you
+ * recognise a title you already know, not to sell it to you. At 24 it is a
+ * colour cue rather than a picture, which is the job.
+ *
+ * The 2:3 ratio is fixed by the source material. `w92` is TMDB's smallest poster
+ * and covers this comfortably, so nothing changes about what is fetched.
  */
 export function Poster({ posterPath }: { posterPath: string | null }) {
   const src = posterUrl(posterPath)
@@ -23,7 +26,7 @@ export function Poster({ posterPath }: { posterPath: string | null }) {
     return (
       <div
         aria-hidden
-        className="bg-surface border-rule h-12 w-8 shrink-0 rounded-sm border"
+        className="bg-surface border-rule h-9 w-6 shrink-0 rounded-sm border"
       />
     )
   }
@@ -32,9 +35,9 @@ export function Poster({ posterPath }: { posterPath: string | null }) {
     <Image
       src={src}
       alt=""
-      width={32}
-      height={48}
-      className="bg-surface h-12 w-8 shrink-0 rounded-sm object-cover"
+      width={24}
+      height={36}
+      className="bg-surface h-9 w-6 shrink-0 rounded-sm object-cover"
       // Decorative: the title next to it is the accessible name.
       aria-hidden
     />
