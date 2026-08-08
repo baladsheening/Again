@@ -9,8 +9,15 @@
 const CDN = 'https://image.tmdb.org/t/p'
 
 /**
- * `w92` is the default because §11 allows small poster thumbnails and nothing
- * more, and 92px covers the 32px square at 2x.
+ * `w154` is the thumbnail. It was `w92` until 8 August, on the arithmetic that
+ * 92 covers a 32px square at 2x — which is true, and phones are not 2x. An
+ * iPhone 12 is 3x, so the square wants 96 real pixels, and `object-cover`
+ * cropping a 92×138 source to a square scales it *up* by 4% to get there. The
+ * thumbnail was being enlarged, which is why it looked soft on the one screen
+ * that matters most.
+ *
+ * `w154` gives 154×231, a downscale rather than an upscale, with headroom for
+ * whatever pixel ratio comes next.
  *
  * `original` is the tap-to-expand view. It went `w500` → `w780` → here, and the
  * first two were soft for the same reason: the size was picked against the
@@ -31,7 +38,7 @@ const CDN = 'https://image.tmdb.org/t/p'
  */
 export function posterUrl(
   posterPath: string | null,
-  size: 'w92' | 'w154' | 'original' = 'w92',
+  size: 'w92' | 'w154' | 'original' = 'w154',
 ) {
   if (!posterPath) return null
   return `${CDN}/${size}${posterPath}`

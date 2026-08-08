@@ -107,7 +107,7 @@ export function Poster({
           alt={`Poster for ${title}`}
           width={2000}
           height={3000}
-          className="h-auto max-h-[85dvh] w-auto rounded-md object-contain"
+          className="h-auto max-h-[85dvh] w-auto max-w-full rounded-md object-contain"
         />
       </dialog>
     </>
