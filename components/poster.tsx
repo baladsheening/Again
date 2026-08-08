@@ -100,7 +100,16 @@ export function Poster({
         // Anywhere closes it. There is nothing to do here but look and leave, so
         // hunting for a close button would be the only difficult part.
         onClick={() => dialogRef.current?.close()}
-        className="bg-transparent backdrop:bg-bg/90 m-auto max-h-[85dvh] max-w-[90vw] p-0"
+        /*
+          Opaque, not the 90% it was. At 90% the page showed faintly through and
+          the poster sat against a slightly lit grey, which softened its edges —
+          the thing you open this to avoid.
+
+          `bg-bg` rather than pure `#000`: §11's matte black is `--color-bg`, and
+          the two are indistinguishable behind an image. A second black would be
+          a palette token added for no visible gain.
+        */
+        className="bg-transparent backdrop:bg-bg m-auto max-h-[85dvh] max-w-[90vw] p-0"
       >
         <Image
           src={large}
