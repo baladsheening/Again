@@ -53,6 +53,8 @@ a phone, since it is the only fix that cannot be checked from a desk.
 
 - [ ] **Groups, and names instead of handles.** Recorded, not built by choice.
       The identity half lands in Phase 2. → *Carry-forward register*
+- [ ] **The desktop view is a phone in a void**, and it is the only view most
+      people will see first. → *The desktop view*
 
 ### Decided, still to build
 
@@ -413,6 +415,45 @@ Where it is offered — inside the resolve question, or on the row afterwards �
 not decided and is small.
 
 ---
+
+## The desktop view
+
+Noted 8 August, after a day of judging the app on a phone: **in a browser it
+looks considerably worse than it does on the handset** — sparse and cramped at
+the same time, which sounds contradictory and is not.
+
+| | content | on a 1440px window |
+|---|---|---|
+| auth pages, `max-w-sm` | 384px | 27% used, **1056px empty** |
+| app pages, `max-w-xl` | 576px | 40% used, **864px empty** |
+
+**Sparse** is the void: a 384px column is literally phone width, so a laptop
+shows a phone-shaped strip floating in black.
+
+**Cramped** is everything inside that strip, because it is all sized for a hand
+at arm's length rather than a screen at desk distance — 15px body, 32px
+thumbnails, `control-box` at 38px on a fine pointer against 48px on touch, `·`
+separators and 12px metadata that read fine at 30cm and look mean at 60cm.
+
+Neither is a bug. Both are the direct result of building mobile-first and
+verifying on a phone, which was the right order. But the desktop view is what a
+browser shows by default, so it is the first impression for anyone who is sent a
+link — and every visual judgement recorded in this project so far was made
+either on `/sign-in` in a browser or on the phone, never on the signed-in app in
+a browser.
+
+**The decision to make first is whether desktop is a target at all.** §12 ends at
+a PWA installed to the home screen, and §13's seeding is a dozen friends texting
+each other a link — that is a phone product, and "it looks thin on a laptop" may
+be an acceptable answer. Deciding that deliberately is different from arriving at
+it, and it is cheap to decide now.
+
+**If it is a target**, the fixes are ordinary and none of them are urgent: let the
+measure grow at a large breakpoint rather than pinning 576px; step the type up
+one notch above `md`; give the thumbnails a larger desktop size; and reconsider
+`control-box` on fine pointers, which is compact because a mouse is precise, not
+because 38px looks good. The auth pages need none of this — a narrow sign-in form
+is correct at any width.
 
 ## Read this before judging the visuals again
 
