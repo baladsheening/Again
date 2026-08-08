@@ -68,14 +68,24 @@ export function EntryRow({
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           {/*
-            Year on the title's line. `items-baseline` so the two sit on one
-            baseline despite the size difference, and `shrink-0` on the year so a
-            long title truncates into the ellipsis rather than squeezing the one
-            piece of information that is always short.
+            One flowing line: the title in full, then a middle dot, then the
+            year. It wraps rather than truncating.
+
+            The title used to be `truncate`, which cut long ones off with an
+            ellipsis — and an ellipsis here promises nothing, because there is no
+            tap to expand and no tooltip. It was simply hiding the name of the
+            film on the rows most likely to need reading.
+
+            `·` (U+00B7) rather than a full stop: it sits on the middle of the
+            line where a separator belongs, instead of on the baseline where it
+            reads as the end of a sentence.
           */}
-          <p className="flex min-w-0 items-baseline gap-2 leading-snug">
-            <span className="truncate">{card.title}</span>
-            <span className="text-muted shrink-0 text-xs">{card.year ?? '—'}</span>
+          <p className="leading-snug">
+            {card.title}
+            <span className="text-muted">
+              <span className="mx-1.5 opacity-40">·</span>
+              {card.year ?? '—'}
+            </span>
           </p>
 
           {/*
