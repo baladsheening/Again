@@ -6,17 +6,36 @@ import {
   incrementReturnAction,
   resolveEntryAction,
 } from '@/app/actions/entries'
+// Type-only, so it is erased at compile time and `server-only` never reaches
+// the client bundle. @/lib/db is the sanctioned entry point (eslint bans the
+// client and schema modules, not this).
+import type { OwnerView } from '@/lib/db'
 import type { EntryCard } from '@/lib/domain'
 import { specFor } from '@/lib/vocabulary'
+import { TickIcon } from './icon-tick'
 import { Poster } from './poster'
 import { ReturnCount } from './return-count'
 
 /**
  * One row of the live list, plus the resolve flow (§8): a single tap to
  * resolve, then a single question. No check-ins, no location, no rating.
+ *
+ * `view` is which collection the row is being shown in, and three things depend
+ * on it. The row cannot infer it from `card.state`, because a go-back-to appears
+ * in two places — the live list, where it needs distinguishing from an unwatched
+ * want, and its own tab, where everything around it is the same thing.
  */
-export function EntryRow({ card, pending = false }: { card: EntryCard; pending?: boolean }) {
+export function EntryRow({
+  card,
+  pending = false,
+  view = 'live',
+}: {
+  card: EntryCard
+  pending?: boolean
+  view?: OwnerView
+}) {
   const spec = specFor(card.kind, card.intent)
+  const satisfied = card.state === 'go_back_to'
   const [asking, setAsking] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -49,10 +68,21 @@ export function EntryRow({ card, pending = false }: { card: EntryCard; pending?:
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="truncate leading-snug">{card.title}</p>
+          {/*
+            The want label states an intention, so it goes when the intention is
+            met. It used to render on every state: "Want to see" sat under a
+            go-back-to beside its return count, and under an archived film nobody
+            wants any more. The separator goes with it rather than leaving a
+            dangling slash.
+          */}
           <p className="text-muted text-xs">
             {card.year ?? '—'}
-            <span className="mx-1.5 opacity-40">/</span>
-            {spec.wantLabel}
+            {card.state === 'want' && (
+              <>
+                <span className="mx-1.5 opacity-40">/</span>
+                {spec.wantLabel}
+              </>
+            )}
           </p>
 
           {card.state === 'want' && !asking && (
@@ -92,7 +122,7 @@ export function EntryRow({ card, pending = false }: { card: EntryCard; pending?:
             </div>
           )}
 
-          {card.state === 'go_back_to' && spec.returnAgainLabel && (
+          {satisfied && spec.returnAgainLabel && (
             <button
               type="button"
               onClick={beenBack}
@@ -106,7 +136,21 @@ export function EntryRow({ card, pending = false }: { card: EntryCard; pending?:
           {error && <p className="text-muted mt-1 text-xs">{error}</p>}
         </div>
 
-        {card.state === 'go_back_to' && <ReturnCount count={card.returnCount} />}
+        {/*
+          The count belongs to its own collection, where a column of numerals
+          sorted by size explains itself. The tick does the work in the live
+          list, where the question is only "have I watched this or not".
+        */}
+        {view === 'go_back_tos' && satisfied && (
+          <ReturnCount count={card.returnCount} label={spec.countLabel} />
+        )}
+
+        {view === 'live' && satisfied && (
+          <span className="text-muted flex shrink-0 items-center">
+            <TickIcon />
+            <span className="sr-only">{spec.countLabel ?? 'Resolved'}</span>
+          </span>
+        )}
       </div>
     </li>
   )

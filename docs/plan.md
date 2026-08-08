@@ -37,34 +37,28 @@ that is fast to build.
 
 ### Before anyone else can use it
 
-Upstash and Resend both exist now and are verified against the real services —
-see steps 2 and 2b. Their credentials live in `.env.local` and **still have to be
-entered into Vercel**, which is part of step 3 rather than a separate item.
+Upstash, Resend and the deploy are all done and verified (steps 2, 2b, 3). The
+app is live at `https://again-msaef.vercel.app`.
 
-- [ ] **Deploy to Vercel.** Import the repo, set env, redeploy with the real
-      `BETTER_AUTH_URL`. Nothing has ever been deployed. → *step 3*
-- [ ] **Run it on a phone.** Nothing has ever run on hardware. → *step 4*
+- [ ] **Finish the phone pass.** Four of five checks clear; the fifth found the
+      landscape bug below, now fixed and unverified on the device that found it.
+      → *step 4*
 
 ### Found by looking at it — 8 August
 
-The first human pass over the signed-in app, and it produced three things in ten
-minutes. That is the argument for having done it.
+The first human pass over the signed-in app produced three findings in ten
+minutes, and the first pass on hardware produced a fourth. **All four are built**
+— see *Built on 8 August* below. What remains is confirming the landscape one on
+a phone, since it is the only fix that cannot be checked from a desk.
 
-- [ ] **The return count leaves the live list**, and its tooltip is wrong where
-      it stays. → *Decided, not yet built*
-- [ ] **A satisfied want is ticked and sinks below the unsatisfied ones.** →
-      *Decided, not yet built*
-- [ ] **The wrong-password message is styled as an aside.** →
-      *Decided, not yet built*
-- [ ] **Groups, and names instead of handles.** New, and the identity half lands
-      in Phase 2. → *Carry-forward register*
+- [ ] **Groups, and names instead of handles.** Recorded, not built by choice.
+      The identity half lands in Phase 2. → *Carry-forward register*
 
-### Decided on 8 August, not yet built
+### Decided, still to build
 
-- [ ] **A resolved entry stops reading "Want to see".** →
-      *Decided, not yet built*
-- [ ] **A private one-line note on your own entry.** →
-      *Decided, not yet built*
+- [ ] **A private one-line note on your own entry.** The only one of the
+      8 August decisions not yet built — it needs a column and a migration
+      rather than an edit. → *Built on 8 August*
 
 ### The product
 
@@ -247,8 +241,30 @@ deliberate action rather than a look. In likelihood order:
       rule exists for this and has never been exercised.
 - [ ] **Yes/No with a thumb**, on the resolve question. The one mistap in the app
       that cannot be undone after ten seconds.
-- [ ] **Landscape with the keyboard up** — is the top of the form still
-      reachable?
+- [x] **Landscape with the keyboard up.** `/sign-in` fine. **The signed-in
+      capture screen is not** — see below.
+- [ ] **Fix the capture dropdown in landscape.** Found on hardware, 8 August:
+      rotated and signed in, only the capture box is visible, and the search
+      results have to be dragged into the third of the screen the keyboard does
+      not cover.
+
+      Three causes, compounding. The dropdown at `components/capture.tsx:183` is
+      `absolute`, so it is out of flow and adds nothing to the page's scroll
+      height — there is almost nothing to scroll. It carries no `max-height` and
+      `overflow-hidden` rather than scroll, so it cannot scroll internally
+      either. And iOS Safari shrinks only the *visual* viewport when the keyboard
+      opens, never the layout viewport, so the page lays results out below the
+      input in good faith and the keyboard covers them.
+
+      Not the old intent-sheet class of bug: nothing is unreachable and nothing
+      swallows taps. It is unusable rather than broken.
+
+      Fixes, cheapest first: `max-h` plus `overflow-y-auto` on the dropdown;
+      `scrollIntoView` on focus so the capture box rises to the top of the
+      visible strip; and `interactiveWidget: 'resizes-content'` on the `viewport`
+      export at `app/layout.tsx:43`, which is the actual fix — it shrinks the
+      layout viewport so ordinary scrolling works. **Safari support for that last
+      one is unverified**; the first two stand regardless.
 - [ ] **Notch and home indicator**, both orientations.
 - [ ] **The `/me` tabs at narrow width** — wrap, or fall off the edge?
 
@@ -268,11 +284,19 @@ Where the value is.
 
 ---
 
-## Decided, not yet built
+## Built on 8 August
 
-Two calls made in conversation on **8 August 2026**. Neither is in the brief, so
-both are written up in `docs/decisions.md` — the reasoning is there, the work is
-here. They are small, and they are not blocked by the deploy.
+Calls made in conversation on **8 August 2026** — none of them in the brief, so
+the reasoning for each is in `docs/decisions.md` and the work is described here.
+
+**Five of the six are built and shipped.** Typecheck, lint and a production build
+pass; the live-list ordering was proved against Postgres with both real and
+synthetic rows. The private note is the exception — it needs a column and a
+migration rather than an edit, and is listed above as still to build.
+
+⚠ **The landscape fix is unverified on hardware.** It was found on a phone and
+cannot be confirmed anywhere else. `interactiveWidget` support in Safari is
+unknown; the other two parts of that fix stand regardless.
 
 ### A resolved entry stops reading "Want to see"
 
@@ -393,8 +417,12 @@ not decided and is small.
 
 **Resolved on 8 August 2026** — an account exists and the signed-in app has been
 seen. Kept because the section explains where the visual work up to that point
-came from, and because it took ten minutes of real use to produce three findings
-that months of reasoning had not.
+came from, and because ten minutes of real use produced three findings that two
+sessions of careful reasoning had not.
+
+This project is thirty hours old — the initial commit is `68bf1a0`, 7 August at
+10:25. That is the point rather than a mitigation: the gap between reasoning
+about a screen and looking at one opens immediately, not eventually.
 
 What it said, and why it was right:
 

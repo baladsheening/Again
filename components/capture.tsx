@@ -166,6 +166,22 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
               setResults([])
             }
           }}
+          /*
+            Lift the box to the top of what is visible when a keyboard is about
+            to take the bottom of the screen, so the results below it land in
+            the space that remains.
+
+            Touch only. On a pointer device there is no keyboard eating the
+            viewport, and yanking the page on focus would be jarring for no
+            reason. The delay lets the keyboard finish animating in — measuring
+            before it settles scrolls to the wrong place.
+          */
+          onFocus={() => {
+            if (!window.matchMedia('(pointer: coarse)').matches) return
+            setTimeout(() => {
+              inputRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+            }, 300)
+          }}
           autoComplete="off"
           spellCheck={false}
           // The placeholder does the teaching on a brand new account (§8).
@@ -180,7 +196,20 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
           <ul
             role="listbox"
             aria-label="Search results"
-            className="bg-surface border-rule absolute z-10 mt-1.5 w-full overflow-hidden rounded-md border"
+            /*
+              `max-h` and a scroll of its own, rather than `overflow-hidden`.
+
+              Found in landscape on a phone: the dropdown is absolutely
+              positioned, so it adds nothing to the page's scroll height, and it
+              had no height cap, so it rendered as tall as its contents into the
+              two thirds of the screen the keyboard was covering. Nothing was
+              broken and nothing was reachable either.
+
+              `dvh` rather than `vh` so the cap follows the viewport the browser
+              actually has, and `overscroll-contain` so reaching the end of the
+              list does not start scrolling the page behind it.
+            */
+            className="bg-surface border-rule absolute z-10 mt-1.5 max-h-[50dvh] w-full overflow-y-auto overscroll-contain rounded-md border"
           >
             {visibleResults.map((film) => (
               <li key={film.externalId} role="option" aria-selected={false}>

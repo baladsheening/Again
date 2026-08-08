@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 
 import { db } from './client'
 import { entries, items, profiles, type Entry, type Item } from './schema'
@@ -59,6 +59,24 @@ function orderFor(view: OwnerView) {
   if (view === 'go_back_tos') {
     return [desc(entries.returnCount), desc(entries.resolvedAt)]
   }
+
+  /*
+    The live view mixes `want` with `go_back_to` (§5.2 — a go-back-to is still a
+    want). Satisfied ones sink below everything still unwatched, so the top of
+    the list is what you have not seen yet, which is what the list is for.
+
+    Written as an explicit CASE rather than ordering on the enum: 'go_back_to'
+    happens to sort before 'want' alphabetically, so `desc(entries.state)` would
+    produce the right answer today by accident and the wrong one the moment a
+    state is renamed or added.
+  */
+  if (view === 'live') {
+    return [
+      asc(sql`case when ${entries.state} = 'want' then 0 else 1 end`),
+      desc(entries.createdAt),
+    ]
+  }
+
   return [desc(entries.createdAt)]
 }
 

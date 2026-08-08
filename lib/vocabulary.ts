@@ -30,6 +30,14 @@ export type IntentSpec = {
   returnCountable: boolean
   /** The increment action, for things that have one. */
   returnAgainLabel?: string
+  /**
+   * Names the return count in words: "Seen 3 times". Paired with
+   * `returnCountable`, and the reason the count is not labelled in the component
+   * — §4 says the wording is derived from kind + intent here, never written into
+   * a component, or "seen" would be hardcoded on a table that also holds books
+   * and places.
+   */
+  countLabel?: string
 }
 
 /**
@@ -49,6 +57,7 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       landsIn: 'go_back_to',
       returnCountable: true,
       returnAgainLabel: 'Been back again',
+      countLabel: 'Seen',
     },
     own: {
       wantLabel: 'Want a copy',
@@ -66,6 +75,7 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       landsIn: 'go_back_to',
       returnCountable: true,
       returnAgainLabel: 'Been back again',
+      countLabel: 'Read',
     },
     own: {
       wantLabel: 'Want a copy',
@@ -83,6 +93,7 @@ export const VOCABULARY: Record<Kind, Partial<Record<Intent, IntentSpec>>> = {
       landsIn: 'go_back_to',
       returnCountable: true,
       returnAgainLabel: 'Been back again',
+      countLabel: 'Been',
     },
   },
   object: {

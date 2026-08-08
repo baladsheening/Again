@@ -67,7 +67,7 @@ export default async function MePage({ searchParams }: PageProps<'/me'>) {
       {entries.length > 0 ? (
         <ul className="flex flex-col">
           {entries.map((row) => (
-            <EntryRow key={row.entry.id} card={toEntryCard(row)} />
+            <EntryRow key={row.entry.id} card={toEntryCard(row)} view={view} />
           ))}
         </ul>
       ) : (

@@ -131,7 +131,18 @@ export function SignInForm() {
               : 'Sign in'}
       </button>
 
-      {message && <p className="text-muted text-sm">{message}</p>}
+      {/*
+        Not `text-muted`. This is the only failure message in the product, and
+        setting it in the colour reserved for de-emphasised metadata made a
+        refused password read as an aside — reported by someone who typed the
+        wrong one on purpose and nearly missed the response. Full-strength text
+        rather than a new colour token: §11 keeps the palette small, amber is
+        spoken for, and the message being grey was the whole problem.
+
+        Carries both outcomes, so it cannot be coloured by meaning without first
+        being split by meaning — the reset path sets a neutral notice here too.
+      */}
+      {message && <p className="text-sm">{message}</p>}
 
       {/*
         `mt-4` on top of the form's gap-3 makes 28px, which is `gap-7` — the same

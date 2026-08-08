@@ -46,6 +46,21 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  /*
+    Shrink the layout viewport when the software keyboard opens, instead of
+    letting it sit over the page.
+
+    Without this a browser resizes only the *visual* viewport: the page still
+    believes it has the full height, lays content out underneath the keyboard in
+    good faith, and ordinary scrolling cannot reach it. That is what made the
+    capture dropdown unusable in landscape.
+
+    ⚠ Support is uneven — Chrome has had it for a while, Safari is unconfirmed
+    here. The `max-h` on the dropdown and the scroll-into-view on focus are the
+    fixes that stand without it; this one upgrades the behaviour where it lands
+    and changes nothing where it does not.
+  */
+  interactiveWidget: 'resizes-content',
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
