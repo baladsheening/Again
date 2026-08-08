@@ -27,7 +27,7 @@ export function Nav({ handle }: { handle: string }) {
         className="gutter mx-auto flex w-full max-w-xl items-center gap-4 py-3 sm:gap-5"
       >
         {/* -mt-px: optical alignment against the tabs beside it. */}
-        <Link href="/" className="wordmark -mt-px shrink-0 text-[1.3125rem]">
+        <Link href="/" className="wordmark -mt-px shrink-0 text-wordmark-nav">
           Again
         </Link>
 

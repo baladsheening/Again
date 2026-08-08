@@ -27,7 +27,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
       {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
       <div className="my-auto flex w-full flex-col gap-7">
         <div className="flex flex-col gap-4 text-start">
-          <h1 className="wordmark text-[2.25rem]">Again</h1>
+          <h1 className="wordmark text-wordmark">Again</h1>
           {/* Same tier as the sign-in tagline — this block has to read the same
               way on both pages, and an expired link is not a footnote. */}
           <p className="text-muted text-sm">

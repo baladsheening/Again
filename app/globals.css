@@ -23,8 +23,19 @@
   --color-surface: #16161a;
   /* slightly warm off-white; cuts halation on long text */
   --color-text: #e8e8e6;
-  /* secondary, timestamps */
-  --color-muted: #8a8a85;
+  /*
+    Secondary text and timestamps: `--color-text` faded, not a colour of its own.
+
+    It was `#8a8a85`, which turned out to be `--color-text` at 0.589 to within
+    3/255 — the same colour, spelled as an independent value that could drift
+    from it. Written as a fade it cannot.
+
+    The behaviour changes too, and for the better: a fixed hex stays the shade it
+    was mixed against black, so on `--color-surface` it sits too dark for its
+    ground. A fade composites over whatever is behind it and holds the same
+    relationship everywhere.
+  */
+  --color-muted: color-mix(in srgb, var(--color-text) 60%, transparent);
   /* hairlines */
   --color-rule: #26262b;
   /**
@@ -37,10 +48,27 @@
   --color-accent: #e0a458;
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  /* counts are data, and the one number in the product that can't be inflated */
+  /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   /* the wordmark and nothing else — see the `wordmark` utility below */
   --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
+
+  /*
+    The three sizes that were arbitrary values.
+
+    Everything else in the app is `text-sm` or `text-xs` — 32 of 38 usages —
+    which needs no naming. These three were `text-[2.25rem]`,
+    `text-[1.3125rem]` and `text-[13px]`: settled by eye over several passes
+    (docs/decisions.md), then left in bracket syntax where the reasoning does not
+    reach them. A number nobody can name is a number the next person re-litigates.
+  */
+
+  /* the wordmark on /sign-in and /reset-password, where it is the page */
+  --text-wordmark: 2.25rem;
+  /* the same wordmark in the nav, where it is a label */
+  --text-wordmark-nav: 1.3125rem;
+  /* rows in the search dropdown, matching the field they drop from */
+  --text-compact: 13px;
 }
 
 @layer base {

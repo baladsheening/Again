@@ -66,7 +66,7 @@ export default async function SignInPage() {
           uses a physical direction, so this stays correct under `dir="rtl"`.
         */}
         <div className="flex flex-col gap-4 text-start">
-          <h1 className="wordmark text-[2.25rem]">Again</h1>
+          <h1 className="wordmark text-wordmark">Again</h1>
           {/*
             Holding this on one line is what set the stacked container to
             `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the
