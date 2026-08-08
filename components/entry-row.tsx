@@ -62,36 +62,64 @@ export function EntryRow({
   */
   return (
     <li className={`flex flex-col py-3 ${busy ? 'opacity-50' : ''}`}>
-      <div className="flex items-start gap-3">
+      {/*
+        The thumbnail is centred on the title line, not on the row.
+
+        `items-center` on the whole row would only be right for a resolved entry,
+        where the title is all there is. A want carries a label and a button
+        underneath, and centring against that taller block floats the thumbnail
+        down beside "Want to see" — related to the wrong thing. So the title line
+        is its own flex row, and everything else stacks below it.
+      */}
+      <div className="flex items-center gap-3">
         <Poster posterPath={card.posterPath} />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          {/*
-            One flowing line: the title in full, then a middle dot, then the
-            year. It wraps rather than truncating.
+        {/*
+          One flowing line: the title in full, then a middle dot, then the year.
+          It wraps rather than truncating.
 
-            The title used to be `truncate`, which cut long ones off with an
-            ellipsis — and an ellipsis here promises nothing, because there is no
-            tap to expand and no tooltip. It was simply hiding the name of the
-            film on the rows most likely to need reading.
+          The title used to be `truncate`, which cut long ones off with an
+          ellipsis — and an ellipsis here promises nothing, because there is no
+          tap to expand and no tooltip. It was simply hiding the name of the film
+          on the rows most likely to need reading.
 
-            `·` (U+00B7) rather than a full stop: it sits on the middle of the
-            line where a separator belongs, instead of on the baseline where it
-            reads as the end of a sentence.
-          */}
-          <p className="leading-snug">
-            {card.title}
-            <span className="text-muted">
-              <span className="mx-1.5 opacity-40">·</span>
-              {card.year ?? '—'}
-            </span>
-          </p>
+          `·` (U+00B7) rather than a full stop: it sits on the middle of the line
+          where a separator belongs, instead of on the baseline where it reads as
+          the end of a sentence.
+        */}
+        <p className="min-w-0 flex-1 leading-snug">
+          {card.title}
+          <span className="text-muted">
+            <span className="mx-1.5 opacity-40">·</span>
+            {card.year ?? '—'}
+          </span>
+        </p>
 
+        {/*
+          The tick marks a want that has been satisfied, in the live list where
+          it sits among wants that have not been. On the go-back-tos tab there is
+          nothing to distinguish — everything there is the same thing.
+        */}
+        {view === 'live' && satisfied && (
+          <span className="text-muted flex shrink-0 items-center">
+            <TickIcon />
+            <span className="sr-only">{spec.resolveAction}</span>
+          </span>
+        )}
+      </div>
+
+      {/*
+        Everything below the title, indented to line up under it: 32px of
+        thumbnail plus the 12px gap. Nothing renders here for a resolved entry,
+        so those rows are a single line.
+      */}
+      {(card.state === 'want' || error) && (
+        <div className="pl-11">
           {/*
             The want label states an intention, so it goes when the intention is
             met. It used to render on every state: "Want to see" sat under a
             go-back-to beside its return count, and under an archived film nobody
-            wants any more. A resolved row now has no second line at all.
+            wants any more.
           */}
           {card.state === 'want' && (
             <p className="text-muted text-xs">{spec.wantLabel}</p>
@@ -136,19 +164,7 @@ export function EntryRow({
 
           {error && <p className="text-muted mt-1 text-xs">{error}</p>}
         </div>
-
-        {/*
-          The tick marks a want that has been satisfied, in the live list where
-          it sits among wants that have not been. On the go-back-tos tab there is
-          nothing to distinguish — everything there is the same thing.
-        */}
-        {view === 'live' && satisfied && (
-          <span className="text-muted flex shrink-0 items-center">
-            <TickIcon />
-            <span className="sr-only">{spec.resolveAction}</span>
-          </span>
-        )}
-      </div>
+      )}
     </li>
   )
 }
