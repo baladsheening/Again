@@ -51,10 +51,17 @@ export function EntryRow({
   }
 
 
+  /*
+    No rule between rows. A border under every item drew a horizontal line every
+    three lines of text and turned a short list into a table — and the rows were
+    never ambiguous: a poster starts each one, and the space does the separating.
+    §11 asks for type to be the design, and a divider is not type.
+
+    `py-3` stays, so the gap between rows is unchanged at 24px; the only thing
+    removed is the line drawn through it.
+  */
   return (
-    <li
-      className={`border-rule flex flex-col border-b py-3 ${busy ? 'opacity-50' : ''}`}
-    >
+    <li className={`flex flex-col py-3 ${busy ? 'opacity-50' : ''}`}>
       <div className="flex items-start gap-3">
         <Poster posterPath={card.posterPath} />
 
