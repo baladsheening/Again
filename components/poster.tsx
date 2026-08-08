@@ -29,8 +29,8 @@ import { posterUrl } from '@/lib/posters'
  * face or the key image, which is the only thing that makes a thumbnail this
  * small worth having.
  *
- * `w92` is TMDB's smallest poster and still covers 32px at 2x, so nothing
- * changes about what is fetched for the thumbnail.
+ * The thumbnail fetches `w154` and the expanded view `original`. Sizes and the
+ * arithmetic behind them are in `lib/posters.ts`.
  */
 export function Poster({
   posterPath,
@@ -44,6 +44,37 @@ export function Poster({
 }) {
   const src = posterUrl(posterPath)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const previousThemeColor = useRef<string | null>(null)
+
+  /*
+    iOS tints the status-bar strip from the `theme-color` meta, which is
+    `#0e0e10` (app/layout.tsx). Without this the top ~50px of the screen stays
+    matte black while the rest of the expanded view is true black — a visible
+    seam exactly where the poster is trying to have no edge.
+
+    The previous value is read rather than hardcoded, so the token stays defined
+    in one place and restoring cannot drift from it.
+  */
+  function setThemeColor(value: string) {
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', value)
+  }
+
+  function open() {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    previousThemeColor.current = meta?.getAttribute('content') ?? null
+    setThemeColor('#000000')
+    dialogRef.current?.showModal()
+  }
+
+  /*
+    Fires for every route out — the click handler, Escape, and the back gesture —
+    because `close` is a native dialog event rather than something we dispatch.
+  */
+  function restoreThemeColor() {
+    if (previousThemeColor.current) setThemeColor(previousThemeColor.current)
+  }
 
   if (!src) {
     return (
@@ -88,7 +119,7 @@ export function Poster({
     <>
       <button
         type="button"
-        onClick={() => dialogRef.current?.showModal()}
+        onClick={open}
         aria-label={`Poster for ${title}`}
         className="shrink-0 rounded-md"
       >
@@ -100,6 +131,7 @@ export function Poster({
         // Anywhere closes it. There is nothing to do here but look and leave, so
         // hunting for a close button would be the only difficult part.
         onClick={() => dialogRef.current?.close()}
+        onClose={restoreThemeColor}
         /*
           True black, not the app's `--color-bg`. §11's matte black is `#0e0e10`
           and is the right ground for type; this is the one surface in the
