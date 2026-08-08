@@ -707,8 +707,51 @@ from that value, so a mismatch shows as a lighter band across the top of every
 screen — which is also why `components/poster.tsx` no longer swaps it: the
 expanded poster and the app now share one ground, and the swap became a no-op.
 
-`--color-surface` stays at `#16161a`. It is further from the ground than it was,
-which suits it: cards and the input field are meant to sit above the page.
+`--color-surface` stayed at `#16161a` at the time, further from the ground than
+it had been, which suited it. It has since become the warm `#20201d` — see
+*An editorial palette* below.
+
+### An editorial palette: warm ink, warm charcoal, brass
+
+**Decided 8 August 2026**, from a proposed set aimed at "classy, magazine-like".
+Adopted with one change and one rejection.
+
+| token | was | now |
+|---|---|---|
+| `--color-bg` | `#000000` | unchanged |
+| `--color-surface` | `#16161a` | `#20201d` |
+| `--color-text` | `#e8e8e6` | `#eae6da` |
+| `--color-rule` | `#26262b` | `#30302b` |
+| `--color-accent` | `#e0a458` | `#b49a62` |
+
+**The background was rejected.** The set proposed `#171715` — `rgb(23,23,21)`,
+lighter than the `#141414` ruled out earlier the same day and much lighter than
+the `#0e0e10` rejected before that. It also worked against itself: the warm
+charcoal surface separates from it by only **1.10:1**, where against pure black
+it manages **1.29** — better than the cool `#16161a` ever did at 1.16. Warm
+surfaces read as raised, and they need a black ground to do it.
+
+**The muted tier was lifted.** The set's ladder is one ink faded — secondary at
+0.689, muted at 0.436, to within 1–2 of exact — which is the structure this
+codebase had just adopted, so it dropped straight in. But 0.436 measures
+**3.69:1**, under AA's 4.5 for body text, and muted is where timestamps and
+metadata live. Kept at 0.6, which measures 6.08. The same 0.42-ish step appears
+in the Gide palette and fails there too; it is a recurring instinct worth
+distrusting.
+
+**Warmth is the point of the whole change.** The ink goes from +2 to +16 on
+R−B. Neutral off-white reads as *screen* — print ink is never neutral, and that
+warmth is most of what makes a thing look printed rather than rendered.
+
+**What it cost: the accent got quieter.** `#b49a62` is the better colour and
+`#e0a458` was the louder signal. §11 gives the accent exactly one duty — marking
+overlap, "the one moment the app exists for" — and that duty is to interrupt.
+Brass is classier and less alarming, which is a real trade on the one colour
+meant to be alarming.
+
+**What would change this back:** overlap failing to catch the eye in Phase 3,
+which is the first time the accent appears against real notifications rather
+than in a palette. If it does, the value moves and the rule around it does not.
 
 ### The return count is removed, and §11 loses its signature element
 

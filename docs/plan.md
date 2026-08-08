@@ -372,9 +372,10 @@ affordance only; on a tab where everything is satisfied it would mark nothing.
 ### The wrong-password message is styled as an aside
 
 `components/sign-in-form.tsx:134` renders it `text-muted text-sm` —
-`--color-muted` is `#8a8a85`, the quietest value in the system and the one used
-for de-emphasised metadata. The only failure message in the product is set in the
-colour reserved for things that do not matter.
+`--color-muted` is the quietest value in the system and the one used for
+de-emphasised metadata. The only failure message in the product is set in the
+colour reserved for things that do not matter. (It was `#8a8a85` then; it is now
+a 60% fade of `--color-text`, but the point is unchanged.)
 
 Two things make this more than a class change:
 

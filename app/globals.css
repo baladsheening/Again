@@ -19,10 +19,23 @@
     fix is a step back towards #08080a rather than all the way to #0e0e10.
   */
   --color-bg: #000000;
-  /* cards, input field. Further from the ground now, which suits it */
-  --color-surface: #16161a;
-  /* slightly warm off-white; cuts halation on long text */
-  --color-text: #e8e8e6;
+  /*
+    Cards and the capture field. Warm charcoal, and it needs the black ground to
+    work: against the near-black it was proposed on it separated by only 1.10:1,
+    against pure black it manages 1.29 — better than the cool `#16161a` it
+    replaces, which managed 1.16. Warm surfaces read as raised; cool ones read as
+    a different shade of the same thing.
+  */
+  --color-surface: #20201d;
+  /*
+    Aged paper. Warmth (R−B) of +16, up from +2 in the `#e8e8e6` it replaces.
+
+    Neutral off-white is what reads as *screen*: print ink is never neutral, and
+    warmth is most of what makes something look printed rather than rendered. The
+    accent below was already warm, so the palette now agrees with a colour it
+    used to sit slightly against.
+  */
+  --color-text: #eae6da;
   /*
     Secondary text and timestamps: `--color-text` faded, not a colour of its own.
 
@@ -37,15 +50,22 @@
   */
   --color-muted: color-mix(in srgb, var(--color-text) 60%, transparent);
   /* hairlines */
-  --color-rule: #26262b;
+  --color-rule: #30302b;
   /**
-   * amber. Used ONLY for overlap state.
+   * Muted brass. Used ONLY for overlap state.
    *
    * Not on buttons, not on links, not on the active tab. It marks the one
    * moment the app exists for, and it stops meaning anything the second it is
    * used for decoration.
+   *
+   * ⚠ Quieter than the `#e0a458` amber it replaces, and that is the one thing
+   * this palette gave up. Brass is the better colour and amber was the louder
+   * signal, and this accent's whole job is to interrupt. If overlap ever fails
+   * to catch the eye in Phase 3 — the first time these appear against real
+   * notifications rather than in a palette — this is the value to reconsider,
+   * not the rule around it.
    */
-  --color-accent: #e0a458;
+  --color-accent: #b49a62;
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
