@@ -45,6 +45,7 @@ export function Poster({
   const src = posterUrl(posterPath)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const previousThemeColor = useRef<string | null>(null)
+  const previousViewport = useRef<string | null>(null)
 
   /*
     iOS tints the status-bar strip from the `theme-color` meta, which is
@@ -65,15 +66,46 @@ export function Poster({
     const meta = document.querySelector('meta[name="theme-color"]')
     previousThemeColor.current = meta?.getAttribute('content') ?? null
     setThemeColor('#000000')
+
+    // Captured before the dialog opens, so the string written back on close is
+    // whatever Next actually rendered rather than a copy that can go stale.
+    previousViewport.current =
+      document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? null
+
     dialogRef.current?.showModal()
+  }
+
+  /*
+    Pinching inside the dialog zooms the *visual viewport* — the whole page, with
+    the dialog merely on top of it. iOS offers no way to scope a pinch to one
+    element, so closing the dialog used to reveal the list behind it still
+    magnified at whatever scale had been reached.
+
+    This clamps the page back to 1 by appending `maximum-scale=1` to the viewport
+    meta, which makes Safari re-evaluate the current zoom against the new
+    ceiling, and then restores the original content so pinch zoom keeps working.
+
+    **The restore is not optional.** `maximum-scale=1` left in place kills pinch
+    zoom for the whole app, which docs/plan.md rules out explicitly as an
+    accessibility regression. Hence the original string is captured on open and
+    written back on a timer rather than being reconstructed here.
+  */
+  function resetPageZoom() {
+    const viewport = document.querySelector('meta[name="viewport"]')
+    const original = previousViewport.current
+    if (!viewport || !original) return
+
+    viewport.setAttribute('content', `${original}, maximum-scale=1`)
+    setTimeout(() => viewport.setAttribute('content', original), 150)
   }
 
   /*
     Fires for every route out — the click handler, Escape, and the back gesture —
     because `close` is a native dialog event rather than something we dispatch.
   */
-  function restoreThemeColor() {
+  function onDialogClose() {
     if (previousThemeColor.current) setThemeColor(previousThemeColor.current)
+    resetPageZoom()
   }
 
   if (!src) {
@@ -131,7 +163,7 @@ export function Poster({
         // Anywhere closes it. There is nothing to do here but look and leave, so
         // hunting for a close button would be the only difficult part.
         onClick={() => dialogRef.current?.close()}
-        onClose={restoreThemeColor}
+        onClose={onDialogClose}
         /*
           True black, not the app's `--color-bg`. §11's matte black is `#0e0e10`
           and is the right ground for type; this is the one surface in the
