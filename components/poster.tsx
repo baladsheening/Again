@@ -67,7 +67,7 @@ export function Poster({
     />
   )
 
-  const large = posterUrl(posterPath, 'w500')
+  const large = posterUrl(posterPath, 'w780')
   if (!expandable || !large || !title) return thumbnail
 
   /*
@@ -105,8 +105,8 @@ export function Poster({
         <Image
           src={large}
           alt={`Poster for ${title}`}
-          width={500}
-          height={750}
+          width={780}
+          height={1170}
           className="h-auto max-h-[85dvh] w-auto rounded-md object-contain"
         />
       </dialog>
