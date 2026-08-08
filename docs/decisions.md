@@ -683,6 +683,33 @@ UI says check your inbox, and the account is gone. So `sendEmail` throws.
 **What would change this:** volume, or deliverability trouble. Postmark remains
 the stronger transactional reputation, and moving is one function.
 
+### True black, over the note that said not to
+
+**Decided 8 August 2026.** `--color-bg` was `#0e0e10`, carrying a comment that
+read *"near-black, not #000 — pure black reads as glass and pulls too hard on
+OLED"*. That reasoning is sound and it was overruled by looking at the thing: on
+an iPhone 12, which is precisely the OLED panel the note was written about,
+`#0e0e10` read as grey rather than as black.
+
+The note was a general principle. It lost to the specific screen, which is the
+right order — the same order that produced the intent-sheet bug, the landscape
+dropdown and the upscaled thumbnail, all found by use rather than by reasoning.
+
+**What it was guarding against, in case it shows up later:** black smear. OLED
+pixels switching from fully off are slower than pixels switching between two lit
+values, so a pure-black background can trail slightly during a fast scroll. If
+that appears, the fix is a step back towards `#08080a` rather than all the way
+to `#0e0e10` — the complaint was that the old value was visibly grey, and
+`#08080a` is not.
+
+`themeColor` in `app/layout.tsx` moved with it. iOS tints the status-bar strip
+from that value, so a mismatch shows as a lighter band across the top of every
+screen — which is also why `components/poster.tsx` no longer swaps it: the
+expanded poster and the app now share one ground, and the swap became a no-op.
+
+`--color-surface` stays at `#16161a`. It is further from the ground than it was,
+which suits it: cards and the input field are meant to sit above the page.
+
 ### The return count is removed, and §11 loses its signature element
 
 **Decided 8 August 2026**, against the brief and knowingly. §11: *"The signature

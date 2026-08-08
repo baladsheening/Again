@@ -41,7 +41,9 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0e0e10',
+  // Matches --color-bg. iOS tints the status-bar strip from this, so a mismatch
+  // shows as a lighter band across the top of every screen.
+  themeColor: '#000000',
   // Responsive from 320px up (§10).
   width: 'device-width',
   initialScale: 1,

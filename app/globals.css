@@ -7,13 +7,23 @@
  * There is no light theme. The palette is the design, and it is one palette.
  */
 @theme {
-  /* near-black, not #000 — pure black reads as glass and pulls too hard on OLED */
-  --color-bg: #0e0e10;
-  /* cards, input field */
+  /*
+    True black. This was #0e0e10 with a note saying "not #000 — pure black reads
+    as glass and pulls too hard on OLED", which is sound in general and was
+    overruled on 8 August by looking at it: on an iPhone 12, which is exactly the
+    OLED panel the note was worried about, #0e0e10 read as grey.
+
+    What the note was guarding against is black smear — OLED pixels switching
+    from fully off are slower than pixels switching between two lit values, so
+    pure-black backgrounds can trail during a fast scroll. If that shows up, the
+    fix is a step back towards #08080a rather than all the way to #0e0e10.
+  */
+  --color-bg: #000000;
+  /* cards, input field. Further from the ground now, which suits it */
   --color-surface: #16161a;
   /* slightly warm off-white; cuts halation on long text */
   --color-text: #e8e8e6;
-  /* secondary, timestamps, counts of other people */
+  /* secondary, timestamps */
   --color-muted: #8a8a85;
   /* hairlines */
   --color-rule: #26262b;

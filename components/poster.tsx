@@ -41,23 +41,14 @@ export function Poster({
   const large = posterUrl(posterPath, 'original')
 
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const previousThemeColor = useRef<string | null>(null)
 
   /*
-    iOS tints the status-bar strip from the `theme-color` meta, which is
-    `#0e0e10`. Without this the top of the screen stays matte black while the
-    rest of the view is true black — a seam exactly where the poster is trying
-    not to have an edge. The previous value is read rather than hardcoded, so the
-    token stays defined only in app/layout.tsx.
+    This used to swap `theme-color` to #000 on open and back on close, because
+    the status-bar strip stayed matte black while the view behind it was true
+    black. The app's own background became true black on 8 August, so the swap
+    became a no-op and went with it.
   */
-  function setThemeColor(value: string) {
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value)
-  }
-
   function open() {
-    previousThemeColor.current =
-      document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? null
-    setThemeColor('#000000')
     dialogRef.current?.showModal()
   }
 
@@ -98,14 +89,15 @@ export function Poster({
 
       <dialog
         ref={dialogRef}
-        onClose={() => {
-          if (previousThemeColor.current) setThemeColor(previousThemeColor.current)
-        }}
         /*
-          True black, not `--color-bg`. §11's matte black is the right ground for
-          type; this is the one surface in the product that is not type. Full
-          bleed, so black reaches every edge and there is nowhere to tap that is
-          not the poster or its ground.
+          `backdrop:bg-black` is now the same value as `--color-bg`, and stays
+          spelled out rather than switched to the token: this surface is black
+          because a poster wants nothing behind it, not because it inherits the
+          app's ground. If the ground ever moves off true black, this should not
+          follow it.
+
+          Full bleed, so black reaches every edge and there is nowhere to tap
+          that is not the poster or its ground.
         */
         className="bg-transparent backdrop:bg-black m-0 h-full max-h-none w-full max-w-none p-0"
       >
