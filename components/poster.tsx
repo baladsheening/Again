@@ -32,11 +32,30 @@ import { posterUrl } from '@/lib/posters'
  */
 
 const MAX_SCALE = 4
+const SETTLE_MS = 300
 
 /** Distance between the first two touches, for pinch. */
 function spread(touches: TouchList) {
   const [a, b] = [touches[0]!, touches[1]!]
   return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+}
+
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
+
+/**
+ * Apple's rubber band, as used by every scroll view on the platform:
+ * `(1 − 1/(x·c/d + 1))·d`, with `c = 0.55`.
+ *
+ * Past the boundary the finger keeps moving and the image keeps following, but
+ * by ever less — the resistance grows with the overshoot and the result
+ * asymptotes at the container's own dimension, so it can never be dragged into
+ * nowhere. Below the boundary it is the identity function and costs nothing.
+ */
+function rubber(offset: number, limit: number, dimension: number) {
+  const over = Math.abs(offset) - limit
+  if (over <= 0) return offset
+  const damped = (1 - 1 / ((over * 0.55) / dimension + 1)) * dimension
+  return Math.sign(offset) * (limit + damped)
 }
 
 export function Poster({
@@ -54,18 +73,20 @@ export function Poster({
 
   const dialogRef = useRef<HTMLDialogElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
   const previousThemeColor = useRef<string | null>(null)
 
   const [zoom, setZoom] = useState({ scale: 1, x: 0, y: 0 })
+  /** Turns the transition on only for the spring back, never during a drag. */
+  const [settling, setSettling] = useState(false)
 
   /*
-    Gesture bookkeeping. A ref rather than state: it changes on every touchmove
-    and none of it should cause a render — only the resulting transform does.
-
-    `moved` is what stops a pinch or a drag from also counting as the tap that
-    closes the dialog. Without it, letting go after zooming in dismisses the
-    thing you just zoomed into.
+    The live transform. A ref rather than state so the touch handlers can read
+    the current value without the effect re-subscribing on every frame; `setZoom`
+    exists purely to render it.
   */
+  const zoomRef = useRef({ scale: 1, x: 0, y: 0 })
+
   const gesture = useRef({
     mode: 'none' as 'none' | 'pinch' | 'pan',
     startSpread: 0,
@@ -74,6 +95,7 @@ export function Poster({
     startY: 0,
     originX: 0,
     originY: 0,
+    /** Stops a pinch or a drag from also counting as the tap that closes. */
     moved: false,
   })
 
@@ -82,77 +104,122 @@ export function Poster({
 
     On iOS a pinch zooms the *visual viewport* — the whole page, with the dialog
     merely sitting on top of it. Closing then revealed the list behind still
-    magnified. There is no way to put that back: `visualViewport.scale` is
-    read-only, and the old `maximum-scale=1` meta trick has been ignored since
-    iOS 10, when Apple deliberately stopped sites disabling zoom. An earlier
-    commit tried it and it did nothing.
+    magnified, and there is no way to put that back: `visualViewport.scale` is
+    read-only, and the `maximum-scale=1` meta trick has been ignored since iOS
+    10, when Apple deliberately stopped sites disabling zoom.
 
-    So the page must never zoom in the first place. `touch-action: none` on the
-    stage plus `preventDefault` on the gestures keeps the pinch inside this
-    element — and having taken the gesture, we owe the user the zoom it was for.
+    So the page must never zoom in the first place. `touch-action: none` plus
+    `preventDefault` keeps the gesture inside this element — and having taken it,
+    the view owes the user the zoom it was for.
 
     Listeners are attached by hand rather than through React's props because they
-    must be `{ passive: false }`; a passive listener cannot preventDefault, and
-    the browser would zoom the page anyway.
+    need `{ passive: false }`; a passive listener cannot preventDefault, and the
+    browser would zoom the page regardless.
   */
   useEffect(() => {
     const stage = stageRef.current
     if (!stage) return
 
+    /** How far the image may be moved before it is showing its own edge. */
+    function limits() {
+      const image = imageRef.current
+      if (!image || !stage) return { x: 0, y: 0 }
+      const { scale } = zoomRef.current
+      return {
+        x: Math.max(0, (image.offsetWidth * scale - stage.clientWidth) / 2),
+        y: Math.max(0, (image.offsetHeight * scale - stage.clientHeight) / 2),
+      }
+    }
+
+    function apply(next: { scale: number; x: number; y: number }) {
+      zoomRef.current = next
+      setZoom(next)
+    }
+
     function onTouchStart(e: TouchEvent) {
       const g = gesture.current
+      const z = zoomRef.current
+      setSettling(false)
+
       if (e.touches.length === 2) {
         g.mode = 'pinch'
         g.startSpread = spread(e.touches)
-        g.startScale = zoom.scale
-        g.originX = zoom.x
-        g.originY = zoom.y
-      } else if (e.touches.length === 1 && zoom.scale > 1) {
+        g.startScale = z.scale
+      } else if (e.touches.length === 1 && z.scale > 1) {
         g.mode = 'pan'
         g.startX = e.touches[0]!.clientX
         g.startY = e.touches[0]!.clientY
-        g.originX = zoom.x
-        g.originY = zoom.y
       } else {
         g.mode = 'none'
       }
+
+      g.originX = z.x
+      g.originY = z.y
       g.moved = false
     }
 
     function onTouchMove(e: TouchEvent) {
       const g = gesture.current
-      if (g.mode === 'none') return
+      if (g.mode === 'none' || !stage) return
       e.preventDefault()
       g.moved = true
 
       if (g.mode === 'pinch' && e.touches.length === 2) {
-        const next = Math.min(
+        const scale = clamp(
+          g.startScale * (spread(e.touches) / g.startSpread),
+          1,
           MAX_SCALE,
-          Math.max(1, g.startScale * (spread(e.touches) / g.startSpread)),
         )
-        setZoom({ scale: next, x: g.originX, y: g.originY })
+        apply({ scale, x: g.originX, y: g.originY })
         return
       }
 
       if (g.mode === 'pan' && e.touches.length === 1) {
-        setZoom((z) => ({
-          ...z,
-          x: g.originX + (e.touches[0]!.clientX - g.startX),
-          y: g.originY + (e.touches[0]!.clientY - g.startY),
-        }))
+        const bound = limits()
+        apply({
+          ...zoomRef.current,
+          x: rubber(
+            g.originX + (e.touches[0]!.clientX - g.startX),
+            bound.x,
+            stage.clientWidth,
+          ),
+          y: rubber(
+            g.originY + (e.touches[0]!.clientY - g.startY),
+            bound.y,
+            stage.clientHeight,
+          ),
+        })
       }
     }
 
     function onTouchEnd(e: TouchEvent) {
       if (e.touches.length > 0) return
       gesture.current.mode = 'none'
-      // Back to rest if the pinch ended at or below 1 — otherwise the poster is
-      // left fractionally offset with nothing to pan.
-      setZoom((z) => (z.scale <= 1.01 ? { scale: 1, x: 0, y: 0 } : z))
+
+      // Spring back to whatever is legal now — which also covers a pinch that
+      // ended smaller, since shrinking tightens the bounds the pan sits inside.
+      const z = zoomRef.current
+      const scale = z.scale <= 1.01 ? 1 : z.scale
+      zoomRef.current = { ...z, scale }
+      const bound = limits()
+      const settled = {
+        scale,
+        x: clamp(z.x, -bound.x, bound.x),
+        y: clamp(z.y, -bound.y, bound.y),
+      }
+
+      if (settled.x === z.x && settled.y === z.y && settled.scale === z.scale) {
+        zoomRef.current = settled
+        return
+      }
+
+      setSettling(true)
+      apply(settled)
+      setTimeout(() => setSettling(false), SETTLE_MS)
     }
 
     // Safari's own gesture events fire alongside touch events; left alone they
-    // zoom the page even when the touch handlers have preventDefaulted.
+    // zoom the page even once the touch handlers have preventDefaulted.
     function blockGesture(e: Event) {
       e.preventDefault()
     }
@@ -171,7 +238,7 @@ export function Poster({
       stage.removeEventListener('gesturestart', blockGesture)
       stage.removeEventListener('gesturechange', blockGesture)
     }
-  }, [zoom.scale, zoom.x, zoom.y])
+  }, [])
 
   /*
     iOS tints the status-bar strip from the `theme-color` meta, which is
@@ -186,20 +253,26 @@ export function Poster({
       ?.setAttribute('content', value)
   }
 
+  function rest() {
+    zoomRef.current = { scale: 1, x: 0, y: 0 }
+    setZoom(zoomRef.current)
+    setSettling(false)
+  }
+
   function open() {
     previousThemeColor.current =
       document
         .querySelector('meta[name="theme-color"]')
         ?.getAttribute('content') ?? null
     setThemeColor('#000000')
-    setZoom({ scale: 1, x: 0, y: 0 })
+    rest()
     dialogRef.current?.showModal()
   }
 
   /** Fires for every way out: the tap, Escape, and the back gesture. */
   function onDialogClose() {
     if (previousThemeColor.current) setThemeColor(previousThemeColor.current)
-    setZoom({ scale: 1, x: 0, y: 0 })
+    rest()
   }
 
   if (!src) {
@@ -262,14 +335,13 @@ export function Poster({
       >
         <div
           ref={stageRef}
-          // A tap closes; a pinch or a drag does not. There is nothing to do here
-          // but look and leave, so a close button would be the only hard part.
           onClick={() => {
             if (!gesture.current.moved) dialogRef.current?.close()
           }}
-          className="flex h-full w-full touch-none items-center justify-center bg-black"
+          className="flex h-full w-full touch-none items-center justify-center overflow-hidden bg-black"
         >
           <Image
+            ref={imageRef}
             src={large}
             alt={`Poster for ${title}`}
             width={2000}
@@ -277,6 +349,9 @@ export function Poster({
             draggable={false}
             style={{
               transform: `translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.scale})`,
+              transition: settling
+                ? `transform ${SETTLE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
+                : undefined,
             }}
             className="max-h-full max-w-full object-contain"
           />
