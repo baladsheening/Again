@@ -219,7 +219,7 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
                 >
                   <Poster posterPath={film.posterPath} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-compact">{film.title}</span>
+                    <span className="block truncate text-sm">{film.title}</span>
                     <span className="text-muted block text-xs">
                       {film.year ?? '—'}
                     </span>
@@ -228,7 +228,7 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
               </li>
             ))}
             {visibleResults.length === 0 && searching && (
-              <li className="text-muted px-3 py-2.5 text-compact">Looking…</li>
+              <li className="text-muted px-3 py-2.5 text-sm">Looking…</li>
             )}
           </ul>
         )}

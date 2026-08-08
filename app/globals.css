@@ -54,21 +54,25 @@
   --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
 
   /*
-    The three sizes that were arbitrary values.
+    The only two named sizes. Everything else is `text-sm` or `text-xs`, which
+    needs no naming.
 
-    Everything else in the app is `text-sm` or `text-xs` — 32 of 38 usages —
-    which needs no naming. These three were `text-[2.25rem]`,
-    `text-[1.3125rem]` and `text-[13px]`: settled by eye over several passes
-    (docs/decisions.md), then left in bracket syntax where the reasoning does not
-    reach them. A number nobody can name is a number the next person re-litigates.
+    Both were arbitrary values — `text-[2.25rem]` and `text-[1.3125rem]` —
+    settled by eye over several passes (docs/decisions.md) and then left in
+    bracket syntax where that reasoning does not reach them. A number nobody can
+    name is a number the next person re-litigates.
+
+    A third, `--text-compact` at 13px, was named and then deleted within the
+    hour. Naming it was what exposed that it had no argument: it existed to match
+    the capture field, and the field goes to 16px on touch for the iOS zoom guard
+    while the dropdown never did. The rows are `text-sm` now, like every other
+    list in the app.
   */
 
   /* the wordmark on /sign-in and /reset-password, where it is the page */
   --text-wordmark: 2.25rem;
   /* the same wordmark in the nav, where it is a label */
   --text-wordmark-nav: 1.3125rem;
-  /* rows in the search dropdown, matching the field they drop from */
-  --text-compact: 13px;
 }
 
 @layer base {
@@ -84,9 +88,11 @@
    * come from type and spacing, because §2 rules out the imagery that usually
    * carries a dark interface.
    *
-   * Scale:  wordmark 36 · heading 24/500/-0.01em · body 15/400
-   *         secondary 14/400 muted · input 14/400 · search result 13/400
-   *         field label 12.5/400 muted · hint 12/400 muted · meta 12/400 muted
+   * Scale:  wordmark 36 (21 in the nav) · heading 24/500/-0.01em · body 15/400
+   *         secondary 14/400 · input 13/400, 16 on touch · meta 12/400 muted
+   *
+   * Field labels are gone — every field names itself from its placeholder — and
+   * search results are secondary like any other list.
    *
    * The line under the wordmark is plain secondary text — 14/400 muted, the
    * same tier as any other supporting sentence. Making it a distinct tier was
