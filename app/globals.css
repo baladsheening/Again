@@ -195,15 +195,26 @@
 }
 
 /**
- * Input text. The 16px on touch is not a style choice — iOS Safari zooms the
- * viewport on focus for any field below 16px, and it does not zoom back out.
- * The other way to stop it is `maximum-scale=1` on the viewport, which kills
- * pinch zoom for everyone and is an accessibility failure, so it is not on the
- * table. The type scale therefore differs by input device, which is the honest
- * trade: 14px reads better with a mouse, 16px is the price of a touchscreen.
+ * Control text — every field in the product, and the buttons beside them, so a
+ * form is set in one size throughout.
+ *
+ * There is no separate `::placeholder` size: it inherits, so a field does not
+ * resize its own text between empty and typed. That is the whole of the rule,
+ * and it holds at both sizes below.
+ *
+ * The 16px on touch is not a style choice — iOS Safari zooms the viewport on
+ * focus for any field below 16px, and it does not zoom back out. The other way
+ * to stop it is `maximum-scale=1` on the viewport, which kills pinch zoom for
+ * everyone and is an accessibility failure, so it is not on the table. The scale
+ * therefore differs by input device, which is the honest trade: 13px reads
+ * cleanly with a mouse, 16px is the price of a touchscreen.
+ *
+ * The buttons do not need the 16px — nothing zooms on a button — but they take
+ * it anyway, because a 13px button beside a 16px field is the inconsistency this
+ * utility exists to prevent. `control-box` pins their height either way.
  */
 @utility input-text {
-  font-size: 14px;
+  font-size: 13px;
 
   @media (pointer: coarse) {
     font-size: 16px;

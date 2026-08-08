@@ -13,9 +13,6 @@ export function OnboardingForm() {
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <label htmlFor="handle" className="text-muted text-[12.5px]">
-          Handle
-        </label>
         {/*
           Mono here is functional rather than decorative, so it survives the
           scarcity rule: a handle is an identifier, and telling l from 1 from I
@@ -30,7 +27,12 @@ export function OnboardingForm() {
             autoFocus
             autoComplete="off"
             spellCheck={false}
-            className="control-box input-text flex-1 bg-transparent pl-1 font-mono outline-none"
+            // Lower case, and left in mono unlike the other placeholders: it
+            // renders directly against the `@` above, and the two only read as
+            // one address — `@handle` — if they agree on case and typeface.
+            placeholder="handle"
+            aria-label="Handle"
+            className="control-box input-text placeholder:text-muted flex-1 bg-transparent pl-1 font-mono outline-none"
           />
         </div>
         <p className="text-muted text-xs">
@@ -39,21 +41,26 @@ export function OnboardingForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="displayName" className="text-muted text-[12.5px]">
-          Name <span className="opacity-60">(optional)</span>
-        </label>
         <input
           id="displayName"
           name="displayName"
           autoComplete="name"
-          className="bg-surface border-rule focus:border-muted control-box input-text rounded-md border px-3 outline-none transition-colors"
+          // "(optional)" was a dimmed span inside the label; a placeholder is one
+          // string and cannot carry two weights, so it is plain text now. It has
+          // to stay said either way — this is the only field in the form that is
+          // not required, and nothing else in here indicates that.
+          placeholder="Name (optional)"
+          aria-label="Name (optional)"
+          className="bg-surface border-rule focus:border-muted control-box input-text placeholder:text-muted rounded-md border px-3 outline-none transition-colors"
         />
       </div>
 
       <button
         type="submit"
         disabled={pending}
-        className="border-rule hover:border-text control-box mt-1 rounded-md border px-4 text-[13.5px] transition-colors disabled:opacity-50"
+        // `control-box input-text` and no `mt-1`, both as on the sign-in submit:
+        // the form's one size, and the form's one gap.
+        className="border-rule hover:border-text control-box input-text rounded-md border px-4 transition-colors disabled:opacity-50"
       >
         {pending ? 'One moment…' : 'Continue'}
       </button>

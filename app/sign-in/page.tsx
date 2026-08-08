@@ -6,14 +6,26 @@ import { getSessionUser } from '@/lib/db'
 export default async function SignInPage() {
   if (await getSessionUser()) redirect('/')
 
-  // 560px is where the form goes inline, and the container has to widen with it
-  // or the row would only ever have 320px to divide up. Deliberately a step past
-  // the point it first fits (~480px) rather than at it — switching layout the
-  // instant it is technically possible lands you in the cramped version of it,
-  // which is worse than the stacked one.
+  // `max-w-sm` at every width, matching /onboarding and /reset-password. The
+  // container used to widen to 42.5rem at 560px, where the form went inline and
+  // needed the room to divide up; the form is stacked now, and a stacked form in
+  // 680px is a column of very wide, very short boxes.
   return (
     <main
-      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12 min-[560px]:max-w-[42.5rem]"
+      // The top padding carries the *bottom* safe-area inset on purpose, and it
+      // is not a typo. `safe-bottom` adds that inset below for clearance, which
+      // is right, but this element's padding is also what `my-auto` centres
+      // inside — so an inset on one side only moves the content up by half of it,
+      // and the more home indicator a device has, the higher the form floats.
+      // Mirroring the inset on top keeps the centring box symmetric on every
+      // device. It replaces `py-12`, whose only remaining job was this 3rem top;
+      // one declaration per edge now, and no override to reason about.
+      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))]"
+      // 3rem, matching /onboarding and /reset-password. This was briefly 4rem, to
+      // lift the fields to the midline; the extra rem worked on a laptop and
+      // overshot on any phone with an indicator, because it was correcting a
+      // fixed imbalance with a device-variable property. The correction moved to
+      // the block below, where it belongs.
       style={{ '--safe-bottom-base': '3rem' } as React.CSSProperties}
     >
       {/*
@@ -24,7 +36,29 @@ export default async function SignInPage() {
         to zero when there is no free space, so this degrades to top-aligned and
         stays scrollable.
       */}
-      <div className="my-auto flex w-full flex-col gap-7">
+      {/*
+        Optical centring, not spacing — nothing renders in this padding. `my-auto`
+        centres the whole block (mark, tagline, fields, button, switches), but the
+        thing that should look centred is the field pair, and the block is not
+        symmetric about it. Padding the light side makes it symmetric, which moves
+        the pair by half of what you add.
+
+        **The correction changes side with the pointer**, which is why there are
+        two classes rather than one with an override:
+
+          mouse  100px above the pair, 94px below  → 6px short  → pad bottom 6
+          touch  100px above the pair, 104px below → 4px over   → pad top 4
+
+        Touch is heavier below because `control-box` grows the fields and the
+        button to 48px there while the header and the 12px switches do not move.
+        Both numbers are the difference itself, derived from the control heights
+        and gaps in `components/sign-in-form.tsx` — the switches' `mt-4` is inside
+        the 94/104, so it counted twice when it was added. Neither depends on the
+        safe-area inset, unlike the `--safe-bottom-base` lever this replaced, so
+        both hold on any screen. A device that reports neither pointer gets no
+        correction and is 3px low, which is the right way to fail.
+      */}
+      <div className="my-auto flex w-full flex-col gap-7 pointer-coarse:pt-1 pointer-fine:pb-[6px]">
         {/*
           `text-start`, not `text-left`: the mark and tagline hang off the same
           edge as the first input, and which edge that is follows the writing

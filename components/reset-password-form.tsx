@@ -82,7 +82,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <button
         type="submit"
         disabled={busy}
-        className="border-rule hover:border-text control-box mt-1 rounded-md border px-4 text-[13.5px] transition-colors disabled:opacity-50"
+        // `control-box input-text`, the same pair the fields wear, so the button
+        // is set in the form's one size rather than a size of its own. No `mt-1`,
+        // for the same reason as the sign-in submit: one gap for the whole form.
+        className="border-rule hover:border-text control-box input-text rounded-md border px-4 transition-colors disabled:opacity-50"
       >
         {busy ? 'One moment…' : 'Set password'}
       </button>
@@ -110,9 +113,6 @@ function Field({
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-muted text-[12.5px]">
-        {label}
-      </label>
       <div className="relative">
         <input
           id={id}
@@ -121,9 +121,16 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
           required
+          placeholder={label}
+          // As on sign-in: the field names itself from the inside, and the name
+          // disappears as soon as there is a value, so `aria-label` holds it for
+          // a screen reader rather than the placeholder being the only one.
+          aria-label={label}
           // Mono for the same reason as the sign-in password field — a revealed
           // password is read character by character, which is what mono is for.
-          className="bg-surface border-rule focus:border-muted control-box input-text w-full rounded-md border pr-11 pl-3 font-mono outline-none transition-colors"
+          // The placeholder is interface text and stays sans, so these two read
+          // as the same kind of field as the ones on sign-in.
+          className="bg-surface border-rule placeholder:text-muted focus:border-muted control-box input-text w-full rounded-md border pr-11 pl-3 font-mono outline-none transition-colors placeholder:font-sans"
         />
         <button
           type="button"

@@ -3,40 +3,30 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { ChevronIcon } from '@/components/icon-chevron'
 import { EyeIcon } from '@/components/icon-eye'
 import { authClient } from '@/lib/auth-client'
 
 type Mode = 'sign-in' | 'sign-up' | 'reset'
 
 /**
- * Shared rather than written out at each use, because they have already drifted
- * once and the symptom was silent — the row simply stopped lining up.
+ * One class string for every control in the form — inputs and the submit button
+ * alike. There were two of these, a size each, and they drifted once with a
+ * silent symptom: the row they were then in stopped lining up. There is no row
+ * any more (the form is always stacked) and there is no second size, so the way
+ * that happened is gone rather than guarded against.
  *
- * `LABEL_TEXT` is worn by the field label and by the empty spacer above the
- * submit button, which only does its job if it renders at exactly the label's
- * height. `CONTROL_TEXT` goes on the inputs and the button alike, which in the
- * inline row derive their height from line-height plus the same padding.
- *
- * These are arbitrary values, which set font-size *without* a line-height —
- * unlike `text-sm` and friends, which set both. That is precisely how they came
- * apart last time, so do not swap one form for the other.
- */
-const LABEL_TEXT = 'text-[12.5px]'
-const FIELD_LABEL = `text-muted ${LABEL_TEXT}`
-
-/**
  * `control-box` (app/globals.css) pins line-height and vertical padding, which
- * between them are the whole of a control's height. Both the inputs and the
- * submit button wear it, so they can carry different font sizes and still line
- * up in the inline row — and it grows on a coarse pointer to clear the 44px
- * touch-target floor without either of them being told about it here.
+ * between them are the whole of a control's height, and grows on a coarse
+ * pointer to clear the 44px touch-target floor without any caller knowing.
+ * `input-text` is 13px, and 16px on touch because iOS Safari zooms the viewport
+ * on focus below that.
  *
- * `input-text` is 14px, and 16px on touch because iOS Safari zooms the viewport
- * on focus below that. The button keeps its own smaller size in both cases; it
- * is not a field, so nothing zooms on it.
+ * Both are utilities that set one property each. A Tailwind size like `text-sm`
+ * sets font-size **and** line-height, so it would fight `control-box` for the
+ * height — that is the specific mistake, and it is why this is not `text-sm`.
  */
 const CONTROL_TEXT = 'control-box input-text'
-const BUTTON_TEXT = 'control-box text-[13.5px]'
 
 export function SignInForm() {
   const router = useRouter()
@@ -90,72 +80,71 @@ export function SignInForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       {/*
-        Stacked until INLINE_AT (see below), then one row. `items-start` rather
-        than `items-end` because the password field grows a hint underneath it in
-        sign-up mode — aligning to the bottom would shunt that one input out of
-        line with the others. Aligning to the top instead lines the labels up,
-        which lines the inputs up, and lets the hint hang harmlessly.
+        Stacked at every width. The fields and the button are direct children of
+        the form, which is the same `flex flex-col gap-3` the wrapper around them
+        used to be — so removing that wrapper changed no spacing. There is no
+        breakpoint here on purpose; see docs/decisions.md.
       */}
-      <div className="flex flex-col gap-3 min-[560px]:flex-row min-[560px]:items-start">
-        {mode === 'sign-up' && (
-          <Field label="Name" value={name} onChange={setName} autoComplete="name" />
-        )}
+      {mode === 'sign-up' && (
+        <Field label="Name" value={name} onChange={setName} autoComplete="name" />
+      )}
 
+      <Field
+        label="Email"
+        type="email"
+        value={email}
+        onChange={setEmail}
+        autoComplete="email"
+        required
+      />
+
+      {mode !== 'reset' && (
         <Field
-          label="Email"
-          type="email"
-          value={email}
-          onChange={setEmail}
-          autoComplete="email"
+          label="Password"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
           required
+          // §10 sets minPasswordLength to 10 server-side; say so before they type.
+          hint={mode === 'sign-up' ? 'At least 10 characters.' : undefined}
         />
+      )}
 
-        {mode !== 'reset' && (
-          <Field
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
-            required
-            // §10 sets minPasswordLength to 10 server-side; say so before they type.
-            hint={mode === 'sign-up' ? 'At least 10 characters.' : undefined}
-          />
-        )}
-
-        {/*
-          Mirrors Field's own shape — label slot, then control — so the button
-          drops into the row already aligned with the inputs instead of being
-          nudged down by a hard-coded offset. The slot wears the real label's
-          classes for that reason; it is empty and hidden from assistive tech,
-          since the button labels itself.
-        */}
-        <div className="flex flex-col gap-1 min-[560px]:shrink-0">
-          <span
-            aria-hidden="true"
-            className={`hidden select-none min-[560px]:block ${FIELD_LABEL}`}
-          >
-            &nbsp;
-          </span>
-          <button
-            type="submit"
-            disabled={busy}
-            className={`border-rule hover:border-text mt-1 rounded-md border px-4 transition-colors disabled:opacity-50 min-[560px]:mt-0 ${BUTTON_TEXT}`}
-          >
-            {busy
-              ? 'One moment…'
-              : mode === 'sign-up'
-                ? 'Create account'
-                : mode === 'reset'
-                  ? 'Send reset link'
-                  : 'Sign in'}
-          </button>
-        </div>
-      </div>
+      {/*
+        No `mt-1`. The submit is one gap-3 from the last field, the same 12px that
+        separates the fields from each other, so the whole form is on one rhythm
+        rather than setting the button slightly apart. The optical centring on
+        /sign-in is derived from these gaps — changing one means recomputing it.
+      */}
+      <button
+        type="submit"
+        disabled={busy}
+        className={`border-rule hover:border-text rounded-md border px-4 transition-colors disabled:opacity-50 ${CONTROL_TEXT}`}
+      >
+        {busy
+          ? 'One moment…'
+          : mode === 'sign-up'
+            ? 'Create account'
+            : mode === 'reset'
+              ? 'Send reset link'
+              : 'Sign in'}
+      </button>
 
       {message && <p className="text-muted text-sm">{message}</p>}
 
-      <div className="text-muted flex flex-wrap gap-3.5 text-xs">
+      {/*
+        `mt-4` on top of the form's gap-3 makes 28px, which is `gap-7` — the same
+        distance the tagline sits above the first field. These switches change what
+        the form is, so they are not part of its rhythm; setting them at the gap
+        that separates the header from the form says that. It is the one place in
+        this form that overrides the gap, which is why the number is written as the
+        arithmetic it is rather than as `mt-4` with no explanation.
+
+        Careful: /sign-in's optical centring is derived from what sits below the
+        fields, and this is part of it (docs/decisions.md).
+      */}
+      <div className="text-muted mt-4 flex flex-wrap gap-3.5 text-xs">
         {mode !== 'sign-in' && (
           <Switch onClick={() => setMode('sign-in')}>Sign in with a password</Switch>
         )}
@@ -172,11 +161,20 @@ export function SignInForm() {
 
 function Switch({ onClick, children }: { onClick: () => void; children: string }) {
   return (
+    // A chevron instead of an underline. Three underlined phrases in a row at
+    // 12px is a lot of rule for very little text, and the underline was also the
+    // heaviest thing on a page whose only real content is two boxes. The chevron
+    // carries the affordance and colour carries the hover.
+    //
+    // `inline-flex items-center` keeps the glyph on the text's baseline block
+    // rather than the line box's, and `gap-1` is tight on purpose: the chevron is
+    // a marker on the phrase, not a sibling of it.
     <button
       type="button"
       onClick={onClick}
-      className="hover:text-text tap-target underline underline-offset-4 transition-colors"
+      className="hover:text-text tap-target inline-flex items-center gap-1 transition-colors"
     >
+      <ChevronIcon />
       {children}
     </button>
   )
@@ -204,12 +202,10 @@ function Field({
   const [revealed, setRevealed] = useState(false)
 
   return (
-    // min-w-0 so the inputs share the row evenly and shrink rather than
-    // overflowing it — flex items default to min-width:auto.
-    <div className="flex flex-col gap-1 min-[560px]:min-w-0 min-[560px]:flex-1">
-      <label htmlFor={id} className={FIELD_LABEL}>
-        {label}
-      </label>
+    // gap-1 holds the hint under the input. The field is full width at every
+    // size; the `min-w-0 flex-1` pair that used to be here was for sharing a row
+    // with the other fields, and there is no row now.
+    <div className="flex flex-col gap-1">
       <div className="relative">
         <input
           id={id}
@@ -218,14 +214,23 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
           required={required}
+          placeholder={label}
+          // The name lives inside the field, so it goes the instant anything is
+          // typed. `aria-label` carries it for a screen reader independently of
+          // that — a placeholder is decoration that happens to read as a name,
+          // and it is the wrong thing to leave a field's only name resting on.
+          aria-label={label}
           // Mono on passwords, for the same functional reason the handle field
           // gets it (§10 homoglyphs): the moment these characters are visible,
           // telling l from 1 from I is the entire job. Applied whether or not it
           // is currently revealed, so toggling does not reflow the text.
           //
-          // pr-10 on password fields only, so the text never runs under the eye.
-          className={`bg-surface border-rule focus:border-muted w-full rounded-md border pl-3 outline-none transition-colors ${
-            isPassword ? 'pr-11 font-mono' : 'pr-3'
+          // The placeholder is exempt — it is interface text, not a password,
+          // and in mono it read as a different kind of thing to the field beside
+          // it. pr-11 on password fields only, so the text never runs under the
+          // eye.
+          className={`bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-md border pl-3 outline-none transition-colors ${
+            isPassword ? 'pr-11 font-mono placeholder:font-sans' : 'pr-3'
           } ${CONTROL_TEXT}`}
         />
         {isPassword && (

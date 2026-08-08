@@ -362,34 +362,90 @@ The weight is pinned in the utility to keep that from happening quietly.
 fetch entirely. Not done — it adds a build dependency and a binary in the repo
 for a saving nobody has asked for yet.
 
-### Input text at 14, field labels at 12.5
+### Input text at 13, and no field labels
 
 Settled by eye over several passes rather than derived from a ratio. Inputs went
-14 → 15 → 14.5 → **14**; field labels went 12 → 13 → **12.5**. The landing point
-matters less than the two constraints that survived the wandering, below.
+14 → 15 → 14.5 → 14 → **13**; field labels went 12 → 13 → 12.5 → **gone**, into
+the field as placeholders (below). The landing point matters less than the two
+constraints that survived the wandering, below.
 
-Half-pixel sizes are not a mistake. Browsers lay type out at subpixel precision;
-only the rasterised glyph snaps to the pixel grid, and on the retina displays
-this app is designed for it does not even do that.
+**13 arrived via the placeholder, not on its own.** The placeholder was set a
+pixel under the 14px value, then the value was matched down to it, so a field
+does not change size between empty and typed. That is the rule worth keeping:
+**one size per field, `::placeholder` inheriting it**, with no second declaration
+anywhere that can fall out of step.
 
-**Two traps this scale carries**, both of which have already caused a visible
-bug once:
+**The 16px touch branch stayed.** Matching the value down briefly took the coarse
+size to 15px, which is under Safari's zoom threshold and cost the guard the
+branch exists for (caveat below). It went back to 16. The rule above survives it
+intact — value and placeholder are still one size — because what differs is the
+pointer, not the state of the field: 13/13 with a mouse, 16/16 on touch. A field
+that grows when you touch it is a scale; a field that grows when you type in it
+is a bug.
 
-- `text-xs` and `text-sm` set font-size **and** line-height. Arbitrary values
-  like `text-[14.5px]` set font-size **only**, inheriting the 1.45 body
-  line-height. Mixing the two forms in one row produces controls of different
-  heights, silently.
-- The inline sign-in row derives its alignment from those heights. So the
-  button's spacer must carry the real label's classes and the button must carry
-  the input's — `FIELD_LABEL` and `CONTROL_TEXT` in `components/sign-in-form.tsx`
-  exist for exactly this and should not be inlined back.
+**Nothing is set at a half pixel any more**, but they were not a mistake when
+they were: browsers lay type out at subpixel precision, and only the rasterised
+glyph snaps to the pixel grid.
 
-**The capture results sit at 13**, a full pixel under the 14 input above them.
-They matched at 14/14 for a while, which had a logic to it — the thing you type
-and the thing you pick being the same size — but a visible step reads better: the
-query is yours, the results are the world's, and they should not sit in the same
-tier. Keep the whole-pixel gap if either moves again. The year beside each title
-stays at 12 with the rest of the meta.
+**The trap this scale carries**, which has already caused a visible bug once:
+`text-xs` and `text-sm` set font-size **and** line-height, while `input-text` and
+`control-box` set one property each on purpose — size in one, height in the
+other. Swap either for a Tailwind size and the two fight over the height, which
+is how a row of controls ends up at three different heights with nothing in the
+diff to suggest it. `CONTROL_TEXT` in `components/sign-in-form.tsx` pairs them
+and should not be inlined back. It had two siblings once — `BUTTON_TEXT` for a
+submit button that carried its own size, and `FIELD_LABEL` for the label and the
+button's height-matching spacer. Both are gone: one size for every control now,
+and no labels to match.
+
+**The capture results sit at 13**, which on a mouse is the input's size too. They
+were a pixel under a 14px input before, and matched at 14/14 before that; the
+step said the query is yours and the results are the world's, and they should not
+read as one tier. At 13/13 that step is carried by the input's border and surface
+instead of by size, which is enough — a field with chrome above a bare list is
+not ambiguous, and it is how every search field in a browser reads. **Taking the
+results to 12 to reopen the gap would be worse**: 12 is the meta tier (the year
+beside each title lives there), so it would trade a distinction for a collision,
+at a size that is too small for the primary label of a touch target in a
+phone-first product. On touch the step is still there for free — 16px input, 13px
+results.
+
+### Sign-in and reset fields name themselves from the inside
+
+No label above the input on either form: **Email**, **Password**, **Name**, **New
+password** and **Confirm** are placeholders, same words, moved inside the field
+they belong to. Asked for directly, and it suits these two forms in particular —
+there are at most three fields, every one of them is a form everyone has filled
+in before, and the label row was the only thing making the inline row a layout
+problem. Removing it took the spacer, `FIELD_LABEL` and the button's wrapper
+`<div>` with it (above).
+
+**Each input keeps an `aria-label`.** A placeholder is presentation that happens
+to read as a name: it disappears at the first keystroke, so anyone who looks away
+mid-form loses it, and it is the wrong thing to leave a field's only accessible
+name resting on. The `aria-label` is what a screen reader announces and it does
+not depend on the field being empty.
+
+**Password placeholders are `placeholder:font-sans`**, against the `font-mono` on
+the value. The mono is there to be read character by character (below) and a
+placeholder is never read that way; left in mono it made those fields look like a
+different species to the email beside them.
+
+**Onboarding went the same way**, asked for directly a moment later, so no form
+in the product now labels a field from above; `components/capture.tsx` was
+already placeholder-only with an `sr-only` label. Two things it does differently:
+
+- The handle placeholder is lower case and **stays in mono**, the one exception
+  to the rule above. It renders immediately after the `@` prefix, and the two
+  only read as one address — `@handle` — if they agree on case and typeface. A
+  sans placeholder there looked like two strings that had collided.
+- **`Name (optional)`** is one flat string. As a label it was "Name" plus a
+  dimmed `(optional)` span; a placeholder cannot carry two weights. The word
+  stays regardless — it is the only field in that form which is not required.
+
+The handle's rule (letters, numbers, underscores, 2–20) is a `<p>` under the
+field, not the placeholder, so it survives the first keystroke. That is the part
+that matters, and it was never in the label.
 
 ### Password fields: mono, and an eye inside the input
 
@@ -415,13 +471,17 @@ A first attempt put a Show/Hide **text** button beside the label instead, to
 avoid eating width from a ~200px field in the inline row. Rejected on sight: it
 read as a second label rather than a control.
 
-**Caveat, unresolved:** iOS Safari zooms the viewport on focus for any input
-under 16px. Going 15 → 14 does not introduce this, since the 15px body already
-accepted it, but it does not fix it either, and §5 makes this a phone-first
-product. The correct fix is 16px inputs, not `maximum-scale=1` on the viewport,
-which disables pinch zoom and is an accessibility failure. Decide when the React
-layer is first exercised on a real phone — see the Phase 5 PWA work, where this
-becomes visible rather than theoretical.
+**Caveat, held rather than resolved:** iOS Safari zooms the viewport on focus for
+any input under 16px and does not zoom back out. `input-text` holds a 16px
+coarse-pointer branch specifically to prevent it, and that branch is the only
+thing standing between a phone-first product (§5) and a zoom on every field.
+
+It has been dropped to 15px once, as a consequence of matching the value size to
+the placeholder, and put back. **Anything that lowers the coarse branch under 16
+reintroduces the bug**, however good the reason looks in the desktop preview
+where it is invisible. The other fix, `maximum-scale=1` on the viewport, disables
+pinch zoom and is an accessibility failure; it is not on the table. Still worth
+confirming on a real phone — see the Phase 5 PWA work.
 
 ### The tagline
 
@@ -437,27 +497,116 @@ The question mark is correct because it is one question with a compound verb —
 by a comma. An earlier draft was two clauses and took a full stop for that
 reason; the reason left when the draft did.
 
-### The sign-in form goes inline at 560px
+### The sign-in form is stacked at every width
 
-Stacked below, one row above: both inputs and the button on a line, with the
-container widening from `max-w-xs` to `max-w-xl` at the same breakpoint — without
-that it would be dividing 320px.
+**One column, `max-w-sm`, no breakpoint.** Asked for directly, and it settles
+something that had been consuming a disproportionate share of this file. The form
+used to go inline at 560px — fields and button on one line, with the container
+widening to 42.5rem to give the row something to divide up. The dimensions kept
+now are the stacked ones exactly: `flex flex-col gap-3`, full-width controls,
+`mt-1` on the submit.
 
-**560px is deliberately past the ~480px where it first fits.** Switching layout
-the instant it becomes technically possible lands you in the cramped version of
-the new layout, which is worse than the comfortable version of the old one.
+The removal took four things with it, all of which existed only to serve that
+row, and each of which had already broken once: the `min-[560px]:*` variants, the
+wrapper `<div>` around the fields (redundant once it was `flex flex-col gap-3`
+inside a form that already was), the `min-w-0 flex-1` pair on each field, and the
+container's width bump. **What is left has no alignment problem to solve**, which
+is the real gain — every control is full width, so nothing can line up wrongly.
 
-Two details that are load bearing rather than incidental:
+**One gap for the whole form.** The submit button had `mt-1` on top of the gap-3,
+setting it slightly apart from the last field; it is gone on all three forms, so
+the space between password and button is the space between the fields. It read as
+an exception to a rhythm that has nothing else in it — three or four boxes in a
+column — and 12px throughout is what makes that column read as one object. The
+sign-in centring numbers derive from these gaps, so this is a two-file change.
 
-- The row is `items-start`, not `items-end`. In sign-up mode the password field
-  grows a hint underneath it, and bottom-aligning would shunt that one input out
-  of line with the others.
-- The button sits in a wrapper mirroring `Field`'s own shape — an empty label
-  slot, then the control — so it aligns with the inputs structurally. A
-  hard-coded top offset would break the moment the label size changed.
+**The mode switches sit `mt-4` below that**, making 28px with the form's gap —
+the same `gap-7` that separates the tagline from the first field. They are the one
+thing in the form that overrides the gap, and they earn it: they do not submit
+anything, they change what the form *is*. Setting them at the distance that
+separates the header from the form says so. The number is written as that
+arithmetic, not as a loose `mt-4`.
+
+**They lost their underlines and took a chevron instead**
+(`components/icon-chevron.tsx`). Three underlined phrases at 12px is a lot of rule
+for very little text, and on a page whose only real content is two boxes the
+underlines were the heaviest marks on it. The chevron points right and sits on the
+left, so it reads as a marker on something that leads somewhere rather than as a
+back arrow; hover is carried by colour alone. It is 12px against a 16px line box
+on purpose — a taller glyph would grow the switch row and invalidate the centring
+numbers above.
+
+It also puts the three auth pages on one shape: /sign-in, /onboarding and
+/reset-password are now all `max-w-sm` single columns, which they were not while
+one of them widened past the others at 560px.
+
+**If an inline row is ever wanted back**, the parts to restore are listed above
+and in `components/sign-in-form.tsx`; the ordering constraint is that the button
+needs whatever the fields have above them, or it will not align.
 
 Alignment of the mark and tagline uses `text-start`, not `text-left`, so it
 follows writing direction. Nothing on this page uses a physical direction.
+
+### Centring the fields, not the block (/sign-in)
+
+`my-auto` centres the whole block — mark, tagline, fields, button, switches — but
+the thing that should *look* centred is the field pair, and the block is not
+symmetric about it. Padding the light side makes it symmetric, which moves the
+pair by half of what you add.
+
+**The correction changes side with the pointer**, so there are two classes rather
+than one with an override:
+
+```
+mouse  100px above the pair, 94px below  → 6px short → pointer-fine:pb-[6px]
+touch  100px above the pair, 104px below → 4px over  → pointer-coarse:pt-1
+```
+
+Touch is heavier below because `control-box` grows the fields and the button to
+48px there while the header and the 12px switches do not move. A device
+reporting neither pointer gets no correction and sits 3px low, which is the right
+way to fail.
+
+Two declarations do it, and the split between them is the point:
+
+- **The pointer pair above, on the centred block.** Nothing renders in that
+  padding; it is optical centring, not spacing.
+- **`pt-[calc(3rem+env(safe-area-inset-bottom))]` on `<main>`.** The top padding
+  carries the *bottom* inset deliberately. `safe-bottom` adds that inset below for
+  clearance, correctly, but the same padding is what `my-auto` centres inside — an
+  inset on one edge only lifts the content by half of it, so the more home
+  indicator a device has, the higher the form floats. Mirroring it on top keeps
+  the box symmetric on every device. It replaced `py-12`, whose only remaining job
+  was that 3rem top, so there is now one declaration per edge and no override.
+
+**This started as `--safe-bottom-base: 4rem`** — one rem of extra bottom padding,
+which lifted the content by half. It measured right on a laptop and overshot by
+~21px on any iPhone with an indicator, because it corrected a fixed imbalance with
+a device-variable property. Two jobs on one declaration. That is the failure mode
+worth remembering, not the number.
+
+**Both numbers are derived, not chosen.** They are the header-above minus
+switches-below difference at each control size, so anything that changes the
+form's rhythm makes them wrong, and they have already moved twice: closing the
+submit button's `mt-1` took them from 18/8 to 22/12, and setting the switches
+`mt-4` below the button took them to 6/4 and flipped the touch one's sign. Both
+were verified by compiling `app/globals.css` through `@tailwindcss/postcss`
+directly — the dev server serves a cached CSS chunk that can lag a source edit by
+several minutes, and it will happily show you a class you have deleted.
+
+**It is per-page, not a token**, because the imbalance is per-page. /onboarding
+has a two-line heading and a three-line paragraph over one field and would need
+more; /reset-password is close to this page but not identical. Neither has been
+measured, and neither is corrected.
+
+**Landscape is deliberately not centred at all.** `my-auto` collapses when the
+content is taller than the container, which is what keeps the top of the form
+reachable when a keyboard takes half the viewport. The padding above stays
+scrollable; a transform-based correction would not have.
+
+**Nothing here is measured on hardware.** The numbers come from the box model —
+line-height plus padding plus border, per control. The Phase 5 phone pass is where
+they get confirmed or corrected.
 
 ---
 
