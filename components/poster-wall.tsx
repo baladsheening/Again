@@ -42,16 +42,22 @@ import { useCapture } from './capture-provider'
  * `images.unoptimized` in next.config.ts is what stops `next/image` doing it
  * quietly).
  */
-export function PosterWall({ films }: { films: FilmSearchResult[] }) {
+export function PosterWall({
+  films,
+  empty = 'Nothing to show from the cinema listings just now. Search is still the way in.',
+}: {
+  films: FilmSearchResult[]
+  /**
+   * What to say when there is nothing. The default is about the listing; search
+   * passes its own, because "the cinema listings" is the wrong explanation for a
+   * query that matched nothing.
+   */
+  empty?: string
+}) {
   const { choose } = useCapture()
 
   if (films.length === 0) {
-    return (
-      <p className="text-muted max-w-sm py-10 text-sm">
-        Nothing to show from the cinema listings just now. Search is still the
-        way in.
-      </p>
-    )
+    return <p className="text-muted max-w-sm py-10 text-sm">{empty}</p>
   }
 
   return (

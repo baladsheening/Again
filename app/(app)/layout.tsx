@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { CaptureProvider } from '@/components/capture-provider'
+import { SearchProvider } from '@/components/search-provider'
 import { Shell } from '@/components/shell'
 import { countMyEntries, getMyProfile, getSessionUser } from '@/lib/db'
 
@@ -31,11 +32,19 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
     lives in `children`. Both start the same add, so the flow has to be above
     both of them.
   */
+  /*
+    `SearchProvider` sits inside `CaptureProvider` and outside `Shell`, because
+    the query is read in two places the shell straddles: the field in its
+    furniture, and the wall it renders in place of `children` while a search is
+    live. Picking a result still ends in the capture flow above it.
+  */
   return (
     <CaptureProvider>
-      <Shell handle={profile.handle} counts={counts}>
-        {children}
-      </Shell>
+      <SearchProvider>
+        <Shell handle={profile.handle} counts={counts}>
+          {children}
+        </Shell>
+      </SearchProvider>
     </CaptureProvider>
   )
 }

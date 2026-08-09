@@ -1,212 +1,79 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 
-import type { FilmSearchResult } from '@/lib/domain'
-import { useCapture } from './capture-provider'
-import { Poster } from './poster'
+import { useSearch } from './search-provider'
 
 /**
- * Search, in both of the places it lives.
+ * The search prompt: a caret waiting to be typed into, and the word itself.
  *
- * §8's load-bearing requirement is here and unchanged: **it resolves as you
- * type**. Free text that never resolves to a canonical entity silently kills
- * overlap, and the failure is invisible for months — so this is a picker over
- * TMDB, never a text box that accepts what you typed.
+ * **It has no results of its own.** Until 9 August this owned the query, the
+ * fetch and a dropdown list beneath it; results now replace the poster wall
+ * instead, so the state moved up to `SearchProvider` and the list is gone. What
+ * is left is the input — which is the whole of what this ever was visually,
+ * since the field has been borderless and transparent since the boxed version
+ * was dropped.
  *
- * **One look, two directions.** It used to have a second, boxed form for the top
- * of the home screen at rail widths — a bordered field on a surface, sized like
- * the auth inputs. That went on 9 August: a search box that looks like a form
- * field asks to be filled in and submitted, and this is a prompt you type into
- * and pick from. Now the prompt is the design everywhere, and the only thing
- * that varies is which way the results open, which is a fact about where the
- * field sits rather than about what it is.
- *
- * `up` is the phone's bottom bar, where there is nothing below the field but the
- * edge of the screen. `down` is the rail, where there is a column of nothing.
+ * The same prompt appears in two places: the phone's bottom bar and the foot of
+ * the poster column at rail widths. Both wrap it in a chevron and a row; neither
+ * needs anything else from it, which is why it takes no props.
  */
-
-const DEBOUNCE_MS = 220
-
-export function SearchField({
-  direction,
-  onActiveChange,
-}: {
-  direction: 'up' | 'down'
-  /** The phone bar only: lets the shell keep the bar on screen while in use. */
-  onActiveChange?: (active: boolean) => void
-}) {
-  const { choose } = useCapture()
-
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<FilmSearchResult[]>([])
-  const [searching, setSearching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [focused, setFocused] = useState(false)
-
+export function SearchField() {
+  const { query, setQuery, setFocused, focused, clear } = useSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  /* --- resolve as you type ------------------------------------------------ */
-
-  const trimmed = query.trim()
-
-  useEffect(() => {
-    if (trimmed.length < 2) return
-
-    const controller = new AbortController()
-
-    // Everything that sets state happens inside the timeout, not in the effect
-    // body — a synchronous setState here would cascade a render per keystroke.
-    const timer = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, {
-          signal: controller.signal,
-        })
-        if (!res.ok) {
-          setResults([])
-          setError(res.status === 429 ? 'Slow down a moment.' : null)
-          return
-        }
-        const body = (await res.json()) as { results: FilmSearchResult[] }
-        setResults(body.results)
-        setError(null)
-      } catch {
-        // Aborted by the next keystroke — the expected path, not a failure.
-      } finally {
-        setSearching(false)
-      }
-    }, DEBOUNCE_MS)
-
-    return () => {
-      controller.abort()
-      clearTimeout(timer)
-    }
-  }, [trimmed])
-
-  // Derived rather than cleared in the effect. Below two characters there is
-  // nothing to show, and that is a fact about `query`, not state of its own.
-  const visibleResults = trimmed.length >= 2 ? results : []
-  const showResults = visibleResults.length > 0 || (searching && trimmed.length >= 2)
-
-  // The shell holds the bar still while this is in use: a bar that slid away
-  // mid-search would take the field, the results and the keyboard with it.
-  useEffect(() => {
-    onActiveChange?.(focused || trimmed.length > 0)
-  }, [focused, trimmed, onActiveChange])
-
-  function pick(film: FilmSearchResult) {
-    // Clear before handing over. The sheet is an overlay, so without this the
-    // results would still be sitting behind it when it closes.
-    setQuery('')
-    setResults([])
-    choose(film)
-    inputRef.current?.blur()
-  }
-
   return (
-    <div className="relative min-w-0 flex-1">
-      <label htmlFor={`search-${direction}`} className="sr-only">
+    /*
+      `-translate-y-px` is an optical correction, not a layout fix. The field is
+      already centred mathematically against the chevron beside it; a lowercase
+      word without descenders still reads about a pixel and a half low, because
+      the eye measures the x-height band and not the line box. Applied to the
+      caret and the field together so the two stay in step.
+    */
+    <div className="flex -translate-y-px items-center gap-1.5">
+      <label htmlFor="search" className="sr-only">
         Search for a film
       </label>
 
       {/*
-        `-translate-y-px` is an optical correction, not a layout fix. The field
-        is already centred mathematically against the chevron beside it; a
-        lowercase word without descenders still reads about a pixel and a half
-        low, because the eye measures the x-height band and not the line box.
-        Applied to the caret and the field together so the two stay in step.
+        A prompt, not a control. The caret blinks only while the field is empty
+        and unfocused: once it has focus the browser draws the real one, and two
+        carets in a row is a bug rather than an effect.
       */}
-      <div className="flex -translate-y-px items-center gap-1.5">
-        {/*
-          A prompt, not a control. The caret blinks only while the field is empty
-          and unfocused: once it has focus the browser draws the real one, and
-          two carets in a row is a bug rather than an effect.
-        */}
-        {!focused && trimmed.length === 0 && (
-          <span
-            aria-hidden
-            className="bg-muted animate-caret h-[1.1em] w-px shrink-0 self-center"
-          />
-        )}
-
-        <input
-          id={`search-${direction}`}
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setQuery('')
-              setResults([])
-              inputRef.current?.blur()
-            }
-          }}
-          autoComplete="off"
-          spellCheck={false}
-          placeholder="search"
-          /*
-            Borderless and transparent: whatever holds the field is its container,
-            and a box inside a box would read as two surfaces. 16px is not a style
-            choice — iOS Safari zooms the viewport on focus for anything below it
-            and does not zoom back.
-          */
-          className="placeholder:text-muted/70 w-full min-w-0 bg-transparent text-base leading-6 outline-none"
+      {!focused && query.length === 0 && (
+        <span
+          aria-hidden
+          className="bg-muted animate-caret h-[1.1em] w-px shrink-0 self-center"
         />
-      </div>
-
-      {showResults && (
-        <ul
-          role="listbox"
-          aria-label="Search results"
-          /*
-            `bottom-full` in the phone bar, so the list grows up off the field
-            instead of into the edge of the screen. That also puts it where the
-            keyboard is not: the viewport is `interactiveWidget:
-            'resizes-content'`, so an open keyboard shrinks the layout viewport
-            and this opens into what remains.
-
-            Downward in the rail, and **wider than the rail**. The column is
-            224px, which is 184px of content — too narrow to read a film title
-            in. The list is absolutely positioned, so it can spill to the right
-            over the gap; it carries a surface and a border, so it reads as
-            something laid on top rather than as a broken column.
-
-            `dvh` rather than `vh` so the cap follows the viewport the browser
-            actually has, and `overscroll-contain` so reaching the end of the
-            list does not start scrolling the page behind it.
-          */
-          className={`bg-surface border-rule absolute z-10 max-h-[50dvh] overflow-y-auto overscroll-contain rounded-md border ${
-            direction === 'up' ? 'bottom-full mb-3 w-full' : 'top-full mt-3 w-72'
-          }`}
-        >
-          {visibleResults.map((film) => (
-            <li key={film.externalId} role="option" aria-selected={false}>
-              <button
-                type="button"
-                onClick={() => pick(film)}
-                className="hover:bg-bg/60 flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors"
-              >
-                <Poster posterPath={film.posterPath} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm">{film.title}</span>
-                  <span className="micro text-muted mt-1 block">{film.year ?? '—'}</span>
-                </span>
-              </button>
-            </li>
-          ))}
-          {visibleResults.length === 0 && searching && (
-            <li className="text-muted px-3.5 py-2.5 text-sm">Looking…</li>
-          )}
-        </ul>
       )}
 
-      {/* Announced but not shown in a prompt this small; the toast carries the
-          visible failures. */}
-      {error && <p className="sr-only">{error}</p>}
+      <input
+        id="search"
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onKeyDown={(e) => {
+          // Escape puts the listing back. It is the only way out other than
+          // deleting what you typed, and the wall gives no other affordance.
+          if (e.key === 'Escape') {
+            clear()
+            inputRef.current?.blur()
+          }
+        }}
+        autoComplete="off"
+        spellCheck={false}
+        placeholder="search"
+        /*
+          Borderless and transparent: whatever holds the field is its container,
+          and a box inside a box would read as two surfaces. 16px is not a style
+          choice — iOS Safari zooms the viewport on focus for anything below it
+          and does not zoom back.
+        */
+        className="placeholder:text-muted/70 w-full min-w-0 bg-transparent text-base leading-6 outline-none"
+      />
     </div>
   )
 }

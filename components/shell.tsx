@@ -11,7 +11,9 @@ import { COLLECTIONS } from '@/lib/vocabulary'
 import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
+import { PosterWall } from './poster-wall'
 import { SearchField } from './search-field'
+import { useSearch } from './search-provider'
 
 /**
  * The signed-in shell: one navigation, at every width.
@@ -170,10 +172,11 @@ export function Shell({
     would take the field, the results and the keyboard's anchor with it, and the
     scroll that triggered it would often be the user reaching for a result.
   */
-  const [searchActive, setSearchActive] = useState(false)
+  const { active: searchActive, focused: searchFocused, results, searching } = useSearch()
+  const searchBusy = searchActive || searchFocused
 
   useEffect(() => {
-    if (!showCollections || searchActive) return
+    if (!showCollections || searchBusy) return
 
     let last = window.scrollY
     let frame = 0
@@ -197,7 +200,7 @@ export function Shell({
       window.removeEventListener('scroll', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [showCollections, searchActive])
+  }, [showCollections, searchBusy])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
@@ -365,7 +368,7 @@ export function Shell({
             <span className="text-muted shrink-0">
               <ChevronIcon />
             </span>
-            <SearchField direction="up" />
+            <SearchField />
           </div>
         </div>
       </div>
@@ -447,7 +450,7 @@ export function Shell({
         the screen. If `--color-bg` ever moves, this moves with it by hand.
       */}
       <header
-        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 shadow-[0_1.5rem_0_0_#000]"
+        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 shadow-[0_1rem_0_0_#000]"
         style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
       >
         <div
@@ -639,7 +642,7 @@ export function Shell({
           </button>
 
           {barMode === 'search' ? (
-            <SearchField direction="up" onActiveChange={setSearchActive} />
+            <SearchField />
           ) : (
             /*
               Dotted, not spaced. Labels separated by gaps alone read as loose
@@ -762,11 +765,36 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_1.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_1rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
-        {children}
+        {/*
+          **Searching replaces the page, it does not open a list over it.**
+
+          Typing swaps whatever collection or wall you were looking at for a wall
+          of what matched, in the same grid, at the same size, tapping to the same
+          intent sheet. A dropdown would have been less work and a worse answer:
+          this app's home screen is already a wall of posters you pick from, and a
+          search that produced a different *kind* of thing would have made finding
+          a film by name feel unlike finding one by looking.
+
+          It replaces the content on every route rather than only on Home. The
+          alternative was navigating to `/` first, which would lose your place in
+          a collection to run a search you might abandon in two keystrokes.
+          Escape, or emptying the field, puts the page back.
+
+          `results` is empty until the query passes the provider's minimum, so a
+          single character shows the page rather than an empty wall.
+        */}
+        {searchActive ? (
+          <PosterWall
+            films={results}
+            empty={searching ? 'Looking…' : 'Nothing by that name.'}
+          />
+        ) : (
+          children
+        )}
       </main>
     </div>
   )
