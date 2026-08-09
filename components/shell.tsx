@@ -121,6 +121,7 @@ const MARK_LINE_HEIGHT = 1.4167
 const MARK_TRIM_TOP = '-0.4167em'
 const MARK_TRIM_BOTTOM = '-0.0556em'
 
+
 export function Shell({
   handle,
   counts,
@@ -299,13 +300,20 @@ export function Shell({
         the foot keeps its rule, where it is doing real work: separating a fixed
         surface from the list scrolling underneath it.
 
-        **It does not move.** `sticky` rather than `fixed`, and the difference is
-        not cosmetic: sticky keeps the header in normal flow, so the content
-        below it starts in the right place on its own and then passes underneath
-        as you scroll. Fixed would take it out of flow and require `main` to
-        carry a top padding equal to the header's height — a number that has to
-        be kept in step with the wordmark size by hand, and is wrong the moment
-        it is not.
+        **It does not move — including through the overscroll bounce**, which is
+        why it is `fixed` rather than `sticky`.
+
+        Sticky was the better answer while the only requirement was "stays at the
+        top": it keeps the header in flow, so content below starts in the right
+        place by itself. But a sticky element is only stuck while the scroll
+        offset is positive. Rubber-band at the top drives it negative, the header
+        stops being stuck, and it rides down the screen with the posters. Fixed
+        is anchored to the viewport and sits out the bounce — the same reason the
+        collection bar at the foot does not move with it.
+
+        What that costs is the thing sticky was chosen to avoid: out of flow, the
+        header holds no space open, so `main` has to carry the header's height in
+        its own padding. See `HEADER_HEIGHT`.
 
         `bg-bg` is what makes the pass-under work at all: without a ground the
         list would show through the mark.
@@ -359,7 +367,7 @@ export function Shell({
         the screen. If `--color-bg` ever moves, this moves with it by hand.
       */}
       <header
-        className="bg-bg rail:hidden sticky top-0 z-20 shadow-[0_1.5rem_0_0_#000]"
+        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 shadow-[0_1.5rem_0_0_#000]"
         style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
       >
         <div
@@ -612,30 +620,43 @@ export function Shell({
 
         `safe-bottom` adds the home-indicator inset on top of whichever applies.
 
-        **`pt-6` below the rail breakpoint, and it is the fix for a regression I
-        caused.** This was `py-8` — 32px — until 9 August, when the mark was
-        moved up and the whole gap was collapsed into the header's `pb` so the
-        two could be one constant. The number went 48px to 10px in one step, and
-        the descender has been meeting the posters ever since, on a device I
-        cannot reproduce it on.
+        **The top padding is the header plus the gap**, and it has to be, because
+        the header is `fixed` and holds no space open itself.
 
-        Everything measurable says 10px is clear: rendered in a browser the ink
-        stops 10.00px above the first poster, and the descender is now contained
-        by the mark's own box, so it cannot reach past it. But the report is
-        consistent, it began exactly here, and it survived three fixes aimed at
-        the type. Whatever is moving on that device is worth about ten pixels,
-        and at 48px there was enough slack to absorb it without anyone noticing.
+        `3.375rem` is the header, and it is not a guess — it is `MASTHEAD_GAP`
+        above the mark, the mark's trimmed box, and `MASTHEAD_GAP` below it:
 
-        So the slack comes back — not all of it, and not to where it was.
+          0.625rem  +  2.125rem  +  0.625rem  =  3.375rem
+          (10px)       (34px)       (10px)       (54px)
 
-        **The gaps are deliberately no longer equal**, which was the earlier
-        request, and the reason is the header above: it is `sticky`, so content
-        passes *underneath* it. The space above the mark is dead air against a
-        status bar; the space below it is a lane things move through. A static
-        masthead wants those equal. A sticky one wants room beneath.
+        The 2.125rem is the mark after its trims, `(1.4167 − 0.4167 − 0.0556) ×
+        36px`, and it is the one term that is a consequence rather than a
+        decision — **if `--text-wordmark` or the trims move, this moves with
+        them.** Measured against the real header, which reports 54.00px.
 
-        Above the breakpoint there is no header, so `rail:pt-10` supplies the
-        space instead.
+        `1.5rem` is the gap, and it is the same 1.5rem as the header's shadow
+        offset. Those two must stay equal: the shadow is what keeps the distance
+        identical once the page scrolls and content starts passing under the
+        mark. **Three numbers move together** — this padding, that shadow, and
+        the header's own paddings above.
+
+        The notch inset is added rather than folded in, because it is clearance
+        rather than height and varies by device.
+
+        Written as literals rather than as the constants above because Tailwind
+        reads class names as text: a template value here would compile to
+        nothing, and a padding that silently resolves to zero is precisely the
+        failure this file has already had once today.
+
+        It is also, deliberately, a bigger gap than the 10px above the mark. That
+        symmetry was an earlier request and it did not survive contact: the space
+        above the mark is dead air against a status bar, while the space below is
+        a lane things move through. Collapsing it to 10px is what made the
+        descender look met by the posters, and the slack is what fixed it.
+
+        Above the breakpoint there is no header at all, so `rail:pt-10` overrides
+        the lot — which is why this is an arbitrary class rather than an inline
+        style, since an inline style would win against the breakpoint.
 
         `rail:pt-10` rather than `py-10`: `padding-block` would set the bottom
         too, and the bottom belongs to `safe-bottom` at every width. Two rules
@@ -661,7 +682,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-6 ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_1.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
