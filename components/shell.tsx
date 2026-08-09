@@ -175,7 +175,7 @@ export function Shell({
         */
         className="gutter rail:sticky rail:top-0 rail:flex rail:h-dvh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
       >
-        <Link href="/" className="wordmark text-wordmark-nav">
+        <Link href="/" className="wordmark text-wordmark">
           Again
         </Link>
 
@@ -257,7 +257,7 @@ export function Shell({
       */}
       <header className="bg-bg rail:hidden sticky top-0 z-20 pt-[env(safe-area-inset-top)]">
         <div className="gutter flex items-center justify-between py-4">
-          <Link href="/" className="wordmark text-wordmark-nav">
+          <Link href="/" className="wordmark text-wordmark">
             Again
           </Link>
 
@@ -357,10 +357,17 @@ export function Shell({
         behind it. They cannot both be shown — the collection line already runs
         to within about 15px of a 375px screen, and there is no width left for a
         field beside it.
+
+        **No rule along the top of it**, matching the header. The bar has
+        `bg-bg`, so content still stops cleanly at its edge — the ground does the
+        separating and the line was only naming a boundary the eye already had.
+        Same argument that took the hairline out from under the wordmark: a rule
+        dividing two things which are already divided is decoration, and §11 does
+        not spend rules on decoration.
       */
       <nav
         aria-label="Main"
-        className={`border-rule bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
+        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
       >

@@ -176,16 +176,23 @@
     ─────────────────────────────────────────────────────────────────────────
   */
 
-  /* the wordmark on /sign-in and /reset-password, where it is the page */
-  --text-wordmark: 2.25rem;
   /*
-    The same wordmark in the shell. 21px until 9 August, which was set when it
-    was the largest thing on the screen by default rather than by intent — once
-    titles went to 22/28 the mark was quietly the *smallest* piece of display
-    type in the app, and a masthead that loses to the body text is not a
-    masthead. 28px puts it back above the titles at both widths.
+    The wordmark, everywhere it appears: `/sign-in`, `/reset-password`, and the
+    shell at both widths.
+
+    There were two of these. `--text-wordmark-nav` held the shell copy at 21px,
+    on the reasoning that the mark is *the page* on an auth screen and only a
+    label inside the app. That reasoning went in two steps on 9 August — 21 to
+    28 when the titles grew past it, then 28 to here — and at the second step the
+    two values met. A second token holding the same number is the thing the
+    `--color-muted` note below argues against: one value spelled twice, free to
+    drift apart for no reason. So there is one.
+
+    What it concedes is that the mark is a masthead in the app too, not a label.
+    That is the right reading of a shell whose header now holds nothing else but
+    two glyphs.
   */
-  --text-wordmark-nav: 1.75rem;
+  --text-wordmark: 2.25rem;
   /*
     A film title in a list. The largest thing on any signed-in screen, and
     deliberately so — with the poster gone from the row (§11, 9 August) the
