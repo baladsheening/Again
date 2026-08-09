@@ -259,30 +259,7 @@ export function Shell({
           Again
         </Link>
 
-        {/*
-          Search, in the same shape the phone bar wears it: a chevron, a caret
-          waiting to be typed into, and the word itself. It used to be a bordered
-          field at the top of the home screen — a box that looked like a form and
-          asked to be submitted, when what it is is a prompt you pick from.
-
-          The chevron does not toggle here. On the phone it swaps the field for
-          the collections, because a single line has room for one of them; a
-          column has room for both, so the glyph goes back to what
-          `icon-chevron.tsx` describes it as — a marker on something that leads
-          somewhere.
-
-          `items-center` and the same 1.5 gap as the bar, so the two placements
-          are the same object seen twice rather than two things that resemble
-          each other.
-        */}
-        <div className="mt-10 flex items-center gap-1.5">
-          <span className="text-muted shrink-0">
-            <ChevronIcon />
-          </span>
-          <SearchField direction="down" />
-        </div>
-
-        <nav aria-label="Main" className="mt-8 flex flex-col gap-4">
+        <nav aria-label="Main" className="mt-12 flex flex-col gap-4">
           {/*
             Home is a destination in its own right now that the capture box
             lives there rather than at the top of Wants — and on a desk it is
@@ -336,6 +313,49 @@ export function Shell({
           </button>
         </div>
       </aside>
+
+      {/*
+        --- search, at the foot of the content column (rail widths) ----------
+
+        Left-justified with the posters and level with *Sign out*, so the two
+        ends of the shell's foot read as one line rather than as two things that
+        happen to be near the bottom.
+
+        **It mirrors the rail's own box to get there.** `top-0`, `h-svh` and
+        `py-10` are the aside's three, so the last thing in this column and the
+        last thing in that one land on the same y whatever the browser chrome is
+        doing. Anchoring to `bottom` instead would have been simpler and wrong:
+        `bottom` follows the *actual* viewport, `h-svh` does not, and on a tablet
+        with a retracted toolbar the two drift apart.
+
+        The left edge is the shell's centring plus the rail's column — 17rem of
+        `rail:pl-68` and 1.25rem of `gutter` — which is exactly where `main`'s
+        content starts, and therefore where the first poster does.
+
+        `w-72` because the results open off this and 288px is a list you can read
+        a title in; the field itself needs a fraction of that. `direction="up"`
+        for the same reason as the phone: there is nothing below it.
+
+        `pointer-events-none` on the full-height column, restored on the row —
+        without it an invisible 288px-wide strip would swallow clicks on every
+        poster it crosses.
+
+        **`pb-9` where the rail has `py-10`, and the 4px is the point.** Matching
+        the two boxes is not the same as matching the two lines: the search sets
+        16px on a 24px line, *Sign out* sets 11px on a 14.3px one, so their
+        baselines sit 6.0px and 3.15px above their own bottoms. Level boxes left
+        the search reading 3.85px high. Four pixels of bottom padding removed
+        drops it onto the same line, measured at 0.15px apart — which is the
+        difference between level and *looking* level.
+      */}
+      <div className="rail:flex pointer-events-none fixed top-0 left-[calc(max(0px,50%_-_36rem)_+_18.25rem)] z-10 hidden h-svh flex-col justify-end pt-10 pb-9">
+        <div className="pointer-events-auto flex w-72 items-center gap-1.5">
+          <span className="text-muted shrink-0">
+            <ChevronIcon />
+          </span>
+          <SearchField direction="up" />
+        </div>
+      </div>
 
       {/*
         --- the header, below 45rem ---------------------------------------
