@@ -253,13 +253,36 @@ export function Shell({
           the window — invisible on a black ground, and cheap against a column
           that never settles.
         */
-        className="gutter rail:fixed rail:top-0 rail:left-[max(0px,calc(50%_-_36rem))] rail:flex rail:h-svh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
+        className="gutter rail:fixed rail:top-0 rail:left-[max(0px,calc(50%_-_36rem))] rail:z-10 rail:flex rail:h-svh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
       >
-        <Link href="/" className="wordmark text-wordmark">
+        <Link href="/" className="wordmark text-wordmark-rail">
           Again
         </Link>
 
-        <nav aria-label="Main" className="mt-12 flex flex-col gap-4">
+        {/*
+          Search, in the same shape the phone bar wears it: a chevron, a caret
+          waiting to be typed into, and the word itself. It used to be a bordered
+          field at the top of the home screen — a box that looked like a form and
+          asked to be submitted, when what it is is a prompt you pick from.
+
+          The chevron does not toggle here. On the phone it swaps the field for
+          the collections, because a single line has room for one of them; a
+          column has room for both, so the glyph goes back to what
+          `icon-chevron.tsx` describes it as — a marker on something that leads
+          somewhere.
+
+          `items-center` and the same 1.5 gap as the bar, so the two placements
+          are the same object seen twice rather than two things that resemble
+          each other.
+        */}
+        <div className="mt-10 flex items-center gap-1.5">
+          <span className="text-muted shrink-0">
+            <ChevronIcon />
+          </span>
+          <SearchField direction="down" />
+        </div>
+
+        <nav aria-label="Main" className="mt-8 flex flex-col gap-4">
           {/*
             Home is a destination in its own right now that the capture box
             lives there rather than at the top of Wants — and on a desk it is
@@ -583,7 +606,7 @@ export function Shell({
           </button>
 
           {barMode === 'search' ? (
-            <SearchField placement="bar" onActiveChange={setSearchActive} />
+            <SearchField direction="up" onActiveChange={setSearchActive} />
           ) : (
             /*
               Dotted, not spaced. Labels separated by gaps alone read as loose

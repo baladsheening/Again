@@ -194,6 +194,13 @@
   */
   --text-wordmark: 2.25rem;
   /*
+    The same mark in the rail, where there is a whole column for it and a phone
+    header's worth of restraint is not called for. A second token again — but
+    unlike `--text-wordmark-nav`, which held the same number as this one and was
+    deleted for it, this holds a different number and earns its name.
+  */
+  --text-wordmark-rail: 2.5rem;
+  /*
     A film title in a list. The largest thing on any signed-in screen, and
     deliberately so — with the poster gone from the row (§11, 9 August) the
     title is the only thing left to recognise a film by, so it carries the

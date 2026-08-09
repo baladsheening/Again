@@ -7,26 +7,33 @@ import { useCapture } from './capture-provider'
 import { Poster } from './poster'
 
 /**
- * Search, in either of the two places it lives.
+ * Search, in both of the places it lives.
  *
  * §8's load-bearing requirement is here and unchanged: **it resolves as you
  * type**. Free text that never resolves to a canonical entity silently kills
  * overlap, and the failure is invisible for months — so this is a picker over
  * TMDB, never a text box that accepts what you typed.
  *
- * `page` is the field at the top of the home screen at rail widths. `bar` is the
- * same field inside the phone's bottom bar, where the results have to open
- * *upward* because there is nothing below it but the edge of the screen.
+ * **One look, two directions.** It used to have a second, boxed form for the top
+ * of the home screen at rail widths — a bordered field on a surface, sized like
+ * the auth inputs. That went on 9 August: a search box that looks like a form
+ * field asks to be filled in and submitted, and this is a prompt you type into
+ * and pick from. Now the prompt is the design everywhere, and the only thing
+ * that varies is which way the results open, which is a fact about where the
+ * field sits rather than about what it is.
+ *
+ * `up` is the phone's bottom bar, where there is nothing below the field but the
+ * edge of the screen. `down` is the rail, where there is a column of nothing.
  */
 
 const DEBOUNCE_MS = 220
 
 export function SearchField({
-  placement,
+  direction,
   onActiveChange,
 }: {
-  placement: 'page' | 'bar'
-  /** Bar only: lets the shell keep the bar on screen while this is in use. */
+  direction: 'up' | 'down'
+  /** The phone bar only: lets the shell keep the bar on screen while in use. */
   onActiveChange?: (active: boolean) => void
 }) {
   const { choose } = useCapture()
@@ -38,7 +45,6 @@ export function SearchField({
   const [focused, setFocused] = useState(false)
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const inBar = placement === 'bar'
 
   /* --- resolve as you type ------------------------------------------------ */
 
@@ -84,14 +90,14 @@ export function SearchField({
   const showResults = visibleResults.length > 0 || (searching && trimmed.length >= 2)
 
   // The shell holds the bar still while this is in use: a bar that slid away
-  // mid-search would take the field with it.
+  // mid-search would take the field, the results and the keyboard with it.
   useEffect(() => {
     onActiveChange?.(focused || trimmed.length > 0)
   }, [focused, trimmed, onActiveChange])
 
   function pick(film: FilmSearchResult) {
-    // Clear before handing over. The sheet is an overlay now, so without this
-    // the results would still be sitting behind it when it closes.
+    // Clear before handing over. The sheet is an overlay, so without this the
+    // results would still be sitting behind it when it closes.
     setQuery('')
     setResults([])
     choose(film)
@@ -99,43 +105,25 @@ export function SearchField({
   }
 
   return (
-    <div className={`relative ${inBar ? 'min-w-0 flex-1' : ''}`}>
-      <label htmlFor={`search-${placement}`} className="sr-only">
+    <div className="relative min-w-0 flex-1">
+      <label htmlFor={`search-${direction}`} className="sr-only">
         Search for a film
       </label>
 
       {/*
-        `-translate-y-px` is an optical correction, not a layout fix.
-
-        Everything here is already centred *mathematically*: the row is 42px, the
-        chevron's glyph is centred in its 12px box, and the input's 24px line box
-        centres inside the row, so both midpoints land on 21px. It still reads
-        low, because a line box is not what the eye measures a word by.
-
-        IBM Plex Sans at 16px in a 24px line box puts the baseline 18px down
-        (half-leading 1.6 plus a 16.4px ascent). "search" has no descender, so its
-        ink runs from the top of the `h` at about 6.3px to the baseline at 18px,
-        and the x-height band that carries most of its visual weight starts at
-        9.7px. That puts the word's apparent centre near 13.3px against a line-box
-        centre of 12 — between one and two pixels low, every time, for any
-        lowercase word without descenders.
-
-        One pixel up, on the caret and the field together so the two stay in step
-        with each other. The chevron does not move: it is the fixed mark in both
-        bar states, and correcting it here would misalign it against the
-        collections.
-
-        A transform rather than a `relative`/`top` pair because it cannot affect
-        layout, and the results list is a sibling rather than a descendant, so
-        nothing inherits a new containing block from it.
+        `-translate-y-px` is an optical correction, not a layout fix. The field
+        is already centred mathematically against the chevron beside it; a
+        lowercase word without descenders still reads about a pixel and a half
+        low, because the eye measures the x-height band and not the line box.
+        Applied to the caret and the field together so the two stay in step.
       */}
-      <div className={inBar ? 'flex -translate-y-px items-center gap-1.5' : undefined}>
+      <div className="flex -translate-y-px items-center gap-1.5">
         {/*
           A prompt, not a control. The caret blinks only while the field is empty
           and unfocused: once it has focus the browser draws the real one, and
           two carets in a row is a bug rather than an effect.
         */}
-        {inBar && !focused && trimmed.length === 0 && (
+        {!focused && trimmed.length === 0 && (
           <span
             aria-hidden
             className="bg-muted animate-caret h-[1.1em] w-px shrink-0 self-center"
@@ -143,7 +131,7 @@ export function SearchField({
         )}
 
         <input
-          id={`search-${placement}`}
+          id={`search-${direction}`}
           ref={inputRef}
           type="text"
           value={query}
@@ -159,16 +147,14 @@ export function SearchField({
           }}
           autoComplete="off"
           spellCheck={false}
-          placeholder={inBar ? 'search' : 'A film you want to see'}
-          className={
-            inBar
-              ? // Borderless and transparent: the bar is the field's container,
-                // and a box inside a box would read as two surfaces. 16px is not
-                // a style choice — iOS Safari zooms the viewport on focus below
-                // it and does not zoom back.
-                'placeholder:text-muted/70 w-full min-w-0 bg-transparent text-base leading-6 outline-none'
-              : 'bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-lg border px-4 py-4 text-base leading-6 outline-none transition-colors'
-          }
+          placeholder="search"
+          /*
+            Borderless and transparent: whatever holds the field is its container,
+            and a box inside a box would read as two surfaces. 16px is not a style
+            choice — iOS Safari zooms the viewport on focus for anything below it
+            and does not zoom back.
+          */
+          className="placeholder:text-muted/70 w-full min-w-0 bg-transparent text-base leading-6 outline-none"
         />
       </div>
 
@@ -177,17 +163,24 @@ export function SearchField({
           role="listbox"
           aria-label="Search results"
           /*
-            `bottom-full` in the bar, so the list grows up off the field instead
-            of into the screen edge. That also puts it where the keyboard is not:
-            the viewport is `interactiveWidget: 'resizes-content'`, so an open
-            keyboard shrinks the layout viewport and this opens into what remains.
+            `bottom-full` in the phone bar, so the list grows up off the field
+            instead of into the edge of the screen. That also puts it where the
+            keyboard is not: the viewport is `interactiveWidget:
+            'resizes-content'`, so an open keyboard shrinks the layout viewport
+            and this opens into what remains.
+
+            Downward in the rail, and **wider than the rail**. The column is
+            224px, which is 184px of content — too narrow to read a film title
+            in. The list is absolutely positioned, so it can spill to the right
+            over the gap; it carries a surface and a border, so it reads as
+            something laid on top rather than as a broken column.
 
             `dvh` rather than `vh` so the cap follows the viewport the browser
-            actually has, and `overscroll-contain` so reaching the end of the list
-            does not start scrolling the page behind it.
+            actually has, and `overscroll-contain` so reaching the end of the
+            list does not start scrolling the page behind it.
           */
-          className={`bg-surface border-rule absolute z-10 max-h-[50dvh] w-full overflow-y-auto overscroll-contain rounded-md border ${
-            inBar ? 'bottom-full mb-3' : 'mt-1.5'
+          className={`bg-surface border-rule absolute z-10 max-h-[50dvh] overflow-y-auto overscroll-contain rounded-md border ${
+            direction === 'up' ? 'bottom-full mb-3 w-full' : 'top-full mt-3 w-72'
           }`}
         >
           {visibleResults.map((film) => (
@@ -211,7 +204,9 @@ export function SearchField({
         </ul>
       )}
 
-      {error && <p className={inBar ? 'sr-only' : 'mt-2'}>{error}</p>}
+      {/* Announced but not shown in a prompt this small; the toast carries the
+          visible failures. */}
+      {error && <p className="sr-only">{error}</p>}
     </div>
   )
 }

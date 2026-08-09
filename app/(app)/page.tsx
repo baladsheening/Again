@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 
 import { PosterWall } from '@/components/poster-wall'
-import { SearchField } from '@/components/search-field'
 import { getMyProfile, getSessionUser } from '@/lib/db'
 import type { FilmSearchResult } from '@/lib/domain'
 import { inCinemas } from '@/lib/tmdb'
@@ -14,9 +13,10 @@ import { inCinemas } from '@/lib/tmdb'
  * why that is a capture prompt rather than the discovery feature §2 rules out,
  * and `docs/decisions.md` for what it costs.
  *
- * **The search field is here only at rail widths.** Below them it lives in the
- * bottom bar, where a thumb can reach it; putting it in both places would mean
- * two fields with two pieces of state and one of them always stale.
+ * **Search is not on this page at any width.** It lived here at rail widths, as
+ * a bordered field above the wall; it moved into the rail on 9 August so that
+ * both layouts reach it the same way — the phone from its bottom bar, the desk
+ * from the column — and so the wall is the whole of the screen it is on.
  *
  * TMDB failing is not an error page. The wall is a prompt, and a prompt that
  * cannot be drawn should leave the rest of the app working — so the failure
@@ -37,13 +37,5 @@ export default async function HomePage() {
     console.error('Home: TMDB listings unavailable', cause)
   }
 
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="rail:block hidden">
-        <SearchField placement="page" />
-      </div>
-
-      <PosterWall films={films} />
-    </div>
-  )
+  return <PosterWall films={films} />
 }
