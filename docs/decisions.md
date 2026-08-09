@@ -996,6 +996,24 @@ the edge on *every* phone, so the row would have wrapped to two lines and undone
 the reason for the dots. The rail has two edges to hang a label and a numeral
 from; a single line has one, so the count is the thing that gives.
 
+**The collection row moved to the foot of the phone screen.** Directed, and the
+reason it is better is not style: that row is the only thing on a phone reached
+for repeatedly, and the top of a handset is the part a thumb cannot get to. What
+stays in the header — the mark, the way to your profile — is looked at rather
+than pressed, so the two halves separate cleanly by how often they are touched.
+
+`fixed`, not `sticky`. Sticky sounds like it saves the padding underneath by
+staying in flow, and does not: a sticky element pulled to the viewport edge still
+overlays whatever is beneath it. The padding is needed either way, so `fixed` is
+the honest spelling of it.
+
+**The padding under `main` is 6rem below the rail breakpoint and 2rem above**,
+set as an arbitrary property rather than the inline style it used to be, because
+it now has to differ by width. 6rem clears a bar that has wrapped to two lines at
+320px, which is more than the ~48px it normally occupies — deliberately, because
+overshooting costs dead space below the last row and undershooting costs a row
+you cannot read.
+
 **`/profile` exists, and Home and Wants are the same address.** The second of
 those looks like the exact fault this shell was built to remove, and is not. The
 old fault was two *named* destinations onto one list, which made you choose

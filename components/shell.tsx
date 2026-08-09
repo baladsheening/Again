@@ -128,7 +128,7 @@ export function Shell({
 
       {/* --- the header, below 45rem ------------------------------------- */}
       <header className="border-rule rail:hidden border-b pt-[env(safe-area-inset-top)]">
-        <div className="gutter flex items-center justify-between py-3">
+        <div className="gutter flex items-center justify-between py-4">
           <Link href="/" className="wordmark text-wordmark-nav">
             Again
           </Link>
@@ -155,32 +155,53 @@ export function Shell({
           </Link>
         </div>
 
+      </header>
+
+      {/*
+        The collection row, at the foot of the phone screen.
+
+        It began under the wordmark and moved here on 9 August. The reason it
+        works better at the bottom is not style: this row is the only thing on a
+        phone you reach for repeatedly, and the top of a handset is the part of
+        it a thumb cannot get to. Everything else in the header — the mark, the
+        way to your profile — is looked at rather than pressed, so the two
+        halves separate cleanly by how often they are touched.
+
+        `fixed` rather than `sticky`. Sticky would keep the bar in flow, which
+        sounds like it saves the padding below — it does not, because a sticky
+        element pulled up to the viewport edge still overlays whatever is under
+        it. Given the padding is needed either way, fixed is the honest spelling.
+
+        The viewport is `interactiveWidget: 'resizes-content'` (app/layout.tsx),
+        so an open keyboard shrinks the layout viewport and this settles above
+        it rather than under it. The capture dropdown is capped at 50dvh
+        directly beneath an input that scrolls itself to the top on focus, so it
+        ends around mid-screen and never reaches this.
+      */}
+      <nav
+        aria-label="Collections"
+        className="border-rule bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)]"
+      >
         {/*
-          Dotted, not spaced. Four labels separated by gaps alone read as four
-          loose words; a `·` between them makes one line of navigation, which is
-          what it is — and it is the same separator the entry rows use between a
-          title and its year, so the app has one way of saying "and then this".
+          Dotted, not spaced. Labels separated by gaps alone read as loose words;
+          a `·` between them makes one line of navigation, which is what it is —
+          and it is the same separator the entry rows use between a title and its
+          year, so the app has one way of saying "and then this".
 
           **The counts come off here**, and that is what makes the line fit. The
-          labels are about 240px at the caption size, the dots bring it to 295px
-          and the home icon to ~320px, inside the ~335px a 375px handset leaves
-          after the gutter. Four counts would add another 80px and put it over
-          the edge on every phone. The rail has two edges to hang a label and a
-          count from; a single line has one, so the count is the thing that
-          gives.
+          nine items come to about 262px at the caption size and the eight gaps
+          to 64px, against the ~335px a 375px handset leaves after the gutter.
+          Four counts would add another 80px and put it well over on every phone.
+          The rail has two edges to hang a label and a numeral from; a single
+          line has one, so the count is the thing that gives.
 
-          Still `flex-wrap`: at 320px it wraps rather than overflowing, and gap-y
-          is 3 so the wrapped rows' tap areas do not meet. A horizontally
-          scrolling strip with no affordance would simply hide a collection.
-
-          The dots are siblings rather than `::before` on each link so they are
-          never inside a tap target, and `select-none` so dragging across the
-          row to copy a collection name does not pick them up.
+          Still `flex-wrap`, and `justify-center` so a wrapped second line sits
+          under the middle of the first rather than hanging off one edge. At
+          320px it will wrap; the padding under `main` is set to clear two lines
+          for exactly that reason, because content hidden behind a fixed bar is a
+          worse failure than a little dead space above it.
         */}
-        <nav
-          aria-label="Collections"
-          className="gutter flex flex-wrap items-baseline gap-x-2.5 gap-y-3 pb-3"
-        >
+        <div className="gutter flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2.5 py-4">
           {/*
             Home and Wants are the same address, and that is deliberate rather
             than the duplication this shell was built to remove: the old fault
@@ -192,18 +213,15 @@ export function Shell({
           <Link
             href="/"
             aria-label="Home"
-            className="text-muted hover:text-text tap-target mr-0.5 self-center transition-colors"
+            className="text-muted hover:text-text tap-target self-center transition-colors"
           >
             <HomeIcon />
           </Link>
+          <Dot />
 
           {COLLECTION_LINKS.map((link, i) => (
             <Fragment key={link.href}>
-              {i > 0 && (
-                <span aria-hidden className="text-micro text-muted select-none opacity-50">
-                  ·
-                </span>
-              )}
+              {i > 0 && <Dot />}
               <CollectionLink
                 {...link}
                 count={counts[link.view]}
@@ -212,21 +230,43 @@ export function Shell({
               />
             </Fragment>
           ))}
-        </nav>
-      </header>
+        </div>
+      </nav>
 
       {/*
         `min-w-0` so a long film title makes the column narrower rather than
         pushing the rail off the screen. `flex flex-col` so a page can push
         something to the foot of the viewport — `/profile` is the one that does.
+
+        The bottom padding is set as a variable rather than inline, because it
+        now has to differ by width: below `rail` it must clear the fixed
+        collection bar, and above it there is no bar to clear. 6rem covers a bar
+        that has wrapped to two lines at 320px, which is deliberately more than
+        the ~48px it usually occupies — the cost of overshooting is dead space
+        below the last row, and the cost of undershooting is a row you cannot
+        read. `safe-bottom` adds the home-indicator inset on top of whichever
+        applies.
       */}
-      <main
-        className="gutter safe-bottom rail:max-w-3xl rail:py-10 flex w-full min-w-0 flex-1 flex-col py-8"
-        style={{ '--safe-bottom-base': '2rem' } as React.CSSProperties}
-      >
+      <main className="gutter safe-bottom rail:max-w-3xl rail:py-10 rail:[--safe-bottom-base:2rem] flex w-full min-w-0 flex-1 flex-col py-8 [--safe-bottom-base:6rem]">
         {children}
       </main>
     </div>
+  )
+}
+
+/**
+ * The separator in the phone collection row.
+ *
+ * A sibling rather than a `::before` on each link, so it never sits inside a tap
+ * target — the links carry `tap-target`, which expands their hit area to 44px,
+ * and a dot inside that expansion would be swallowed by it. `select-none` so
+ * dragging across the row to copy a collection name does not pick the dots up.
+ */
+function Dot() {
+  return (
+    <span aria-hidden className="text-micro text-muted select-none opacity-50">
+      ·
+    </span>
   )
 }
 
