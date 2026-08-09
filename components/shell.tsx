@@ -220,29 +220,40 @@ export function Shell({
       pair centred with equal air either side; without it the rail pins to the
       left edge of a wide monitor and the list drifts away from it.
     */
-    <div className="rail:flex-row rail:gap-12 mx-auto flex w-full max-w-6xl flex-1 flex-col">
+    <div className="rail:pl-68 mx-auto flex w-full max-w-6xl flex-1 flex-col">
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
-          `sticky`, so the collections stay put while the list scrolls past them.
-          That is the whole reason a rail beats a header on a large screen: the
-          navigation stops being something you scroll back up to find.
+          The collections stay put while the list scrolls past them. That is the
+          whole reason a rail beats a header on a large screen: the navigation
+          stops being something you scroll back up to find.
+
+          **`fixed`, not `sticky` — and for the same reason the header is.** A
+          sticky element only holds position while the scroll offset is inside
+          its range. At either limit the document rubber-bands past it, sticky
+          disengages, and the rail rides up and down with the posters. Fixed is
+          anchored to the viewport and sits the bounce out.
+
+          **The left edge is the shell's own centring, restated.** Out of flow,
+          the rail can no longer be the first item in a centred row, so it has to
+          find that column itself: `max(0px, 50% - 36rem)` is the left edge of a
+          72rem box centred in the viewport, which is exactly what `mx-auto
+          max-w-6xl` produces on the shell. `max()` handles the narrow case,
+          where the box is the full width and the edge is zero. `main` is held
+          off it by `rail:pl-68` — 14rem of rail plus the 3rem that used to be
+          the flex gap — so the column lands where it always did.
 
           **`h-svh`, not `h-dvh`** — the *small* viewport height rather than the
           dynamic one. `dvh` is defined to track the viewport as browser chrome
           shows and hides, which on a tablet happens continuously while you
           scroll. The rail's height followed it, and because identity is pinned
-          to the foot with `mt-auto`, the whole column drifted up and down a few
-          pixels the entire way down the page.
-
-          `svh` is the height with the chrome *shown*, and it does not change.
-          The cost is that when the toolbar retracts the foot of the rail sits a
-          little above the true bottom of the window rather than on it — which is
-          invisible on a black ground, and cheap against a column that never
-          settles. On a desktop browser, with no retracting chrome, the three
-          units are identical and this changes nothing.
+          to the foot with `mt-auto`, the whole column drifted a few pixels the
+          entire way down the page. `svh` does not change. The cost is that when
+          the toolbar retracts the foot sits a little above the true bottom of
+          the window — invisible on a black ground, and cheap against a column
+          that never settles.
         */
-        className="gutter rail:sticky rail:top-0 rail:flex rail:h-svh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
+        className="gutter rail:fixed rail:top-0 rail:left-[max(0px,calc(50%_-_36rem))] rail:flex rail:h-svh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
       >
         <Link href="/" className="wordmark text-wordmark">
           Again
