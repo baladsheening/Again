@@ -66,6 +66,20 @@ const COLLECTION_LINKS = [
 const SCROLL_THRESHOLD = 8
 const ALWAYS_SHOWN_ABOVE = 32
 
+/**
+ * The air around the wordmark on a phone: the same distance above it as below
+ * it, so the mark heads the page rather than floating in it.
+ *
+ * One constant rather than two matching literals, because two numbers that have
+ * to stay equal eventually will not — this pair was 16px and 48px before
+ * 9 August, and nothing in the code said they were meant to be related.
+ *
+ * The notch inset is added to the top one separately. That is clearance, not
+ * spacing, and counting it as spacing is what made the mark drift down the
+ * screen by however much home indicator a given device has.
+ */
+const MASTHEAD_GAP = '0.5rem'
+
 export function Shell({
   handle,
   counts,
@@ -254,9 +268,33 @@ export function Shell({
 
         `bg-bg` is what makes the pass-under work at all: without a ground the
         list would show through the mark.
+
+        **The mark sits the same distance from the status bar as the content sits
+        from the mark**, and that is why the two paddings here are one constant.
+        It was 16px above and 48px below — the header's own 16 plus 32 from
+        `main` — which read as a mark pushed down into the page rather than one
+        heading it.
+
+        The number is spent in one place now: `MASTHEAD_GAP` above the mark
+        (added to the notch inset, which is not spacing and must not be counted
+        as any) and the same below it, with `main` contributing `pt-0` beneath.
+        Written as one constant because two literals that have to stay equal will
+        not.
+
+        Box-equal, which is not quite optically equal: the wordmark's ink does
+        not fill its 36px line-height-1 box, and "again" descends on the `g` while
+        reaching the top only with the dot of the `i`. If the gaps read unevenly,
+        the correction belongs on this constant's two uses rather than on the
+        type.
       */}
-      <header className="bg-bg rail:hidden sticky top-0 z-20 pt-[env(safe-area-inset-top)]">
-        <div className="gutter flex items-center justify-between py-4">
+      <header
+        className="bg-bg rail:hidden sticky top-0 z-20"
+        style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
+      >
+        <div
+          className="gutter flex items-center justify-between"
+          style={{ paddingBottom: MASTHEAD_GAP }}
+        >
           <Link href="/" className="wordmark text-wordmark">
             Again
           </Link>
@@ -489,9 +527,20 @@ export function Shell({
         the screen they are meant to sit in.
 
         `safe-bottom` adds the home-indicator inset on top of whichever applies.
+
+        **`pt-0` below the rail breakpoint is not an oversight.** The gap under
+        the mark is set once, by the header's `pb`, so that it can be the same
+        number as the gap above it — see `MASTHEAD_GAP` there. A top padding here
+        would silently add to it and make the two unequal again, which is the
+        thing that was wrong. Above the breakpoint there is no header, so
+        `rail:pt-10` supplies the space instead.
+
+        `rail:pt-10` rather than `py-10`: `padding-block` would set the bottom
+        too, and the bottom belongs to `safe-bottom` at every width. Two rules
+        writing one property is how a spacing bug survives a fix.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:py-10 rail:[--safe-bottom-base:2rem] flex w-full min-w-0 flex-1 flex-col py-8 ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] flex w-full min-w-0 flex-1 flex-col pt-0 ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
