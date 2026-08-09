@@ -108,7 +108,21 @@ const MASTHEAD_GAP = '0.625rem'
  * ratios above are properties of the typeface and the word, not of 36px.
  */
 const MARK_ASCENDER_SLACK = 'calc(0.2083 * var(--text-wordmark))'
-const MARK_DESCENDER_OVERHANG = 'calc(0.1528 * var(--text-wordmark))'
+/**
+ * ⚠ The **declared** descent, not the measured ink — deliberately, and it is the
+ * one place here that is not exact on purpose.
+ *
+ * Ojuju's content area is 1.4167em, so at `line-height: 1` it overflows 0.2083em
+ * below the box; the `g` only actually inks 0.1528em of that. Padding to the ink
+ * is correct and leaves two pixels of nothing between the letter and whatever
+ * follows. Padding to the declared descent puts the *entire* line box inside the
+ * header, which means the header's background covers every pixel the type could
+ * possibly occupy on any platform, in any fallback face.
+ *
+ * The asymmetry is the point: being a pixel tight at the top costs a pixel of
+ * air, and being a pixel tight at the bottom costs a collision.
+ */
+const MARK_DESCENDER_OVERHANG = 'calc(0.2083 * var(--text-wordmark))'
 
 export function Shell({
   handle,
@@ -572,8 +586,27 @@ export function Shell({
         too, and the bottom belongs to `safe-bottom` at every width. Two rules
         writing one property is how a spacing bug survives a fix.
       */}
+      {/*
+        `isolate` — `isolation: isolate` — is not styling. It gives `main` its own
+        stacking context so nothing inside it can paint above the sticky header,
+        whatever the compositor decides to do.
+
+        Added 9 August after a report that the posters overlapped the wordmark's
+        descender *only after a pull-to-refresh*, having been correct on first
+        paint at the same scroll position. Spacing does not change between two
+        paints of the same layout — measured in a browser, the descender clears
+        by ~10px — so the cause is compositing rather than geometry, and
+        pull-to-refresh is exactly when iOS Safari tears down and rebuilds layers.
+
+        Without a stacking context here, `main`'s contents sit in the root one
+        alongside the header. The header's `z-20` should still win, and does
+        everywhere it can be measured — but a promoted image layer is free to be
+        composited out of document order, and images are what get promoted.
+        Nothing inside `main` sets a `z-index`, so this changes no intended
+        painting; it only removes the freedom to get it wrong.
+      */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] flex w-full min-w-0 flex-1 flex-col pt-0 ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-0 ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
