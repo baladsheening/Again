@@ -15,8 +15,13 @@ import { TmdbError } from '@/lib/tmdb'
  * neither of which a Server Action gives you.
  */
 
+/**
+ * One character is a valid query — see `MIN_QUERY` in
+ * `components/search-provider.tsx` for why, and note that this is one of three
+ * places the floor lives.
+ */
 const querySchema = z.object({
-  q: z.string().min(2).max(120),
+  q: z.string().min(1).max(120),
 })
 
 export async function GET(request: Request) {

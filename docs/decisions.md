@@ -1086,6 +1086,53 @@ sheet free to drift from the first. The sheet became an overlay in the process,
 because the thing that starts an add may be a 110px poster halfway down a grid
 or a field pinned to the bottom of the screen, and neither has room to answer in.
 
+### Space Grotesk, capitalised — and the old face kept
+
+**Directed 9 August.** `--font-display` is Space Grotesk and the mark reads
+*Again* rather than *again*.
+
+The capitalisation is a deletion rather than an addition: `wordmark` carried
+`text-transform: lowercase`, and the JSX string has always said "Again". The
+transform existed so the mark could not drift between the two places it appears;
+removing it keeps that guarantee and renders the string that was written.
+
+**Ojuju is still in the code, deliberately, and costs nothing.** The declaration
+stays in `app/layout.tsx` with `preload: false`, so switching back is one line in
+`globals.css`. `@font-face` is lazy — a browser fetches a font only when text
+actually uses the family — so the only thing that would have downloaded it
+anyway is next/font's preload hint, and that is the thing turned off.
+
+**Every trim constant had to be re-measured**, because they describe a typeface
+rather than a size. Space Grotesk at 36px: declared ascent 35, descent 11, so a
+46px content area against Ojuju's 51px; the ink of "Again" runs 26px above the
+baseline and 8px below. `MARK_LINE_HEIGHT` went 1.4167 → 1.2778 and the trims
+with it. The inked height came out at **34px either way**, which is the only
+reason `HEADER_HEIGHT`'s 3.375rem did not have to move — a coincidence worth
+knowing about rather than relying on.
+
+### One character is a search, and the cap comes off
+
+Both were dropdown-shaped decisions that stopped making sense when results
+became a wall.
+
+**The two-character minimum is now one.** A single letter would have dropped a
+list of noise over the page; the same letter produces a different wall of
+posters, which is a thing you can look at. The floor lives in three places and
+all three moved together: `MIN_QUERY` in `components/search-provider.tsx`, the
+Zod schema in `app/api/search/route.ts`, and `searchFilms` in `lib/tmdb.ts`.
+
+**The eight-result cap is gone.** Eight rows is as much list as anyone reads
+before retyping; eight posters is two thirds of a screen with the rest empty. It
+is the whole page now — twenty, which is TMDB's page size.
+
+⚠ **TMDB has no prefix search, and there is no endpoint that does.**
+`/search/movie?query=b` is a relevance match ranked by popularity, not "films
+beginning with b". A single letter therefore returns TMDB's twenty best guesses
+for that letter, not an alphabetical run, and no amount of paging changes what
+kind of answer it is. Whole pages *could* be chained to go deeper — at one
+upstream request each, on every keystroke, behind a rate limiter, for a wall
+nobody scrolls to the four hundredth poster of.
+
 ### The phone shell, and a breakpoint named for the layout
 
 All directed on 9 August, after the redesign was looked at. Recorded for the two

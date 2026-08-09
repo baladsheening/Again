@@ -143,8 +143,14 @@
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-  /* the wordmark and nothing else — see the `wordmark` utility below */
-  --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
+  /*
+    The wordmark and nothing else — see the `wordmark` utility below.
+
+    Space Grotesk since 9 August. `--font-ojuju` is still defined and still
+    loaded lazily (see app/layout.tsx), so switching back is this line and
+    nothing else.
+  */
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 
   /*
     The named sizes. Everything else is `text-sm` or `text-xs`, which needs no
@@ -503,9 +509,13 @@
 @utility wordmark {
   font-family: var(--font-display);
   font-weight: 500;
-  /* Lowercase here, not in the JSX: the mark must render identically in the nav
-     and on sign-in, and a text-transform cannot drift the way two strings can. */
-  text-transform: lowercase;
+  /*
+    No `text-transform`. It was `lowercase`, which rendered "again" from a JSX
+    string that has always said "Again" — the transform was there so the mark
+    could not drift between the two places it appears. Capitalised since
+    9 August, and the guarantee is unchanged: both call sites still render the
+    same string, they just render the one that was written.
+  */
   letter-spacing: -0.005em;
   line-height: 1;
 }

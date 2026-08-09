@@ -109,19 +109,24 @@ const MASTHEAD_GAP = '0.625rem'
  * measurement to get right and becomes impossible.
  *
  * That leaves dead space — a line box holds room for diacritics nothing in
- * "again" uses. Measured with `TextMetrics.actualBoundingBox*` at 36px: the
- * baseline sits 41px down, the ink runs 26px above it and 8px below, so there is
- * **15px of nothing above the letters and 2px below them**. The negative margins
- * remove exactly that, leaving an element whose outer box is the inked bounds.
+ * "Again" uses. Measured with `TextMetrics.actualBoundingBox*` at 36px in Space
+ * Grotesk: declared ascent 35 and descent 11, so a 46px content area, while the
+ * ink runs 26px above the baseline and 8px below. That is **9px of nothing above
+ * the letters and 3px below them**, which the negative margins remove, leaving an
+ * element whose outer box is the inked bounds.
+ *
+ * The numbers are the typeface's, so they were re-measured when the mark moved
+ * from Ojuju to Space Grotesk. The inked height came out at 34px either way,
+ * which is why the header's 3.375rem did not have to move with them.
  *
  * Everything is in `em`, so it is the mark's own size that scales it and no
  * custom property has to resolve for the layout to hold. Once the box is the
  * letters, the header's padding is plain `MASTHEAD_GAP` on both sides and means
  * what it says.
  */
-const MARK_LINE_HEIGHT = 1.4167
-const MARK_TRIM_TOP = '-0.4167em'
-const MARK_TRIM_BOTTOM = '-0.0556em'
+const MARK_LINE_HEIGHT = 1.2778
+const MARK_TRIM_TOP = '-0.25em'
+const MARK_TRIM_BOTTOM = '-0.0833em'
 
 
 export function Shell({
@@ -362,9 +367,9 @@ export function Shell({
         drops it onto the same line, measured at 0.15px apart — which is the
         difference between level and *looking* level.
       */}
-      <div className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_18.25rem)] z-10 hidden h-svh flex-col justify-end">
+      <div className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end">
         <div className="bg-bg pointer-events-auto pt-6 pb-9">
-          <div className="flex w-72 items-center gap-1.5">
+          <div className="gutter flex max-w-3xl items-center gap-1.5">
             <span className="text-muted shrink-0">
               <ChevronIcon />
             </span>
@@ -450,7 +455,7 @@ export function Shell({
         the screen. If `--color-bg` ever moves, this moves with it by hand.
       */}
       <header
-        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 shadow-[0_1rem_0_0_#000]"
+        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 shadow-[0_0.5rem_0_0_#000]"
         style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
       >
         <div
@@ -765,7 +770,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_1rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_0.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >

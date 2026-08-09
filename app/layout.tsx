@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Mono, IBM_Plex_Sans, Ojuju } from 'next/font/google'
+import { IBM_Plex_Mono, IBM_Plex_Sans, Ojuju, Space_Grotesk } from 'next/font/google'
 
 import './globals.css'
 
@@ -8,11 +8,30 @@ import './globals.css'
  * Static single weight — only the mark uses this, so the variable range is
  * payload nobody spends. See docs/decisions.md.
  */
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-space-grotesk',
+  subsets: ['latin'],
+  weight: '500',
+  display: 'swap',
+})
+
+/**
+ * The previous wordmark face, kept on purpose rather than deleted — switching
+ * back is one line in `globals.css`, where `--font-display` chooses between
+ * them.
+ *
+ * **`preload: false` is what stops that costing anything.** `@font-face` is
+ * lazy: a browser fetches a font only when text actually uses the family, and
+ * nothing uses this one now. What would fetch it regardless is next/font's
+ * default preload hint, so that is the thing turned off. The declaration stays,
+ * the variable stays, the download does not happen.
+ */
 const ojuju = Ojuju({
   variable: '--font-ojuju',
   subsets: ['latin'],
   weight: '500',
   display: 'swap',
+  preload: false,
 })
 
 /** §11: IBM Plex Sans for interface and body. Avoid Inter. */
@@ -70,7 +89,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${plexSans.variable} ${plexMono.variable} ${ojuju.variable} h-full`}
+      className={`${plexSans.variable} ${plexMono.variable} ${spaceGrotesk.variable} ${ojuju.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>

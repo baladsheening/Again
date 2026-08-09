@@ -37,7 +37,14 @@ export function SearchField({ id }: { id: string }) {
       the eye measures the x-height band and not the line box. Applied to the
       caret and the field together so the two stay in step.
     */
-    <div className="flex -translate-y-px items-center gap-1.5">
+    /*
+      `flex-1` is what puts the × on the right-hand edge. Without it the row
+      shrinks to the width of the word "search" and the clear control sits in the
+      middle of the screen; with it the input takes the slack and the × is pushed
+      out to the container's edge — which in both placements is the gutter, and
+      therefore the same line the last poster in a row ends on.
+    */
+    <div className="flex min-w-0 flex-1 -translate-y-px items-center gap-1.5">
       <label htmlFor={id} className="sr-only">
         Search for a film
       </label>

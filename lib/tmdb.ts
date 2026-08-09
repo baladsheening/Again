@@ -101,9 +101,20 @@ function yearOf(releaseDate: string | undefined): number | null {
   return Number.isFinite(year) && year > 1800 ? year : null
 }
 
+/**
+ * ⚠ **TMDB has no prefix search.** `/search/movie?query=b` does not mean "films
+ * beginning with b" — it is a relevance match ranked by popularity, and there is
+ * no endpoint that does the other thing. So a single letter returns what TMDB
+ * thinks are the twenty best matches for that letter, not an alphabetical run.
+ *
+ * Twenty is TMDB's page size, and this takes one page. Whole pages could be
+ * chained to go deeper, at one upstream request each, on every keystroke, behind
+ * a rate limiter — for a wall nobody is going to scroll to the four hundredth
+ * poster of.
+ */
 export async function searchFilms(query: string): Promise<FilmSearchResult[]> {
   const trimmed = query.trim()
-  if (trimmed.length < 2) return []
+  if (trimmed.length < 1) return []
 
   const raw = await tmdb(
     `/search/movie?query=${encodeURIComponent(trimmed)}&include_adult=false&language=en-US&page=1`,
@@ -113,7 +124,13 @@ export async function searchFilms(query: string): Promise<FilmSearchResult[]> {
   const parsed = searchResponse.safeParse(raw)
   if (!parsed.success) throw new TmdbError('Unexpected TMDB search response', 502)
 
-  return parsed.data.results.slice(0, 8).map((r) => ({
+  /*
+    The whole page. It was `.slice(0, 8)`, which was the right number for a
+    dropdown — eight rows is as much list as anyone reads before retyping. The
+    results are a wall of posters now, and eight posters is two thirds of one
+    screen with the rest of it empty.
+  */
+  return parsed.data.results.map((r) => ({
     externalId: String(r.id),
     title: r.title,
     year: yearOf(r.release_date),

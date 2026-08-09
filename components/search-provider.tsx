@@ -22,8 +22,18 @@ import type { FilmSearchResult } from '@/lib/domain'
  */
 
 const DEBOUNCE_MS = 220
-/** Below this, there is nothing worth asking TMDB and nothing worth showing. */
-const MIN_QUERY = 2
+/**
+ * One character is a search.
+ *
+ * It was two, on the reasoning that a single letter is not a query. That is true
+ * of a dropdown, where one letter would drop a list of noise over the page; it
+ * is not true of a wall, where the same twenty posters are just a different wall
+ * to look at. Typing `b` now shows what TMDB returns for `b`.
+ *
+ * The floor is enforced in three places and all three had to move together: here,
+ * the Zod schema in `app/api/search/route.ts`, and `searchFilms` in `lib/tmdb.ts`.
+ */
+const MIN_QUERY = 1
 
 type SearchState = {
   query: string
