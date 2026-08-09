@@ -347,9 +347,30 @@ export function Shell({
         here instead, which meant the header carried a number describing a fact
         about a font. Correcting the box rather than the space around it is what
         lets both paddings be the same constant again.
+
+        ─────────────────────────────────────────────────────────────────────
+        **`after:h-6` is why a poster never reaches the descender.**
+
+        The header is `sticky`, so content passes under it and is cut off at its
+        bottom edge — which sits only `MASTHEAD_GAP` below the `g`. At rest the
+        first poster is 24px further down again, thanks to `pt-6` on `main`; the
+        moment you scroll, that 24px slides away and the cut edge arrives 10px
+        under the descender. The gap was never constant, it just looked it until
+        something moved.
+
+        So the header paints 24px further than it measures. The pseudo-element
+        adds no height and takes part in no layout — it only extends the ground
+        the mark sits on, so the cut edge lands where the resting gap already
+        was. `h-6` is `pt-6` on `main`: **the two must stay equal**, and that is
+        the whole trick — the distance from the descender to the first poster is
+        then the same number whether the page is scrolled or not.
+
+        `pointer-events-none` because it covers 24px of content once scrolled,
+        and a strip of invisible background that swallows taps on the poster
+        underneath it would be a worse bug than the one this fixes.
       */}
       <header
-        className="bg-bg rail:hidden sticky top-0 z-20"
+        className="bg-bg rail:hidden after:bg-bg sticky top-0 z-20 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-6 after:content-['']"
         style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
       >
         <div
