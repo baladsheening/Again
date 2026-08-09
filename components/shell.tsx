@@ -602,12 +602,30 @@ export function Shell({
 
         `safe-bottom` adds the home-indicator inset on top of whichever applies.
 
-        **`pt-0` below the rail breakpoint is not an oversight.** The gap under
-        the mark is set once, by the header's `pb`, so that it can be the same
-        number as the gap above it — see `MASTHEAD_GAP` there. A top padding here
-        would silently add to it and make the two unequal again, which is the
-        thing that was wrong. Above the breakpoint there is no header, so
-        `rail:pt-10` supplies the space instead.
+        **`pt-6` below the rail breakpoint, and it is the fix for a regression I
+        caused.** This was `py-8` — 32px — until 9 August, when the mark was
+        moved up and the whole gap was collapsed into the header's `pb` so the
+        two could be one constant. The number went 48px to 10px in one step, and
+        the descender has been meeting the posters ever since, on a device I
+        cannot reproduce it on.
+
+        Everything measurable says 10px is clear: rendered in a browser the ink
+        stops 10.00px above the first poster, and the descender is now contained
+        by the mark's own box, so it cannot reach past it. But the report is
+        consistent, it began exactly here, and it survived three fixes aimed at
+        the type. Whatever is moving on that device is worth about ten pixels,
+        and at 48px there was enough slack to absorb it without anyone noticing.
+
+        So the slack comes back — not all of it, and not to where it was.
+
+        **The gaps are deliberately no longer equal**, which was the earlier
+        request, and the reason is the header above: it is `sticky`, so content
+        passes *underneath* it. The space above the mark is dead air against a
+        status bar; the space below it is a lane things move through. A static
+        masthead wants those equal. A sticky one wants room beneath.
+
+        Above the breakpoint there is no header, so `rail:pt-10` supplies the
+        space instead.
 
         `rail:pt-10` rather than `py-10`: `padding-block` would set the bottom
         too, and the bottom belongs to `safe-bottom` at every width. Two rules
@@ -633,7 +651,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-0 ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-6 ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
