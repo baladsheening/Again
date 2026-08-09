@@ -1014,7 +1014,33 @@ it now has to differ by width. 6rem clears a bar that has wrapped to two lines a
 overshooting costs dead space below the last row and undershooting costs a row
 you cannot read.
 
-**`/profile` exists, and Home and Wants are the same address.** The second of
+**Home and Wants became different screens, and §8 pays for it.** Directed late
+on 9 August: *the input field should be on the home screen, not the Wants.* So
+`/` is the capture box alone and `/wants` is the list.
+
+This resolves the awkwardness flagged earlier the same day — a house glyph
+pointing at the collection sitting next to it — in the other direction from the
+one that was defended. It is the better answer: capture is now a place rather
+than the top of a list, which suits a product §8 calls a capture tool first and
+a browsing tool second.
+
+**What it costs is §8's "it is never blank underneath."** That requirement was
+written when the list *was* the home screen and there was nowhere else for it to
+be; with the list one tap away, a home screen showing only its field is the
+honest shape rather than a regression. But it is a real deviation and the first
+thing to revisit if a new account finds nothing to do on the screen it lands on.
+The cheapest remedy, if so, is the last two or three additions under the field —
+recent captures, not the collection, so it does not become the duplicate the
+shell was rebuilt to remove.
+
+**The optimistic row went with it.** Adding used to appear instantly as a row in
+the list underneath — `useOptimistic` over the entries, reverting on its own if
+the action failed, which is what §10 asks for. With no list on the route there is
+no row to insert, so the acknowledgement is a sentence: *Adding {title}…* set on
+the same tick the film is picked, replaced by *Added {title}. Undo* when the
+server answers. The undo window is unchanged.
+
+**`/profile` exists.** The second of
 those looks like the exact fault this shell was built to remove, and is not. The
 old fault was two *named* destinations onto one list, which made you choose
 between two words for the same thing. A glyph at the head of the line is not a

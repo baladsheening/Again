@@ -46,7 +46,7 @@ import { ProfileIcon } from './icon-profile'
  */
 
 const COLLECTION_LINKS = [
-  { href: '/', label: COLLECTIONS.wants, view: 'live' },
+  { href: '/wants', label: COLLECTIONS.wants, view: 'live' },
   { href: '/go-back-tos', label: COLLECTIONS.goBackTos, view: 'go_back_tos' },
   { href: '/fixtures', label: COLLECTIONS.fixtures, view: 'fixtures' },
   { href: '/archive', label: COLLECTIONS.archive, view: 'archive' },
@@ -163,7 +163,28 @@ export function Shell({
           Again
         </Link>
 
-        <nav aria-label="Collections" className="mt-12 flex flex-col gap-4">
+        <nav aria-label="Main" className="mt-12 flex flex-col gap-4">
+          {/*
+            Home is a destination in its own right now that the capture box
+            lives there rather than at the top of Wants — and on a desk it is
+            the *only* way to add anything, so it cannot rest on the wordmark
+            being a link. Set as a word rather than the house glyph the phone
+            bar uses: the icon is there because a bottom bar has no room for
+            five labels, and a column has room for all of them.
+
+            `mb-2` on top of the gap, because Home is not one of the four. It is
+            the smallest separation that says so without a rule.
+          */}
+          <Link
+            href="/"
+            aria-current={pathname === '/' ? 'page' : undefined}
+            className={`micro tap-target mb-2 transition-colors ${
+              pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+            }`}
+          >
+            Home
+          </Link>
+
           {COLLECTION_LINKS.map((link) => (
             <CollectionLink
               key={link.href}
@@ -305,17 +326,22 @@ export function Shell({
         */}
         <div className="gutter flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2.5 py-4">
           {/*
-            Home and Wants are the same address, and that is deliberate rather
-            than the duplication this shell was built to remove: the old fault
-            was two *named* destinations onto one list, which made you choose
-            between two words for one thing. A glyph at the head of the line is
-            not a fifth collection — it is the way back to the top of the app
-            from anywhere, which on a phone is the one move worth an icon.
+            Home was the same address as Wants until the capture box moved off
+            the list on 9 August. It is a real destination now — the one place
+            you can add anything — which is what the glyph had been promising
+            since it appeared.
+
+            A glyph rather than a fifth label, because the line is already
+            within about 15px of a 375px screen and "HOME" would cost 40 more.
+            The rail spells it out; a bottom bar cannot afford to.
           */}
           <Link
             href="/"
             aria-label="Home"
-            className="text-muted hover:text-text tap-target self-center transition-colors"
+            aria-current={pathname === '/' ? 'page' : undefined}
+            className={`tap-target self-center transition-colors ${
+              pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+            }`}
           >
             <HomeIcon />
           </Link>

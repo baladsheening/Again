@@ -1,28 +1,26 @@
 import { redirect } from 'next/navigation'
 
 import { Capture } from '@/components/capture'
-import { getMyProfile, getSessionUser, listMyEntries, toEntryCard } from '@/lib/db'
+import { getMyProfile, getSessionUser } from '@/lib/db'
 
 /**
- * Wants, and the capture box (§8): input at the top, the live list beneath.
+ * Home: the capture box, and nothing else.
  *
- * This is `/` because capture is the fastest thing in the product and the
- * fastest thing should be at the shortest address. It used to share its content
- * with `/me`, which defaulted to the same `live` view — two top-level
- * destinations onto one list. `/me` now redirects here.
+ * `/` used to be Wants — the input with the live list under it, which is how §8
+ * describes the home screen. Splitting them on 9 August makes capture a place
+ * rather than the top of a list, and it is what makes the house glyph in the
+ * phone bar point somewhere of its own instead of at the collection beside it.
  *
- * Live is `state in ('want','go_back_to')` (§5.2) — a go-back-to is still a
- * want, because it is repeatable. Fixtures are deliberately not here: already
- * possessed means there is nothing left to want.
+ * **It takes no data.** The list moved to `/wants`, so this route has nothing to
+ * read — the session and profile checks below are the only server work, and they
+ * are for the person rather than for security (the boundary is `lib/db/`, §3).
  */
-export default async function WantsPage() {
+export default async function HomePage() {
   const sessionUser = await getSessionUser()
   if (!sessionUser) redirect('/sign-in')
 
   const profile = await getMyProfile(sessionUser)
   if (!profile) redirect('/onboarding')
 
-  const entries = await listMyEntries(sessionUser, 'live')
-
-  return <Capture entries={entries.map(toEntryCard)} />
+  return <Capture />
 }

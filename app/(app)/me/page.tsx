@@ -13,7 +13,7 @@ import { permanentRedirect } from 'next/navigation'
  * the archive, not of the app.
  */
 const MOVED: Record<string, Route> = {
-  live: '/',
+  live: '/wants',
   go_back_tos: '/go-back-tos',
   fixtures: '/fixtures',
   archive: '/archive',
@@ -23,5 +23,5 @@ export default async function MePage({ searchParams }: PageProps<'/me'>) {
   const params = await searchParams
   const requested = Array.isArray(params.view) ? params.view[0] : params.view
 
-  permanentRedirect(MOVED[requested ?? 'live'] ?? '/')
+  permanentRedirect(MOVED[requested ?? 'live'] ?? '/wants')
 }

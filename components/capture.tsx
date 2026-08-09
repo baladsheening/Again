@@ -1,40 +1,52 @@
 'use client'
 
-import { useEffect, useOptimistic, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
-import type { EntryCard, FilmSearchResult, Intent } from '@/lib/domain'
+import type { FilmSearchResult, Intent } from '@/lib/domain'
 import { intentsFor, specFor } from '@/lib/vocabulary'
-import { EntryList } from './entry-list'
 import { Poster } from './poster'
 
 /**
- * The whole home screen (§8): an input box at the top, the live list directly
- * beneath. This makes Again a capture tool first and a browsing tool second,
- * which is what the rest of the design assumes.
+ * The home screen: one input box, and what happens after you use it.
  *
- * Two requirements from §8, both load bearing:
- *  - It resolves as you type. Free text that never resolves to a canonical
- *    entity silently kills overlap, and the failure is invisible for months.
- *  - It is never blank underneath.
+ * §8 describes this as the input with the live list directly beneath, and until
+ * 9 August it was — because `/` *was* Wants. Wants is its own route now, and the
+ * capture box came here rather than staying with the list. What that costs is
+ * §8's "never blank underneath", which was written when there was nowhere else
+ * for the list to be; see docs/decisions.md.
+ *
+ * The other §8 requirement is untouched and is the load-bearing one: **it
+ * resolves as you type**. Free text that never resolves to a canonical entity
+ * silently kills overlap, and the failure is invisible for months.
  */
 
 const DEBOUNCE_MS = 220
 const UNDO_WINDOW_MS = 10_000
 
-export function Capture({ entries }: { entries: EntryCard[] }) {
+export function Capture() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<FilmSearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [chosen, setChosen] = useState<FilmSearchResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [undo, setUndo] = useState<{ entryId: string; title: string } | null>(null)
+  /*
+    What replaced the optimistic row.
 
-  const [isPending, startTransition] = useTransition()
-  const [optimistic, addOptimistic] = useOptimistic(
-    entries,
-    (state, card: EntryCard) => [card, ...state],
-  )
+    Adding used to show up instantly as a row in the list underneath, which was
+    the feedback — `useOptimistic` over the entries, reverting on its own if the
+    action failed. With the list on another route there is no row to insert, so
+    the acknowledgement has to be a sentence instead, and it has to appear on the
+    same tick the film is picked rather than when the server answers. Set
+    synchronously here, cleared when the transition resolves either way.
+  */
+  const [adding, setAdding] = useState<string | null>(null)
+
+  // `isPending` is deliberately not destructured. It existed to fade the
+  // optimistic row while it was in flight; `adding` above is the acknowledgement
+  // now, and it is set and cleared by this component rather than inferred.
+  const [, startTransition] = useTransition()
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -95,21 +107,14 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
     setQuery('')
     setResults([])
     setError(null)
+    setUndo(null)
+    // Before the transition, not inside it: this is the acknowledgement, and an
+    // acknowledgement that waits for the network is not one.
+    setAdding(film.title)
 
     startTransition(async () => {
-      // Optimistic (§10). If the action fails this reverts on its own when the
-      // transition ends, which is the rollback.
-      addOptimistic({
-        id: `optimistic-${film.externalId}-${intent}`,
-        kind: 'film',
-        intent,
-        state: 'want',
-        title: film.title,
-        year: film.year,
-        posterPath: film.posterPath,
-      })
-
       const result = await addFilmAction({ externalId: film.externalId, intent })
+      setAdding(null)
 
       if (!result.ok) {
         setError(result.message)
@@ -147,8 +152,9 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
     !chosen && (visibleResults.length > 0 || (searching && trimmed.length >= 2))
 
   return (
-    // gap-6, not gap-4. The capture box and the list are two different things
-    // and the redesign is mostly a matter of letting them be that far apart.
+    // gap-6: the field and whatever it has to say afterwards are two different
+    // things, and the redesign is mostly a matter of letting them be that far
+    // apart.
     <div className="flex flex-col gap-6">
       {/* --- input ------------------------------------------------------- */}
       <div className="relative">
@@ -249,7 +255,10 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
       {/* --- the intent sheet (§8) --------------------------------------- */}
       {chosen && <IntentSheet film={chosen} onPick={add} onClose={() => setChosen(null)} />}
 
-      {/* --- undo / errors ----------------------------------------------- */}
+      {/* --- acknowledgement / undo / errors ------------------------------ */}
+      {adding && (
+        <p className="text-muted -mt-2 truncate text-sm">Adding {adding}…</p>
+      )}
       {undo && (
         <p className="text-muted -mt-2 flex items-center gap-3 text-sm">
           <span className="truncate">Added {undo.title}.</span>
@@ -270,13 +279,6 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
         correction as the resolve error in `entry-row.tsx`; see docs/decisions.md.
       */}
       {error && <p className="-mt-2">{error}</p>}
-
-      {/* --- the live list ----------------------------------------------- */}
-      <EntryList
-        entries={optimistic}
-        view="live"
-        isPending={(card) => isPending && card.id.startsWith('optimistic-')}
-      />
     </div>
   )
 }

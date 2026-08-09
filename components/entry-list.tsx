@@ -11,7 +11,7 @@ import { EntryRow } from './entry-row'
  * action that fills the collection rather than reporting that it is empty.
  */
 const EMPTY: Record<OwnerView, string> = {
-  live: 'Start with one film. Anything you have been meaning to watch.',
+  live: 'Nothing yet. Home is where this starts — one film, anything you have been meaning to watch.',
   go_back_tos: 'Resolve something and say you would go back, and it collects here.',
   fixtures: 'Things you own and would keep will collect here.',
   archive: 'Things you tried and would not return to. Only you can see this.',
