@@ -262,25 +262,46 @@ export function Shell({
           </Link>
 
           {/*
-            This replaced the handle and a *Sign out* button, which between them
-            took the right-hand half of the row to say something you already
-            know — your own handle — and to offer an action you want roughly
-            once. Both are still one tap away, in the same bottom-left corner
-            the rail puts them in.
+            The two glyphs. Home moved up here from the head of the collection
+            row on 9 August, which is where it had been since it was a way back
+            to the top of the app rather than a destination — now that it is the
+            poster wall it belongs with the other place you go rather than with
+            the collections you filter between.
 
-            `-my-3/py-3` expands the tap target to the full header height, and
-            `pl-4` gives it width on the side it can take it from.
+            It also buys the collection line about 33px, which it needed: with
+            the house and its dot in it the row ran past a 375px screen and
+            wrapped.
+
+            The wordmark still links home too. That is a duplicate address and
+            deliberately so — a masthead that does not go home reads as broken,
+            and this is the explicit control rather than the convention.
+
+            `-my-3/py-3` takes both tap targets to the full header height; the
+            gap between them is what keeps the two 44px areas from meeting.
           */}
-          <Link
-            href="/profile"
-            aria-label="Profile"
-            aria-current={pathname === '/profile' ? 'page' : undefined}
-            className={`-my-3 py-3 pl-4 transition-colors ${
-              pathname === '/profile' ? 'text-text' : 'text-muted hover:text-text'
-            }`}
-          >
-            <ProfileIcon />
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link
+              href="/"
+              aria-label="Home"
+              aria-current={pathname === '/' ? 'page' : undefined}
+              className={`-my-3 py-3 transition-colors ${
+                pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+              }`}
+            >
+              <HomeIcon />
+            </Link>
+
+            <Link
+              href="/profile"
+              aria-label="Profile"
+              aria-current={pathname === '/profile' ? 'page' : undefined}
+              className={`-my-3 py-3 transition-colors ${
+                pathname === '/profile' ? 'text-text' : 'text-muted hover:text-text'
+              }`}
+            >
+              <ProfileIcon />
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -362,37 +383,21 @@ export function Shell({
               between a title and its year, so the app has one way of saying
               "and then this".
 
-              **The counts come off here**, and that is what makes the line fit.
-              The items come to about 262px at the caption size and the gaps to
-              64px, against the ~335px a 375px handset leaves after the gutter.
-              Four counts would add another 80px. The rail has two edges to hang
-              a label and a numeral from; a single line has one, so the count is
-              the thing that gives.
+              **The counts come off here**, and that is most of what makes the
+              line fit. The four labels come to about 236px at the caption size
+              and the gaps to 48px, against the ~335px a 375px handset leaves
+              after the gutter — comfortable now that the house glyph has moved
+              to the header and taken its dot and two gaps with it. Four counts
+              would add another 80px and put it back over. The rail has two edges
+              to hang a label and a numeral from; a single line has one, so the
+              count is the thing that gives.
 
-              `flex-wrap` with `justify-center`, so where it does not fit the
-              second line sits under the middle of the first rather than hanging
-              off one edge. The padding under `main` is set to clear two lines
-              for exactly that reason: content hidden behind a fixed bar is a
-              worse failure than a little dead space above it.
+              `flex-wrap` with `justify-center` is kept for 320px, where it is
+              still tight. The padding under `main` clears two lines for exactly
+              that reason: content hidden behind a fixed bar is a worse failure
+              than a little dead space above it.
             */
             <div className="flex min-w-0 flex-1 flex-wrap items-baseline justify-center gap-x-2 gap-y-2.5">
-              {/*
-                Home is the poster wall — what is on, and what is about to be. A
-                glyph rather than a fifth label, because the line has no room for
-                40 more pixels. The rail spells it out.
-              */}
-              <Link
-                href="/"
-                aria-label="Home"
-                aria-current={pathname === '/' ? 'page' : undefined}
-                className={`tap-target self-center transition-colors ${
-                  pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
-                }`}
-              >
-                <HomeIcon />
-              </Link>
-              <Dot />
-
               {COLLECTION_LINKS.map((link, i) => (
                 <Fragment key={link.href}>
                   {i > 0 && <Dot />}

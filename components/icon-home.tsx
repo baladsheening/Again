@@ -1,23 +1,25 @@
 /**
- * Home, at the head of the phone collection row.
+ * Home — the poster wall of what is on — in the phone header, beside the way to
+ * your profile.
  *
- * §11 permits known icons, and a house is the known one — it is the single most
- * settled glyph in interface design, which is the whole reason it can sit in a
- * row of words without a label under it.
+ * §11 permits known icons, and a house is the known one: the single most settled
+ * glyph in interface design, which is why it can sit unlabelled next to another
+ * unlabelled glyph and still be read.
  *
  * Same inline-rather-than-a-package reasoning as `icon-chevron.tsx`, and
  * `currentColor` for the same reason: the accent is reserved for overlap, so
  * this inherits whatever the row around it is doing.
  *
- * 14px, against 11px caps beside it. A glyph set to the exact size of the text
- * next to it reads smaller than the text, because letters have no interior — so
- * it takes the three extra pixels back.
+ * **20px, matching `ProfileIcon`.** It was 14px while it sat at the head of the
+ * collection row, sized against the 11px caps beside it; paired with the profile
+ * glyph instead, the thing it has to agree with is that glyph, and two icons of
+ * different sizes side by side read as a mistake rather than as a hierarchy.
  */
 export function HomeIcon() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="20"
+      height="20"
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
