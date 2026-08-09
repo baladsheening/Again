@@ -3,7 +3,7 @@ import 'server-only'
 import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 
 import { db } from './client'
-import { entries, items, profiles, type Entry, type Item } from './schema'
+import { entries, items, profiles, type Entry, type EntryState, type Item } from './schema'
 import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { runOverlap } from '@/lib/overlap'
@@ -103,6 +103,42 @@ export async function listMyEntries(
     .offset(offset)
 
   return rows
+}
+
+/**
+ * How many entries sit in each collection, for the shell rail.
+ *
+ * **One grouped statement, not four counts.** Four `count(*)` queries to render
+ * four numbers on every page is the shape §6 warns about for overlap, and the
+ * argument is the same here: it is a per-row query where a set-based one does.
+ *
+ * `go_back_to` is deliberately counted twice — once in `live` and once in
+ * `go_back_tos` — because a go-back-to is still a want (§5.2). The two numbers
+ * summing to more than the number of rows is the model showing through, not an
+ * error.
+ *
+ * Unpaginated by design, and it is the one read in the layer that is allowed to
+ * be: it returns four integers whatever the size of the table, so §10's rule
+ * against unbounded selects has nothing to bite on.
+ */
+export async function countMyEntries(
+  sessionUser: SessionUser,
+): Promise<Record<OwnerView, number>> {
+  const rows = await db
+    .select({ state: entries.state, count: sql<number>`count(*)::int` })
+    .from(entries)
+    .where(eq(entries.userId, sessionUser.id))
+    .groupBy(entries.state)
+
+  const byState = new Map(rows.map((r) => [r.state, r.count]))
+  const n = (state: EntryState) => byState.get(state) ?? 0
+
+  return {
+    live: n('want') + n('go_back_to'),
+    go_back_tos: n('go_back_to'),
+    fixtures: n('fixture'),
+    archive: n('done'),
+  }
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
-import { Nav } from '@/components/nav'
-import { getMyProfile, getSessionUser } from '@/lib/db'
+import { Shell } from '@/components/shell'
+import { countMyEntries, getMyProfile, getSessionUser } from '@/lib/db'
 
 /**
  * The signed-in shell.
@@ -10,6 +10,10 @@ import { getMyProfile, getSessionUser } from '@/lib/db'
  * every navigation and cannot cover Server Actions. The actual boundary is
  * `lib/db/`, where every function requires a `SessionUser` that only a real
  * session can produce (§3).
+ *
+ * The counts are fetched here rather than in each page for the same reason the
+ * navigation lives here: they are chrome, and chrome that four pages each had
+ * to remember to fetch would be wrong on the first page that forgot.
  */
 export default async function AppLayout({ children }: LayoutProps<'/'>) {
   const sessionUser = await getSessionUser()
@@ -18,15 +22,11 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
   const profile = await getMyProfile(sessionUser)
   if (!profile) redirect('/onboarding')
 
+  const counts = await countMyEntries(sessionUser)
+
   return (
-    <>
-      <Nav handle={profile.handle} />
-      <main
-        className="gutter safe-bottom mx-auto w-full max-w-xl flex-1 py-6"
-        style={{ '--safe-bottom-base': '1.5rem' } as React.CSSProperties}
-      >
-        {children}
-      </main>
-    </>
+    <Shell handle={profile.handle} counts={counts}>
+      {children}
+    </Shell>
   )
 }

@@ -47,6 +47,7 @@ export { getMyProfile, getProfileByHandle, createProfile } from './profiles'
 
 export {
   listMyEntries,
+  countMyEntries,
   listEntriesForOtherUser,
   addEntry,
   resolveEntry,

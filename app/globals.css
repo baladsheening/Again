@@ -74,25 +74,58 @@
   --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
 
   /*
-    The only two named sizes. Everything else is `text-sm` or `text-xs`, which
-    needs no naming.
+    The named sizes. Everything else is `text-sm` or `text-xs`, which needs no
+    naming.
 
-    Both were arbitrary values — `text-[2.25rem]` and `text-[1.3125rem]` —
-    settled by eye over several passes (docs/decisions.md) and then left in
+    The first two were arbitrary values — `text-[2.25rem]` and `text-[1.3125rem]`
+    — settled by eye over several passes (docs/decisions.md) and then left in
     bracket syntax where that reasoning does not reach them. A number nobody can
     name is a number the next person re-litigates.
 
     A third, `--text-compact` at 13px, was named and then deleted within the
     hour. Naming it was what exposed that it had no argument: it existed to match
     the capture field, and the field goes to 16px on touch for the iOS zoom guard
-    while the dropdown never did. The rows are `text-sm` now, like every other
-    list in the app.
+    while the dropdown never did.
+
+    ─────────────────────────────────────────────────────────────────────────
+    §11 says type is the entire design. Until 9 August it was read as *small
+    type only*, and that was the whole reason the app looked bare.
+
+    The largest thing in the signed-in app was the 21px nav wordmark. A film
+    title — the thing the product is about — was 15px, the same size as the
+    year beside it, the label under it and the button under that. Editorial
+    design is not restrained type; it is violent contrast between one large
+    thing and everything else. The app had the "everything else" half and no
+    large thing at all.
+
+    `--text-title` and `--text-micro` are that contrast: a 2:1 ratio between
+    the title and its own metadata, where there used to be 15px against 12px.
+    ─────────────────────────────────────────────────────────────────────────
   */
 
   /* the wordmark on /sign-in and /reset-password, where it is the page */
   --text-wordmark: 2.25rem;
-  /* the same wordmark in the nav, where it is a label */
+  /* the same wordmark in the shell, where it is a label */
   --text-wordmark-nav: 1.3125rem;
+  /*
+    A film title in a list. The largest thing on any signed-in screen, and
+    deliberately so — with the poster gone from the row (§11, 9 August) the
+    title is the only thing left to recognise a film by, so it carries the
+    weight the artwork used to.
+
+    22px holds "The Zone of Interest" on one line at 320px, which is the
+    longest title in any list the project has looked at. Longer ones wrap, and
+    a wrapping title is what an editorial list does rather than a failure.
+  */
+  --text-title: 1.375rem;
+  /* The same title at desk distance rather than arm's length. */
+  --text-title-lg: 1.75rem;
+  /*
+    The caption tier — see the `micro` utility, which is where this is actually
+    consumed. Named rather than inlined because the utility is not the only
+    consumer: the rail counts take the size without the uppercasing.
+  */
+  --text-micro: 0.6875rem;
 }
 
 @layer base {
@@ -282,6 +315,52 @@
 
   @media (pointer: coarse) {
     font-size: 16px;
+  }
+}
+
+/**
+ * The caption tier. Everything that is *about* the thing rather than the thing:
+ * the year and want label under a title, the collection names in the shell, the
+ * word above the capture field.
+ *
+ * Uppercase with wide tracking, which is the one typographic move that makes
+ * small text read as deliberate rather than as leftovers. It is also what lets
+ * these sit at 11px without looking like an apology — uppercase has no
+ * descenders and a taller apparent x-height, so it reads a size larger than it
+ * is set.
+ *
+ * **Never for anything a person wrote or chose.** Uppercasing a film title
+ * destroys the capitalisation TMDB supplies, and uppercasing a handle makes it
+ * look like a different string from the one that was typed. This is for the
+ * app's own words about someone else's content.
+ *
+ * The transform is here rather than in the JSX for the same reason it is in
+ * `wordmark`: two strings can drift, one utility cannot, and the underlying
+ * text stays readable to a screen reader and copyable as typed.
+ */
+@utility micro {
+  font-size: var(--text-micro);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/**
+ * A film title in a list, and the largest type in the signed-in app.
+ *
+ * Negative tracking because it is set large: type designed for body sizes opens
+ * up visibly past about 20px, and closing it back is what stops a big title
+ * reading as a heading in a document. `text-wrap: balance` so a title that does
+ * wrap breaks into two even lines rather than six words and one.
+ */
+@utility title {
+  font-size: var(--text-title);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+
+  @media (min-width: 64rem) {
+    font-size: var(--text-title-lg);
   }
 }
 

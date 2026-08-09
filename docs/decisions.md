@@ -871,6 +871,102 @@ private archive nobody can see; a note is the only reason to open it.
 That is not an extension of this decision, it is the reversal of it — the whole
 argument above is the privacy.
 
+### The redesign, 9 August: scale contrast, one navigation, and a rail
+
+**Trigger:** the person who commissioned the app looked at it and said it was
+neither instinctive nor attractive, and that the desktop view was "compact and
+bare". That is the second time in three days that looking at the thing produced
+findings that reasoning about it had not, and the pattern is now worth naming
+rather than re-learning.
+
+Four separate faults, and only one of them was taste.
+
+**1. Nothing was ever big.** The largest type in the signed-in app was the 21px
+nav wordmark. A film title — the subject of the entire product — was 15px, the
+same size as the year beside it, the label under it, and the button under that.
+§11 says type is the entire design, and that had been read as *small type only*.
+It is the opposite: editorial design is violent contrast between one large thing
+and everything else, and the app had only the "everything else". Fixed by
+`--text-title` (22px, 28px from `lg`) against `--text-micro` (11px), a little
+over 2:1, where it used to be 15 against 12.
+
+**2. Nearly everything was muted.** `--color-muted` was on the year, the want
+label, the resolve button, the tick, the tabs, the handle, sign out, every empty
+state, and the only error message in the product. Roughly four glyphs in five on
+a given screen sat at 60% opacity, which does not read as restraint — it reads as
+disabled. The palette did not change (it is three days old and correct); its
+application did. Contrast is now carried by size, which frees colour to mean
+something.
+
+**3. The 32px poster was decoration that failed at decorating.** Too small to
+recognise a film by, and cropped square so it was not even poster-shaped, on the
+one screen §11 wants type to carry. Removed from every list. It survives where it
+is *functional* — the search dropdown and the intent sheet, where telling two
+films of the same title apart is the actual task — and tapping a title now opens
+the artwork full-bleed at TMDB's largest size. The trade: no poster anywhere you
+did not ask for one, a real poster when you did, instead of a thumbnail
+everywhere that was neither.
+
+**4. Half the navigation was a duplicate, and that is what "not instinctive"
+meant.** A header offered *Add* and *Me*; `/me` then offered four collection tabs
+beneath it. And `/` listed the `live` view while `/me` **defaulted to the `live`
+view** — two top-level destinations onto one list. There is one axis of
+navigation in this product (which collection am I looking at) and it was being
+expressed as two, one of them a second door onto one room.
+
+So: the collections are routes — `/`, `/go-back-tos`, `/fixtures`, `/archive` —
+named once, in one place. `/me` `permanentRedirect`s, translating its old
+`?view=` values rather than dropping everyone on Wants, because a bookmarked
+`?view=archive` was a bookmark of the archive. Adding happens on Wants, which is
+where a new want lands, and is a better answer than a tab called *Add* that had
+to explain itself.
+
+**The rail answers the desktop question, and it is not primarily a visual fix.**
+`docs/plan.md` recorded the browser view as sparse and cramped at once: a 576px
+column of phone-sized type in a 1440px window. The obvious repair was to widen
+the measure and step the type up, and that would have fixed *cramped* while
+making *sparse* worse — a longer line of bigger text is still one column in a
+void. Putting the four collections in a persistent left rail spends the width on
+navigation that was previously stacked vertically above the content, so the wide
+layout gains something the narrow one cannot have instead of being the narrow one
+stretched. It also happens to dissolve fault 4, which is the argument for doing
+both at once rather than in sequence.
+
+**The desktop question itself is now settled: a browser is a target.** It had
+been open since 8 August, on the reasoning that §12 ends at a home-screen PWA and
+§13 seeds by text message. That reasoning still holds for where people will *use*
+the app; it did not survive the observation that a browser is what a link opens,
+and a link is how §13 seeds. Deciding it deliberately was the point.
+
+**Two reversals worth flagging, both of earlier entries in this file.**
+
+- **Hairlines are back between rows.** They were removed on 8 August because "a
+  border under every item drew a horizontal line every three lines of text and
+  turned a short list into a table". True at the spacing it was written about:
+  12px of padding, so the rule sat closer to the text than the text sat to
+  itself, and read as a cell boundary. At 28px it inverts — the space separates
+  and the rule measures, which is what a hairline does on a printed page. §11's
+  own palette calls `--color-rule` an editorial divider; this is that use.
+- **The capture field no longer wears `input-text`.** That utility exists to sit
+  at 13px with a mouse and 16px on touch, and its whole argument was that a form
+  should be set in one size throughout. The capture box is not in a form. It
+  takes `text-base` — 16px at every pointer, which clears iOS Safari's zoom
+  threshold for the same reason `input-text` does, without taking a compromise
+  made for a consistency it is not part of.
+
+**What was deliberately not touched:** the auth pages. `plan.md` had already
+concluded a narrow sign-in form is correct at any width, and `/sign-in`'s optical
+centring is arithmetic derived from the current control heights and gaps — the
+one place in the app where changing a gap silently invalidates a recorded
+calculation. It is also the most-worked screen in the project and was not what
+anyone was complaining about.
+
+**What would change this:** the title size is the load-bearing number. If real
+lists turn out to be full of long titles that wrap to three lines at 22px, the
+answer is a smaller title rather than truncation — the ellipsis was removed on
+8 August because it promised an expansion that did not exist, and that is still
+true.
+
 ---
 
 ## Third-party dependencies

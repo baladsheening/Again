@@ -5,7 +5,7 @@ import { useEffect, useOptimistic, useRef, useState, useTransition } from 'react
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { EntryCard, FilmSearchResult, Intent } from '@/lib/domain'
 import { intentsFor, specFor } from '@/lib/vocabulary'
-import { EntryRow } from './entry-row'
+import { EntryList } from './entry-list'
 import { Poster } from './poster'
 
 /**
@@ -147,7 +147,9 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
     !chosen && (visibleResults.length > 0 || (searching && trimmed.length >= 2))
 
   return (
-    <div className="flex flex-col gap-4">
+    // gap-6, not gap-4. The capture box and the list are two different things
+    // and the redesign is mostly a matter of letting them be that far apart.
+    <div className="flex flex-col gap-6">
       {/* --- input ------------------------------------------------------- */}
       <div className="relative">
         <label htmlFor="capture" className="sr-only">
@@ -185,10 +187,20 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
           spellCheck={false}
           // The placeholder does the teaching on a brand new account (§8).
           placeholder="A film you want to see"
-          // Deliberately taller than the form fields — it is the one thing on
-          // the page (§8). `input-text` rather than a literal size so it still
-          // clears iOS Safari's 16px zoom threshold on touch.
-          className="bg-surface border-rule placeholder:text-muted focus:border-muted input-text w-full rounded-md border px-3.5 py-3 leading-5 outline-none transition-colors pointer-coarse:leading-6"
+          /*
+            Deliberately larger and taller than the form fields — it is the one
+            thing on the page (§8), and after the redesign it is also the only
+            thing above the fold that is not a film title.
+
+            `text-base` rather than the `input-text` utility the auth fields
+            wear. That utility exists to sit at 13px with a mouse and 16px on
+            touch, because iOS Safari zooms the viewport on focus below 16 and
+            never zooms back; 16px flat clears the same threshold and is the
+            right size here regardless of pointer. This field is not part of a
+            form that has to be internally consistent, so it does not have to
+            take the compromise the forms take.
+          */
+          className="bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-lg border px-4 py-4 text-base leading-6 outline-none transition-colors"
         />
 
         {showResults && (
@@ -215,12 +227,12 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
                 <button
                   type="button"
                   onClick={() => setChosen(film)}
-                  className="hover:bg-bg/60 flex w-full items-center gap-3 px-3 py-2 text-left transition-colors"
+                  className="hover:bg-bg/60 flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors"
                 >
                   <Poster posterPath={film.posterPath} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm">{film.title}</span>
-                    <span className="text-muted block text-xs">
+                    <span className="micro text-muted mt-1 block">
                       {film.year ?? '—'}
                     </span>
                   </span>
@@ -239,7 +251,7 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
 
       {/* --- undo / errors ----------------------------------------------- */}
       {undo && (
-        <p className="text-muted flex items-center gap-3 text-sm">
+        <p className="text-muted -mt-2 flex items-center gap-3 text-sm">
           <span className="truncate">Added {undo.title}.</span>
           <button
             type="button"
@@ -252,25 +264,19 @@ export function Capture({ entries }: { entries: EntryCard[] }) {
           </button>
         </p>
       )}
-      {error && <p className="text-muted text-sm">{error}</p>}
+      {/*
+        Full strength, at body size. It was `text-muted text-sm` — a failure
+        message in the colour reserved for things that do not matter. Same
+        correction as the resolve error in `entry-row.tsx`; see docs/decisions.md.
+      */}
+      {error && <p className="-mt-2">{error}</p>}
 
       {/* --- the live list ----------------------------------------------- */}
-      {optimistic.length > 0 ? (
-        <ul className="flex flex-col">
-          {optimistic.map((card) => (
-            <EntryRow
-              key={card.id}
-              card={card}
-              pending={isPending && card.id.startsWith('optimistic-')}
-            />
-          ))}
-        </ul>
-      ) : (
-        // Empty states instruct rather than apologise (§10).
-        <p className="text-muted py-8 text-sm">
-          Start with one film. Anything you have been meaning to watch.
-        </p>
-      )}
+      <EntryList
+        entries={optimistic}
+        view="live"
+        isPending={(card) => isPending && card.id.startsWith('optimistic-')}
+      />
     </div>
   )
 }
@@ -309,21 +315,26 @@ function IntentSheet({
       aria-modal="true"
       aria-label={film.title}
       tabIndex={-1}
-      className="border-rule bg-surface flex flex-col gap-4 rounded-lg border p-4 outline-none"
+      className="border-rule bg-surface flex flex-col gap-5 rounded-lg border p-5 outline-none"
     >
+      {/*
+        The poster earns its place here, unlike in the list: this is the moment
+        you are choosing between two films that may share a title, and the
+        artwork is the fastest way to tell them apart. See `poster.tsx`.
+      */}
       <div className="flex items-center gap-3">
         <Poster posterPath={film.posterPath} />
         <div className="min-w-0">
           <p className="truncate">{film.title}</p>
-          <p className="text-muted text-xs">{film.year ?? '—'}</p>
+          <p className="micro text-muted mt-1">{film.year ?? '—'}</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-start gap-3">
         <button
           type="button"
           onClick={() => onPick(film, primary)}
-          className="border-rule hover:border-text rounded border px-4 py-2.5 text-left text-sm transition-colors"
+          className="border-rule hover:border-text w-full rounded border px-4 py-3 text-left text-sm transition-colors sm:w-auto"
         >
           {specFor('film', primary).wantLabel}
         </button>
@@ -333,7 +344,7 @@ function IntentSheet({
             key={intent}
             type="button"
             onClick={() => onPick(film, intent)}
-            className="text-muted hover:text-text px-4 py-1.5 text-left text-sm transition-colors"
+            className="text-muted hover:text-text tap-target text-left text-sm underline underline-offset-4 transition-colors"
           >
             {specFor('film', intent).wantLabel}
           </button>
@@ -343,7 +354,7 @@ function IntentSheet({
       <button
         type="button"
         onClick={onClose}
-        className="text-muted hover:text-text self-start text-xs transition-colors"
+        className="text-muted hover:text-text micro tap-target self-start transition-colors"
       >
         Cancel
       </button>

@@ -10,47 +10,38 @@ import { posterUrl } from '@/lib/posters'
  * `images.unoptimized` in next.config.ts stops `next/image` routing them via
  * `/_next/image`.
  *
- * §11 allows small poster thumbnails and no other imagery, so this is the only
- * picture in the product.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Where posters live, as of 9 August
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * **A 32px rounded square.** At the original 46×69 the poster was taller than
- * the text beside it and the eye went to the artwork first, which inverts §11 —
- * type is the design, and the poster exists to help you recognise a title you
- * already know. Square rather than 2:3 because poster-shaped *reads* as a
- * poster; `object-top` because a film poster puts its subject in the upper half
+ * **Not in any list.** The lists are type alone. A 32px thumbnail beside every
+ * row was too small to recognise a film by and cropped square so it was not
+ * even poster-shaped — decoration that failed at decorating, on the one screen
+ * §11 wants type to carry.
+ *
+ * They survive in exactly two places, and both are functional rather than
+ * decorative:
+ *
+ *  - **`Poster`** — the thumbnail, in the search dropdown and the intent sheet.
+ *    Here it is doing a job nothing else can: telling two films with the same
+ *    title apart at the moment you are choosing between them.
+ *  - **`PosterReveal`** — wraps a title so tapping it opens the artwork
+ *    full-bleed on black. The whole of the artwork, at the largest size TMDB
+ *    has, once you have asked for it.
+ *
+ * That is the trade the redesign made: no poster anywhere you did not ask for
+ * one, and a real poster when you did, instead of a thumbnail everywhere that
+ * was neither.
+ *
+ * Square rather than 2:3 because poster-shaped *reads* as a poster at thumbnail
+ * size; `object-top` because a film poster puts its subject in the upper half
  * and its billing block along the bottom.
- *
- * Tapping one opens it full-bleed on black. Tap anywhere to close, and that is
- * the whole interaction — pinch-zoom, double-tap zoom, panning and rubber
- * banding were all built and all removed on 8 August. See docs/decisions.md.
  *
  * The thumbnail fetches `w154` and the expanded view `original`, which is the
  * largest TMDB has. Sizes and the arithmetic are in `lib/posters.ts`.
  */
-export function Poster({
-  posterPath,
-  title,
-  expandable = false,
-}: {
-  posterPath: string | null
-  /** Names the poster for a reader. Required to make it expandable. */
-  title?: string
-  expandable?: boolean
-}) {
+export function Poster({ posterPath }: { posterPath: string | null }) {
   const src = posterUrl(posterPath)
-  const large = posterUrl(posterPath, 'original')
-
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
-  /*
-    This used to swap `theme-color` to #000 on open and back on close, because
-    the status-bar strip stayed matte black while the view behind it was true
-    black. The app's own background became true black on 8 August, so the swap
-    became a no-op and went with it.
-  */
-  function open() {
-    dialogRef.current?.showModal()
-  }
 
   if (!src) {
     return (
@@ -61,30 +52,60 @@ export function Poster({
     )
   }
 
-  const thumbnail = (
+  return (
     <Image
       src={src}
       alt=""
       width={32}
       height={32}
       className="bg-surface size-8 shrink-0 rounded-md object-cover object-top"
-      // Decorative in the plain case: the title next to it is the accessible
-      // name. When expandable, the button around it carries the label instead.
+      // Decorative: the title next to it is the accessible name.
       aria-hidden
     />
   )
+}
 
-  if (!expandable || !large || !title) return thumbnail
+/**
+ * Tap the title, see the poster. Tap anywhere, close it — that is the whole
+ * interaction. Pinch-zoom, double-tap zoom, panning and rubber banding were all
+ * built and all removed on 8 August; see docs/decisions.md.
+ *
+ * Renders its children unwrapped when there is no artwork, so a film TMDB has
+ * no poster for is a plain title rather than a button that opens nothing.
+ */
+export function PosterReveal({
+  posterPath,
+  title,
+  className,
+  children,
+}: {
+  posterPath: string | null
+  title: string
+  className?: string
+  children: React.ReactNode
+}) {
+  const large = posterUrl(posterPath, 'original')
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  if (!large) return <>{children}</>
 
   return (
     <>
       <button
         type="button"
-        onClick={open}
-        aria-label={`Poster for ${title}`}
-        className="shrink-0 rounded-md"
+        onClick={() => dialogRef.current?.showModal()}
+        aria-label={`${title} — see the poster`}
+        /*
+          `text-left` because this is a paragraph of text inside a button, and
+          `decoration-transparent` so the underline exists at rest and only
+          takes colour on hover. Animating an underline in from nothing shifts
+          nothing, but it does mean the affordance is invisible until you are
+          already on it — this way the geometry is settled and only the ink
+          arrives.
+        */
+        className={`decoration-rule hover:decoration-muted text-left underline decoration-1 underline-offset-[6px] transition-colors ${className ?? ''}`}
       >
-        {thumbnail}
+        {children}
       </button>
 
       <dialog

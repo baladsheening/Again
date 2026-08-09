@@ -53,8 +53,18 @@ a phone, since it is the only fix that cannot be checked from a desk.
 
 - [ ] **Groups, and names instead of handles.** Recorded, not built by choice.
       The identity half lands in Phase 2. → *Carry-forward register*
-- [ ] **The desktop view is a phone in a void**, and it is the only view most
-      people will see first. → *The desktop view*
+- [x] ~~**The desktop view is a phone in a void.**~~ Answered 9 August: a browser
+      **is** a target, and the fix was a rail rather than a wider column. →
+      *The redesign, 9 August*
+
+### Found by looking at it — 9 August
+
+- [ ] **Nobody has seen the redesign signed in.** Same gap as 8 August, one
+      layer up: it typechecks, lints, builds, and every route responds, but the
+      only screen a human has looked at since the change is `/sign-in`, which is
+      the one screen it deliberately did not touch. → *The redesign, 9 August*
+- [ ] **A poster wall behind `/sign-in`.** Asked for and not built — it needs a
+      poster source, a cache and a decision about §2. → *The redesign, 9 August*
 
 ### Decided, still to build
 
@@ -268,7 +278,10 @@ deliberate action rather than a look. In likelihood order:
       layout viewport so ordinary scrolling works. **Safari support for that last
       one is unverified**; the first two stand regardless.
 - [ ] **Notch and home indicator**, both orientations.
-- [ ] **The `/me` tabs at narrow width** — wrap, or fall off the edge?
+- [ ] **The collection row at narrow width** — wrap, or fall off the edge? These
+      were the `/me` tabs; since 9 August they are the app's only navigation and
+      live in the shell header, so falling off the edge now costs three
+      collections rather than three tabs.
 
 Has to follow the deploy, which is why it is not folded into step 1. The whole
 responsive layer was reasoned from specs and confirmed in compiled CSS, and has
@@ -416,7 +429,51 @@ not decided and is small.
 
 ---
 
-## The desktop view
+## The redesign, 9 August
+
+**Built.** Typecheck, lint and a production build pass; all four collection
+routes respond and redirect correctly while signed out. The reasoning for every
+part of it is in `docs/decisions.md` under *The redesign, 9 August*.
+
+Triggered by the person who commissioned it looking at the signed-in app and
+finding it neither instinctive nor attractive. Four faults, one of them taste:
+
+| | |
+|---|---|
+| Nothing was ever big | Titles now 22px, 28px from `lg`, against 11px metadata — a little over 2:1, where it was 15 against 12 |
+| Nearly everything was muted | Contrast moved onto size, so `--color-muted` stops carrying four glyphs in five |
+| The 32px poster was decoration that failed | Gone from every list; kept in search and the intent sheet, where it is functional; tap a title for the real thing |
+| Half the navigation was a duplicate | `/` and `/me` listed the same rows. Collections are routes now, named once |
+
+**The desktop view is a rail**, not a wider column. Widening the measure would
+have fixed *cramped* and made *sparse* worse. The four collections move into a
+persistent left rail from `lg`, so the wide layout gains something the narrow one
+cannot have — and that is also what removes the second navigation.
+
+**The auth pages were deliberately not touched.** A narrow sign-in form is
+correct at any width (below), and `/sign-in`'s optical centring is arithmetic
+derived from its current gaps.
+
+### What is left of it
+
+- **Nobody has seen it signed in.** The change is verified the way the layout
+  work was verified on 7 August — compiled output and a build — which is exactly
+  the standard that two separate human passes have now beaten. Sign in on
+  `localhost:3000` and look at Wants, then a collection with nothing in it, then
+  the same two at a browser width.
+- **The poster wall behind `/sign-in`** was asked for and not built. It needs a
+  source of poster paths (TMDB trending, proxied and cached per §10), a decision
+  about how much §2 it costs, and it is a feature rather than a restyle. The
+  login page is also the one screen §12 calls the least of it, which is the
+  argument for it being last rather than first.
+- **`--text-title` is the load-bearing number.** If real lists turn out to be
+  full of titles that wrap to three lines at 22px, the answer is a smaller
+  title, not truncation.
+
+## The desktop view — resolved 9 August
+
+Kept because the measurements are what the rail was built against, and because
+the *decision to make first* below was the right question and got an answer.
 
 Noted 8 August, after a day of judging the app on a phone: **in a browser it
 looks considerably worse than it does on the handset** — sparse and cramped at
@@ -448,12 +505,23 @@ each other a link — that is a phone product, and "it looks thin on a laptop" m
 be an acceptable answer. Deciding that deliberately is different from arriving at
 it, and it is cheap to decide now.
 
+> **Answered 9 August: it is a target.** The reasoning above holds for where
+> people will *use* the app and did not survive the observation that a browser is
+> what a link opens, and a link is how §13 seeds.
+
 **If it is a target**, the fixes are ordinary and none of them are urgent: let the
 measure grow at a large breakpoint rather than pinning 576px; step the type up
 one notch above `md`; give the thumbnails a larger desktop size; and reconsider
 `control-box` on fine pointers, which is compact because a mouse is precise, not
 because 38px looks good. The auth pages need none of this — a narrow sign-in form
 is correct at any width.
+
+> Three of those four were overtaken. The measure did not grow — a rail took the
+> width instead, for the reason in `decisions.md`. The type stepped up well past
+> one notch. The thumbnails did not get a larger desktop size; they left the
+> lists entirely. **`control-box` on fine pointers is still open** and is now the
+> only piece of that list outstanding: it is 38px because a mouse is precise, and
+> the auth fields are the only place it is still felt.
 
 ## Read this before judging the visuals again
 

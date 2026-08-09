@@ -10,16 +10,30 @@ import type { OwnerView } from '@/lib/db'
 import type { EntryCard } from '@/lib/domain'
 import { specFor } from '@/lib/vocabulary'
 import { TickIcon } from './icon-tick'
-import { Poster } from './poster'
+import { PosterReveal } from './poster'
 
 /**
- * One row of the live list, plus the resolve flow (§8): a single tap to
- * resolve, then a single question. No check-ins, no location, no rating.
+ * One row of a collection, plus the resolve flow (§8): a single tap to resolve,
+ * then a single question. No check-ins, no location, no rating.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The row is type and nothing else (9 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The title is the largest thing on the screen and the metadata is the smallest,
+ * a little over 2:1 apart. That ratio is the entire design of this row and it is
+ * what §11 has been asking for from the start — the old row set the title, the
+ * year, the label and the button within three pixels of each other, so nothing
+ * was more important than anything else and the whole list read as one flat
+ * grey block.
+ *
+ * The 32px poster thumbnail is gone with it. See `components/poster.tsx` for
+ * where the artwork went and why.
  *
  * `view` is which collection the row is being shown in. A go-back-to appears in
  * two places — the live list, where it needs distinguishing from an unwatched
- * want, and its own tab, where everything around it is the same thing — so the
- * row cannot infer its context from `card.state`.
+ * want, and its own collection, where everything around it is the same thing —
+ * so the row cannot infer its context from `card.state`.
  *
  * **There is no return count and no increment.** Both were removed on 8 August;
  * `docs/decisions.md` carries the reasoning and what it costs.
@@ -50,87 +64,84 @@ export function EntryRow({
     })
   }
 
-
   /*
-    No rule between rows. A border under every item drew a horizontal line every
-    three lines of text and turned a short list into a table — and the rows were
-    never ambiguous: a poster starts each one, and the space does the separating.
-    §11 asks for type to be the design, and a divider is not type.
+    A hairline between rows, which is a reversal — they were removed on 8 August
+    because "a border under every item drew a horizontal line every three lines
+    of text and turned a short list into a table".
 
-    `py-3` stays, so the gap between rows is unchanged at 24px; the only thing
-    removed is the line drawn through it.
+    That was true at the spacing it was written about: 12px of padding, so the
+    rule sat closer to the text than the text sat to itself, and read as a cell
+    boundary. At 28px it does the opposite — the space is the separator and the
+    rule is a measure, which is what a hairline does on a printed page. §11's
+    own palette calls `--color-rule` an editorial divider; this is that use.
+
+    `last:border-b-0` so the list ends on text rather than on a line pointing at
+    nothing.
   */
   return (
-    <li className={`flex flex-col py-3 ${busy ? 'opacity-50' : ''}`}>
-      {/*
-        The thumbnail is centred on the title line, not on the row.
-
-        `items-center` on the whole row would only be right for a resolved entry,
-        where the title is all there is. A want carries a label and a button
-        underneath, and centring against that taller block floats the thumbnail
-        down beside "Want to see" — related to the wrong thing. So the title line
-        is its own flex row, and everything else stacks below it.
-      */}
-      <div className="flex items-center gap-3">
-        <Poster posterPath={card.posterPath} title={card.title} expandable />
-
+    <li
+      className={`border-rule flex flex-col gap-3 border-b py-7 transition-opacity last:border-b-0 lg:flex-row lg:items-start lg:gap-10 ${
+        busy ? 'opacity-40' : ''
+      }`}
+    >
+      <div className="min-w-0 flex-1">
         {/*
-          One flowing line: the title in full, then a middle dot, then the year.
-          It wraps rather than truncating.
-
-          The title used to be `truncate`, which cut long ones off with an
-          ellipsis — and an ellipsis here promises nothing, because there is no
-          tap to expand and no tooltip. It was simply hiding the name of the film
-          on the rows most likely to need reading.
-
-          `·` (U+00B7) rather than a full stop: it sits on the middle of the line
-          where a separator belongs, instead of on the baseline where it reads as
-          the end of a sentence.
+          Tapping the title opens the poster full-bleed. It is the only route to
+          the artwork now that the thumbnail has gone — see `poster.tsx`.
         */}
-        <p className="min-w-0 flex-1 leading-snug">
+        <PosterReveal posterPath={card.posterPath} title={card.title} className="title block">
           {card.title}
-          <span className="text-muted">
-            <span className="mx-1.5 opacity-40">·</span>
-            {card.year ?? '—'}
-          </span>
-        </p>
+        </PosterReveal>
 
         {/*
-          The tick marks a want that has been satisfied, in the live list where
-          it sits among wants that have not been. On the go-back-tos tab there is
-          nothing to distinguish — everything there is the same thing.
+          Year, then what you want with it. The separator is `·` (U+00B7) rather
+          than a full stop: it sits on the middle of the line where a separator
+          belongs, instead of on the baseline where it reads as the end of a
+          sentence.
+
+          The want label states an intention, so it goes when the intention is
+          met — it used to render on every state, so "Want to see" sat under a
+          film nobody wanted any more. What replaces it on a satisfied row is
+          the tick, and in every other collection nothing replaces it, because
+          the collection has already said what these are.
         */}
-        {view === 'live' && satisfied && (
-          <span className="text-muted flex shrink-0 items-center">
-            <TickIcon />
-            <span className="sr-only">{spec.resolveAction}</span>
-          </span>
-        )}
+        <p className="micro text-muted mt-2.5 flex items-center gap-1.5">
+          <span>{card.year ?? '—'}</span>
+
+          {card.state === 'want' && (
+            <>
+              <span aria-hidden className="opacity-40">
+                ·
+              </span>
+              <span>{spec.wantLabel}</span>
+            </>
+          )}
+
+          {view === 'live' && satisfied && (
+            <>
+              <TickIcon />
+              <span className="sr-only">{spec.resolveAction}</span>
+            </>
+          )}
+        </p>
       </div>
 
       {/*
-        Everything below the title, indented to line up under it: 32px of
-        thumbnail plus the 12px gap. Nothing renders here for a resolved entry,
-        so those rows are a single line.
+        The action column. On a phone it stacks under the title; from `lg` it
+        moves to the right of the row, which is what gives the desk-width layout
+        something to do with its measure other than set longer lines.
+
+        Nothing renders here outside the live list — a resolved entry has no
+        action left, so those rows are a title and a year.
       */}
       {(card.state === 'want' || error) && (
-        <div className="pl-11">
-          {/*
-            The want label states an intention, so it goes when the intention is
-            met. It used to render on every state: "Want to see" sat under a
-            go-back-to beside its return count, and under an archived film nobody
-            wants any more.
-          */}
-          {card.state === 'want' && (
-            <p className="text-muted text-xs">{spec.wantLabel}</p>
-          )}
-
+        <div className="flex flex-col items-start gap-2 lg:shrink-0 lg:items-end">
           {card.state === 'want' && !asking && (
             <button
               type="button"
               onClick={() => setAsking(true)}
               disabled={busy}
-              className="text-muted hover:text-text tap-target mt-2 self-start text-sm underline underline-offset-4 transition-colors"
+              className="text-muted hover:text-text tap-target text-sm underline underline-offset-4 transition-colors"
             >
               {spec.resolveAction}
             </button>
@@ -143,7 +154,7 @@ export function EntryRow({
             after ten seconds, so the gap is not cosmetic.
           */}
           {asking && (
-            <div className="mt-2 flex flex-wrap items-center gap-4 pointer-coarse:gap-5">
+            <div className="flex flex-wrap items-center gap-4 pointer-coarse:gap-5">
               <span className="text-sm">{spec.question}</span>
               <button
                 type="button"
@@ -162,7 +173,15 @@ export function EntryRow({
             </div>
           )}
 
-          {error && <p className="text-muted mt-1 text-xs">{error}</p>}
+          {/*
+            Full strength, at body size. This is a failure message and it used to
+            be set `text-muted text-xs` — the quietest value in the system, the
+            one reserved for de-emphasised metadata. §11 rules out the accent for
+            this (it marks overlap and nothing else) and there is no error colour
+            in the palette, so weight and size carry it instead. Decided
+            8 August; see docs/decisions.md.
+          */}
+          {error && <p className="lg:text-end">{error}</p>}
         </div>
       )}
     </li>
