@@ -59,12 +59,14 @@ a phone, since it is the only fix that cannot be checked from a desk.
 
 ### Found by looking at it — 9 August
 
-- [ ] **Nobody has seen the redesign signed in.** Same gap as 8 August, one
-      layer up: it typechecks, lints, builds, and every route responds, but the
-      only screen a human has looked at since the change is `/sign-in`, which is
-      the one screen it deliberately did not touch. → *The redesign, 9 August*
-- [ ] **A poster wall behind `/sign-in`.** Asked for and not built — it needs a
-      poster source, a cache and a decision about §2. → *The redesign, 9 August*
+- [x] ~~**Nobody has seen the redesign signed in.**~~ Seen, and reworked through
+      about twenty rounds of feedback over the day. All shipped.
+- [ ] **A poster wall behind `/sign-in`.** Asked for on the morning of 9 August
+      and still the only request from that day not built. It needs a poster
+      source, a cache and a decision about §2. → *Pick up here*
+- [ ] **Search returns one TMDB page.** 20 is not the API's ceiling. →
+      *Pick up here — the one open question, in full*
+- [ ] **Real search results have never been seen.** → *Pick up here*
 
 ### Decided, still to build
 
@@ -427,6 +429,92 @@ What it needs:
 
 Where it is offered — inside the resolve question, or on the row afterwards — is
 not decided and is small.
+
+---
+
+## Pick up here — end of 9 August
+
+Everything below this heading is shipped and live. `main` is at `60e9843`;
+branch `reset-flow-and-screen-correctness` is in sync; the working tree is clean
+apart from two untracked reference PNGs in the repo root, which are design
+references and deliberately uncommitted.
+
+### The one open question, in full
+
+**Is 20 the maximum a search can return?** No — 20 is one *page*.
+
+- TMDB's search endpoints return a fixed **20 results per page**, with `page`,
+  `total_pages` and `total_results` in the response. `&page=2` and so on are
+  available, capped by TMDB at 500 pages, so roughly 10,000 results are
+  reachable for a broad query.
+- **`lib/tmdb.ts` takes page 1 only**, so 20 is *our* ceiling, not the API's.
+  `searchResponse` does not even parse `total_pages`, so nothing in the app
+  currently knows how many more there are.
+- ⚠ Unverified against the live API. TMDB's host is unreachable from the
+  environment this was written in; the 20-per-page figure is documented
+  behaviour, not a response anyone has read.
+
+**If more than 20 is wanted, two honest options:**
+
+1. **Load more as the results wall is scrolled** — fetch page 2 at the bottom,
+   then 3. Costs an upstream request only when asked, keeps first paint as fast
+   as it is, and is what §10's pagination rule implies. **This is the one to
+   build.**
+2. **Fetch N pages up front** — 3 pages for 60 posters. Simpler, but it triples
+   the upstream cost of every debounced keystroke, including the ones typed
+   through on the way to a longer word.
+
+⚠ **Neither gives "all films starting with B".** `/search/movie?query=b` is a
+relevance match ranked by popularity, and TMDB has no prefix-search endpoint.
+Page 5 of `b` is the 81st–100th most popular match for "b"; it never becomes an
+alphabetical run.
+
+### Never seen working
+
+- **Real search results filling the wall.** The swap, both empty states, the
+  clear control and the geometry are all verified in a browser. A poster
+  arriving from an actual query is not — TMDB's API host is blocked from the
+  build environment. This is the first thing to look at.
+- **`inCinemas()` against the real API**, for the same reason. An empty wall with
+  search still working is its designed failure.
+
+### Judgements waiting on a human
+
+- **Typing one letter.** The floor went 2 → 1 and the cap 8 → 20 on the same
+  day; whether TMDB's twenty best guesses for `b` are a usable wall or junk can
+  only be settled by looking.
+- **Space Grotesk against the rest of the type.** A geometric face over IBM Plex
+  Sans; the mark is the only thing on screen in that voice.
+- **18px under the mark** on a phone, against a capital `A` that reads heavier
+  than the old lowercase `a`.
+- **The chevron's ink at the desktop foot.** Its *box* is flush with the
+  posters; the glyph is drawn ~4px inside its own viewBox, so the visible mark
+  sits slightly right of the poster edge. One negative margin if it should be
+  ink-flush.
+- **The 300ms slide** on the phone's collection bar, and whether it returns too
+  eagerly on any upward movement.
+
+### Numbers that must move together
+
+Changing one of these without the others reintroduces a bug that has already
+been fixed once. All are in `components/shell.tsx` unless noted.
+
+| | |
+|---|---|
+| `shadow-[0_0.5rem_...]` on the header ↔ the `0.5rem` in `main`'s `pt-[calc(…)]` | keeps the mark-to-poster distance identical scrolled and at rest |
+| `3.375rem` in `main`'s padding ↔ `MASTHEAD_GAP` + the mark's trimmed box + `MASTHEAD_GAP` | the header is `fixed`, so `main` holds its height open by hand |
+| `MARK_LINE_HEIGHT` / `MARK_TRIM_TOP` / `MARK_TRIM_BOTTOM` ↔ `--text-wordmark` and the typeface | measured, not derived; re-measure on any change to either |
+| foot `left-[… + 17rem]` + inner `gutter max-w-3xl` ↔ `rail:pl-68` and `rail:max-w-3xl` on `main` | puts the search row's two edges on the posters' two edges |
+| foot `pb-9` ↔ rail `py-10` | 4px, so the search and *Sign out* share a baseline rather than a box edge |
+| `MIN_QUERY` ↔ the Zod schema in `app/api/search/route.ts` ↔ the guard in `lib/tmdb.ts` | the search floor lives in three files |
+
+**How to measure any of it:** a temporary route under `app/` rendering
+`CaptureProvider` → `SearchProvider` → `Shell` with a fake `PosterWall`, plus a
+client component that reports `getBoundingClientRect` and
+`TextMetrics.actualBoundingBox*`, driven by
+`msedge --headless=new --dump-dom`. A client component is required — the app's
+CSP blocks inline `<script>`. Delete the route and run `npx next typegen`
+afterwards, or `tsc` fails on a stale route type.
 
 ---
 
