@@ -336,9 +336,20 @@ export function Shell({
         a title in; the field itself needs a fraction of that. `direction="up"`
         for the same reason as the phone: there is nothing below it.
 
-        `pointer-events-none` on the full-height column, restored on the row —
-        without it an invisible 288px-wide strip would swallow clicks on every
-        poster it crosses.
+        **It stands on a ground, or the posters run through it.** The wall
+        scrolls past this the way it scrolls past the phone's bar, and text over
+        moving artwork is unreadable — so the row sits on an opaque band that
+        runs from the content column's left edge to the right of the window.
+        Posters disappear behind it at a clean horizontal edge instead of
+        crossing the word.
+
+        The band deliberately stops short of the rail. Full width would paint
+        over *Sign out* and the handle, which sit at the same height in the
+        aside — and this element comes later in the document, so it would win.
+
+        `pointer-events-none` on the full-height column, restored on the band —
+        an opaque bar should absorb the clicks it covers, and the empty column
+        above it should not.
 
         **`pb-9` where the rail has `py-10`, and the 4px is the point.** Matching
         the two boxes is not the same as matching the two lines: the search sets
@@ -348,12 +359,14 @@ export function Shell({
         drops it onto the same line, measured at 0.15px apart — which is the
         difference between level and *looking* level.
       */}
-      <div className="rail:flex pointer-events-none fixed top-0 left-[calc(max(0px,50%_-_36rem)_+_18.25rem)] z-10 hidden h-svh flex-col justify-end pt-10 pb-9">
-        <div className="pointer-events-auto flex w-72 items-center gap-1.5">
-          <span className="text-muted shrink-0">
-            <ChevronIcon />
-          </span>
-          <SearchField direction="up" />
+      <div className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_18.25rem)] z-10 hidden h-svh flex-col justify-end">
+        <div className="bg-bg pointer-events-auto pt-6 pb-9">
+          <div className="flex w-72 items-center gap-1.5">
+            <span className="text-muted shrink-0">
+              <ChevronIcon />
+            </span>
+            <SearchField direction="up" />
+          </div>
         </div>
       </div>
 
