@@ -3,6 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { Fragment } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -87,7 +88,7 @@ export function Shell({
               {...link}
               count={counts[link.view]}
               active={pathname === link.href}
-              block
+              layout="rail"
             />
           ))}
         </nav>
@@ -129,23 +130,44 @@ export function Shell({
         </div>
 
         {/*
-          Wraps rather than scrolls. The four labels come to roughly 265px at
-          the caption size, which clears a 320px screen once the gutter is taken
-          off — but only just, and a horizontally scrolling strip with no
-          affordance simply hides a collection. gap-y is 3 so the wrapped rows'
-          tap areas do not meet.
+          Dotted, not spaced. Four labels separated by gaps alone read as four
+          loose words; a `·` between them makes one line of navigation, which is
+          what it is — and it is the same separator the entry rows use between a
+          title and its year, so the app has one way of saying "and then this".
+
+          **The counts come off here**, and that is what makes the line fit. The
+          labels are about 240px at the caption size and the dots bring it to
+          295px, inside the ~335px a 375px phone leaves after the gutter. Four
+          counts would add another 80px and put it back over the edge on every
+          handset. The rail has two edges to hang a label and a count from; a
+          single line has one, so the count is the thing that gives.
+
+          Still `flex-wrap`: at 320px it wraps rather than overflowing, and gap-y
+          is 3 so the wrapped rows' tap areas do not meet. A horizontally
+          scrolling strip with no affordance would simply hide a collection.
+
+          The dots are siblings rather than `::before` on each link so they are
+          never inside a tap target, and `select-none` so dragging across the
+          row to copy a collection name does not pick them up.
         */}
         <nav
           aria-label="Collections"
-          className="gutter flex flex-wrap gap-x-3.5 gap-y-3 pb-3"
+          className="gutter flex flex-wrap items-baseline gap-x-2.5 gap-y-3 pb-3"
         >
-          {COLLECTION_LINKS.map((link) => (
-            <CollectionLink
-              key={link.href}
-              {...link}
-              count={counts[link.view]}
-              active={pathname === link.href}
-            />
+          {COLLECTION_LINKS.map((link, i) => (
+            <Fragment key={link.href}>
+              {i > 0 && (
+                <span aria-hidden className="text-micro text-muted select-none opacity-50">
+                  ·
+                </span>
+              )}
+              <CollectionLink
+                {...link}
+                count={counts[link.view]}
+                active={pathname === link.href}
+                layout="inline"
+              />
+            </Fragment>
           ))}
         </nav>
       </header>
@@ -165,9 +187,15 @@ export function Shell({
 }
 
 /**
- * One collection. The count is mono because it is data — §11 keeps that face
- * scarce and spends it on numerals and timestamps, and a collection size is
- * exactly that.
+ * One collection, in either of the two places collections are listed.
+ *
+ * `rail` gets the count: the column has two edges to hang a label and a numeral
+ * from, so the count costs nothing. `inline` does not, because a single line
+ * across the top of a phone has no second edge and no width to spare — see the
+ * nav above for the arithmetic.
+ *
+ * The count is mono because it is data — §11 keeps that face scarce and spends
+ * it on numerals and timestamps, and a collection size is exactly that.
  *
  * **A zero renders as nothing.** An empty collection is already saying so with
  * its empty state; four grey zeroes down the rail of a new account is the app
@@ -178,25 +206,24 @@ function CollectionLink({
   label,
   count,
   active,
-  block = false,
+  layout,
 }: {
   href: Route
   label: string
   count: number
   active: boolean
-  /** Rail layout: label and count pushed to opposite edges of the column. */
-  block?: boolean
+  layout: 'rail' | 'inline'
 }) {
   return (
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
       className={`micro tap-target flex items-baseline gap-2 transition-colors ${
-        block ? 'justify-between' : ''
+        layout === 'rail' ? 'justify-between' : ''
       } ${active ? 'text-text' : 'text-muted hover:text-text'}`}
     >
       <span>{label}</span>
-      {count > 0 && (
+      {layout === 'rail' && count > 0 && (
         <span className={`font-mono tabular-nums ${active ? 'text-muted' : 'opacity-60'}`}>
           {count}
         </span>
