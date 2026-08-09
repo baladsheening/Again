@@ -967,6 +967,38 @@ answer is a smaller title rather than truncation — the ellipsis was removed on
 8 August because it promised an expansion that did not exist, and that is still
 true.
 
+### A second colour: lacquer red for "you are here"
+
+**Directed 9 August.** `--color-active: #c1483c` marks whichever of the two
+header glyphs — Home or Profile — you are currently on, and nothing else.
+
+This is the first colour added to the palette since it was set, and the palette
+being small is most of §11. Three things make it defensible rather than drift:
+
+- **It does not touch the amber rule.** §11 reserves `--color-accent` for overlap
+  state, and brass is still spoken for, still unused until Phase 3, still the
+  only thing that will mark a convergence. Two colours, two meanings, neither
+  borrowed from the other.
+- **It inherits the same scarcity discipline.** The moment red appears on
+  something that is not a current-page marker it stops meaning anything, and the
+  header glyphs stop being readable at a glance. The rule around it is the rule
+  around amber, word for word.
+- **An unlabelled glyph has no word to carry its state.** That is why the two
+  icons get colour and the collection labels in the bottom bar do not — a word
+  can say where it is by getting brighter, and `text-text` on the current
+  collection still does. The inconsistency is deliberate and is about labels
+  versus glyphs, not about two ideas of "active".
+
+**⚠ It is not the error colour, and spending it on one would cost this.**
+`docs/plan.md` has wanted a red for failure messages since 8 August and
+deliberately did not add one — those are full-strength text instead, for exactly
+this reason. If a red is ever wanted there it has to be a *different* red, or
+this stops being a position and starts being an alarm.
+
+Measured 4.26:1 against the true-black ground, past the 3:1 WCAG 1.4.11 asks of
+a graphical control. `aria-current="page"` is on both links regardless, so
+nothing depends on seeing the colour.
+
 ### The poster wall, and the largest deviation from the brief so far
 
 **Directed on 9 August**, and it needs stating plainly rather than buried: the

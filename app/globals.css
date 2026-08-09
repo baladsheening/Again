@@ -66,6 +66,31 @@
    * not the rule around it.
    */
   --color-accent: #b49a62;
+  /**
+   * Lacquer red. **"You are here", on the two header glyphs and nowhere else.**
+   *
+   * Added 9 August, directed. It is the second meaningful colour in a palette
+   * that had one, so it inherits the same scarcity rule the accent lives under:
+   * the moment it appears on something that is not a current-page marker it
+   * stops meaning anything, and the header icons stop being readable at a
+   * glance.
+   *
+   * ⚠ **It is not an error colour, and taking it for one would cost this.**
+   * `docs/plan.md` has wanted a red for the failure messages since 8 August and
+   * deliberately did not add one; those are full-strength text instead. If a red
+   * is ever wanted there it has to be a *different* red, or this stops being a
+   * position and starts being an alarm.
+   *
+   * §11's rule is that amber marks overlap state and nothing else, and this does
+   * not touch it — brass is still spoken for, still unused until Phase 3, and
+   * still the only thing that marks a convergence. Two colours, two meanings,
+   * neither borrowed.
+   *
+   * 4.3:1 against the true-black ground, comfortably past the 3:1 WCAG 1.4.11
+   * asks of a graphical control, and warm enough to sit with `--color-text`'s
+   * aged paper rather than against it.
+   */
+  --color-active: #c1483c;
 
   /*
     The width at which the shell becomes a rail.

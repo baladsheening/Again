@@ -279,13 +279,28 @@ export function Shell({
             `-my-3/py-3` takes both tap targets to the full header height; the
             gap between them is what keeps the two 44px areas from meeting.
           */}
+          {/*
+            `text-active` — lacquer red — on whichever of the two you are
+            currently looking at. See the token in globals.css for the scarcity
+            rule it inherits and for why it must never become the error colour.
+
+            These are the only two places it appears. An unlabelled glyph has no
+            word to carry its state, so it needs the colour more than a label
+            does; the collections in the bottom bar still mark the current one
+            with full-strength text, which is a deliberate difference rather than
+            an oversight — they are words, and a word can say where it is by
+            getting brighter.
+
+            Colour is not the only signal either way: `aria-current="page"` is on
+            both, so nothing here depends on being able to see red.
+          */}
           <div className="flex items-center gap-5">
             <Link
               href="/"
               aria-label="Home"
               aria-current={pathname === '/' ? 'page' : undefined}
               className={`-my-3 py-3 transition-colors ${
-                pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+                pathname === '/' ? 'text-active' : 'text-muted hover:text-text'
               }`}
             >
               <HomeIcon />
@@ -296,7 +311,7 @@ export function Shell({
               aria-label="Profile"
               aria-current={pathname === '/profile' ? 'page' : undefined}
               className={`-my-3 py-3 transition-colors ${
-                pathname === '/profile' ? 'text-text' : 'text-muted hover:text-text'
+                pathname === '/profile' ? 'text-active' : 'text-muted hover:text-text'
               }`}
             >
               <ProfileIcon />
