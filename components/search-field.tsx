@@ -104,7 +104,32 @@ export function SearchField({
         Search for a film
       </label>
 
-      <div className={inBar ? 'flex items-center gap-1.5' : undefined}>
+      {/*
+        `-translate-y-px` is an optical correction, not a layout fix.
+
+        Everything here is already centred *mathematically*: the row is 42px, the
+        chevron's glyph is centred in its 12px box, and the input's 24px line box
+        centres inside the row, so both midpoints land on 21px. It still reads
+        low, because a line box is not what the eye measures a word by.
+
+        IBM Plex Sans at 16px in a 24px line box puts the baseline 18px down
+        (half-leading 1.6 plus a 16.4px ascent). "search" has no descender, so its
+        ink runs from the top of the `h` at about 6.3px to the baseline at 18px,
+        and the x-height band that carries most of its visual weight starts at
+        9.7px. That puts the word's apparent centre near 13.3px against a line-box
+        centre of 12 — between one and two pixels low, every time, for any
+        lowercase word without descenders.
+
+        One pixel up, on the caret and the field together so the two stay in step
+        with each other. The chevron does not move: it is the fixed mark in both
+        bar states, and correcting it here would misalign it against the
+        collections.
+
+        A transform rather than a `relative`/`top` pair because it cannot affect
+        layout, and the results list is a sibling rather than a descendant, so
+        nothing inherits a new containing block from it.
+      */}
+      <div className={inBar ? 'flex -translate-y-px items-center gap-1.5' : undefined}>
         {/*
           A prompt, not a control. The caret blinks only while the field is empty
           and unfocused: once it has focus the browser draws the real one, and
