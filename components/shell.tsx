@@ -350,30 +350,46 @@ export function Shell({
         }`}
       >
         {/*
-          `min-h-6` is what stops the bar jumping when the chevron is tapped.
+          The row is a fixed 42px, and neither state is allowed to set it.
 
-          The two states are not naturally the same height: search is an input at
-          `leading-6`, so 24px of content, while the collections are `micro` — 11px
-          at 1.3 line-height, about 14px. Tailwind's preflight zeroes input padding
-          and borders, so those two numbers are the whole of it. Against a bar
-          pinned to `bottom-0`, a 10px difference in content height moves the
-          whole row up and down as you toggle.
+          The two are not naturally the same height: search is an input at
+          `leading-6`, so 24px of content, while the collections are `micro` —
+          11px at 1.3 line-height, 14.3px. Tailwind's preflight zeroes input
+          padding and borders, so those two numbers are the whole of it. Against
+          a bar pinned to `bottom-0`, a 9.7px difference in content height moves
+          the whole row as you toggle.
 
-          Pinning the *row* rather than either state means neither has to know
-          about the other, and `min-h` rather than `h` so the collections can
-          still wrap to a second line at 320px without being clipped.
+          **42px is the collections height**, which is the one asked for: the
+          28px this row used to carry as `py-3.5` plus that 14.3px line. Search
+          is the taller state and now centres inside it rather than growing it,
+          which is the right way round — the field is the thing with slack in it,
+          and 24px of line-height in 42px still clears a 16px face comfortably.
+
+          The padding had to go with it. `min-h` on a border box is satisfied by
+          padding alone, so `min-h-6` against `py-3.5` was a no-op: 24px of
+          minimum against 28px of padding never binds, and the height stayed
+          content-driven. Height and padding cannot both set this; the height
+          does, and the centring replaces the padding.
+
+          `min-h` rather than `h` so nothing is ever clipped — at 320px the
+          collections wrap to two lines, which comes to 38.6px and still fits
+          inside the 42px, but if a label is ever added it grows rather than
+          cutting one off.
         */}
-        <div className="gutter flex min-h-6 items-center gap-2 py-3.5">
+        <div className="gutter flex min-h-10.5 items-center gap-2">
           {/*
             The one control that is always there. It points right at a field
             waiting to be typed into, and flips to point back the way it came
             once the collections are showing — the same glyph doing the same job
             in both directions, rather than two icons that have to be learned.
 
-            `-my-3.5/py-3.5` takes the visible target to the full height of the
-            bar, and `pr-1` gives it width without pushing the field along. That
-            comes to 40px, under the 44px floor, so `tap-target` adds the last
-            four without moving anything — which is the whole reason that utility
+            `self-stretch` rather than the negative margins it used to carry:
+            with the row at a fixed height the button can simply take all of it,
+            which is both simpler and immune to the height changing again.
+            `pr-1` gives it width without pushing the field along.
+
+            42px is under the 44px floor, so `tap-target` adds the last two
+            without moving anything — which is the whole reason that utility
             exists rather than being padding.
           */}
           <button
@@ -381,7 +397,7 @@ export function Shell({
             onClick={() => setBarMode((m) => (m === 'search' ? 'nav' : 'search'))}
             aria-expanded={barMode === 'nav'}
             aria-label={barMode === 'search' ? 'Show collections' : 'Search'}
-            className="text-muted hover:text-text tap-target -my-3.5 shrink-0 py-3.5 pr-1 transition-colors"
+            className="text-muted hover:text-text tap-target flex shrink-0 items-center self-stretch pr-1 transition-colors"
           >
             <ChevronIcon
               className={`transition-transform duration-200 ${
