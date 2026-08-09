@@ -77,42 +77,38 @@ const ALWAYS_SHOWN_ABOVE = 32
  * The notch inset is added to the top separately. That is clearance, not
  * spacing, and counting it as spacing is what makes a mark drift down the screen
  * by however much inset a given device reports.
+ *
+ * 10px rather than 8: measured in a browser, the corrections below land the
+ * visible gaps within 0.2px of this number at both ends, so it is now the gap
+ * rather than an approximation of it, and 8 was tight enough that any remaining
+ * error showed up as a collision.
  */
-const MASTHEAD_GAP = '0.5rem'
+const MASTHEAD_GAP = '0.625rem'
 
 /**
  * The two corrections that turn `MASTHEAD_GAP` from a box measurement into a
  * visible one. Both exist because `wordmark` sets `line-height: 1`, which makes
- * a 36px box for type whose ink does not fit in it.
+ * a box the size of the em for type whose ink does not fit inside it.
  *
- * **Ojuju's real metrics**, from the fallback `@font-face` next/font generates:
- * `ascent-override: 116.88%`, `descent-override: 28.55%`, `size-adjust: 96.68%`
- * — so against its own em the ascent is 1.130em and the descent 0.276em, and the
- * content area is **1.406em**. At `line-height: 1` the line box is 1em, so the
- * content area overflows `(1.406 − 1) / 2 = 0.203em` above *and* below it.
+ * **Measured, not derived.** Both were estimated twice from the metrics
+ * next/font reports for the fallback face, and both were wrong — the declared
+ * ascent and descent describe the space a font reserves, not the space "again"
+ * actually inks. These are `TextMetrics.actualBoundingBox*` for the rendered
+ * string at 36px, taken from the real shell in a browser:
  *
- * **`OVERHANG`** is that overflow at 36px: 7.3px of descender hanging below the
- * box. It was the bug — with 8px beneath the box, the `g` in "again" had 0.7px
- * of clearance and the posters ran into it. Adding it to the bottom padding puts
- * the descender back inside the sticky header's painted box, which is what stops
- * the collision rather than merely hiding it.
+ *   baseline sits 33.50px below the box top
+ *   ink ascent  26.00px  → 7.50px of empty box **above** the letters (0.2083em)
+ *   ink descent  8.00px  → 5.50px of `g` hanging **below** the box  (0.1528em)
  *
- * **`SLACK`** is the opposite problem at the other end: nothing in "again"
- * reaches the ascent line, which is tall because it has to hold diacritics. The
- * highest ink is the dot of the `i`, roughly 0.78em above the baseline, leaving
- * about 0.15em of empty box above it. Subtracting it stops the top gap reading
- * larger than the bottom one.
+ * Note the declared metrics said 7.31px of overhang; the truth is 5.50px. The
+ * gap between those two numbers is why guessing at this twice did not converge.
  *
- * ⚠ `OVERHANG` is derived and exact; **`SLACK` is an estimate** — the dot's
- * height is the one number the generated metrics do not carry. If the gaps still
- * read unevenly, this is the value to move, and it is the only guess here.
- *
- * ⚠ Both are computed for a 36px mark and expressed in rem, so they are tied to
- * `--text-wordmark`. Change that and these want recomputing: multiply the em
- * figures above by the new size.
+ * Written as a multiple of `--text-wordmark` rather than as a fixed rem, so they
+ * follow the mark if its size changes again — which it has twice today. The
+ * ratios above are properties of the typeface and the word, not of 36px.
  */
-const MARK_DESCENDER_OVERHANG = '0.46rem'
-const MARK_ASCENDER_SLACK = '0.34rem'
+const MARK_ASCENDER_SLACK = 'calc(0.2083 * var(--text-wordmark))'
+const MARK_DESCENDER_OVERHANG = 'calc(0.1528 * var(--text-wordmark))'
 
 export function Shell({
   handle,
