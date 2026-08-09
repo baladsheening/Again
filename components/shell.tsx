@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -52,6 +52,18 @@ const COLLECTION_LINKS = [
   { href: '/archive', label: COLLECTIONS.archive, view: 'archive' },
 ] as const satisfies ReadonlyArray<{ href: Route; label: string; view: OwnerView }>
 
+/**
+ * How far the page must move before the collection bar reacts, and how close to
+ * the top it is always shown regardless.
+ *
+ * The threshold exists because momentum scrolling on iOS emits a stream of
+ * one- and two-pixel events, and a bar that answered every one of them would
+ * flicker rather than recede. It accumulates: a slow drag still crosses 8px
+ * eventually, because `last` is only reset when the bar actually acts.
+ */
+const SCROLL_THRESHOLD = 8
+const ALWAYS_SHOWN_ABOVE = 32
+
 export function Shell({
   handle,
   counts,
@@ -72,6 +84,56 @@ export function Shell({
     is stranded.
   */
   const showCollections = pathname !== '/profile'
+
+  /*
+    The collection bar recedes as you scroll down and comes back the moment you
+    scroll up, which is the behaviour the browser's own address bar has — the
+    two now move together rather than one sitting still while the other slides.
+
+    The header does not do this. It is `sticky` and stays put, because it is the
+    only thing on the screen that says where you are, and a mark that comes and
+    goes reads as a rendering fault rather than as a gesture.
+
+    Read through `requestAnimationFrame` rather than on the event: `scrollY`
+    forces layout, and doing that on every scroll event of a momentum flick is
+    how a list starts dropping frames while it is being read.
+  */
+  const [collectionsHidden, setCollectionsHidden] = useState(false)
+
+  useEffect(() => {
+    if (!showCollections) return
+
+    let last = window.scrollY
+    let frame = 0
+
+    const onScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        const y = Math.max(0, window.scrollY)
+        const delta = y - last
+        // `last` deliberately does not move until the threshold is crossed, so
+        // slow scrolling accumulates instead of never registering.
+        if (Math.abs(delta) < SCROLL_THRESHOLD) return
+        last = y
+        setCollectionsHidden(y > ALWAYS_SHOWN_ABOVE && delta > 0)
+      })
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [showCollections])
+
+  /*
+    There is deliberately no effect resetting this on navigation. Moving to
+    another collection scrolls the page to the top, which fires the handler
+    above with a large negative delta and reveals the bar on its own — and the
+    only way to reach another collection from a hidden bar is to scroll up
+    first, which has already revealed it.
+  */
 
   async function signOut() {
     await authClient.signOut()
@@ -144,8 +206,19 @@ export function Shell({
         for it to divide, since the row below is the content itself. The bar at
         the foot keeps its rule, where it is doing real work: separating a fixed
         surface from the list scrolling underneath it.
+
+        **It does not move.** `sticky` rather than `fixed`, and the difference is
+        not cosmetic: sticky keeps the header in normal flow, so the content
+        below it starts in the right place on its own and then passes underneath
+        as you scroll. Fixed would take it out of flow and require `main` to
+        carry a top padding equal to the header's height — a number that has to
+        be kept in step with the wordmark size by hand, and is wrong the moment
+        it is not.
+
+        `bg-bg` is what makes the pass-under work at all: without a ground the
+        list would show through the mark.
       */}
-      <header className="rail:hidden pt-[env(safe-area-inset-top)]">
+      <header className="bg-bg rail:hidden sticky top-0 z-20 pt-[env(safe-area-inset-top)]">
         <div className="gutter flex items-center justify-between py-4">
           <Link href="/" className="wordmark text-wordmark-nav">
             Again
@@ -197,10 +270,19 @@ export function Shell({
         ends around mid-screen and never reaches this.
 
         **Not on `/profile`** — see `showCollections` above.
+
+        **It recedes as you scroll down**, and returns on the first movement
+        back up — see `collectionsHidden`. `translate-y-full` moves it by its own
+        height including the safe-area padding, so it clears the screen exactly
+        whatever the device inset is, and no number here has to know about any
+        other number. The `motion-reduce` rule in globals.css collapses the
+        transition to nothing, which leaves the behaviour and removes the slide.
       */
       <nav
         aria-label="Collections"
-        className="border-rule bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)]"
+        className={`border-rule bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
+          collectionsHidden ? 'translate-y-full' : 'translate-y-0'
+        }`}
       >
         {/*
           Dotted, not spaced. Labels separated by gaps alone read as loose words;
