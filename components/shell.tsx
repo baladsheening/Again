@@ -107,22 +107,41 @@ const MASTHEAD_GAP = '0.625rem'
  * follow the mark if its size changes again — which it has twice today. The
  * ratios above are properties of the typeface and the word, not of 36px.
  */
-const MARK_ASCENDER_SLACK = 'calc(0.2083 * var(--text-wordmark))'
 /**
- * ⚠ The **declared** descent, not the measured ink — deliberately, and it is the
- * one place here that is not exact on purpose.
+ * The wordmark's own box, in the phone header, corrected so that it *is* the
+ * letters.
  *
- * Ojuju's content area is 1.4167em, so at `line-height: 1` it overflows 0.2083em
- * below the box; the `g` only actually inks 0.1528em of that. Padding to the ink
- * is correct and leaves two pixels of nothing between the letter and whatever
- * follows. Padding to the declared descent puts the *entire* line box inside the
- * header, which means the header's background covers every pixel the type could
- * possibly occupy on any platform, in any fallback face.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why this replaced two rounds of padding arithmetic (9 August)
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * The asymmetry is the point: being a pixel tight at the top costs a pixel of
- * air, and being a pixel tight at the bottom costs a collision.
+ * `wordmark` sets `line-height: 1`, which gives a 36px box to type whose content
+ * area is 1.4167em — 51px. The ink therefore hangs 7.5px *below* the box, and
+ * the posters kept meeting the `g`. Two attempts fixed that by padding the
+ * header to compensate, and both were a number in one place describing a fact
+ * about a font in another. The last of them expressed that number as
+ * `calc(… * var(--text-wordmark))` inside an inline style, which was never
+ * verified in a browser and fails silently to `0` if the variable does not
+ * resolve — a collapse that looks exactly like the reported symptom.
+ *
+ * So the box is made honest instead. `line-height` is set to the content area,
+ * which means the descender **cannot** leave the element: overlap stops being a
+ * measurement to get right and becomes impossible.
+ *
+ * That leaves dead space — a line box holds room for diacritics nothing in
+ * "again" uses. Measured with `TextMetrics.actualBoundingBox*` at 36px: the
+ * baseline sits 41px down, the ink runs 26px above it and 8px below, so there is
+ * **15px of nothing above the letters and 2px below them**. The negative margins
+ * remove exactly that, leaving an element whose outer box is the inked bounds.
+ *
+ * Everything is in `em`, so it is the mark's own size that scales it and no
+ * custom property has to resolve for the layout to hold. Once the box is the
+ * letters, the header's padding is plain `MASTHEAD_GAP` on both sides and means
+ * what it says.
  */
-const MARK_DESCENDER_OVERHANG = 'calc(0.2083 * var(--text-wordmark))'
+const MARK_LINE_HEIGHT = 1.4167
+const MARK_TRIM_TOP = '-0.4167em'
+const MARK_TRIM_BOTTOM = '-0.0556em'
 
 export function Shell({
   handle,
@@ -320,29 +339,37 @@ export function Shell({
         heading it.
 
         The number is spent in one place: `MASTHEAD_GAP`, above the mark and
-        below it. The notch inset is added to the top separately, because it is
-        clearance rather than spacing.
+        below it, equal because the mark's box is trimmed to its own letters —
+        see `MARK_LINE_HEIGHT` and the trims. The notch inset is added to the top
+        separately, because it is clearance rather than spacing.
 
-        **The two paddings are not equal, and that is what makes the gaps equal.**
-        `line-height: 1` on the wordmark makes a box smaller than the type inside
-        it, so the box lies at both ends: 7.3px of the `g` hangs below it, and
-        about 5px of empty ascent sits above the letters. The first was a
-        collision — the posters ran into the descender — and the second only made
-        the top look roomier. So the bottom padding adds the overhang and the top
-        subtracts the slack, and `MASTHEAD_GAP` stays what it says it is: the
-        space you can see. See the constants for the metrics they came from.
+        Two earlier versions of this compensated for the type inside the padding
+        here instead, which meant the header carried a number describing a fact
+        about a font. Correcting the box rather than the space around it is what
+        lets both paddings be the same constant again.
       */}
       <header
         className="bg-bg rail:hidden sticky top-0 z-20"
-        style={{
-          paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP} - ${MARK_ASCENDER_SLACK})`,
-        }}
+        style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
       >
         <div
           className="gutter flex items-center justify-between"
-          style={{ paddingBottom: `calc(${MASTHEAD_GAP} + ${MARK_DESCENDER_OVERHANG})` }}
+          style={{ paddingBottom: MASTHEAD_GAP }}
         >
-          <Link href="/" className="wordmark text-wordmark">
+          {/*
+            The trim. `line-height` contains the descender so it cannot reach
+            what follows, and the negative margins take back the diacritic space
+            "again" never uses, so the element's outer box is the inked bounds.
+          */}
+          <Link
+            href="/"
+            className="wordmark text-wordmark"
+            style={{
+              lineHeight: MARK_LINE_HEIGHT,
+              marginTop: MARK_TRIM_TOP,
+              marginBottom: MARK_TRIM_BOTTOM,
+            }}
+          >
             Again
           </Link>
 
