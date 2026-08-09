@@ -967,6 +967,56 @@ answer is a smaller title rather than truncation — the ellipsis was removed on
 8 August because it promised an expansion that did not exist, and that is still
 true.
 
+### The phone shell, and a breakpoint named for the layout
+
+All directed on 9 August, after the redesign was looked at. Recorded for the two
+places where carrying out the instruction required a call nobody made.
+
+**`--breakpoint-rail: 45rem`, rather than `md`.** The trigger was "make iPads
+show the rail" — the rail had been at `lg` (64rem), so every iPad in portrait
+except the 12.9" Pro was getting the phone layout. `md` at 48rem would have
+fixed three of the four and still missed the mini at 744px. So the number comes
+from the layout instead of from the device: the rail costs 224px plus a 48px gap
+plus gutters, and below about 720px the reading column is squeezed harder than
+the navigation is worth. That it catches every current iPad is a consequence
+rather than the definition, which is what keeps it correct when the device
+landscape moves.
+
+**It is deliberately not the same breakpoint as the type step.** Titles go to
+28px at 64rem, and the entry row moves its action to the right at 64rem. So a
+tablet gets the rail with phone-sized rows and a laptop gets both. One
+breakpoint doing both jobs would have forced a choice between a cramped tablet
+and no rail on one at all.
+
+**The counts came off the phone collection row.** Not asked for, and it is what
+makes the dotted line fit: the labels are ~240px at the caption size, the dots
+bring it to 295px and the home icon to ~320px, against the ~335px a 375px
+handset leaves after the gutter. Four counts add another ~80px and put it over
+the edge on *every* phone, so the row would have wrapped to two lines and undone
+the reason for the dots. The rail has two edges to hang a label and a numeral
+from; a single line has one, so the count is the thing that gives.
+
+**`/profile` exists, and Home and Wants are the same address.** The second of
+those looks like the exact fault this shell was built to remove, and is not. The
+old fault was two *named* destinations onto one list, which made you choose
+between two words for the same thing. A glyph at the head of the line is not a
+fifth collection — it is the way back to the top of the app from anywhere, which
+on a phone is the one move worth an icon.
+
+`/profile` carries the handle and *Sign out* in the **bottom-left corner**,
+because that is where the rail already puts them. The same two things in the
+same corner at every width, so moving between a phone and a laptop does not move
+them; a centred block would have been a different composition that happened to
+contain the same words. It also renders `profiles.display_name`, which has been
+collected at onboarding since Phase 0 and rendered nowhere — showing your own
+name to yourself pre-empts nothing, since the open Phase 2 question is what
+*other* people see.
+
+**This is where `/settings` will grow.** Three things are already waiting on it
+in `docs/plan.md` — TMDB attribution (a licence condition), the iOS install
+note, and changing a password you *do* know. None is built and none was asked
+for, so the page holds two items and no heading.
+
 ---
 
 ## Third-party dependencies

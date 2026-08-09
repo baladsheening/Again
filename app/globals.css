@@ -67,6 +67,27 @@
    */
   --color-accent: #b49a62;
 
+  /*
+    The width at which the shell becomes a rail.
+
+    Named rather than borrowed from `md`, because it is a statement about this
+    layout and not about a device: the rail costs 224px plus a 48px gap plus the
+    gutters, so below about 720px the reading column is squeezed harder than the
+    navigation is worth. 45rem is that floor.
+
+    It also catches every iPad in portrait — the smallest is 744px — which `md`
+    at 48rem does not. That was the trigger (9 August: "make ipads show the
+    rail"), but the number comes from the column, so it stays correct if the
+    device landscape moves.
+
+    Deliberately *not* the same breakpoint as the type step. Titles go to 28px
+    at 64rem, and the entry row moves its action to the right at 64rem too: a
+    tablet gets the rail with phone-sized rows, and a laptop gets both. One
+    breakpoint doing both jobs would have forced the choice between a cramped
+    tablet and no rail on it at all.
+  */
+  --breakpoint-rail: 45rem;
+
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
@@ -105,8 +126,14 @@
 
   /* the wordmark on /sign-in and /reset-password, where it is the page */
   --text-wordmark: 2.25rem;
-  /* the same wordmark in the shell, where it is a label */
-  --text-wordmark-nav: 1.3125rem;
+  /*
+    The same wordmark in the shell. 21px until 9 August, which was set when it
+    was the largest thing on the screen by default rather than by intent — once
+    titles went to 22/28 the mark was quietly the *smallest* piece of display
+    type in the app, and a masthead that loses to the body text is not a
+    masthead. 28px puts it back above the titles at both widths.
+  */
+  --text-wordmark-nav: 1.75rem;
   /*
     A film title in a list. The largest thing on any signed-in screen, and
     deliberately so — with the poster gone from the row (§11, 9 August) the

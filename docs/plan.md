@@ -78,8 +78,9 @@ a phone, since it is the only fix that cannot be checked from a desk.
 
 ### Smaller, unscheduled
 
-- [ ] **`/settings` does not exist**, and three things now want it. →
-      *Unscheduled*
+- [ ] **`/settings` does not exist**, and three things now want it. `/profile`
+      arrived on 9 August with the handle and *Sign out* on it, and is where
+      those three should land. → *Unscheduled*
 - [ ] **Reset rate limiting is per IP, not per email address.** → *Unscheduled*
 
 ### Flagged and never answered
@@ -700,6 +701,12 @@ carry it. Built and confirmed in the compiled CSS:
       (a licence condition), the iOS install note, and changing a password you
       *do* know — reset only serves the case where you have forgotten it, so a
       signed-in user currently has no way to change their password at all.
+
+      **`/profile` now exists** (9 August) and is the page these belong on. It
+      holds the handle, the display name and *Sign out*, positioned bottom-left
+      to match the rail. Nothing else was added, because nothing else was asked
+      for — but the route, the layout and the sign-out path are all in place, so
+      each of the three is now an addition rather than a new screen.
 - [ ] **Reset rate limiting is per IP, not per email address.** A distributed
       attacker could still fill one person's inbox. The fix means reading the
       request body in `app/api/auth/[...all]/route.ts`; deliberately not built.
