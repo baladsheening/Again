@@ -36,9 +36,21 @@ const CDN = 'https://image.tmdb.org/t/p'
  * The cost falls on whoever taps it: measured originals run 0.8–1.5MB. That is
  * a real amount on mobile data, and it is spent only on a deliberate tap.
  */
+/**
+ * `w342` is the home wall. The grid runs three columns on a phone, so a cell is
+ * around 110 CSS px — 330 real pixels on a 3x screen, which `w342` covers as a
+ * downscale with nothing to spare and nothing wasted. At rail widths the columns
+ * grow to about 150px, and a desk screen is 1x or 2x, so the same file still
+ * downscales.
+ *
+ * Chosen against the *rendered* size rather than the download, which is the
+ * mistake the note below records twice. The wall shows around forty of these at
+ * once, so the size that is merely adequate per poster is the one that decides
+ * whether the screen is usable on mobile data.
+ */
 export function posterUrl(
   posterPath: string | null,
-  size: 'w92' | 'w154' | 'original' = 'w154',
+  size: 'w92' | 'w154' | 'w342' | 'original' = 'w154',
 ) {
   if (!posterPath) return null
   return `${CDN}/${size}${posterPath}`

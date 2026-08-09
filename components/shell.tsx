@@ -8,8 +8,10 @@ import { Fragment, useEffect, useState } from 'react'
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
 import { COLLECTIONS } from '@/lib/vocabulary'
+import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
+import { SearchField } from './search-field'
 
 /**
  * The signed-in shell: one navigation, at every width.
@@ -100,8 +102,22 @@ export function Shell({
   */
   const [collectionsHidden, setCollectionsHidden] = useState(false)
 
+  /*
+    Which of the two things the bar is holding. Search is the default: on a phone
+    it is the only route to the field, and adding is what the app is for.
+  */
+  const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
+
+  /*
+    True while the search field is focused or has something in it. The bar is
+    pinned in place for as long as that holds — a bar that slid away mid-search
+    would take the field, the results and the keyboard's anchor with it, and the
+    scroll that triggered it would often be the user reaching for a result.
+  */
+  const [searchActive, setSearchActive] = useState(false)
+
   useEffect(() => {
-    if (!showCollections) return
+    if (!showCollections || searchActive) return
 
     let last = window.scrollY
     let frame = 0
@@ -125,7 +141,7 @@ export function Shell({
       window.removeEventListener('scroll', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [showCollections])
+  }, [showCollections, searchActive])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
@@ -298,66 +314,98 @@ export function Shell({
         whatever the device inset is, and no number here has to know about any
         other number. The `motion-reduce` rule in globals.css collapses the
         transition to nothing, which leaves the behaviour and removes the slide.
+
+        **It holds one of two things**, and the chevron swaps them. Search is the
+        default, because adding is the thing you came to do and it is now the
+        only way to reach the field on a phone; the collections are one tap
+        behind it. They cannot both be shown — the collection line already runs
+        to within about 15px of a 375px screen, and there is no width left for a
+        field beside it.
       */
       <nav
-        aria-label="Collections"
+        aria-label="Main"
         className={`border-rule bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
       >
-        {/*
-          Dotted, not spaced. Labels separated by gaps alone read as loose words;
-          a `·` between them makes one line of navigation, which is what it is —
-          and it is the same separator the entry rows use between a title and its
-          year, so the app has one way of saying "and then this".
-
-          **The counts come off here**, and that is what makes the line fit. The
-          nine items come to about 262px at the caption size and the eight gaps
-          to 64px, against the ~335px a 375px handset leaves after the gutter.
-          Four counts would add another 80px and put it well over on every phone.
-          The rail has two edges to hang a label and a numeral from; a single
-          line has one, so the count is the thing that gives.
-
-          Still `flex-wrap`, and `justify-center` so a wrapped second line sits
-          under the middle of the first rather than hanging off one edge. At
-          320px it will wrap; the padding under `main` is set to clear two lines
-          for exactly that reason, because content hidden behind a fixed bar is a
-          worse failure than a little dead space above it.
-        */}
-        <div className="gutter flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2.5 py-4">
+        <div className="gutter flex items-center gap-2 py-3.5">
           {/*
-            Home was the same address as Wants until the capture box moved off
-            the list on 9 August. It is a real destination now — the one place
-            you can add anything — which is what the glyph had been promising
-            since it appeared.
+            The one control that is always there. It points right at a field
+            waiting to be typed into, and flips to point back the way it came
+            once the collections are showing — the same glyph doing the same job
+            in both directions, rather than two icons that have to be learned.
 
-            A glyph rather than a fifth label, because the line is already
-            within about 15px of a 375px screen and "HOME" would cost 40 more.
-            The rail spells it out; a bottom bar cannot afford to.
+            `-my-3.5/py-3.5` takes the tap target to the full height of the bar,
+            and `pr-1` gives it width without pushing the field along.
           */}
-          <Link
-            href="/"
-            aria-label="Home"
-            aria-current={pathname === '/' ? 'page' : undefined}
-            className={`tap-target self-center transition-colors ${
-              pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
-            }`}
+          <button
+            type="button"
+            onClick={() => setBarMode((m) => (m === 'search' ? 'nav' : 'search'))}
+            aria-expanded={barMode === 'nav'}
+            aria-label={barMode === 'search' ? 'Show collections' : 'Search'}
+            className="text-muted hover:text-text -my-3.5 shrink-0 py-3.5 pr-1 transition-colors"
           >
-            <HomeIcon />
-          </Link>
-          <Dot />
+            <ChevronIcon
+              className={`transition-transform duration-200 ${
+                barMode === 'nav' ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
 
-          {COLLECTION_LINKS.map((link, i) => (
-            <Fragment key={link.href}>
-              {i > 0 && <Dot />}
-              <CollectionLink
-                {...link}
-                count={counts[link.view]}
-                active={pathname === link.href}
-                layout="inline"
-              />
-            </Fragment>
-          ))}
+          {barMode === 'search' ? (
+            <SearchField placement="bar" onActiveChange={setSearchActive} />
+          ) : (
+            /*
+              Dotted, not spaced. Labels separated by gaps alone read as loose
+              words; a `·` between them makes one line of navigation, which is
+              what it is — and it is the same separator the entry rows use
+              between a title and its year, so the app has one way of saying
+              "and then this".
+
+              **The counts come off here**, and that is what makes the line fit.
+              The items come to about 262px at the caption size and the gaps to
+              64px, against the ~335px a 375px handset leaves after the gutter.
+              Four counts would add another 80px. The rail has two edges to hang
+              a label and a numeral from; a single line has one, so the count is
+              the thing that gives.
+
+              `flex-wrap` with `justify-center`, so where it does not fit the
+              second line sits under the middle of the first rather than hanging
+              off one edge. The padding under `main` is set to clear two lines
+              for exactly that reason: content hidden behind a fixed bar is a
+              worse failure than a little dead space above it.
+            */
+            <div className="flex min-w-0 flex-1 flex-wrap items-baseline justify-center gap-x-2 gap-y-2.5">
+              {/*
+                Home is the poster wall — what is on, and what is about to be. A
+                glyph rather than a fifth label, because the line has no room for
+                40 more pixels. The rail spells it out.
+              */}
+              <Link
+                href="/"
+                aria-label="Home"
+                aria-current={pathname === '/' ? 'page' : undefined}
+                className={`tap-target self-center transition-colors ${
+                  pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+                }`}
+              >
+                <HomeIcon />
+              </Link>
+              <Dot />
+
+              {COLLECTION_LINKS.map((link, i) => (
+                <Fragment key={link.href}>
+                  {i > 0 && <Dot />}
+                  <CollectionLink
+                    {...link}
+                    count={counts[link.view]}
+                    active={pathname === link.href}
+                    layout="inline"
+                  />
+                </Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </nav>
       )}

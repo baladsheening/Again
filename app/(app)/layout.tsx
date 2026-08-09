@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { CaptureProvider } from '@/components/capture-provider'
 import { Shell } from '@/components/shell'
 import { countMyEntries, getMyProfile, getSessionUser } from '@/lib/db'
 
@@ -24,9 +25,17 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
 
   const counts = await countMyEntries(sessionUser)
 
+  /*
+    `CaptureProvider` wraps the shell rather than sitting inside it, because the
+    search field lives *in* the shell's bottom bar on a phone and the poster wall
+    lives in `children`. Both start the same add, so the flow has to be above
+    both of them.
+  */
   return (
-    <Shell handle={profile.handle} counts={counts}>
-      {children}
-    </Shell>
+    <CaptureProvider>
+      <Shell handle={profile.handle} counts={counts}>
+        {children}
+      </Shell>
+    </CaptureProvider>
   )
 }

@@ -22,6 +22,13 @@ const BASE = 'https://api.themoviedb.org/3'
  */
 const DETAILS_TTL = 60 * 60 * 24 * 30
 const SEARCH_TTL = 60 * 60
+/**
+ * What is in cinemas changes on a Friday, not on a Tuesday afternoon. Six hours
+ * means four upstream calls a day however many people open the app, which is the
+ * point: this is the one request every signed-in session makes before it does
+ * anything else, so it is the one that must never be per-user.
+ */
+const IN_CINEMAS_TTL = 60 * 60 * 6
 
 /** TMDB is upstream and untrusted like anything else — parse, don't assume. */
 const searchResponse = z.object({
@@ -112,6 +119,56 @@ export async function searchFilms(query: string): Promise<FilmSearchResult[]> {
     year: yearOf(r.release_date),
     posterPath: r.poster_path ?? null,
   }))
+}
+
+/**
+ * What is on, and what is about to be — the home screen.
+ *
+ * Two TMDB lists rather than one. `now_playing` alone is a short and slightly
+ * stale window, and half of what a person means by "I want to see that" is a
+ * film they have seen a trailer for and cannot watch yet. Together they are the
+ * set of things worth capturing this month.
+ *
+ * **Order is release order, not popularity.** TMDB returns both lists ranked by
+ * its own popularity score, and adopting that would make this a chart — which
+ * §2 rules out, and which would quietly turn the home screen into the thing the
+ * brief spends a paragraph warning about. Sorting by release date makes it a
+ * calendar instead: what is on now, then what is coming.
+ *
+ * Posterless films are dropped rather than given a placeholder. The screen is
+ * nothing but artwork, so a film with none has nothing to contribute to it.
+ *
+ * `Promise.all`, so the two calls cost one round trip rather than two. A failure
+ * in either propagates — see the caller for what an empty screen looks like.
+ */
+export async function inCinemas(): Promise<FilmSearchResult[]> {
+  const [playing, upcoming] = await Promise.all([
+    tmdb('/movie/now_playing?language=en-US&page=1', IN_CINEMAS_TTL),
+    tmdb('/movie/upcoming?language=en-US&page=1', IN_CINEMAS_TTL),
+  ])
+
+  const films = [playing, upcoming].flatMap((raw) => {
+    const parsed = searchResponse.safeParse(raw)
+    if (!parsed.success) throw new TmdbError('Unexpected TMDB list response', 502)
+    return parsed.data.results
+  })
+
+  // The two lists overlap around a release date, and a wall that shows the same
+  // poster twice looks like a bug rather than a coincidence.
+  const seen = new Set<number>()
+  return films
+    .filter((r) => {
+      if (!r.poster_path || seen.has(r.id)) return false
+      seen.add(r.id)
+      return true
+    })
+    .sort((a, b) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
+    .map((r) => ({
+      externalId: String(r.id),
+      title: r.title,
+      year: yearOf(r.release_date),
+      posterPath: r.poster_path ?? null,
+    }))
 }
 
 /**

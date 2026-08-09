@@ -13,7 +13,7 @@
  * the same reason: it inherits the muted/hover treatment of the button around it,
  * and §11 reserves amber for overlap.
  */
-export function ChevronIcon() {
+export function ChevronIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       width="12"
@@ -25,7 +25,7 @@ export function ChevronIcon() {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="shrink-0"
+      className={`shrink-0 ${className}`}
     >
       <path d="M4.25 2.5 7.75 6l-3.5 3.5" />
     </svg>

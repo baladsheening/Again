@@ -967,6 +967,93 @@ answer is a smaller title rather than truncation — the ellipsis was removed on
 8 August because it promised an expansion that did not exist, and that is still
 true.
 
+### The poster wall, and the largest deviation from the brief so far
+
+**Directed on 9 August**, and it needs stating plainly rather than buried: the
+home screen is now a wall of posters for films in cinemas or about to be, and
+that is imagery well beyond what §11 allows. §11 says "no imagery beyond small
+poster thumbnails"; §2 rules out public discovery and algorithmic
+recommendation; and the same day this landed, the thumbnails were being removed
+from the lists for being decoration that failed at decorating. Both moves are
+defensible together, but only if the argument is written down.
+
+**The argument is that this is a capture prompt, not a catalogue.** Again is a
+capture tool first (§8), and the thing it was worst at was the moment before
+capture — you have to already know what you want in order to type it. A wall of
+what is on is the answer to *what have I been meaning to see*, which is the
+question the app exists to catch. Three tests it passes, and each one is a line
+that must not be crossed later:
+
+- **It is not availability.** §2 calls "where to get it" the most tempting wrong
+  feature in the whole design. Nothing here says where to watch anything, and
+  nothing may be added that does — no streaming lookup, no cinema times, no
+  booking link. That is the line, and it is close.
+- **It is not recommendation.** No algorithm, no personalisation, no ranking by
+  anything about you. Everyone signed in sees the same wall. It is ordered by
+  **release date rather than TMDB's popularity score**, deliberately: popularity
+  order would make it a chart, and a chart is the discovery feature §2 rules
+  out. `inCinemas` in `lib/tmdb.ts` does that sort for this reason alone.
+- **It is not a feed.** One page from each of two endpoints, no infinite scroll,
+  no accumulation, and nothing about it responds to what you did yesterday.
+
+**Tapping a poster starts an add**, which is what keeps it a capture surface
+rather than something to look at. A wall you cannot act on would be decoration,
+and decoration is exactly what §11 is guarding against.
+
+**Where it is still wrong, if it is:** the §13 test — "if a feature request
+makes the app more useful to a stranger, it is probably wrong". This one does.
+A stranger with no friends on Again gets a browsable wall of new releases. The
+counter is that it makes the app more useful to a *member* in the same motion,
+by removing the blank screen §8 warned about; but the test is failed, not
+passed, and that is the thing to weigh if this ever feels like the wrong product.
+
+**Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
+is unreachable from the environment this was built in, so the call is checked
+only by types and by sharing its Zod schema with `searchFilms`, which does work
+in production. Both list endpoints return the same `results[]` shape as
+`/search/movie`, so the parse should hold — but should is not does, and an empty
+wall with search still working is the designed failure.
+
+### The search field moved into the phone's bottom bar
+
+Same instruction. The bar now holds one of two things and a chevron swaps them:
+search by default, the collections one tap behind it. They cannot both be shown
+— the collection line already runs to within about 15px of a 375px screen, and
+there is no width left for a field beside it.
+
+**Search is the default**, because on a phone the bar is now the only route to
+the field, and adding is what the app is for. The chevron points right at a
+field waiting to be typed into and flips to point back once the collections
+show: one glyph doing one job in both directions, rather than two icons to learn.
+
+**A caret blinks while the field is empty and unfocused**, at the 1.06s interval
+terminals use. It stops on focus, because the browser draws the real one and two
+carets is a bug rather than an effect. WCAG 2.2.2 governs blinking content and
+exempts a text cursor, which is what this is.
+
+**Results open upward.** There is nothing below the bar but the edge of the
+screen, and this also puts them where the keyboard is not: the viewport is
+`interactiveWidget: 'resizes-content'`, so an open keyboard shrinks the layout
+viewport and the list opens into what remains. This is a better arrangement than
+the one it replaces — the old top-of-page dropdown is what produced the
+landscape bug on 8 August.
+
+**The bar stops receding while search is in use.** A bar that slid away
+mid-search would take the field, the results and the keyboard's anchor with it,
+and the scroll that triggered it would usually be someone reaching for a result.
+
+**At rail widths none of this applies** — the field stays at the top of the home
+screen, above the wall. Two fields in two places would mean two pieces of state
+and one of them always stale, so it is one or the other by width, never both.
+
+**The add flow moved above both surfaces.** There are two ways to start an add
+now — a poster in the wall and the search field — and both end in the same
+intent sheet, server action and ten-second undo window. `CaptureProvider` owns
+that once; duplicating it would have meant two undo timers and a second intent
+sheet free to drift from the first. The sheet became an overlay in the process,
+because the thing that starts an add may be a 110px poster halfway down a grid
+or a field pinned to the bottom of the screen, and neither has room to answer in.
+
 ### The phone shell, and a breakpoint named for the layout
 
 All directed on 9 August, after the redesign was looked at. Recorded for the two
