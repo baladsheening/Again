@@ -220,6 +220,29 @@
     color: var(--color-text);
     /* Respected throughout (§10, §11). */
     scroll-behavior: smooth;
+
+    /**
+     * No pull-to-refresh.
+     *
+     * `none` rather than `contain`, and the difference is the whole point:
+     * `contain` stops scroll *chaining* to a parent but explicitly still allows
+     * the browser's own overscroll actions — a refresh included. Only `none`
+     * prevents the action itself.
+     *
+     * On the viewport-defining element rather than `body`, because a value here
+     * is what the viewport reads; setting it on `body` only propagates when
+     * `html` has not spoken, which is a rule nobody should have to remember.
+     *
+     * The elastic bounce goes with it, and costs nothing here: the ground is
+     * true black and the overscrolled area was black against black. What it buys
+     * is that a downward flick at the top of a list is a scroll and never a page
+     * load — this app has a fixed bar that recedes on scroll and a sticky mark,
+     * and a gesture that sometimes reloads the document instead of scrolling it
+     * is the kind of thing you learn to be careful around.
+     *
+     * Refreshing deliberately still works from the address bar.
+     */
+    overscroll-behavior-y: none;
   }
 
   /**
