@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 
+import { CloseIcon } from './icon-close'
 import { useSearch } from './search-provider'
 
 /**
@@ -15,10 +16,16 @@ import { useSearch } from './search-provider'
  * was dropped.
  *
  * The same prompt appears in two places: the phone's bottom bar and the foot of
- * the poster column at rail widths. Both wrap it in a chevron and a row; neither
- * needs anything else from it, which is why it takes no props.
+ * the poster column at rail widths. Both wrap it in a chevron and a row.
+ *
+ * **`id` is not optional, and it is not decoration.** Both placements are in the
+ * document at every width — the breakpoint hides one with CSS rather than
+ * choosing between them, because choosing would need a media query in JavaScript
+ * and a server render that cannot know the answer. Two inputs therefore exist,
+ * and two inputs sharing an `id` is a duplicate identifier with two `<label for>`
+ * pointing at whichever the browser found first.
  */
-export function SearchField() {
+export function SearchField({ id }: { id: string }) {
   const { query, setQuery, setFocused, focused, clear } = useSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -31,7 +38,7 @@ export function SearchField() {
       caret and the field together so the two stay in step.
     */
     <div className="flex -translate-y-px items-center gap-1.5">
-      <label htmlFor="search" className="sr-only">
+      <label htmlFor={id} className="sr-only">
         Search for a film
       </label>
 
@@ -48,7 +55,7 @@ export function SearchField() {
       )}
 
       <input
-        id="search"
+        id={id}
         ref={inputRef}
         type="text"
         value={query}
@@ -74,6 +81,40 @@ export function SearchField() {
         */
         className="placeholder:text-muted/70 w-full min-w-0 bg-transparent text-base leading-6 outline-none"
       />
+
+      {/*
+        The way back to the listing.
+
+        Escape already did this, and Escape is not an affordance on a phone —
+        with the results filling the screen and no visible control, clearing the
+        field was something you had to know rather than something you could see.
+
+        **It keeps focus.** Clearing is usually the start of typing something
+        else, and dropping the keyboard between two searches is the difference
+        between correcting a query and starting one again.
+
+        `ml-2` on top of the row's gap, so `tap-target`'s 44px expansion reaches
+        only about a pixel into the field. That utility's own note warns about
+        neighbours stealing each other's taps, and the neighbour here is the text
+        you are trying to put a cursor in.
+
+        Rendered from the first character rather than from the search minimum:
+        one character shows the listing through, but it is still text you may
+        want rid of.
+      */}
+      {query.length > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            clear()
+            inputRef.current?.focus()
+          }}
+          aria-label="Clear search"
+          className="text-muted hover:text-text tap-target ml-2 shrink-0 self-center transition-colors"
+        >
+          <CloseIcon />
+        </button>
+      )}
     </div>
   )
 }

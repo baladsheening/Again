@@ -368,7 +368,7 @@ export function Shell({
             <span className="text-muted shrink-0">
               <ChevronIcon />
             </span>
-            <SearchField />
+            <SearchField id="search-foot" />
           </div>
         </div>
       </div>
@@ -642,7 +642,7 @@ export function Shell({
           </button>
 
           {barMode === 'search' ? (
-            <SearchField />
+            <SearchField id="search-bar" />
           ) : (
             /*
               Dotted, not spaced. Labels separated by gaps alone read as loose
