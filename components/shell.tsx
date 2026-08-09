@@ -64,6 +64,15 @@ export function Shell({
   const pathname = usePathname()
   const router = useRouter()
 
+  /*
+    `/profile` is the one signed-in screen with no collection bar. It is not a
+    collection, so the bar would be pointing at four places you are not — and it
+    is the only screen composed around its own bottom-left corner, which a fixed
+    bar sits directly on top of. The wordmark is still a link home, so nothing
+    is stranded.
+  */
+  const showCollections = pathname !== '/profile'
+
   async function signOut() {
     await authClient.signOut()
     router.push('/sign-in')
@@ -126,8 +135,17 @@ export function Shell({
         </div>
       </aside>
 
-      {/* --- the header, below 45rem ------------------------------------- */}
-      <header className="border-rule rail:hidden border-b pt-[env(safe-area-inset-top)]">
+      {/*
+        --- the header, below 45rem ---------------------------------------
+
+        No rule under it. A hairline here drew a line across the screen directly
+        beneath the one piece of display type in the app, which boxed the mark in
+        rather than letting it sit at the top of the page — and there is nothing
+        for it to divide, since the row below is the content itself. The bar at
+        the foot keeps its rule, where it is doing real work: separating a fixed
+        surface from the list scrolling underneath it.
+      */}
+      <header className="rail:hidden pt-[env(safe-area-inset-top)]">
         <div className="gutter flex items-center justify-between py-4">
           <Link href="/" className="wordmark text-wordmark-nav">
             Again
@@ -154,10 +172,10 @@ export function Shell({
             <ProfileIcon />
           </Link>
         </div>
-
       </header>
 
-      {/*
+      {showCollections && (
+      /*
         The collection row, at the foot of the phone screen.
 
         It began under the wordmark and moved here on 9 August. The reason it
@@ -177,7 +195,9 @@ export function Shell({
         it rather than under it. The capture dropdown is capped at 50dvh
         directly beneath an input that scrolls itself to the top on focus, so it
         ends around mid-screen and never reaches this.
-      */}
+
+        **Not on `/profile`** — see `showCollections` above.
+      */
       <nav
         aria-label="Collections"
         className="border-rule bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)]"
@@ -232,22 +252,33 @@ export function Shell({
           ))}
         </div>
       </nav>
+      )}
 
       {/*
         `min-w-0` so a long film title makes the column narrower rather than
         pushing the rail off the screen. `flex flex-col` so a page can push
         something to the foot of the viewport — `/profile` is the one that does.
 
-        The bottom padding is set as a variable rather than inline, because it
-        now has to differ by width: below `rail` it must clear the fixed
-        collection bar, and above it there is no bar to clear. 6rem covers a bar
-        that has wrapped to two lines at 320px, which is deliberately more than
-        the ~48px it usually occupies — the cost of overshooting is dead space
-        below the last row, and the cost of undershooting is a row you cannot
-        read. `safe-bottom` adds the home-indicator inset on top of whichever
-        applies.
+        The bottom padding is a variable rather than an inline style, because it
+        has to differ by width *and* by page: it exists only to clear the fixed
+        collection bar. 6rem covers a bar that has wrapped to two lines at 320px,
+        which is deliberately more than the ~48px it usually occupies — the cost
+        of overshooting is dead space below the last row, the cost of
+        undershooting is a row you cannot read.
+
+        It drops back to 2rem wherever there is no bar: at rail widths, and on
+        `/profile` at every width. That page is composed around its own
+        bottom-left corner, so 6rem of clearance for a bar that is not there
+        would leave the handle and *Sign out* floating well above the fold of
+        the screen they are meant to sit in.
+
+        `safe-bottom` adds the home-indicator inset on top of whichever applies.
       */}
-      <main className="gutter safe-bottom rail:max-w-3xl rail:py-10 rail:[--safe-bottom-base:2rem] flex w-full min-w-0 flex-1 flex-col py-8 [--safe-bottom-base:6rem]">
+      <main
+        className={`gutter safe-bottom rail:max-w-3xl rail:py-10 rail:[--safe-bottom-base:2rem] flex w-full min-w-0 flex-1 flex-col py-8 ${
+          showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
+        }`}
+      >
         {children}
       </main>
     </div>
