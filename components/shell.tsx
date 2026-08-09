@@ -224,12 +224,25 @@ export function Shell({
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
-          `sticky` with `h-dvh`, so the collections stay put while the list
-          scrolls past them. That is the whole reason a rail beats a header on a
-          large screen: the navigation stops being something you scroll back up
-          to find.
+          `sticky`, so the collections stay put while the list scrolls past them.
+          That is the whole reason a rail beats a header on a large screen: the
+          navigation stops being something you scroll back up to find.
+
+          **`h-svh`, not `h-dvh`** — the *small* viewport height rather than the
+          dynamic one. `dvh` is defined to track the viewport as browser chrome
+          shows and hides, which on a tablet happens continuously while you
+          scroll. The rail's height followed it, and because identity is pinned
+          to the foot with `mt-auto`, the whole column drifted up and down a few
+          pixels the entire way down the page.
+
+          `svh` is the height with the chrome *shown*, and it does not change.
+          The cost is that when the toolbar retracts the foot of the rail sits a
+          little above the true bottom of the window rather than on it — which is
+          invisible on a black ground, and cheap against a column that never
+          settles. On a desktop browser, with no retracting chrome, the three
+          units are identical and this changes nothing.
         */
-        className="gutter rail:sticky rail:top-0 rail:flex rail:h-dvh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
+        className="gutter rail:sticky rail:top-0 rail:flex rail:h-svh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
       >
         <Link href="/" className="wordmark text-wordmark">
           Again
