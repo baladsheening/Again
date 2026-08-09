@@ -349,7 +349,7 @@ export function Shell({
         lets both paddings be the same constant again.
 
         ─────────────────────────────────────────────────────────────────────
-        **`after:h-6` is why a poster never reaches the descender.**
+        **The shadow is why a poster never reaches the descender.**
 
         The header is `sticky`, so content passes under it and is cut off at its
         bottom edge — which sits only `MASTHEAD_GAP` below the `g`. At rest the
@@ -358,19 +358,30 @@ export function Shell({
         under the descender. The gap was never constant, it just looked it until
         something moved.
 
-        So the header paints 24px further than it measures. The pseudo-element
-        adds no height and takes part in no layout — it only extends the ground
-        the mark sits on, so the cut edge lands where the resting gap already
-        was. `h-6` is `pt-6` on `main`: **the two must stay equal**, and that is
-        the whole trick — the distance from the descender to the first poster is
-        then the same number whether the page is scrolled or not.
+        So the header paints 24px further than it measures: a hard-edged
+        box-shadow, offset down by exactly the distance `main` holds open, with
+        no blur and no spread. It adds no height and joins no layout — it only
+        extends the ground the mark sits on, so the cut edge lands where the
+        resting gap already was. The offset is `pt-6` on `main`: **the two must
+        stay equal**, and that is the whole trick — the distance from the
+        descender to the first poster is then the same number whether the page
+        is scrolled or not.
 
-        `pointer-events-none` because it covers 24px of content once scrolled,
-        and a strip of invisible background that swallows taps on the poster
-        underneath it would be a worse bug than the one this fixes.
+        **A shadow rather than the `::after` this started as.** A positioned
+        pseudo-element is painted *above* its parent's in-flow content, so if its
+        top edge lands even slightly high it covers the very descender it exists
+        to protect — which is exactly what happened. An outer box-shadow is
+        painted *behind* the element's own background and text, so it cannot
+        reach the mark however it is positioned. It also cannot swallow a tap,
+        which the pseudo-element needed `pointer-events-none` to avoid.
+
+        Black is spelled out rather than taken from the token, for the same
+        reason `poster.tsx` spells its backdrop: this has to match the header's
+        ground exactly, and a shadow that is one shade off reads as a band across
+        the screen. If `--color-bg` ever moves, this moves with it by hand.
       */}
       <header
-        className="bg-bg rail:hidden after:bg-bg sticky top-0 z-20 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-6 after:content-['']"
+        className="bg-bg rail:hidden sticky top-0 z-20 shadow-[0_1.5rem_0_0_#000]"
         style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
       >
         <div
