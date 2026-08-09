@@ -349,22 +349,39 @@ export function Shell({
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
       >
-        <div className="gutter flex items-center gap-2 py-3.5">
+        {/*
+          `min-h-6` is what stops the bar jumping when the chevron is tapped.
+
+          The two states are not naturally the same height: search is an input at
+          `leading-6`, so 24px of content, while the collections are `micro` — 11px
+          at 1.3 line-height, about 14px. Tailwind's preflight zeroes input padding
+          and borders, so those two numbers are the whole of it. Against a bar
+          pinned to `bottom-0`, a 10px difference in content height moves the
+          whole row up and down as you toggle.
+
+          Pinning the *row* rather than either state means neither has to know
+          about the other, and `min-h` rather than `h` so the collections can
+          still wrap to a second line at 320px without being clipped.
+        */}
+        <div className="gutter flex min-h-6 items-center gap-2 py-3.5">
           {/*
             The one control that is always there. It points right at a field
             waiting to be typed into, and flips to point back the way it came
             once the collections are showing — the same glyph doing the same job
             in both directions, rather than two icons that have to be learned.
 
-            `-my-3.5/py-3.5` takes the tap target to the full height of the bar,
-            and `pr-1` gives it width without pushing the field along.
+            `-my-3.5/py-3.5` takes the visible target to the full height of the
+            bar, and `pr-1` gives it width without pushing the field along. That
+            comes to 40px, under the 44px floor, so `tap-target` adds the last
+            four without moving anything — which is the whole reason that utility
+            exists rather than being padding.
           */}
           <button
             type="button"
             onClick={() => setBarMode((m) => (m === 'search' ? 'nav' : 'search'))}
             aria-expanded={barMode === 'nav'}
             aria-label={barMode === 'search' ? 'Show collections' : 'Search'}
-            className="text-muted hover:text-text -my-3.5 shrink-0 py-3.5 pr-1 transition-colors"
+            className="text-muted hover:text-text tap-target -my-3.5 shrink-0 py-3.5 pr-1 transition-colors"
           >
             <ChevronIcon
               className={`transition-transform duration-200 ${
@@ -397,7 +414,7 @@ export function Shell({
               that reason: content hidden behind a fixed bar is a worse failure
               than a little dead space above it.
             */
-            <div className="flex min-w-0 flex-1 flex-wrap items-baseline justify-center gap-x-2 gap-y-2.5">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-2.5">
               {COLLECTION_LINKS.map((link, i) => (
                 <Fragment key={link.href}>
                   {i > 0 && <Dot />}
