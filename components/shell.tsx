@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -12,7 +12,6 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { SearchField } from './search-field'
-import { useOverscrollBump } from './use-overscroll-bump'
 
 /**
  * The signed-in shell: one navigation, at every width.
@@ -86,28 +85,6 @@ const ALWAYS_SHOWN_ABOVE = 32
  */
 const MASTHEAD_GAP = '0.625rem'
 
-/**
- * The two corrections that turn `MASTHEAD_GAP` from a box measurement into a
- * visible one. Both exist because `wordmark` sets `line-height: 1`, which makes
- * a box the size of the em for type whose ink does not fit inside it.
- *
- * **Measured, not derived.** Both were estimated twice from the metrics
- * next/font reports for the fallback face, and both were wrong — the declared
- * ascent and descent describe the space a font reserves, not the space "again"
- * actually inks. These are `TextMetrics.actualBoundingBox*` for the rendered
- * string at 36px, taken from the real shell in a browser:
- *
- *   baseline sits 33.50px below the box top
- *   ink ascent  26.00px  → 7.50px of empty box **above** the letters (0.2083em)
- *   ink descent  8.00px  → 5.50px of `g` hanging **below** the box  (0.1528em)
- *
- * Note the declared metrics said 7.31px of overhang; the truth is 5.50px. The
- * gap between those two numbers is why guessing at this twice did not converge.
- *
- * Written as a multiple of `--text-wordmark` rather than as a fixed rem, so they
- * follow the mark if its size changes again — which it has twice today. The
- * ratios above are properties of the typeface and the word, not of 36px.
- */
 /**
  * The wordmark's own box, in the phone header, corrected so that it *is* the
  * letters.
@@ -193,14 +170,6 @@ export function Shell({
     scroll that triggered it would often be the user reaching for a result.
   */
   const [searchActive, setSearchActive] = useState(false)
-
-  /*
-    The rubber band at the ends of the page, rebuilt because suppressing
-    pull-to-refresh took the native one with it. It moves `main` rather than the
-    shell, so the mark and the bar hold still — see the hook.
-  */
-  const mainRef = useRef<HTMLElement>(null)
-  useOverscrollBump(mainRef)
 
   useEffect(() => {
     if (!showCollections || searchActive) return
@@ -692,7 +661,6 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        ref={mainRef}
         className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-6 ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
