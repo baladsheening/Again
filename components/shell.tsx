@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -12,6 +12,7 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { SearchField } from './search-field'
+import { useOverscrollBump } from './use-overscroll-bump'
 
 /**
  * The signed-in shell: one navigation, at every width.
@@ -192,6 +193,14 @@ export function Shell({
     scroll that triggered it would often be the user reaching for a result.
   */
   const [searchActive, setSearchActive] = useState(false)
+
+  /*
+    The rubber band at the ends of the page, rebuilt because suppressing
+    pull-to-refresh took the native one with it. It moves `main` rather than the
+    shell, so the mark and the bar hold still — see the hook.
+  */
+  const mainRef = useRef<HTMLElement>(null)
+  useOverscrollBump(mainRef)
 
   useEffect(() => {
     if (!showCollections || searchActive) return
@@ -683,6 +692,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
+        ref={mainRef}
         className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-6 ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
