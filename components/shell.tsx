@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -211,7 +211,17 @@ export function Shell({
   */
   const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
 
-  const { active: searchActive, results, searching, loadMore } = useSearch()
+  const {
+    active: searchActive,
+    focused: searchFocused,
+    results,
+    searching,
+    loadMore,
+  } = useSearch()
+
+  /* Keeps the bar on the keyboard's top edge — see `useKeyboardPin`. */
+  const barRef = useRef<HTMLElement>(null)
+  useKeyboardPin(searchFocused, barRef)
 
   /*
     The bar recedes on every screen, search included.
@@ -657,8 +667,16 @@ export function Shell({
         not spend rules on decoration.
       */
       <nav
+        ref={barRef}
         aria-label="Main"
-        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
+        /*
+          `transition-[translate]`, not `transition-transform`. Two things move
+          this element: the recede slide writes `translate` and wants its 300ms,
+          while `useKeyboardPin` writes `transform` and must be instant.
+          Tailwind's `transition-transform` covers both properties at once,
+          which would make the bar visibly chase the keyboard.
+        */
+        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-[translate] duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
       >
@@ -689,6 +707,27 @@ export function Shell({
           inside the 42px, but if a label is ever added it grows rather than
           cutting one off.
         */}
+        {/*
+          The bar's ground, continued a screen below it, so a gap under it
+          cannot be seen.
+
+          `visualViewport` reports the keyboard's height in bursts that lag the
+          ~250ms it takes to animate in, so the bar arrives before the keys do.
+          Chasing that with easing is a losing game — any duration picked is
+          wrong on the next iOS release and on a slower phone — so the lag is
+          not what is fixed here. What is fixed is that it shows: the space
+          under the bar is painted in the page ground rather than letting the
+          poster wall through it. Same trick as the header's shadow.
+
+          At rest it is entirely below the fold and paints nothing.
+          `pointer-events-none` — it lies over the keyboard's own area and must
+          never take a tap meant for a key.
+        */}
+        <div
+          aria-hidden
+          className="bg-bg pointer-events-none absolute inset-x-0 top-full h-screen"
+        />
+
         <div className="gutter flex min-h-10.5 items-center gap-2">
           {/*
             The one control that is always there. It points right at a field
@@ -888,6 +927,89 @@ export function Shell({
       </main>
     </div>
   )
+}
+
+/**
+ * Holds the phone's bar on the top edge of an open keyboard.
+ *
+ * **The symptom this exists for**: with the keyboard up and a wall of results to
+ * scroll, the bar vanished and came back only at the very bottom of the results.
+ * That is not a hidden bar, it is a bar parked out of sight. iOS positions
+ * `fixed` against the *layout* viewport, which stays the full height of the
+ * screen while the keyboard covers the bottom of it — so `bottom-0` sits behind
+ * the keyboard, and it only scrolls into view when the visual viewport reaches
+ * the foot of the layout one, which is the foot of the document. A page with
+ * nothing to scroll never showed the fault.
+ *
+ * The bar's bottom edge therefore has to be moved to the bottom edge of the
+ * *visual* viewport, which is where the keyboard's top edge is:
+ *
+ *     lift = vv.offsetTop + vv.height − layoutHeight
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Three earlier attempts, and what each got wrong (10 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * 1. **Measured unfocused.** iOS collapses its own toolbar on scroll, which is
+ *    also a viewport change, so an ordinary scroll with no keyboard anywhere
+ *    read as hundreds of pixels and sent the bar up the screen. Hence `focused`:
+ *    a keyboard cannot be open without it, so it rules out every viewport change
+ *    that is not one, without having to tell them apart.
+ * 2. **Used `window.innerHeight` for the layout height.** It moves with Safari's
+ *    toolbar. `document.documentElement.clientHeight` is the layout viewport and
+ *    does not.
+ * 3. **Dropped `offsetTop` and the `scroll` listener** to escape (2), which
+ *    re-anchored the bar to the layout viewport — so it dragged with the page
+ *    and never came back. `offsetTop` is the entire reason a fixed element needs
+ *    correcting here; it is not optional.
+ *
+ * **Written straight to the element rather than through state.**
+ * `visualViewport` emits `scroll` continuously while a finger is down, and a
+ * re-render per event is how a list starts dropping frames while it is read.
+ * Nothing else needs the number.
+ *
+ * It is also much less exposed than it was: the bar now recedes while the page
+ * is scrolled, so for most of the time this is tracking, there is nothing on
+ * screen to track imprecisely.
+ */
+function useKeyboardPin(focused: boolean, ref: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = ref.current
+    const vv = window.visualViewport
+    if (!focused || !el || !vv) return
+
+    const apply = () => {
+      const lift = Math.min(
+        0,
+        vv.offsetTop + vv.height - document.documentElement.clientHeight,
+      )
+
+      /*
+        `transform`, where the recede-and-return slide uses `translate`. Two
+        separate CSS properties on one element, which is what lets one be
+        instant and the other animated — the bar transitions `translate` only,
+        so this tracks the keyboard frame for frame while the slide keeps its
+        300ms. Merging them puts the bar back to visibly chasing the keyboard.
+
+        The safe-area padding goes with it: that inset clears the home
+        indicator, the keyboard already covers it, and leaving it in parks the
+        bar a thumb's width above the keys instead of on them.
+      */
+      el.style.transform = lift ? `translateY(${lift}px)` : ''
+      el.style.paddingBottom = lift ? '0px' : ''
+    }
+
+    apply()
+    vv.addEventListener('resize', apply)
+    vv.addEventListener('scroll', apply)
+
+    return () => {
+      vv.removeEventListener('resize', apply)
+      vv.removeEventListener('scroll', apply)
+      el.style.transform = ''
+      el.style.paddingBottom = ''
+    }
+  }, [focused, ref])
 }
 
 /**
