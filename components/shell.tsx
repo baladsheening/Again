@@ -706,26 +706,21 @@ export function Shell({
           cutting one off.
         */}
         {/*
-          The bar's ground, continued a screen below it, so a gap under it
-          cannot be seen.
+          There was a screen-tall black panel here, hung below the bar to hide
+          any gap between it and a keyboard still animating in. **Removed
+          10 August: it made a small fault into a large one.**
 
-          `visualViewport` reports the keyboard's height in bursts that lag the
-          ~250ms it takes to animate in, so the bar arrives before the keys do.
-          Chasing that with easing is a losing game — any duration picked is
-          wrong on the next iOS release and on a slower phone — so the lag is
-          not what is fixed here. What is fixed is that it shows: the space
-          under the bar is painted in the page ground rather than letting the
-          poster wall through it. Same trick as the header's shadow.
+          It only ever covered the keyboard's own area, which is invisible — as
+          long as the bar was where it should be. The moment the bar was not,
+          the panel came with it and drew a sheet of black across the results.
+          A brief gap under the bar is a blemish; a screen of the page hidden
+          behind an opaque rectangle is a broken app, and the second failure was
+          the price of insuring against the first.
 
-          At rest it is entirely below the fold and paints nothing.
-          `pointer-events-none` — it lies over the keyboard's own area and must
-          never take a tap meant for a key.
+          If the gap on opening turns out to be worth fixing, fix it by bounding
+          the panel to a plausible keyboard height rather than a whole screen,
+          so the worst case stays small.
         */}
-        <div
-          aria-hidden
-          className="bg-bg pointer-events-none absolute inset-x-0 top-full h-screen"
-        />
-
         <div className="gutter flex min-h-10.5 items-center gap-2">
           {/*
             The one control that is always there. It points right at a field
@@ -997,22 +992,25 @@ function useKeyboardPin(focused: boolean, ref: React.RefObject<HTMLElement | nul
       el.style.paddingBottom = lift ? '0px' : ''
     }
 
+    /*
+      **`resize` only. Never `scroll`, on either viewport.**
+
+      A keyboard has one height and it does not change while the page moves
+      under it, so the lift is a constant and recomputing it per scroll event
+      buys nothing. What it costs is severe: every imprecision in the reading
+      becomes movement, so the bar crawled up the screen with the scroll,
+      dragging its own background over the results.
+
+      The bar is `fixed`, so a constant lift holds it against the keyboard for
+      free, however far the page is scrolled. Anything that genuinely changes
+      the keyboard — switching to emoji, a hardware keyboard appearing,
+      rotation — is a resize, and is caught here.
+    */
     apply()
     vv.addEventListener('resize', apply)
-    vv.addEventListener('scroll', apply)
-    /*
-      The document's own scroll as well as the visual viewport's. Which of the
-      two moves depends on where the page is and what iOS decides to do with the
-      keyboard up, and a missed event leaves the bar behind — so both are
-      watched rather than guessing which one fires. It costs one style write per
-      event and no render, because nothing here goes through React.
-    */
-    window.addEventListener('scroll', apply, { passive: true })
 
     return () => {
       vv.removeEventListener('resize', apply)
-      vv.removeEventListener('scroll', apply)
-      window.removeEventListener('scroll', apply)
       el.style.transform = ''
       el.style.paddingBottom = ''
     }
