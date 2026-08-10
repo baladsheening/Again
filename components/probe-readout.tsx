@@ -1,32 +1,31 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 
 /**
- * ⚠ **TEMPORARY.** A live readout of the viewport numbers, for diagnosing where
- * the phone's search bar ends up with a keyboard open. Delete this file and its
- * one use in `components/shell.tsx` once that is settled.
+ * ⚠ **TEMPORARY, AND DELIBERATELY ALWAYS ON.** A live readout of the viewport
+ * numbers, for settling where the phone's search bar ends up with a keyboard
+ * open. Delete this file and its one use in `components/shell.tsx` once that is
+ * done.
  *
- * Only renders with `?probe=1` on the URL, so it cannot appear by accident.
+ * It was behind `?probe=1` and did not appear on the device it was built for —
+ * most likely the app was opened without the flag, which is exactly the kind of
+ * thing that costs a whole round trip. Unconditional is uglier and cannot fail.
  *
  * **It writes to the DOM rather than through state**, on a `requestAnimationFrame`
  * loop. A probe that re-rendered sixty times a second would be measuring a page
- * it was itself slowing down, and the thing under investigation is scrolling
- * behaviour.
+ * it was itself slowing down, and scrolling is the thing under investigation.
  */
-export function ProbeReadout({ bar }: { bar: React.RefObject<HTMLElement | null> }) {
-  /*
-    `useSearchParams` rather than reading `window.location` into state: it is
-    the same answer on the server and the client, so there is no hydration
-    mismatch and no render spent discovering the flag.
-  */
-  const on = useSearchParams().get('probe') === '1'
+export function ProbeReadout({
+  bar,
+  anchor,
+}: {
+  bar: React.RefObject<HTMLElement | null>
+  anchor: React.RefObject<HTMLElement | null>
+}) {
   const out = useRef<HTMLPreElement>(null)
 
   useEffect(() => {
-    if (!on) return
-
     let frame = 0
 
     const tick = () => {
@@ -34,25 +33,23 @@ export function ProbeReadout({ bar }: { bar: React.RefObject<HTMLElement | null>
       const vv = window.visualViewport
 
       if (el && vv) {
-        const rect = bar.current?.getBoundingClientRect()
+        const barRect = bar.current?.getBoundingClientRect()
+        const anchorRect = anchor.current?.getBoundingClientRect()
         const n = (v: number | undefined) =>
-          v === undefined ? '—' : String(Math.round(v * 10) / 10).padStart(7)
-
-        // The same quantity `useKeyboardPin` corrects on. Zero means the bar's
-        // bottom edge is exactly on the bottom of the visible area.
-        const err =
-          rect === undefined ? undefined : rect.bottom - vv.offsetTop - vv.height
+          v === undefined ? '      —' : String(Math.round(v)).padStart(7)
 
         el.textContent = [
           `inner  ${n(window.innerHeight)}`,
           `client ${n(document.documentElement.clientHeight)}`,
           `vv.h   ${n(vv.height)}`,
           `vv.top ${n(vv.offsetTop)}`,
-          `vv.pg  ${n(vv.pageTop)}`,
           `scrY   ${n(window.scrollY)}`,
-          `bar.t  ${n(rect?.top)}`,
-          `bar.b  ${n(rect?.bottom)}`,
-          `ERR    ${n(err)}`,
+          `anch.b ${n(anchorRect?.bottom)}`,
+          `bar.b  ${n(barRect?.bottom)}`,
+          // What the pin is aiming the bar's bottom edge at, and how far off it
+          // currently is. TARGET − bar.b is the whole diagnosis.
+          `TARGET ${n(vv.offsetTop + vv.height)}`,
+          `OFF    ${n(barRect ? vv.offsetTop + vv.height - barRect.bottom : undefined)}`,
         ].join('\n')
       }
 
@@ -61,9 +58,7 @@ export function ProbeReadout({ bar }: { bar: React.RefObject<HTMLElement | null>
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [on, bar])
-
-  if (!on) return null
+  }, [bar, anchor])
 
   return (
     <pre

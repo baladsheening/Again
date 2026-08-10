@@ -229,7 +229,8 @@ export function Shell({
 
   /* Keeps the bar on the keyboard's top edge — see `useKeyboardPin`. */
   const barRef = useRef<HTMLElement>(null)
-  useKeyboardPin(searchFocused, collectionsHidden, barRef)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  useKeyboardPin(searchFocused, barRef, anchorRef)
 
   /*
     The bar recedes on every screen, search included.
@@ -312,8 +313,19 @@ export function Shell({
       left edge of a wide monitor and the list drifts away from it.
     */
     <div className="rail:pl-68 mx-auto flex w-full max-w-6xl flex-1 flex-col">
-      {/* ⚠ temporary — renders nothing without `?probe=1`. */}
-      <ProbeReadout bar={barRef} />
+      {/*
+        The reference for `useKeyboardPin`: `bottom-0` and nothing else, so it
+        reports where an untransformed fixed element actually lands on this
+        device. Zero height, no paint, no hit area — it exists to be measured.
+      */}
+      <div
+        ref={anchorRef}
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
+      />
+
+      {/* ⚠ temporary */}
+      <ProbeReadout bar={barRef} anchor={anchorRef} />
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
@@ -971,20 +983,14 @@ export function Shell({
  */
 function useKeyboardPin(
   focused: boolean,
-  receded: boolean,
-  ref: React.RefObject<HTMLElement | null>,
+  bar: React.RefObject<HTMLElement | null>,
+  anchor: React.RefObject<HTMLElement | null>,
 ) {
-  /*
-    Kept across renders, because `receded` changing re-runs the effect and the
-    correction must not be thrown away and rebuilt each time — that is a jump
-    back to the wrong place followed by a jump to the right one.
-  */
-  const lift = useRef(0)
-
   useEffect(() => {
-    const el = ref.current
+    const el = bar.current
+    const mark = anchor.current
     const vv = window.visualViewport
-    if (!focused || !el || !vv) return
+    if (!focused || !el || !mark || !vv) return
 
     let frame = 0
 
@@ -992,28 +998,27 @@ function useKeyboardPin(
       frame = 0
 
       /*
-        Nothing while the bar is receded. Its own hide is a `translate` of one
-        bar-height, which this would read as error and cancel — correcting the
-        bar back into view every time it tried to leave.
+        `bottom-0` is not where the browser puts `bottom-0`, so ask it.
+
+        The anchor is a zero-height element with the bar's exact positioning and
+        nothing else — no transform, no recede, no padding. Wherever it has
+        ended up *is* where an untouched fixed element sits on this device at
+        this instant, including whatever iOS has done to it, and the bar needs
+        the difference between that and the bottom of the visible area.
+
+        **Measured off the anchor rather than off the bar** because the bar
+        carries its own recede — a `translate` of one bar-height, mid-animation
+        for 300ms of it. Reading the bar meant reading that too, and correcting
+        it away: the hide was being cancelled by the pin, which is why the bar
+        stayed on screen and drifted instead of leaving.
       */
-      if (receded) return
+      const lift = Math.min(
+        0,
+        vv.offsetTop + vv.height - mark.getBoundingClientRect().bottom,
+      )
 
-      /*
-        Where the bar actually is, against where it should be, both in the
-        coordinates you can see.
-
-        `getBoundingClientRect` is in layout-viewport coordinates and
-        `vv.offsetTop` is where the visible area starts in those same
-        coordinates, so the subtraction gives the bar's position within what is
-        on screen. It should end at `vv.height` — the bottom of the visible
-        area, which with a keyboard up is the keyboard's top edge.
-      */
-      const error = el.getBoundingClientRect().bottom - vv.offsetTop - vv.height
-      if (Math.abs(error) < 0.5) return
-
-      // Never below the resting position; only ever lifted off it.
-      lift.current = Math.min(0, lift.current - error)
-      el.style.transform = `translateY(${lift.current}px)`
+      el.style.transform = lift ? `translateY(${lift}px)` : ''
+      el.style.paddingBottom = lift ? '0px' : ''
     }
 
     const schedule = () => {
@@ -1021,14 +1026,15 @@ function useKeyboardPin(
       frame = requestAnimationFrame(measure)
     }
 
-    /*
-      The safe-area inset clears the home indicator and the keyboard already
-      covers it. Set before the first measurement, because it changes the bar's
-      height and therefore where its bottom edge is.
-    */
-    el.style.paddingBottom = '0px'
     schedule()
 
+    /*
+      Scroll is watched again, and this time it has to be. With a keyboard open
+      iOS stops honouring `fixed` and lets the bar scroll away with the
+      document — the fault in the screenshots, where the bar sat halfway up a
+      wall of posters with results still visible below it. The anchor drifts by
+      exactly the same amount, so following the scroll is what cancels it.
+    */
     vv.addEventListener('resize', schedule)
     vv.addEventListener('scroll', schedule)
     window.addEventListener('scroll', schedule, { passive: true })
@@ -1038,18 +1044,12 @@ function useKeyboardPin(
       vv.removeEventListener('scroll', schedule)
       window.removeEventListener('scroll', schedule)
       if (frame) cancelAnimationFrame(frame)
-    }
-  }, [focused, receded, ref])
 
-  /* Back to the resting position the moment the keyboard is not there. */
-  useEffect(() => {
-    if (focused) return
-    const el = ref.current
-    if (!el) return
-    lift.current = 0
-    el.style.transform = ''
-    el.style.paddingBottom = ''
-  }, [focused, ref])
+      /* Back to the resting position the moment the keyboard is not there. */
+      el.style.transform = ''
+      el.style.paddingBottom = ''
+    }
+  }, [focused, bar, anchor])
 }
 
 /**
