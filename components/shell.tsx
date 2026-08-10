@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -12,10 +12,8 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
-/* ⚠ temporary — see components/probe-readout.tsx */
-import { ProbeReadout } from './probe-readout'
 import { SearchField } from './search-field'
-import { useSearch } from './search-provider'
+import { useSearch, type SearchFailure } from './search-provider'
 
 /**
  * The signed-in shell: one navigation, at every width.
@@ -110,88 +108,28 @@ const KEYBOARD_SETTLE_MS = 500
 const KEYBOARD_MIN_HEIGHT = 100
 
 /**
- * The air above and below the wordmark on a phone — the *visible* air, measured
- * to the letters rather than to the box they sit in.
+ * What a search that did not work says.
  *
- * One constant rather than two matching literals, because two numbers that have
- * to stay equal eventually will not: this pair was 16px and 48px before
- * 9 August, and nothing in the code said they were meant to be related.
- *
- * The notch inset is added to the top separately. That is clearance, not
- * spacing, and counting it as spacing is what makes a mark drift down the screen
- * by however much inset a given device reports.
- *
- * 10px rather than 8: measured in a browser, the corrections below land the
- * visible gaps within 0.2px of this number at both ends, so it is now the gap
- * rather than an approximation of it, and 8 was tight enough that any remaining
- * error showed up as a collision.
+ * **None of these is "Nothing by that name."**, which is what all three used to
+ * say — see `SearchFailure`. Each states what happened and what to do about it,
+ * in that order, because the second is the only part anyone reads. No apology
+ * and no error code: a person looking for a film is not debugging the app.
  */
-const MASTHEAD_GAP = '0.625rem'
+const SEARCH_FAILURE_TEXT: Record<SearchFailure, string> = {
+  'rate-limited': 'That is a lot of searching at once. Give it a moment.',
+  'signed-out': 'You have been signed out. Sign in again to search.',
+  unavailable: 'Search is unreachable just now.',
+}
 
 /**
- * The wordmark's own box, in the phone header, corrected so that it *is* the
- * letters.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Why this replaced two rounds of padding arithmetic (9 August)
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * `wordmark` sets `line-height: 1`, which gives a 36px box to type whose content
- * area is 1.4167em — 51px. The ink therefore hangs 7.5px *below* the box, and
- * the posters kept meeting the `g`. Two attempts fixed that by padding the
- * header to compensate, and both were a number in one place describing a fact
- * about a font in another. The last of them expressed that number as
- * `calc(… * var(--text-wordmark))` inside an inline style, which was never
- * verified in a browser and fails silently to `0` if the variable does not
- * resolve — a collapse that looks exactly like the reported symptom.
- *
- * So the box is made honest instead. `line-height` is set to the content area,
- * which means the descender **cannot** leave the element: overlap stops being a
- * measurement to get right and becomes impossible.
- *
- * That leaves dead space — a line box holds room for descenders and diacritics
- * the mark does not use. Measured with `TextMetrics.actualBoundingBox*` at 36px
- * in Space Grotesk: declared ascent 35 and descent 11, so a 46px content area.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Re-measured through two changes of case (10 August)
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * The mark went to caps and back to lower case the same day, and measuring all
- * three cases is what makes the next change of mind a two-line edit:
- *
- * | | ink above baseline | ink below | inked height |
- * |---|---|---|---|
- * | `again` (**current**) | 26px | 8px (the `g`) | 34px |
- * | `Again` | 26px | 8px | 34px |
- * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | 27px |
- *
- * **Lower case and capitalised measure the same**, which is why going back to
- * `again` restored the numbers this file had before the caps pass rather than
- * needing new ones: the `g` sets the bottom either way, and the top is 26px in
- * all three — the dot of the `i` reaches as high as the capital A does.
- *
- * Only caps differ, and only at the bottom. If the mark ever goes back to them,
- * it is `MARK_TRIM_BOTTOM` −0.2778em and `main`'s padding 2.9375rem.
- *
- * That leaves **9px of nothing above the letters and 3px below them**, which the
- * negative margins remove, leaving an element whose outer box is the inked
- * bounds. `MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` have not moved through any of
- * it — they describe the typeface and a height the case does not change.
- *
- * The numbers are the typeface's, so they were re-measured when the mark moved
- * from Ojuju to Space Grotesk, and again at each change of case.
- *
- * Everything is in `em`, so it is the mark's own size that scales it and no
- * custom property has to resolve for the layout to hold. Once the box is the
- * letters, the header's padding is plain `MASTHEAD_GAP` on both sides and means
- * what it says.
+ * The masthead's spacing and the wordmark's trims used to be four constants
+ * here, applied as inline styles. **They now live in `app/globals.css`** as
+ * `--masthead-gap` and the `wordmark-trim` utility, and that is a
+ * Content-Security-Policy constraint rather than a preference: a style
+ * *attribute* cannot carry a nonce, so every one of them was silently dropped in
+ * production. The measurements and the case table moved with them — see the
+ * comment on `wordmark-trim`.
  */
-const MARK_LINE_HEIGHT = 1.2778
-const MARK_TRIM_TOP = '-0.25em'
-/** −3/36em. The `g` hangs 8px below the baseline and the box holds 11. */
-const MARK_TRIM_BOTTOM = '-0.0833em'
-
 
 export function Shell({
   handle,
@@ -240,16 +178,48 @@ export function Shell({
     focused: searchFocused,
     results,
     searching,
+    failure,
     loadMore,
+    retry,
   } = useSearch()
 
   /* The page's scroller — see the note on the element itself. */
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  /* Keeps the bar on the keyboard's top edge — see `useKeyboardPin`. */
+  /*
+    Keeps whichever search dock is on screen on the keyboard's top edge — see
+    `useKeyboardPin`.
+
+    **There are two docks, and a phone reaches both of them.** The bar at the
+    foot is `rail:hidden` and the row above the posters is `hidden rail:flex`, so
+    the breakpoint chooses; and 45rem is 720px, which most handsets clear the
+    moment they are turned on their side. Pinning only the phone's bar left the
+    landscape field — the one actually on screen — sitting behind the keyboard.
+
+    Each dock carries a zero-height twin with its own positioning and nothing
+    else. That is what the hook measures: see the note on `useKeyboardPin`.
+  */
   const barRef = useRef<HTMLElement>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
-  useKeyboardPin(searchFocused, barRef, anchorRef)
+  const railRef = useRef<HTMLDivElement>(null)
+  const railAnchorRef = useRef<HTMLDivElement>(null)
+
+  /*
+    Memoised because the hook subscribes against it: a fresh array literal every
+    render would tear down and rebuild five listeners on each keystroke. Refs are
+    stable for the life of the component, so there is nothing for this to depend
+    on.
+  */
+  const docks = useMemo<SearchDock[]>(
+    () => [
+      /* The phone's bar wears the home-indicator inset, which a keyboard covers. */
+      { el: barRef, anchor: anchorRef, dropsSafeArea: true },
+      { el: railRef, anchor: railAnchorRef },
+    ],
+    [],
+  )
+
+  useKeyboardPin(searchFocused, scrollRef, docks)
 
   /*
     The bar recedes on every screen, search included.
@@ -334,12 +304,31 @@ export function Shell({
   }, [showCollections, searchFocused])
 
   /*
-    There is deliberately no effect resetting this on navigation. Moving to
-    another collection scrolls the page to the top, which fires the handler
-    above with a large negative delta and reveals the bar on its own — and the
-    only way to reach another collection from a hidden bar is to scroll up
-    first, which has already revealed it.
+    A new route starts at the top of itself.
+
+    **This used to be free and stopped being so on 10 August.** Next's own scroll
+    handling moves the *document*, and the shell now scrolls in `#scroll-root`
+    instead — so navigation left the new page at whatever offset the last one was
+    at. Three screens into Wants, tapping Archive put you three screens into
+    Archive, which reads as the app having lost your tap rather than as a scroll
+    position.
+
+    **The bar reveals itself off the back of this**, and still does not need an
+    effect of its own: `scrollTo` fires a `scroll` event on the scroller, the
+    handler above reads a large negative delta, and a receded bar comes back. If
+    the page was already at the top there is no event — and no need for one,
+    since a bar can only be hidden below `ALWAYS_SHOWN_ABOVE`.
+
+    `instant` against the `scroll-behavior: smooth` on `html`, for the reason the
+    search field's reset gives: animating a journey nobody took is a lurch.
+
+    It costs restoring the position on Back, which was already lost — Next
+    restores the document, and the document has not moved since this became a
+    nested scroller.
   */
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname])
 
   async function signOut() {
     await authClient.signOut()
@@ -385,18 +374,31 @@ export function Shell({
     <div id="scroll-root" ref={scrollRef} className="fixed inset-0 overflow-y-auto">
     <div className="rail:pl-68 mx-auto flex min-h-full w-full max-w-6xl flex-col">
       {/*
-        The reference for `useKeyboardPin`: `bottom-0` and nothing else, so it
-        reports where an untransformed fixed element actually lands on this
-        device. Zero height, no paint, no hit area — it exists to be measured.
+        The two references for `useKeyboardPin`. Each carries its dock's
+        positioning and nothing else — no transform, no recede, no padding — so
+        it reports where an untransformed fixed element actually lands on this
+        device. Zero size, no paint, no hit area: they exist to be measured.
+
+        They wear their dock's breakpoint too, so exactly one of them is ever
+        laid out, and the hook picks the pair that is.
       */}
       <div
         ref={anchorRef}
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
+        className="rail:hidden pointer-events-none fixed inset-x-0 bottom-0 h-0"
+      />
+      {/*
+        The rail dock hangs off `top-0` and `h-svh` rather than `bottom-0` — see
+        the dock itself for why — so its resting edge is not the same line as the
+        bar's, and it needs a twin of its own shape rather than a share of that
+        one.
+      */}
+      <div
+        ref={railAnchorRef}
+        aria-hidden
+        className="rail:block pointer-events-none fixed top-0 hidden h-svh w-0"
       />
 
-      {/* ⚠ temporary */}
-      <ProbeReadout bar={barRef} anchor={anchorRef} />
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
@@ -535,7 +537,15 @@ export function Shell({
         drops it onto the same line, measured at 0.15px apart — which is the
         difference between level and *looking* level.
       */}
-      <div className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end">
+      {/*
+        `transition-[translate]` for the same reason the phone's bar has it:
+        `useKeyboardPin` writes `transform` here and it must be instant, so the
+        two properties are kept apart even though nothing animates this one yet.
+      */}
+      <div
+        ref={railRef}
+        className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
+      >
         <div className="bg-bg pointer-events-auto pt-6 pb-9">
           <div className="gutter flex max-w-3xl items-center gap-1.5">
             <span className="text-muted shrink-0">
@@ -622,28 +632,16 @@ export function Shell({
         ground exactly, and a shadow that is one shade off reads as a band across
         the screen. If `--color-bg` ever moves, this moves with it by hand.
       */}
-      <header
-        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 shadow-[0_0.5rem_0_0_#000]"
-        style={{ paddingTop: `calc(env(safe-area-inset-top) + ${MASTHEAD_GAP})` }}
-      >
-        <div
-          className="gutter flex items-center justify-between"
-          style={{ paddingBottom: MASTHEAD_GAP }}
-        >
+      <header className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] shadow-[0_0.5rem_0_0_#000]">
+        <div className="gutter flex items-center justify-between pb-[var(--masthead-gap)]">
           {/*
-            The trim. `line-height` contains the descender so it cannot reach
-            what follows, and the negative margins take back the diacritic space
-            "again" never uses, so the element's outer box is the inked bounds.
+            `wordmark-trim` contains the descender so it cannot reach what
+            follows, and takes back the diacritic space "again" never uses, so
+            the element's outer box is the inked bounds. The measurements, and
+            what to change if the mark's case moves again, are on the utility in
+            globals.css.
           */}
-          <Link
-            href="/"
-            className="wordmark text-wordmark"
-            style={{
-              lineHeight: MARK_LINE_HEIGHT,
-              marginTop: MARK_TRIM_TOP,
-              marginBottom: MARK_TRIM_BOTTOM,
-            }}
-          >
+          <Link href="/" className="wordmark wordmark-trim text-wordmark">
             Again
           </Link>
 
@@ -892,11 +890,24 @@ export function Shell({
         of overshooting is dead space below the last row, the cost of
         undershooting is a row you cannot read.
 
-        It drops back to 2rem wherever there is no bar: at rail widths, and on
-        `/profile` at every width. That page is composed around its own
-        bottom-left corner, so 6rem of clearance for a bar that is not there
-        would leave the handle and *Sign out* floating well above the fold of
-        the screen they are meant to sit in.
+        It drops back to 2rem on `/profile` below the breakpoint, where there is
+        no bar at all. That page is composed around its own bottom-left corner,
+        so 6rem of clearance for a bar that is not there would leave the handle
+        and *Sign out* floating well above the fold of the screen they are meant
+        to sit in.
+
+        **At rail widths it is 6rem too, and that was 2rem until 10 August.**
+        There is no collection bar up there, which is what the 2rem was reasoning
+        about — but there is a fixed search row at the foot of the same column,
+        and it is about 84px tall: 24px of `pt-6`, a 24px field, 36px of `pb-9`.
+        2rem of clearance is 32px, so the last row of a list or the last rank of
+        posters sat under it and could not be scrolled clear. 6rem clears 84 with
+        room to spare, and it is the number the phone already uses.
+
+        It applies on `/profile` at rail widths as well, deliberately: the search
+        row is fixed to the viewport and does not know which page is under it, so
+        the corner that page is composed around is exactly the corner the row
+        covers.
 
         `safe-bottom` adds the home-indicator inset on top of whichever applies.
 
@@ -968,7 +979,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_0.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_0.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
@@ -995,12 +1006,41 @@ export function Shell({
           see `loadMore`. Only search pages: the cinema listing is what is on and
           what is coming, which is a set rather than a stream.
         */}
+        {/*
+          **A search that failed does not say "Nothing by that name."**
+
+          It did until 10 August: every non-2xx became zero results, and zero
+          results is a sentence about the film. A rate limit is the one that
+          matters — it arrives while someone is typing fast, and the advice it
+          silently gave was "that one does not exist, try another", which spends
+          the budget that just ran out. See `SearchFailure`.
+
+          The retry sits under the wall rather than inside it. `PosterWall` is
+          silent artwork by instruction, with no spinner and no caption; a line
+          that appears only when something is broken is a different thing from a
+          mechanism announcing itself, but it is still not the wall's business.
+
+          Not offered for `signed-out`, where trying again does the same thing
+          again — the message is the action there.
+        */}
         {searchActive ? (
-          <PosterWall
-            films={results}
-            empty={searching ? 'Looking…' : 'Nothing by that name.'}
-            onReachEnd={loadMore}
-          />
+          failure && results.length === 0 ? (
+            /* Nothing came back at all, so the notice is the whole screen. */
+            <SearchFailureNotice failure={failure} onRetry={retry} />
+          ) : (
+            <>
+              <PosterWall
+                films={results}
+                empty={searching ? 'Looking…' : 'Nothing by that name.'}
+                onReachEnd={loadMore}
+              />
+              {/*
+                A page failed under a wall worth looking at. The notice goes
+                below it, where the next twenty would have appeared.
+              */}
+              {failure && <SearchFailureNotice failure={failure} onRetry={retry} />}
+            </>
+          )
         ) : (
           children
         )}
@@ -1011,7 +1051,28 @@ export function Shell({
 }
 
 /**
- * Holds the phone's bar on the top edge of an open keyboard.
+ * One search dock, and the untransformed twin that says where it rests.
+ */
+type SearchDock = {
+  /** The element to move. */
+  el: React.RefObject<HTMLElement | null>
+  /**
+   * A zero-size element with the dock's positioning and nothing else. Both wear
+   * the dock's breakpoint, so a hidden dock has a hidden anchor and the pair is
+   * either laid out together or not at all.
+   */
+  anchor: React.RefObject<HTMLElement | null>
+  /**
+   * Whether the dock's bottom padding is home-indicator clearance rather than
+   * design spacing. An open keyboard covers the indicator, so that padding is
+   * dead space holding the row off the keys — dropped while the keyboard is up
+   * and restored with it.
+   */
+  dropsSafeArea?: boolean
+}
+
+/**
+ * Holds whichever search dock is on screen on the top edge of an open keyboard.
  *
  * **The symptom this exists for**: with the keyboard up and a wall of results to
  * scroll, the bar vanished and came back only at the very bottom of the results.
@@ -1055,34 +1116,70 @@ export function Shell({
  */
 function useKeyboardPin(
   focused: boolean,
-  bar: React.RefObject<HTMLElement | null>,
-  anchor: React.RefObject<HTMLElement | null>,
+  scroller: React.RefObject<HTMLElement | null>,
+  docks: SearchDock[],
 ) {
   useEffect(() => {
-    const el = bar.current
-    const mark = anchor.current
     const vv = window.visualViewport
-    if (!focused || !el || !mark || !vv) return
+    if (!focused || !vv) return
 
     let frame = 0
+
+    const rest = (dock: SearchDock) => {
+      const el = dock.el.current
+      if (!el) return
+      el.style.transform = ''
+      if (dock.dropsSafeArea) el.style.paddingBottom = ''
+    }
 
     const measure = () => {
       frame = 0
 
       /*
+        **Which dock, asked of the DOM rather than of a media query.**
+
+        The breakpoint that chooses between them lives in a Tailwind variant,
+        and JS cannot read a variant — only re-state it, as a number free to
+        drift from the one in globals.css. `getClientRects()` is empty for a
+        `display: none` element and not for a laid-out one, which is the same
+        question asked of the thing that actually answers it. It costs a rect
+        per dock per frame, on a path that is already measuring one.
+      */
+      const all = docks
+      const shown = all.find((d) => (d.el.current?.getClientRects().length ?? 0) > 0)
+
+      /*
+        Anything not on screen goes back to rest. Without this, turning a phone
+        sideways mid-search would leave the bar holding the transform it needed
+        in portrait, waiting to be turned back and found halfway up the screen.
+      */
+      for (const dock of all) if (dock !== shown) rest(dock)
+      if (!shown) return
+
+      const el = shown.el.current
+      const anchor = shown.anchor.current
+      /*
+        A `display: none` anchor measures as all zeros, and a lift computed from
+        that is the height of the screen. The pair share a breakpoint so this
+        should not happen; it is cheap to be sure, because the failure is the
+        dock leaving the screen entirely.
+      */
+      if (!el || !anchor || anchor.getClientRects().length === 0) return
+
+      /*
         `bottom-0` is not where the browser puts `bottom-0`, so ask it.
 
-        The anchor is a zero-height element with the bar's exact positioning and
+        The anchor is a zero-size element with the dock's exact positioning and
         nothing else — no transform, no recede, no padding. Wherever it has
         ended up *is* where an untouched fixed element sits on this device at
-        this instant, including whatever iOS has done to it, and the bar needs
+        this instant, including whatever iOS has done to it, and the dock needs
         the difference between that and the bottom of the visible area.
 
-        **Measured off the anchor rather than off the bar** because the bar
-        carries its own recede — a `translate` of one bar-height, mid-animation
-        for 300ms of it. Reading the bar meant reading that too, and correcting
-        it away: the hide was being cancelled by the pin, which is why the bar
-        stayed on screen and drifted instead of leaving.
+        **Measured off the anchor rather than off the dock** because the phone's
+        bar carries its own recede — a `translate` of one bar-height,
+        mid-animation for 300ms of it. Reading the bar meant reading that too,
+        and correcting it away: the hide was being cancelled by the pin, which
+        is why the bar stayed on screen and drifted instead of leaving.
       */
       /*
         **Not clamped.** It was `Math.min(0, …)` — "only ever lift, never push
@@ -1090,15 +1187,15 @@ function useKeyboardPin(
 
         Measured on the device: keyboard open at rest gives `anch.b 660`,
         `vv.h 389`, so the correction is −271 and the bar lands right. Scroll
-        down and the anchor drifts up with the document, so by 300px of scroll
-        the correction wanted is *positive* — the bar has to be pushed back
-        down to stay level with the keyboard. The clamp discarded exactly that,
-        which is why the bar floated mid-results from a few hundred pixels in.
+        down and the anchor drifts up with the page, so by 300px of scroll the
+        correction wanted is *positive* — the bar has to be pushed back down to
+        stay level with the keyboard. The clamp discarded exactly that, which is
+        why the bar floated mid-results from a few hundred pixels in.
       */
-      const lift = vv.offsetTop + vv.height - mark.getBoundingClientRect().bottom
+      const lift = vv.offsetTop + vv.height - anchor.getBoundingClientRect().bottom
 
       el.style.transform = lift ? `translateY(${lift}px)` : ''
-      el.style.paddingBottom = '0px'
+      if (shown.dropsSafeArea) el.style.paddingBottom = '0px'
     }
 
     const schedule = () => {
@@ -1109,27 +1206,78 @@ function useKeyboardPin(
     schedule()
 
     /*
-      Scroll is watched again, and this time it has to be. With a keyboard open
-      iOS stops honouring `fixed` and lets the bar scroll away with the
-      document — the fault in the screenshots, where the bar sat halfway up a
-      wall of posters with results still visible below it. The anchor drifts by
-      exactly the same amount, so following the scroll is what cancels it.
+      **The scroll listened to is the shell's own, not the window's.**
+
+      Since 10 August the page scrolls inside `#scroll-root` and the document
+      never moves, which is what keeps `fixed` honoured with a keyboard open.
+      `window`'s scroll event therefore fires exactly never — so a listener on it
+      was watching the one thing in the app guaranteed not to happen, and if iOS
+      does let a dock drift after all, nothing would have corrected it.
+
+      `resize` and `orientationchange` are here because the choice of dock is a
+      breakpoint away, and turning a handset sideways crosses it with a keyboard
+      still open.
     */
+    const box = scroller.current
+    box?.addEventListener('scroll', schedule, { passive: true })
     vv.addEventListener('resize', schedule)
     vv.addEventListener('scroll', schedule)
-    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    window.addEventListener('orientationchange', schedule)
 
     return () => {
+      box?.removeEventListener('scroll', schedule)
       vv.removeEventListener('resize', schedule)
       vv.removeEventListener('scroll', schedule)
-      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      window.removeEventListener('orientationchange', schedule)
       if (frame) cancelAnimationFrame(frame)
 
       /* Back to the resting position the moment the keyboard is not there. */
-      el.style.transform = ''
-      el.style.paddingBottom = ''
+      for (const dock of docks) rest(dock)
     }
-  }, [focused, bar, anchor])
+  }, [focused, scroller, docks])
+}
+
+/**
+ * A search that did not work, and the way to ask again.
+ *
+ * **Deliberately outside `PosterWall`.** The wall is silent artwork by
+ * instruction — no spinner, no "loading more", nothing announcing a mechanism
+ * whose job is to go unnoticed. A line that appears only when something is
+ * broken is a different kind of thing, but it is still not the wall's business,
+ * and keeping it out means the wall did not have to learn about failure to say
+ * so.
+ *
+ * No retry after being signed out: pressing it would fail the same way, and the
+ * message already names the action. Everything else is worth one more attempt —
+ * a rate limit expires, and an unreachable upstream usually is not.
+ *
+ * Not `text-active`. Red is the wrong register here and it is spoken for; §11's
+ * scarcity rule is about the accent, and the same argument holds for the second
+ * colour in the app. A failure that recovers on a tap is not an alarm.
+ */
+function SearchFailureNotice({
+  failure,
+  onRetry,
+}: {
+  failure: SearchFailure
+  onRetry: () => void
+}) {
+  return (
+    <p className="text-muted flex flex-wrap items-center gap-x-3 gap-y-1 py-10 text-sm">
+      {SEARCH_FAILURE_TEXT[failure]}
+      {failure !== 'signed-out' && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="text-text hover:text-muted tap-target underline underline-offset-4 transition-colors"
+        >
+          Try again
+        </button>
+      )}
+    </p>
+  )
 }
 
 /**
