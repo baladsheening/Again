@@ -69,6 +69,23 @@ const SCROLL_THRESHOLD = 8
 const ALWAYS_SHOWN_ABOVE = 32
 
 /**
+ * How long after the viewport changes size to stop believing the scroll
+ * position.
+ *
+ * A keyboard opening is not a scroll, but it produces one: the layout viewport
+ * shrinks, and the browser scrolls the focused field into view on top of that.
+ * Both land as `scroll` events with a positive delta, which is indistinguishable
+ * from a downward flick — so tapping the field opened the keyboard and hid the
+ * bar in the same gesture.
+ *
+ * Long enough to cover the keyboard's own animation and the scroll that follows
+ * it. The cost is that a flick within half a second of the keyboard appearing
+ * will not recede the bar, which is a fair trade against the bar vanishing the
+ * moment it is touched.
+ */
+const VIEWPORT_SETTLE_MS = 500
+
+/**
  * The air above and below the wordmark on a phone — the *visible* air, measured
  * to the letters rather than to the box they sit in.
  *
@@ -212,12 +229,26 @@ export function Shell({
 
     let last = window.scrollY
     let frame = 0
+    let settleUntil = 0
 
     const onScroll = () => {
       if (frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
         const y = Math.max(0, window.scrollY)
+
+        /*
+          Follow the page without reacting to it. Everything the keyboard moves
+          arrives as scroll, so during the settle window the baseline is kept
+          current and the bar is left alone — which means the flick that comes
+          after is measured from where the page actually is, rather than from
+          wherever it was before the keyboard shoved it.
+        */
+        if (performance.now() < settleUntil) {
+          last = y
+          return
+        }
+
         const delta = y - last
         // `last` deliberately does not move until the threshold is crossed, so
         // slow scrolling accumulates instead of never registering.
@@ -227,9 +258,24 @@ export function Shell({
       })
     }
 
+    /*
+      A keyboard arriving or leaving. The bar is shown outright rather than
+      merely left as it was: this is the one moment the field is certain to be
+      wanted, and it is the moment the page is least trustworthy.
+    */
+    const onViewportChange = () => {
+      settleUntil = performance.now() + VIEWPORT_SETTLE_MS
+      last = window.scrollY
+      setCollectionsHidden(false)
+    }
+
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onViewportChange)
+    window.visualViewport?.addEventListener('resize', onViewportChange)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onViewportChange)
+      window.visualViewport?.removeEventListener('resize', onViewportChange)
       if (frame) cancelAnimationFrame(frame)
     }
   }, [showCollections])
