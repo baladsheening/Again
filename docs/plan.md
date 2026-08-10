@@ -76,8 +76,9 @@ a phone, since it is the only fix that cannot be checked from a desk.
 - [x] ~~**Search was one page and not quite live.**~~ → *10 August*
 - [x] ~~**The caret blinked when nobody was in the field**, and the placeholder
       jumped 7px when you tapped in.~~ → *10 August*
-- [x] ~~**The mark should be all-capitals.**~~ Built, with the trims and the
-      header height re-measured. → *10 August*
+- [x] ~~**The mark should be all-capitals.**~~ Built, then **reversed the same
+      day** — the mark is lower case (`again`). All three cases are measured, so
+      changing it again is two lines. → *10 August*
 
 ### Decided, still to build
 
@@ -488,12 +489,11 @@ question to come back and answer it the same way.
 - [x] ~~**Typing one letter.**~~ Answered 10 August: usable. `MIN_QUERY` stays 1.
 - [x] ~~**The 300ms slide** on the phone's collection bar.~~ Answered: right.
 - [x] ~~**Space Grotesk against the rest of the type.**~~ Answered: liked, stays.
-- **The tracking on the caps mark.** +0.03em, up from −0.005em, because caps at
-  display size expect to be tracked. A first pass, not a measured one.
-- **14px under the mark on the auth pages.** The caps mark has no descender
-  filling that gap, so `gap-4` was cut to `gap-[9px]` to hold the *visible* space
-  where it was. But 14px is what was tuned against a descender, and a flat
-  baseline may want a little more.
+- [x] ~~**The mark's case.**~~ Answered twice on 10 August — caps, then back to
+  lower. `again` it is, with `letter-spacing` back at −0.005em and the auth-page
+  gap back at `gap-4`. All three cases are measured in `docs/decisions.md`, so
+  the next change of mind is `text-transform` plus two numbers in
+  `components/shell.tsx`.
 - **The chevron's ink at the desktop foot.** Its *box* is flush with the
   posters; the glyph is drawn ~4px inside its own viewBox, so the visible mark
   sits slightly right of the poster edge. One negative margin if it should be
@@ -509,9 +509,9 @@ been fixed once. All are in `components/shell.tsx` unless noted.
 | | |
 |---|---|
 | `shadow-[0_0.5rem_...]` on the header ↔ the `0.5rem` in `main`'s `pt-[calc(…)]` | keeps the mark-to-poster distance identical scrolled and at rest |
-| `2.9375rem` in `main`'s padding ↔ `MASTHEAD_GAP` + the mark's trimmed box + `MASTHEAD_GAP` | the header is `fixed`, so `main` holds its height open by hand |
-| `MARK_LINE_HEIGHT` / `MARK_TRIM_TOP` / `MARK_TRIM_BOTTOM` ↔ `--text-wordmark`, the typeface **and the case** | measured, not derived; re-measure on any change to any of them — going to caps on 10 August moved `MARK_TRIM_BOTTOM` and the padding above |
-| `gap-[9px]` on `/sign-in` ↔ the same gap on `/reset-password` | the mark-and-tagline block reads the same on both, and the number is a consequence of the mark having no descender |
+| `3.375rem` in `main`'s padding ↔ `MASTHEAD_GAP` + the mark's trimmed box + `MASTHEAD_GAP` | the header is `fixed`, so `main` holds its height open by hand |
+| `MARK_TRIM_BOTTOM` ↔ `text-transform` on `wordmark` ↔ `main`'s padding ↔ `gap-4` on both auth pages | **the mark's case drives all four.** Caps: −0.2778em / 2.9375rem / `gap-[9px]`. Lower or capitalised: −0.0833em / 3.375rem / `gap-4`. Went round this loop twice on 10 August |
+| `MARK_LINE_HEIGHT` / `MARK_TRIM_TOP` ↔ `--text-wordmark` and the typeface | measured, not derived; unchanged by case, so only a new size or face moves them |
 | foot `left-[… + 17rem]` + inner `gutter max-w-3xl` ↔ `rail:pl-68` and `rail:max-w-3xl` on `main` | puts the search row's two edges on the posters' two edges |
 | foot `pb-9` ↔ rail `py-10` | 4px, so the search and *Sign out* share a baseline rather than a box edge |
 | `MIN_QUERY` ↔ the Zod schema in `app/api/search/route.ts` ↔ the guard in `lib/tmdb.ts` | the search floor lives in three files |

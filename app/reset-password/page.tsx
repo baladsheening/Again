@@ -26,10 +26,10 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
     >
       {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
       <div className="my-auto flex w-full flex-col gap-7">
-        {/* `gap-[9px]` rather than `gap-4`: the caps mark has no descender to
-            fill the space. Full argument in app/sign-in/page.tsx — and the two
-            must stay equal, since this block reads the same on both pages. */}
-        <div className="flex flex-col gap-[9px] text-start">
+        {/* `gap-4` holds 14px of visible air, because the mark's `g` hangs 2px
+            below its own box. Full argument in app/sign-in/page.tsx — and the
+            two must stay equal, since this block reads the same on both pages. */}
+        <div className="flex flex-col gap-4 text-start">
           <h1 className="wordmark text-wordmark">Again</h1>
           {/* Same tier as the sign-in tagline — this block has to read the same
               way on both pages, and an expired link is not a footnote. */}

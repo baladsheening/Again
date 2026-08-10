@@ -1229,7 +1229,7 @@ for, so the page holds two items and no heading.
 
 ---
 
-## Search goes deep, and the mark goes up — 10 August
+## Search goes deep, and the mark changes case twice — 10 August
 
 Four instructions in one pass, after the first look at real search results on the
 deployed app. Two were settled by looking and needed no code: **one letter does
@@ -1317,52 +1317,66 @@ One deletion answers both, and there is nothing to put in its place: the word
 The original was defensible, which is why it was built. It is recorded here so
 the argument for it is not made again.
 
-### AGAIN, in caps
+### The mark's case: caps, then back to lower — both on 10 August
 
-Directed. `text-transform: uppercase` on the `wordmark` utility rather than four
-capitalised JSX strings — the mark appears in the phone header, the rail,
-`/sign-in` and `/reset-password`, and four literals are four things that can
-drift. It is also the accessible spelling: a screen reader may spell a five-letter
-literal in caps, where a CSS transform leaves the DOM text as "Again" and gets the
-app's name read as a word.
+Directed twice in one day. The mark went `Again` → `AGAIN` in the morning and
+`AGAIN` → `again` in the afternoon, and it is now set in lower case.
 
-`letter-spacing` went −0.005em → **+0.03em**. Caps at display size are drawn
-expecting to be tracked; a lowercase face's sidebearings are cut for x-height, and
-five untracked capitals at 36px read as a squeezed word.
+**The record is kept because the round trip is the useful part**, not the
+destination. Case is a taste decision settled by looking, it has now been all
+three values in two days, and it will very likely move again. What matters is
+that the cost of moving it stays near zero and that nobody re-derives these
+measurements a third time.
 
-**The mark did not get smaller, and the measurements say why.** Re-measured with
-`TextMetrics.actualBoundingBox*` at 36px in Space Grotesk:
+**One declaration, not four strings.** `text-transform` on the `wordmark`
+utility, where it was before 9 August. The mark appears in the phone header, the
+rail, `/sign-in` and `/reset-password`; four literals are four things that can
+drift, and a transform keeps them one thing. It also keeps the DOM text as
+"Again" at every call site, so `<title>`, prose and the accessible name all
+spell the app's name as a word whatever the CSS is doing — which is the
+accessibility argument too, since a screen reader may spell out a five-letter
+literal in caps.
 
-| | ink above baseline | ink below | inked height |
-|---|---|---|---|
-| `Again` | 26px | 8px (the `g`) | 34px |
-| `AGAIN` | 26px | 1px (the `G`'s overshoot) | **27px** |
+**`letter-spacing` follows the case.** −0.005em for lower case; it was raised to
++0.03em for the caps pass, because caps at display size are drawn expecting to be
+tracked, and put back with them. The same value on a lowercase mark reads loose.
 
-The top is identical, because the tallest thing in "Again" was always the capital
-A. Every number that moved is about the bottom:
+**Every case measured, so the next change is two lines.** `TextMetrics.
+actualBoundingBox*` at 36px in Space Grotesk:
 
-- `MARK_TRIM_BOTTOM` −0.0833em → −0.2778em (−3px → −10px)
-- `main`'s top padding `3.375rem` → **`2.9375rem`** — 10 + 27 + 10 = 47px,
-  measured against the real header at 47.00px, both gaps landing on 10px of ink
-- `MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` unchanged; they describe the typeface
-  and the cap height, and neither moved
+| | ink above baseline | ink below | inked height | `MARK_TRIM_BOTTOM` | `main` padding |
+|---|---|---|---|---|---|
+| `again` (**current**) | 26px | 8px (the `g`) | 34px | −0.0833em | 3.375rem |
+| `Again` | 26px | 8px | 34px | −0.0833em | 3.375rem |
+| `AGAIN` | 26px | 1px | 27px | −0.2778em | 2.9375rem |
 
-The 1px below the baseline is not noise. `G` is a round letter and round letters
-are drawn a hair past the baseline so they do not read short beside a flat one;
-trimming it would clip the curve.
+**Lower case and capitalised measure identically**, which is why going back cost
+nothing but restoring the old numbers: the `g` sets the bottom either way, and
+the top is 26px in all three — the dot of the `i` reaches as high as the capital
+A. Only caps differ, and only at the bottom, where the descender is missing. Its
+1px is the `G`'s overshoot, not noise: round letters are drawn a hair past the
+baseline so they do not read short beside a flat one, and trimming it would clip
+the curve.
 
-**The auth pages needed the ancillary adjustment.** The h1's box is 36px but its
-ink is not centred in it — the baseline lands 30px down, so `Again` hung its `g`
-2px below its own box and `AGAIN` stops 5px above it. An unchanged `gap-4`
-therefore went from 14px of visible air to 21px, the tagline drifting away from
-the mark on both pages. Spent on the gap (`gap-[9px]`) rather than on the mark:
-a negative margin would shorten the column, and the column is centred by
-`my-auto` with two optical corrections measured against its current height.
-Moving what is between two elements changes nothing else; moving the mark's box
-would re-open all of it.
+`MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` did not move through any of it. They
+describe the typeface and a height the case does not change.
 
-⚠ 14px is what was tuned by eye against a descender. A flat baseline may want a
-little more — a judgement for a human, like the tracking above it.
+Both headers were measured against the real thing rather than computed: 47.00px
+in caps, 54.02px in lower case, each with both visible gaps landing on 10px of
+ink. The 0.02 is subpixel rounding on the em-based margins.
+
+**The auth pages carry the same dependency.** The h1's box is 36px but its ink is
+not centred in it — the baseline lands 30px down, so the mark's `g` hangs 2px
+*below* its own box, and `gap-4` therefore shows 14px of visible air rather than
+16. In caps the ink stopped 5px *above* the box instead and the same `gap-4` read
+as 21px, the tagline visibly drifting off the mark; it was cut to `gap-[9px]` for
+those few hours and restored with the lower case.
+
+That correction was spent on the gap rather than on the mark deliberately, and
+the reasoning survives the revert: a negative margin on the h1 would shorten the
+column, and the column is centred by `my-auto` with two optical corrections
+measured against its current height. Moving what sits *between* two elements
+changes nothing else; moving the mark's own box would re-open all of it.
 
 ---
 

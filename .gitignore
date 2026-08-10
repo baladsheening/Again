@@ -47,3 +47,6 @@ next-env.d.ts
 
 # dev server output
 dev.log
+
+# vercel cli link state — written by `vercel link`, machine-specific
+.vercel

@@ -113,32 +113,33 @@ const MASTHEAD_GAP = '0.625rem'
  * in Space Grotesk: declared ascent 35 and descent 11, so a 46px content area.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- *  Re-measured for the caps mark (10 August)
+ *  Re-measured through two changes of case (10 August)
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * The mark is set in caps now (`wordmark` in globals.css), and the measurement
- * that matters is the one that did **not** move:
+ * The mark went to caps and back to lower case the same day, and measuring all
+ * three cases is what makes the next change of mind a two-line edit:
  *
  * | | ink above baseline | ink below | inked height |
  * |---|---|---|---|
- * | `Again` | 26px | 8px (the `g`) | 34px |
- * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | **27px** |
+ * | `again` (**current**) | 26px | 8px (the `g`) | 34px |
+ * | `Again` | 26px | 8px | 34px |
+ * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | 27px |
  *
- * The top is identical, because the tallest thing in "Again" was always the
- * capital A. So the caps mark is not a smaller mark — it is the same mark with
- * the descender gone, and every number that changes here is about the bottom.
+ * **Lower case and capitalised measure the same**, which is why going back to
+ * `again` restored the numbers this file had before the caps pass rather than
+ * needing new ones: the `g` sets the bottom either way, and the top is 26px in
+ * all three — the dot of the `i` reaches as high as the capital A does.
  *
- * 1px, not 0: `G` is a round letter, and round letters are drawn a hair past the
- * baseline so they do not read as short beside a flat one. Trimming it away
- * would clip the curve.
+ * Only caps differ, and only at the bottom. If the mark ever goes back to them,
+ * it is `MARK_TRIM_BOTTOM` −0.2778em and `main`'s padding 2.9375rem.
  *
- * That leaves **9px of nothing above the letters and 10px below them**, which the
+ * That leaves **9px of nothing above the letters and 3px below them**, which the
  * negative margins remove, leaving an element whose outer box is the inked
- * bounds. `MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` are unchanged — they describe
- * the typeface and the cap height, and neither moved.
+ * bounds. `MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` have not moved through any of
+ * it — they describe the typeface and a height the case does not change.
  *
  * The numbers are the typeface's, so they were re-measured when the mark moved
- * from Ojuju to Space Grotesk, and again when it went to caps.
+ * from Ojuju to Space Grotesk, and again at each change of case.
  *
  * Everything is in `em`, so it is the mark's own size that scales it and no
  * custom property has to resolve for the layout to hold. Once the box is the
@@ -147,8 +148,8 @@ const MASTHEAD_GAP = '0.625rem'
  */
 const MARK_LINE_HEIGHT = 1.2778
 const MARK_TRIM_TOP = '-0.25em'
-/** −10/36em. Was −0.0833 (−3px) while the mark had a `g` hanging out of it. */
-const MARK_TRIM_BOTTOM = '-0.2778em'
+/** −3/36em. The `g` hangs 8px below the baseline and the box holds 11. */
+const MARK_TRIM_BOTTOM = '-0.0833em'
 
 
 export function Shell({
@@ -739,21 +740,22 @@ export function Shell({
         **The top padding is the header plus the gap**, and it has to be, because
         the header is `fixed` and holds no space open itself.
 
-        `2.9375rem` is the header, and it is not a guess — it is `MASTHEAD_GAP`
+        `3.375rem` is the header, and it is not a guess — it is `MASTHEAD_GAP`
         above the mark, the mark's trimmed box, and `MASTHEAD_GAP` below it:
 
-          0.625rem  +  1.6875rem  +  0.625rem  =  2.9375rem
-          (10px)       (27px)        (10px)       (47px)
+          0.625rem  +  2.125rem  +  0.625rem  =  3.375rem
+          (10px)       (34px)       (10px)       (54px)
 
-        The 1.6875rem is the mark after its trims, `(1.2778 − 0.25 − 0.2778) ×
+        The 2.125rem is the mark after its trims, `(1.2778 − 0.25 − 0.0833) ×
         36px`, and it is the one term that is a consequence rather than a
-        decision — **if `--text-wordmark` or the trims move, this moves with
-        them.** Measured against the real header, which reports 47.00px.
+        decision — **if `--text-wordmark`, the trims or the mark's case move,
+        this moves with them.** Measured against the real header, which reports
+        54.00px.
 
-        **It was 3.375rem until 10 August**, when the mark went to caps and its
-        inked box lost the `g`'s descender — 34px of ink became 27px. Nothing
-        about the spacing changed; the thing being spaced got shorter, and this
-        number is the only place that fact is written down.
+        **It was 2.9375rem for part of 10 August**, while the mark was in caps
+        and its inked box had no descender in it — 27px of ink rather than 34.
+        The spacing never changed; the thing being spaced did, and this number is
+        the only place that fact is written down.
 
         `1.5rem` is the gap, and it is the same 1.5rem as the header's shadow
         offset. Those two must stay equal: the shadow is what keeps the distance
@@ -803,7 +805,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_2.9375rem_+_0.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_0.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
