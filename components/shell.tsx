@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -194,12 +194,6 @@ export function Shell({
   */
   const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
 
-  /*
-    True while the search field is focused or has something in it. The bar is
-    pinned in place for as long as that holds — a bar that slid away mid-search
-    would take the field, the results and the keyboard's anchor with it, and the
-    scroll that triggered it would often be the user reaching for a result.
-  */
   const {
     active: searchActive,
     focused: searchFocused,
@@ -207,13 +201,20 @@ export function Shell({
     searching,
     loadMore,
   } = useSearch()
-  const searchBusy = searchActive || searchFocused
 
-  /* Keeps the bar on top of the keyboard rather than behind it — see below. */
-  const keyboardInset = useKeyboardInset(searchFocused)
+  const barRef = useRef<HTMLElement>(null)
+
+  /*
+    Back into view when the keyboard goes, so dismissing it with the keyboard's
+    own key returns the bar rather than leaving it receded until you scroll.
+  */
+  const revealBar = useCallback(() => setCollectionsHidden(false), [])
+
+  /* Holds the bar against the top of the keyboard — see `useKeyboardPin`. */
+  useKeyboardPin(searchFocused, barRef, revealBar)
 
   useEffect(() => {
-    if (!showCollections || searchBusy) return
+    if (!showCollections) return
 
     let last = window.scrollY
     let frame = 0
@@ -237,7 +238,7 @@ export function Shell({
       window.removeEventListener('scroll', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [showCollections, searchBusy])
+  }, [showCollections])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
@@ -601,6 +602,16 @@ export function Shell({
         other number. The `motion-reduce` rule in globals.css collapses the
         transition to nothing, which leaves the behaviour and removes the slide.
 
+        **It does that with the keyboard open too**, which it deliberately did
+        not until 10 August. The bar used to freeze while search was in use, on
+        the reasoning that sliding away mid-search would take the field and the
+        results' anchor with it. Directed otherwise, and the new arrangement is
+        better: with the keyboard up, the bar and the keys together take half the
+        screen, and scrolling a wall of results is exactly when that half is
+        wanted back. The keyboard stays; only the bar goes, it returns on the
+        first upward movement, and `translate-y-full` from a lifted position
+        parks it neatly behind the keyboard rather than off the screen.
+
         **It holds one of two things**, and the chevron swaps them. Search is the
         default, because adding is the thing you came to do and it is now the
         only way to reach the field on a phone; the collections are one tap
@@ -616,32 +627,25 @@ export function Shell({
         not spend rules on decoration.
       */
       <nav
+        ref={barRef}
         aria-label="Main"
-        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
+        /*
+          `transition-[translate]`, not `transition-transform`.
+
+          Two things move this element and they must not share a transition.
+          The recede-and-return slide is `translate`, set by the class below, and
+          wants its 300ms. Following the keyboard is `transform`, written by
+          `useKeyboardPin`, and must be instant — 300ms of easing against a
+          keyboard that opens in 250 leaves the bar visibly chasing it.
+
+          Tailwind's `transition-transform` covers `transform` *and* `translate`
+          together, which is why it cannot be used here. Naming one property
+          lets the two behaviours coexist on one element, and it is also why the
+          keyboard lift is a `transform` rather than more `translate`.
+        */
+        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-[translate] duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
-        /*
-          Lifted to sit on top of the keyboard, and held there.
-
-          `transform` composes with the `translate-y-full` above rather than
-          fighting it — Tailwind v4 writes that to the separate `translate`
-          property, and individual transform properties apply before `transform`.
-
-          **No transition while the keyboard is up.** `transition-transform`
-          covers both properties, and 300ms of easing against a keyboard that
-          animates in 250 leaves the bar chasing it up the screen. The slide the
-          transition exists for cannot happen here anyway: the bar stops
-          receding while search is in use.
-
-          The safe-area padding comes off at the same time. That inset clears the
-          home indicator, and the keyboard is already covering it — leaving it in
-          parks the bar a thumb's width above the keys instead of on them.
-        */
-        style={{
-          transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined,
-          transitionProperty: keyboardInset ? 'none' : undefined,
-          paddingBottom: keyboardInset ? 0 : undefined,
-        }}
       >
         {/*
           The row is a fixed 42px, and neither state is allowed to set it.
@@ -900,84 +904,87 @@ export function Shell({
 }
 
 /**
- * How much of the layout viewport an open keyboard is covering.
+ * Holds the phone's bar against the top of the open keyboard.
  *
  * `interactiveWidget: 'resizes-content'` (app/layout.tsx) is supposed to make
  * this unnecessary, and on Android it does — the layout viewport shrinks, so
- * `bottom-0` already sits above the keyboard. **iOS Safari ignores it.** There
- * `innerHeight` stays the full screen and only the *visual* viewport shrinks, so
- * a fixed bar sits behind the keyboard and shifts around as the visual viewport
- * is scrolled.
+ * `bottom-0` already sits above the keyboard. **iOS Safari ignores it.** The
+ * layout viewport stays the full screen, the keyboard covers the bottom of it,
+ * and a `fixed` element is positioned against the layout viewport — so the bar
+ * sits behind the keyboard, and scrolls with the page rather than staying put.
  *
- * **`focused` is not an optimisation, it is a correctness condition.** A
- * keyboard cannot be open unless something has focus, so gating on it rules out
- * every viewport change that is not a keyboard — an ordinary scroll, measured
- * unconditionally, reads as several hundred pixels of inset and sends the bar up
- * the screen.
+ * The bar's bottom edge therefore has to be moved to the bottom edge of the
+ * *visual* viewport, which is where the keyboard's top edge is:
  *
- * No platform check: where `resizes-content` works, the viewport does not shrink
- * under the keyboard and this returns 0 on its own.
+ *     lift = vv.offsetTop + vv.height − layoutHeight
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Three attempts, and what each got wrong (10 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * 1. **Measured unfocused.** iOS collapses its own toolbar on scroll, which is
+ *    also a viewport change, so an ordinary scroll with no keyboard anywhere
+ *    read as hundreds of pixels and sent the bar up the screen. Hence `focused`
+ *    — a keyboard cannot be open without it, so it rules out every viewport
+ *    change that is not one, without having to tell them apart.
+ * 2. **Used `window.innerHeight` as the layout height.** It is not stable on
+ *    iOS: it moves with the toolbar. `document.documentElement.clientHeight` is
+ *    the layout viewport and does not.
+ * 3. **Dropped `offsetTop` and the `scroll` listener** to escape (2), which
+ *    re-anchored the bar to the layout viewport — so it dragged with the page
+ *    and never came back. `offsetTop` is not optional; it is the entire reason
+ *    a fixed element needs correcting on iOS in the first place.
+ *
+ * **Written straight to the element, not through state.** `visualViewport`
+ * emits `scroll` continuously while a finger is down, and a re-render per event
+ * is how a list starts dropping frames while it is being read. Nothing else
+ * depends on the value, so nothing needs to know it.
+ *
+ * `onRelease` fires when focus goes, which is also when the keyboard is
+ * dismissed with its own key — the bar comes back rather than staying receded.
  */
-function useKeyboardInset(focused: boolean) {
-  const [inset, setInset] = useState(0)
-
+function useKeyboardPin(
+  focused: boolean,
+  ref: React.RefObject<HTMLElement | null>,
+  onRelease: () => void,
+) {
   useEffect(() => {
-    if (!focused) return
-
+    const el = ref.current
     const vv = window.visualViewport
-    if (!vv) return
+    if (!focused || !el || !vv) return
 
-    /*
-      The height the visual viewport had before the keyboard arrived, taken once
-      and then held.
+    const apply = () => {
+      const lift = Math.min(
+        0,
+        vv.offsetTop + vv.height - document.documentElement.clientHeight,
+      )
 
-      **This is the whole fix, and the reason it is a ref rather than a fresh
-      reading.** The obvious formula is `innerHeight − vv.height − vv.offsetTop`,
-      which is geometrically correct and unusable: on iOS both `innerHeight` and
-      `offsetTop` move while you scroll — the toolbar collapses, the visual
-      viewport shifts, the page rubber-bands at the ends. Recomputed per frame,
-      the inset changed with the scroll and the bar crawled up the screen and
-      stuck there at the foot of the results.
+      /*
+        `transform`, while the recede-and-return slide uses `translate` — two
+        separate CSS properties, which is what lets one be instant and the other
+        animated. The bar's class list transitions `translate` only, so this
+        tracks the keyboard frame for frame while the slide keeps its 300ms.
 
-      `vv.height` alone does not move for any of those. It moves for the
-      keyboard, which is the only thing being measured. So the reference is
-      taken at focus and the inset is the shrinkage since — which also states
-      the requirement directly: the bar keeps the position relative to the
-      keyboard that it had when the field was tapped.
-
-      `max` against `innerHeight` covers focus arriving while a keyboard is
-      already up — moving between two fields — where `vv.height` is already
-      short and would otherwise be mistaken for the full screen.
-    */
-    const base = Math.max(vv.height, window.innerHeight)
-
-    let frame = 0
-    const update = () => {
-      // Coalesced into a frame: iOS emits these in bursts while the keyboard
-      // animates, and each one would otherwise be a render.
-      if (frame) return
-      frame = requestAnimationFrame(() => {
-        frame = 0
-        const shrunk = base - vv.height
-        // Sub-pixel noise is constant on iOS; 1px of it is not a keyboard.
-        setInset(shrunk > 1 ? shrunk : 0)
-      })
+        The safe-area padding comes off with it: that inset clears the home
+        indicator, the keyboard is already covering it, and leaving it in parks
+        the bar a thumb's width above the keys instead of on them.
+      */
+      el.style.transform = lift ? `translateY(${lift}px)` : ''
+      el.style.paddingBottom = lift ? '0px' : ''
     }
 
-    update()
-    vv.addEventListener('resize', update)
+    apply()
+    vv.addEventListener('resize', apply)
+    vv.addEventListener('scroll', apply)
+
     return () => {
-      vv.removeEventListener('resize', update)
-      if (frame) cancelAnimationFrame(frame)
+      vv.removeEventListener('resize', apply)
+      vv.removeEventListener('scroll', apply)
+      el.style.transform = ''
+      el.style.paddingBottom = ''
+      onRelease()
     }
-  }, [focused])
-
-  /*
-    Zeroed on the way out by deriving rather than by resetting the state in the
-    effect — the last measurement is stale the moment focus goes, and a blurred
-    field means the keyboard is closing whatever the viewport last reported.
-  */
-  return focused ? inset : 0
+  }, [focused, ref, onRelease])
 }
 
 /**
