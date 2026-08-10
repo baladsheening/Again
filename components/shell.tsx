@@ -213,9 +213,6 @@ export function Shell({
   */
   const [collectionsHidden, setCollectionsHidden] = useState(false)
 
-  /* Where the page was before the keyboard touched it — see the hold below. */
-  const restoreY = useRef(0)
-
   /*
     Which of the two things the bar is holding. Search is the default: on a phone
     it is the only route to the field, and adding is what the app is for.
@@ -267,13 +264,6 @@ export function Shell({
         const y = Math.max(0, window.scrollY)
 
         /*
-          The place to put the page back to if the field is tapped. Only
-          recorded while nothing has focus, so it is always where the posters
-          were before the keyboard got involved.
-        */
-        if (!searchFocused) restoreY.current = y
-
-        /*
           Follow the page without reacting to it. Everything the keyboard moves
           arrives as scroll, so during the settle window the baseline is kept
           current and the bar is left alone — which means the flick that comes
@@ -300,50 +290,6 @@ export function Shell({
       if (frame) cancelAnimationFrame(frame)
     }
   }, [showCollections, searchFocused])
-
-  /*
-    Tapping the field must not move the posters.
-
-    Safari's rule on focus is "make the focused element visible", and with the
-    keyboard open the input genuinely is not: it lives in a bar at `bottom-0`,
-    which measured 660 against a visible area of 389. So Safari scrolls the
-    document by the height of the keyboard to reach it — the posters jumping up
-    by ~271px, which is the browser's scroll and not ours, and happens before any
-    of our code runs.
-
-    It cannot be pre-empted, so it is undone. For the length of the settle window
-    the page is held at wherever it was when the field was tapped: Safari scrolls,
-    this scrolls back, inside a frame.
-
-    **It stops the moment a query exists**, which is what keeps it from fighting
-    the scroll-to-top a new wall of results does. Shell's cleanup runs before
-    `SearchProvider`'s effect — children before parents — so the hold is already
-    gone by the time that scroll happens.
-  */
-  useEffect(() => {
-    if (!searchFocused || searchActive) return
-
-    const target = restoreY.current
-    const until = performance.now() + KEYBOARD_SETTLE_MS
-    let frame = 0
-
-    const hold = () => {
-      if (frame) return
-      frame = requestAnimationFrame(() => {
-        frame = 0
-        if (performance.now() > until) return
-        if (Math.abs(window.scrollY - target) > 1) {
-          window.scrollTo({ top: target, behavior: 'instant' })
-        }
-      })
-    }
-
-    window.addEventListener('scroll', hold, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', hold)
-      if (frame) cancelAnimationFrame(frame)
-    }
-  }, [searchFocused, searchActive])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
@@ -1035,27 +981,6 @@ export function Shell({
  * re-render per event is how a list starts dropping frames while it is read.
  * Nothing else needs the number.
  */
-/**
- * The last keyboard height this session, so the bar can get out of the way
- * before the next one arrives rather than after.
- *
- * Module scope, not state: it is a fact about the device, it must survive
- * navigation between collections, and nothing should re-render when it changes.
- * Zero until a keyboard has been seen, and `KEYBOARD_GUESS` covers that once.
- */
-let knownKeyboard = 0
-
-/**
- * What fraction of the screen a phone keyboard takes, for the one tap that
- * happens before we have measured a real one. 271 against 660 was the reading
- * on the handset this was built against; 0.42 is that, rounded to something
- * defensible rather than fitted to one device.
- *
- * Being wrong costs nothing — the exact figure lands a frame later and the
- * correction rides the same transition — so this only has to be close.
- */
-const KEYBOARD_GUESS = 0.42
-
 function useKeyboardPin(
   focused: boolean,
   bar: React.RefObject<HTMLElement | null>,
@@ -1068,59 +993,9 @@ function useKeyboardPin(
     if (!focused || !el || !mark || !vv) return
 
     let frame = 0
-    /* When the field took focus, which is when a keyboard is expected. */
-    const focusedAt = performance.now()
 
     const measure = () => {
       frame = 0
-
-      const keyboard = document.documentElement.clientHeight - vv.height
-
-      /*
-        ───────────────────────────────────────────────────────────────────────
-         Out of the way before the keyboard arrives, not after (10 August)
-        ───────────────────────────────────────────────────────────────────────
-
-        Safari scrolls the document on focus to keep the focused element
-        visible. It is not the tap that hides the input — it is the viewport
-        shrinking a moment later, at which point the input, sitting in a bar at
-        `bottom-0`, is below the fold, and Safari scrolls the whole page by the
-        height of the keyboard to reach it. That is the posters jumping up.
-
-        **Correcting it afterwards cannot be made to look right.** iOS scrolls
-        on the compositor, so the movement is painted before any handler runs;
-        scrolling back is always at least a frame late, which is the page going
-        up and snapping down again.
-
-        So it is prevented. `focus` fires while the viewport is still full
-        height, before the keyboard animates in, so the bar goes up *now* by
-        whatever the last keyboard measured. By the time the viewport shrinks
-        the input is already inside it, Safari has nothing to reveal, and the
-        page never moves.
-
-        The transition is added for this one move, so the bar rises with the
-        keys instead of teleporting, and comes off below once the real height
-        lands — nothing after this may ease, or the bar drifts along behind
-        every scroll.
-      */
-      if (keyboard <= 1) {
-        /*
-          No keyboard, and after the settle window there is not going to be one
-          — a hardware keyboard shrinks nothing. Sit back down rather than hold
-          a lift for keys that never came.
-        */
-        if (performance.now() - focusedAt > KEYBOARD_SETTLE_MS) {
-          el.style.transform = ''
-          el.style.paddingBottom = ''
-          return
-        }
-
-        const guess = knownKeyboard || Math.round(vv.height * KEYBOARD_GUESS)
-        el.style.transitionProperty = 'translate, transform'
-        el.style.transform = `translateY(${-guess}px)`
-        el.style.paddingBottom = '0px'
-        return
-      }
 
       /*
         `bottom-0` is not where the browser puts `bottom-0`, so ask it.
@@ -1150,21 +1025,6 @@ function useKeyboardPin(
       */
       const lift = vv.offsetTop + vv.height - mark.getBoundingClientRect().bottom
 
-      /* The real height, so the next tap needs no guess. */
-      knownKeyboard = keyboard
-
-      /*
-        The transition comes off once the keyboard has finished arriving, not
-        the moment its height is first reported — the resize lands early in the
-        animation, and cutting the ease there would snap the bar up ahead of
-        the keys, which is the teleport it was added to avoid.
-
-        After that it must be instant. A pin that eases is a pin that lags a
-        scroll, which is the fault this spent the afternoon on.
-      */
-      if (performance.now() - focusedAt > KEYBOARD_SETTLE_MS) {
-        el.style.transitionProperty = ''
-      }
       el.style.transform = lift ? `translateY(${lift}px)` : ''
       el.style.paddingBottom = '0px'
     }
@@ -1174,39 +1034,7 @@ function useKeyboardPin(
       frame = requestAnimationFrame(measure)
     }
 
-    /*
-      ─────────────────────────────────────────────────────────────────────────
-       Out of the way before the keyboard arrives, not after (10 August)
-      ─────────────────────────────────────────────────────────────────────────
-
-      Safari scrolls the document on focus to keep the focused element visible.
-      It is not the tap that makes the input invisible, it is the viewport
-      shrinking a moment later — at which point the input, sitting in a bar at
-      `bottom-0`, is below the fold and Safari scrolls the whole page by the
-      height of the keyboard to reach it. That is the posters jumping up.
-
-      **Correcting that afterwards cannot be made to look right.** iOS scrolls
-      on the compositor, so the movement is painted before any handler runs;
-      scrolling back is always a frame or more late, which is the page going up
-      and snapping down.
-
-      So it is prevented instead. `focus` fires while the viewport is still full
-      height — before the keyboard animates in — so the bar is lifted *now*, by
-      what the last keyboard measured. By the time the viewport shrinks the input
-      is already inside it, Safari has nothing to reveal, and no scroll happens.
-
-      The transition is added for this one move so the bar rises with the keys
-      rather than teleporting, and `measure` takes it off again as soon as the
-      real height lands.
-    */
     schedule()
-
-    /*
-      One late look, in case no keyboard ever arrives — a hardware one changes
-      nothing about the viewport, so without this the bar would hold a lift for
-      keys that are not coming.
-    */
-    const settled = setTimeout(schedule, KEYBOARD_SETTLE_MS + 50)
 
     /*
       Scroll is watched again, and this time it has to be. With a keyboard open
@@ -1224,14 +1052,8 @@ function useKeyboardPin(
       vv.removeEventListener('scroll', schedule)
       window.removeEventListener('scroll', schedule)
       if (frame) cancelAnimationFrame(frame)
-      clearTimeout(settled)
 
-      /*
-        Back to the resting position the moment the keyboard is not there — and
-        eased, because the keyboard leaves over the same quarter second it
-        arrives in. The transition is cleared on the next focus by `measure`.
-      */
-      el.style.transitionProperty = 'translate, transform'
+      /* Back to the resting position the moment the keyboard is not there. */
       el.style.transform = ''
       el.style.paddingBottom = ''
     }
