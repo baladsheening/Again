@@ -243,6 +243,9 @@ export function Shell({
     loadMore,
   } = useSearch()
 
+  /* The page's scroller — see the note on the element itself. */
+  const scrollRef = useRef<HTMLDivElement>(null)
+
   /* Keeps the bar on the keyboard's top edge — see `useKeyboardPin`. */
   const barRef = useRef<HTMLElement>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
@@ -260,9 +263,10 @@ export function Shell({
     flick away.
   */
   useEffect(() => {
-    if (!showCollections) return
+    const scroller = scrollRef.current
+    if (!showCollections || !scroller) return
 
-    let last = window.scrollY
+    let last = scroller.scrollTop
     let frame = 0
 
     /*
@@ -284,7 +288,7 @@ export function Shell({
       if (frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
-        const y = Math.max(0, window.scrollY)
+        const y = Math.max(0, scroller.scrollTop)
 
         /*
           Follow the page without reacting to it. Everything the keyboard moves
@@ -317,13 +321,13 @@ export function Shell({
       if (Math.abs(height - lastViewport) < KEYBOARD_MIN_HEIGHT) return
       lastViewport = height
       settleUntil = performance.now() + KEYBOARD_SETTLE_MS
-      last = window.scrollY
+      last = scroller.scrollTop
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true })
+    scroller.addEventListener('scroll', onScroll, { passive: true })
     window.visualViewport?.addEventListener('resize', onViewport)
     return () => {
-      window.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('scroll', onScroll)
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (frame) cancelAnimationFrame(frame)
     }
@@ -350,7 +354,36 @@ export function Shell({
       pair centred with equal air either side; without it the rail pins to the
       left edge of a wide monitor and the list drifts away from it.
     */
-    <div className="rail:pl-68 mx-auto flex w-full max-w-6xl flex-1 flex-col">
+    /*
+      ─────────────────────────────────────────────────────────────────────────
+       The page scrolls in here, not in the document (10 August)
+      ─────────────────────────────────────────────────────────────────────────
+
+      **This is what makes the keyboard case behave like the keyboard-down
+      case**, rather than being approximated by it.
+
+      iOS stops honouring `position: fixed` while the software keyboard is open
+      *and the document scrolls*: the bar is dragged along by the page, so it
+      has to be chased, and chasing is always a frame behind. Every fault today
+      — the bar riding up over the results, sticking mid-wall, sliding back only
+      on the way up — is that chase, not the arithmetic.
+
+      The keyboard is not the removable condition. The document scrolling is. A
+      viewport-sized scroller keeps `scrollY` at zero forever, so `fixed` holds,
+      the bar does not move, and receding is the same plain slide it already is
+      with the keyboard down.
+
+      Fixed children still anchor to the viewport rather than to this box — no
+      ancestor here sets `transform`, `filter` or `perspective`, which are the
+      only things that would capture them. If one is ever added to this element,
+      the header, the rail and the bar all fall into it at once.
+
+      ⚠ **It costs pull-to-refresh**, which was deliberately restored on
+      9 August. A document that never scrolls cannot be pulled past its top. The
+      rubber band inside the scroller stays.
+    */
+    <div id="scroll-root" ref={scrollRef} className="fixed inset-0 overflow-y-auto">
+    <div className="rail:pl-68 mx-auto flex min-h-full w-full max-w-6xl flex-col">
       {/*
         The reference for `useKeyboardPin`: `bottom-0` and nothing else, so it
         reports where an untransformed fixed element actually lands on this
@@ -972,6 +1005,7 @@ export function Shell({
           children
         )}
       </main>
+    </div>
     </div>
   )
 }

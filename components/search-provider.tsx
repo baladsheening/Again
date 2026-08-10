@@ -172,8 +172,18 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
       `instant`, against the `scroll-behavior: smooth` set on `html` in
       globals.css. Smooth is right for a link to somewhere; animating a
       three-screen journey back up on a keystroke is not travel, it is a lurch.
+
+      **The shell scrolls in its own element, not the document** — see the
+      scroller in `components/shell.tsx`, which is what keeps `position: fixed`
+      working while a keyboard is open. So the document is always at zero and
+      `window.scrollTo` moves nothing. Found by id rather than passed down: the
+      provider sits *above* the shell, so there is no ref to hand it, and a
+      context existing solely to carry one element would be more machinery than
+      the problem deserves.
     */
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    const scroller = document.getElementById('scroll-root')
+    if (scroller) scroller.scrollTo({ top: 0, behavior: 'instant' })
+    else window.scrollTo({ top: 0, behavior: 'instant' })
 
     /*
       A hit renders this frame, with no debounce and no request. The synchronous
