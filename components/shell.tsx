@@ -1012,13 +1012,21 @@ function useKeyboardPin(
         it away: the hide was being cancelled by the pin, which is why the bar
         stayed on screen and drifted instead of leaving.
       */
-      const lift = Math.min(
-        0,
-        vv.offsetTop + vv.height - mark.getBoundingClientRect().bottom,
-      )
+      /*
+        **Not clamped.** It was `Math.min(0, …)` — "only ever lift, never push
+        down" — which sounds safe and threw the fix away.
+
+        Measured on the device: keyboard open at rest gives `anch.b 660`,
+        `vv.h 389`, so the correction is −271 and the bar lands right. Scroll
+        down and the anchor drifts up with the document, so by 300px of scroll
+        the correction wanted is *positive* — the bar has to be pushed back
+        down to stay level with the keyboard. The clamp discarded exactly that,
+        which is why the bar floated mid-results from a few hundred pixels in.
+      */
+      const lift = vv.offsetTop + vv.height - mark.getBoundingClientRect().bottom
 
       el.style.transform = lift ? `translateY(${lift}px)` : ''
-      el.style.paddingBottom = lift ? '0px' : ''
+      el.style.paddingBottom = '0px'
     }
 
     const schedule = () => {
