@@ -3,7 +3,8 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
@@ -108,6 +109,21 @@ const USER_SCROLL_GRACE_MS = 750
  * with room either side.
  */
 const KEYBOARD_MIN_HEIGHT = 100
+
+/**
+ * The three halves of "has this hydrated yet" — see `portalReady` in `Shell`.
+ *
+ * At module scope rather than inline because `useSyncExternalStore` resubscribes
+ * whenever `subscribe` changes identity, and an arrow written in the component
+ * body is a new function on every render.
+ *
+ * Nothing ever changes, so `subscribeToNothing` returns an unsubscribe that has
+ * nothing to undo. The store is not a store; it is a way of saying "the server
+ * and hydration get this answer, and every render after gets that one".
+ */
+const subscribeToNothing = () => () => {}
+const onClient = () => true
+const onServer = () => false
 
 /**
  * What a search that did not work says.
@@ -222,6 +238,25 @@ export function Shell({
     it is the only route to the field, and adding is what the app is for.
   */
   const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
+
+  /*
+    Whether hydration has finished, which is when a portal may be opened.
+
+    **Not `typeof document !== 'undefined'`**, which is the obvious spelling and
+    the broken one. That is false on the server and true on the client's *first*
+    render — and the first client render is hydration, which has to produce
+    exactly what the server sent. Measured with a temporary route and a real
+    browser: it throws `Hydration failed because the server rendered HTML didn't
+    match the client`, and React answers by throwing the whole tree away and
+    building it again on the client. The shell would be rebuilt on every load.
+
+    `useSyncExternalStore` is the version that holds, because it is the one API
+    that gets to answer the server and the client differently on purpose:
+    `onServer` is used for the server render *and* for hydration, `onClient`
+    takes over on the render after. Verified the same way — no mismatch, and the
+    portalled nodes still land in `document.body`.
+  */
+  const portalReady = useSyncExternalStore(subscribeToNothing, onClient, onServer)
 
   const {
     active: searchActive,
@@ -436,10 +471,10 @@ export function Shell({
       the bar does not move, and receding is the same plain slide it already is
       with the keyboard down.
 
-      Fixed children still anchor to the viewport rather than to this box — no
-      ancestor here sets `transform`, `filter` or `perspective`, which are the
-      only things that would capture them. If one is ever added to this element,
-      the header, the rail and the bar all fall into it at once.
+      The posters are the only things in this scroller. The search docks and
+      their measuring anchors are portalled to `document.body`: iOS can drag a
+      fixed descendant of an overflow scroller with it while revealing a focused
+      field, even though the CSS ancestry says that should not happen.
 
       ⚠ **It costs pull-to-refresh**, which was deliberately restored on
       9 August. A document that never scrolls cannot be pulled past its top. The
@@ -455,24 +490,31 @@ export function Shell({
 
         They wear their dock's breakpoint too, so exactly one of them is ever
         laid out, and the hook picks the pair that is.
-      */}
-      <div
-        ref={anchorRef}
-        aria-hidden
-        className="rail:hidden pointer-events-none fixed inset-x-0 bottom-0 h-0"
-      />
-      {/*
-        The rail dock hangs off `top-0` and `h-svh` rather than `bottom-0` — see
-        the dock itself for why — so its resting edge is not the same line as the
+
+        The second hangs off `top-0` and `h-svh` rather than `bottom-0` — see the
+        rail dock itself for why — so its resting edge is not the same line as the
         bar's, and it needs a twin of its own shape rather than a share of that
         one.
-      */}
-      <div
-        ref={railAnchorRef}
-        aria-hidden
-        className="rail:block pointer-events-none fixed top-0 hidden h-svh w-0"
-      />
 
+        **Portalled with their docks**, or they would be measuring a box the
+        docks are no longer in.
+      */}
+      {portalReady &&
+        createPortal(
+          <>
+            <div
+              ref={anchorRef}
+              aria-hidden
+              className="rail:hidden pointer-events-none fixed inset-x-0 bottom-0 h-0"
+            />
+            <div
+              ref={railAnchorRef}
+              aria-hidden
+              className="rail:block pointer-events-none fixed top-0 hidden h-svh w-0"
+            />
+          </>,
+          document.body,
+        )}
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
@@ -616,21 +658,25 @@ export function Shell({
         `useKeyboardPin` writes `transform` here and it must be instant, so the
         two properties are kept apart even though nothing animates this one yet.
       */}
-      <div
-        ref={railRef}
-        onFocusCapture={onDockFocus}
-        onBlurCapture={onDockBlur}
-        className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
-      >
-        <div className="bg-bg pointer-events-auto pt-6 pb-9">
-          <div className="gutter flex max-w-3xl items-center gap-1.5">
-            <span className="text-muted shrink-0">
-              <ChevronIcon />
-            </span>
-            <SearchField id="search-foot" />
-          </div>
-        </div>
-      </div>
+      {portalReady &&
+        createPortal(
+          <div
+            ref={railRef}
+            onFocusCapture={onDockFocus}
+            onBlurCapture={onDockBlur}
+            className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
+          >
+            <div className="bg-bg pointer-events-auto pt-6 pb-9">
+              <div className="gutter flex max-w-3xl items-center gap-1.5">
+                <span className="text-muted shrink-0">
+                  <ChevronIcon />
+                </span>
+                <SearchField id="search-foot" />
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
 
       {/*
         --- the header, below 45rem ---------------------------------------
@@ -780,7 +826,9 @@ export function Shell({
         </div>
       </header>
 
-      {showCollections && (
+      {showCollections &&
+        portalReady &&
+        createPortal(
       /*
         The collection row, at the foot of the phone screen.
 
@@ -953,8 +1001,9 @@ export function Shell({
             </div>
           )}
         </div>
-      </nav>
-      )}
+          </nav>,
+          document.body,
+        )}
 
       {/*
         `min-w-0` so a long film title makes the column narrower rather than
