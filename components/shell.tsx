@@ -227,7 +227,7 @@ export function Shell({
 
   /* Keeps the bar on the keyboard's top edge — see `useKeyboardPin`. */
   const barRef = useRef<HTMLElement>(null)
-  useKeyboardPin(searchFocused, barRef)
+  useKeyboardPin(searchFocused, collectionsHidden, barRef)
 
   /*
     The bar recedes on every screen, search included.
@@ -934,86 +934,117 @@ export function Shell({
  * the foot of the layout one, which is the foot of the document. A page with
  * nothing to scroll never showed the fault.
  *
- * The bar's bottom edge therefore has to be moved to the bottom edge of the
- * *visual* viewport, which is where the keyboard's top edge is:
- *
- *     lift = vv.offsetTop + vv.height − layoutHeight
- *
  * ─────────────────────────────────────────────────────────────────────────────
- *  Three earlier attempts, and what each got wrong (10 August)
+ *  It measures, it does not calculate — and that is the point (10 August)
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * 1. **Measured unfocused.** iOS collapses its own toolbar on scroll, which is
- *    also a viewport change, so an ordinary scroll with no keyboard anywhere
- *    read as hundreds of pixels and sent the bar up the screen. Hence `focused`:
- *    a keyboard cannot be open without it, so it rules out every viewport change
- *    that is not one, without having to tell them apart.
- * 2. **Used `window.innerHeight` for the layout height.** It moves with Safari's
- *    toolbar. `document.documentElement.clientHeight` is the layout viewport and
- *    does not.
- * 3. **Dropped `offsetTop` and the `scroll` listener** to escape (2), which
- *    re-anchored the bar to the layout viewport — so it dragged with the page
- *    and never came back. `offsetTop` is the entire reason a fixed element needs
- *    correcting here; it is not optional.
+ * Five versions of this computed the lift from viewport arithmetic, and every
+ * one of them was wrong on a real handset in a different way: the bar rode up
+ * on scroll, or stuck above the keyboard, or sat behind it, or dragged a screen
+ * of black over the results. Each fix was a better guess at what iOS means by
+ * `innerHeight`, `clientHeight` and `offsetTop` with a keyboard open, and each
+ * guess was falsified by the next test.
+ *
+ * The guessing is what was wrong, not any particular guess. **Safari may anchor
+ * a `fixed` element to the layout viewport or to the visual one, and this no
+ * longer needs to know which**, because it reads the position back off the
+ * element instead of predicting it:
+ *
+ *     error = rect.bottom − vv.offsetTop − vv.height
+ *     lift −= error
+ *
+ * Under either behaviour the measurement is of what actually happened, so the
+ * correction is right in both. Where the old formula was a model of the
+ * browser, this is a thermostat.
+ *
+ * It settles in one frame — `transform` does not affect layout, so the next
+ * `getBoundingClientRect` already includes it and the error reads zero.
  *
  * **Written straight to the element rather than through state.**
  * `visualViewport` emits `scroll` continuously while a finger is down, and a
  * re-render per event is how a list starts dropping frames while it is read.
  * Nothing else needs the number.
- *
- * It is also much less exposed than it was: the bar now recedes while the page
- * is scrolled, so for most of the time this is tracking, there is nothing on
- * screen to track imprecisely.
  */
-function useKeyboardPin(focused: boolean, ref: React.RefObject<HTMLElement | null>) {
+function useKeyboardPin(
+  focused: boolean,
+  receded: boolean,
+  ref: React.RefObject<HTMLElement | null>,
+) {
+  /*
+    Kept across renders, because `receded` changing re-runs the effect and the
+    correction must not be thrown away and rebuilt each time — that is a jump
+    back to the wrong place followed by a jump to the right one.
+  */
+  const lift = useRef(0)
+
   useEffect(() => {
     const el = ref.current
     const vv = window.visualViewport
     if (!focused || !el || !vv) return
 
-    const apply = () => {
-      const lift = Math.min(
-        0,
-        vv.offsetTop + vv.height - document.documentElement.clientHeight,
-      )
+    let frame = 0
+
+    const measure = () => {
+      frame = 0
 
       /*
-        `transform`, where the recede-and-return slide uses `translate`. Two
-        separate CSS properties on one element, which is what lets one be
-        instant and the other animated — the bar transitions `translate` only,
-        so this tracks the keyboard frame for frame while the slide keeps its
-        300ms. Merging them puts the bar back to visibly chasing the keyboard.
-
-        The safe-area padding goes with it: that inset clears the home
-        indicator, the keyboard already covers it, and leaving it in parks the
-        bar a thumb's width above the keys instead of on them.
+        Nothing while the bar is receded. Its own hide is a `translate` of one
+        bar-height, which this would read as error and cancel — correcting the
+        bar back into view every time it tried to leave.
       */
-      el.style.transform = lift ? `translateY(${lift}px)` : ''
-      el.style.paddingBottom = lift ? '0px' : ''
+      if (receded) return
+
+      /*
+        Where the bar actually is, against where it should be, both in the
+        coordinates you can see.
+
+        `getBoundingClientRect` is in layout-viewport coordinates and
+        `vv.offsetTop` is where the visible area starts in those same
+        coordinates, so the subtraction gives the bar's position within what is
+        on screen. It should end at `vv.height` — the bottom of the visible
+        area, which with a keyboard up is the keyboard's top edge.
+      */
+      const error = el.getBoundingClientRect().bottom - vv.offsetTop - vv.height
+      if (Math.abs(error) < 0.5) return
+
+      // Never below the resting position; only ever lifted off it.
+      lift.current = Math.min(0, lift.current - error)
+      el.style.transform = `translateY(${lift.current}px)`
+    }
+
+    const schedule = () => {
+      if (frame) return
+      frame = requestAnimationFrame(measure)
     }
 
     /*
-      **`resize` only. Never `scroll`, on either viewport.**
-
-      A keyboard has one height and it does not change while the page moves
-      under it, so the lift is a constant and recomputing it per scroll event
-      buys nothing. What it costs is severe: every imprecision in the reading
-      becomes movement, so the bar crawled up the screen with the scroll,
-      dragging its own background over the results.
-
-      The bar is `fixed`, so a constant lift holds it against the keyboard for
-      free, however far the page is scrolled. Anything that genuinely changes
-      the keyboard — switching to emoji, a hardware keyboard appearing,
-      rotation — is a resize, and is caught here.
+      The safe-area inset clears the home indicator and the keyboard already
+      covers it. Set before the first measurement, because it changes the bar's
+      height and therefore where its bottom edge is.
     */
-    apply()
-    vv.addEventListener('resize', apply)
+    el.style.paddingBottom = '0px'
+    schedule()
+
+    vv.addEventListener('resize', schedule)
+    vv.addEventListener('scroll', schedule)
+    window.addEventListener('scroll', schedule, { passive: true })
 
     return () => {
-      vv.removeEventListener('resize', apply)
-      el.style.transform = ''
-      el.style.paddingBottom = ''
+      vv.removeEventListener('resize', schedule)
+      vv.removeEventListener('scroll', schedule)
+      window.removeEventListener('scroll', schedule)
+      if (frame) cancelAnimationFrame(frame)
     }
+  }, [focused, receded, ref])
+
+  /* Back to the resting position the moment the keyboard is not there. */
+  useEffect(() => {
+    if (focused) return
+    const el = ref.current
+    if (!el) return
+    lift.current = 0
+    el.style.transform = ''
+    el.style.paddingBottom = ''
   }, [focused, ref])
 }
 
