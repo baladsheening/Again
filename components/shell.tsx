@@ -213,6 +213,9 @@ export function Shell({
   */
   const [collectionsHidden, setCollectionsHidden] = useState(false)
 
+  /* Where the page was before the keyboard touched it — see the hold below. */
+  const restoreY = useRef(0)
+
   /*
     Which of the two things the bar is holding. Search is the default: on a phone
     it is the only route to the field, and adding is what the app is for.
@@ -264,6 +267,13 @@ export function Shell({
         const y = Math.max(0, window.scrollY)
 
         /*
+          The place to put the page back to if the field is tapped. Only
+          recorded while nothing has focus, so it is always where the posters
+          were before the keyboard got involved.
+        */
+        if (!searchFocused) restoreY.current = y
+
+        /*
           Follow the page without reacting to it. Everything the keyboard moves
           arrives as scroll, so during the settle window the baseline is kept
           current and the bar is left alone — which means the flick that comes
@@ -290,6 +300,50 @@ export function Shell({
       if (frame) cancelAnimationFrame(frame)
     }
   }, [showCollections, searchFocused])
+
+  /*
+    Tapping the field must not move the posters.
+
+    Safari's rule on focus is "make the focused element visible", and with the
+    keyboard open the input genuinely is not: it lives in a bar at `bottom-0`,
+    which measured 660 against a visible area of 389. So Safari scrolls the
+    document by the height of the keyboard to reach it — the posters jumping up
+    by ~271px, which is the browser's scroll and not ours, and happens before any
+    of our code runs.
+
+    It cannot be pre-empted, so it is undone. For the length of the settle window
+    the page is held at wherever it was when the field was tapped: Safari scrolls,
+    this scrolls back, inside a frame.
+
+    **It stops the moment a query exists**, which is what keeps it from fighting
+    the scroll-to-top a new wall of results does. Shell's cleanup runs before
+    `SearchProvider`'s effect — children before parents — so the hold is already
+    gone by the time that scroll happens.
+  */
+  useEffect(() => {
+    if (!searchFocused || searchActive) return
+
+    const target = restoreY.current
+    const until = performance.now() + KEYBOARD_SETTLE_MS
+    let frame = 0
+
+    const hold = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        if (performance.now() > until) return
+        if (Math.abs(window.scrollY - target) > 1) {
+          window.scrollTo({ top: target, behavior: 'instant' })
+        }
+      })
+    }
+
+    window.addEventListener('scroll', hold, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', hold)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [searchFocused, searchActive])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
