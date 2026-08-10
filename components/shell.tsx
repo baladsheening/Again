@@ -12,6 +12,8 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
+/* ⚠ temporary — see components/probe-readout.tsx */
+import { ProbeReadout } from './probe-readout'
 import { SearchField } from './search-field'
 import { useSearch } from './search-provider'
 
@@ -310,6 +312,8 @@ export function Shell({
       left edge of a wide monitor and the list drifts away from it.
     */
     <div className="rail:pl-68 mx-auto flex w-full max-w-6xl flex-1 flex-col">
+      {/* ⚠ temporary — renders nothing without `?probe=1`. */}
+      <ProbeReadout bar={barRef} />
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
