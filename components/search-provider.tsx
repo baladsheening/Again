@@ -77,6 +77,23 @@ type Loaded = SearchPage & { q: string }
 
 const NOTHING: Loaded = { q: '', results: [], page: 0, totalPages: 0 }
 
+/**
+ * Why a search produced nothing, when the reason is not "nothing matched".
+ *
+ * **These were all one thing until 10 August, and the one thing was silence.**
+ * `fetchPage` turned every non-2xx response into `null`, the provider turned
+ * `null` into zero results, and the wall said *Nothing by that name.* — so a
+ * rate limit, an expired session and TMDB being down all read as a confident
+ * statement about the film you were looking for. The worst of them is the rate
+ * limit, because it arrives exactly when someone is typing fast, and the advice
+ * it silently gives is "that film does not exist, try another one", which
+ * spends more of the budget that ran out.
+ *
+ * They are separate here because the answer differs: wait, sign in again, or
+ * try again.
+ */
+export type SearchFailure = 'rate-limited' | 'signed-out' | 'unavailable'
+
 type SearchState = {
   query: string
   setQuery: (q: string) => void
@@ -84,10 +101,18 @@ type SearchState = {
   active: boolean
   results: FilmSearchResult[]
   searching: boolean
+  /**
+   * Why the last request failed, or `null`. Read alongside `results`: empty
+   * results means the failure is the whole answer, and results present means a
+   * page failed underneath a wall that is still worth looking at.
+   */
+  failure: SearchFailure | null
   /** Whether TMDB has another page of matches for what is currently loaded. */
   hasMore: boolean
   /** Fetch the next page and append it. Safe to call repeatedly; guards itself. */
   loadMore: () => void
+  /** Ask again for whichever request failed — the first page, or the next one. */
+  retry: () => void
   /** Field focus, so the phone's bar can hold still while it is in use. */
   focused: boolean
   setFocused: (f: boolean) => void
@@ -102,17 +127,42 @@ export function useSearch() {
   return ctx
 }
 
-async function fetchPage(
-  q: string,
-  page: number,
-  signal?: AbortSignal,
-): Promise<SearchPage | null> {
-  const res = await fetch(
-    `/api/search?q=${encodeURIComponent(q)}&page=${page}`,
-    { signal },
-  )
-  if (!res.ok) return null
-  return (await res.json()) as SearchPage
+type PageResult = { ok: true; page: SearchPage } | { ok: false; failure: SearchFailure }
+
+/**
+ * One page from our own proxy, with the reason attached when there is not one.
+ *
+ * **An abort is rethrown rather than reported.** Every keystroke cancels the
+ * request before it, so aborts are the common case here and not a failure at
+ * all — folding them in with the network errors would put "Search is
+ * unavailable" on the screen of anyone typing at speed. The signal is the thing
+ * that tells them apart: a `fetch` that rejects while its own signal is aborted
+ * was cancelled by us.
+ */
+async function fetchPage(q: string, page: number, signal?: AbortSignal): Promise<PageResult> {
+  let res: Response
+  try {
+    res = await fetch(`/api/search?q=${encodeURIComponent(q)}&page=${page}`, { signal })
+  } catch (cause) {
+    if (signal?.aborted) throw cause
+    // Offline, DNS, a dropped connection: nothing came back to read a status off.
+    return { ok: false, failure: 'unavailable' }
+  }
+
+  if (res.ok) {
+    try {
+      return { ok: true, page: (await res.json()) as SearchPage }
+    } catch {
+      // A 200 whose body did not parse is the upstream being wrong, not empty.
+      return { ok: false, failure: 'unavailable' }
+    }
+  }
+
+  // The three the route can return — see app/api/search/route.ts. Anything else
+  // is ours and unexpected, and reads the same way to the person searching.
+  if (res.status === 429) return { ok: false, failure: 'rate-limited' }
+  if (res.status === 401) return { ok: false, failure: 'signed-out' }
+  return { ok: false, failure: 'unavailable' }
 }
 
 export function SearchProvider({ children }: { children: React.ReactNode }) {
@@ -121,8 +171,37 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
   const [searching, setSearching] = useState(false)
   const [focused, setFocused] = useState(false)
 
+  /**
+   * Which request cycle the field is on. Bumped by `retry` and by `clear`.
+   *
+   * `retry` needs it because a failure is deliberately not cached, so asking
+   * again has to be a real request rather than a replay of the miss — and the
+   * effect below keys off the query string, which has not changed. This is the
+   * thing that has.
+   */
+  const [attempt, setAttempt] = useState(0)
+
+  /**
+   * The last failure, carrying the request it belongs to.
+   *
+   * **Stamped rather than cleared**, for the reason `Loaded` carries its own `q`:
+   * a failure that outlives the question it answers is worse than no failure at
+   * all, and the way to make that unrepresentable is to write down what it was
+   * about instead of remembering to erase it. Typing another letter, retrying
+   * and emptying the field all move one of these two values, so all three stop
+   * this being current without a line of code that says so.
+   */
+  const [failed, setFailed] = useState<{
+    q: string
+    attempt: number
+    reason: SearchFailure
+  } | null>(null)
+
   const trimmed = query.trim()
   const active = trimmed.length >= MIN_QUERY
+
+  const failure =
+    failed && failed.q === trimmed && failed.attempt === attempt ? failed.reason : null
 
   /**
    * Every query typed this session, with however many pages of it were pulled.
@@ -154,36 +233,63 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
    */
   const generation = useRef(0)
 
+  /**
+   * Whether a page beyond the first is in flight.
+   *
+   * **This replaced writing the page number forward before the request.** That
+   * trick stopped two intersection callbacks in the same frame from both
+   * fetching page 2, and did nothing about the case after it: the optimistic
+   * write is a render, a render rebuilds `loadMore`, the wall's effect re-runs
+   * against the new one, and the sentinel is still on screen because nothing has
+   * arrived to push it down — so page 3 was requested while page 2 was in
+   * flight, then 4, as fast as React could re-render. The replies then landed in
+   * whatever order the network chose and `loaded.page` finished on whichever was
+   * last, which could be *behind* what had already been merged in.
+   *
+   * A ref rather than state because it is read and written in the same tick that
+   * the guard has to hold for, and a state update is not visible until the next
+   * render — which is the whole distance the fault lived in.
+   */
+  const loadingMore = useRef(false)
+
+  /*
+    Back to the top, because a new query is a new wall.
+
+    This did not matter while a search was twenty posters — there was nowhere to
+    be but the top. It matters now that one can run to hundreds: type another
+    letter three screens into `batman` and, without this, you are three screens
+    into a wall that has been replaced under you, looking at results you never
+    scrolled to.
+
+    `instant`, against the `scroll-behavior: smooth` set on `html` in
+    globals.css. Smooth is right for a link to somewhere; animating a
+    three-screen journey back up on a keystroke is not travel, it is a lurch.
+
+    **The shell scrolls in its own element, not the document** — see the scroller
+    in `components/shell.tsx`, which is what keeps `position: fixed` working
+    while a keyboard is open. So the document is always at zero and
+    `window.scrollTo` moves nothing. Found by id rather than passed down: the
+    provider sits *above* the shell, so there is no ref to hand it, and a context
+    existing solely to carry one element would be more machinery than the problem
+    deserves.
+
+    **An effect of its own, keyed on the query alone**, because the request below
+    also runs on `attempt` — and a retry is not a new wall. Pressing *Try again*
+    under a page that failed happens at the foot of a few hundred posters, which
+    is precisely where being thrown back to the top is least welcome.
+  */
+  useEffect(() => {
+    if (trimmed.length < MIN_QUERY) return
+    const scroller = document.getElementById('scroll-root')
+    if (scroller) scroller.scrollTo({ top: 0, behavior: 'instant' })
+    else window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [trimmed])
+
   useEffect(() => {
     generation.current += 1
     const gen = generation.current
 
     if (trimmed.length < MIN_QUERY) return
-
-    /*
-      Back to the top, because a new query is a new wall.
-
-      This did not matter while a search was twenty posters — there was nowhere
-      to be but the top. It matters now that one can run to hundreds: type
-      another letter three screens into `batman` and, without this, you are
-      three screens into a wall that has been replaced under you, looking at
-      results you never scrolled to.
-
-      `instant`, against the `scroll-behavior: smooth` set on `html` in
-      globals.css. Smooth is right for a link to somewhere; animating a
-      three-screen journey back up on a keystroke is not travel, it is a lurch.
-
-      **The shell scrolls in its own element, not the document** — see the
-      scroller in `components/shell.tsx`, which is what keeps `position: fixed`
-      working while a keyboard is open. So the document is always at zero and
-      `window.scrollTo` moves nothing. Found by id rather than passed down: the
-      provider sits *above* the shell, so there is no ref to hand it, and a
-      context existing solely to carry one element would be more machinery than
-      the problem deserves.
-    */
-    const scroller = document.getElementById('scroll-root')
-    if (scroller) scroller.scrollTo({ top: 0, behavior: 'instant' })
-    else window.scrollTo({ top: 0, behavior: 'instant' })
 
     /*
       A hit renders this frame, with no debounce and no request. The synchronous
@@ -202,11 +308,21 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     const timer = setTimeout(async () => {
       setSearching(true)
       try {
-        const body = await fetchPage(trimmed, 1, controller.signal)
+        const result = await fetchPage(trimmed, 1, controller.signal)
         if (gen !== generation.current) return
-        const next: Loaded = body
-          ? { q: trimmed, ...body }
-          : { q: trimmed, results: [], page: 0, totalPages: 0 }
+
+        /*
+          A failure is not cached and does not replace what is on screen. The
+          wall holds its last answer for the same reason it holds it while a new
+          request is in flight — and if there is nothing to hold, the message
+          the failure carries is what gets shown instead of a count of zero.
+        */
+        if (!result.ok) {
+          setFailed({ q: trimmed, attempt, reason: result.failure })
+          return
+        }
+
+        const next: Loaded = { q: trimmed, ...result.page }
         cache.current.set(trimmed, next)
         setLoaded(next)
       } catch {
@@ -220,7 +336,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
       controller.abort()
       clearTimeout(timer)
     }
-  }, [trimmed])
+  }, [trimmed, attempt])
 
   /*
     Paging is only offered once page 1 of *this* query has landed. While the
@@ -240,68 +356,98 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
    * `IntersectionObserver` and observers fire more often than anyone expects.
    */
   const loadMore = useCallback(() => {
-    if (!hasMore || searching) return
+    /*
+      One page at a time, and the ref is what makes that true. `hasMore` cannot
+      do it: it is derived from state, so it still describes the last render
+      while a request is in the air, and every guard built on it was a guard the
+      next render walked straight through.
+    */
+    if (!hasMore || searching || loadingMore.current) return
+    loadingMore.current = true
 
     const gen = generation.current
     const q = loaded.q
     const next = loaded.page + 1
 
-    /*
-      Marked in the cache *before* the request, not after. Two intersection
-      callbacks in one frame would otherwise both pass the guard above and both
-      fetch page 2 — the classic double-append. Writing the page forward first
-      makes the second call a no-op via `hasMore` on the next render, and a
-      failed request rolls it back below.
-    */
-    setLoaded((prev) => (prev.q === q ? { ...prev, page: next } : prev))
-
     void (async () => {
-      let body: SearchPage | null = null
       try {
-        body = await fetchPage(q, next)
+        const result = await fetchPage(q, next)
+        if (gen !== generation.current) return
+
+        /*
+          Nothing moves on a failed page. `loaded` is untouched, so `loadMore`
+          keeps its identity, so the wall's effect does not re-run and the
+          observer cannot spin on it — it goes quiet until someone asks again,
+          either by scrolling off the foot and back onto it or by pressing the
+          retry the shell puts under the wall.
+        */
+        if (!result.ok) {
+          setFailed({ q, attempt, reason: result.failure })
+          return
+        }
+
+        /*
+          Merged against the cache rather than against `prev` inside the updater,
+          because building the merged list is also what is written to the cache —
+          and a state updater must be free of side effects to be safe to call
+          twice, which React does in development.
+
+          The `Set` is not defensive: TMDB's pages overlap around a popularity
+          tie, and the same film arriving twice would be a duplicate key in the
+          wall as well as a poster shown twice.
+        */
+        const base = cache.current.get(q)?.results ?? []
+        const seen = new Set(base.map((f) => f.externalId))
+        const merged = [...base, ...result.page.results.filter((f) => !seen.has(f.externalId))]
+
+        const grown: Loaded = {
+          q,
+          results: merged,
+          page: result.page.page,
+          totalPages: result.page.totalPages,
+        }
+        cache.current.set(q, grown)
+        setLoaded((prev) => (prev.q === q ? grown : prev))
       } catch {
-        body = null
+        // `fetchPage` only throws on an abort, and nothing aborts a page load.
+      } finally {
+        /*
+          Cleared before the render this function's own `setLoaded` schedules, so
+          the wall asking for the page after this one is never turned away by a
+          flag belonging to a request that has already landed.
+        */
+        loadingMore.current = false
       }
-
-      if (gen !== generation.current) return
-
-      if (!body) {
-        // Put the page back so the foot of the wall can try again on the next
-        // scroll rather than going quiet for the rest of the session.
-        setLoaded((prev) => (prev.q === q && prev.page === next ? { ...prev, page: next - 1 } : prev))
-        return
-      }
-
-      /*
-        Merged against the cache rather than against `prev` inside the updater,
-        because building the merged list is also what is written to the cache —
-        and a state updater must be free of side effects to be safe to call
-        twice, which React does in development.
-
-        The `Set` is not defensive: TMDB's pages overlap around a popularity tie,
-        and the same film arriving twice would be a duplicate key in the wall as
-        well as a poster shown twice.
-      */
-      const base = cache.current.get(q)?.results ?? []
-      const seen = new Set(base.map((f) => f.externalId))
-      const merged = [...base, ...body.results.filter((f) => !seen.has(f.externalId))]
-
-      const grown: Loaded = {
-        q,
-        results: merged,
-        page: body.page,
-        totalPages: body.totalPages,
-      }
-      cache.current.set(q, grown)
-      setLoaded((prev) => (prev.q === q ? grown : prev))
     })()
-  }, [hasMore, searching, loaded.q, loaded.page])
+  }, [hasMore, searching, loaded.q, loaded.page, attempt])
+
+  /**
+   * Ask again for whatever failed.
+   *
+   * Which request that was is not tracked, because `results` already says: an
+   * empty wall means the first page never arrived, and a full one means a later
+   * page did not.
+   *
+   * `attempt` moves either way, which is what takes the message off the screen —
+   * see `failed`. It also re-runs the effect, which is the request itself in the
+   * first case and a cache hit costing one bail-out in the second.
+   */
+  const retry = useCallback(() => {
+    setAttempt((n) => n + 1)
+    if (loaded.q === trimmed && loaded.results.length > 0) loadMore()
+  }, [loadMore, loaded.q, loaded.results.length, trimmed])
 
   const clear = useCallback(() => {
     generation.current += 1
     setQuery('')
     setLoaded(NOTHING)
     setSearching(false)
+    /*
+      A new cycle, so a failure recorded against the old one cannot come back if
+      the same query is typed again — which it will be, because the thing people
+      do after a search goes wrong is search for it again.
+    */
+    setAttempt((n) => n + 1)
   }, [])
 
   return (
@@ -321,8 +467,14 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
         */
         results: active ? loaded.results : [],
         searching,
+        /*
+          Below the minimum there is nothing being asked, so there is nothing
+          that can have gone wrong — the same reasoning as `results` above.
+        */
+        failure: active ? failure : null,
         hasMore,
         loadMore,
+        retry,
         focused,
         setFocused,
         clear,
