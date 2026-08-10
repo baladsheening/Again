@@ -94,6 +94,22 @@ const ALWAYS_SHOWN_ABOVE = 32
 const KEYBOARD_SETTLE_MS = 500
 
 /**
+ * The smallest viewport change worth treating as a keyboard.
+ *
+ * The settle window cannot be armed by *any* resize — Safari's toolbar
+ * collapses and expands continuously while you scroll, and re-arming on that
+ * cancels the receding entirely, which is a fault this has already had once
+ * today. But it cannot be armed by focus alone either: focus fires when the
+ * field is tapped and the keyboard finishes arriving a few hundred milliseconds
+ * later, so the window had closed before the browser's own scroll landed.
+ *
+ * The two are far apart in size. A toolbar is tens of pixels; the keyboard
+ * measured 271 against a 660 viewport on the handset. 100 sits between them
+ * with room either side.
+ */
+const KEYBOARD_MIN_HEIGHT = 100
+
+/**
  * The air above and below the wordmark on a phone — the *visible* air, measured
  * to the letters rather than to the box they sit in.
  *
@@ -250,12 +266,19 @@ export function Shell({
     let frame = 0
 
     /*
-      Armed here rather than by a listener, because the thing that arms it is
-      this effect re-running: `searchFocused` is in the dependencies, so a
-      keyboard opening or closing re-enters exactly once, with the baseline
-      taken fresh and the window started. Nothing else can trigger it.
+      Armed at focus — the effect re-runs then, `searchFocused` being a
+      dependency — and re-armed when the keyboard actually turns up.
+
+      **Both are needed, and neither is enough.** Focus is the moment the
+      keyboard is *asked* for; it lands a few hundred milliseconds later, and
+      Safari's scroll-to-reveal lands with it. iOS delivers that scroll as one
+      large event when the movement finishes rather than as a stream, so by the
+      time it arrives the window opened at focus has closed, and a single 271px
+      positive delta is indistinguishable from a hard flick. The bar receded
+      just as the keyboard settled.
     */
-    const settleUntil = performance.now() + KEYBOARD_SETTLE_MS
+    let settleUntil = performance.now() + KEYBOARD_SETTLE_MS
+    let lastViewport = window.visualViewport?.height ?? 0
 
     const onScroll = () => {
       if (frame) return
@@ -284,9 +307,24 @@ export function Shell({
       })
     }
 
+    /*
+      A keyboard, not a toolbar — see `KEYBOARD_MIN_HEIGHT`. Anything smaller is
+      Safari's own chrome moving as the page scrolls, and re-arming on that
+      would stop the bar ever receding.
+    */
+    const onViewport = () => {
+      const height = window.visualViewport?.height ?? 0
+      if (Math.abs(height - lastViewport) < KEYBOARD_MIN_HEIGHT) return
+      lastViewport = height
+      settleUntil = performance.now() + KEYBOARD_SETTLE_MS
+      last = window.scrollY
+    }
+
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.visualViewport?.addEventListener('resize', onViewport)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.visualViewport?.removeEventListener('resize', onViewport)
       if (frame) cancelAnimationFrame(frame)
     }
   }, [showCollections, searchFocused])

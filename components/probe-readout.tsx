@@ -38,6 +38,21 @@ export function ProbeReadout({
         const n = (v: number | undefined) =>
           v === undefined ? '      —' : String(Math.round(v)).padStart(7)
 
+        /*
+          Hold itself on screen, or it is useless exactly when it is needed.
+
+          This is `fixed`, and iOS stops honouring that while the keyboard is
+          open — so it drifted off the top of the screen on every scroll, which
+          is why three of the diagnostic screenshots had no readout on them.
+          The anchor is `fixed bottom-0` with nothing done to it, so how far it
+          has strayed from `clientHeight` is the drift, and the same amount put
+          back holds this against the top of the visible area.
+        */
+        if (anchorRect) {
+          const drift = anchorRect.bottom - document.documentElement.clientHeight
+          el.style.transform = `translateY(${vv.offsetTop - drift}px)`
+        }
+
         el.textContent = [
           `inner  ${n(window.innerHeight)}`,
           `client ${n(document.documentElement.clientHeight)}`,
