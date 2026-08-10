@@ -30,8 +30,23 @@ const SEARCH_TTL = 60 * 60
  */
 const IN_CINEMAS_TTL = 60 * 60 * 6
 
+/**
+ * TMDB pages search results twenty at a time and refuses to go past page 500,
+ * so about ten thousand results are reachable for a broad query. The cap is
+ * theirs, not ours — asking for 501 is a 400 rather than an empty page.
+ */
+export const MAX_PAGE = 500
+
 /** TMDB is upstream and untrusted like anything else — parse, don't assume. */
 const searchResponse = z.object({
+  /*
+    Both optional because `inCinemas` parses with this schema too and does not
+    care about either — and because a paging field that vanished upstream should
+    degrade to "there is one page" rather than throw away results that arrived
+    perfectly well.
+  */
+  page: z.number().optional(),
+  total_pages: z.number().optional(),
   results: z.array(
     z.object({
       id: z.number(),
@@ -101,23 +116,53 @@ function yearOf(releaseDate: string | undefined): number | null {
   return Number.isFinite(year) && year > 1800 ? year : null
 }
 
+/** One page of matches, and enough to know whether there is another. */
+export type FilmSearchPage = {
+  results: FilmSearchResult[]
+  page: number
+  /** TMDB's own count, capped at `MAX_PAGE` — what is *reachable*, not what exists. */
+  totalPages: number
+}
+
 /**
  * ⚠ **TMDB has no prefix search.** `/search/movie?query=b` does not mean "films
  * beginning with b" — it is a relevance match ranked by popularity, and there is
- * no endpoint that does the other thing. So a single letter returns what TMDB
- * thinks are the twenty best matches for that letter, not an alphabetical run.
+ * no endpoint that does the other thing. So a single letter returns TMDB's best
+ * guesses for that letter in popularity order, and page 5 is the 81st–100th of
+ * them. **It never becomes an alphabetical run**, however deep it is paged.
  *
- * Twenty is TMDB's page size, and this takes one page. Whole pages could be
- * chained to go deeper, at one upstream request each, on every keystroke, behind
- * a rate limiter — for a wall nobody is going to scroll to the four hundredth
- * poster of.
+ * That caveat is the reason this takes a page number rather than a count of
+ * films: depth here buys *more matches*, not *completeness*, and no number of
+ * requests turns one into the other.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why one page per call (10 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The instruction was "as many results as possible, in real time", and the
+ * tempting reading is to fetch three or four pages here and return sixty films
+ * from one call. That was rejected: this function runs on a debounce measured in
+ * tens of milliseconds, so every page it fetches eagerly is fetched again for
+ * every letter typed on the way to a word — including the letters nobody meant
+ * to search for. Four pages per keystroke is four times the upstream bill for
+ * posters that are, at that instant, three screens below the fold.
+ *
+ * So depth is pulled rather than pushed: the wall asks for page 2 when it is
+ * scrolled to, and page 3 after that (`components/poster-wall.tsx`). First paint
+ * costs exactly one request, as it always did, and the ten-thousandth result is
+ * still reachable by someone who wants it. That is also what §10's pagination
+ * rule asks for.
  */
-export async function searchFilms(query: string): Promise<FilmSearchResult[]> {
+export async function searchFilms(query: string, page = 1): Promise<FilmSearchPage> {
   const trimmed = query.trim()
-  if (trimmed.length < 1) return []
+  if (trimmed.length < 1) return { results: [], page: 1, totalPages: 0 }
+
+  // Clamped rather than trusted. The route validates too, but this is the
+  // boundary that actually talks to TMDB, and 501 is a 400 from them.
+  const wanted = Math.min(Math.max(1, Math.trunc(page)), MAX_PAGE)
 
   const raw = await tmdb(
-    `/search/movie?query=${encodeURIComponent(trimmed)}&include_adult=false&language=en-US&page=1`,
+    `/search/movie?query=${encodeURIComponent(trimmed)}&include_adult=false&language=en-US&page=${wanted}`,
     SEARCH_TTL,
   )
 
@@ -130,12 +175,16 @@ export async function searchFilms(query: string): Promise<FilmSearchResult[]> {
     results are a wall of posters now, and eight posters is two thirds of one
     screen with the rest of it empty.
   */
-  return parsed.data.results.map((r) => ({
-    externalId: String(r.id),
-    title: r.title,
-    year: yearOf(r.release_date),
-    posterPath: r.poster_path ?? null,
-  }))
+  return {
+    results: parsed.data.results.map((r) => ({
+      externalId: String(r.id),
+      title: r.title,
+      year: yearOf(r.release_date),
+      posterPath: r.poster_path ?? null,
+    })),
+    page: parsed.data.page ?? wanted,
+    totalPages: Math.min(parsed.data.total_pages ?? 1, MAX_PAGE),
+  }
 }
 
 /**

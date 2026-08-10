@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
 
 import type { FilmSearchResult } from '@/lib/domain'
 import { posterUrl } from '@/lib/posters'
@@ -42,9 +43,20 @@ import { useCapture } from './capture-provider'
  * `images.unoptimized` in next.config.ts is what stops `next/image` doing it
  * quietly).
  */
+/**
+ * How far below the last poster the wall starts asking for the next twenty.
+ *
+ * Roughly two rows of artwork at every width, which is the point: the request
+ * goes while there is still something to look at, so the next page has landed by
+ * the time the scroll reaches where it will go. At `0px` the wall would stop
+ * dead at the foot on every page and wait out a round trip in full view.
+ */
+const LOOKAHEAD = '800px'
+
 export function PosterWall({
   films,
   empty = 'Nothing to show from the cinema listings just now. Search is still the way in.',
+  onReachEnd,
 }: {
   films: FilmSearchResult[]
   /**
@@ -53,14 +65,61 @@ export function PosterWall({
    * query that matched nothing.
    */
   empty?: string
+  /**
+   * Called while the foot of the wall is in view, if there is more to come.
+   *
+   * Optional because only search pages. The cinema listing is a fixed set — what
+   * is on now and what is coming — and a calendar that kept going would be the
+   * feed §2 rules out.
+   *
+   * **It is called repeatedly, not once.** The observer reports a state, and
+   * that state persists across an append that did not fill the screen, so the
+   * wall keeps asking until it does. Guarding against that is the caller's job,
+   * and `loadMore` in `search-provider.tsx` does it.
+   */
+  onReachEnd?: () => void
 }) {
   const { choose } = useCapture()
+
+  /*
+    Hooks before the empty branch, not after. An early `return` above a
+    `useState` is a different number of hooks on two renders of the same
+    component, which React treats as a bug in the caller and not in itself.
+  */
+  const sentinel = useRef<HTMLDivElement>(null)
+  const [atFoot, setAtFoot] = useState(false)
+
+  useEffect(() => {
+    const el = sentinel.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setAtFoot(entry?.isIntersecting ?? false),
+      { rootMargin: `${LOOKAHEAD} 0px` },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  /*
+    Split from the observer deliberately. Calling `onReachEnd` from inside the
+    callback would fire it against whatever closure the observer was created
+    with, so a stale `loadMore` would page from wherever the wall was when the
+    element mounted. Reading a boolean out and reacting to it here means the
+    call always uses the current one — and re-runs when `loadMore`'s identity
+    changes, which is precisely when a page has landed and the next one may be
+    wanted.
+  */
+  useEffect(() => {
+    if (atFoot) onReachEnd?.()
+  }, [atFoot, onReachEnd])
 
   if (films.length === 0) {
     return <p className="text-muted max-w-sm py-10 text-sm">{empty}</p>
   }
 
   return (
+    <>
     <ul className="rail:grid-cols-5 xl:grid-cols-6 grid grid-cols-3 gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
@@ -97,5 +156,20 @@ export function PosterWall({
         )
       })}
     </ul>
+
+    {/*
+      The tripwire, and nothing else.
+
+      No spinner and no "loading more". The wall is silent artwork, and a
+      caption appearing under it every twenty posters would be the loudest
+      thing on the screen — announcing a mechanism whose entire job is to not
+      be noticed. Posters simply continue.
+
+      Zero height, so it adds nothing to the layout it sits at the foot of.
+      `aria-hidden` because there is nothing here to read: it is a scroll
+      position, not content.
+    */}
+    <div ref={sentinel} aria-hidden className="h-0 w-full" />
+    </>
   )
 }

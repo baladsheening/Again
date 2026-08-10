@@ -1229,6 +1229,143 @@ for, so the page holds two items and no heading.
 
 ---
 
+## Search goes deep, and the mark goes up — 10 August
+
+Four instructions in one pass, after the first look at real search results on the
+deployed app. Two were settled by looking and needed no code: **one letter does
+give a usable wall**, so `MIN_QUERY` stays at 1, and **the 300ms slide on the
+phone's collection bar is right**, so it stays. Space Grotesk stays too.
+
+### As many results as possible, in real time
+
+Both halves were asked for together and they pull against each other, which is
+most of what the design here is about: *deeper* means more upstream requests and
+*faster* means more of them again, and the budget is one TMDB quota.
+
+**Depth is pulled, not pushed.** `searchFilms` takes a page number and returns
+one page; the wall asks for the next twenty as its foot comes into view, up to
+TMDB's own ceiling of 500 pages. The alternative on the table was fetching three
+or four pages per query, which is simpler and wrong: the request runs on a
+debounce measured in tens of milliseconds, so every eagerly-fetched page is
+fetched again for every letter typed on the way to a word — quadrupling the bill
+for posters three screens below the fold. First paint still costs exactly one
+request.
+
+⚠ **This does not make search complete, and no amount of paging would.**
+`/search/movie?query=b` is a relevance match ranked by popularity. Page 5 is the
+81st–100th most popular match for "b"; it never becomes an alphabetical run,
+because TMDB has no prefix-search endpoint. Depth buys more matches, not all of
+them, and that distinction should survive any future request to "show
+everything".
+
+**Real time is 90ms, down from 220.** A fast typist is at 100–150ms between
+letters, so 220 waited out the ordinary gaps as well as the deliberate ones and
+the wall always arrived a beat after you stopped. It cannot go to zero: a request
+per keystroke is mostly requests for prefixes nobody meant, and their answers
+race each other back. A `generation` counter makes late answers safe to drop —
+`AbortController` alone does not, since an abort races the response rather than
+beating it.
+
+**A client-side cache is what actually makes it feel immediate.** Every query
+typed this session keeps its pages in a `Map`. Backspacing out of `matrix` is not
+a new question, and correcting a typo — the most common thing anyone does in a
+search field — now costs a render rather than a round trip.
+
+**`LIMITS.search` went 30/min → 120/min.** Thirty was sized for a four-times
+longer debounce and a single page; one unlucky minute of typing and scrolling now
+passes it, and a 429 mid-search reads as the app being broken rather than as a
+limit working. The limit exists to stop a script draining the quota, and 120 does
+that as well as 30 did.
+
+**The four fields of a loaded query are one piece of state.** Held separately, a
+keystroke could leave `results` describing the old query while `page` described
+the new one, and *load more* would append page 2 of what you are typing onto the
+results of what you typed a moment ago. Carrying the query string alongside them
+makes that unrepresentable.
+
+**A new query returns to the top.** It did not matter at twenty posters; at
+several hundred, typing another letter three screens down would leave you three
+screens into a wall that had been replaced under you.
+
+**No spinner at the foot.** The wall is silent artwork, and a caption every
+twenty posters would be the loudest thing on screen — announcing a mechanism
+whose job is not to be noticed. Posters simply continue.
+
+⚠ Still unverified against the live API: that a page is twenty and that
+`total_pages` says what it is documented to say. TMDB's host is unreachable from
+the build environment. Nothing depends on the figure — `hasMore` reads
+`total_pages` off the response rather than assuming a page size — but the number
+in these notes is still documented behaviour rather than one anyone has read.
+
+### The blinking caret was wrong twice over
+
+A hand-drawn 1px caret blinked in the search field while it was **empty and
+unfocused**, and unmounted on focus so the browser's real one could take over.
+Deleted, along with `--animate-caret`.
+
+A blinking cursor means *this is where your typing goes*, and it was making that
+claim at a field nobody had touched — falling silent at the exact moment it
+became true. Asked for the right way round on 10 August: it should blink when you
+tap in, which the browser does for free, in the platform's own rhythm.
+
+The same element caused the second fault. At 1px wide with 6px of the row's `gap`
+beside it, unmounting on focus moved the placeholder and everything typed after
+it 7px left, and 7px back on blur — a prompt that flinched when you tapped it.
+One deletion answers both, and there is nothing to put in its place: the word
+"search" is the affordance and the caret is the browser's.
+
+The original was defensible, which is why it was built. It is recorded here so
+the argument for it is not made again.
+
+### AGAIN, in caps
+
+Directed. `text-transform: uppercase` on the `wordmark` utility rather than four
+capitalised JSX strings — the mark appears in the phone header, the rail,
+`/sign-in` and `/reset-password`, and four literals are four things that can
+drift. It is also the accessible spelling: a screen reader may spell a five-letter
+literal in caps, where a CSS transform leaves the DOM text as "Again" and gets the
+app's name read as a word.
+
+`letter-spacing` went −0.005em → **+0.03em**. Caps at display size are drawn
+expecting to be tracked; a lowercase face's sidebearings are cut for x-height, and
+five untracked capitals at 36px read as a squeezed word.
+
+**The mark did not get smaller, and the measurements say why.** Re-measured with
+`TextMetrics.actualBoundingBox*` at 36px in Space Grotesk:
+
+| | ink above baseline | ink below | inked height |
+|---|---|---|---|
+| `Again` | 26px | 8px (the `g`) | 34px |
+| `AGAIN` | 26px | 1px (the `G`'s overshoot) | **27px** |
+
+The top is identical, because the tallest thing in "Again" was always the capital
+A. Every number that moved is about the bottom:
+
+- `MARK_TRIM_BOTTOM` −0.0833em → −0.2778em (−3px → −10px)
+- `main`'s top padding `3.375rem` → **`2.9375rem`** — 10 + 27 + 10 = 47px,
+  measured against the real header at 47.00px, both gaps landing on 10px of ink
+- `MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` unchanged; they describe the typeface
+  and the cap height, and neither moved
+
+The 1px below the baseline is not noise. `G` is a round letter and round letters
+are drawn a hair past the baseline so they do not read short beside a flat one;
+trimming it would clip the curve.
+
+**The auth pages needed the ancillary adjustment.** The h1's box is 36px but its
+ink is not centred in it — the baseline lands 30px down, so `Again` hung its `g`
+2px below its own box and `AGAIN` stops 5px above it. An unchanged `gap-4`
+therefore went from 14px of visible air to 21px, the tagline drifting away from
+the mark on both pages. Spent on the gap (`gap-[9px]`) rather than on the mark:
+a negative margin would shorten the column, and the column is centred by
+`my-auto` with two optical corrections measured against its current height.
+Moving what is between two elements changes nothing else; moving the mark's box
+would re-open all of it.
+
+⚠ 14px is what was tuned by eye against a descender. A flat baseline may want a
+little more — a judgement for a human, like the tracking above it.
+
+---
+
 ## Third-party dependencies
 
 ### Where TMDB actually sits

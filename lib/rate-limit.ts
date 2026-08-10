@@ -25,7 +25,19 @@ export type Limit = { requests: number; windowSeconds: number }
 
 export const LIMITS = {
   auth: { requests: 10, windowSeconds: 60 },
-  search: { requests: 30, windowSeconds: 60 },
+  /*
+    Raised from 30 on 10 August, when search became real-time and pageable.
+    Thirty was a ceiling for a debounce four times longer and a single page: one
+    unlucky minute of typing and scrolling now passes it, and the failure is a
+    429 in the middle of someone looking for a film — which reads as the app
+    being broken rather than as a limit being enforced.
+
+    Two a second sustained is still far below anything a person produces, and
+    the client's own cache means a query already typed costs nothing at all. The
+    limit is here to stop a script draining the TMDB quota, and 120 does that
+    exactly as well as 30 did.
+  */
+  search: { requests: 120, windowSeconds: 60 },
   entryCreate: { requests: 60, windowSeconds: 60 },
   swapInitiate: { requests: 5, windowSeconds: 300 },
 } as const satisfies Record<string, Limit>

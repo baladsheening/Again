@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { getSessionUser } from '@/lib/db'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
-import { searchFilms } from '@/lib/tmdb'
+import { MAX_PAGE, searchFilms } from '@/lib/tmdb'
 import { TmdbError } from '@/lib/tmdb'
 
 /**
@@ -22,6 +22,12 @@ import { TmdbError } from '@/lib/tmdb'
  */
 const querySchema = z.object({
   q: z.string().min(1).max(120),
+  /**
+   * Which page of matches. Coerced because a query string is text, bounded
+   * because `MAX_PAGE` is TMDB's ceiling and asking past it is an upstream 400
+   * — a fact worth catching here rather than turning into a 503.
+   */
+  page: z.coerce.number().int().min(1).max(MAX_PAGE).default(1),
 })
 
 export async function GET(request: Request) {
@@ -31,13 +37,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
+  const params = new URL(request.url).searchParams
   const parsed = querySchema.safeParse({
-    q: new URL(request.url).searchParams.get('q') ?? '',
+    q: params.get('q') ?? '',
+    // `?? '1'` rather than letting `null` reach the coercion: `Number(null)` is
+    // 0, which would fail the bound instead of taking the default.
+    page: params.get('page') ?? '1',
   })
 
   // Too short is not an error — it is what every query looks like on the way to
   // being long enough.
-  if (!parsed.success) return NextResponse.json({ results: [] })
+  if (!parsed.success) return NextResponse.json({ results: [], page: 1, totalPages: 0 })
 
   // Per user and per IP (§10). Two accounts behind one connection should not
   // double the budget.
@@ -55,9 +65,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const results = await searchFilms(parsed.data.q)
+    const page = await searchFilms(parsed.data.q, parsed.data.page)
     return NextResponse.json(
-      { results },
+      page,
       // Private: results are identical for everyone, but the request is
       // authenticated and shared caches should not hold it.
       { headers: { 'Cache-Control': 'private, max-age=60' } },

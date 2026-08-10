@@ -62,11 +62,22 @@ a phone, since it is the only fix that cannot be checked from a desk.
 - [x] ~~**Nobody has seen the redesign signed in.**~~ Seen, and reworked through
       about twenty rounds of feedback over the day. All shipped.
 - [ ] **A poster wall behind `/sign-in`.** Asked for on the morning of 9 August
-      and still the only request from that day not built. It needs a poster
+      and still the only request from that day not built. **Deferred again on
+      10 August** — wanted later that day or another day, and what it should
+      look like is an open question rather than a build task. It needs a poster
       source, a cache and a decision about §2. → *Pick up here*
-- [ ] **Search returns one TMDB page.** 20 is not the API's ceiling. →
-      *Pick up here — the one open question, in full*
-- [ ] **Real search results have never been seen.** → *Pick up here*
+- [x] ~~**Search returns one TMDB page.**~~ Pages now, on scroll, to TMDB's own
+      ceiling of 500. → *Search and the caps mark, 10 August*
+- [x] ~~**Real search results have never been seen.**~~ Seen on the deployed app,
+      10 August. One letter gives a usable wall.
+
+### Found by looking at it — 10 August
+
+- [x] ~~**Search was one page and not quite live.**~~ → *10 August*
+- [x] ~~**The caret blinked when nobody was in the field**, and the placeholder
+      jumped 7px when you tapped in.~~ → *10 August*
+- [x] ~~**The mark should be all-capitals.**~~ Built, with the trims and the
+      header height re-measured. → *10 August*
 
 ### Decided, still to build
 
@@ -432,67 +443,63 @@ not decided and is small.
 
 ---
 
-## Pick up here — end of 9 August
+## Pick up here — 10 August
 
-Everything below this heading is shipped and live. `main` is at `60e9843`;
-branch `reset-flow-and-screen-correctness` is in sync; the working tree is clean
-apart from two untracked reference PNGs in the repo root, which are design
-references and deliberately uncommitted.
+Built this session and **not yet pushed**: search paging and the real-time
+field, the caret deletion, and the caps mark. `main` on the remote is at
+`9b80f86`, which is the 9 August work; local `main` is stale at `f55462a` and
+the tracking ref for `reset-flow-and-screen-correctness` is staler still — the
+"34 ahead" git reports is that ref, not unpushed work from the 9th.
 
-### The one open question, in full
+Typecheck, lint and a production build pass. The working tree also holds three
+untracked reference PNGs in the repo root, which are design references and
+deliberately uncommitted.
 
-**Is 20 the maximum a search can return?** No — 20 is one *page*.
+### The one open question, answered
 
-- TMDB's search endpoints return a fixed **20 results per page**, with `page`,
-  `total_pages` and `total_results` in the response. `&page=2` and so on are
-  available, capped by TMDB at 500 pages, so roughly 10,000 results are
-  reachable for a broad query.
-- **`lib/tmdb.ts` takes page 1 only**, so 20 is *our* ceiling, not the API's.
-  `searchResponse` does not even parse `total_pages`, so nothing in the app
-  currently knows how many more there are.
-- ⚠ Unverified against the live API. TMDB's host is unreachable from the
-  environment this was written in; the 20-per-page figure is documented
-  behaviour, not a response anyone has read.
+**Is 20 the maximum a search can return?** No — 20 was one *page*, and ours.
+Built on 10 August: `searchFilms` takes a page, the wall pulls the next twenty as
+its foot approaches, and TMDB's 500-page ceiling is the limit. The full reasoning,
+including why pages are pulled rather than fetched N at a time, is in
+`docs/decisions.md` under *Search goes deep, and the mark goes up*.
 
-**If more than 20 is wanted, two honest options:**
+⚠ **It still does not give "all films starting with B",** and nothing will.
+`/search/movie?query=b` is a relevance match ranked by popularity; TMDB has no
+prefix-search endpoint. Depth buys more matches, not all of them. Expect this
+question to come back and answer it the same way.
 
-1. **Load more as the results wall is scrolled** — fetch page 2 at the bottom,
-   then 3. Costs an upstream request only when asked, keeps first paint as fast
-   as it is, and is what §10's pagination rule implies. **This is the one to
-   build.**
-2. **Fetch N pages up front** — 3 pages for 60 posters. Simpler, but it triples
-   the upstream cost of every debounced keystroke, including the ones typed
-   through on the way to a longer word.
+### Still never seen working
 
-⚠ **Neither gives "all films starting with B".** `/search/movie?query=b` is a
-relevance match ranked by popularity, and TMDB has no prefix-search endpoint.
-Page 5 of `b` is the 81st–100th most popular match for "b"; it never becomes an
-alphabetical run.
-
-### Never seen working
-
-- **Real search results filling the wall.** The swap, both empty states, the
-  clear control and the geometry are all verified in a browser. A poster
-  arriving from an actual query is not — TMDB's API host is blocked from the
-  build environment. This is the first thing to look at.
+- **Deep paging against the real API.** Search results themselves are confirmed
+  (10 August, on the deployed app), but nobody has scrolled past page 1, and
+  TMDB's host is blocked from the build environment — the TLS handshake is
+  intercepted, so not even a scratch `node` script reaches it. **Scroll a broad
+  query — `b`, or `star` — well past the first twenty and check the posters keep
+  coming and never repeat.**
 - **`inCinemas()` against the real API**, for the same reason. An empty wall with
   search still working is its designed failure.
+- **The 90ms debounce on a real connection.** It is right on a desk; on mobile
+  data it may be sending requests that the next keystroke throws away. The lever
+  is `DEBOUNCE_MS` in `components/search-provider.tsx`, and `LIMITS.search` moved
+  to 120/min to give it room.
 
 ### Judgements waiting on a human
 
-- **Typing one letter.** The floor went 2 → 1 and the cap 8 → 20 on the same
-  day; whether TMDB's twenty best guesses for `b` are a usable wall or junk can
-  only be settled by looking.
-- **Space Grotesk against the rest of the type.** A geometric face over IBM Plex
-  Sans; the mark is the only thing on screen in that voice.
-- **18px under the mark** on a phone, against a capital `A` that reads heavier
-  than the old lowercase `a`.
+- [x] ~~**Typing one letter.**~~ Answered 10 August: usable. `MIN_QUERY` stays 1.
+- [x] ~~**The 300ms slide** on the phone's collection bar.~~ Answered: right.
+- [x] ~~**Space Grotesk against the rest of the type.**~~ Answered: liked, stays.
+- **The tracking on the caps mark.** +0.03em, up from −0.005em, because caps at
+  display size expect to be tracked. A first pass, not a measured one.
+- **14px under the mark on the auth pages.** The caps mark has no descender
+  filling that gap, so `gap-4` was cut to `gap-[9px]` to hold the *visible* space
+  where it was. But 14px is what was tuned against a descender, and a flat
+  baseline may want a little more.
 - **The chevron's ink at the desktop foot.** Its *box* is flush with the
   posters; the glyph is drawn ~4px inside its own viewBox, so the visible mark
   sits slightly right of the poster edge. One negative margin if it should be
   ink-flush.
-- **The 300ms slide** on the phone's collection bar, and whether it returns too
-  eagerly on any upward movement.
+- **The poster wall behind `/sign-in`** — deferred on 10 August pending a
+  decision about what it should look like, not about whether to build it.
 
 ### Numbers that must move together
 
@@ -502,8 +509,9 @@ been fixed once. All are in `components/shell.tsx` unless noted.
 | | |
 |---|---|
 | `shadow-[0_0.5rem_...]` on the header ↔ the `0.5rem` in `main`'s `pt-[calc(…)]` | keeps the mark-to-poster distance identical scrolled and at rest |
-| `3.375rem` in `main`'s padding ↔ `MASTHEAD_GAP` + the mark's trimmed box + `MASTHEAD_GAP` | the header is `fixed`, so `main` holds its height open by hand |
-| `MARK_LINE_HEIGHT` / `MARK_TRIM_TOP` / `MARK_TRIM_BOTTOM` ↔ `--text-wordmark` and the typeface | measured, not derived; re-measure on any change to either |
+| `2.9375rem` in `main`'s padding ↔ `MASTHEAD_GAP` + the mark's trimmed box + `MASTHEAD_GAP` | the header is `fixed`, so `main` holds its height open by hand |
+| `MARK_LINE_HEIGHT` / `MARK_TRIM_TOP` / `MARK_TRIM_BOTTOM` ↔ `--text-wordmark`, the typeface **and the case** | measured, not derived; re-measure on any change to any of them — going to caps on 10 August moved `MARK_TRIM_BOTTOM` and the padding above |
+| `gap-[9px]` on `/sign-in` ↔ the same gap on `/reset-password` | the mark-and-tagline block reads the same on both, and the number is a consequence of the mark having no descender |
 | foot `left-[… + 17rem]` + inner `gutter max-w-3xl` ↔ `rail:pl-68` and `rail:max-w-3xl` on `main` | puts the search row's two edges on the posters' two edges |
 | foot `pb-9` ↔ rail `py-10` | 4px, so the search and *Sign out* share a baseline rather than a box edge |
 | `MIN_QUERY` ↔ the Zod schema in `app/api/search/route.ts` ↔ the guard in `lib/tmdb.ts` | the search floor lives in three files |

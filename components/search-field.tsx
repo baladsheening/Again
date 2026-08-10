@@ -6,7 +6,7 @@ import { CloseIcon } from './icon-close'
 import { useSearch } from './search-provider'
 
 /**
- * The search prompt: a caret waiting to be typed into, and the word itself.
+ * The search prompt: the word, and the field it names.
  *
  * **It has no results of its own.** Until 9 August this owned the query, the
  * fetch and a dropdown list beneath it; results now replace the poster wall
@@ -26,7 +26,7 @@ import { useSearch } from './search-provider'
  * pointing at whichever the browser found first.
  */
 export function SearchField({ id }: { id: string }) {
-  const { query, setQuery, setFocused, focused, clear } = useSearch()
+  const { query, setQuery, setFocused, clear } = useSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 
   return (
@@ -34,8 +34,7 @@ export function SearchField({ id }: { id: string }) {
       `-translate-y-px` is an optical correction, not a layout fix. The field is
       already centred mathematically against the chevron beside it; a lowercase
       word without descenders still reads about a pixel and a half low, because
-      the eye measures the x-height band and not the line box. Applied to the
-      caret and the field together so the two stay in step.
+      the eye measures the x-height band and not the line box.
     */
     /*
       `flex-1` is what puts the × on the right-hand edge. Without it the row
@@ -50,16 +49,32 @@ export function SearchField({ id }: { id: string }) {
       </label>
 
       {/*
-        A prompt, not a control. The caret blinks only while the field is empty
-        and unfocused: once it has focus the browser draws the real one, and two
-        carets in a row is a bug rather than an effect.
+        ─────────────────────────────────────────────────────────────────────
+         There was a caret here, and taking it out fixed two things (10 August)
+        ─────────────────────────────────────────────────────────────────────
+
+        A 1px element blinked at 1.06s while the field was empty and unfocused —
+        a prompt waiting to be typed into — and it unmounted on focus, so the
+        browser's real caret could take over without two appearing in a row.
+
+        Both halves of that were wrong, and they were the same fault seen twice:
+
+        **It blinked when nobody was in the field.** A blinking cursor means
+        *this is where your typing goes*, and it was making that claim at a field
+        the user had not touched — so the one moment it fell silent was the
+        moment it became true. Asked for on 10 August the right way round: the
+        cursor should blink when you tap in, and the browser already does that,
+        for free, in the platform's own rhythm.
+
+        **Unmounting it moved the word.** The span was 1px wide with 6px of the
+        row's `gap` beside it, so the placeholder and everything typed after it
+        jumped 7px left the instant the field took focus, and 7px back on blur.
+        A prompt that flinches when you tap it is the app twitching under your
+        finger.
+
+        Deleting it answers both, and there is nothing to replace it with: the
+        word "search" is the affordance, and the caret is the browser's.
       */}
-      {!focused && query.length === 0 && (
-        <span
-          aria-hidden
-          className="bg-muted animate-caret h-[1.1em] w-px shrink-0 self-center"
-        />
-      )}
 
       <input
         id={id}

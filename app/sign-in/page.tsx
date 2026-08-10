@@ -65,7 +65,29 @@ export default async function SignInPage() {
           direction rather than being pinned to the left. Nothing else in here
           uses a physical direction, so this stays correct under `dir="rtl"`.
         */}
-        <div className="flex flex-col gap-4 text-start">
+        {/*
+          `gap-[9px]`, where every other stack here uses the scale — and it is
+          the caps mark that made it odd (10 August).
+
+          The h1's box is 36px (`wordmark` sets `line-height: 1`), but the ink
+          inside it is not centred: the baseline lands 30px down, so `Again` used
+          to hang its `g` 2px *below* its own box and `AGAIN` stops 5px above it.
+          The gap the eye sees is the box gap plus that slack, so an unchanged
+          `gap-4` went from 14px of visible air to 21px the moment the descender
+          left — the tagline drifting away from the mark on both auth pages,
+          which is the whole of what changed on them.
+
+          9px puts it back to 14. **Spent here rather than on the h1**, and that
+          is the point: a negative margin on the mark would shorten the column,
+          and the column is centred by `my-auto` with two optical corrections
+          measured against its current height. Moving the gap changes what is
+          between two elements; moving the mark's box would quietly re-open
+          everything below.
+
+          ⚠ 14px is what was tuned by eye against a descender. A flat baseline
+          may want a little more — worth a look now the mark is in caps.
+        */}
+        <div className="flex flex-col gap-[9px] text-start">
           <h1 className="wordmark text-wordmark">Again</h1>
           {/*
             Holding this on one line is what set the stacked container to

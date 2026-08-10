@@ -108,16 +108,37 @@ const MASTHEAD_GAP = '0.625rem'
  * which means the descender **cannot** leave the element: overlap stops being a
  * measurement to get right and becomes impossible.
  *
- * That leaves dead space — a line box holds room for diacritics nothing in
- * "Again" uses. Measured with `TextMetrics.actualBoundingBox*` at 36px in Space
- * Grotesk: declared ascent 35 and descent 11, so a 46px content area, while the
- * ink runs 26px above the baseline and 8px below. That is **9px of nothing above
- * the letters and 3px below them**, which the negative margins remove, leaving an
- * element whose outer box is the inked bounds.
+ * That leaves dead space — a line box holds room for descenders and diacritics
+ * the mark does not use. Measured with `TextMetrics.actualBoundingBox*` at 36px
+ * in Space Grotesk: declared ascent 35 and descent 11, so a 46px content area.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Re-measured for the caps mark (10 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The mark is set in caps now (`wordmark` in globals.css), and the measurement
+ * that matters is the one that did **not** move:
+ *
+ * | | ink above baseline | ink below | inked height |
+ * |---|---|---|---|
+ * | `Again` | 26px | 8px (the `g`) | 34px |
+ * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | **27px** |
+ *
+ * The top is identical, because the tallest thing in "Again" was always the
+ * capital A. So the caps mark is not a smaller mark — it is the same mark with
+ * the descender gone, and every number that changes here is about the bottom.
+ *
+ * 1px, not 0: `G` is a round letter, and round letters are drawn a hair past the
+ * baseline so they do not read as short beside a flat one. Trimming it away
+ * would clip the curve.
+ *
+ * That leaves **9px of nothing above the letters and 10px below them**, which the
+ * negative margins remove, leaving an element whose outer box is the inked
+ * bounds. `MARK_LINE_HEIGHT` and `MARK_TRIM_TOP` are unchanged — they describe
+ * the typeface and the cap height, and neither moved.
  *
  * The numbers are the typeface's, so they were re-measured when the mark moved
- * from Ojuju to Space Grotesk. The inked height came out at 34px either way,
- * which is why the header's 3.375rem did not have to move with them.
+ * from Ojuju to Space Grotesk, and again when it went to caps.
  *
  * Everything is in `em`, so it is the mark's own size that scales it and no
  * custom property has to resolve for the layout to hold. Once the box is the
@@ -126,7 +147,8 @@ const MASTHEAD_GAP = '0.625rem'
  */
 const MARK_LINE_HEIGHT = 1.2778
 const MARK_TRIM_TOP = '-0.25em'
-const MARK_TRIM_BOTTOM = '-0.0833em'
+/** −10/36em. Was −0.0833 (−3px) while the mark had a `g` hanging out of it. */
+const MARK_TRIM_BOTTOM = '-0.2778em'
 
 
 export function Shell({
@@ -177,7 +199,13 @@ export function Shell({
     would take the field, the results and the keyboard's anchor with it, and the
     scroll that triggered it would often be the user reaching for a result.
   */
-  const { active: searchActive, focused: searchFocused, results, searching } = useSearch()
+  const {
+    active: searchActive,
+    focused: searchFocused,
+    results,
+    searching,
+    loadMore,
+  } = useSearch()
   const searchBusy = searchActive || searchFocused
 
   useEffect(() => {
@@ -423,27 +451,27 @@ export function Shell({
         lets both paddings be the same constant again.
 
         ─────────────────────────────────────────────────────────────────────
-        **The shadow is why a poster never reaches the descender.**
+        **The shadow is why a poster never reaches the mark.**
 
-        The header is `sticky`, so content passes under it and is cut off at its
-        bottom edge — which sits only `MASTHEAD_GAP` below the `g`. At rest the
-        first poster is 24px further down again, thanks to `pt-6` on `main`; the
-        moment you scroll, that 24px slides away and the cut edge arrives 10px
-        under the descender. The gap was never constant, it just looked it until
-        something moved.
+        The header is `fixed`, so content passes under it and is cut off at its
+        bottom edge — which sits only `MASTHEAD_GAP` below the letters. At rest
+        the first poster is another 0.5rem down again, from the `+ 0.5rem` in
+        `main`'s padding; the moment you scroll, that 8px slides away and the cut
+        edge arrives 10px under the mark. The gap was never constant, it just
+        looked it until something moved.
 
-        So the header paints 24px further than it measures: a hard-edged
+        So the header paints 8px further than it measures: a hard-edged
         box-shadow, offset down by exactly the distance `main` holds open, with
         no blur and no spread. It adds no height and joins no layout — it only
         extends the ground the mark sits on, so the cut edge lands where the
-        resting gap already was. The offset is `pt-6` on `main`: **the two must
-        stay equal**, and that is the whole trick — the distance from the
-        descender to the first poster is then the same number whether the page
-        is scrolled or not.
+        resting gap already was. **The `0.5rem` in this shadow and the `0.5rem`
+        in `main`'s padding must stay equal**, and that is the whole trick — the
+        distance from the mark to the first poster is then the same number
+        whether the page is scrolled or not.
 
         **A shadow rather than the `::after` this started as.** A positioned
         pseudo-element is painted *above* its parent's in-flow content, so if its
-        top edge lands even slightly high it covers the very descender it exists
+        top edge lands even slightly high it covers the very letters it exists
         to protect — which is exactly what happened. An outer box-shadow is
         painted *behind* the element's own background and text, so it cannot
         reach the mark however it is positioned. It also cannot swallow a tap,
@@ -711,16 +739,21 @@ export function Shell({
         **The top padding is the header plus the gap**, and it has to be, because
         the header is `fixed` and holds no space open itself.
 
-        `3.375rem` is the header, and it is not a guess — it is `MASTHEAD_GAP`
+        `2.9375rem` is the header, and it is not a guess — it is `MASTHEAD_GAP`
         above the mark, the mark's trimmed box, and `MASTHEAD_GAP` below it:
 
-          0.625rem  +  2.125rem  +  0.625rem  =  3.375rem
-          (10px)       (34px)       (10px)       (54px)
+          0.625rem  +  1.6875rem  +  0.625rem  =  2.9375rem
+          (10px)       (27px)        (10px)       (47px)
 
-        The 2.125rem is the mark after its trims, `(1.4167 − 0.4167 − 0.0556) ×
+        The 1.6875rem is the mark after its trims, `(1.2778 − 0.25 − 0.2778) ×
         36px`, and it is the one term that is a consequence rather than a
         decision — **if `--text-wordmark` or the trims move, this moves with
-        them.** Measured against the real header, which reports 54.00px.
+        them.** Measured against the real header, which reports 47.00px.
+
+        **It was 3.375rem until 10 August**, when the mark went to caps and its
+        inked box lost the `g`'s descender — 34px of ink became 27px. Nothing
+        about the spacing changed; the thing being spaced got shorter, and this
+        number is the only place that fact is written down.
 
         `1.5rem` is the gap, and it is the same 1.5rem as the header's shadow
         offset. Those two must stay equal: the shadow is what keeps the distance
@@ -770,7 +803,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_3.375rem_+_0.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:2rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_2.9375rem_+_0.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
@@ -791,11 +824,17 @@ export function Shell({
 
           `results` is empty until the query passes the provider's minimum, so a
           single character shows the page rather than an empty wall.
+
+          **It keeps going.** `onReachEnd` pulls the next twenty as the foot of
+          the wall approaches, up to TMDB's own ceiling of five hundred pages —
+          see `loadMore`. Only search pages: the cinema listing is what is on and
+          what is coming, which is a set rather than a stream.
         */}
         {searchActive ? (
           <PosterWall
             films={results}
             empty={searching ? 'Looking…' : 'Nothing by that name.'}
+            onReachEnd={loadMore}
           />
         ) : (
           children

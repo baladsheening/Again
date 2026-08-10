@@ -113,32 +113,17 @@
   */
   --breakpoint-rail: 45rem;
 
-  /**
-   * The caret in the bottom-bar search field, blinking while the field is empty
-   * and unfocused — a prompt waiting to be typed into rather than a control
-   * waiting to be found.
-   *
-   * `step-end` rather than a fade: a text caret has never eased in anywhere, and
-   * an easing one reads as a pulsing dot. 1.06s is the interval Windows and most
-   * terminals use, which is the reason to pick it — the eye already knows it.
-   *
-   * WCAG 2.2.2 governs blinking content and exempts a text cursor, which is what
-   * this is; it stops the moment the field is focused, because the real caret
-   * takes over and two would be a bug. Reduced motion is handled globally below:
-   * the animation is cut to one iteration of 0.01ms, so it settles static.
-   */
-  --animate-caret: caret-blink 1.06s step-end infinite;
+  /*
+    A `--animate-caret` lived here — a 1.06s step-end blink for a hand-drawn
+    caret in the search field, at the interval terminals use.
 
-  @keyframes caret-blink {
-    0%,
-    49% {
-      opacity: 1;
-    }
-    50%,
-    100% {
-      opacity: 0;
-    }
-  }
+    Removed 10 August with the element it animated. The blink ran while the
+    field was *unfocused*, which is the one time it was not true, and the span
+    unmounting on focus shifted the placeholder 7px. The browser's own caret
+    does the job correctly and costs nothing. See `components/search-field.tsx`
+    for the full argument, and docs/decisions.md for why the original was
+    defensible enough to have been built.
+  */
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
@@ -510,12 +495,31 @@
   font-family: var(--font-display);
   font-weight: 500;
   /*
-    No `text-transform`. It was `lowercase`, which rendered "again" from a JSX
-    string that has always said "Again" — the transform was there so the mark
-    could not drift between the two places it appears. Capitalised since
-    9 August, and the guarantee is unchanged: both call sites still render the
-    same string, they just render the one that was written.
+    **Set in caps, 10 August.** Directed — the mark reads AGAIN.
+
+    A transform rather than four JSX strings, and that is not laziness. The mark
+    appears in four places: the phone header, the rail, `/sign-in` and
+    `/reset-password`. Four literals is four things that can drift, which is why
+    this utility existed with `lowercase` in it before 9 August; one declaration
+    cannot.
+
+    It is also the accessible spelling. A screen reader announcing a five-letter
+    literal in caps may spell it — "A, G, A, I, N" — where a CSS transform leaves
+    the DOM text as "Again" and gets the app's name read as a word. The same
+    reason `<title>` and every mention in prose stay capitalised normally.
   */
-  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  /*
+    Positive, where the lowercase mark wanted −0.005em. Caps set at display size
+    are drawn on the assumption they will be tracked: the sidebearings of a
+    lowercase face are cut for x-height, and at 36px five capitals with no
+    tracking read as a word that has been squeezed. A little under a pixel per
+    gap at the header size, which is the smallest amount that reads as deliberate.
+
+    ⚠ Height is unaffected — this changes no trim below. It does add a trailing
+    space after the final N, which matters at exactly one call site: see the
+    centring note in `app/sign-in/page.tsx`.
+  */
+  letter-spacing: 0.03em;
   line-height: 1;
 }
