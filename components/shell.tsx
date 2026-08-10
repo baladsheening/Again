@@ -210,7 +210,7 @@ export function Shell({
   const searchBusy = searchActive || searchFocused
 
   /* Keeps the bar on top of the keyboard rather than behind it — see below. */
-  const keyboardInset = useKeyboardInset()
+  const keyboardInset = useKeyboardInset(searchFocused)
 
   useEffect(() => {
     if (!showCollections || searchBusy) return
@@ -670,6 +670,34 @@ export function Shell({
           inside the 42px, but if a label is ever added it grows rather than
           cutting one off.
         */}
+        {/*
+          The ground under the bar, and the reason a gap cannot appear.
+
+          The keyboard animates in over about 250ms; `visualViewport` reports the
+          new height in bursts that lag it. Chasing that with easing is a losing
+          game — whatever duration is picked is wrong on the next iOS release, on
+          a slower device, and on a hardware keyboard — so the lag is not what
+          gets fixed here. **What gets fixed is that the lag is visible.**
+
+          This extends the bar's own background a full screen below it. Whatever
+          the bar has not caught up to yet is painted in the page ground rather
+          than showing the poster wall through it, so the bar appears to sit on
+          the keyboard from the first frame and simply gets shorter as the
+          keyboard arrives. It also covers the reverse case, where the keyboard
+          retracts faster than the bar drops.
+
+          At rest it is entirely below the fold and paints nothing. `h-screen`
+          rather than `h-svh`: this wants the largest the gap could ever be, not
+          the smallest.
+
+          `pointer-events-none` — it is a foot of black over the keyboard's own
+          area, and it must never take a tap meant for a key.
+        */}
+        <div
+          aria-hidden
+          className="bg-bg pointer-events-none absolute inset-x-0 top-full h-screen"
+        />
+
         <div className="gutter flex min-h-10.5 items-center gap-2">
           {/*
             The one control that is always there. It points right at a field
@@ -881,21 +909,38 @@ export function Shell({
  * a fixed bar sits behind the keyboard and shifts around as the visual viewport
  * is scrolled.
  *
- * The difference between the two viewports is exactly the keyboard, which is why
- * this needs no platform check and no keyboard-height guess: where
- * `resizes-content` works, the two agree and this returns 0.
+ * **`focused` is not an optimisation, it is the whole correctness condition.**
+ * The gap between the two viewports is not only ever the keyboard: iOS collapses
+ * and expands its own toolbar as you scroll, and rubber-banding at either end
+ * moves `offsetTop`. Measured unconditionally, an ordinary scroll with no
+ * keyboard anywhere reads as several hundred pixels of inset, and the bar rides
+ * up the screen and settles back — which is exactly what it did.
+ *
+ * A keyboard cannot be open unless something has focus, so gating on focus
+ * removes every one of those cases without having to tell them apart. No
+ * platform check either: where `resizes-content` works, the two viewports agree
+ * and this returns 0.
  */
-function useKeyboardInset() {
+function useKeyboardInset(focused: boolean) {
   const [inset, setInset] = useState(0)
 
   useEffect(() => {
+    if (!focused) return
+
     const vv = window.visualViewport
     if (!vv) return
 
+    let frame = 0
     const update = () => {
-      const covered = window.innerHeight - vv.height - vv.offsetTop
-      // Sub-pixel noise is constant on iOS; 1px of it is not a keyboard.
-      setInset(covered > 1 ? covered : 0)
+      // Coalesced into a frame: iOS emits these in bursts while the keyboard
+      // animates, and each one would otherwise be a render.
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        const covered = window.innerHeight - vv.height - vv.offsetTop
+        // Sub-pixel noise is constant on iOS; 1px of it is not a keyboard.
+        setInset(covered > 1 ? covered : 0)
+      })
     }
 
     update()
@@ -904,10 +949,16 @@ function useKeyboardInset() {
     return () => {
       vv.removeEventListener('resize', update)
       vv.removeEventListener('scroll', update)
+      if (frame) cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [focused])
 
-  return inset
+  /*
+    Zeroed on the way out by deriving rather than by resetting the state in the
+    effect — the last measurement is stale the moment focus goes, and a blurred
+    field means the keyboard is closing whatever the viewport last reported.
+  */
+  return focused ? inset : 0
 }
 
 /**
