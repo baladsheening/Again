@@ -56,7 +56,15 @@ const eslintConfig = defineConfig([
   },
 
   {
-    name: 'again/vocabulary',
+    /**
+     * Two unrelated bans, in one block because they have to be.
+     *
+     * `no-restricted-syntax` takes one options array, and a later flat-config
+     * object *replaces* an earlier one's options rather than merging them — so
+     * a second block adding the style rule would silently switch the vocabulary
+     * rule off for every file both blocks covered. One block, two selectors.
+     */
+    name: 'again/restricted-syntax',
     files: ['app/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}'],
     ignores: ['lib/vocabulary.ts', 'eslint.config.mjs'],
     rules: {
@@ -66,6 +74,32 @@ const eslintConfig = defineConfig([
           selector: `Identifier[name=${BANNED_VOCABULARY}]`,
           message:
             'Banned vocabulary (§4). Never use: recommendation, review, rating, score, favourite, saved, bookmark, feed.',
+        },
+        /**
+         * **A `style` attribute does not survive the CSP, and fails only in
+         * production.**
+         *
+         * `proxy.ts` sets `style-src 'self' 'nonce-…'` with no `unsafe-inline`
+         * (§10). A nonce whitelists a `<style>` element; there is nowhere on an
+         * *attribute* to put one, so the browser drops every server-rendered
+         * `style="…"`. `next dev` adds `unsafe-inline`, so the failure is
+         * invisible until it is deployed — which is how the masthead shipped
+         * without its safe-area padding and the wordmark without its trims
+         * (found 10 August).
+         *
+         * Use a class: Tailwind's arbitrary values cover `pt-[calc(…)]` and its
+         * arbitrary *properties* cover `[--safe-bottom-base:3rem]`, both of
+         * which compile to real stylesheet rules. Anything with a name worth
+         * reading belongs in `app/globals.css` as a `@utility`.
+         *
+         * ⚠ This bans the attribute, not the CSSOM. `el.style.transform = …`
+         * from an effect is unaffected — CSP governs attribute parsing — and
+         * `useKeyboardPin` in `components/shell.tsx` depends on that.
+         */
+        {
+          selector: 'JSXAttribute[name.name="style"]',
+          message:
+            'Inline style attributes are blocked by the CSP in production and nowhere else (§10). Use a class — Tailwind arbitrary values and arbitrary properties both compile to real rules. See app/globals.css.',
         },
       ],
     },

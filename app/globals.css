@@ -210,6 +210,29 @@
     consumer: the rail counts take the size without the uppercasing.
   */
   --text-micro: 0.6875rem;
+
+  /**
+   * The air above and below the wordmark in the phone header — the *visible*
+   * air, measured to the letters rather than to the box they sit in.
+   *
+   * One token rather than two matching literals, because two numbers that have
+   * to stay equal eventually will not: this pair was 16px and 48px before
+   * 9 August, and nothing in the code said they were meant to be related.
+   *
+   * The notch inset is added to the top separately, at the point of use. That is
+   * clearance, not spacing, and counting it as spacing is what makes a mark
+   * drift down the screen by however much inset a given device reports.
+   *
+   * 10px rather than 8: measured in a browser, the trims below land the visible
+   * gaps within 0.2px of this number at both ends, so it is the gap rather than
+   * an approximation of it, and 8 was tight enough that any remaining error
+   * showed up as a collision.
+   *
+   * **It lives here rather than in `components/shell.tsx`, and that is a
+   * Content-Security-Policy constraint, not a preference** — see the note on
+   * `wordmark-trim` below.
+   */
+  --masthead-gap: 0.625rem;
 }
 
 @layer base {
@@ -523,4 +546,83 @@
   */
   letter-spacing: -0.005em;
   line-height: 1;
+}
+
+/**
+ * The wordmark's own box, in the phone header, corrected so that it *is* the
+ * letters.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why this is CSS and not an inline style (10 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * These three declarations were `style={{ … }}` on the mark in
+ * `components/shell.tsx`, built from JS constants. **They were being dropped in
+ * production and nowhere else.** The CSP in `proxy.ts` sets `style-src 'self'
+ * 'nonce-…'` with no `unsafe-inline`, and a nonce cannot whitelist a style
+ * *attribute* — there is nowhere on an attribute to put one. So every
+ * server-rendered `style="…"` in this app was blocked by the browser on the
+ * deployed site, while `next dev` (which adds `unsafe-inline`) showed it
+ * working. Confirmed by building and reading the HTML: `style="…"` is in the
+ * markup, and the header allows no attribute styles.
+ *
+ * ⚠ **Nothing may render a `style` attribute.** `no-restricted-syntax` in
+ * `eslint.config.mjs` enforces it. Writing `el.style.x` from JS is unaffected —
+ * CSP governs the parsing of attributes, not the CSSOM — which is what
+ * `useKeyboardPin` relies on.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why the box is trimmed at all (9 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * `wordmark` sets `line-height: 1`, which gives a 36px box to type whose content
+ * area is 1.4167em — 51px. The ink therefore hangs 7.5px *below* the box, and
+ * the posters kept meeting the `g`. Two attempts fixed that by padding the
+ * header to compensate, and both were a number in one place describing a fact
+ * about a font in another.
+ *
+ * So the box is made honest instead. `line-height` is set to the content area,
+ * which means the descender **cannot** leave the element: overlap stops being a
+ * measurement to get right and becomes impossible.
+ *
+ * That leaves dead space — a line box holds room for descenders and diacritics
+ * the mark does not use. Measured with `TextMetrics.actualBoundingBox*` at 36px
+ * in Space Grotesk: declared ascent 35 and descent 11, so a 46px content area.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Re-measured through two changes of case (10 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The mark went to caps and back to lower case the same day, and measuring all
+ * three cases is what makes the next change of mind a two-line edit:
+ *
+ * | | ink above baseline | ink below | inked height |
+ * |---|---|---|---|
+ * | `again` (**current**) | 26px | 8px (the `g`) | 34px |
+ * | `Again` | 26px | 8px | 34px |
+ * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | 27px |
+ *
+ * **Lower case and capitalised measure the same**, which is why going back to
+ * `again` restored the numbers this project had before the caps pass rather than
+ * needing new ones: the `g` sets the bottom either way, and the top is 26px in
+ * all three — the dot of the `i` reaches as high as the capital A does.
+ *
+ * Only caps differ, and only at the bottom. If the mark ever goes back to them,
+ * `margin-bottom` is −0.2778em and `main`'s padding in `components/shell.tsx`
+ * is 2.9375rem.
+ *
+ * That leaves **9px of nothing above the letters and 3px below them**, which the
+ * negative margins remove, leaving an element whose outer box is the inked
+ * bounds. The line-height and the top trim have not moved through any of it —
+ * they describe the typeface and a height the case does not change. The bottom
+ * trim is −3/36em: the `g` hangs 8px below the baseline and the box holds 11.
+ *
+ * Everything is in `em`, so it is the mark's own size that scales it. Once the
+ * box is the letters, the header's padding is plain `--masthead-gap` on both
+ * sides and means what it says.
+ */
+@utility wordmark-trim {
+  line-height: 1.2778;
+  margin-top: -0.25em;
+  margin-bottom: -0.0833em;
 }

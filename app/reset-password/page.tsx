@@ -20,10 +20,12 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
   const token = typeof params.token === 'string' ? params.token : null
 
   return (
-    <main
-      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12"
-      style={{ '--safe-bottom-base': '3rem' } as React.CSSProperties}
-    >
+    /*
+      An arbitrary property class, not a `style` attribute — the CSP allows no
+      inline styles, so the attribute version was dropped in production only.
+      See the note on `wordmark-trim` in globals.css.
+    */
+    <main className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12 [--safe-bottom-base:3rem]">
       {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
       <div className="my-auto flex w-full flex-col gap-7">
         {/* `gap-4` holds 14px of visible air, because the mark's `g` hangs 2px

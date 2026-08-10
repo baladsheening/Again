@@ -20,13 +20,18 @@ export default async function SignInPage() {
       // Mirroring the inset on top keeps the centring box symmetric on every
       // device. It replaces `py-12`, whose only remaining job was this 3rem top;
       // one declaration per edge now, and no override to reason about.
-      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))]"
-      // 3rem, matching /onboarding and /reset-password. This was briefly 4rem, to
-      // lift the fields to the midline; the extra rem worked on a laptop and
-      // overshot on any phone with an indicator, because it was correcting a
+      //
+      // The `3rem` base matches /onboarding and /reset-password. It was briefly
+      // 4rem, to lift the fields to the midline; the extra rem worked on a laptop
+      // and overshot on any phone with an indicator, because it was correcting a
       // fixed imbalance with a device-variable property. The correction moved to
       // the block below, where it belongs.
-      style={{ '--safe-bottom-base': '3rem' } as React.CSSProperties}
+      //
+      // ⚠ An arbitrary *property* class rather than the `style` attribute this
+      // was, and that is not cosmetic: the CSP in proxy.ts allows no inline style
+      // attributes, so this declaration was being dropped in production and
+      // nowhere else. See the note on `wordmark-trim` in globals.css.
+      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col [--safe-bottom-base:3rem] pt-[calc(3rem+env(safe-area-inset-bottom))]"
     >
       {/*
         `my-auto`, not `justify-center` on the parent. When a phone keyboard

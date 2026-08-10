@@ -13,6 +13,28 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   const isDev = process.env.NODE_ENV === 'development'
 
+  /*
+    ⚠ **`style-src`'s nonce does not cover `style="…"` attributes, and nothing
+    can.** A nonce is an attribute on a `<style>` element; a style *attribute*
+    has nowhere to carry one, so this policy drops every inline style the server
+    renders — while `next dev`'s `unsafe-inline` renders them fine. That
+    divergence shipped a masthead with no safe-area padding and a wordmark with
+    no trims, and neither was visible outside production (found 10 August).
+
+    Nothing in the app renders a `style` attribute now; `no-restricted-syntax` in
+    eslint.config.mjs enforces it, and the values that used to live in one are in
+    app/globals.css. Writing `el.style.x` from an effect is a different thing and
+    stays allowed — CSP governs the parsing of attributes, not the CSSOM.
+
+    So the style nonce buys nothing today: the app ships one linked stylesheet
+    and no `<style>` elements. It stays because the cost is a base64 string, and
+    the alternative — `'self'` alone — quietly permits the first inline `<style>`
+    anything adds.
+
+    Do not "fix" a blocked style by adding `style-src-attr 'unsafe-inline'`. It
+    would work, and it would re-open every inline style in the app to anything
+    that can inject an attribute. Move the declaration into globals.css instead.
+  */
   const csp = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''};
