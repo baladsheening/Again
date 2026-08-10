@@ -50,6 +50,16 @@ if (!set('RESEND_API_KEY')) {
   )
 }
 
+if (!set('TMDB_READ_ACCESS_TOKEN')) {
+  failures.push(
+    'No TMDB_READ_ACCESS_TOKEN. Search and the cinema wall are both this key, ' +
+      'so the app deploys, signs people in and then cannot find a single film. ' +
+      'It is optional in lib/env.ts on purpose — the schema is phase-gated so a ' +
+      'partial .env.local still boots — which makes this the only place the ' +
+      'requirement is stated.',
+  )
+}
+
 const authUrl = process.env.BETTER_AUTH_URL?.trim()
 if (!authUrl) {
   failures.push('BETTER_AUTH_URL is unset.')
