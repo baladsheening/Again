@@ -209,6 +209,9 @@ export function Shell({
   } = useSearch()
   const searchBusy = searchActive || searchFocused
 
+  /* Keeps the bar on top of the keyboard rather than behind it — see below. */
+  const keyboardInset = useKeyboardInset()
+
   useEffect(() => {
     if (!showCollections || searchBusy) return
 
@@ -617,6 +620,28 @@ export function Shell({
         className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
+        /*
+          Lifted to sit on top of the keyboard, and held there.
+
+          `transform` composes with the `translate-y-full` above rather than
+          fighting it — Tailwind v4 writes that to the separate `translate`
+          property, and individual transform properties apply before `transform`.
+
+          **No transition while the keyboard is up.** `transition-transform`
+          covers both properties, and 300ms of easing against a keyboard that
+          animates in 250 leaves the bar chasing it up the screen. The slide the
+          transition exists for cannot happen here anyway: the bar stops
+          receding while search is in use.
+
+          The safe-area padding comes off at the same time. That inset clears the
+          home indicator, and the keyboard is already covering it — leaving it in
+          parks the bar a thumb's width above the keys instead of on them.
+        */
+        style={{
+          transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined,
+          transitionProperty: keyboardInset ? 'none' : undefined,
+          paddingBottom: keyboardInset ? 0 : undefined,
+        }}
       >
         {/*
           The row is a fixed 42px, and neither state is allowed to set it.
@@ -844,6 +869,45 @@ export function Shell({
       </main>
     </div>
   )
+}
+
+/**
+ * How much of the layout viewport an open keyboard is covering.
+ *
+ * `interactiveWidget: 'resizes-content'` (app/layout.tsx) is supposed to make
+ * this unnecessary, and on Android it does — the layout viewport shrinks, so
+ * `bottom-0` already sits above the keyboard. **iOS Safari ignores it.** There
+ * `innerHeight` stays the full screen and only the *visual* viewport shrinks, so
+ * a fixed bar sits behind the keyboard and shifts around as the visual viewport
+ * is scrolled.
+ *
+ * The difference between the two viewports is exactly the keyboard, which is why
+ * this needs no platform check and no keyboard-height guess: where
+ * `resizes-content` works, the two agree and this returns 0.
+ */
+function useKeyboardInset() {
+  const [inset, setInset] = useState(0)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+
+    const update = () => {
+      const covered = window.innerHeight - vv.height - vv.offsetTop
+      // Sub-pixel noise is constant on iOS; 1px of it is not a keyboard.
+      setInset(covered > 1 ? covered : 0)
+    }
+
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [])
+
+  return inset
 }
 
 /**
