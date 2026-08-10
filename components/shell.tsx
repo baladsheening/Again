@@ -69,21 +69,27 @@ const SCROLL_THRESHOLD = 8
 const ALWAYS_SHOWN_ABOVE = 32
 
 /**
- * How long after the viewport changes size to stop believing the scroll
+ * How long after the keyboard opens or closes to stop believing the scroll
  * position.
  *
- * A keyboard opening is not a scroll, but it produces one: the layout viewport
- * shrinks, and the browser scrolls the focused field into view on top of that.
- * Both land as `scroll` events with a positive delta, which is indistinguishable
- * from a downward flick — so tapping the field opened the keyboard and hid the
- * bar in the same gesture.
+ * A keyboard opening is not a scroll, but it produces one: the viewport
+ * changes size and the browser scrolls the focused field into view. Both land
+ * as `scroll` events with a positive delta, indistinguishable from a downward
+ * flick — so tapping the field opened the keyboard and hid the bar in the same
+ * gesture.
  *
- * Long enough to cover the keyboard's own animation and the scroll that follows
- * it. The cost is that a flick within half a second of the keyboard appearing
- * will not recede the bar, which is a fair trade against the bar vanishing the
- * moment it is touched.
+ * ⚠ **Timed from focus, never from a viewport resize.** The first version of
+ * this listened for `visualViewport` resize, on the reasoning that a keyboard
+ * is a viewport change. So is Safari's own toolbar collapsing, which happens
+ * *continuously while you scroll* — so every scroll re-armed this window and
+ * snapped the bar back, which cancelled the receding it was meant to protect.
+ * Focus changes exactly when a keyboard opens or closes and at no other time.
+ *
+ * Long enough to cover the keyboard's animation and the scroll that follows it.
+ * The cost is that a flick within half a second of tapping the field will not
+ * recede the bar.
  */
-const VIEWPORT_SETTLE_MS = 500
+const KEYBOARD_SETTLE_MS = 500
 
 /**
  * The air above and below the wordmark on a phone — the *visible* air, measured
@@ -239,7 +245,14 @@ export function Shell({
 
     let last = window.scrollY
     let frame = 0
-    let settleUntil = 0
+
+    /*
+      Armed here rather than by a listener, because the thing that arms it is
+      this effect re-running: `searchFocused` is in the dependencies, so a
+      keyboard opening or closing re-enters exactly once, with the baseline
+      taken fresh and the window started. Nothing else can trigger it.
+    */
+    const settleUntil = performance.now() + KEYBOARD_SETTLE_MS
 
     const onScroll = () => {
       if (frame) return
@@ -268,27 +281,12 @@ export function Shell({
       })
     }
 
-    /*
-      A keyboard arriving or leaving. The bar is shown outright rather than
-      merely left as it was: this is the one moment the field is certain to be
-      wanted, and it is the moment the page is least trustworthy.
-    */
-    const onViewportChange = () => {
-      settleUntil = performance.now() + VIEWPORT_SETTLE_MS
-      last = window.scrollY
-      setCollectionsHidden(false)
-    }
-
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onViewportChange)
-    window.visualViewport?.addEventListener('resize', onViewportChange)
     return () => {
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onViewportChange)
-      window.visualViewport?.removeEventListener('resize', onViewportChange)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [showCollections])
+  }, [showCollections, searchFocused])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
@@ -1002,10 +1000,19 @@ function useKeyboardPin(focused: boolean, ref: React.RefObject<HTMLElement | nul
     apply()
     vv.addEventListener('resize', apply)
     vv.addEventListener('scroll', apply)
+    /*
+      The document's own scroll as well as the visual viewport's. Which of the
+      two moves depends on where the page is and what iOS decides to do with the
+      keyboard up, and a missed event leaves the bar behind — so both are
+      watched rather than guessing which one fires. It costs one style write per
+      event and no render, because nothing here goes through React.
+    */
+    window.addEventListener('scroll', apply, { passive: true })
 
     return () => {
       vv.removeEventListener('resize', apply)
       vv.removeEventListener('scroll', apply)
+      window.removeEventListener('scroll', apply)
       el.style.transform = ''
       el.style.paddingBottom = ''
     }
