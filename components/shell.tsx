@@ -194,23 +194,21 @@ export function Shell({
   */
   const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
 
-  /*
-    True while the search field is focused or has something in it. The bar is
-    pinned in place for as long as that holds — a bar that slid away mid-search
-    would take the field, the results and the keyboard's anchor with it, and the
-    scroll that triggered it would often be the user reaching for a result.
-  */
-  const {
-    active: searchActive,
-    focused: searchFocused,
-    results,
-    searching,
-    loadMore,
-  } = useSearch()
-  const searchBusy = searchActive || searchFocused
+  const { active: searchActive, results, searching, loadMore } = useSearch()
 
+  /*
+    The bar recedes on every screen, search included.
+
+    It used to freeze while search was in use, on the reasoning that a bar
+    sliding away mid-search would take the field and the results' anchor with
+    it. Directed otherwise on 10 August, and the new answer is better: with the
+    keyboard up, the bar and the keys together take half the screen, and
+    scrolling a wall of results is exactly when that half is wanted back. It
+    returns on the first upward movement, so the field is never more than a
+    flick away.
+  */
   useEffect(() => {
-    if (!showCollections || searchBusy) return
+    if (!showCollections) return
 
     let last = window.scrollY
     let frame = 0
@@ -234,7 +232,7 @@ export function Shell({
       window.removeEventListener('scroll', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [showCollections, searchBusy])
+  }, [showCollections])
 
   /*
     There is deliberately no effect resetting this on navigation. Moving to
