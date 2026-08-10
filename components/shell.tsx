@@ -196,6 +196,25 @@ export function Shell({
   const collectionsHidden = receded.route === pathname && receded.hidden
 
   /*
+    Focus arrives before React's effect can re-arm the keyboard settle window.
+    Keep that first window synchronous, so the browser's own scroll-to-reveal
+    cannot be mistaken for a deliberate downward scroll.
+  */
+  const keyboardOpeningRef = useRef(false)
+  const keyboardFocusAtRef = useRef(0)
+
+  function onDockFocus(event: React.FocusEvent<HTMLElement>) {
+    if (!(event.target instanceof HTMLInputElement)) return
+    keyboardOpeningRef.current = true
+    keyboardFocusAtRef.current = performance.now()
+    setReceded({ route: pathname, hidden: false })
+  }
+
+  function onDockBlur(event: React.FocusEvent<HTMLElement>) {
+    if (event.target instanceof HTMLInputElement) keyboardOpeningRef.current = false
+  }
+
+  /*
     Which of the two things the bar is holding. Search is the default: on a phone
     it is the only route to the field, and adding is what the app is for.
   */
@@ -288,6 +307,20 @@ export function Shell({
       frame = requestAnimationFrame(() => {
         frame = 0
         const y = Math.max(0, scroller.scrollTop)
+        const now = performance.now()
+
+        /*
+          This ref is set by the focus event itself, before the effect keyed by
+          `searchFocused` can run. It closes the race between focus and the
+          keyboard's scroll-to-reveal event.
+        */
+        if (keyboardOpeningRef.current) {
+          if (now < Math.max(settleUntil, keyboardFocusAtRef.current + KEYBOARD_SETTLE_MS)) {
+            last = y
+            return
+          }
+          keyboardOpeningRef.current = false
+        }
 
         /*
           Follow the page without reacting to it. Everything the keyboard moves
@@ -296,7 +329,7 @@ export function Shell({
           after is measured from where the page actually is, rather than from
           wherever it was before the keyboard shoved it.
         */
-        if (performance.now() < settleUntil) {
+        if (now < settleUntil) {
           last = y
           return
         }
@@ -570,6 +603,8 @@ export function Shell({
       */}
       <div
         ref={railRef}
+        onFocusCapture={onDockFocus}
+        onBlurCapture={onDockBlur}
         className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
       >
         <div className="bg-bg pointer-events-auto pt-6 pb-9">
@@ -778,6 +813,8 @@ export function Shell({
       <nav
         ref={barRef}
         aria-label="Main"
+        onFocusCapture={onDockFocus}
+        onBlurCapture={onDockBlur}
         /*
           `transition-[translate]`, not `transition-transform`. Two things move
           this element: the recede slide writes `translate` and wants its 300ms,
