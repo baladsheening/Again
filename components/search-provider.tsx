@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { createContext, use, useCallback, useEffect, useRef, useState } from 'react'
 
 import type { FilmSearchResult } from '@/lib/domain'
@@ -107,6 +108,11 @@ type SearchState = {
    * page failed underneath a wall that is still worth looking at.
    */
   failure: SearchFailure | null
+  /**
+   * Seconds until a rate limit lifts, straight off the route's `Retry-After`.
+   * `null` for every other failure, and for a limiter that did not say.
+   */
+  retryAfter: number | null
   /** Whether TMDB has another page of matches for what is currently loaded. */
   hasMore: boolean
   /** Fetch the next page and append it. Safe to call repeatedly; guards itself. */
@@ -127,7 +133,10 @@ export function useSearch() {
   return ctx
 }
 
-type PageResult = { ok: true; page: SearchPage } | { ok: false; failure: SearchFailure }
+type PageResult =
+  | { ok: true; page: SearchPage }
+  /** `retryAfter` is seconds, and only ever set on a rate limit. */
+  | { ok: false; failure: SearchFailure; retryAfter: number | null }
 
 /**
  * One page from our own proxy, with the reason attached when there is not one.
@@ -146,7 +155,7 @@ async function fetchPage(q: string, page: number, signal?: AbortSignal): Promise
   } catch (cause) {
     if (signal?.aborted) throw cause
     // Offline, DNS, a dropped connection: nothing came back to read a status off.
-    return { ok: false, failure: 'unavailable' }
+    return { ok: false, failure: 'unavailable', retryAfter: null }
   }
 
   if (res.ok) {
@@ -154,15 +163,30 @@ async function fetchPage(q: string, page: number, signal?: AbortSignal): Promise
       return { ok: true, page: (await res.json()) as SearchPage }
     } catch {
       // A 200 whose body did not parse is the upstream being wrong, not empty.
-      return { ok: false, failure: 'unavailable' }
+      return { ok: false, failure: 'unavailable', retryAfter: null }
     }
   }
 
   // The three the route can return — see app/api/search/route.ts. Anything else
   // is ours and unexpected, and reads the same way to the person searching.
-  if (res.status === 429) return { ok: false, failure: 'rate-limited' }
-  if (res.status === 401) return { ok: false, failure: 'signed-out' }
-  return { ok: false, failure: 'unavailable' }
+  if (res.status === 429) {
+    /*
+      The route sends `Retry-After` and there is no reason to paraphrase it. "Give
+      it a moment" is a guess in front of a number we were handed; the number is
+      also the difference between waiting and pressing the button repeatedly,
+      which is what someone does when told to wait an unspecified while.
+
+      **Read, not obeyed.** Nothing here schedules an automatic retry: a limiter
+      that is refusing requests is the last thing that should be sent more of
+      them on a timer, and every attempt after this one is now a deliberate press
+      by someone who has been told how long it will be.
+    */
+    const header = Number(res.headers.get('Retry-After'))
+    const retryAfter = Number.isFinite(header) && header > 0 ? Math.ceil(header) : null
+    return { ok: false, failure: 'rate-limited', retryAfter }
+  }
+  if (res.status === 401) return { ok: false, failure: 'signed-out', retryAfter: null }
+  return { ok: false, failure: 'unavailable', retryAfter: null }
 }
 
 export function SearchProvider({ children }: { children: React.ReactNode }) {
@@ -195,13 +219,46 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     q: string
     attempt: number
     reason: SearchFailure
+    retryAfter: number | null
   } | null>(null)
+
+  /*
+    A search belongs to the route it was run from.
+
+    Without this, tapping *Archive* with `batman` still in the field left the same
+    wall of results on screen — the tap did nothing visible, which reads as a
+    dropped tap rather than as a search that outlived its page. The wall replacing
+    the content of *every* route is deliberate (see the note at its use site) and
+    this is not a retreat from it: running a search from anywhere is one thing,
+    and having one follow you somewhere you deliberately navigated is another.
+
+    **Adjusted during render rather than in an effect**, which is React's own
+    prescription for state that has to follow a prop. An effect would render the
+    new route once with the old results still up and clear them on the frame
+    after, which is the flash this exists to prevent.
+  */
+  const pathname = usePathname()
+  const [routeOfQuery, setRouteOfQuery] = useState(pathname)
+  if (routeOfQuery !== pathname) {
+    setRouteOfQuery(pathname)
+    setQuery('')
+    setLoaded(NOTHING)
+    setSearching(false)
+    setFailed(null)
+    /*
+      No `generation` bump here — it is declared below, and it does not need one.
+      Emptying the field re-runs the request effect, whose cleanup aborts the
+      flight in progress and whose body increments the counter. Nothing can paint
+      in between, because `active` is already false by then.
+    */
+  }
 
   const trimmed = query.trim()
   const active = trimmed.length >= MIN_QUERY
 
   const failure =
     failed && failed.q === trimmed && failed.attempt === attempt ? failed.reason : null
+  const retryAfter = failure === 'rate-limited' ? (failed?.retryAfter ?? null) : null
 
   /**
    * Every query typed this session, with however many pages of it were pulled.
@@ -249,8 +306,16 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
    * A ref rather than state because it is read and written in the same tick that
    * the guard has to hold for, and a state update is not visible until the next
    * render — which is the whole distance the fault lived in.
+   *
+   * **It holds the generation it belongs to, not a boolean.** A plain flag is
+   * raised by one query and lowered by whoever finishes last, so page 2 of
+   * `batman` still in flight when the field moves to `batmanx` refused the new
+   * query its second page — and, having been lowered by the stale reply, would
+   * then have let a duplicate through. Stamped, it blocks only a request from
+   * the generation that is current, and a straggler cannot clear a token that is
+   * no longer its own.
    */
-  const loadingMore = useRef(false)
+  const loadingMore = useRef<number | null>(null)
 
   /*
     Back to the top, because a new query is a new wall.
@@ -318,7 +383,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
           the failure carries is what gets shown instead of a count of zero.
         */
         if (!result.ok) {
-          setFailed({ q: trimmed, attempt, reason: result.failure })
+          setFailed({ q: trimmed, attempt, reason: result.failure, retryAfter: result.retryAfter })
           return
         }
 
@@ -362,10 +427,10 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
       while a request is in the air, and every guard built on it was a guard the
       next render walked straight through.
     */
-    if (!hasMore || searching || loadingMore.current) return
-    loadingMore.current = true
-
     const gen = generation.current
+    if (!hasMore || searching || loadingMore.current === gen) return
+    loadingMore.current = gen
+
     const q = loaded.q
     const next = loaded.page + 1
 
@@ -382,7 +447,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
           retry the shell puts under the wall.
         */
         if (!result.ok) {
-          setFailed({ q, attempt, reason: result.failure })
+          setFailed({ q, attempt, reason: result.failure, retryAfter: result.retryAfter })
           return
         }
 
@@ -414,9 +479,11 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
         /*
           Cleared before the render this function's own `setLoaded` schedules, so
           the wall asking for the page after this one is never turned away by a
-          flag belonging to a request that has already landed.
+          token belonging to a request that has already landed — and only if the
+          token is still this request's, so a straggler from a query nobody is
+          looking at cannot unlock the one they are.
         */
-        loadingMore.current = false
+        if (loadingMore.current === gen) loadingMore.current = null
       }
     })()
   }, [hasMore, searching, loaded.q, loaded.page, attempt])
@@ -434,7 +501,17 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
    */
   const retry = useCallback(() => {
     setAttempt((n) => n + 1)
-    if (loaded.q === trimmed && loaded.results.length > 0) loadMore()
+    if (loaded.q === trimmed && loaded.results.length > 0) {
+      loadMore()
+      return
+    }
+    /*
+      Nothing worth holding. What is in `loaded` answers a question that is no
+      longer being asked — clearing the notice would otherwise put those posters
+      back up for one round trip, which is the thing suppressing them on failure
+      was for. *Looking…* is the honest state while a retry is out.
+    */
+    setLoaded(NOTHING)
   }, [loadMore, loaded.q, loaded.results.length, trimmed])
 
   const clear = useCallback(() => {
@@ -464,14 +541,21 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
           nothing while a new one is in flight — the wall holds what it has until
           it has something better, so typing another letter never blanks the
           screen and then fills it again.
+
+          **But holding stops the moment the new request fails.** `batman`'s
+          posters under a field reading `batmanx` and a notice saying the search
+          did not work is three things on one screen that contradict each other,
+          and only the notice is true. Holding is right while an answer is coming;
+          it is a lie once one is not.
         */
-        results: active ? loaded.results : [],
+        results: active && (loaded.q === trimmed || !failure) ? loaded.results : [],
         searching,
         /*
           Below the minimum there is nothing being asked, so there is nothing
           that can have gone wrong — the same reasoning as `results` above.
         */
         failure: active ? failure : null,
+        retryAfter,
         hasMore,
         loadMore,
         retry,
