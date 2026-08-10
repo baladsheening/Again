@@ -909,17 +909,14 @@ export function Shell({
  * a fixed bar sits behind the keyboard and shifts around as the visual viewport
  * is scrolled.
  *
- * **`focused` is not an optimisation, it is the whole correctness condition.**
- * The gap between the two viewports is not only ever the keyboard: iOS collapses
- * and expands its own toolbar as you scroll, and rubber-banding at either end
- * moves `offsetTop`. Measured unconditionally, an ordinary scroll with no
- * keyboard anywhere reads as several hundred pixels of inset, and the bar rides
- * up the screen and settles back — which is exactly what it did.
+ * **`focused` is not an optimisation, it is a correctness condition.** A
+ * keyboard cannot be open unless something has focus, so gating on it rules out
+ * every viewport change that is not a keyboard — an ordinary scroll, measured
+ * unconditionally, reads as several hundred pixels of inset and sends the bar up
+ * the screen.
  *
- * A keyboard cannot be open unless something has focus, so gating on focus
- * removes every one of those cases without having to tell them apart. No
- * platform check either: where `resizes-content` works, the two viewports agree
- * and this returns 0.
+ * No platform check: where `resizes-content` works, the viewport does not shrink
+ * under the keyboard and this returns 0 on its own.
  */
 function useKeyboardInset(focused: boolean) {
   const [inset, setInset] = useState(0)
@@ -930,6 +927,30 @@ function useKeyboardInset(focused: boolean) {
     const vv = window.visualViewport
     if (!vv) return
 
+    /*
+      The height the visual viewport had before the keyboard arrived, taken once
+      and then held.
+
+      **This is the whole fix, and the reason it is a ref rather than a fresh
+      reading.** The obvious formula is `innerHeight − vv.height − vv.offsetTop`,
+      which is geometrically correct and unusable: on iOS both `innerHeight` and
+      `offsetTop` move while you scroll — the toolbar collapses, the visual
+      viewport shifts, the page rubber-bands at the ends. Recomputed per frame,
+      the inset changed with the scroll and the bar crawled up the screen and
+      stuck there at the foot of the results.
+
+      `vv.height` alone does not move for any of those. It moves for the
+      keyboard, which is the only thing being measured. So the reference is
+      taken at focus and the inset is the shrinkage since — which also states
+      the requirement directly: the bar keeps the position relative to the
+      keyboard that it had when the field was tapped.
+
+      `max` against `innerHeight` covers focus arriving while a keyboard is
+      already up — moving between two fields — where `vv.height` is already
+      short and would otherwise be mistaken for the full screen.
+    */
+    const base = Math.max(vv.height, window.innerHeight)
+
     let frame = 0
     const update = () => {
       // Coalesced into a frame: iOS emits these in bursts while the keyboard
@@ -937,18 +958,16 @@ function useKeyboardInset(focused: boolean) {
       if (frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
-        const covered = window.innerHeight - vv.height - vv.offsetTop
+        const shrunk = base - vv.height
         // Sub-pixel noise is constant on iOS; 1px of it is not a keyboard.
-        setInset(covered > 1 ? covered : 0)
+        setInset(shrunk > 1 ? shrunk : 0)
       })
     }
 
     update()
     vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
     return () => {
       vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
       if (frame) cancelAnimationFrame(frame)
     }
   }, [focused])
