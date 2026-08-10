@@ -91,6 +91,8 @@ const ALWAYS_SHOWN_ABOVE = 32
  */
 const KEYBOARD_SETTLE_MS = 500
 
+const USER_SCROLL_GRACE_MS = 750
+
 /**
  * The smallest viewport change worth treating as a keyboard.
  *
@@ -202,6 +204,7 @@ export function Shell({
   */
   const keyboardOpeningRef = useRef(false)
   const keyboardFocusAtRef = useRef(0)
+  const userScrollAtRef = useRef(0)
 
   function onDockFocus(event: React.FocusEvent<HTMLElement>) {
     if (!(event.target instanceof HTMLInputElement)) return
@@ -302,6 +305,10 @@ export function Shell({
     let settleUntil = performance.now() + KEYBOARD_SETTLE_MS
     let lastViewport = window.visualViewport?.height ?? 0
 
+    const markUserScroll = () => {
+      userScrollAtRef.current = performance.now()
+    }
+
     const onScroll = () => {
       if (frame) return
       frame = requestAnimationFrame(() => {
@@ -338,6 +345,10 @@ export function Shell({
         // `last` deliberately does not move until the threshold is crossed, so
         // slow scrolling accumulates instead of never registering.
         if (Math.abs(delta) < SCROLL_THRESHOLD) return
+        if (now - userScrollAtRef.current > USER_SCROLL_GRACE_MS) {
+          last = y
+          return
+        }
         last = y
         setReceded({ route: pathname, hidden: y > ALWAYS_SHOWN_ABOVE && delta > 0 })
       })
@@ -357,9 +368,13 @@ export function Shell({
     }
 
     scroller.addEventListener('scroll', onScroll, { passive: true })
+    scroller.addEventListener('touchmove', markUserScroll, { passive: true })
+    scroller.addEventListener('wheel', markUserScroll, { passive: true })
     window.visualViewport?.addEventListener('resize', onViewport)
     return () => {
       scroller.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('touchmove', markUserScroll)
+      scroller.removeEventListener('wheel', markUserScroll)
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (frame) cancelAnimationFrame(frame)
     }

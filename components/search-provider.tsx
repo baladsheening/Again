@@ -57,6 +57,12 @@ const DEBOUNCE_MS = 90
  */
 const MIN_QUERY = 1
 
+function scrollSearchRootToTop() {
+  const scroller = document.getElementById('scroll-root')
+  if (scroller) scroller.scrollTo({ top: 0, behavior: 'instant' })
+  else window.scrollTo({ top: 0, behavior: 'instant' })
+}
+
 /** The shape the route returns. Parsed loosely — it is our own endpoint. */
 type SearchPage = {
   results: FilmSearchResult[]
@@ -345,9 +351,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
   */
   useEffect(() => {
     if (trimmed.length < MIN_QUERY) return
-    const scroller = document.getElementById('scroll-root')
-    if (scroller) scroller.scrollTo({ top: 0, behavior: 'instant' })
-    else window.scrollTo({ top: 0, behavior: 'instant' })
+    scrollSearchRootToTop()
   }, [trimmed])
 
   useEffect(() => {
@@ -363,6 +367,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     */
     const hit = cache.current.get(trimmed)
     if (hit) {
+      scrollSearchRootToTop()
       setLoaded(hit)
       setSearching(false)
       return
@@ -389,6 +394,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
 
         const next: Loaded = { q: trimmed, ...result.page }
         cache.current.set(trimmed, next)
+        scrollSearchRootToTop()
         setLoaded(next)
       } catch {
         // Aborted by the next keystroke — the expected path, not a failure.
