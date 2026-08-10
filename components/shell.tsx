@@ -117,8 +117,25 @@ const KEYBOARD_MIN_HEIGHT = 100
  */
 const SEARCH_FAILURE_TEXT: Record<SearchFailure, string> = {
   'rate-limited': 'That is a lot of searching at once. Give it a moment.',
-  'signed-out': 'You have been signed out. Sign in again to search.',
+  'signed-out': 'You have been signed out.',
   unavailable: 'Search is unreachable just now.',
+}
+
+/**
+ * The same sentence, with the wait in it when the limiter named one.
+ *
+ * The route sends `Retry-After` and this is the only place it can be read by the
+ * person it concerns. "Give it a moment" is what you say when you do not know;
+ * saying it over a number we were handed is the difference between waiting and
+ * pressing the button again to find out.
+ */
+function failureText(failure: SearchFailure, retryAfter: number | null) {
+  if (failure === 'rate-limited' && retryAfter) {
+    return `That is a lot of searching at once. Try again in ${retryAfter} second${
+      retryAfter === 1 ? '' : 's'
+    }.`
+  }
+  return SEARCH_FAILURE_TEXT[failure]
 }
 
 /**
@@ -164,8 +181,19 @@ export function Shell({
     Read through `requestAnimationFrame` rather than on the event: `scrollY`
     forces layout, and doing that on every scroll event of a momentum flick is
     how a list starts dropping frames while it is being read.
+
+    **Stamped with the route it receded on, so navigation always shows it again.**
+    It was a plain boolean, revealed by the scroll event that the reset below
+    fires — which is true nearly always and not quite always: the handler ignores
+    scrolls inside the settle window, and blurring the field on the way to a link
+    opens one. A bar stuck off-screen on arrival is a screen with no navigation
+    on it, which is too expensive to hold with an argument about event ordering
+    when the alternative is to make it unrepresentable. Same device as `failed`
+    in the search provider: write down what the state is about instead of
+    remembering to clear it.
   */
-  const [collectionsHidden, setCollectionsHidden] = useState(false)
+  const [receded, setReceded] = useState({ route: pathname, hidden: false })
+  const collectionsHidden = receded.route === pathname && receded.hidden
 
   /*
     Which of the two things the bar is holding. Search is the default: on a phone
@@ -179,6 +207,7 @@ export function Shell({
     results,
     searching,
     failure,
+    retryAfter,
     loadMore,
     retry,
   } = useSearch()
@@ -277,7 +306,7 @@ export function Shell({
         // slow scrolling accumulates instead of never registering.
         if (Math.abs(delta) < SCROLL_THRESHOLD) return
         last = y
-        setCollectionsHidden(y > ALWAYS_SHOWN_ABOVE && delta > 0)
+        setReceded({ route: pathname, hidden: y > ALWAYS_SHOWN_ABOVE && delta > 0 })
       })
     }
 
@@ -301,7 +330,7 @@ export function Shell({
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [showCollections, searchFocused])
+  }, [showCollections, searchFocused, pathname])
 
   /*
     A new route starts at the top of itself.
@@ -313,11 +342,8 @@ export function Shell({
     Archive, which reads as the app having lost your tap rather than as a scroll
     position.
 
-    **The bar reveals itself off the back of this**, and still does not need an
-    effect of its own: `scrollTo` fires a `scroll` event on the scroller, the
-    handler above reads a large negative delta, and a receded bar comes back. If
-    the page was already at the top there is no event — and no need for one,
-    since a bar can only be hidden below `ALWAYS_SHOWN_ABOVE`.
+    The bar comes back on its own, and not because of anything here — see
+    `receded` above, which is scoped to the route it was hidden on.
 
     `instant` against the `scroll-behavior: smooth` on `html`, for the reason the
     search field's reset gives: animating a journey nobody took is a lurch.
@@ -1026,7 +1052,7 @@ export function Shell({
         {searchActive ? (
           failure && results.length === 0 ? (
             /* Nothing came back at all, so the notice is the whole screen. */
-            <SearchFailureNotice failure={failure} onRetry={retry} />
+            <SearchFailureNotice failure={failure} retryAfter={retryAfter} onRetry={retry} />
           ) : (
             <>
               <PosterWall
@@ -1038,7 +1064,7 @@ export function Shell({
                 A page failed under a wall worth looking at. The notice goes
                 below it, where the next twenty would have appeared.
               */}
-              {failure && <SearchFailureNotice failure={failure} onRetry={retry} />}
+              {failure && <SearchFailureNotice failure={failure} retryAfter={retryAfter} onRetry={retry} />}
             </>
           )
         ) : (
@@ -1249,9 +1275,11 @@ function useKeyboardPin(
  * and keeping it out means the wall did not have to learn about failure to say
  * so.
  *
- * No retry after being signed out: pressing it would fail the same way, and the
- * message already names the action. Everything else is worth one more attempt —
- * a rate limit expires, and an unreachable upstream usually is not.
+ * **Being signed out gets a link, not a retry.** Pressing *Try again* against a
+ * 401 fails the same way every time, so the control has to be the thing that
+ * actually fixes it — and telling someone to sign in without giving them the
+ * door is the version of this that gets abandoned. Everything else is worth one
+ * more attempt: a rate limit expires, and an unreachable upstream usually is not.
  *
  * Not `text-active`. Red is the wrong register here and it is spoken for; §11's
  * scarcity rule is about the accent, and the same argument holds for the second
@@ -1259,20 +1287,24 @@ function useKeyboardPin(
  */
 function SearchFailureNotice({
   failure,
+  retryAfter,
   onRetry,
 }: {
   failure: SearchFailure
+  retryAfter: number | null
   onRetry: () => void
 }) {
+  const action = 'text-text hover:text-muted tap-target underline underline-offset-4 transition-colors'
+
   return (
     <p className="text-muted flex flex-wrap items-center gap-x-3 gap-y-1 py-10 text-sm">
-      {SEARCH_FAILURE_TEXT[failure]}
-      {failure !== 'signed-out' && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="text-text hover:text-muted tap-target underline underline-offset-4 transition-colors"
-        >
+      {failureText(failure, retryAfter)}
+      {failure === 'signed-out' ? (
+        <Link href="/sign-in" className={action}>
+          Sign in
+        </Link>
+      ) : (
+        <button type="button" onClick={onRetry} className={action}>
           Try again
         </button>
       )}
