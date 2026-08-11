@@ -13,7 +13,6 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
-import { clampWatch, ProbeReadout } from './probe-readout'
 import { SearchField } from './search-field'
 import { useSearch, type SearchFailure } from './search-provider'
 
@@ -173,13 +172,37 @@ const KEYBOARD_ARRIVAL_MS = 700
  * the one from last time — and a keyboard's height does not change between two
  * taps of the same field on the same device.
  *
- * Zero until a keyboard has been seen once, so the very first focus after a cold
- * load still bumps. That is deliberate rather than tolerated: it makes the
- * diagnosis testable by hand. **Tap once, then tap again — if the second is
- * smooth and the first was not, this is the cause.** Persisting it across loads
- * is the obvious follow-up and is worth nothing until that holds.
+ * **Confirmed on the handset, 11 August**: with the lift applied at
+ * `pointerdown` and focus called by hand — see `onDockPointerDown` — the second
+ * tap of a launch was smooth and the clamp counted zero document scrolls. The
+ * first tap bumped only because nothing was remembered yet, which is what the
+ * persistence removes: the height survives launches in `localStorage`, so it is
+ * known from the first tap of every session after the very first.
+ *
+ * It only ever grows — the larger of memory and measurement, mirrored to
+ * storage. The two directions of error cost differently: remembering too little
+ * reproduces the native bump this exists to prevent, remembering too much parks
+ * the bar a touch high for the few frames before the real measurement lands.
+ * Growth is the cheap side.
  */
 let lastKeyboardOverlap = 0
+
+const OVERLAP_KEY = 'again:keyboard-overlap'
+
+/**
+ * The remembered height, hydrated from storage on first use. Module state is
+ * asked first: storage can throw and is slower, and after the first keyboard of
+ * a session the module already knows.
+ */
+function rememberedOverlap(): number {
+  if (lastKeyboardOverlap > 0) return lastKeyboardOverlap
+  try {
+    lastKeyboardOverlap = Number(window.localStorage.getItem(OVERLAP_KEY)) || 0
+  } catch {
+    // Private mode or storage denied: the first tap of a launch bumps, as before.
+  }
+  return lastKeyboardOverlap
+}
 
 /**
  * The smallest viewport change worth treating as a keyboard.
@@ -336,10 +359,11 @@ export function Shell({
     const input = event.target
     if (!(input instanceof HTMLInputElement)) return
     if (document.activeElement === input) return
-    if (lastKeyboardOverlap <= 0) return
+    const overlap = rememberedOverlap()
+    if (overlap <= 0) return
 
     const el = event.currentTarget
-    el.style.transform = `translateY(${-lastKeyboardOverlap}px)`
+    el.style.transform = `translateY(${-overlap}px)`
     if (dropsSafeArea) el.style.paddingBottom = '0px'
     input.focus({ preventScroll: true })
 
@@ -383,9 +407,10 @@ export function Shell({
       that fired it is inside. No lookup, and no question of picking the one
       that is on screen — the one that took the focus is by definition it.
     */
-    if (lastKeyboardOverlap <= 0) return
+    const overlap = rememberedOverlap()
+    if (overlap <= 0) return
     const el = event.currentTarget
-    el.style.transform = `translateY(${-lastKeyboardOverlap}px)`
+    el.style.transform = `translateY(${-overlap}px)`
     if (dropsSafeArea) el.style.paddingBottom = '0px'
   }
 
@@ -631,12 +656,7 @@ export function Shell({
     let until = 0
 
     const clamp = () => {
-      const y = window.scrollY
-      if (y <= 0) return
-      /* ⚠ TEMPORARY — see `clampWatch`. Goes with the probe. */
-      clampWatch.hits += 1
-      if (y > clampWatch.max) clampWatch.max = y
-      window.scrollTo({ top: 0, behavior: 'instant' })
+      if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' })
     }
 
     /*
@@ -812,22 +832,6 @@ export function Shell({
           </>,
           document.body,
         )}
-
-      {/*
-        ⚠ **TEMPORARY — remove this and `components/probe-readout.tsx` together**
-        once the phone's keyboard numbers have been read off a handset.
-
-        Portalled to `document.body` for the same reason the docks are: it has to
-        be measuring from where they measure from, not from inside the scroller.
-
-        See the file for why it is unconditional rather than behind a flag.
-      */}
-      {portalReady &&
-        createPortal(
-          <ProbeReadout focused={searchFocused} scroller={scrollRef} docks={docks} />,
-          document.body,
-        )}
-
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
@@ -1695,8 +1699,9 @@ function useKeyboardPin(
         Outside the window this is skipped entirely, so a bar with no keyboard
         under it still returns to rest.
       */
-      if (Math.abs(lift) < 1 && lastKeyboardOverlap > 0 && performance.now() < until) {
-        lift = -lastKeyboardOverlap
+      const remembered = rememberedOverlap()
+      if (Math.abs(lift) < 1 && remembered > 0 && performance.now() < until) {
+        lift = -remembered
       }
 
       el.style.transform = lift ? `translateY(${lift}px)` : ''
@@ -1732,11 +1737,19 @@ function useKeyboardPin(
 
       /*
         Remembered for the *next* focus, which is the only moment it is worth
-        anything — see `lastKeyboardOverlap`. Only real keyboards are recorded:
-        a zero is the keyboard being closed, and writing that down would throw
-        away the number the next tap needs.
+        anything — see `lastKeyboardOverlap` for why it only grows. A zero is
+        the keyboard being closed, and writing that down would throw away the
+        number the next tap needs.
       */
-      if (overlap > 0) lastKeyboardOverlap = Math.round(overlap)
+      const rounded = Math.round(overlap)
+      if (rounded > lastKeyboardOverlap) {
+        lastKeyboardOverlap = rounded
+        try {
+          window.localStorage.setItem(OVERLAP_KEY, String(rounded))
+        } catch {
+          // Nothing to do — the in-memory copy still improves this session.
+        }
+      }
     }
 
     /*
