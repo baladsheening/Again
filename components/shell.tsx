@@ -144,6 +144,44 @@ const KEYBOARD_SETTLE_MS = 500
 const KEYBOARD_ARRIVAL_MS = 700
 
 /**
+ * The keyboard's height, as measured the last time one was open.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why a remembered number is worth more than a measured one here
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **The bump on tapping the field is iOS moving the web view, not the page.**
+ * Measured on the handset, installed: the wordmark, the header icons and the
+ * poster wall all move together — so `position: fixed` elements move — while
+ * every quantity the page can see holds still. `scrY 0`, `docT 0`, `vv.t 0`,
+ * `sTop 0`, and the wall's client rect pinned at 109 through the whole focus.
+ * Nothing inside the document can move a fixed element without moving one of
+ * those, so the movement is happening underneath the page's own coordinate
+ * system, where nothing here can observe or undo it.
+ *
+ * It is standalone keyboard avoidance. The focused field sits at the foot of a
+ * 797px layout viewport, the keyboard covers the bottom 333 of it, so UIKit
+ * lifts the view to reveal the field. `useKeyboardPin` then raises the bar clear
+ * of the keys, the field is no longer covered, and iOS puts the view back —
+ * which is the drop. **The bump and the drop are iOS reacting to us, one beat
+ * apart**, and three attempts to correct the movement failed because there was
+ * never anything on this side to correct.
+ *
+ * So the answer is to leave it nothing to reveal: the bar has to be clear of the
+ * keyboard *at the instant of focus*, before the keyboard has arrived and
+ * therefore before it can be measured. The only number available that early is
+ * the one from last time — and a keyboard's height does not change between two
+ * taps of the same field on the same device.
+ *
+ * Zero until a keyboard has been seen once, so the very first focus after a cold
+ * load still bumps. That is deliberate rather than tolerated: it makes the
+ * diagnosis testable by hand. **Tap once, then tap again — if the second is
+ * smooth and the first was not, this is the cause.** Persisting it across loads
+ * is the obvious follow-up and is worth nothing until that holds.
+ */
+let lastKeyboardOverlap = 0
+
+/**
  * The smallest viewport change worth treating as a keyboard.
  *
  * The settle window cannot be armed by *any* resize — Safari's toolbar
@@ -270,11 +308,42 @@ export function Shell({
   const keyboardOpeningRef = useRef(false)
   const keyboardFocusAtRef = useRef(0)
 
-  function onDockFocus(event: React.FocusEvent<HTMLElement>) {
+  /*
+    `dropsSafeArea` is passed rather than looked up, because reaching for the
+    memoised `docks` array from an event handler is enough to stop the React
+    Compiler preserving that memo — and the two call sites each already know
+    which dock they are.
+  */
+  function onDockFocus(event: React.FocusEvent<HTMLElement>, dropsSafeArea = false) {
     if (!(event.target instanceof HTMLInputElement)) return
     keyboardOpeningRef.current = true
     keyboardFocusAtRef.current = performance.now()
     setReceded({ route: pathname, hidden: false })
+
+    /*
+      **Get out from behind the keyboard before iOS notices the field is there.**
+      See `lastKeyboardOverlap` for the measurement this rests on.
+
+      Written here rather than in an effect because *here* is the focus event
+      itself — the earliest moment in the browser at which anything can happen.
+      An effect is a render away, and a render is a frame, and one frame is
+      already too late: iOS begins its avoidance animation with the keyboard's.
+
+      It is an estimate and it does not have to be right. `useKeyboardPin`
+      measures the real position on the next frame and every frame after, so
+      being a few pixels out costs nothing — the only job here is that the field
+      not be *underneath the keyboard* when iOS looks. The transform written is
+      the same shape the hook writes, so the hook's own correction replaces it
+      rather than fighting it.
+
+      `currentTarget` is the dock: this handler is on the dock, and the field
+      that fired it is inside. No lookup, and no question of picking the one
+      that is on screen — the one that took the focus is by definition it.
+    */
+    if (lastKeyboardOverlap <= 0) return
+    const el = event.currentTarget
+    el.style.transform = `translateY(${-lastKeyboardOverlap}px)`
+    if (dropsSafeArea) el.style.paddingBottom = '0px'
   }
 
   function onDockBlur(event: React.FocusEvent<HTMLElement>) {
@@ -1072,7 +1141,9 @@ export function Shell({
       <nav
         ref={barRef}
         aria-label="Main"
-        onFocusCapture={onDockFocus}
+        /* The phone's bar is the one whose bottom padding is a home-indicator
+           inset — see `dropsSafeArea` on `SearchDock`. */
+        onFocusCapture={(event) => onDockFocus(event, true)}
         onBlurCapture={onDockBlur}
         /*
           `transition-[translate]`, not `transition-transform`. Two things move
@@ -1584,6 +1655,14 @@ function useKeyboardPin(
       if (!box) return
       const overlap = Math.max(0, box.getBoundingClientRect().bottom - (vv.offsetTop + vv.height))
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
+
+      /*
+        Remembered for the *next* focus, which is the only moment it is worth
+        anything — see `lastKeyboardOverlap`. Only real keyboards are recorded:
+        a zero is the keyboard being closed, and writing that down would throw
+        away the number the next tap needs.
+      */
+      if (overlap > 0) lastKeyboardOverlap = Math.round(overlap)
     }
 
     /*
