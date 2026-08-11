@@ -94,26 +94,34 @@ const ALWAYS_SHOWN_ABOVE = 32
 const KEYBOARD_SETTLE_MS = 500
 
 /**
- * How recently a hand must have been on the page for a downward scroll to hide
- * the bar. Momentum outlives it; a finger refreshes it.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  There was a `USER_SCROLL_GRACE_MS` here. It is gone — 11 August.
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **Refreshed by `touchstart` as well as `touchmove`, since 11 August.** It
- * was movement alone, on the reasonable-sounding basis that a scroll is made by
- * moving. The case that breaks is catching a page that is already gliding: the
- * touch which arrests the momentum does not reliably deliver a `touchmove` — the
- * scroll is running off the main thread and the gesture is spent stopping it —
- * so the drag immediately after was measured against a window that had already
- * closed, and the bar would not hide until the page had come to a full stop and
- * the gesture was started again. The same fault in the opposite direction was
- * fixed by making showing unconditional; hiding cannot be made unconditional,
- * so the window has to be armed by the thing that actually marks a hand
- * arriving.
+ * The bar only reacted while a `touchmove` or `wheel` was recent, so that "a
+ * scroll with no finger behind it moves the baseline and nothing else"
+ * (`8124684`). Its purpose was to tell the keyboard's scroll apart from a flick
+ * without having to infer it from a delta and a clock.
  *
- * A `touchstart` alone still hides nothing. It only opens the window in which a
- * real scroll delta of at least `SCROLL_THRESHOLD` counts, so a tap on a poster
- * does not move the furniture.
+ * **The premise was false, and the probe is what showed it.** Through an entire
+ * focus-type-scroll run on the handset, `sTop` never left 0 — the shell's own
+ * scroller does not move when the keyboard opens. What moves is the *document*,
+ * by 271px, and this handler reads `scroller.scrollTop`. The keyboard's scroll
+ * therefore raises no event it could ever have seen. The window was guarding a
+ * door onto a wall.
+ *
+ * What it cost is the gesture: touch events are not reliably delivered while
+ * momentum is running — the first touch is spent arresting the scroll — so
+ * catching a gliding page and dragging the other way was measured against a
+ * window that had already shut. Reported twice from the handset, and predicted
+ * in `8124684`'s own message, which shipped marked *"untested on a handset,
+ * like the two attempts before it"*.
+ *
+ * The settle window below stays, and is now the only line rather than the
+ * second. It is keyed to focus and to viewport resizes — the events that
+ * actually mark a keyboard — rather than to a proxy the platform withholds
+ * exactly when it is needed.
  */
-const USER_SCROLL_GRACE_MS = 750
 
 /**
  * How long to hold the document down by hand after anything that moves it.
@@ -261,7 +269,6 @@ export function Shell({
   */
   const keyboardOpeningRef = useRef(false)
   const keyboardFocusAtRef = useRef(0)
-  const userScrollAtRef = useRef(0)
 
   function onDockFocus(event: React.FocusEvent<HTMLElement>) {
     if (!(event.target instanceof HTMLInputElement)) return
@@ -381,10 +388,6 @@ export function Shell({
     let settleUntil = performance.now() + KEYBOARD_SETTLE_MS
     let lastViewport = window.visualViewport?.height ?? 0
 
-    const markUserScroll = () => {
-      userScrollAtRef.current = performance.now()
-    }
-
     const onScroll = () => {
       if (frame) return
       frame = requestAnimationFrame(() => {
@@ -423,35 +426,18 @@ export function Shell({
         if (Math.abs(delta) < SCROLL_THRESHOLD) return
 
         /*
-          **Hiding needs a finger. Showing never does.**
+          **Every scroll of this element counts, whoever made it.**
 
-          The grace window used to gate both, and that is what made the bar
-          reachable "only from a still start" — reported from the handset on
-          11 August. Flick down through a wall of results, then reach up for the
-          bar before the momentum has died: the last touch is by then older than
-          the window, so the upward movement was discarded and the bar stayed
-          away until the page came to a complete stop and the gesture could be
-          started again. The one moment anyone wants the bar back is while the
-          page is still moving.
+          Nothing is asked here about fingers any more — see the note where
+          `USER_SCROLL_GRACE_MS` used to be. The only scrolls this element
+          receives are ones a person made: the keyboard moves the document and
+          the two scroll-to-top calls move it upward, which can only ever show
+          the bar.
 
-          The asymmetry is not a compromise, it is what `8124684` actually
-          meant. Its purpose was that the browser's own scrolling — iOS
-          revealing a focused field, a route or a query jumping the wall back to
-          the top — must not *take the navigation away*. None of that argues for
-          refusing to give it back. The two failures are also nothing like each
-          other in cost: a bar that appears when it need not is a moment of
-          furniture, and a bar that will not come back is a screen with no way
-          off it.
-
-          Programmatic scrolls are upward, so they now show the bar rather than
-          being ignored, which is the right answer on arriving somewhere new.
-          The keyboard's scroll-to-reveal is downward and still held off by both
-          this and the settle window above.
+          Momentum therefore keeps the bar reacting for as long as the page is
+          moving, in both directions, which is what the gesture always looked
+          like it should do.
         */
-        if (delta > 0 && now - userScrollAtRef.current > USER_SCROLL_GRACE_MS) {
-          last = y
-          return
-        }
         last = y
         setReceded({ route: pathname, hidden: y > ALWAYS_SHOWN_ABOVE && delta > 0 })
       })
@@ -471,19 +457,9 @@ export function Shell({
     }
 
     scroller.addEventListener('scroll', onScroll, { passive: true })
-    /*
-      `touchstart` as well as `touchmove` — see `USER_SCROLL_GRACE_MS`. A hand
-      landing on a page that is still gliding is the case movement alone misses.
-    */
-    scroller.addEventListener('touchstart', markUserScroll, { passive: true })
-    scroller.addEventListener('touchmove', markUserScroll, { passive: true })
-    scroller.addEventListener('wheel', markUserScroll, { passive: true })
     window.visualViewport?.addEventListener('resize', onViewport)
     return () => {
       scroller.removeEventListener('scroll', onScroll)
-      scroller.removeEventListener('touchstart', markUserScroll)
-      scroller.removeEventListener('touchmove', markUserScroll)
-      scroller.removeEventListener('wheel', markUserScroll)
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (frame) cancelAnimationFrame(frame)
     }

@@ -108,9 +108,26 @@ type Peaks = {
   scrollY: number
   docTop: number
   scrollTop: number
+  /**
+   * The furthest the *visible window* slid down the layout viewport.
+   *
+   * Added on the second attempt at the bump when tapping the field. `scrY` says
+   * whether the document moved; this says whether what you can see moved. They
+   * travelled together on 11 August, and if they have come apart — `scrY 0`
+   * against a non-zero `vv.t` — then holding the document down cannot fix the
+   * bump and every attempt to has been aimed at the wrong number.
+   */
+  vvTop: number
 }
 
-const NO_PEAKS: Peaks = { err: 0, errAt: 0, scrollY: 0, docTop: 0, scrollTop: 0 }
+const NO_PEAKS: Peaks = {
+  err: 0,
+  errAt: 0,
+  scrollY: 0,
+  docTop: 0,
+  scrollTop: 0,
+  vvTop: 0,
+}
 
 export function ProbeReadout({
   focused,
@@ -186,6 +203,7 @@ export function ProbeReadout({
         if (Math.abs(scrollY) > Math.abs(p.scrollY)) p.scrollY = scrollY
         if (Math.abs(docTop) > Math.abs(p.docTop)) p.docTop = docTop
         if (scrollTop > p.scrollTop) p.scrollTop = scrollTop
+        if (Math.abs(vv.offsetTop) > Math.abs(p.vvTop)) p.vvTop = vv.offsetTop
 
         /*
           Hold itself on screen, or it is useless exactly when it is needed.
@@ -223,7 +241,7 @@ export function ProbeReadout({
           '--- worst since focus ---',
           `ERR  ${n(p.err)} @    ${n(p.errAt)}`,
           `scrY ${n(p.scrollY)} docT ${n(p.docTop)}`,
-          `sTop ${n(p.scrollTop)}`,
+          `sTop ${n(p.scrollTop)} vv.t ${n(p.vvTop)}`,
         ].join('\n')
       }
 
