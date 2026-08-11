@@ -29,6 +29,19 @@ export function SearchField({ id }: { id: string }) {
   const { query, setQuery, setFocused, clear } = useSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 
+  /**
+   * Whether the field held the caret at the instant the × was pressed.
+   *
+   * Recorded on `pointerdown` because that is the last moment the answer is
+   * still true: pressing a button moves focus off the input as its default
+   * action, so by `click` the field has already lost it and
+   * `document.activeElement` no longer says what the person was doing.
+   *
+   * A ref rather than state — it is written and read inside one gesture, and a
+   * render in the middle of that is both pointless and a chance to be stale.
+   */
+  const hadCaret = useRef(false)
+
   return (
     /*
       `-translate-y-px` is an optical correction, not a layout fix. The field is
@@ -111,9 +124,17 @@ export function SearchField({ id }: { id: string }) {
         with the results filling the screen and no visible control, clearing the
         field was something you had to know rather than something you could see.
 
-        **It keeps focus.** Clearing is usually the start of typing something
-        else, and dropping the keyboard between two searches is the difference
-        between correcting a query and starting one again.
+        **It keeps focus, and only keeps it.** Clearing is usually the start of
+        typing something else, and dropping the keyboard between two searches is
+        the difference between correcting a query and starting one again.
+
+        ⚠ **Keeping is not the same as taking, and this took.** The refocus was
+        unconditional, so pressing × with the keyboard already down raised
+        one — reported from the handset on 11 August. Nobody asked to type; they
+        asked to be rid of what was in the field, and the answer was half the
+        screen filling with keys. The distinction the original note meant is
+        between *holding* a caret through the clear and *summoning* one, and only
+        the first was ever wanted. See `hadCaret`.
 
         `ml-2` on top of the row's gap, so `tap-target`'s 44px expansion reaches
         only about a pixel into the field. That utility's own note warns about
@@ -127,9 +148,12 @@ export function SearchField({ id }: { id: string }) {
       {query.length > 0 && (
         <button
           type="button"
+          onPointerDown={() => {
+            hadCaret.current = document.activeElement === inputRef.current
+          }}
           onClick={() => {
             clear()
-            inputRef.current?.focus()
+            if (hadCaret.current) inputRef.current?.focus()
           }}
           aria-label="Clear search"
           className="text-muted hover:text-text tap-target ml-2 shrink-0 self-center transition-colors"

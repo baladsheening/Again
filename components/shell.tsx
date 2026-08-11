@@ -381,7 +381,34 @@ export function Shell({
         // `last` deliberately does not move until the threshold is crossed, so
         // slow scrolling accumulates instead of never registering.
         if (Math.abs(delta) < SCROLL_THRESHOLD) return
-        if (now - userScrollAtRef.current > USER_SCROLL_GRACE_MS) {
+
+        /*
+          **Hiding needs a finger. Showing never does.**
+
+          The grace window used to gate both, and that is what made the bar
+          reachable "only from a still start" — reported from the handset on
+          11 August. Flick down through a wall of results, then reach up for the
+          bar before the momentum has died: the last touch is by then older than
+          the window, so the upward movement was discarded and the bar stayed
+          away until the page came to a complete stop and the gesture could be
+          started again. The one moment anyone wants the bar back is while the
+          page is still moving.
+
+          The asymmetry is not a compromise, it is what `8124684` actually
+          meant. Its purpose was that the browser's own scrolling — iOS
+          revealing a focused field, a route or a query jumping the wall back to
+          the top — must not *take the navigation away*. None of that argues for
+          refusing to give it back. The two failures are also nothing like each
+          other in cost: a bar that appears when it need not is a moment of
+          furniture, and a bar that will not come back is a screen with no way
+          off it.
+
+          Programmatic scrolls are upward, so they now show the bar rather than
+          being ignored, which is the right answer on arriving somewhere new.
+          The keyboard's scroll-to-reveal is downward and still held off by both
+          this and the settle window above.
+        */
+        if (delta > 0 && now - userScrollAtRef.current > USER_SCROLL_GRACE_MS) {
           last = y
           return
         }
@@ -980,7 +1007,37 @@ export function Shell({
           Tailwind's `transition-transform` covers both properties at once,
           which would make the bar visibly chase the keyboard.
         */
-        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] transition-[translate] duration-300 ${
+        /*
+          ───────────────────────────────────────────────────────────────────
+           The inset, less a centimetre of it (11 August)
+          ───────────────────────────────────────────────────────────────────
+
+          This was the whole of `env(safe-area-inset-bottom)`, which is correct
+          in a browser tab and wrong installed — and installing it is what
+          exposed that. In Safari the toolbar already occupies that band so the
+          inset reports 0; standalone there is no toolbar, the inset becomes the
+          full home-indicator reservation, and the bar rose 34px overnight. It
+          read as though the address bar were still there and the app had simply
+          left a gap where it used to be.
+
+          **The indicator needs clearing, not the whole band it is quoted in.**
+          It is about 5px of ink sitting about 8px off the bottom edge, so it
+          occupies roughly the lowest 13px. 34 − 16 leaves 18px: the indicator
+          cleared with five to spare, and sixteen given back to a bar whose only
+          job is to be within reach of a thumb.
+
+          `max(0px, …)` and not a positive floor, deliberately. On anything with
+          no inset — every browser tab, every device without an indicator — this
+          must come out at zero and change nothing. A floor of even half a rem
+          would have lifted the bar in exactly the place it was already right.
+
+          ⚠ **`useKeyboardPin` overwrites this to `0px` while a keyboard is
+          open** and clears the override when it closes, because a keyboard
+          covers the indicator and the clearance becomes dead space holding the
+          row off the keys. Anything written here has to survive being replaced
+          and restored — which is why it is a class and not an inline style.
+        */
+        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[max(0px,calc(env(safe-area-inset-bottom)_-_1rem))] transition-[translate] duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
       >
