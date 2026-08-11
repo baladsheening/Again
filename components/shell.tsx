@@ -1294,7 +1294,13 @@ type SearchDock = {
 }
 
 /**
- * Holds whichever search dock is on screen on the top edge of an open keyboard.
+ * Holds whichever search dock is on screen on the top edge of an open keyboard,
+ * and holds the foot of the page above it.
+ *
+ * **Two jobs, because they are one measurement.** Both need the bottom edge of
+ * the visible area, and both need re-reading on the same five events; splitting
+ * them would mean a second copy of every listener to answer the same question
+ * twice a frame. See `floor` below, and `safe-bottom` in globals.css.
  *
  * **The symptom this exists for**: with the keyboard up and a wall of results to
  * scroll, the bar vanished and came back only at the very bottom of the results.
@@ -1420,9 +1426,40 @@ function useKeyboardPin(
       if (shown.dropsSafeArea) el.style.paddingBottom = '0px'
     }
 
+    /*
+      **The floor of the page, held above the keyboard — see `safe-bottom`.**
+
+      The scroller is `fixed inset-0`, so it is as tall as the *layout* viewport,
+      and iOS does not shrink that for a keyboard. Its bottom strip is therefore
+      behind the keys, and at maximum scroll the last row of a long list is
+      parked in there with no range left to lift it out. Reported on the handset
+      the moment the document stopped scrolling: the document scrolling had been
+      supplying the missing distance all along, as a side effect of the fault it
+      caused everywhere else.
+
+      Measured, like the pin above, rather than derived from `innerHeight` or
+      `clientHeight`. The distance between the scroller's own bottom edge and the
+      bottom of what can be seen is the answer whatever iOS thinks those two
+      numbers mean, and it is zero when there is no keyboard.
+
+      Written as a custom property rather than as `paddingBottom`, because the
+      elements that need it already have a padding rule with two other terms in
+      it. Setting the property adds a third; setting the padding would replace
+      all three and drop the home-indicator inset on the floor.
+    */
+    const floor = () => {
+      const box = scroller.current
+      if (!box) return
+      const overlap = Math.max(0, box.getBoundingClientRect().bottom - (vv.offsetTop + vv.height))
+      box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
+    }
+
     const schedule = () => {
       if (frame) return
-      frame = requestAnimationFrame(measure)
+      frame = requestAnimationFrame(() => {
+        measure()
+        floor()
+      })
     }
 
     schedule()
@@ -1465,6 +1502,11 @@ function useKeyboardPin(
 
       /* Back to the resting position the moment the keyboard is not there. */
       for (const dock of docks) rest(dock)
+      /*
+        And the floor with it, or every page keeps a keyboard's worth of dead
+        space under it for the rest of the session.
+      */
+      box?.style.removeProperty('--keyboard-overlap')
     }
   }, [focused, scroller, docks])
 }
