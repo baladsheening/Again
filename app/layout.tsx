@@ -57,6 +57,31 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: 'Again',
   description: 'Things to try. Things to do again.',
+  /*
+    Installed to the home screen, the app runs without Safari's chrome — see
+    `app/manifest.ts` for why that is worth having rather than merely tidy.
+
+    ⚠ **This is the half iOS actually obeys.** The manifest's `display:
+    'standalone'` is only honoured from 16.4; `apple-mobile-web-app-capable`,
+    which this emits, is what has decided it for a decade and still decides it
+    on anything older. Setting one without the other silently half-works, which
+    is the worst of the three outcomes because it looks done.
+  */
+  appleWebApp: {
+    capable: true,
+    title: 'Again',
+    /*
+      The web view extends under the status bar rather than being pushed below a
+      black strip, which is the same arrangement `viewportFit: 'cover'` already
+      sets up for the browser — and every surface that needs to keep clear of it
+      already spends `env(safe-area-inset-top)` to do so.
+
+      On a pure-black app the visible difference is nil either way. The reason to
+      prefer this one is that the two modes then behave identically, so a
+      spacing fault cannot appear in the installed app and nowhere else.
+    */
+    statusBarStyle: 'black-translucent',
+  },
 }
 
 export const viewport: Viewport = {
