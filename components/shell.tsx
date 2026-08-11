@@ -93,7 +93,47 @@ const ALWAYS_SHOWN_ABOVE = 32
  */
 const KEYBOARD_SETTLE_MS = 500
 
+/**
+ * How recently a hand must have been on the page for a downward scroll to hide
+ * the bar. Momentum outlives it; a finger refreshes it.
+ *
+ * ⚠ **Refreshed by `touchstart` as well as `touchmove`, since 11 August.** It
+ * was movement alone, on the reasonable-sounding basis that a scroll is made by
+ * moving. The case that breaks is catching a page that is already gliding: the
+ * touch which arrests the momentum does not reliably deliver a `touchmove` — the
+ * scroll is running off the main thread and the gesture is spent stopping it —
+ * so the drag immediately after was measured against a window that had already
+ * closed, and the bar would not hide until the page had come to a full stop and
+ * the gesture was started again. The same fault in the opposite direction was
+ * fixed by making showing unconditional; hiding cannot be made unconditional,
+ * so the window has to be armed by the thing that actually marks a hand
+ * arriving.
+ *
+ * A `touchstart` alone still hides nothing. It only opens the window in which a
+ * real scroll delta of at least `SCROLL_THRESHOLD` counts, so a tap on a poster
+ * does not move the furniture.
+ */
 const USER_SCROLL_GRACE_MS = 750
+
+/**
+ * How long to hold the document down by hand after anything that moves it.
+ *
+ * **The clamp works and used to be visible doing it.** iOS does not stream the
+ * scroll it performs to reveal a focused field; it delivers one large event when
+ * the movement has finished — which the settle window above already relies on.
+ * A correction driven by that event is therefore a correction applied *after*
+ * the whole animation has been painted, so tapping the field pushed the page up
+ * and dropped it back, and the drop was this working rather than failing.
+ *
+ * So for the length of the keyboard's arrival the document is put back on every
+ * frame instead, which corrects it within the frame it moves and shows nothing.
+ *
+ * Longer than `KEYBOARD_SETTLE_MS` on purpose: that window is about when to stop
+ * *believing* the scroll position, and this one has to outlast the animation
+ * that produces it, including the second, smaller move iOS makes when the
+ * predictive-text strip appears.
+ */
+const KEYBOARD_ARRIVAL_MS = 700
 
 /**
  * The smallest viewport change worth treating as a keyboard.
@@ -431,11 +471,17 @@ export function Shell({
     }
 
     scroller.addEventListener('scroll', onScroll, { passive: true })
+    /*
+      `touchstart` as well as `touchmove` — see `USER_SCROLL_GRACE_MS`. A hand
+      landing on a page that is still gliding is the case movement alone misses.
+    */
+    scroller.addEventListener('touchstart', markUserScroll, { passive: true })
     scroller.addEventListener('touchmove', markUserScroll, { passive: true })
     scroller.addEventListener('wheel', markUserScroll, { passive: true })
     window.visualViewport?.addEventListener('resize', onViewport)
     return () => {
       scroller.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('touchstart', markUserScroll)
       scroller.removeEventListener('touchmove', markUserScroll)
       scroller.removeEventListener('wheel', markUserScroll)
       window.visualViewport?.removeEventListener('resize', onViewport)
@@ -493,23 +539,67 @@ export function Shell({
     reads zero and does nothing, so it settles rather than looping.
   */
   useEffect(() => {
+    let frame = 0
+    let until = 0
+
     const clamp = () => {
       if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' })
     }
 
+    /*
+      **Every frame, for as long as the keyboard is moving — see
+      `KEYBOARD_ARRIVAL_MS`.**
+
+      Clamping on the scroll event alone left the page visibly pushed up for the
+      length of the animation, because iOS reports that scroll once at the end
+      rather than as it happens. Reported from the handset on 11 August as the
+      page pushing up and dropping back; the drop was the correction landing.
+
+      A frame loop does not need to be told when the document moved. It puts it
+      back before the frame is painted, so there is nothing to see.
+    */
+    const pump = () => {
+      clamp()
+      frame = performance.now() < until ? requestAnimationFrame(pump) : 0
+    }
+
+    const hold = () => {
+      until = performance.now() + KEYBOARD_ARRIVAL_MS
+      if (!frame) frame = requestAnimationFrame(pump)
+    }
+
+    /*
+      Focus is the earliest warning that a keyboard is coming — earlier than the
+      viewport resize, which arrives once it has started moving. Both arm the
+      loop, because closing the keyboard moves the document too and there is no
+      focus event that reliably precedes *that*.
+
+      `focusin` on the document rather than the field's own handler: the two
+      docks each have one and this is not their business, and it costs one
+      listener instead of a prop threaded to both.
+    */
+    const onFocusChange = (event: FocusEvent) => {
+      if (event.target instanceof HTMLInputElement) hold()
+    }
+
     clamp()
     window.addEventListener('scroll', clamp, { passive: true })
+    document.addEventListener('focusin', onFocusChange)
+    document.addEventListener('focusout', onFocusChange)
     /*
       The keyboard arriving is not a scroll, and on iOS the scroll it causes can
       land before or after the viewport resize. Listening to both means the
       document is put back whichever order they come in.
     */
-    window.visualViewport?.addEventListener('resize', clamp)
+    window.visualViewport?.addEventListener('resize', hold)
     window.visualViewport?.addEventListener('scroll', clamp)
     return () => {
       window.removeEventListener('scroll', clamp)
-      window.visualViewport?.removeEventListener('resize', clamp)
+      document.removeEventListener('focusin', onFocusChange)
+      document.removeEventListener('focusout', onFocusChange)
+      window.visualViewport?.removeEventListener('resize', hold)
       window.visualViewport?.removeEventListener('scroll', clamp)
+      if (frame) cancelAnimationFrame(frame)
     }
   }, [])
 
