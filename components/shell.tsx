@@ -173,14 +173,34 @@ const KEYBOARD_ARRIVAL_MS = 700
 const DOCUMENT_PARK = 1
 
 /**
- * How long after a finger leaves the screen a scroll may still be its fault.
+ * How long everything must have been still before an arrival at zero is allowed
+ * to mean the status bar.
  *
- * A drag that reaches the top of the page overscrolls into the document — that
- * is what pull-to-refresh is — and it arrives at zero exactly like a status-bar
- * tap does. The finger tells them apart, and momentum means the finger can be
- * gone by the time the scroll lands.
+ * ⚠ **This replaced a window measured from `touchend`, which was the wrong
+ * clock** — see the note on `stir` below, and the report that killed it. A flick
+ * hands the page to iOS and the finger leaves; the scroll it started runs for a
+ * second or more afterwards, and the elastic settle at the end of it takes the
+ * parked document to zero long after any touch-based grace has expired.
+ *
+ * 600ms is measured against the thing that actually reports: `#scroll-root`
+ * emits scroll events continuously until momentum stops, so this is 600ms after
+ * the page has genuinely come to rest rather than 600ms after a finger left.
+ *
+ * The cost is a status-bar tap in the half-second after a flick, which does
+ * nothing and can be repeated. That is the right way round: a gesture that
+ * occasionally needs asking twice against a page that occasionally yanks itself
+ * to the top while being read.
  */
-const TOUCH_GRACE_MS = 400
+const QUIET_MS = 600
+
+/**
+ * How long the page must *stay* still after the document reaches zero.
+ *
+ * The gesture ends with the document at zero and nothing else moved. Anything
+ * that only looked quiet for an instant will have stirred something within this
+ * window, and short enough that a real tap is still answered promptly.
+ */
+const CONFIRM_MS = 150
 
 /**
  * How long to wait before putting the document back on its park.
@@ -975,13 +995,59 @@ export function Shell({
   useEffect(() => {
     let frame = 0
     let until = 0
-    /* Whether a finger is on the glass, and when the last one left. */
-    let fingerDown = false
-    let touchEndedAt = 0
     let repark = 0
+    let confirm = 0
+
+    /*
+      ─────────────────────────────────────────────────────────────────────────
+       Stillness, not fingers — and the first version got this exactly wrong
+      ─────────────────────────────────────────────────────────────────────────
+
+      **Reported from the handset the same day this shipped: with the keyboard
+      down, an ordinary swipe returned the page to the top as though the clock
+      had been tapped.** With the keyboard up it behaved, which is the whole
+      diagnosis — a focused input is a separate guard below, and it was the only
+      one still standing.
+
+      The first version asked "is a finger on the glass, or was one lately".
+      **That is the signal this file has already recorded as unavailable**: see
+      the note where `USER_SCROLL_GRACE_MS` used to be, which removed a window
+      built on the same events because iOS withholds them exactly while it is
+      scrolling. Momentum outlives a `touchend` by a second or more, and the
+      parked document jitters to zero in the elastic settle at the end of a
+      flick — by which time the finger has been gone for longer than any grace
+      worth having.
+
+      So the question is not about fingers. It is **has anything moved lately**,
+      and the answer comes from the scroller itself, which reports continuously
+      through a flick and through every millisecond of the momentum after it.
+      A status-bar tap is the one arrival at zero that happens while the page is
+      standing still.
+
+      `stir` is called for anything that means motion or the intent of it. The
+      document's *own* movement is deliberately not one of them — that is the
+      signal being read, not noise to be suppressed by it.
+    */
+    let fingerDown = false
+    let stirredAt = 0
+    const stir = () => {
+      stirredAt = performance.now()
+    }
+    const still = () => !fingerDown && performance.now() - stirredAt > QUIET_MS
 
     const park = () => {
-      if (fingerDown) return
+      /*
+        Never under a finger — a write to the document's offset mid-drag is a
+        gesture being taken away from the person making it. Momentum is not held
+        off, deliberately: the old version parked straight through it on the
+        handset with no complaint, and waiting for stillness here would leave the
+        document off its park for a second after every status-bar tap, which is
+        exactly when the next one might come.
+      */
+      if (fingerDown) {
+        reparkSoon()
+        return
+      }
       if (window.scrollY !== DOCUMENT_PARK) {
         window.scrollTo({ top: DOCUMENT_PARK, behavior: 'instant' })
       }
@@ -1026,39 +1092,57 @@ export function Shell({
       reparkSoon()
     }
 
+    /*
+      Below the park, and the question is who moved it. Four things can, and
+      only the last is the gesture:
+
+      - a finger or the momentum behind it, dragging past the top of the page
+        into the overscroll, or settling out of a flick;
+      - the keyboard, arriving or leaving, which moves everything;
+      - a wheel or trackpad chaining out of `#scroll-root` at its own top,
+        which is a desktop and has no status bar to tap;
+      - the status bar.
+    */
+    const couldBeTheGesture = () =>
+      still() &&
+      performance.now() >= until &&
+      !(document.activeElement instanceof HTMLInputElement) &&
+      window.matchMedia('(pointer: coarse)').matches
+
     const onScroll = () => {
       clamp()
       /* Anything at or past the park is either the park itself or has just been
          put back by the line above. */
       if (window.scrollY >= DOCUMENT_PARK) return
 
-      /*
-        Below the park, and the question is who moved it. Four things can, and
-        only the last is the gesture:
+      /* Wherever it came from, the document does not stay off its park. */
+      reparkSoon()
+      if (!couldBeTheGesture()) return
 
-        - a finger, dragging past the top of the page into the overscroll;
-        - the keyboard, arriving or leaving, which moves everything;
-        - a wheel or trackpad chaining out of `#scroll-root` at its own top,
-          which is a desktop and has no status bar to tap;
-        - the status bar.
+      /*
+        **And it has to hold still through the arrival, not merely before it.**
+        The gesture ends with the document at zero and everything else exactly
+        where it was; a scroll that only looked quiet for an instant will have
+        stirred something by the time this runs. Cheap insurance against the
+        fault above coming back in a form the stillness window alone lets past,
+        and 150ms is under the threshold at which a tap feels unanswered.
       */
-      if (fingerDown || performance.now() - touchEndedAt < TOUCH_GRACE_MS) return
-      if (performance.now() < until) return
-      if (document.activeElement instanceof HTMLInputElement) return
-      if (!window.matchMedia('(pointer: coarse)').matches) {
-        reparkSoon()
-        return
-      }
-      toTop()
+      window.clearTimeout(confirm)
+      confirm = window.setTimeout(() => {
+        if (!couldBeTheGesture()) return
+        if (window.scrollY >= DOCUMENT_PARK) return
+        toTop()
+      }, CONFIRM_MS)
     }
 
     const onTouchStart = () => {
       fingerDown = true
+      stir()
     }
 
     const onTouchEnd = () => {
       fingerDown = false
-      touchEndedAt = performance.now()
+      stir()
       /* A drag that ended in the overscroll leaves the document off its park. */
       reparkSoon()
     }
@@ -1115,13 +1199,25 @@ export function Shell({
     document.addEventListener('focusin', onFocusChange)
     document.addEventListener('focusout', onFocusChange)
     /*
+      **The scroller is the one that matters**, and it is why this is no longer
+      a question about fingers: it reports every frame of a flick and every
+      frame of the momentum after it, including the elastic settle at the end,
+      which is the part that was being mistaken for the status bar.
+    */
+    const page = scrollRef.current
+    page?.addEventListener('scroll', stir, { passive: true })
+    /*
       Capture, so a handler inside the page cannot stop these arriving — the
-      dock cancels `pointerdown`, and the touch stream is what says whether a
-      scroll had a finger behind it.
+      dock cancels `pointerdown`. A touch is still worth hearing where it is
+      delivered; it is only being relied on as a *veto* now, never as the
+      absence of one.
     */
     document.addEventListener('touchstart', onTouchStart, { passive: true, capture: true })
+    document.addEventListener('touchmove', stir, { passive: true, capture: true })
     document.addEventListener('touchend', onTouchEnd, { passive: true, capture: true })
     document.addEventListener('touchcancel', onTouchEnd, { passive: true, capture: true })
+    /* A trackpad or wheel is not a touch and moves the page just the same. */
+    window.addEventListener('wheel', stir, { passive: true })
     /*
       The keyboard arriving is not a scroll, and on iOS the scroll it causes can
       land before or after the viewport resize. Listening to both means the
@@ -1133,13 +1229,17 @@ export function Shell({
       window.removeEventListener('scroll', onScroll)
       document.removeEventListener('focusin', onFocusChange)
       document.removeEventListener('focusout', onFocusChange)
+      page?.removeEventListener('scroll', stir)
       document.removeEventListener('touchstart', onTouchStart, true)
+      document.removeEventListener('touchmove', stir, true)
       document.removeEventListener('touchend', onTouchEnd, true)
       document.removeEventListener('touchcancel', onTouchEnd, true)
+      window.removeEventListener('wheel', stir)
       window.visualViewport?.removeEventListener('resize', hold)
       window.visualViewport?.removeEventListener('scroll', clamp)
       if (frame) cancelAnimationFrame(frame)
       window.clearTimeout(repark)
+      window.clearTimeout(confirm)
     }
   }, [])
 

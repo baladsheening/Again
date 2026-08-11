@@ -1521,9 +1521,31 @@ tap.
 **The pixel is the safety argument.** The lock it loosens exists because iOS
 scrolled the document by a full keyboard height and a correction is always a
 frame behind; a single pixel of range bounds that fault by arithmetic instead of
-by a race. Four guards keep the reading honest — a finger down or lately lifted,
-a keyboard moving, a focused input, and a fine pointer — and each was verified
-by making the false positive happen on purpose.
+by a race.
+
+⚠ **The first version of the guard shipped and was wrong, in the way this file
+had already written down once.** It asked whether a finger was on the glass or
+had lately left. Reported from the handset within the hour: with the keyboard
+down, an ordinary swipe threw the page back to the top. With the keyboard up it
+behaved — which is the entire diagnosis, since a focused input is a separate
+guard and was the only one still standing.
+
+A flick hands the page to iOS and the finger leaves; the scroll runs for a
+second or more afterwards, and the parked document reaches zero in the elastic
+settle at the end of it, long after any touch-based grace has expired. **This is
+the same false premise that removed `USER_SCROLL_GRACE_MS` on 11 August** —
+"touch events are not reliably delivered while momentum is running" — and it was
+rebuilt three commits later, in a different function, for a different purpose.
+The lesson generalises further than the note that carries it: **on iOS, a finger
+is not a proxy for motion.**
+
+The guard now asks whether anything has *moved* — `#scroll-root` reports every
+frame of a flick and of the momentum after it — and requires the page to have
+been still for 600ms before an arrival at zero counts, and to stay still for
+150ms after it. A touch is still heard, but only as a veto, never as the absence
+of one. The false positive was reproduced in a browser before the fix and is
+covered by it afterwards; the cost is a status-bar tap in the half-second after
+a flick, which does nothing and can be repeated.
 
 **It is a best effort, and the one part of this work a browser cannot settle.**
 Whether a standalone web app on iOS receives the status-bar tap at all is not
