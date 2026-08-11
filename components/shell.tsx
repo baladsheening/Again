@@ -13,6 +13,7 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
+import { ProbeReadout } from './probe-readout'
 import { SearchField } from './search-field'
 import { useSearch, type SearchFailure } from './search-provider'
 
@@ -515,6 +516,22 @@ export function Shell({
           </>,
           document.body,
         )}
+
+      {/*
+        ⚠ **TEMPORARY — remove this and `components/probe-readout.tsx` together**
+        once the phone's keyboard numbers have been read off a handset.
+
+        Portalled to `document.body` for the same reason the docks are: it has to
+        be measuring from where they measure from, not from inside the scroller.
+
+        See the file for why it is unconditional rather than behind a flag.
+      */}
+      {portalReady &&
+        createPortal(
+          <ProbeReadout focused={searchFocused} scroller={scrollRef} docks={docks} />,
+          document.body,
+        )}
+
       {/* --- the rail, from 45rem up ------------------------------------- */}
       <aside
         /*
