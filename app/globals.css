@@ -281,6 +281,65 @@
     overflow: hidden;
   }
 
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  …except for one pixel of it, which is a gesture rather than a scroll
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **Tapping the status bar returns a phone to the top of whatever it is
+   * showing, and iOS can only do that to a document that scrolls.** The lock
+   * above left the gesture nothing to act on, so it did nothing — on a wall of
+   * several hundred results, which is the one place it is worth most. There is
+   * no event for it either: UIKit sends the main scroll view to its top and
+   * reports nothing, so being sent somewhere is the only way to hear it happen.
+   *
+   * One pixel of range is enough to be sent *from*. `components/shell.tsx` parks
+   * the document at the far end of it and reads an arrival at zero, with no
+   * finger on the glass, as the tap — see `DOCUMENT_PARK` there, which is the
+   * other half of this and useless without it.
+   *
+   * ⚠ **The pixel is also the safety argument, and it is why this is not a
+   * retreat from the block above.** That lock exists because iOS scrolled the
+   * document by a full keyboard height to reveal a focused field, and a
+   * correction is always a frame late. With a single pixel of range the worst
+   * that reveal can now achieve is a single pixel — the fault is bounded by
+   * arithmetic rather than by a race. The clamp still holds the park every frame
+   * while a keyboard moves, and `927d0e0`'s pre-lift means there is nothing to
+   * reveal in the first place.
+   *
+   * **Coarse pointers only**, which is where status bars are. A mouse would get
+   * a permanent scrollbar down the right of every screen for a pixel it can
+   * never use, and the desktop document stays locked exactly as it was.
+   *
+   * `overflow-y: auto` beside the inherited `overflow-x: hidden`: neither is
+   * `visible`, so nothing is coerced back to `auto` sideways, and the root's
+   * overflow is what the viewport takes.
+   *
+   * ⚠ **`min-height`, and not `height` — measured, not preferred.** The obvious
+   * spelling is `height: calc(100% + 1px)`, and in a browser it does *nothing*:
+   * the root keeps a used height of exactly the viewport, `scrollHeight` equals
+   * `clientHeight`, and the range never appears. The identical declaration set
+   * from JavaScript on the same element does produce it, so the value resolves
+   * fine and the rule above is losing `height` to the `100%` it is trying to
+   * replace. `min-height` has nothing to argue with — it composes with that rule
+   * instead of competing, and it is the honest statement anyway: *at least a
+   * pixel taller than the viewport*.
+   *
+   * Verified in Chromium under touch emulation at two viewport sizes: root 781
+   * against a scrollport of 780, and `window.scrollTo({ top: 9 })` lands on 1.
+   * **The failure mode is silent** — the gesture simply stops working — so
+   * re-measure that number rather than reading this rule and assuming.
+   *
+   * It restores pull-to-refresh in a browser tab as a side effect, which the
+   * block above records as the thing it regretted costing.
+   */
+  @media (pointer: coarse) {
+    html {
+      min-height: calc(100% + 1px);
+      overflow-y: auto;
+    }
+  }
+
   body {
     position: fixed;
     inset: 0;

@@ -29,19 +29,6 @@ export function SearchField({ id }: { id: string }) {
   const { query, setQuery, setFocused, clear } = useSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  /**
-   * Whether the field held the caret at the instant the × was pressed.
-   *
-   * Recorded on `pointerdown` because that is the last moment the answer is
-   * still true: pressing a button moves focus off the input as its default
-   * action, so by `click` the field has already lost it and
-   * `document.activeElement` no longer says what the person was doing.
-   *
-   * A ref rather than state — it is written and read inside one gesture, and a
-   * render in the middle of that is both pointless and a chance to be stale.
-   */
-  const hadCaret = useRef(false)
-
   return (
     /*
       `-translate-y-px` is an optical correction, not a layout fix. The field is
@@ -134,7 +121,36 @@ export function SearchField({ id }: { id: string }) {
         asked to be rid of what was in the field, and the answer was half the
         screen filling with keys. The distinction the original note meant is
         between *holding* a caret through the clear and *summoning* one, and only
-        the first was ever wanted. See `hadCaret`.
+        the first was ever wanted.
+
+        ─────────────────────────────────────────────────────────────────────
+         Then it cleared nothing at all
+        ─────────────────────────────────────────────────────────────────────
+
+        Reported from the handset the same day: with the keyboard up, pressing ×
+        did nothing whatever.
+
+        **The blur is now prevented rather than repaired**, which is the fix for
+        it and a better spelling of everything above besides. Focus never leaves
+        the input, so the keyboard does not fold, so the dock does not drop back
+        its lifted height between the press and the `click` — and a control that
+        moves out from under a finger mid-tap is a failure this app has already
+        had once, on a poster, described in the note on the tap's aftermath in
+        `components/shell.tsx`. It also settles the two paragraphs above without
+        a ref or a repair: a caret that was there is held and one that was not is
+        never summoned, because nothing about focus happens at all.
+
+        ⚠ **That mechanism is the best explanation of the handset report, not a
+        measurement of it.** What *was* measured, in Chromium under touch
+        emulation, is a second and entirely separate way for this control to do
+        nothing — and it was introduced the same afternoon by the fix for
+        tap-outside-to-dismiss, which swallowed the ×'s own click. React
+        propagates a synthetic event through the component tree rather than the
+        DOM, and this field is portalled out of the element that handler sits
+        on. See the note beside `onContentPointerDown` in `components/shell.tsx`.
+
+        Both are fixed. If the × is ever reported dead again, check the second
+        one first: it is the one that can be reproduced without a phone.
 
         `ml-2` on top of the row's gap, so `tap-target`'s 44px expansion reaches
         only about a pixel into the field. That utility's own note warns about
@@ -148,13 +164,16 @@ export function SearchField({ id }: { id: string }) {
       {query.length > 0 && (
         <button
           type="button"
-          onPointerDown={() => {
-            hadCaret.current = document.activeElement === inputRef.current
-          }}
-          onClick={() => {
-            clear()
-            if (hadCaret.current) inputRef.current?.focus()
-          }}
+          /*
+            Both, because they cover different pointers and neither covers the
+            other. Cancelling `pointerdown` suppresses the compatibility mouse
+            events for *touch* — which is what the dock's own pre-lift relies on
+            — while a mouse fires `mousedown` regardless of it. `click` is spared
+            by both, deliberately and by spec, so the clear still arrives.
+          */
+          onPointerDown={(event) => event.preventDefault()}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => clear()}
           aria-label="Clear search"
           className="text-muted hover:text-text tap-target ml-2 shrink-0 self-center transition-colors"
         >

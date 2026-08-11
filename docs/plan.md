@@ -483,6 +483,19 @@ question to come back and answer it the same way.
   data it may be sending requests that the next keystroke throws away. The lever
   is `DEBOUNCE_MS` in `components/search-provider.tsx`, and `LIMITS.search` moved
   to 120/min to give it room.
+- **The status-bar tap, 11 August.** Everything downstream of the gesture is
+  verified in a browser — the document parks on one pixel, an arrival at zero
+  takes the wall to the top, and the four false positives (a finger, a closing
+  keyboard, a focused field, a mouse) each stay silent. What no browser can
+  answer is whether iOS hands a standalone web app the tap at all. **Scroll a
+  wall of results well down and tap the clock.** If nothing happens the cost is
+  one pixel of document and nothing else; see `DOCUMENT_PARK` in
+  `components/shell.tsx` for what to check next.
+- **The × on hardware.** It cleared nothing on the handset with the keyboard up,
+  and the fix removes the movement that best explains that — the blur is now
+  prevented, so the dock cannot drop out from under the finger between the press
+  and the click. A second, unrelated cause was found and fixed in the browser
+  (see `docs/decisions.md`, 11 August). Only the browser one is proven.
 
 ### Judgements waiting on a human
 

@@ -143,6 +143,55 @@ const KEYBOARD_SETTLE_MS = 500
 const KEYBOARD_ARRIVAL_MS = 700
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Where the document is parked, and why it is not zero (11 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **iOS scrolls to the top when you tap the status bar. It can only do that to a
+ * document that scrolls**, and this one deliberately does not — the page lives
+ * in `#scroll-root`, and `globals.css` locked the document down to stop iOS
+ * moving it to reveal a focused field. So the gesture had nothing to act on and
+ * did nothing, which on a wall of results is the one navigation a phone offers
+ * for free and this app was not answering. Asked for on the handset.
+ *
+ * There is no event for it. UIKit sends the main scroll view to its top and
+ * nothing else is reported, so the only way to hear the tap is to have somewhere
+ * to be sent *from*: the document is given exactly one pixel of range and held
+ * at the far end of it, and a scroll that arrives at zero with no finger
+ * anywhere near the screen is the status bar being tapped.
+ *
+ * ⚠ **One pixel is the whole safety argument.** The lock it replaces exists
+ * because iOS scrolled the document by a full keyboard height — 271px, measured
+ * — and a correction is always a frame behind. It cannot do that here: the range
+ * is a single pixel, so the worst iOS can now do is a pixel, whatever it thinks
+ * it is revealing. That is 99.6% of a lock that has no way of hearing the
+ * gesture, and it is why this is not a retreat from `75561da`.
+ *
+ * The clamp below is unchanged in kind; it now holds the document at the park
+ * instead of at zero, which is the same statement one pixel along.
+ */
+const DOCUMENT_PARK = 1
+
+/**
+ * How long after a finger leaves the screen a scroll may still be its fault.
+ *
+ * A drag that reaches the top of the page overscrolls into the document — that
+ * is what pull-to-refresh is — and it arrives at zero exactly like a status-bar
+ * tap does. The finger tells them apart, and momentum means the finger can be
+ * gone by the time the scroll lands.
+ */
+const TOUCH_GRACE_MS = 400
+
+/**
+ * How long to wait before putting the document back on its park.
+ *
+ * Long enough to outlast iOS's own animation to the top — re-parking into it
+ * would fight the gesture being answered — and long enough to let an overscroll
+ * settle rather than snapping the page out of a rubber band.
+ */
+const REPARK_MS = 400
+
+/**
  * The keyboard's height, as measured the last time one was open.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -558,6 +607,87 @@ export function Shell({
   }
 
   /*
+    ───────────────────────────────────────────────────────────────────────────
+     A tap on the page puts the keyboard away, and does nothing else (11 August)
+    ───────────────────────────────────────────────────────────────────────────
+
+    The keyboard covers half the screen and the only ways out of it were Escape,
+    which a phone does not have, and emptying the field. So the first tap
+    anywhere in the page was landing on whatever it hit — and what it usually hit
+    was a poster, because a wall of results is what is on the screen while
+    searching. Asked for on the handset: **collapse it, and do not open the
+    intent sheet on the way.**
+
+    Both halves matter. Dismissing without swallowing the tap would mean the
+    keyboard folds *and* the sheet opens, which is the complaint. Swallowing
+    without dismissing would be a dropped tap.
+
+    ⚠ **A React handler on `#scroll-root` hears the docks too, and that cost the
+    × its tap.** The scoping argument was "both docks are portalled to
+    `document.body`, so they are not in this subtree" — true of the DOM and
+    false of React, which propagates a synthetic event through the *component*
+    tree. The docks are `createPortal`ed from inside this element's JSX, so
+    every tap on the field, the chevron and the clear button arrived here as
+    well.
+
+    What that looked like: pressing × blurred the field and swallowed the very
+    click that was supposed to clear it, so the control did nothing at all —
+    which is one of the three things reported on 11 August, reproduced in a
+    browser and caused by the fix for another of them.
+
+    So containment is asked of the DOM, where the portals really are. It is one
+    line and it is the whole difference between "the page" and "the app".
+
+    The header and the wordmark *are* in here, and they cost a second tap while
+    the keyboard is up. That is the trade: one rule, stated once — the first tap
+    puts the keyboard away — rather than a list of exceptions that has to be
+    maintained against every control added later.
+
+    **The tap has to be a tap.** A finger that travelled was scrolling a wall of
+    results, and scrolling with the keyboard up is a thing people deliberately do
+    — the bar recedes for it. Same 12px as the dock, and for the same reason.
+
+    **Touch only.** A mouse click outside a field already blurs it, for free and
+    with no keyboard involved; swallowing desktop clicks to reproduce that would
+    break every control on the page.
+  */
+  const dismissTapRef = useRef<{ y: number } | null>(null)
+
+  /** Whether a tap landed in the page itself, rather than in a portalled dock. */
+  function inThePage(event: React.PointerEvent<HTMLElement>) {
+    return event.target instanceof Node && event.currentTarget.contains(event.target)
+  }
+
+  function onContentPointerDown(event: React.PointerEvent<HTMLElement>) {
+    if (event.pointerType === 'mouse') return
+    if (!inThePage(event)) return
+    /* Asked of the DOM rather than of `searchFocused`, because the question is
+       "is a keyboard up", and the answer is whichever field holds the caret. */
+    if (!(document.activeElement instanceof HTMLInputElement)) return
+    dismissTapRef.current = { y: event.clientY }
+  }
+
+  function onContentPointerUp(event: React.PointerEvent<HTMLElement>) {
+    const pending = dismissTapRef.current
+    dismissTapRef.current = null
+    if (!pending) return
+    if (!inThePage(event)) return
+    if (Math.abs(event.clientY - pending.y) > 12) return
+
+    const field = document.activeElement
+    if (!(field instanceof HTMLInputElement)) return
+
+    /* The same swallow the dock uses, for the same burst: `click` is not a
+       compatibility event and arrives whatever is done to the pointer. */
+    suppressTapAftermath()
+    field.blur()
+  }
+
+  function onContentPointerCancel() {
+    dismissTapRef.current = null
+  }
+
+  /*
     `dropsSafeArea` is passed rather than looked up, because reaching for the
     memoised `docks` array from an event handler is enough to stop the React
     Compiler preserving that memo — and the two call sites each already know
@@ -821,8 +951,8 @@ export function Shell({
     correction; it is an invariant the design already assumed, now enforced
     rather than hoped for.
 
-    ⚠ **Only positive offsets.** Pull-to-refresh is an *over*scroll past the top
-    and reads as zero or negative, so it survives untouched — which matters,
+    ⚠ **Only offsets past the park.** Pull-to-refresh is an *over*scroll past the
+    top and reads as zero or negative, so it survives untouched — which matters,
     because it was deliberately restored on 9 August and `413c1d9` wrongly
     claimed to have cost it. It never did: the document was still scrolling, and
     that was the bug rather than the price.
@@ -831,14 +961,106 @@ export function Shell({
     animate the correction, which is the visible slide this exists to remove.
 
     Resetting inside a scroll handler fires another scroll event; the second one
-    reads zero and does nothing, so it settles rather than looping.
+    reads the park and does nothing, so it settles rather than looping.
+
+    ─────────────────────────────────────────────────────────────────────────
+     It also listens for the status bar, which is the one scroll worth having
+    ─────────────────────────────────────────────────────────────────────────
+
+    See `DOCUMENT_PARK`. The two belong in one effect because they are one
+    quantity: this is the only place in the app that may write `window.scrollY`,
+    and a second listener holding an opinion about the same number is how a
+    correction and a gesture end up cancelling each other every frame.
   */
   useEffect(() => {
     let frame = 0
     let until = 0
+    /* Whether a finger is on the glass, and when the last one left. */
+    let fingerDown = false
+    let touchEndedAt = 0
+    let repark = 0
+
+    const park = () => {
+      if (fingerDown) return
+      if (window.scrollY !== DOCUMENT_PARK) {
+        window.scrollTo({ top: DOCUMENT_PARK, behavior: 'instant' })
+      }
+    }
+
+    const reparkSoon = () => {
+      window.clearTimeout(repark)
+      repark = window.setTimeout(park, REPARK_MS)
+    }
 
     const clamp = () => {
-      if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' })
+      if (window.scrollY > DOCUMENT_PARK) {
+        window.scrollTo({ top: DOCUMENT_PARK, behavior: 'instant' })
+      }
+    }
+
+    /**
+     * The status bar was tapped: take the page to the top of itself.
+     *
+     * `#scroll-root` is what scrolls, so this is where the gesture has to be
+     * forwarded — the document arriving at zero is only the messenger.
+     *
+     * **Smooth, which is the exception in this file and not a slip.** Everything
+     * else here corrects a movement nobody asked for, and animating those is the
+     * lurch each of their notes describes. This one is a journey somebody
+     * requested, and iOS animates it natively everywhere else on the phone; an
+     * instant jump would read as the page having been replaced rather than
+     * travelled. Reduced motion takes it back to instant, since the CSS
+     * `scroll-behavior` that normally answers that cannot reach an explicit
+     * `behavior` passed here.
+     */
+    const toTop = () => {
+      const box = scrollRef.current
+      if (box && box.scrollTop > 0) {
+        box.scrollTo({
+          top: 0,
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'instant'
+            : 'smooth',
+        })
+      }
+      reparkSoon()
+    }
+
+    const onScroll = () => {
+      clamp()
+      /* Anything at or past the park is either the park itself or has just been
+         put back by the line above. */
+      if (window.scrollY >= DOCUMENT_PARK) return
+
+      /*
+        Below the park, and the question is who moved it. Four things can, and
+        only the last is the gesture:
+
+        - a finger, dragging past the top of the page into the overscroll;
+        - the keyboard, arriving or leaving, which moves everything;
+        - a wheel or trackpad chaining out of `#scroll-root` at its own top,
+          which is a desktop and has no status bar to tap;
+        - the status bar.
+      */
+      if (fingerDown || performance.now() - touchEndedAt < TOUCH_GRACE_MS) return
+      if (performance.now() < until) return
+      if (document.activeElement instanceof HTMLInputElement) return
+      if (!window.matchMedia('(pointer: coarse)').matches) {
+        reparkSoon()
+        return
+      }
+      toTop()
+    }
+
+    const onTouchStart = () => {
+      fingerDown = true
+    }
+
+    const onTouchEnd = () => {
+      fingerDown = false
+      touchEndedAt = performance.now()
+      /* A drag that ended in the overscroll leaves the document off its park. */
+      reparkSoon()
     }
 
     /*
@@ -869,6 +1091,9 @@ export function Shell({
     const hold = () => {
       until = performance.now() + KEYBOARD_ARRIVAL_MS
       if (!frame) frame = requestAnimationFrame(pump)
+      /* A keyboard leaving takes the document with it, and the pump only ever
+         pushes *down* to the park. Put it back once the movement is over. */
+      reparkSoon()
     }
 
     /*
@@ -885,10 +1110,18 @@ export function Shell({
       if (event.target instanceof HTMLInputElement) hold()
     }
 
-    clamp()
-    window.addEventListener('scroll', clamp, { passive: true })
+    park()
+    window.addEventListener('scroll', onScroll, { passive: true })
     document.addEventListener('focusin', onFocusChange)
     document.addEventListener('focusout', onFocusChange)
+    /*
+      Capture, so a handler inside the page cannot stop these arriving — the
+      dock cancels `pointerdown`, and the touch stream is what says whether a
+      scroll had a finger behind it.
+    */
+    document.addEventListener('touchstart', onTouchStart, { passive: true, capture: true })
+    document.addEventListener('touchend', onTouchEnd, { passive: true, capture: true })
+    document.addEventListener('touchcancel', onTouchEnd, { passive: true, capture: true })
     /*
       The keyboard arriving is not a scroll, and on iOS the scroll it causes can
       land before or after the viewport resize. Listening to both means the
@@ -897,12 +1130,16 @@ export function Shell({
     window.visualViewport?.addEventListener('resize', hold)
     window.visualViewport?.addEventListener('scroll', clamp)
     return () => {
-      window.removeEventListener('scroll', clamp)
+      window.removeEventListener('scroll', onScroll)
       document.removeEventListener('focusin', onFocusChange)
       document.removeEventListener('focusout', onFocusChange)
+      document.removeEventListener('touchstart', onTouchStart, true)
+      document.removeEventListener('touchend', onTouchEnd, true)
+      document.removeEventListener('touchcancel', onTouchEnd, true)
       window.visualViewport?.removeEventListener('resize', hold)
       window.visualViewport?.removeEventListener('scroll', clamp)
       if (frame) cancelAnimationFrame(frame)
+      window.clearTimeout(repark)
     }
   }, [])
 
@@ -979,7 +1216,14 @@ export function Shell({
       the gesture kept working throughout. The clamp only ever pushes *positive*
       offsets back, so the overscroll past the top is untouched.
     */
-    <div id="scroll-root" ref={scrollRef} className="fixed inset-0 overflow-y-auto">
+    <div
+      id="scroll-root"
+      ref={scrollRef}
+      onPointerDownCapture={onContentPointerDown}
+      onPointerUpCapture={onContentPointerUp}
+      onPointerCancelCapture={onContentPointerCancel}
+      className="fixed inset-0 overflow-y-auto"
+    >
     <div className="rail:pl-68 mx-auto flex min-h-full w-full max-w-6xl flex-col">
       {/*
         The two references for `useKeyboardPin`. Each carries its dock's

@@ -1398,9 +1398,12 @@ There is no user-agent sniffing anywhere in it, and no `isIOS`.
 Five things, each answering a mechanism that was measured on the device rather
 than reasoned about:
 
-1. **The document is held at zero** — a clamp on positive `window.scrollY`, plus
-   `overflow: hidden` and a fixed body. iOS scrolls the document by the
-   keyboard's exact height to reveal a focused field.
+1. **The document is held at its park** — a clamp on any `window.scrollY` past
+   it, plus a fixed body and a root that is at most one pixel taller than the
+   viewport. iOS scrolls the document by the keyboard's exact height to reveal a
+   focused field; with a pixel of range that is a pixel. The park itself was
+   zero until the status-bar gesture needed somewhere to be sent from — see
+   "Three reports from one handset" below.
 2. **The pin re-measures every frame while the keyboard moves**, rather than
    once per viewport event. A correction scheduled from an event is a frame
    behind an animation.
@@ -1432,13 +1435,20 @@ fires only on a non-zero offset, which such a platform never produces.
 The pointer handlers return immediately for `pointerType === 'mouse'`, so no
 desktop browser sees any of it.
 
-⚠ **One part is not gated, and it is the one to revisit.** The `overflow:
-hidden` document lock in `globals.css` is unconditional CSS, so it costs
-pull-to-refresh in *any* browser tab, not only Safari's. It was left broad
-deliberately while the mechanism was unproven — a
-`@media (display-mode: standalone)` wrapper would narrow it, at the risk of the
-query being unsupported and the fix silently doing nothing. The mechanism is now
-proven, so narrowing it is live work rather than a gamble. See "Still open".
+⚠ **One part was not gated, and it has since been narrowed.** The `overflow:
+hidden` document lock in `globals.css` was unconditional CSS, so it cost
+pull-to-refresh in *any* browser tab, not only Safari's. It is now bounded to
+`(pointer: coarse)`, where a one-pixel range replaces the flat lock — the
+overscroll past the top survives, so the refresh comes back, and the clamp still
+holds every offset past the park. A fine pointer keeps the lock exactly as it
+was.
+
+The narrowing is by input device rather than by `display-mode: standalone`,
+which this entry previously proposed. A media query that is unsupported
+evaluates false, and false for `standalone` would have silently unlocked the
+document in the installed app — the one place the fault was measured. False for
+`pointer: coarse` leaves a desk locked, which is where the lock costs nothing.
+It fails the safe way round.
 
 ### Is there a better way?
 
@@ -1473,6 +1483,88 @@ gating above says they take the native path untouched, and that is a prediction.
 This project's own record is that predictions about layout lose to five minutes
 of looking — see the note at the end of this file, and every entry dated
 10 August.
+
+---
+
+## Three reports from one handset, and what each cost — 11 August
+
+Directed, in one line: *tapping outside the keyboard should collapse it without
+opening the intent sheet; tapping the status bar should return users to top;
+tapping the × should clear the field.* Each mechanism lives in a comment beside
+its code. This entry is for the two decisions that are not local to any of them,
+and for the trap that connects the first and the third.
+
+### Dismissal swallows the tap that dismissed
+
+One rule, applied to the whole page: **the first tap with a keyboard up puts the
+keyboard away and does nothing else.** The alternative — dismiss, but let the
+tap through — is precisely the reported fault, since what fills the screen
+during a search is a wall of posters and every one of them opens the intent
+sheet.
+
+What it costs is a second tap on the header's two glyphs, which are the only
+controls inside the page rather than in the furniture. A list of exemptions
+would have bought them back and would need extending by hand for every control
+added afterwards, which is how a rule stops being one. The collection bar, the
+field and the × are unaffected: they are in the docks, and a tap on the keyboard
+side of the argument is not a tap outside it.
+
+### The status bar needed the document back, one pixel of it
+
+iOS scroll-to-top acts on the main scroll view, and this app deliberately has
+none — the page scrolls in `#scroll-root` and the document was locked flat.
+There is no event for the gesture, so the only way to hear it is to be sent
+somewhere: the root is a pixel taller than the viewport, the document is parked
+at the far end of it, and an arrival at zero with no finger on the glass is the
+tap.
+
+**The pixel is the safety argument.** The lock it loosens exists because iOS
+scrolled the document by a full keyboard height and a correction is always a
+frame behind; a single pixel of range bounds that fault by arithmetic instead of
+by a race. Four guards keep the reading honest — a finger down or lately lifted,
+a keyboard moving, a focused input, and a fine pointer — and each was verified
+by making the false positive happen on purpose.
+
+**It is a best effort, and the one part of this work a browser cannot settle.**
+Whether a standalone web app on iOS receives the status-bar tap at all is not
+documented anywhere authoritative, and if it does not, this costs a pixel and
+changes nothing else. Everything downstream of the gesture is measured.
+
+### React events do not follow the DOM, and that broke the ×
+
+Both docks are `createPortal`ed into `document.body` from inside `#scroll-root`'s
+JSX. The dismissal handler was scoped to that element on the reasoning that the
+docks are not in its subtree — **true of the DOM and false of React**, which
+propagates a synthetic event through the component tree. So every tap on the
+field and on the × arrived at the dismissal handler, which blurred the field and
+swallowed the click that was meant to clear it.
+
+That is one of the three reported faults, reproduced exactly, and caused by the
+fix for another of them. It was found by driving the real app in Chromium under
+touch emulation, five minutes after the change looked finished and typechecked
+clean. Containment is now asked of the DOM, where the portals actually are.
+
+**The wider point is the file's own rule, restated:** a passing build says
+nothing about whether a screen works, and this is the second time this project
+has had a fault that only a browser could see.
+
+### Measured, not preferred
+
+Two findings worth keeping, because both fail silently:
+
+- **`min-height`, not `height`, for the root's extra pixel.** `height: calc(100%
+  + 1px)` from the stylesheet does nothing at all — the root keeps a used height
+  of exactly the viewport — while the identical declaration set from JavaScript
+  produces the range. `min-height` composes with the `height: 100%` already
+  there instead of arguing with it. Verified at two viewport sizes.
+- **Cancelling `pointerdown` spares the `click` in Chromium too**, which the
+  keyboard stack had only measured in WebKit. The × relies on it: the
+  cancellation is what stops the focus moving, and the click is what clears.
+
+**What is not verified:** the status-bar gesture itself, and the handset
+mechanism behind the × — the fix removes the movement that best explains the
+report, but the report was never reproduced on hardware. Twenty-nine assertions
+covering everything else pass in Chromium at phone, tablet and desk widths.
 
 ---
 
