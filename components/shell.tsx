@@ -367,6 +367,29 @@ export function Shell({
     that would leave the bar lifted over nothing with no keyboard coming.
     `pointerup` treats real movement as "not a tap" and puts the bar back, and
     `pointercancel` puts it back unconditionally.
+
+    ⚠ **`pointerdown` is cancelled, and that is what lets the keyboard stay.**
+    For touch, the compatibility mouse events — mousedown, mouseup, click — are
+    dispatched *after* `pointerup`, hit-tested at the touch point. By then the
+    bar has moved away, so they landed on the wall behind it, and mousedown's
+    default action on a non-focusable target is to blur the focused element:
+    the keyboard was granted at `pointerup` and taken back a beat later.
+    Observed on the handset as the keyboard starting to expand and collapsing
+    again. Cancelling `pointerdown` is the spec's off-switch for the whole
+    compatibility sequence — nothing else fires, nothing blurs, and the focus
+    this handler arranged is the one that stands.
+
+    **The whole row is the field, not just the input's own 24px box.** The
+    input sits centred in a 42px row, and a tap in the strip above or below it
+    has the row as its target — which fell through to the native path: iOS's
+    own touch adjustment focused the input anyway, without the lift, and the
+    bump came back. Observed as "it works near the bottom edge, but it bumps".
+    Any non-interactive target inside the dock now counts as the field; the
+    chevron and the collection links are interactive and keep themselves.
+
+    **Touch only.** A mouse needs none of this — no keyboard, no reveal, no
+    bump — and cancelling its pointerdown would break click-to-place-caret in
+    a field that still holds text.
   */
   const pendingTapRef = useRef<{
     input: HTMLInputElement
@@ -380,14 +403,29 @@ export function Shell({
     if (dropsSafeArea) el.style.paddingBottom = ''
   }
 
+  /** The input a tap on the dock means, or null where it means something else. */
+  function dockInput(dock: HTMLElement, target: EventTarget | null): HTMLInputElement | null {
+    if (!(target instanceof Element)) return null
+    /* Buttons and links in the dock are their own answer — the chevron, the
+       collections. Everything else in a dock is the field's furniture. */
+    if (target.closest('button, a')) return null
+    if (target instanceof HTMLInputElement) return target
+    return dock.querySelector('input')
+  }
+
   function onDockPointerDown(event: React.PointerEvent<HTMLElement>, dropsSafeArea = false) {
-    const input = event.target
-    if (!(input instanceof HTMLInputElement)) return
+    if (event.pointerType === 'mouse') return
+    const el = event.currentTarget
+    const input = dockInput(el, event.target)
+    if (!input) return
     if (document.activeElement === input) return
     const overlap = rememberedOverlap()
     if (overlap <= 0) return
 
-    const el = event.currentTarget
+    /* See the note above — this is what stops the synthesized mouse events
+       landing behind the moved bar and blurring the focus arranged below. */
+    event.preventDefault()
+
     el.style.transform = `translateY(${-overlap}px)`
     if (dropsSafeArea) el.style.paddingBottom = '0px'
     pendingTapRef.current = { input, el, dropsSafeArea, y: event.clientY }
