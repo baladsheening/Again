@@ -340,21 +340,46 @@ export function Shell({
     zero. So the decision is made in the native focus machinery, before the DOM
     handler fires, and a pre-lift written there is always one verdict late.
 
-    `pointerdown` is before any of it. The handler lifts the dock and then calls
-    `focus()` itself, which turns the race into a sequence: by the time WebKit
-    computes what needs revealing, the field is already above where the keyboard
-    will land. The natural focus that would have followed the tap finds the
-    field already focused and does nothing.
+    `pointerdown` is before any of it: the dock is lifted there, so by the time
+    anything computes what needs revealing, the field is already above where the
+    keyboard will land.
+
+    ⚠ **The focus itself happens at `pointerup`, and that split is load-bearing.**
+    The first version called `focus()` here, in the same handler as the lift —
+    and on the handset the bump was gone *and no keyboard ever arrived*. iOS
+    does not grant a keyboard for a focus arranged while the finger is still
+    down; it grants one for a focus made by a completed tap. So the lift takes
+    the earliest moment and the focus takes the latest one, which is also the
+    order the two need anyway — style is long flushed by the time the tap ends,
+    so the verdict reads the lifted rect.
+
+    The pair stays matched across the movement because touch pointers have
+    **implicit pointer capture**: every pointer event after `pointerdown` is
+    delivered to the same element, even though the bar has moved 333px out from
+    under the finger in between. A `click` could not be trusted for that; this
+    can.
 
     `preventScroll` covers the separate scroll `focus()` itself can request; the
     keyboard reveal is not that scroll, which is why the option alone never
     fixed anything.
 
-    A tap can die between pointerdown and focus taking — the finger can drag
-    away — and that would leave the bar lifted over nothing. The timeout puts it
-    back if focus has not landed; one second is longer than any tap and shorter
-    than a reader notices a stray bar.
+    A gesture can end somewhere other than a tap — a drag, or a cancel — and
+    that would leave the bar lifted over nothing with no keyboard coming.
+    `pointerup` treats real movement as "not a tap" and puts the bar back, and
+    `pointercancel` puts it back unconditionally.
   */
+  const pendingTapRef = useRef<{
+    input: HTMLInputElement
+    el: HTMLElement
+    dropsSafeArea: boolean
+    y: number
+  } | null>(null)
+
+  function restDock(el: HTMLElement, dropsSafeArea: boolean) {
+    el.style.transform = ''
+    if (dropsSafeArea) el.style.paddingBottom = ''
+  }
+
   function onDockPointerDown(event: React.PointerEvent<HTMLElement>, dropsSafeArea = false) {
     const input = event.target
     if (!(input instanceof HTMLInputElement)) return
@@ -365,14 +390,32 @@ export function Shell({
     const el = event.currentTarget
     el.style.transform = `translateY(${-overlap}px)`
     if (dropsSafeArea) el.style.paddingBottom = '0px'
-    input.focus({ preventScroll: true })
+    pendingTapRef.current = { input, el, dropsSafeArea, y: event.clientY }
+  }
 
+  function onDockPointerUp(event: React.PointerEvent<HTMLElement>) {
+    const pending = pendingTapRef.current
+    pendingTapRef.current = null
+    if (!pending) return
+
+    /* A finger that travelled was scrolling, not tapping. */
+    if (Math.abs(event.clientY - pending.y) > 12) {
+      restDock(pending.el, pending.dropsSafeArea)
+      return
+    }
+
+    pending.input.focus({ preventScroll: true })
+
+    /* If the keyboard is refused anyway, do not leave the bar lifted over nothing. */
     window.setTimeout(() => {
-      if (document.activeElement !== input) {
-        el.style.transform = ''
-        if (dropsSafeArea) el.style.paddingBottom = ''
-      }
-    }, 1000)
+      if (document.activeElement !== pending.input) restDock(pending.el, pending.dropsSafeArea)
+    }, 400)
+  }
+
+  function onDockPointerCancel() {
+    const pending = pendingTapRef.current
+    pendingTapRef.current = null
+    if (pending) restDock(pending.el, pending.dropsSafeArea)
   }
 
   /*
@@ -980,6 +1023,8 @@ export function Shell({
           <div
             ref={railRef}
             onPointerDownCapture={onDockPointerDown}
+            onPointerUpCapture={onDockPointerUp}
+            onPointerCancelCapture={onDockPointerCancel}
             onFocusCapture={onDockFocus}
             onBlurCapture={onDockBlur}
             className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
@@ -1197,6 +1242,8 @@ export function Shell({
         /* The phone's bar is the one whose bottom padding is a home-indicator
            inset — see `dropsSafeArea` on `SearchDock`. */
         onPointerDownCapture={(event) => onDockPointerDown(event, true)}
+        onPointerUpCapture={onDockPointerUp}
+        onPointerCancelCapture={onDockPointerCancel}
         onFocusCapture={(event) => onDockFocus(event, true)}
         onBlurCapture={onDockBlur}
         /*
