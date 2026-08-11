@@ -236,6 +236,50 @@
 }
 
 @layer base {
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The document may not scroll. Not "does not" — may not (11 August)
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **Measured on the handset**: tapping the search field makes iOS scroll the
+   * document by exactly the keyboard's height — `clmp 1 max 333` — to reveal the
+   * focused field. That scroll is composited off the main thread and *painted*
+   * before the `scroll` event is dispatched, so the clamp in
+   * `components/shell.tsx` puts it back a frame later and the round trip is
+   * visible as the whole page jumping up and dropping back.
+   *
+   * A correction cannot win that race; it is told after the paint. Nor can the
+   * field be moved out of the way first — that was tried, and it works in the
+   * sense that the bar is now correct throughout, but keyboard avoidance reads
+   * the field's *layout* position and a `transform` is a compositor artefact
+   * UIKit cannot see.
+   *
+   * So the range itself has to go. Nothing in this app is laid out in the
+   * document flow — the page lives in `#scroll-root`, which is `fixed inset-0` —
+   * so the document has no business scrolling under any circumstances, and
+   * `overflow: hidden` says so rather than hoping. `height: 100%` and the fixed
+   * body are the older, blunter half of the same statement, kept because this
+   * has to work rather than be tidy.
+   *
+   * ⚠ **This costs pull-to-refresh in a browser tab**, which was deliberately
+   * restored on 9 August and wrongly reported as lost once already. Applied
+   * unconditionally on purpose, and only for now: the app is used installed,
+   * where iOS provides no pull-to-refresh to lose, and a
+   * `@media (display-mode: standalone)` wrapper would narrow it — but if that
+   * query is unsupported the fix silently does nothing, which is the worst of
+   * the three outcomes. **Prove the mechanism first, then narrow it.**
+   */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    position: fixed;
+    inset: 0;
+  }
+
   html {
     background-color: var(--color-bg);
     color: var(--color-text);
@@ -244,14 +288,19 @@
 
     /*
       Deliberately no `overscroll-behavior`. The elastic bounce at the ends of
-      the page is the browser's, and pull-to-refresh comes with it — the two
+      the page is the browser's, and pull-to-refresh came with it — the two
       cannot be separated by a property value. `none` suppresses the overscroll
       *action* and takes the bounce with it; `contain` keeps the bounce and keeps
       the refresh.
 
       Both were tried on 9 August: `none`, then a hand-built rubber band to
       replace what it removed, then this. The native bounce is better than the
-      imitation, and the refresh is worth having with it.
+      imitation, and the refresh was worth having with it.
+
+      Moot while the rule above holds — a document that cannot scroll cannot
+      overscroll either. Left in place because it is the argument, not the
+      setting, that is worth keeping: if the lock is ever narrowed to standalone,
+      this is what the tab goes back to.
     */
   }
 
