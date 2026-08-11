@@ -190,6 +190,68 @@ let lastKeyboardOverlap = 0
 const OVERLAP_KEY = 'again:keyboard-overlap'
 
 /**
+ * The ground a lifted dock stands on, as a `box-shadow` value.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why the gap needs dressing at all
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The bar reaches its lifted position instantly and the keyboard takes about
+ * three hundred milliseconds to arrive, so for that beat there is a strip of
+ * poster wall between the two. Reported on the handset as looking wrong even
+ * though it closes itself, and it does look wrong: content appears *below* the
+ * bar, which is somewhere content never otherwise lives.
+ *
+ * **The instant arrival is not negotiable.** The field has to be clear of the
+ * keyboard before focus is granted or the native reveal scroll comes back — see
+ * `lastKeyboardOverlap` — and iOS exposes no animated keyboard edge to ride up
+ * with. One viewport resize is reported, when the movement has already
+ * finished.
+ *
+ * So the strip is filled with ground instead. The keys then rise over black
+ * rather than over artwork, which reads as the page ending where it in fact
+ * ends the moment the keyboard is up.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A shadow, and bounded — both deliberate
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **A shadow rather than an element**, for the reason the header's ground is one
+ * (see its note): it joins no layout, adds no height, cannot swallow a tap, and
+ * needs no ref threaded to it. It is painted behind the dock's own background,
+ * so it can only ever extend the ground, never cover the row.
+ *
+ * **Offset and spread are each half the depth**, which is not a trick for its
+ * own sake. A plain offset shifts the whole box down, so once the depth exceeds
+ * the bar's height — 333 against about 60 — the copy detaches and leaves a band
+ * of poster between. Inflating by half and shifting by half puts the shadow's
+ * top edge exactly on the element's own and its bottom edge exactly `depth`
+ * below: one continuous ground. The sideways inflation runs off both screen
+ * edges, where there is nothing to hit.
+ *
+ * ⚠ **Bounded to the lift, and that is the whole safety argument.** A screen-tall
+ * panel lived here until 10 August and was removed for making a small fault into
+ * a large one: it only covered the keyboard's own area *as long as the bar was
+ * where it should be*, and the moment it was not, it drew a sheet of black
+ * across the results. Its removal note asked for exactly this — a panel bounded
+ * to a plausible keyboard height, so the worst case stays small. The height is
+ * no longer plausible but measured, and the bound is the lift itself, so the
+ * ground can never reach further than the distance the bar has actually moved.
+ *
+ * Black is spelled out rather than taken from the token, for the same reason
+ * the header's shadow spells it: this has to match the dock's own ground
+ * exactly, and one shade off reads as a band across the screen. If
+ * `--color-bg` ever moves, this moves with it by hand.
+ */
+function groundFor(lift: number) {
+  /* A positive lift pushes the dock *down*; there is no gap under it then. */
+  const depth = Math.ceil(Math.max(0, -lift))
+  if (!depth) return ''
+  const half = depth / 2
+  return `0 ${half}px 0 ${half}px #000`
+}
+
+/**
  * Swallow the synthesized mouse burst that follows a handled tap.
  *
  * Installed at `pointerup`, at the document, capture phase — ahead of React's
@@ -431,6 +493,7 @@ export function Shell({
 
   function restDock(el: HTMLElement, dropsSafeArea: boolean) {
     el.style.transform = ''
+    el.style.boxShadow = ''
     if (dropsSafeArea) el.style.paddingBottom = ''
   }
 
@@ -458,6 +521,12 @@ export function Shell({
     event.preventDefault()
 
     el.style.transform = `translateY(${-overlap}px)`
+    /*
+      The ground goes down with the lift, in the same write, or the strip of
+      poster it exists to cover is visible for the frame between them. Only the
+      phone's bar — see the note on `dropsSafeArea` at the hook's call site.
+    */
+    if (dropsSafeArea) el.style.boxShadow = groundFor(-overlap)
     if (dropsSafeArea) el.style.paddingBottom = '0px'
     pendingTapRef.current = { input, el, dropsSafeArea, y: event.clientY }
   }
@@ -1731,6 +1800,10 @@ function useKeyboardPin(
       const el = dock.el.current
       if (!el) return
       el.style.transform = ''
+      /* Unconditional: neither dock carries a shadow from its class list, so
+         clearing one that was never written costs nothing and cannot be
+         forgotten if the ground is ever given to the other. */
+      el.style.boxShadow = ''
       if (dock.dropsSafeArea) el.style.paddingBottom = ''
     }
 
@@ -1822,6 +1895,16 @@ function useKeyboardPin(
       }
 
       el.style.transform = lift ? `translateY(${lift}px)` : ''
+      /*
+        ⚠ **The phone's bar only** — `dropsSafeArea` is standing in for "this
+        dock rests on the bottom edge of the screen", which is the one fact both
+        it and the ground follow from. The rail's dock is a full-height column
+        whose visible band is at the foot of the *content*, so a shadow on the
+        element this holds would paint a screen of black rather than a strip.
+        Dressing that one needs a ref to the band inside it, and it is untested
+        territory besides — see `docs/decisions.md` on iPad.
+      */
+      if (shown.dropsSafeArea) el.style.boxShadow = groundFor(lift)
       if (shown.dropsSafeArea) el.style.paddingBottom = '0px'
     }
 
