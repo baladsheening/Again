@@ -483,14 +483,6 @@ question to come back and answer it the same way.
   data it may be sending requests that the next keystroke throws away. The lever
   is `DEBOUNCE_MS` in `components/search-provider.tsx`, and `LIMITS.search` moved
   to 120/min to give it room.
-- **The status-bar tap, 11 August.** Everything downstream of the gesture is
-  verified in a browser — the document parks on one pixel, an arrival at zero
-  takes the wall to the top, and the four false positives (a finger, a closing
-  keyboard, a focused field, a mouse) each stay silent. What no browser can
-  answer is whether iOS hands a standalone web app the tap at all. **Scroll a
-  wall of results well down and tap the clock.** If nothing happens the cost is
-  one pixel of document and nothing else; see `DOCUMENT_PARK` in
-  `components/shell.tsx` for what to check next.
 - **The × on hardware.** It cleared nothing on the handset with the keyboard up,
   and the fix removes the movement that best explains that — the blur is now
   prevented, so the dock cannot drop out from under the finger between the press
@@ -507,6 +499,15 @@ question to come back and answer it the same way.
   gap back at `gap-4`. All three cases are measured in `docs/decisions.md`, so
   the next change of mind is `text-transform` plus two numbers in
   `components/shell.tsx`.
+- **Getting back to the top of a long wall.** Asked for on 11 August as *tapping
+  the status bar should return users to top*. Built against the iOS gesture,
+  shipped twice, and removed at the client's instruction after it damaged
+  ordinary scrolling both times — the full account is in `docs/decisions.md`
+  under *What was tried for the status bar, and removed*. The need is real and
+  is now unmet: a wall of search results runs to hundreds of posters and the only
+  way back up is to swipe. **This wants a control the app can actually observe**
+  rather than a platform gesture it can only infer — the masthead is the obvious
+  candidate, and it is a product decision rather than a mechanism one.
 - **The chevron's ink at the desktop foot.** Its *box* is flush with the
   posters; the glyph is drawn ~4px inside its own viewBox, so the visible mark
   sits slightly right of the poster edge. One negative margin if it should be

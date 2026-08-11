@@ -1398,12 +1398,9 @@ There is no user-agent sniffing anywhere in it, and no `isIOS`.
 Five things, each answering a mechanism that was measured on the device rather
 than reasoned about:
 
-1. **The document is held at its park** — a clamp on any `window.scrollY` past
-   it, plus a fixed body and a root that is at most one pixel taller than the
-   viewport. iOS scrolls the document by the keyboard's exact height to reveal a
-   focused field; with a pixel of range that is a pixel. The park itself was
-   zero until the status-bar gesture needed somewhere to be sent from — see
-   "Three reports from one handset" below.
+1. **The document is held at zero** — a clamp on positive `window.scrollY`, plus
+   `overflow: hidden` and a fixed body. iOS scrolls the document by the
+   keyboard's exact height to reveal a focused field.
 2. **The pin re-measures every frame while the keyboard moves**, rather than
    once per viewport event. A correction scheduled from an event is a frame
    behind an animation.
@@ -1435,20 +1432,20 @@ fires only on a non-zero offset, which such a platform never produces.
 The pointer handlers return immediately for `pointerType === 'mouse'`, so no
 desktop browser sees any of it.
 
-⚠ **One part was not gated, and it has since been narrowed.** The `overflow:
-hidden` document lock in `globals.css` was unconditional CSS, so it cost
-pull-to-refresh in *any* browser tab, not only Safari's. It is now bounded to
-`(pointer: coarse)`, where a one-pixel range replaces the flat lock — the
-overscroll past the top survives, so the refresh comes back, and the clamp still
-holds every offset past the park. A fine pointer keeps the lock exactly as it
-was.
+⚠ **One part is not gated, and it is the one to revisit.** The `overflow:
+hidden` document lock in `globals.css` is unconditional CSS, so it costs
+pull-to-refresh in *any* browser tab, not only Safari's. It was left broad
+deliberately while the mechanism was unproven — a
+`@media (display-mode: standalone)` wrapper would narrow it, at the risk of the
+query being unsupported and the fix silently doing nothing. The mechanism is now
+proven, so narrowing it is live work rather than a gamble. See "Still open".
 
-The narrowing is by input device rather than by `display-mode: standalone`,
-which this entry previously proposed. A media query that is unsupported
-evaluates false, and false for `standalone` would have silently unlocked the
-document in the installed app — the one place the fault was measured. False for
-`pointer: coarse` leaves a desk locked, which is where the lock costs nothing.
-It fails the safe way round.
+⚠ **It was narrowed once, on 11 August, and put back.** Loosening the lock to a
+single pixel of range on coarse pointers was how the status-bar gesture was
+given something to listen to, and it cost ordinary scrolling twice on the
+handset before being reverted whole. If this is narrowed again it should be for
+pull-to-refresh's sake alone, and with no detector reading the result — see
+"What was tried for the status bar, and removed" below.
 
 ### Is there a better way?
 
@@ -1486,13 +1483,17 @@ of looking — see the note at the end of this file, and every entry dated
 
 ---
 
-## Three reports from one handset, and what each cost — 11 August
+## Three reports from one handset — two answered, one withdrawn — 11 August
 
 Directed, in one line: *tapping outside the keyboard should collapse it without
 opening the intent sheet; tapping the status bar should return users to top;
-tapping the × should clear the field.* Each mechanism lives in a comment beside
-its code. This entry is for the two decisions that are not local to any of them,
-and for the trap that connects the first and the third.
+tapping the × should clear the field.* The first and third are built and live in
+comments beside their code. **The second was built, shipped, broke scrolling
+twice, and was removed entirely at the client's instruction** — that account is
+at the end of this entry, because what it cost is worth more than what it did.
+
+This section is for the decisions that are not local to any one mechanism, and
+for the trap that connects the first and the third.
 
 ### Dismissal swallows the tap that dismissed
 
@@ -1508,49 +1509,6 @@ would have bought them back and would need extending by hand for every control
 added afterwards, which is how a rule stops being one. The collection bar, the
 field and the × are unaffected: they are in the docks, and a tap on the keyboard
 side of the argument is not a tap outside it.
-
-### The status bar needed the document back, one pixel of it
-
-iOS scroll-to-top acts on the main scroll view, and this app deliberately has
-none — the page scrolls in `#scroll-root` and the document was locked flat.
-There is no event for the gesture, so the only way to hear it is to be sent
-somewhere: the root is a pixel taller than the viewport, the document is parked
-at the far end of it, and an arrival at zero with no finger on the glass is the
-tap.
-
-**The pixel is the safety argument.** The lock it loosens exists because iOS
-scrolled the document by a full keyboard height and a correction is always a
-frame behind; a single pixel of range bounds that fault by arithmetic instead of
-by a race.
-
-⚠ **The first version of the guard shipped and was wrong, in the way this file
-had already written down once.** It asked whether a finger was on the glass or
-had lately left. Reported from the handset within the hour: with the keyboard
-down, an ordinary swipe threw the page back to the top. With the keyboard up it
-behaved — which is the entire diagnosis, since a focused input is a separate
-guard and was the only one still standing.
-
-A flick hands the page to iOS and the finger leaves; the scroll runs for a
-second or more afterwards, and the parked document reaches zero in the elastic
-settle at the end of it, long after any touch-based grace has expired. **This is
-the same false premise that removed `USER_SCROLL_GRACE_MS` on 11 August** —
-"touch events are not reliably delivered while momentum is running" — and it was
-rebuilt three commits later, in a different function, for a different purpose.
-The lesson generalises further than the note that carries it: **on iOS, a finger
-is not a proxy for motion.**
-
-The guard now asks whether anything has *moved* — `#scroll-root` reports every
-frame of a flick and of the momentum after it — and requires the page to have
-been still for 600ms before an arrival at zero counts, and to stay still for
-150ms after it. A touch is still heard, but only as a veto, never as the absence
-of one. The false positive was reproduced in a browser before the fix and is
-covered by it afterwards; the cost is a status-bar tap in the half-second after
-a flick, which does nothing and can be repeated.
-
-**It is a best effort, and the one part of this work a browser cannot settle.**
-Whether a standalone web app on iOS receives the status-bar tap at all is not
-documented anywhere authoritative, and if it does not, this costs a pixel and
-changes nothing else. Everything downstream of the gesture is measured.
 
 ### React events do not follow the DOM, and that broke the ×
 
@@ -1572,21 +1530,66 @@ has had a fault that only a browser could see.
 
 ### Measured, not preferred
 
-Two findings worth keeping, because both fail silently:
+**Cancelling `pointerdown` spares the `click` in Chromium too**, which the
+keyboard stack had only measured in WebKit. The × relies on it: the cancellation
+is what stops the focus moving, and the click is what clears.
 
-- **`min-height`, not `height`, for the root's extra pixel.** `height: calc(100%
-  + 1px)` from the stylesheet does nothing at all — the root keeps a used height
-  of exactly the viewport — while the identical declaration set from JavaScript
-  produces the range. `min-height` composes with the `height: 100%` already
-  there instead of arguing with it. Verified at two viewport sizes.
-- **Cancelling `pointerdown` spares the `click` in Chromium too**, which the
-  keyboard stack had only measured in WebKit. The × relies on it: the
-  cancellation is what stops the focus moving, and the click is what clears.
+**What is not verified:** the handset mechanism behind the × — the fix removes
+the movement that best explains the report, but the report was never reproduced
+on hardware. Everything else is covered by browser assertions at phone, tablet
+and desk widths.
 
-**What is not verified:** the status-bar gesture itself, and the handset
-mechanism behind the × — the fix removes the movement that best explains the
-report, but the report was never reproduced on hardware. Twenty-nine assertions
-covering everything else pass in Chromium at phone, tablet and desk widths.
+### What was tried for the status bar, and removed
+
+**Do not rebuild this without reading the whole of this subsection.** It shipped
+twice and was withdrawn at the client's instruction with the gesture still never
+observed working once.
+
+iOS scroll-to-top acts on the main frame's scroll view, and this app
+deliberately has none: the page scrolls in `#scroll-root` and the document is
+locked flat. There is no event for the gesture — UIKit scrolls the view and
+reports nothing else — so the only way to hear it is to have somewhere to be
+sent *from*. The attempt gave the root one pixel of range on coarse pointers,
+parked the document at the far end of it, and read an arrival at zero as the tap.
+
+It cost ordinary scrolling twice:
+
+1. **First version.** The guard asked whether a finger was on the glass or had
+   lately left. With the keyboard down, an ordinary swipe threw the page back to
+   the top; with the keyboard up it behaved, because a focused input was a
+   separate guard and the only one still standing.
+2. **Second version.** The guard asked whether anything had *moved* —
+   `#scroll-root` reports every frame of a flick and of the momentum after it —
+   and required 600ms of stillness before an arrival at zero counted. The
+   reported fault was reproduced in a browser before the change and covered
+   after it. **The client reported it still made things worse**, and the whole
+   mechanism came out.
+
+Two things are worth carrying forward from it.
+
+**On iOS, a finger is not a proxy for motion.** The first version's premise is
+the one this file had already written down when `USER_SCROLL_GRACE_MS` was
+removed the same day — touch events are not reliably delivered while momentum is
+running — and it was rebuilt three commits later, in a different function, for a
+different purpose. A flick hands the page to iOS and the finger leaves; the
+scroll runs for a second or more afterwards, and a parked document reaches zero
+in the elastic settle at the end of it, long after any touch-based grace has
+expired.
+
+**`min-height`, not `height`, if a range is ever wanted on the root.** `height:
+calc(100% + 1px)` from a stylesheet does nothing at all — the root keeps a used
+height of exactly the viewport — while the identical declaration set from
+JavaScript produces the range. `min-height` composes with the `height: 100%`
+already there instead of arguing with it. It fails silently, which is how it
+cost an hour.
+
+**What would make this worth attempting again:** evidence that a standalone web
+app on iOS receives the status-bar tap at all. That was never established, and
+without it the whole design is a detector for an event that may never arrive —
+which is the real reason to leave it out, ahead of any argument about guards. A
+deliberate control in the app is the honest alternative: the wordmark is already
+a link home, and a tap on the masthead is a gesture this app can actually
+observe.
 
 ---
 
