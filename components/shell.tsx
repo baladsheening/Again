@@ -309,6 +309,49 @@ export function Shell({
   const keyboardFocusAtRef = useRef(0)
 
   /*
+    **The pre-lift moved from focus to pointerdown, because focus is after the
+    verdict.** Measured on `51d9b16`: the bar was in position through the whole
+    arrival — peak `ERR` read 0 — and iOS still scrolled the document by the full
+    keyboard height (`clmp 1 max 333`). If the reveal were computed from where
+    the field was once the focus *event* had run, that scroll would have been
+    zero. So the decision is made in the native focus machinery, before the DOM
+    handler fires, and a pre-lift written there is always one verdict late.
+
+    `pointerdown` is before any of it. The handler lifts the dock and then calls
+    `focus()` itself, which turns the race into a sequence: by the time WebKit
+    computes what needs revealing, the field is already above where the keyboard
+    will land. The natural focus that would have followed the tap finds the
+    field already focused and does nothing.
+
+    `preventScroll` covers the separate scroll `focus()` itself can request; the
+    keyboard reveal is not that scroll, which is why the option alone never
+    fixed anything.
+
+    A tap can die between pointerdown and focus taking — the finger can drag
+    away — and that would leave the bar lifted over nothing. The timeout puts it
+    back if focus has not landed; one second is longer than any tap and shorter
+    than a reader notices a stray bar.
+  */
+  function onDockPointerDown(event: React.PointerEvent<HTMLElement>, dropsSafeArea = false) {
+    const input = event.target
+    if (!(input instanceof HTMLInputElement)) return
+    if (document.activeElement === input) return
+    if (lastKeyboardOverlap <= 0) return
+
+    const el = event.currentTarget
+    el.style.transform = `translateY(${-lastKeyboardOverlap}px)`
+    if (dropsSafeArea) el.style.paddingBottom = '0px'
+    input.focus({ preventScroll: true })
+
+    window.setTimeout(() => {
+      if (document.activeElement !== input) {
+        el.style.transform = ''
+        if (dropsSafeArea) el.style.paddingBottom = ''
+      }
+    }, 1000)
+  }
+
+  /*
     `dropsSafeArea` is passed rather than looked up, because reaching for the
     memoised `docks` array from an event handler is enough to stop the React
     Compiler preserving that memo — and the two call sites each already know
@@ -932,6 +975,7 @@ export function Shell({
         createPortal(
           <div
             ref={railRef}
+            onPointerDownCapture={onDockPointerDown}
             onFocusCapture={onDockFocus}
             onBlurCapture={onDockBlur}
             className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
@@ -1148,6 +1192,7 @@ export function Shell({
         aria-label="Main"
         /* The phone's bar is the one whose bottom padding is a home-indicator
            inset — see `dropsSafeArea` on `SearchDock`. */
+        onPointerDownCapture={(event) => onDockPointerDown(event, true)}
         onFocusCapture={(event) => onDockFocus(event, true)}
         onBlurCapture={onDockBlur}
         /*
