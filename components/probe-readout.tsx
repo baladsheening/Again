@@ -94,6 +94,27 @@ function capturingAncestor(el: HTMLElement) {
 /** How often to walk the ancestry, in frames. It cannot change mid-gesture. */
 const ANCESTRY_EVERY = 30
 
+/**
+ * ⚠ **TEMPORARY, and it lives here so it dies with this file.** What the
+ * document-scroll clamp in `Shell` has actually caught.
+ *
+ * The clamp corrects `window.scrollY` from a `scroll` listener, which runs
+ * *before* any `requestAnimationFrame` — so by the time this probe samples,
+ * the value is always back to zero. Every reading of `scrY 0` in this readout is
+ * therefore consistent with two opposite worlds: iOS never scrolled, or iOS
+ * scrolled and was put back before anything could look.
+ *
+ * On iOS the scroll itself is composited off the main thread and painted before
+ * the event is dispatched, so the second world would show exactly the reported
+ * symptom — a page that jumps and drops back — while every number here says
+ * nothing moved.
+ *
+ * `hits` is how many times the clamp found a non-zero offset since focus, and
+ * `max` is the furthest it saw. Both zero means the document genuinely is not
+ * moving and the bump is somewhere else entirely.
+ */
+export const clampWatch = { hits: 0, max: 0 }
+
 type ProbeDock = {
   el: React.RefObject<HTMLElement | null>
   anchor: React.RefObject<HTMLElement | null>
@@ -186,6 +207,8 @@ export function ProbeReadout({
   */
   useEffect(() => {
     peaks.current = { ...NO_PEAKS }
+    clampWatch.hits = 0
+    clampWatch.max = 0
   }, [focused])
 
   useEffect(() => {
@@ -305,6 +328,12 @@ export function ProbeReadout({
             by exactly this much.
           */
           `wall ${n(p.wallMin)} .... ${n(p.wallMax)}`,
+          /*
+            What the clamp caught and this probe cannot see for itself — see
+            `clampWatch`. Non-zero means the document *is* being scrolled and
+            put back, and the bump is that round trip.
+          */
+          `clmp ${n(clampWatch.hits)} max  ${n(clampWatch.max)}`,
         ].join('\n')
       }
 

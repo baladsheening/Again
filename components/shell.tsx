@@ -13,7 +13,7 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
-import { ProbeReadout } from './probe-readout'
+import { clampWatch, ProbeReadout } from './probe-readout'
 import { SearchField } from './search-field'
 import { useSearch, type SearchFailure } from './search-provider'
 
@@ -588,7 +588,12 @@ export function Shell({
     let until = 0
 
     const clamp = () => {
-      if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' })
+      const y = window.scrollY
+      if (y <= 0) return
+      /* ⚠ TEMPORARY — see `clampWatch`. Goes with the probe. */
+      clampWatch.hits += 1
+      if (y > clampWatch.max) clampWatch.max = y
+      window.scrollTo({ top: 0, behavior: 'instant' })
     }
 
     /*
@@ -1623,7 +1628,31 @@ function useKeyboardPin(
         stay level with the keyboard. The clamp discarded exactly that, which is
         why the bar floated mid-results from a few hundred pixels in.
       */
-      const lift = vv.offsetTop + vv.height - anchor.getBoundingClientRect().bottom
+      let lift = vv.offsetTop + vv.height - anchor.getBoundingClientRect().bottom
+
+      /*
+        **Do not undo the pre-lift while waiting for the keyboard to arrive.**
+
+        `onDockFocus` raises the bar clear of where the keyboard is about to be,
+        so that iOS has no covered field to reveal — see `lastKeyboardOverlap`.
+        This function then ran on the very next frame, found a viewport that had
+        not shrunk yet, measured a lift of zero, and wrote `transform = ''`.
+
+        The pre-lift was therefore destroyed about one frame after it was
+        applied, every time, which is why it changed nothing. A thermostat that
+        switches the heating off because the room is not yet cold.
+
+        Zero is not "the bar is where it should be" during the arrival window; it
+        is "no keyboard has been seen yet". While that is true and a height is
+        remembered, the assumption stands. The moment the viewport actually
+        shrinks the measurement is non-zero and takes over on its own.
+
+        Outside the window this is skipped entirely, so a bar with no keyboard
+        under it still returns to rest.
+      */
+      if (Math.abs(lift) < 1 && lastKeyboardOverlap > 0 && performance.now() < until) {
+        lift = -lastKeyboardOverlap
+      }
 
       el.style.transform = lift ? `translateY(${lift}px)` : ''
       if (shown.dropsSafeArea) el.style.paddingBottom = '0px'
