@@ -1380,6 +1380,102 @@ changes nothing else; moving the mark's own box would re-open all of it.
 
 ---
 
+## The keyboard, and why the iOS counter-measures are still portable — 11 August
+
+The phone's search bar with a keyboard open took two days and eleven commits.
+The mechanisms are documented where each fix lives, in `components/shell.tsx`
+and `app/globals.css`. This entry is about the shape of the result, because a
+reader meeting that file for the first time will see a stack of
+platform-specific workarounds and reasonably ask whether the app has been built
+for one handset.
+
+**It has not, and the reason is a rule worth stating on its own: every
+counter-measure arms off a measured symptom, never off a platform identity.**
+There is no user-agent sniffing anywhere in it, and no `isIOS`.
+
+### What is in the stack
+
+Five things, each answering a mechanism that was measured on the device rather
+than reasoned about:
+
+1. **The document is held at zero** — a clamp on positive `window.scrollY`, plus
+   `overflow: hidden` and a fixed body. iOS scrolls the document by the
+   keyboard's exact height to reveal a focused field.
+2. **The pin re-measures every frame while the keyboard moves**, rather than
+   once per viewport event. A correction scheduled from an event is a frame
+   behind an animation.
+3. **The bar is lifted at `pointerdown`**, using a keyboard height remembered
+   from last time. The native reveal is decided before the DOM focus event
+   fires, so a lift written at focus is always one verdict late.
+4. **Focus is called at `pointerup`.** iOS grants a keyboard to a completed tap,
+   not to a focus arranged while the finger is still down — arrange it at
+   `pointerdown` and you get focus with no keys.
+5. **The tap's aftermath is swallowed.** The synthesized mouse burst is
+   hit-tested at the touch point, where the bar no longer is; `preventDefault`
+   on `pointerdown` kills mousedown/mouseup, and a 300ms document-level capture
+   handler kills the `click`, which the spec deliberately spares.
+
+### Why this is not an iOS build
+
+Items 3, 4 and 5 all live behind one early return: `rememberedOverlap() > 0`.
+Overlap is *measured*, as the distance between the shell's scroller and the
+bottom of the visible area. On a platform that shrinks the layout viewport for
+its keyboard — which is what `interactiveWidget: 'resizes-content'` asks for and
+what Chromium implements — that distance is zero, nothing is ever remembered,
+and none of the three ever runs. The tap takes the plain native path from end to
+end.
+
+Item 2 is a thermostat: it corrects the error it measures, and on a platform
+where `fixed` behaves the error is zero and it writes nothing. Item 1's clamp
+fires only on a non-zero offset, which such a platform never produces.
+
+The pointer handlers return immediately for `pointerType === 'mouse'`, so no
+desktop browser sees any of it.
+
+⚠ **One part is not gated, and it is the one to revisit.** The `overflow:
+hidden` document lock in `globals.css` is unconditional CSS, so it costs
+pull-to-refresh in *any* browser tab, not only Safari's. It was left broad
+deliberately while the mechanism was unproven — a
+`@media (display-mode: standalone)` wrapper would narrow it, at the risk of the
+query being unsupported and the fix silently doing nothing. The mechanism is now
+proven, so narrowing it is live work rather than a gamble. See "Still open".
+
+### Is there a better way?
+
+**On today's iOS, no.** A standalone web app gets no keyboard contract from the
+platform: `interactive-widget` is ignored, there is no `VirtualKeyboard` API and
+no `keyboard-inset` environment variable, and the reveal decision happens in
+native focus machinery before any script runs. Chromium offers all three, which
+is exactly why none of this fires there. Every production web app with a
+bottom-docked input on iOS carries some version of this; the difference here is
+that ours is measured and documented rather than copied.
+
+Two genuine alternatives exist, neither of them a refactor:
+
+- **A thin native wrapper** (Capacitor and similar) receives UIKit's real
+  keyboard-frame callbacks, including the animation curve, and would delete most
+  of this. That is a platform decision, not a code cleanup, and it buys a great
+  deal of other cost.
+- **The decoy-field pattern** — the visible bar becomes a facade that never
+  moves, and the real input lives permanently above the keyboard line. It would
+  collapse items 3, 4 and 5 into one structure. It is the designed fallback if a
+  future iOS release breaks any link in the tap chain, and is not worth churning
+  a working stack for before then.
+
+**What would change this:** iOS Safari implementing `interactive-widget` or the
+VirtualKeyboard API, at which point items 1 and 3–5 all fall dormant on their
+own measurements and can be deleted rather than disabled; or a decision to ship
+a native wrapper; or a report of the tap chain breaking, which is the trigger for
+the decoy-field rewrite.
+
+**What is not verified:** none of this has been seen on Android or an iPad. The
+gating above says they take the native path untouched, and that is a prediction.
+This project's own record is that predictions about layout lose to five minutes
+of looking — see the note at the end of this file, and every entry dated
+10 August.
+
+---
+
 ## Third-party dependencies
 
 ### Where TMDB actually sits

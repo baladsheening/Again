@@ -248,11 +248,17 @@
    * `components/shell.tsx` puts it back a frame later and the round trip is
    * visible as the whole page jumping up and dropping back.
    *
-   * A correction cannot win that race; it is told after the paint. Nor can the
-   * field be moved out of the way first — that was tried, and it works in the
-   * sense that the bar is now correct throughout, but keyboard avoidance reads
-   * the field's *layout* position and a `transform` is a compositor artefact
-   * UIKit cannot see.
+   * A correction cannot win that race; it is told after the paint.
+   *
+   * ⚠ **This block once claimed that moving the field out of the way first
+   * cannot work either, because "keyboard avoidance reads the field's layout
+   * position and a `transform` is a compositor artefact UIKit cannot see".
+   * That was a guess and it is false.** Moving the field first is exactly what
+   * fixed this, in `components/shell.tsx`, and it moves it with a `transform` —
+   * so the reveal plainly does read the transformed rect. The earlier attempt
+   * failed on *timing*, not on transforms: it lifted the bar in the focus
+   * handler, and the reveal is decided in native focus machinery before that
+   * handler runs. Lifting at `pointerdown` works.
    *
    * So the range itself has to go. Nothing in this app is laid out in the
    * document flow — the page lives in `#scroll-root`, which is `fixed inset-0` —
