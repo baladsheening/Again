@@ -190,6 +190,32 @@ let lastKeyboardOverlap = 0
 const OVERLAP_KEY = 'again:keyboard-overlap'
 
 /**
+ * Swallow the synthesized mouse burst that follows a handled tap.
+ *
+ * Installed at `pointerup`, at the document, capture phase — ahead of React's
+ * root, so the poster's own handlers never see the events either.
+ * `preventDefault` stops the native activation and `stopPropagation` stops the
+ * delivery; between them nothing behind the moved bar can be pressed by a tap
+ * that was aimed at the bar.
+ *
+ * 300ms outlives the burst, which follows `pointerup` within a frame or two,
+ * and is shorter than any deliberate second tap. Removed early is fine; firing
+ * on a real tap is the failure to keep rare, which is why this is not a second
+ * longer.
+ */
+function suppressTapAftermath() {
+  const swallow = (event: Event) => {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+  const types = ['mousedown', 'mouseup', 'click'] as const
+  for (const type of types) document.addEventListener(type, swallow, true)
+  window.setTimeout(() => {
+    for (const type of types) document.removeEventListener(type, swallow, true)
+  }, 300)
+}
+
+/**
  * The remembered height, hydrated from storage on first use. Module state is
  * asked first: storage can throw and is slower, and after the first keyboard of
  * a session the module already knows.
@@ -368,16 +394,21 @@ export function Shell({
     `pointerup` treats real movement as "not a tap" and puts the bar back, and
     `pointercancel` puts it back unconditionally.
 
-    ⚠ **`pointerdown` is cancelled, and that is what lets the keyboard stay.**
-    For touch, the compatibility mouse events — mousedown, mouseup, click — are
-    dispatched *after* `pointerup`, hit-tested at the touch point. By then the
-    bar has moved away, so they landed on the wall behind it, and mousedown's
-    default action on a non-focusable target is to blur the focused element:
-    the keyboard was granted at `pointerup` and taken back a beat later.
-    Observed on the handset as the keyboard starting to expand and collapsing
-    again. Cancelling `pointerdown` is the spec's off-switch for the whole
-    compatibility sequence — nothing else fires, nothing blurs, and the focus
-    this handler arranged is the one that stands.
+    ⚠ **The tap's aftermath is silenced twice, and both are needed.** For
+    touch, the mouse events are dispatched *after* `pointerup`, hit-tested at
+    the touch point — where the bar no longer is, because the lift moved it.
+    They land on whatever sits behind: first observed as the keyboard being
+    granted and taken back a beat later, then — with `pointerdown` cancelled —
+    as the intent sheet opening for the poster that happened to be under the
+    finger.
+
+    Cancelling `pointerdown` suppresses the *compatibility* events, mousedown
+    and mouseup, and the blur their defaults carry. But `click` is deliberately
+    not one of them — the spec keeps it device-independent, firing regardless —
+    so it reached the poster on its own and opened the sheet, whose arrival
+    blurred the field and folded the keyboard anyway. `suppressTapAftermath`
+    swallows the whole burst at the document, capture-phase, for just longer
+    than it takes to arrive.
 
     **The whole row is the field, not just the input's own 24px box.** The
     input sits centred in a 42px row, and a tap in the strip above or below it
@@ -442,6 +473,7 @@ export function Shell({
       return
     }
 
+    suppressTapAftermath()
     pending.input.focus({ preventScroll: true })
 
     /* If the keyboard is refused anyway, do not leave the bar lifted over nothing. */
