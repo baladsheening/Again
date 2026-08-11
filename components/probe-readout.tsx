@@ -119,27 +119,29 @@ type Peaks = {
    */
   vvTop: number
   /**
-   * The highest and lowest the content column has actually sat, in client
+   * The highest and lowest the *artwork* has actually sat, in client
    * coordinates, since the field was focused.
    *
-   * **Added on the third attempt at the bump, because the first two measured
-   * only scrolling and the report is that the posters move.** Every scroll
-   * offset in this readout held at zero while something was plainly shifting on
-   * screen, so the remaining possibility is that the column itself changes
-   * position — which no number here was watching.
+   * ⚠ **This watched `main` on the first attempt and that was a wasted round.**
+   * `main` is the only in-flow child of the scroller, so its top is pinned to
+   * the scroller's top by construction and reads 0 forever — it could only have
+   * moved if the scroller scrolled, which was already known not to happen. It
+   * measured the box rather than what is inside it, and the posters sit inside
+   * it behind a padding-top.
    *
-   * `main` carries the padding that `--keyboard-overlap` writes into, and it is
-   * the box the posters sit in. If `top` moves while every `scrollTop` is zero,
-   * the movement is layout and the floor added in `c328c88` is the first
-   * suspect. If it does not move, nothing in the app is doing this and the cause
-   * is outside the page.
+   * The wall is the thing the report is about, so the wall is what is measured.
+   * If this spreads while every `scrollTop` is zero, the movement is layout, and
+   * `padT` beside it says whether the top padding is the mechanism — which it
+   * would be if the safe-area inset changes as the keyboard arrives. If it does
+   * not spread, nothing inside the page moves at all and the cause is the web
+   * view itself.
    *
-   * Seeded from the first frame rather than from zero — a clientRect top of 0 is
-   * a plausible real value, so a zeroed baseline would report a spread that
-   * never happened.
+   * Seeded from the first frame rather than from zero — a client top of 0 is a
+   * plausible real value, so a zeroed baseline would report a spread that never
+   * happened.
    */
-  mainMin: number
-  mainMax: number
+  wallMin: number
+  wallMax: number
   seeded: boolean
 }
 
@@ -150,8 +152,8 @@ const NO_PEAKS: Peaks = {
   docTop: 0,
   scrollTop: 0,
   vvTop: 0,
-  mainMin: 0,
-  mainMax: 0,
+  wallMin: 0,
+  wallMax: 0,
   seeded: false,
 }
 
@@ -232,22 +234,29 @@ export function ProbeReadout({
         if (Math.abs(vv.offsetTop) > Math.abs(p.vvTop)) p.vvTop = vv.offsetTop
 
         /*
-          The content column, which is what "the posters move" refers to. Found
-          by tag rather than by ref: the probe is portalled out of the shell and
-          there is exactly one `main` on the page.
+          The artwork itself, which is what "the posters move" refers to. Found
+          by selector rather than by ref: the probe is portalled out of the
+          shell, and there is exactly one `main` on the page.
+
+          The grid when there is one, and whatever `main` leads with otherwise —
+          an empty collection or a failure notice is a paragraph, and it is still
+          the thing that would be seen to move.
         */
         const main = document.querySelector('main')
-        const mainTop = main?.getBoundingClientRect().top
-        const padBottom = main ? parseFloat(getComputedStyle(main).paddingBottom) : undefined
+        const wall = main?.querySelector('ul') ?? main?.firstElementChild ?? null
+        const wallTop = wall?.getBoundingClientRect().top
+        const style = main ? getComputedStyle(main) : undefined
+        const padTop = style ? parseFloat(style.paddingTop) : undefined
+        const padBottom = style ? parseFloat(style.paddingBottom) : undefined
 
-        if (mainTop !== undefined) {
+        if (wallTop !== undefined) {
           if (!p.seeded) {
-            p.mainMin = mainTop
-            p.mainMax = mainTop
+            p.wallMin = wallTop
+            p.wallMax = wallTop
             p.seeded = true
           } else {
-            p.mainMin = Math.min(p.mainMin, mainTop)
-            p.mainMax = Math.max(p.mainMax, mainTop)
+            p.wallMin = Math.min(p.wallMin, wallTop)
+            p.wallMax = Math.max(p.wallMax, wallTop)
           }
         }
 
@@ -283,18 +292,19 @@ export function ProbeReadout({
           `anch ${n(anchorBottom)} bar  ${n(dockBottom)}`,
           `TGT  ${n(target)} OFF  ${n(offset)}`,
           `ERR  ${n(error)}`,
-          `mainT${n(mainTop)} padB ${n(padBottom)}`,
+          `wall ${n(wallTop)} padT ${n(padTop)}`,
+          `padB ${n(padBottom)}`,
           '',
           '--- worst since focus ---',
           `ERR  ${n(p.err)} @    ${n(p.errAt)}`,
           `scrY ${n(p.scrollY)} docT ${n(p.docTop)}`,
           `sTop ${n(p.scrollTop)} vv.t ${n(p.vvTop)}`,
           /*
-            The one that answers it. Equal means the column never moved and
-            nothing in the page is doing this; different means it did, and by
-            exactly this much.
+            The one that answers it. Equal means the artwork never moved and
+            nothing inside the page is doing this; different means it did, and
+            by exactly this much.
           */
-          `main ${n(p.mainMin)} .... ${n(p.mainMax)}`,
+          `wall ${n(p.wallMin)} .... ${n(p.wallMax)}`,
         ].join('\n')
       }
 
