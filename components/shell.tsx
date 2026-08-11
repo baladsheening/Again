@@ -533,6 +533,14 @@ export function Shell({
 
       A frame loop does not need to be told when the document moved. It puts it
       back before the frame is painted, so there is nothing to see.
+
+      ⚠ **This is a browser-tab concern only, and that is now measured.**
+      Installed to the home screen the document does not move at all: `scrY`,
+      `docT` and `vv.t` all held at 0 through an entire focus on the handset. The
+      271px scroll was Safari's, and the app is no longer usually in Safari. Kept
+      because the site is still reachable in a tab, where the fault is real — but
+      **do not reach for this when something moves in the installed app**, which
+      is a mistake already made twice.
     */
     const pump = () => {
       clamp()
@@ -1475,6 +1483,7 @@ function useKeyboardPin(
     if (!focused || !vv) return
 
     let frame = 0
+    let until = 0
 
     const rest = (dock: SearchDock) => {
       const el = dock.el.current
@@ -1577,15 +1586,44 @@ function useKeyboardPin(
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
     }
 
-    const schedule = () => {
-      if (frame) return
-      frame = requestAnimationFrame(() => {
-        measure()
-        floor()
-      })
+    /*
+      ─────────────────────────────────────────────────────────────────────────
+       One frame for an event, every frame for an animation (11 August)
+      ─────────────────────────────────────────────────────────────────────────
+
+      **Measured: `ERR` peaked at −333 on the handset** — a full keyboard-height
+      below the visible area, which is the bar sitting at its resting position
+      with the keys already drawn over it. That is the pin arriving late, not
+      arriving wrong: `ERR` settled at 0 immediately after.
+
+      A correction scheduled from an event is always one frame behind the event,
+      and a keyboard is not an event — it is a three-hundred-millisecond
+      animation that reports its progress in steps. Correcting once per step
+      means the bar is visibly chasing it up the screen, which is the same
+      complaint this hook's own note says five earlier versions produced by
+      arithmetic.
+
+      So a viewport change now holds the loop open for the length of the
+      animation and re-measures every frame, while a scroll — genuinely a
+      discrete event — still costs exactly one.
+    */
+    const run = () => {
+      measure()
+      floor()
+      frame = performance.now() < until ? requestAnimationFrame(run) : 0
     }
 
-    schedule()
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(run)
+    }
+
+    const hold = () => {
+      until = performance.now() + KEYBOARD_ARRIVAL_MS
+      schedule()
+    }
+
+    /* The effect itself re-runs on focus, which is the keyboard being asked for. */
+    hold()
 
     /*
       **Both scrolls are listened to — the shell's own and the window's.**
@@ -1609,18 +1647,19 @@ function useKeyboardPin(
     const box = scroller.current
     box?.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('scroll', schedule, { passive: true })
-    vv.addEventListener('resize', schedule)
-    vv.addEventListener('scroll', schedule)
-    window.addEventListener('resize', schedule)
-    window.addEventListener('orientationchange', schedule)
+    /* The three that mean "something is animating", not "something happened". */
+    vv.addEventListener('resize', hold)
+    vv.addEventListener('scroll', hold)
+    window.addEventListener('resize', hold)
+    window.addEventListener('orientationchange', hold)
 
     return () => {
       box?.removeEventListener('scroll', schedule)
       window.removeEventListener('scroll', schedule)
-      vv.removeEventListener('resize', schedule)
-      vv.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', schedule)
-      window.removeEventListener('orientationchange', schedule)
+      vv.removeEventListener('resize', hold)
+      vv.removeEventListener('scroll', hold)
+      window.removeEventListener('resize', hold)
+      window.removeEventListener('orientationchange', hold)
       if (frame) cancelAnimationFrame(frame)
 
       /* Back to the resting position the moment the keyboard is not there. */
