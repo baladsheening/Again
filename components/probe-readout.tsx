@@ -118,6 +118,29 @@ type Peaks = {
    * bump and every attempt to has been aimed at the wrong number.
    */
   vvTop: number
+  /**
+   * The highest and lowest the content column has actually sat, in client
+   * coordinates, since the field was focused.
+   *
+   * **Added on the third attempt at the bump, because the first two measured
+   * only scrolling and the report is that the posters move.** Every scroll
+   * offset in this readout held at zero while something was plainly shifting on
+   * screen, so the remaining possibility is that the column itself changes
+   * position — which no number here was watching.
+   *
+   * `main` carries the padding that `--keyboard-overlap` writes into, and it is
+   * the box the posters sit in. If `top` moves while every `scrollTop` is zero,
+   * the movement is layout and the floor added in `c328c88` is the first
+   * suspect. If it does not move, nothing in the app is doing this and the cause
+   * is outside the page.
+   *
+   * Seeded from the first frame rather than from zero — a clientRect top of 0 is
+   * a plausible real value, so a zeroed baseline would report a spread that
+   * never happened.
+   */
+  mainMin: number
+  mainMax: number
+  seeded: boolean
 }
 
 const NO_PEAKS: Peaks = {
@@ -127,6 +150,9 @@ const NO_PEAKS: Peaks = {
   docTop: 0,
   scrollTop: 0,
   vvTop: 0,
+  mainMin: 0,
+  mainMax: 0,
+  seeded: false,
 }
 
 export function ProbeReadout({
@@ -206,6 +232,26 @@ export function ProbeReadout({
         if (Math.abs(vv.offsetTop) > Math.abs(p.vvTop)) p.vvTop = vv.offsetTop
 
         /*
+          The content column, which is what "the posters move" refers to. Found
+          by tag rather than by ref: the probe is portalled out of the shell and
+          there is exactly one `main` on the page.
+        */
+        const main = document.querySelector('main')
+        const mainTop = main?.getBoundingClientRect().top
+        const padBottom = main ? parseFloat(getComputedStyle(main).paddingBottom) : undefined
+
+        if (mainTop !== undefined) {
+          if (!p.seeded) {
+            p.mainMin = mainTop
+            p.mainMax = mainTop
+            p.seeded = true
+          } else {
+            p.mainMin = Math.min(p.mainMin, mainTop)
+            p.mainMax = Math.max(p.mainMax, mainTop)
+          }
+        }
+
+        /*
           Hold itself on screen, or it is useless exactly when it is needed.
 
           This is `fixed`, and iOS may stop honouring that while the keyboard is
@@ -237,11 +283,18 @@ export function ProbeReadout({
           `anch ${n(anchorBottom)} bar  ${n(dockBottom)}`,
           `TGT  ${n(target)} OFF  ${n(offset)}`,
           `ERR  ${n(error)}`,
+          `mainT${n(mainTop)} padB ${n(padBottom)}`,
           '',
           '--- worst since focus ---',
           `ERR  ${n(p.err)} @    ${n(p.errAt)}`,
           `scrY ${n(p.scrollY)} docT ${n(p.docTop)}`,
           `sTop ${n(p.scrollTop)} vv.t ${n(p.vvTop)}`,
+          /*
+            The one that answers it. Equal means the column never moved and
+            nothing in the page is doing this; different means it did, and by
+            exactly this much.
+          */
+          `main ${n(p.mainMin)} .... ${n(p.mainMax)}`,
         ].join('\n')
       }
 
