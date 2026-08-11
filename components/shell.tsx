@@ -417,6 +417,76 @@ export function Shell({
   }, [showCollections, searchFocused, pathname])
 
   /*
+    ─────────────────────────────────────────────────────────────────────────
+     The document is held at zero, because iOS will not leave it there
+    ─────────────────────────────────────────────────────────────────────────
+
+    **This is the fault, measured on the handset on 11 August**, after five
+    fixes that each corrected a different number. With the keyboard open the
+    probe read:
+
+        scrY 271   docT 271   vv.t 271   sTop 0   cli 660   vv.h 389
+
+    The document had scrolled 271px — the keyboard's exact height — while the
+    shell's own scroller had not moved at all. `413c1d9` states the opposite as
+    its premise: *"the shell now scrolls in a viewport-sized element, scrollY
+    stays zero, fixed holds."* It does not, and everything built on top of that
+    sentence was correcting the wrong quantity.
+
+    Where the 271 comes from: iOS Safari ignores `interactiveWidget:
+    'resizes-content'` (see app/layout.tsx), so the layout viewport stays the
+    full 660 while the visible area drops to 389. The difference is scroll range
+    the browser invents out of nothing, and it scrolls into it to reveal the
+    focused field. Every `fixed` element in the app is displaced by that amount:
+    the search dock, and — visibly, in the diagnostic photographs — the header,
+    which scrolled off the top of a screen it is pinned to.
+
+    All three reported symptoms are this one number. The bar could not be seen;
+    the first row of results was not in view; the swipe back up "had resistance"
+    and the bar arrived at the moment the top was reached. That was the document
+    being dragged back to zero, and everything landing when it got there.
+
+    **Nothing in this app is laid out in the document flow.** The page lives in
+    `#scroll-root`, which is `fixed inset-0`. A positive `window.scrollY` is
+    therefore never something a person asked for and never something a layout
+    needs — it is only ever iOS acting on its own. So this is not a chase or a
+    correction; it is an invariant the design already assumed, now enforced
+    rather than hoped for.
+
+    ⚠ **Only positive offsets.** Pull-to-refresh is an *over*scroll past the top
+    and reads as zero or negative, so it survives untouched — which matters,
+    because it was deliberately restored on 9 August and `413c1d9` wrongly
+    claimed to have cost it. It never did: the document was still scrolling, and
+    that was the bug rather than the price.
+
+    `instant` against the `scroll-behavior: smooth` on `html`. Smooth here would
+    animate the correction, which is the visible slide this exists to remove.
+
+    Resetting inside a scroll handler fires another scroll event; the second one
+    reads zero and does nothing, so it settles rather than looping.
+  */
+  useEffect(() => {
+    const clamp = () => {
+      if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+
+    clamp()
+    window.addEventListener('scroll', clamp, { passive: true })
+    /*
+      The keyboard arriving is not a scroll, and on iOS the scroll it causes can
+      land before or after the viewport resize. Listening to both means the
+      document is put back whichever order they come in.
+    */
+    window.visualViewport?.addEventListener('resize', clamp)
+    window.visualViewport?.addEventListener('scroll', clamp)
+    return () => {
+      window.removeEventListener('scroll', clamp)
+      window.visualViewport?.removeEventListener('resize', clamp)
+      window.visualViewport?.removeEventListener('scroll', clamp)
+    }
+  }, [])
+
+  /*
     A new route starts at the top of itself.
 
     **This used to be free and stopped being so on 10 August.** Next's own scroll
@@ -463,23 +533,31 @@ export function Shell({
 
       iOS stops honouring `position: fixed` while the software keyboard is open
       *and the document scrolls*: the bar is dragged along by the page, so it
-      has to be chased, and chasing is always a frame behind. Every fault today
-      — the bar riding up over the results, sticking mid-wall, sliding back only
-      on the way up — is that chase, not the arithmetic.
+      has to be chased, and chasing is always a frame behind.
 
-      The keyboard is not the removable condition. The document scrolling is. A
-      viewport-sized scroller keeps `scrollY` at zero forever, so `fixed` holds,
-      the bar does not move, and receding is the same plain slide it already is
-      with the keyboard down.
+      The keyboard is not the removable condition. The document scrolling is.
+
+      ⚠ **Moving the page in here did not, on its own, stop the document
+      scrolling — measured 11 August.** This block used to claim that a
+      viewport-sized scroller "keeps `scrollY` at zero forever". It does not:
+      iOS invents scroll range from the gap between the layout viewport and the
+      visible area, whatever the document contains. `scrollY` read 271 with the
+      keyboard open. The full reading is on the clamp effect in `Shell`, which
+      is the part that actually holds `scrollY` at zero — this element and that
+      effect are two halves of one fix, and neither works alone.
 
       The posters are the only things in this scroller. The search docks and
-      their measuring anchors are portalled to `document.body`: iOS can drag a
-      fixed descendant of an overflow scroller with it while revealing a focused
-      field, even though the CSS ancestry says that should not happen.
+      their measuring anchors are portalled to `document.body`. That was done on
+      the theory that an overflow scroller can drag a fixed descendant with it;
+      the probe has since shown `capt —` and `par body`, so no ancestor was ever
+      capturing anything. **The portals are kept anyway** — they are correct, and
+      they take the docks out of a box whose height is not the visible height.
 
-      ⚠ **It costs pull-to-refresh**, which was deliberately restored on
-      9 August. A document that never scrolls cannot be pulled past its top. The
-      rubber band inside the scroller stays.
+      ⚠ **It was said to cost pull-to-refresh. It never did.** The claim was that
+      a document which never scrolls cannot be pulled past its top — but the
+      document was still scrolling, which was the bug rather than the price, and
+      the gesture kept working throughout. The clamp only ever pushes *positive*
+      offsets back, so the overscroll past the top is untouched.
     */
     <div id="scroll-root" ref={scrollRef} className="fixed inset-0 overflow-y-auto">
     <div className="rail:pl-68 mx-auto flex min-h-full w-full max-w-6xl flex-col">
@@ -1350,13 +1428,19 @@ function useKeyboardPin(
     schedule()
 
     /*
-      **The scroll listened to is the shell's own, not the window's.**
+      **Both scrolls are listened to — the shell's own and the window's.**
 
-      Since 10 August the page scrolls inside `#scroll-root` and the document
-      never moves, which is what keeps `fixed` honoured with a keyboard open.
-      `window`'s scroll event therefore fires exactly never — so a listener on it
-      was watching the one thing in the app guaranteed not to happen, and if iOS
-      does let a dock drift after all, nothing would have corrected it.
+      This said the opposite until 11 August: that the document never moves, so
+      `window`'s scroll event "fires exactly never" and a listener on it was
+      watching the one thing guaranteed not to happen. Measured on the handset,
+      it fires and it carries 271px. See the clamp in `Shell`.
+
+      The clamp is what fixes it; this is the backstop. The two are worth having
+      together because they fail differently: the clamp puts the document back
+      and cannot help on a frame where iOS has moved it and not yet been told,
+      while this reads the dock's real position and corrects whatever displaced
+      it, without needing to know what did. A thermostat does not care why the
+      room got cold.
 
       `resize` and `orientationchange` are here because the choice of dock is a
       breakpoint away, and turning a handset sideways crosses it with a keyboard
@@ -1364,6 +1448,7 @@ function useKeyboardPin(
     */
     const box = scroller.current
     box?.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('scroll', schedule, { passive: true })
     vv.addEventListener('resize', schedule)
     vv.addEventListener('scroll', schedule)
     window.addEventListener('resize', schedule)
@@ -1371,6 +1456,7 @@ function useKeyboardPin(
 
     return () => {
       box?.removeEventListener('scroll', schedule)
+      window.removeEventListener('scroll', schedule)
       vv.removeEventListener('resize', schedule)
       vv.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)

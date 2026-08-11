@@ -76,10 +76,16 @@ export const viewport: Viewport = {
     good faith, and ordinary scrolling cannot reach it. That is what made the
     capture dropdown unusable in landscape.
 
-    ⚠ Support is uneven — Chrome has had it for a while, Safari is unconfirmed
-    here. The `max-h` on the dropdown and the scroll-into-view on focus are the
-    fixes that stand without it; this one upgrades the behaviour where it lands
-    and changes nothing where it does not.
+    ⚠ **iOS Safari ignores this, measured on the handset on 11 August.** With the
+    keyboard open the probe read `cli 660` against `vv.h 389`: the layout viewport
+    did not shrink by a pixel, and that 271px difference is exactly the scroll
+    range iOS then invented for the document — see the clamp in
+    `components/shell.tsx`, which is what actually holds the phone case together.
+
+    Kept because it is correct and free where it does land, and Chrome has had it
+    for a while. But **nothing may be built on the assumption that it works.** The
+    comment above said "Safari is unconfirmed here" while three fixes downstream
+    quietly relied on it; unconfirmed is now confirmed, in the negative.
   */
   interactiveWidget: 'resizes-content',
 }
