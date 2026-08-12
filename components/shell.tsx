@@ -70,6 +70,26 @@ const SCROLL_THRESHOLD = 8
 const ALWAYS_SHOWN_ABOVE = 32
 
 /**
+ * How long the app must have been away before coming back to it is worth
+ * re-fetching.
+ *
+ * Every signed-in screen is server-rendered out of `lib/db/` — the collection
+ * counts in this component's own props, the return counts, every convergence —
+ * so the page you come back to is exactly as old as the moment you left it. On
+ * the phone that is the common case rather than the rare one: the app is
+ * installed, and an installed app is left by switching to another one, not by
+ * closing anything.
+ *
+ * **The measure is how long you were gone, not how recently we last asked.** A
+ * banner glanced at and a call declined in one tap are not returns, and they are
+ * precisely the sub-threshold case — so the number that decides what counts as
+ * stale is the same number that stops app-switching becoming a request per
+ * switch. A rate limit on top of it would be a second answer to a question
+ * already answered.
+ */
+const STALE_AFTER_MS = 10_000
+
+/**
  * How long after the keyboard opens or closes to stop believing the scroll
  * position.
  *
@@ -1010,6 +1030,75 @@ export function Shell({
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname])
+
+  /*
+    ─────────────────────────────────────────────────────────────────────────
+     Coming back to the app is the thing that asks for fresh data
+    ─────────────────────────────────────────────────────────────────────────
+
+    Built 12 August, answering *what happens if we bring back pull-to-refresh*.
+    Three things had been blamed for costing that gesture and only one of them
+    does: not the container scroll, not the clamp above — which pushes back
+    *positive* offsets, and an overscroll past the top is zero or negative — but
+    the `overflow: hidden` document lock in `globals.css`, which leaves nothing
+    to overscroll in.
+
+    Bringing it back therefore means handing the document its scroll range, and
+    that range is the 271px iOS invents to reveal a focused field. It would trade
+    a gesture for the fault the whole of that comment exists about. And it would
+    buy nothing where the app is actually used: **iOS gives a standalone web app
+    no pull-to-refresh**, so installed there is none to restore.
+
+    So the gesture is not the mechanism. *Returning to the app* is what a person
+    means by refreshing, it is observable installed and in a tab alike, and it
+    needs no scroll range at all.
+
+    `router.refresh()` re-runs the Server Components for this route, layouts
+    included — which is what brings `counts` up to date, not only the page. The
+    payload is merged rather than remounted, so client state, focus and scroll
+    position all survive it: this may fire under an open intent sheet or a live
+    search without taking either away. What changes is the content behind them.
+
+    ⚠ **`Date.now()`, not `performance.now()`.** The question is how much time
+    passed in the world while the app was not running, which is wall clock. The
+    frame timings elsewhere in this file ask the opposite question and correctly
+    use the opposite instrument.
+
+    Two pairs of events, because the two ways back are not the same. Switching
+    away and returning fires `visibilitychange`. A back gesture in a tab may
+    instead thaw the whole frame out of the bfcache, from however long ago, and
+    `pageshow` is what says so. Whichever arrives first clears `awayAt` and the
+    other finds nothing to do — the reset is the de-duplication, so there is no
+    second timer to keep in step.
+  */
+  useEffect(() => {
+    let awayAt = 0
+
+    const leave = () => {
+      awayAt = Date.now()
+    }
+
+    const arrive = () => {
+      if (document.visibilityState !== 'visible') return
+      const left = awayAt
+      awayAt = 0
+      if (left && Date.now() - left >= STALE_AFTER_MS) router.refresh()
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') leave()
+      else arrive()
+    }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pagehide', leave)
+    window.addEventListener('pageshow', arrive)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pagehide', leave)
+      window.removeEventListener('pageshow', arrive)
+    }
+  }, [router])
 
   async function signOut() {
     await authClient.signOut()

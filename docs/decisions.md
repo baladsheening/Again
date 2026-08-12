@@ -1447,6 +1447,13 @@ handset before being reverted whole. If this is narrowed again it should be for
 pull-to-refresh's sake alone, and with no detector reading the result — see
 "What was tried for the status bar, and removed" below.
 
+⚠ **And the want behind it is now served elsewhere.** Asked on 12 August what
+bringing pull-to-refresh back would cost, the answer was this range and the
+fault that comes with it — for a gesture iOS does not give a standalone app at
+all. Freshness on return is built in `components/shell.tsx` instead, and needs
+no scroll range. Read "Pull-to-refresh, and what was actually being asked for"
+before narrowing anything here.
+
 ### Is there a better way?
 
 **On today's iOS, no.** A standalone web app gets no keyboard contract from the
@@ -1590,6 +1597,96 @@ which is the real reason to leave it out, ahead of any argument about guards. A
 deliberate control in the app is the honest alternative: the wordmark is already
 a link home, and a tap on the masthead is a gesture this app can actually
 observe.
+
+---
+
+## Pull-to-refresh, and what was actually being asked for — 12 August
+
+Asked in one line: *what happens if we bring back the pull to refresh?*
+
+### Three things were blamed for costing it. One of them does
+
+This is worth stating plainly because the record contains two wrong answers,
+both of them written down confidently at the time:
+
+- **The container scroll (`413c1d9`) — did not.** It claimed the cost and never
+  charged it; the document was still scrolling, which was the bug rather than
+  the price.
+- **The document clamp in `components/shell.tsx` — does not.** It pushes back
+  *positive* offsets only, and an overscroll past the top reads zero or
+  negative, so the gesture passes through untouched.
+- **The `overflow: hidden` document lock in `app/globals.css` — does.** A
+  document that cannot scroll cannot overscroll, so there is nothing for the
+  gesture to happen in. Unconditional CSS, so it costs pull-to-refresh in every
+  browser tab.
+
+`overscroll-behavior` is deliberately unset and is moot while the lock holds —
+that argument is kept in place in `globals.css` for whenever it stops holding.
+
+### Why it was not brought back
+
+Two reasons, and the second is the one that settles it.
+
+**Restoring the gesture means restoring document scroll range**, and that range
+is precisely the 271px iOS invents to reveal a focused field — the whole subject
+of the 11 August keyboard entry above. The lock is what makes the clamp's error
+zero; without it the clamp goes back to correcting a fault instead of preventing
+one. That is a real trade rather than a free win.
+
+**And it buys nothing where the app is used.** iOS gives a standalone web app no
+pull-to-refresh. The app is installed (`0f8419a`), so on the handset there is
+none to restore. Building the mechanism anyway would be the status-bar tap over
+again: a structure serving a gesture that never arrives.
+
+Two costs that would *not* be paid, for the record, because they were paid
+already: the header is `fixed` rather than `sticky` specifically so it holds
+through the rubber-band, and `isolate` on `main` exists because pull-to-refresh
+was when iOS tore down and rebuilt layers and the posters climbed over the
+wordmark.
+
+### What was built instead
+
+**Returning to the app is what a person means by refreshing**, it is observable
+installed and in a tab alike, and it needs no scroll range at all. So
+`components/shell.tsx` now calls `router.refresh()` when the app comes back
+after `STALE_AFTER_MS` away — 10 seconds.
+
+The reasoning that is not local to the code:
+
+- **The measure is how long you were gone, not how recently we last asked.** A
+  banner glanced at and a call declined in one tap are not returns, and they are
+  exactly the sub-threshold case — so one number both defines staleness and
+  stops app-switching becoming a request per switch. A rate limit on top would
+  be a second answer to a question already answered.
+- **It is in the shell, so it is one listener for the whole signed-in app**, and
+  the refresh re-runs layouts as well as the page — which is what brings the
+  collection `counts` up to date, not only the list under them.
+- **`Date.now()`, not `performance.now()`.** How much time passed in the world
+  while the app was not running is a wall-clock question. Every other timing in
+  that file is a frame question and correctly uses the other instrument.
+- **`pageshow` alongside `visibilitychange`**, because a back gesture in a tab
+  can thaw the whole frame out of the bfcache rather than merely revealing it.
+  Whichever fires first clears the timestamp and the other finds nothing to do,
+  so the reset is the de-duplication and there is no second timer to keep in
+  step.
+
+⚠ **This does not narrow the lock, and it is not an argument for narrowing it
+later.** If pull-to-refresh is ever wanted in a tab for its own sake, the note
+under "Still open" applies unchanged — and it should be narrowed with nothing
+listening to the result, which is what broke scrolling twice on 11 August.
+
+⚠ **If it is narrowed, invert the failure the old note worried about.** The
+concern recorded in `globals.css` was that `@media (display-mode: standalone)`
+would silently do nothing where the query is unsupported, dropping the lock
+everywhere — the worst of the three outcomes. Detect standalone in script
+instead (`matchMedia` plus `navigator.standalone`), stamp the root, and key the
+lock off the *absence* of a proven browser tab. Then an unanswered question
+keeps the lock rather than losing it.
+
+**Not verified in a browser.** It typechecks and lints; the signed-in shell
+needs an account to reach, and none was created for this. See "Verified, versus
+assumed" — this file's own record is that a passing build says nothing about
+whether a screen behaves.
 
 ---
 

@@ -274,6 +274,14 @@
    * `@media (display-mode: standalone)` wrapper would narrow it — but if that
    * query is unsupported the fix silently does nothing, which is the worst of
    * the three outcomes. **Prove the mechanism first, then narrow it.**
+   *
+   * ⚠ **Do not narrow this to buy freshness.** That is what the gesture is
+   * usually wanted for, and it is built without any scroll range in
+   * `components/shell.tsx` — the app re-fetches when you come back to it. What
+   * narrowing this buys is the gesture itself, in a tab, and it costs the
+   * document the range iOS invents for the keyboard. See "Pull-to-refresh, and
+   * what was actually being asked for" in docs/decisions.md, which also says
+   * how to detect standalone so an unanswered question keeps the lock.
    */
   html,
   body {
