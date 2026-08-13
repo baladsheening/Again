@@ -13,6 +13,8 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
+/* ⚠ TEMPORARY — see components/scroll-probe.tsx. Remove with it. */
+import { ScrollProbe, useUnlockFlag } from './scroll-probe'
 import { SearchField } from './search-field'
 import { useSearch, type SearchFailure } from './search-provider'
 
@@ -741,6 +743,14 @@ export function Shell({
   const scrollRef = useRef<HTMLDivElement>(null)
 
   /*
+    ⚠ **TEMPORARY — the 13 August scroll-ownership question.** Armed by hand on
+    the handset; off for everyone else, including in production. Every use of
+    `unlocked` below is part of the instrument and comes out with it. See
+    `components/scroll-probe.tsx` for what is being asked and how to read it.
+  */
+  const { unlocked, toggle: toggleUnlock } = useUnlockFlag()
+
+  /*
     Keeps whichever search dock is on screen on the keyboard's top edge — see
     `useKeyboardPin`.
 
@@ -935,6 +945,20 @@ export function Shell({
     reads zero and does nothing, so it settles rather than looping.
   */
   useEffect(() => {
+    /*
+      ⚠ **TEMPORARY — comes out with `components/scroll-probe.tsx`.**
+
+      The clamp cannot tell iOS's scrolling from a person's: it resets any
+      positive `window.scrollY`, whoever asked. Measured in Chromium on 13
+      August, it fired **18 times** against a single deliberate scroll of the
+      unlocked document and won every time. So while the probe is armed it has
+      to stand down, or the measurement is of the clamp rather than of iOS.
+
+      This is also the finding that says the clamp must be *deleted* rather than
+      narrowed if scroll ownership ever moves back to the document.
+    */
+    if (unlocked) return
+
     let frame = 0
     let until = 0
 
@@ -1005,7 +1029,8 @@ export function Shell({
       window.visualViewport?.removeEventListener('scroll', clamp)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [])
+    /* `unlocked` is temporary — see the guard at the top. Deps go back to `[]`. */
+  }, [unlocked])
 
   /*
     A new route starts at the top of itself.
@@ -1028,8 +1053,10 @@ export function Shell({
     nested scroller.
   */
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
-  }, [pathname])
+    /* ⚠ TEMPORARY: unlocked, the scroller is the document. Comes out with the probe. */
+    if (unlocked) window.scrollTo({ top: 0, behavior: 'instant' })
+    else scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname, unlocked])
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -1189,6 +1216,23 @@ export function Shell({
               className="rail:block pointer-events-none fixed top-0 hidden h-svh w-0"
             />
           </>,
+          document.body,
+        )}
+      {/*
+        ⚠ **TEMPORARY — the whole of this block comes out with
+        `components/scroll-probe.tsx`.** Portalled to `document.body` on purpose:
+        `inThePage` above asks the DOM about containment, so from out here the
+        probe's own button does not read as a tap on the page and the
+        tap-outside-dismiss rule leaves it alone.
+      */}
+      {portalReady &&
+        createPortal(
+          <ScrollProbe
+            focused={searchFocused}
+            unlocked={unlocked}
+            onToggle={toggleUnlock}
+            scroller={scrollRef}
+          />,
           document.body,
         )}
       {/* --- the rail, from 45rem up ------------------------------------- */}
