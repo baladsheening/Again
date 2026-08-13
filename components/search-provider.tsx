@@ -58,9 +58,7 @@ const DEBOUNCE_MS = 90
 const MIN_QUERY = 1
 
 function scrollSearchRootToTop() {
-  const scroller = document.getElementById('scroll-root')
-  if (scroller) scroller.scrollTo({ top: 0, behavior: 'instant' })
-  else window.scrollTo({ top: 0, behavior: 'instant' })
+  window.scrollTo({ top: 0, behavior: 'instant' })
 }
 
 /** The shape the route returns. Parsed loosely — it is our own endpoint. */
@@ -336,13 +334,13 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     globals.css. Smooth is right for a link to somewhere; animating a
     three-screen journey back up on a keystroke is not travel, it is a lurch.
 
-    **The shell scrolls in its own element, not the document** — see the scroller
-    in `components/shell.tsx`, which is what keeps `position: fixed` working
-    while a keyboard is open. So the document is always at zero and
-    `window.scrollTo` moves nothing. Found by id rather than passed down: the
-    provider sits *above* the shell, so there is no ref to hand it, and a context
-    existing solely to carry one element would be more machinery than the problem
-    deserves.
+    ⚠ **This scrolled `#scroll-root` by id until 13 August, and now scrolls the
+    window.** The shell used to scroll inside a `fixed inset-0` element, so the
+    document was always at zero and `window.scrollTo` moved nothing. That element
+    is an ordinary block in the flow again — see the note on it in
+    `components/shell.tsx` — so the document is the scroller and the id lookup
+    would have found a box that no longer moves. Silent when wrong: the wall
+    would simply stay where it was.
 
     **An effect of its own, keyed on the query alone**, because the request below
     also runs on `attempt` — and a retry is not a new wall. Pressing *Try again*

@@ -238,62 +238,37 @@
 @layer base {
   /**
    * ───────────────────────────────────────────────────────────────────────────
-   *  The document may not scroll. Not "does not" — may not (11 August)
+   *  The document scrolls. It was locked for eight days and did not need to be
    * ───────────────────────────────────────────────────────────────────────────
    *
-   * **Measured on the handset**: tapping the search field makes iOS scroll the
-   * document by exactly the keyboard's height — `clmp 1 max 333` — to reveal the
-   * focused field. That scroll is composited off the main thread and *painted*
-   * before the `scroll` event is dispatched, so the clamp in
-   * `components/shell.tsx` puts it back a frame later and the round trip is
-   * visible as the whole page jumping up and dropping back.
+   * **There was an `overflow: hidden` lock here, with a fixed body and a
+   * `height: 100%`, and on 13 August it was measured unnecessary and removed.**
+   * What it defended against was real: on 11 August, tapping the search field
+   * made iOS scroll the document by the keyboard's height — 271px in a tab, 333
+   * standalone — to reveal the focused field, dragging every `position: fixed`
+   * element in the app up with it, the header included. The lock removed the
+   * range so there was nothing to scroll into.
    *
-   * A correction cannot win that race; it is told after the paint.
+   * ⚠ **But the lock and the real fix were built in the same week, and the lock
+   * was never taken off to see whether the fix stood on its own.** It does. The
+   * dock now lifts clear of the keyboard at `pointerdown`, before iOS decides
+   * whether it needs to reveal anything, so there is nothing left to reveal.
+   * Measured on the handset with the document unlocked and the clamp stood
+   * down — six keyboard openings, installed and in a Safari tab, nothing to put
+   * the document back: **`scrollY` peaked at 0 every time.**
    *
-   * ⚠ **This block once claimed that moving the field out of the way first
-   * cannot work either, because "keyboard avoidance reads the field's layout
-   * position and a `transform` is a compositor artefact UIKit cannot see".
-   * That was a guess and it is false.** Moving the field first is exactly what
-   * fixed this, in `components/shell.tsx`, and it moves it with a `transform` —
-   * so the reveal plainly does read the transformed rect. The earlier attempt
-   * failed on *timing*, not on transforms: it lifted the bar in the focus
-   * handler, and the reveal is decided in native focus machinery before that
-   * handler runs. Lifting at `pointerdown` works.
+   * That is a warning about method more than about CSS. A defence built beside a
+   * cure hides whether the cure works, and the two of them together looked
+   * exactly like the cure alone. **When a guard and a fix land together, take the
+   * guard off once and look.**
    *
-   * So the range itself has to go. Nothing in this app is laid out in the
-   * document flow — the page lives in `#scroll-root`, which is `fixed inset-0` —
-   * so the document has no business scrolling under any circumstances, and
-   * `overflow: hidden` says so rather than hoping. `height: 100%` and the fixed
-   * body are the older, blunter half of the same statement, kept because this
-   * has to work rather than be tidy.
+   * What the lock was costing: Safari collapses its address bar in response to
+   * the *document* scrolling, and a document with no scroll range never asks. It
+   * cost pull-to-refresh in a tab for the same reason. Both are back.
    *
-   * ⚠ **This costs pull-to-refresh in a browser tab**, which was deliberately
-   * restored on 9 August and wrongly reported as lost once already. Applied
-   * unconditionally on purpose, and only for now: the app is used installed,
-   * where iOS provides no pull-to-refresh to lose, and a
-   * `@media (display-mode: standalone)` wrapper would narrow it — but if that
-   * query is unsupported the fix silently does nothing, which is the worst of
-   * the three outcomes. **Prove the mechanism first, then narrow it.**
-   *
-   * ⚠ **Do not narrow this to buy freshness.** That is what the gesture is
-   * usually wanted for, and it is built without any scroll range in
-   * `components/shell.tsx` — the app re-fetches when you come back to it. What
-   * narrowing this buys is the gesture itself, in a tab, and it costs the
-   * document the range iOS invents for the keyboard. See "Pull-to-refresh, and
-   * what was actually being asked for" in docs/decisions.md, which also says
-   * how to detect standalone so an unanswered question keeps the lock.
+   * Nothing replaces it. `#scroll-root` is an ordinary block in the flow now and
+   * the page scrolls the way every other page does.
    */
-  html,
-  body {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  body {
-    position: fixed;
-    inset: 0;
-  }
-
   html {
     background-color: var(--color-bg);
     color: var(--color-text);
@@ -311,10 +286,8 @@
       replace what it removed, then this. The native bounce is better than the
       imitation, and the refresh was worth having with it.
 
-      Moot while the rule above holds — a document that cannot scroll cannot
-      overscroll either. Left in place because it is the argument, not the
-      setting, that is worth keeping: if the lock is ever narrowed to standalone,
-      this is what the tab goes back to.
+      **Live again since 13 August.** It was moot for eight days while the lock
+      above held, because a document that cannot scroll cannot overscroll.
     */
   }
 
@@ -427,16 +400,22 @@
  *
  * `--keyboard-overlap` is written onto `#scroll-root` by `useKeyboardPin` and
  * inherits down to whatever wears this. **It is measured, not assumed**: the
- * distance between the scroller's own bottom edge and the bottom of the visible
- * area, which is zero whenever there is no keyboard.
+ * distance between the bottom of the layout viewport and the bottom of the
+ * visible area, which is zero whenever there is no keyboard.
  *
  * ⚠ **Without it the last row of a long list cannot be reached (11 August).**
- * The scroller is `fixed inset-0`, so it is the height of the *layout* viewport
- * — which iOS does not shrink for a keyboard. The bottom of it therefore sits
- * behind the keys, and at maximum scroll the final row is parked in that strip
- * with no range left to lift it out. Holding the document at zero is what
- * exposed this: the document scrolling used to supply the missing distance, as
- * a side effect of the fault it caused everywhere else.
+ * **iOS does not shrink the layout viewport for a keyboard** — it ignores
+ * `interactive-widget: resizes-content`, see app/layout.tsx — so the foot of the
+ * page sits behind the keys, and at maximum scroll the final row is parked in
+ * that strip with no range left to lift it out.
+ *
+ * ⚠ **Still needed after the document lock came off on 13 August, and that is
+ * worth stating because it looks as though it should not be.** The document
+ * scrolling used to supply the missing distance, which is how this went unseen
+ * until the lock exposed it — but that distance was the *invented* range iOS
+ * added to reveal a focused field, and iOS no longer adds it. The real scroll
+ * range a flowing document has is content minus layout viewport, and the
+ * keyboard is over the bottom of that either way.
  */
 @utility safe-bottom {
   padding-bottom: calc(

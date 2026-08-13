@@ -13,8 +13,6 @@ import { ChevronIcon } from './icon-chevron'
 import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
 import { PosterWall } from './poster-wall'
-/* ⚠ TEMPORARY — see components/scroll-probe.tsx. Remove with it. */
-import { ScrollProbe, useUnlockFlag } from './scroll-probe'
 import { SearchField } from './search-field'
 import { useSearch, type SearchFailure } from './search-provider'
 
@@ -739,16 +737,15 @@ export function Shell({
     retry,
   } = useSearch()
 
-  /* The page's scroller — see the note on the element itself. */
-  const scrollRef = useRef<HTMLDivElement>(null)
-
   /*
-    ⚠ **TEMPORARY — the 13 August scroll-ownership question.** Armed by hand on
-    the handset; off for everyone else, including in production. Every use of
-    `unlocked` below is part of the instrument and comes out with it. See
-    `components/scroll-probe.tsx` for what is being asked and how to read it.
+    The element the page lives in — see the note on it in the render.
+
+    **It is no longer a scroller.** Since 13 August the document scrolls, and
+    this is an ordinary block in the flow. It is kept, and kept referenced,
+    because it is what `--keyboard-overlap` is written onto and what the
+    tap-to-dismiss handlers are scoped to.
   */
-  const { unlocked, toggle: toggleUnlock } = useUnlockFlag()
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   /*
     Keeps whichever search dock is on screen on the keyboard's top edge — see
@@ -767,6 +764,8 @@ export function Shell({
   const anchorRef = useRef<HTMLDivElement>(null)
   const railRef = useRef<HTMLDivElement>(null)
   const railAnchorRef = useRef<HTMLDivElement>(null)
+  /* The bottom of the layout viewport — see the element itself, and `floor`. */
+  const floorAnchorRef = useRef<HTMLDivElement>(null)
 
   /*
     Memoised because the hook subscribes against it: a fresh array literal every
@@ -783,7 +782,7 @@ export function Shell({
     [],
   )
 
-  useKeyboardPin(searchFocused, scrollRef, docks)
+  useKeyboardPin(searchFocused, scrollRef, floorAnchorRef, docks)
 
   /*
     The bar recedes on every screen, search included.
@@ -797,10 +796,10 @@ export function Shell({
     flick away.
   */
   useEffect(() => {
-    const scroller = scrollRef.current
-    if (!showCollections || !scroller) return
+    if (!showCollections) return
 
-    let last = scroller.scrollTop
+    /* The document, since 13 August — see the note on `#scroll-root`. */
+    let last = window.scrollY
     let frame = 0
 
     /*
@@ -822,7 +821,7 @@ export function Shell({
       if (frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
-        const y = Math.max(0, scroller.scrollTop)
+        const y = Math.max(0, window.scrollY)
         const now = performance.now()
 
         /*
@@ -856,17 +855,20 @@ export function Shell({
         if (Math.abs(delta) < SCROLL_THRESHOLD) return
 
         /*
-          **Every scroll of this element counts, whoever made it.**
+          **Every scroll counts, whoever made it.**
 
-          Nothing is asked here about fingers any more — see the note where
-          `USER_SCROLL_GRACE_MS` used to be. The only scrolls this element
-          receives are ones a person made: the keyboard moves the document and
-          the two scroll-to-top calls move it upward, which can only ever show
-          the bar.
+          Nothing is asked here about fingers — see the note where
+          `USER_SCROLL_GRACE_MS` used to be. Momentum therefore keeps the bar
+          reacting for as long as the page is moving, in both directions, which
+          is what the gesture always looked like it should do.
 
-          Momentum therefore keeps the bar reacting for as long as the page is
-          moving, in both directions, which is what the gesture always looked
-          like it should do.
+          ⚠ **This used to lean on "the only scrolls this element receives are
+          ones a person made", and since 13 August that is no longer true** — it
+          watches the document, which is also what a keyboard would move. The
+          settle window above is what carries it instead, and it was written for
+          exactly this case: 271px arriving in one event, indistinguishable from
+          a hard flick. It is not a new risk, it is the old one, now guarded in
+          one place rather than avoided by construction.
         */
         last = y
         setReceded({ route: pathname, hidden: y > ALWAYS_SHOWN_ABOVE && delta > 0 })
@@ -883,13 +885,13 @@ export function Shell({
       if (Math.abs(height - lastViewport) < KEYBOARD_MIN_HEIGHT) return
       lastViewport = height
       settleUntil = performance.now() + KEYBOARD_SETTLE_MS
-      last = scroller.scrollTop
+      last = window.scrollY
     }
 
-    scroller.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.visualViewport?.addEventListener('resize', onViewport)
     return () => {
-      scroller.removeEventListener('scroll', onScroll)
+      window.removeEventListener('scroll', onScroll)
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (frame) cancelAnimationFrame(frame)
     }
@@ -897,166 +899,54 @@ export function Shell({
 
   /*
     ─────────────────────────────────────────────────────────────────────────
-     The document is held at zero, because iOS will not leave it there
+     There was a document clamp here, and removing it is the point (13 August)
     ─────────────────────────────────────────────────────────────────────────
 
-    **This is the fault, measured on the handset on 11 August**, after five
-    fixes that each corrected a different number. With the keyboard open the
-    probe read:
+    It reset any positive `window.scrollY` on every scroll event, every frame
+    for the length of a keyboard animation. It existed because on 11 August iOS
+    scrolled the document by the keyboard's height to reveal the focused field —
+    271px in a tab, 333 standalone — dragging every `position: fixed` element in
+    the app up with it.
 
-        scrY 271   docT 271   vv.t 271   sTop 0   cli 660   vv.h 389
+    **It was measured unnecessary and deleted.** The dock lifts clear of the
+    keyboard at `pointerdown` now, before iOS decides whether it needs to reveal
+    anything, so there is nothing left to reveal. Six keyboard openings on the
+    handset with the document unlocked and this stood down, installed and in a
+    Safari tab: `scrollY` peaked at 0 every time.
 
-    The document had scrolled 271px — the keyboard's exact height — while the
-    shell's own scroller had not moved at all. `413c1d9` states the opposite as
-    its premise: *"the shell now scrolls in a viewport-sized element, scrollY
-    stays zero, fixed holds."* It does not, and everything built on top of that
-    sentence was correcting the wrong quantity.
+    ⚠ **It could not tell iOS's scrolling from a person's** — it reset positive
+    offsets whoever asked. Measured in Chromium against one deliberate 400px
+    scroll of the unlocked document, it fired 18 times and won. So it was never
+    narrowable: any version of it that survives is a version that fights the
+    user. Deleting was the only move, which is why the measurement mattered.
 
-    Where the 271 comes from: iOS Safari ignores `interactiveWidget:
-    'resizes-content'` (see app/layout.tsx), so the layout viewport stays the
-    full 660 while the visible area drops to 389. The difference is scroll range
-    the browser invents out of nothing, and it scrolls into it to reveal the
-    focused field. Every `fixed` element in the app is displaced by that amount:
-    the search dock, and — visibly, in the diagnostic photographs — the header,
-    which scrolled off the top of a screen it is pinned to.
-
-    All three reported symptoms are this one number. The bar could not be seen;
-    the first row of results was not in view; the swipe back up "had resistance"
-    and the bar arrived at the moment the top was reached. That was the document
-    being dragged back to zero, and everything landing when it got there.
-
-    **Nothing in this app is laid out in the document flow.** The page lives in
-    `#scroll-root`, which is `fixed inset-0`. A positive `window.scrollY` is
-    therefore never something a person asked for and never something a layout
-    needs — it is only ever iOS acting on its own. So this is not a chase or a
-    correction; it is an invariant the design already assumed, now enforced
-    rather than hoped for.
-
-    ⚠ **Only positive offsets.** Pull-to-refresh is an *over*scroll past the top
-    and reads as zero or negative, so it survives untouched — which matters,
-    because it was deliberately restored on 9 August and `413c1d9` wrongly
-    claimed to have cost it. It never did: the document was still scrolling, and
-    that was the bug rather than the price.
-
-    `instant` against the `scroll-behavior: smooth` on `html`. Smooth here would
-    animate the correction, which is the visible slide this exists to remove.
-
-    Resetting inside a scroll handler fires another scroll event; the second one
-    reads zero and does nothing, so it settles rather than looping.
+    If a keyboard ever moves the document again, **do not rebuild this.** The
+    backstop in `useKeyboardPin` reads the dock's real position and corrects
+    whatever displaced it without needing to know what did, and the decoy-field
+    pattern in docs/decisions.md is the designed rewrite. A correction scheduled
+    from an event is always a frame behind the paint; that is what made this one
+    visible as a jump-and-drop in the first place.
   */
-  useEffect(() => {
-    /*
-      ⚠ **TEMPORARY — comes out with `components/scroll-probe.tsx`.**
-
-      The clamp cannot tell iOS's scrolling from a person's: it resets any
-      positive `window.scrollY`, whoever asked. Measured in Chromium on 13
-      August, it fired **18 times** against a single deliberate scroll of the
-      unlocked document and won every time. So while the probe is armed it has
-      to stand down, or the measurement is of the clamp rather than of iOS.
-
-      This is also the finding that says the clamp must be *deleted* rather than
-      narrowed if scroll ownership ever moves back to the document.
-    */
-    if (unlocked) return
-
-    let frame = 0
-    let until = 0
-
-    const clamp = () => {
-      if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' })
-    }
-
-    /*
-      **Every frame, for as long as the keyboard is moving — see
-      `KEYBOARD_ARRIVAL_MS`.**
-
-      Clamping on the scroll event alone left the page visibly pushed up for the
-      length of the animation, because iOS reports that scroll once at the end
-      rather than as it happens. Reported from the handset on 11 August as the
-      page pushing up and dropping back; the drop was the correction landing.
-
-      A frame loop does not need to be told when the document moved. It puts it
-      back before the frame is painted, so there is nothing to see.
-
-      ⚠ **This is a browser-tab concern only, and that is now measured.**
-      Installed to the home screen the document does not move at all: `scrY`,
-      `docT` and `vv.t` all held at 0 through an entire focus on the handset. The
-      271px scroll was Safari's, and the app is no longer usually in Safari. Kept
-      because the site is still reachable in a tab, where the fault is real — but
-      **do not reach for this when something moves in the installed app**, which
-      is a mistake already made twice.
-    */
-    const pump = () => {
-      clamp()
-      frame = performance.now() < until ? requestAnimationFrame(pump) : 0
-    }
-
-    const hold = () => {
-      until = performance.now() + KEYBOARD_ARRIVAL_MS
-      if (!frame) frame = requestAnimationFrame(pump)
-    }
-
-    /*
-      Focus is the earliest warning that a keyboard is coming — earlier than the
-      viewport resize, which arrives once it has started moving. Both arm the
-      loop, because closing the keyboard moves the document too and there is no
-      focus event that reliably precedes *that*.
-
-      `focusin` on the document rather than the field's own handler: the two
-      docks each have one and this is not their business, and it costs one
-      listener instead of a prop threaded to both.
-    */
-    const onFocusChange = (event: FocusEvent) => {
-      if (event.target instanceof HTMLInputElement) hold()
-    }
-
-    clamp()
-    window.addEventListener('scroll', clamp, { passive: true })
-    document.addEventListener('focusin', onFocusChange)
-    document.addEventListener('focusout', onFocusChange)
-    /*
-      The keyboard arriving is not a scroll, and on iOS the scroll it causes can
-      land before or after the viewport resize. Listening to both means the
-      document is put back whichever order they come in.
-    */
-    window.visualViewport?.addEventListener('resize', hold)
-    window.visualViewport?.addEventListener('scroll', clamp)
-    return () => {
-      window.removeEventListener('scroll', clamp)
-      document.removeEventListener('focusin', onFocusChange)
-      document.removeEventListener('focusout', onFocusChange)
-      window.visualViewport?.removeEventListener('resize', hold)
-      window.visualViewport?.removeEventListener('scroll', clamp)
-      if (frame) cancelAnimationFrame(frame)
-    }
-    /* `unlocked` is temporary — see the guard at the top. Deps go back to `[]`. */
-  }, [unlocked])
 
   /*
-    A new route starts at the top of itself.
+    A new route starts at the top of itself, and **nothing here does that any
+    more — Next does, again, for free.**
 
-    **This used to be free and stopped being so on 10 August.** Next's own scroll
-    handling moves the *document*, and the shell now scrolls in `#scroll-root`
-    instead — so navigation left the new page at whatever offset the last one was
-    at. Three screens into Wants, tapping Archive put you three screens into
-    Archive, which reads as the app having lost your tap rather than as a scroll
-    position.
+    There was an effect here that scrolled `#scroll-root` to zero on every
+    pathname change. It was written on 10 August because moving the page into a
+    nested scroller broke Next's own handling, which moves the *document*: three
+    screens into Wants, tapping Archive put you three screens into Archive.
+
+    The document scrolls again since 13 August, so that handling works, and this
+    is deleted rather than repointed at `window` — **repointing it would have
+    been strictly worse than nothing.** Next restores the previous offset on
+    Back, and an unconditional reset keyed on `pathname` cannot tell a Back from
+    a tap: it would force the top on both, costing the restoration the old note
+    here recorded as already lost. It is not lost any more.
 
     The bar comes back on its own, and not because of anything here — see
     `receded` above, which is scoped to the route it was hidden on.
-
-    `instant` against the `scroll-behavior: smooth` on `html`, for the reason the
-    search field's reset gives: animating a journey nobody took is a lurch.
-
-    It costs restoring the position on Back, which was already lost — Next
-    restores the document, and the document has not moved since this became a
-    nested scroller.
   */
-  useEffect(() => {
-    /* ⚠ TEMPORARY: unlocked, the scroller is the document. Comes out with the probe. */
-    if (unlocked) window.scrollTo({ top: 0, behavior: 'instant' })
-    else scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
-  }, [pathname, unlocked])
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -1142,39 +1032,37 @@ export function Shell({
     */
     /*
       ─────────────────────────────────────────────────────────────────────────
-       The page scrolls in here, not in the document (10 August)
+       The page scrolls in the document, like every other page (13 August)
       ─────────────────────────────────────────────────────────────────────────
 
-      **This is what makes the keyboard case behave like the keyboard-down
-      case**, rather than being approximated by it.
+      **This was `fixed inset-0 overflow-y-auto` from 10 to 13 August, and it is
+      an ordinary block again.** The page scrolled in here because iOS stops
+      honouring `position: fixed` while the keyboard is open *and the document
+      scrolls* — so the document was stopped from scrolling, here and with an
+      `overflow: hidden` lock in globals.css.
 
-      iOS stops honouring `position: fixed` while the software keyboard is open
-      *and the document scrolls*: the bar is dragged along by the page, so it
-      has to be chased, and chasing is always a frame behind.
+      What that cost was invisible until someone asked for it: Safari collapses
+      its address bar in response to the *document* scrolling, and a document
+      with no scroll range never asks. Pull-to-refresh went the same way.
+      Measured at phone width, document scroll range in three states — as
+      shipped 0px, the lock lifted 0px, the lock lifted **and** this un-pinned
+      1229px. **Which is why lifting the lock alone reads as no change**: the
+      content was in a box stapled to the glass, so the document had no height
+      to scroll whether or not it was allowed to.
 
-      The keyboard is not the removable condition. The document scrolling is.
+      ⚠ **The reason it is safe to undo is that the real fix outgrew it.** The
+      dock lifts clear of the keyboard at `pointerdown` now, before iOS decides
+      whether to reveal the field, so the reveal never happens: `scrollY` peaked
+      at 0 across six keyboard openings on the handset, installed and in a tab,
+      with nothing left to put the document back. That fix and the lock were
+      built the same week and the lock was never taken off to check — **a guard
+      built beside a cure hides whether the cure works.**
 
-      ⚠ **Moving the page in here did not, on its own, stop the document
-      scrolling — measured 11 August.** This block used to claim that a
-      viewport-sized scroller "keeps `scrollY` at zero forever". It does not:
-      iOS invents scroll range from the gap between the layout viewport and the
-      visible area, whatever the document contains. `scrollY` read 271 with the
-      keyboard open. The full reading is on the clamp effect in `Shell`, which
-      is the part that actually holds `scrollY` at zero — this element and that
-      effect are two halves of one fix, and neither works alone.
-
-      The posters are the only things in this scroller. The search docks and
-      their measuring anchors are portalled to `document.body`. That was done on
-      the theory that an overflow scroller can drag a fixed descendant with it;
-      the probe has since shown `capt —` and `par body`, so no ancestor was ever
-      capturing anything. **The portals are kept anyway** — they are correct, and
-      they take the docks out of a box whose height is not the visible height.
-
-      ⚠ **It was said to cost pull-to-refresh. It never did.** The claim was that
-      a document which never scrolls cannot be pulled past its top — but the
-      document was still scrolling, which was the bug rather than the price, and
-      the gesture kept working throughout. The clamp only ever pushes *positive*
-      offsets back, so the overscroll past the top is untouched.
+      This element is kept for three things that are not scrolling:
+      `--keyboard-overlap` is written onto it and inherits down; the
+      tap-to-dismiss handlers are scoped to it; and `search-provider.tsx` finds
+      it by id. The docks and their measuring anchors stay portalled to
+      `document.body`, which was always correct.
     */
     <div
       id="scroll-root"
@@ -1182,9 +1070,8 @@ export function Shell({
       onPointerDownCapture={onContentPointerDown}
       onPointerUpCapture={onContentPointerUp}
       onPointerCancelCapture={onContentPointerCancel}
-      className="fixed inset-0 overflow-y-auto"
     >
-    <div className="rail:pl-68 mx-auto flex min-h-full w-full max-w-6xl flex-col">
+    <div className="rail:pl-68 mx-auto flex min-h-svh w-full max-w-6xl flex-col">
       {/*
         The two references for `useKeyboardPin`. Each carries its dock's
         positioning and nothing else — no transform, no recede, no padding — so
@@ -1215,24 +1102,31 @@ export function Shell({
               aria-hidden
               className="rail:block pointer-events-none fixed top-0 hidden h-svh w-0"
             />
+            {/*
+              **The bottom of the layout viewport, as a thing that can be
+              measured** — see `floor` in `useKeyboardPin`.
+
+              Needed since 13 August. `floor` used to read the bottom edge of
+              `#scroll-root`, which meant the viewport's bottom only because that
+              element was `fixed inset-0`; in the flow its bottom is the bottom
+              of the *content*, which is a different line and usually far below
+              the screen. Measuring the overlap against that would report a
+              keyboard the size of the whole page.
+
+              Unlike the two above it wears no breakpoint: the floor is the floor
+              at every width, and both docks need it.
+
+              Measured rather than derived from `innerHeight` or `clientHeight`,
+              which is the same choice `floor` and the pin already make — those
+              numbers mean different things to different browsers with a keyboard
+              open, and a rendered box does not.
+            */}
+            <div
+              ref={floorAnchorRef}
+              aria-hidden
+              className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
+            />
           </>,
-          document.body,
-        )}
-      {/*
-        ⚠ **TEMPORARY — the whole of this block comes out with
-        `components/scroll-probe.tsx`.** Portalled to `document.body` on purpose:
-        `inThePage` above asks the DOM about containment, so from out here the
-        probe's own button does not read as a tap on the page and the
-        tap-outside-dismiss rule leaves it alone.
-      */}
-      {portalReady &&
-        createPortal(
-          <ScrollProbe
-            focused={searchFocused}
-            unlocked={unlocked}
-            onToggle={toggleUnlock}
-            scroller={scrollRef}
-          />,
           document.body,
         )}
       {/* --- the rail, from 45rem up ------------------------------------- */}
@@ -2007,7 +1901,13 @@ type SearchDock = {
  */
 function useKeyboardPin(
   focused: boolean,
-  scroller: React.RefObject<HTMLElement | null>,
+  /**
+   * Where `--keyboard-overlap` is written. Not a scroller since 13 August — it
+   * is the element the property has to inherit from, and nothing more.
+   */
+  host: React.RefObject<HTMLElement | null>,
+  /** A zero-height fixed twin on the viewport's bottom edge — see `floor`. */
+  floorAnchor: React.RefObject<HTMLElement | null>,
   docks: SearchDock[],
 ) {
   useEffect(() => {
@@ -2016,6 +1916,14 @@ function useKeyboardPin(
 
     let frame = 0
     let until = 0
+
+    /*
+      Captured for the cleanup rather than read from the ref there, which would
+      be reading it after React may have pointed it somewhere else. `floor`
+      below still reads the ref live, because it runs while the effect is
+      current and the freshest value is the right one.
+    */
+    const hostEl = host.current
 
     const rest = (dock: SearchDock) => {
       const el = dock.el.current
@@ -2132,18 +2040,31 @@ function useKeyboardPin(
     /*
       **The floor of the page, held above the keyboard — see `safe-bottom`.**
 
-      The scroller is `fixed inset-0`, so it is as tall as the *layout* viewport,
-      and iOS does not shrink that for a keyboard. Its bottom strip is therefore
-      behind the keys, and at maximum scroll the last row of a long list is
-      parked in there with no range left to lift it out. Reported on the handset
-      the moment the document stopped scrolling: the document scrolling had been
-      supplying the missing distance all along, as a side effect of the fault it
-      caused everywhere else.
+      **iOS does not shrink the layout viewport for a keyboard** — it ignores
+      `interactive-widget: resizes-content`, see app/layout.tsx. So the foot of
+      the page is behind the keys, and at maximum scroll the last row of a long
+      list is parked in there with no range left to lift it out. Reported on the
+      handset the moment the document stopped scrolling: the document scrolling
+      had been supplying the missing distance all along, as a side effect of the
+      fault it caused everywhere else.
+
+      ⚠ **Still needed now the document scrolls again (13 August), which reads
+      as though it should not be.** What used to supply the distance was the
+      range iOS *invented* to reveal a focused field, and iOS no longer invents
+      it — the dock is lifted clear before it decides. A flowing document's real
+      range is content minus layout viewport, and the keyboard is over the bottom
+      of that either way.
+
+      ⚠ **Measured against `floorAnchor`, not against the page's own box.** Until
+      13 August this read the bottom edge of `#scroll-root`, which was the
+      viewport's bottom only because that element was `fixed inset-0`. In the flow
+      its bottom is the bottom of the *content* — usually far below the screen —
+      and the overlap would come out as most of the page.
 
       Measured, like the pin above, rather than derived from `innerHeight` or
-      `clientHeight`. The distance between the scroller's own bottom edge and the
-      bottom of what can be seen is the answer whatever iOS thinks those two
-      numbers mean, and it is zero when there is no keyboard.
+      `clientHeight`: the distance between a fixed twin on the viewport's bottom
+      edge and the bottom of what can be seen is the answer whatever iOS thinks
+      those two numbers mean, and it is zero when there is no keyboard.
 
       Written as a custom property rather than as `paddingBottom`, because the
       elements that need it already have a padding rule with two other terms in
@@ -2151,9 +2072,10 @@ function useKeyboardPin(
       all three and drop the home-indicator inset on the floor.
     */
     const floor = () => {
-      const box = scroller.current
-      if (!box) return
-      const overlap = Math.max(0, box.getBoundingClientRect().bottom - (vv.offsetTop + vv.height))
+      const box = host.current
+      const edge = floorAnchor.current
+      if (!box || !edge) return
+      const overlap = Math.max(0, edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height))
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
 
       /*
@@ -2213,26 +2135,25 @@ function useKeyboardPin(
     hold()
 
     /*
-      **Both scrolls are listened to — the shell's own and the window's.**
+      **The window's scroll, which since 13 August is the only one there is.**
 
-      This said the opposite until 11 August: that the document never moves, so
-      `window`'s scroll event "fires exactly never" and a listener on it was
-      watching the one thing guaranteed not to happen. Measured on the handset,
-      it fires and it carries 271px. See the clamp in `Shell`.
+      There were two listeners here, this one and one on `#scroll-root`. That
+      element no longer scrolls, so its listener watched the one thing guaranteed
+      not to happen — which is, word for word, what this comment used to say
+      about the window before 11 August measured it wrong. The mistake is
+      symmetrical and worth keeping on the page: **subscribe to what moves, and
+      check which one that is rather than reasoning about it.**
 
-      The clamp is what fixes it; this is the backstop. The two are worth having
-      together because they fail differently: the clamp puts the document back
-      and cannot help on a frame where iOS has moved it and not yet been told,
-      while this reads the dock's real position and corrects whatever displaced
-      it, without needing to know what did. A thermostat does not care why the
-      room got cold.
+      This is the backstop, and it is now the only guard of its kind — the clamp
+      it used to sit beside is deleted. It reads the dock's real position and
+      corrects whatever displaced it without needing to know what did. A
+      thermostat does not care why the room got cold, which is exactly why it
+      survives a change of cause.
 
       `resize` and `orientationchange` are here because the choice of dock is a
       breakpoint away, and turning a handset sideways crosses it with a keyboard
       still open.
     */
-    const box = scroller.current
-    box?.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('scroll', schedule, { passive: true })
     /* The three that mean "something is animating", not "something happened". */
     vv.addEventListener('resize', hold)
@@ -2241,7 +2162,6 @@ function useKeyboardPin(
     window.addEventListener('orientationchange', hold)
 
     return () => {
-      box?.removeEventListener('scroll', schedule)
       window.removeEventListener('scroll', schedule)
       vv.removeEventListener('resize', hold)
       vv.removeEventListener('scroll', hold)
@@ -2255,9 +2175,9 @@ function useKeyboardPin(
         And the floor with it, or every page keeps a keyboard's worth of dead
         space under it for the rest of the session.
       */
-      box?.style.removeProperty('--keyboard-overlap')
+      hostEl?.style.removeProperty('--keyboard-overlap')
     }
-  }, [focused, scroller, docks])
+  }, [focused, host, floorAnchor, docks])
 }
 
 /**

@@ -1690,6 +1690,123 @@ whether a screen behaves.
 
 ---
 
+## The document scrolls again, and the lock was never needed — 13 August
+
+Asked in one line: *why can we not have the address bar recede when scrolling
+down? It happens on other sites.*
+
+### The answer, and why it is one cause and not three
+
+Safari collapses its address bar in response to the **document** scrolling. This
+app's document could not scroll: the page lived in `#scroll-root`, which was
+`fixed inset-0`, behind an `overflow: hidden` lock in `app/globals.css`. So the
+bar was never told anything had happened.
+
+Measured in Chromium at phone width, document scroll range:
+
+| as shipped | the lock lifted, nothing else | the lock lifted **and** `#scroll-root` un-pinned |
+|---|---|---|
+| 0px | 0px | 1229px |
+
+⚠ **The middle column is the one worth keeping.** Lifting the lock on its own
+changes nothing, because the content was in a box stapled to the glass and the
+document had no height to scroll whether or not it was permitted to. Anyone who
+tries the one-line CSS fix will see no difference and conclude the diagnosis was
+wrong. Scroll ownership had to move with it.
+
+### What made it safe, and the method lesson underneath
+
+The lock existed for a real fault, measured on 11 August: tapping the search
+field made iOS scroll the document by the keyboard's height — 271px in a tab,
+333 standalone — to reveal the focused field, dragging every `position: fixed`
+element in the app up with it, the header included.
+
+**But the lock and the real fix were built in the same week, and the lock was
+never taken off to see whether the fix stood on its own.** It does. The dock
+lifts clear of the keyboard at `pointerdown` now, before iOS decides whether it
+needs to reveal anything, so there is nothing left to reveal.
+
+Measured on the handset through a temporary probe, with the document unlocked
+and the clamp stood down — six keyboard openings, three installed and three in a
+Safari tab, nothing left to put the document back: **`scrollY` peaked at 0 every
+time.** In the tab, the address bar receded on scroll and stopped receding again
+the moment the lock went back on.
+
+> **A defence built beside a cure hides whether the cure works.** The two of them
+> together look exactly like the cure alone, and the guard gets kept forever on
+> the strength of the bug never recurring. When a guard and a fix land together,
+> take the guard off once and look.
+
+That is the transferable part. The CSS is incidental.
+
+### The clamp could never have been narrowed
+
+It reset any positive `window.scrollY` from a scroll listener, every frame for
+the length of a keyboard animation. Measured in Chromium against one deliberate
+400px scroll of the unlocked document, **it fired 18 times and won every time.**
+It could not tell iOS's scrolling from a person's, because it never asked — so
+every surviving version of it is a version that fights the user. Deleting was
+the only move available, which is exactly why the handset measurement had to
+come first.
+
+### What it cost to build, against what it looked like it would cost
+
+The part that looked riskiest needed nothing. **The masthead and the search dock
+are `position: fixed`, which is viewport-relative, so document scrolling leaves
+them alone** — measured before the change, unchanged after it.
+
+Four things did need moving, and all four were mechanical:
+
+- The bar's recede logic now watches the window rather than `#scroll-root`. Its
+  old note leaned on "the only scrolls this element receives are ones a person
+  made", which is no longer true — the settle window written for the 271px case
+  is what carries it instead.
+- `useKeyboardPin`'s `floor()` measures `--keyboard-overlap` against a new
+  zero-height fixed twin on the viewport's bottom edge. It used to read
+  `#scroll-root`'s own bottom, which meant the viewport's bottom **only because
+  that element was pinned**; in the flow it is the bottom of the content, and the
+  overlap would have come out as most of the page.
+- `scrollSearchRootToTop` in `search-provider.tsx` scrolls the window. Silent
+  when wrong: the wall would simply have stayed where it was on the next
+  keystroke.
+- The per-route scroll reset was **deleted rather than repointed**, which is the
+  one judgement call here. It existed only because a nested scroller broke Next's
+  own handling on 10 August. Repointing it at `window` would have been strictly
+  worse than nothing: Next restores the previous offset on Back, and a reset
+  keyed on `pathname` cannot tell a Back from a tap, so it would have forced the
+  top on both. The restoration that the old note recorded as already lost is not
+  lost any more.
+
+`floor()` is still needed, which reads as though it should not be. What used to
+supply that distance was the range iOS *invented* to reveal a focused field, and
+iOS no longer invents it; a flowing document's real range is content minus layout
+viewport, and iOS does not shrink the layout viewport for a keyboard either way.
+
+### What came back with it
+
+The address bar recedes in a tab. Pull-to-refresh works in a tab again — the
+`overscroll-behavior` note in `globals.css` stops being moot after eight days.
+Neither exists installed, where the app is actually used, so this is for arrival
+before install. Refresh-on-return (`ef1a909`) is unaffected and remains the
+freshness mechanism in both modes.
+
+**Verified in a browser**: 34 assertions across phone, tablet and desk widths —
+scroll range, the lock's absence, the wall tracking the scroll exactly, the
+masthead holding its place, the bar receding and returning, routes starting at
+their top, the search wall resetting on a keystroke, and tap-to-dismiss still
+blurring without opening the intent sheet.
+
+⚠ **Not verified on the handset after the change.** The measurement that
+authorised it was taken there; the result of it has not been looked at yet.
+
+⚠ **Playwright screenshots under `isMobile: true` capture from the layout
+viewport origin and ignore document scroll.** A screenshot showed the wall
+standing still while `scrollY` read 400; the bounding rect showed it had moved
+the full 400. Measure rects, not screenshots, when the question is whether
+something moved — this nearly produced a wrong conclusion in the other direction.
+
+---
+
 ## Third-party dependencies
 
 ### Where TMDB actually sits

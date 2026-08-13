@@ -3,17 +3,19 @@ import type { MetadataRoute } from 'next'
 /**
  * What the app is when it is installed rather than visited.
  *
- * **Added 11 August to remove Safari's chrome rather than fight it.** The page
- * scrolls inside `#scroll-root` and the document is held at zero — see the clamp
- * in `components/shell.tsx` — which is what keeps `position: fixed` honoured
- * while a keyboard is open. Safari collapses its own toolbar in response to the
- * *document* scrolling, so that toolbar is now permanently expanded in a browser
- * tab, and the two cannot both be had: the document scrolling is the fault, and
- * the address bar retracting was a side effect of it.
+ * **Added 11 August to remove Safari's chrome rather than fight it.** At the
+ * time the document was held at zero to keep `position: fixed` honoured with a
+ * keyboard open, and since Safari collapses its toolbar in response to the
+ * *document* scrolling, that toolbar was permanently expanded in a browser tab.
+ * Installing was the way out: no address bar, no toolbar, and the app's own bar
+ * at the foot owning the bottom of the phone outright.
  *
- * Installed, the question stops existing. There is no address bar and no
- * toolbar, so the app's own bar at the foot is the only furniture on the screen
- * and it owns the bottom of the phone outright.
+ * ⚠ **The trade this describes no longer exists, and this is kept anyway.** The
+ * document scrolls again since 13 August — the lock was measured unnecessary,
+ * see app/globals.css — so the address bar retracts in a tab like anywhere else.
+ * Standalone is still the better place for this app to live, but it is now a
+ * preference rather than a workaround, and nothing here is load-bearing for the
+ * keyboard.
  *
  * ⚠ **iOS reads two different things and both are needed.** `display` here is
  * honoured from iOS 16.4; before that, and still most reliably, it is
