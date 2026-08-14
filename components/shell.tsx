@@ -70,6 +70,17 @@ const SCROLL_THRESHOLD = 8
 const ALWAYS_SHOWN_ABOVE = 32
 
 /**
+ * How far a finger may travel and still be a tap.
+ *
+ * One number for every gesture this shell arbitrates, because they all ask the
+ * same question of the same finger: the dock's pre-lift asks it to know whether
+ * a keyboard was really wanted, and the page asks it to tell a tap-to-dismiss
+ * from a scroll. Two values would let two handlers reach opposite verdicts about
+ * one movement, which is a class of bug rather than a number to get right.
+ */
+const TAP_SLOP = 12
+
+/**
  * How long the app must have been away before coming back to it is worth
  * re-fetching.
  *
@@ -210,66 +221,44 @@ let lastKeyboardOverlap = 0
 const OVERLAP_KEY = 'again:keyboard-overlap'
 
 /**
- * The ground a lifted dock stands on, as a `box-shadow` value.
- *
  * ─────────────────────────────────────────────────────────────────────────────
- *  Why the gap needs dressing at all
+ *  There was a `groundFor` here, and this is the second time it has gone
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * The bar reaches its lifted position instantly and the keyboard takes about
- * three hundred milliseconds to arrive, so for that beat there is a strip of
- * poster wall between the two. Reported on the handset as looking wrong even
- * though it closes itself, and it does look wrong: content appears *below* the
- * bar, which is somewhere content never otherwise lives.
+ * It returned a `box-shadow` painting black from the lifted dock's top edge down
+ * by the height of the lift, so that the keys rose over ground rather than over
+ * artwork instead of showing a strip of poster under the bar for the three
+ * hundred milliseconds a keyboard takes to arrive.
  *
- * **The instant arrival is not negotiable.** The field has to be clear of the
- * keyboard before focus is granted or the native reveal scroll comes back — see
- * `lastKeyboardOverlap` — and iOS exposes no animated keyboard edge to ride up
- * with. One viewport resize is reported, when the movement has already
- * finished.
+ * **Removed 14 August, and the strip is accepted.** Two handset reports came in
+ * on 13 August and this was both of them:
  *
- * So the strip is filled with ground instead. The keys then rise over black
- * rather than over artwork, which reads as the page ending where it in fact
- * ends the moment the keyboard is up.
+ * 1. *A black sheet over the posters when the keyboard opens.* The depth came
+ *    from `rememberedOverlap()` — which only ever grows, and persists across
+ *    launches — and the dock had already jumped that same distance up the
+ *    screen, so the band began wherever the remembered number put it. At an
+ *    honest 333 on an 797px handset that is the bottom half of the display going
+ *    black on every tap of the field, before any keyboard exists to cover it.
+ * 2. *Flicker while scrolling with the keyboard up.* `measure()` rewrote this
+ *    every frame from a live `lift` that changes sign, and `groundFor` returned
+ *    `''` the instant `lift` went non-negative — so a keyboard-tall band of
+ *    black switched off and on once a frame for the length of a scroll.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- *  A shadow, and bounded — both deliberate
- * ─────────────────────────────────────────────────────────────────────────────
+ * ⚠ **Do not build a third one.** The screen-tall panel was removed on 10 August
+ * for making a small fault into a large one, and its removal note asked for
+ * precisely what replaced it: the same panel, bounded to a plausible keyboard
+ * height, so that the worst case stays small. `6fadfa8` built that on 11 August
+ * and it failed the same way — because bounding the ground to `lift` only bounds
+ * it as far as `lift` can be trusted, and `lift` is a live measurement taken off
+ * a `position: fixed` anchor, which is the one thing iOS withdraws while a
+ * keyboard is open. The bound was never the fix.
  *
- * **A shadow rather than an element**, for the reason the header's ground is one
- * (see its note): it joins no layout, adds no height, cannot swallow a tap, and
- * needs no ref threaded to it. It is painted behind the dock's own background,
- * so it can only ever extend the ground, never cover the row.
- *
- * **Offset and spread are each half the depth**, which is not a trick for its
- * own sake. A plain offset shifts the whole box down, so once the depth exceeds
- * the bar's height — 333 against about 60 — the copy detaches and leaves a band
- * of poster between. Inflating by half and shifting by half puts the shadow's
- * top edge exactly on the element's own and its bottom edge exactly `depth`
- * below: one continuous ground. The sideways inflation runs off both screen
- * edges, where there is nothing to hit.
- *
- * ⚠ **Bounded to the lift, and that is the whole safety argument.** A screen-tall
- * panel lived here until 10 August and was removed for making a small fault into
- * a large one: it only covered the keyboard's own area *as long as the bar was
- * where it should be*, and the moment it was not, it drew a sheet of black
- * across the results. Its removal note asked for exactly this — a panel bounded
- * to a plausible keyboard height, so the worst case stays small. The height is
- * no longer plausible but measured, and the bound is the lift itself, so the
- * ground can never reach further than the distance the bar has actually moved.
- *
- * Black is spelled out rather than taken from the token, for the same reason
- * the header's shadow spells it: this has to match the dock's own ground
- * exactly, and one shade off reads as a band across the screen. If
- * `--color-bg` ever moves, this moves with it by hand.
+ * **A strip of poster under the bar for a third of a second is a blemish. A
+ * mechanism that can black out half the screen is not a proportionate insurance
+ * against it**, and that is now twice. If the gap is ever worth answering again,
+ * answer it by not putting the field where the keyboard goes — see the note on
+ * `useKeyboardPin`. Nothing needs dressing if nothing has to move.
  */
-function groundFor(lift: number) {
-  /* A positive lift pushes the dock *down*; there is no gap under it then. */
-  const depth = Math.ceil(Math.max(0, -lift))
-  if (!depth) return ''
-  const half = depth / 2
-  return `0 ${half}px 0 ${half}px #000`
-}
 
 /**
  * Swallow the synthesized mouse burst that follows a handled tap.
@@ -513,7 +502,6 @@ export function Shell({
 
   function restDock(el: HTMLElement, dropsSafeArea: boolean) {
     el.style.transform = ''
-    el.style.boxShadow = ''
     if (dropsSafeArea) el.style.paddingBottom = ''
   }
 
@@ -542,11 +530,10 @@ export function Shell({
 
     el.style.transform = `translateY(${-overlap}px)`
     /*
-      The ground goes down with the lift, in the same write, or the strip of
-      poster it exists to cover is visible for the frame between them. Only the
-      phone's bar — see the note on `dropsSafeArea` at the hook's call site.
+      The home-indicator clearance comes off in the same write as the lift: a
+      keyboard covers the indicator, so the inset becomes dead space holding the
+      row off the keys. Only the phone's bar carries one — see `dropsSafeArea`.
     */
-    if (dropsSafeArea) el.style.boxShadow = groundFor(-overlap)
     if (dropsSafeArea) el.style.paddingBottom = '0px'
     pendingTapRef.current = { input, el, dropsSafeArea, y: event.clientY }
   }
@@ -557,7 +544,7 @@ export function Shell({
     if (!pending) return
 
     /* A finger that travelled was scrolling, not tapping. */
-    if (Math.abs(event.clientY - pending.y) > 12) {
+    if (Math.abs(event.clientY - pending.y) > TAP_SLOP) {
       restDock(pending.el, pending.dropsSafeArea)
       return
     }
@@ -614,9 +601,11 @@ export function Shell({
     puts the keyboard away — rather than a list of exceptions that has to be
     maintained against every control added later.
 
-    **The tap has to be a tap.** A finger that travelled was scrolling a wall of
-    results, and scrolling with the keyboard up is a thing people deliberately do
-    — the bar recedes for it. Same 12px as the dock, and for the same reason.
+    **The tap has to be a tap**, and since 14 August a drag is the other half of
+    the same rule rather than the exception to it — see `onContentPointerMove`.
+    Both dismiss; only the tap is swallowed, because only the tap would otherwise
+    land on a poster. `TAP_SLOP` is the line between them, and it is the dock's
+    line too.
 
     **Touch only.** A mouse click outside a field already blurs it, for free and
     with no keyboard involved; swallowing desktop clicks to reproduce that would
@@ -638,12 +627,66 @@ export function Shell({
     dismissTapRef.current = { y: event.clientY }
   }
 
+  /*
+    ───────────────────────────────────────────────────────────────────────────
+     Scrolling the page puts the keyboard away as well (14 August)
+    ───────────────────────────────────────────────────────────────────────────
+
+    The same rule as the tap above, extended to the other gesture a person aims
+    at the page rather than at a control: **a gesture meant for the page
+    dismisses the keyboard.** The tap is swallowed on its way out because it
+    would otherwise land on a poster; the drag is not, because the scroll it
+    starts is the thing that was asked for.
+
+    ⚠ **This is what stops the bar travelling and the screen flickering while a
+    wall of results is scrolled**, reported from the handset on 13 August.
+    `useKeyboardPin` holds the dock on the keyboard's edge by measuring a
+    `position: fixed` anchor every frame, and iOS stops honouring `fixed` while a
+    keyboard is open *and the document scrolls* — which is the premise this whole
+    shell was once built around, and which the 13 August change reopened by
+    giving the document its scroll range back. The drift is not a theory: the
+    note on `lift` records it measured on the handset, and the clamp there was
+    removed precisely so the pin could chase it.
+
+    **So the two halves of the condition are kept apart instead of the chase
+    being made better.** The keyboard goes as the scroll begins, so the pin is
+    never running while the page moves, so there is nothing to measure wrong.
+    That holds on every engine, because it is a rule about gestures rather than
+    a correction for one browser's idea of `fixed`.
+
+    ⚠ **Driven by the gesture, never by the `scroll` event.** A scroll listener
+    would be shorter and would blur the field on scrolls nobody made with a
+    finger: `search-provider.tsx` puts the window back to the top on every new
+    query, so typing a second word would fold the keyboard mid-search. A pointer
+    is the only thing that says a person did it.
+
+    One movement past the threshold is all this needs, and that one is delivered.
+    The events iOS withholds are the ones during *momentum*, after the finger has
+    gone — the `USER_SCROLL_GRACE_MS` lesson, which does not reach a handler that
+    has already decided by then.
+
+    **Touch only**, like the rest of the trio. A wheel or a trackpad has no
+    keyboard behind it, and dropping focus because the page moved would be
+    hostile on a desk.
+  */
+  function onContentPointerMove(event: React.PointerEvent<HTMLElement>) {
+    const pending = dismissTapRef.current
+    if (!pending) return
+    if (Math.abs(event.clientY - pending.y) <= TAP_SLOP) return
+
+    /* Cleared before the blur, so the `pointerup` ending this drag finds nothing
+       pending and cannot swallow a tap that was never made. */
+    dismissTapRef.current = null
+    const field = document.activeElement
+    if (field instanceof HTMLInputElement) field.blur()
+  }
+
   function onContentPointerUp(event: React.PointerEvent<HTMLElement>) {
     const pending = dismissTapRef.current
     dismissTapRef.current = null
     if (!pending) return
     if (!inThePage(event)) return
-    if (Math.abs(event.clientY - pending.y) > 12) return
+    if (Math.abs(event.clientY - pending.y) > TAP_SLOP) return
 
     const field = document.activeElement
     if (!(field instanceof HTMLInputElement)) return
@@ -789,11 +832,17 @@ export function Shell({
 
     It used to freeze while search was in use, on the reasoning that a bar
     sliding away mid-search would take the field and the results' anchor with
-    it. Directed otherwise on 10 August, and the new answer is better: with the
-    keyboard up, the bar and the keys together take half the screen, and
-    scrolling a wall of results is exactly when that half is wanted back. It
-    returns on the first upward movement, so the field is never more than a
-    flick away.
+    it. Directed otherwise on 10 August, and the new answer is better: the bar is
+    a fixed surface over a wall being read, and reading is when the screen is
+    wanted back. It returns on the first upward movement, so the field is never
+    more than a flick away.
+
+    ⚠ **The reason given here used to be the keyboard** — that the bar and the
+    keys together take half the screen, and a scroll is exactly when that half is
+    wanted back. Since 14 August the drag itself puts the keyboard away, so that
+    case lasts one gesture and the recede is no longer what answers it. The
+    behaviour is unchanged; the justification is now the plain one, which is that
+    this is what the browser's own address bar does and the two move together.
   */
   useEffect(() => {
     if (!showCollections) return
@@ -1068,6 +1117,7 @@ export function Shell({
       id="scroll-root"
       ref={scrollRef}
       onPointerDownCapture={onContentPointerDown}
+      onPointerMoveCapture={onContentPointerMove}
       onPointerUpCapture={onContentPointerUp}
       onPointerCancelCapture={onContentPointerCancel}
     >
@@ -1580,9 +1630,13 @@ export function Shell({
           behind an opaque rectangle is a broken app, and the second failure was
           the price of insuring against the first.
 
-          If the gap on opening turns out to be worth fixing, fix it by bounding
-          the panel to a plausible keyboard height rather than a whole screen,
-          so the worst case stays small.
+          ⚠ **That advice was taken, and it failed the same way.** This note
+          used to end by asking for the panel back, bounded to a plausible
+          keyboard height so the worst case stayed small; `6fadfa8` built exactly
+          that on 11 August as a `box-shadow`, and it was removed on 14 August
+          after two handset reports. The full record is where the function was —
+          see the note in place of `groundFor` at the top of this file. **The gap
+          is accepted now. Do not fill it a third time.**
         */}
         <div className="gutter flex min-h-10.5 items-center gap-2">
           {/*
@@ -1929,10 +1983,6 @@ function useKeyboardPin(
       const el = dock.el.current
       if (!el) return
       el.style.transform = ''
-      /* Unconditional: neither dock carries a shadow from its class list, so
-         clearing one that was never written costs nothing and cannot be
-         forgotten if the ground is ever given to the other. */
-      el.style.boxShadow = ''
       if (dock.dropsSafeArea) el.style.paddingBottom = ''
     }
 
@@ -2025,15 +2075,12 @@ function useKeyboardPin(
 
       el.style.transform = lift ? `translateY(${lift}px)` : ''
       /*
-        ⚠ **The phone's bar only** — `dropsSafeArea` is standing in for "this
-        dock rests on the bottom edge of the screen", which is the one fact both
-        it and the ground follow from. The rail's dock is a full-height column
-        whose visible band is at the foot of the *content*, so a shadow on the
-        element this holds would paint a screen of black rather than a strip.
-        Dressing that one needs a ref to the band inside it, and it is untested
-        territory besides — see `docs/decisions.md` on iPad.
+        ⚠ **The phone's bar only.** `dropsSafeArea` stands in for "this dock
+        rests on the bottom edge of the screen", which is what makes the
+        home-indicator inset dead space once a keyboard covers it. The rail's
+        dock is a full-height column whose visible band is at the foot of the
+        *content*, and it wears no such inset.
       */
-      if (shown.dropsSafeArea) el.style.boxShadow = groundFor(lift)
       if (shown.dropsSafeArea) el.style.paddingBottom = '0px'
     }
 

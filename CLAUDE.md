@@ -17,6 +17,26 @@ This file holds the rules for building. Two companions:
   carry-forward register: things decided in one phase that must land in a
   specific later one. Update it as phases move.
 
+## How things get fixed
+
+**Every fix is structural, and every fix holds on every device.** A change that
+makes the symptom go away on the handset in front of you is not a fix. It is a
+constant waiting to be wrong on the next screen.
+
+Ruled out by name: numbers tuned until one device looks right, thresholds and
+timeouts chosen to outlast one platform's animation, branches that sniff for a
+browser, and any correctness argument that reduces to "it looks fine here". A
+workaround written for one engine still executes on all of them, which makes it
+everyone's liability — so prefer removing the collision to correcting for it.
+
+Reach in this order: **remove the mechanism**, then **remove the condition it
+fails under**, and only then correct it. A subtraction cannot be wrong on a
+device nobody has tested.
+
+Four surfaces ship: iOS Safari installed, iOS Safari in a tab, Android, and the
+desk — with iPad crossing the `rail` breakpoint into a fifth layout. Done means
+right by construction on all of them, not measured right on one.
+
 ## The rule that holds everything up (§3)
 
 **The database is never reachable from the client.** Every query goes through
