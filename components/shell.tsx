@@ -1579,7 +1579,7 @@ export function Shell({
         */}
         <div className="gutter flex h-[var(--wordmark-ink)] items-center justify-between">
           {searchAtTop ? (
-            <div className="flex w-full min-w-0 items-center gap-1.5">
+            <div className="caret-deferred flex w-full min-w-0 items-center gap-1.5">
               {/*
                 The way out, and the only control in this row that is not the
                 field. See `exitSearch` — it leaves search rather than navigating,
@@ -1594,9 +1594,25 @@ export function Shell({
                 different route; a control that removes its own surface has to
                 hold focus until its click has landed.
 
-                `tap-target` takes a 12px glyph to the 44px floor without moving
-                anything, and `-ml-1` pulls the expanded area back off the gutter
-                so the row still starts on the same line the wordmark does.
+                ⚠ **`size-[var(--wordmark-ink)]`, so the circle is the row.** A
+                literal would be a fourth number tied to the type size, and this
+                one has to fit inside a row whose height is already that token —
+                a 26px pill in a 25.75px row overflows by a hair at this size and
+                by more at the next. Reading the token makes the circle exactly as
+                tall as the line it sits on, at any size, and `aspect-square` on
+                its own would not: the button's width is content-driven, so it
+                would size to a 12px glyph.
+
+                `bg-surface` rather than a border. The surface token exists to
+                read as raised against the black ground — its own note says warm
+                surfaces need that ground to do it — which is what a chip around a
+                control is for. A hairline ring would be a second boundary drawn
+                where the fill already draws one.
+
+                `tap-target` still applies: 25.75px is well under the 44px floor.
+                Its expansion reaches about 9px past the circle, which clears the
+                chevron and stops well short of the input — see the warning on
+                that utility about neighbours stealing each other's taps.
               */}
               <button
                 type="button"
@@ -1604,7 +1620,7 @@ export function Shell({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={exitSearch}
                 aria-label="Leave search"
-                className="text-muted hover:text-text tap-target -ml-1 shrink-0 transition-colors"
+                className="bg-surface text-muted hover:text-text tap-target flex size-[var(--wordmark-ink)] shrink-0 items-center justify-center rounded-full transition-colors"
               >
                 <ArrowLeftIcon />
               </button>
@@ -1618,9 +1634,16 @@ export function Shell({
 
                 `searchFocused` rather than `searchAtTop`, so it stops the moment
                 the caret goes rather than the moment the row does.
+
+                **Turquoise** — `--color-caret`, directed 15 August, and the third
+                meaningful colour in this palette. The token's own note carries the
+                scarcity rule it now lives under; the short version is that it
+                means *the app is listening* and must never appear on anything
+                else. It is the colour whether or not the blink is running, because
+                what it marks is the field being live rather than the animation.
               */}
               <span
-                className={`text-muted shrink-0 ${searchFocused ? 'animate-caret' : ''}`}
+                className={`text-caret shrink-0 ${searchFocused ? 'animate-caret' : ''}`}
               >
                 <ChevronIcon />
               </span>

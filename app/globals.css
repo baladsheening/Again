@@ -92,6 +92,28 @@
    */
   --color-active: #c1483c;
 
+  /**
+   * Turquoise. **The caret, and the caret only** — the chevron beside the search
+   * field in the masthead, which blinks while that field holds focus.
+   *
+   * Directed 15 August. ⚠ **It is the third meaningful colour in a palette whose
+   * whole argument is that it has two**, and that is worth stating rather than
+   * burying: §11 reserves amber for overlap, `--color-active` took red for "you
+   * are here" under the same scarcity rule, and each addition costs the others a
+   * little of their meaning. The case for this one is that a caret is a *system
+   * state* rather than decoration — it says the app is listening, which is
+   * neither of the other two claims — and that platforms tint their own carets
+   * for exactly that reason. **The same scarcity rule applies from here on: the
+   * moment turquoise appears on anything that is not the caret, it stops saying
+   * the app is listening.**
+   *
+   * 9.3:1 against the true-black ground, well past the 3:1 WCAG 1.4.11 asks of a
+   * graphical control. Cooler than anything else in the palette on purpose —
+   * `--color-text`, the accent and the active red are all warm, so this reads as
+   * a different kind of thing rather than as another member of the set.
+   */
+  --color-caret: #3fbfae;
+
   /*
     The width at which the shell becomes a rail.
 
@@ -505,6 +527,36 @@
   @media (pointer: coarse) {
     line-height: 24px;
     padding-block: 0.6875rem;
+  }
+}
+
+/**
+ * Hold the browser's own caret back until there is text for it to point into.
+ *
+ * ⚠ **Two blinking marks 6px apart, out of phase.** The chevron blinks at 1.06s
+ * step-end and the platform's caret blinks on its own rhythm, and with an empty
+ * field they sit next to each other saying the same thing — which is what got
+ * this noticed. Asked on 15 August: why have both.
+ *
+ * **Because they make different claims, but only once there is text.** The
+ * chevron says the field is live. The caret says *the next character lands
+ * here*, and that is only information when there is something to be positioned
+ * inside — tap into the middle of a typed query to fix a letter and the caret is
+ * the only thing showing where. Removing it outright would trade a small
+ * redundancy for the loss of cursor placement, selection and arrow-key
+ * navigation.
+ *
+ * So it is deferred rather than deleted: `:placeholder-shown` is true exactly
+ * while the field is empty, which is exactly when the chevron alone is enough.
+ *
+ * ⚠ **Only where a blinking chevron stands in for it.** The rail's dock has a
+ * chevron that does not blink, so the same rule there would leave that field with
+ * no live indicator at all — which is why this is a utility applied at one call
+ * site rather than a rule on `input`.
+ */
+@utility caret-deferred {
+  & input:placeholder-shown {
+    caret-color: transparent;
   }
 }
 
