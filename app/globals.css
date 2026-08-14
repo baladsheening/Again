@@ -183,14 +183,20 @@
     That is the right reading of a shell whose header now holds nothing else but
     two glyphs.
   */
-  --text-wordmark: 2.25rem;
+  /*
+    **1.75rem since 15 August, down from 2.25rem.** Directed, along with the
+    capitalisation below. Everything that depends on it is expressed against it
+    now — see `--wordmark-ink` and `--wordmark-slack` at the foot of this block —
+    so the next change of mind is this line and nothing else.
+  */
+  --text-wordmark: 1.75rem;
   /*
     The same mark in the rail, where there is a whole column for it and a phone
     header's worth of restraint is not called for. A second token again — but
     unlike `--text-wordmark-nav`, which held the same number as this one and was
     deleted for it, this holds a different number and earns its name.
   */
-  --text-wordmark-rail: 2.5rem;
+  --text-wordmark-rail: 2rem;
   /*
     A film title in a list. The largest thing on any signed-in screen, and
     deliberately so — with the poster gone from the row (§11, 9 August) the
@@ -233,6 +239,31 @@
    * `wordmark-trim` below.
    */
   --masthead-gap: 0.625rem;
+
+  /**
+   * The mark's inked height, and the dead space under it — both as a fraction of
+   * `--text-wordmark`, so that changing the size is one line again.
+   *
+   * ⚠ **These two are why the size is a knob rather than a small project.** The
+   * `wordmark-trim` margins are in `em` and have always scaled by themselves,
+   * but the masthead row's height and `main`'s top padding in
+   * `components/shell.tsx` were px and rem derived from a measurement taken at
+   * 36px — so every change of size silently needed three hand edits, and the one
+   * that mattered would have been the one nobody made. They read these instead.
+   *
+   * ⚠ **Both ratios assume a mark with no descender**, which is what `need` is.
+   * Measured at 36px in Space Grotesk 500, from the table on `wordmark-trim`:
+   *
+   *   ink height   27/36 = 0.75      (26px above the baseline, 1px below)
+   *   slack below  5/36  = 0.1389    (the box holds 11px of descender, 1 is used)
+   *
+   * For a word with a descender — `again` was one — they are 34/36 = 0.9444 and
+   * 3/36 = 0.0833. Changing the word means re-measuring these, not guessing them;
+   * the instruction at the top of `wordmark` is the whole reason both cases have
+   * ever been written down.
+   */
+  --wordmark-ink: calc(var(--text-wordmark) * 0.75);
+  --wordmark-slack: calc(var(--text-wordmark) * 0.1389);
 }
 
 @layer base {
@@ -579,14 +610,19 @@
   font-family: var(--font-display);
   font-weight: 500;
   /*
-    **Set in lower case, 10 August.** Directed — the mark reads *need* as of
-    15 August, and read *again* before that.
+    **Capitalised, 15 August.** Directed, with the size — the mark reads *Need*.
 
-    The case has been all three: `lowercase` until 9 August, capitalised that
-    day, caps on the morning of the 10th and back to lower case the same
-    afternoon. It is settled by eye rather than by argument, so the thing to
-    preserve is not the value but the property that makes changing it cheap —
-    **one declaration, not four JSX strings.**
+    The case has now been all three twice over: `lowercase` until 9 August,
+    capitalised that day, caps on the morning of the 10th, back to lower case the
+    same afternoon, and capitalised again here. It is settled by eye rather than
+    by argument, so the thing to preserve is not the value but the property that
+    makes changing it cheap — **one declaration, not four JSX strings.**
+
+    ⚠ **This particular change moved no other number, and that was checked
+    rather than assumed.** `Need` measures 26px above the baseline and 1px below
+    at 36px, the same as `need`: capitalising an initial that already reaches the
+    ascender line changes nothing about the inked box. Lower case and capitalised
+    measured the same for `again` too, for the same reason.
 
     The mark appears in four places: the phone header, the rail, `/sign-in` and
     `/reset-password`. Four literals are four things that can drift, and a
@@ -600,11 +636,12 @@
     top padding in `components/shell.tsx` follow it, and so does the gap under
     the mark on the two auth pages. Re-measure; do not reason.
   */
-  text-transform: lowercase;
+  text-transform: capitalize;
   /*
-    Back to −0.005em with the lower case. The +0.03em this briefly held was for
-    caps, which are drawn expecting to be tracked; lower case is not, and the
-    same value on a lowercase mark reads as loose rather than as deliberate.
+    −0.005em, unchanged by the capitalisation. The +0.03em this briefly held was
+    for full caps, which are drawn expecting to be tracked; one capital initial
+    on an otherwise lowercase word is not that, and the value that suits lower
+    case suits this.
   */
   letter-spacing: -0.005em;
   line-height: 1;
@@ -660,7 +697,8 @@
  *
  * | | ink above baseline | ink below | inked height |
  * |---|---|---|---|
- * | `need` (**current**) | 26px | 1px (the `e`'s overshoot) | 27px |
+ * | `Need` (**current**) | 26px | 1px (the `e`'s overshoot) | 27px |
+ * | `need` | 26px | 1px | 27px |
  * | `again` | 26px | 8px (the `g`) | 34px |
  * | `Again` | 26px | 8px | 34px |
  * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | 27px |
@@ -676,8 +714,12 @@
  * 36px in Space Grotesk 500 — which is what the instruction at the top of
  * `wordmark` asks for and is the only reason this was a three-line edit.
  *
- * The descender-less numbers are the ones to keep if the mark ever moves again;
- * for a word with a descender the pair is −0.0833em and 3.375rem.
+ * ⚠ **The rem figure above is history now.** `main`'s padding and the masthead
+ * row read `--wordmark-ink` instead, so the size is one token and these ratios
+ * are what carry it — see the note on those two. What still has to be re-measured
+ * by hand is a change of *word*, because a descender changes both ratios: for
+ * one that has a descender the pair is −0.0833em and 0.9444 rather than
+ * −0.2778em and 0.75.
  *
  * That leaves **9px of nothing above the letters and 3px below them**, which the
  * negative margins remove, leaving an element whose outer box is the inked

@@ -1466,9 +1466,29 @@ export function Shell({
         className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] pb-[var(--masthead-gap)] shadow-[0_0.5rem_0_0_#000]"
       >
         {/*
-          ⚠ **`min-h-[1.6875rem]` — 27px — and the row owns it rather than either
-          state (15 August).** 27px is the mark's inked height, measured; see the
-          table on `wordmark-trim`. Everything follows from putting it here:
+          ⚠ **`h-[var(--wordmark-ink)]` — a height, not a minimum — and the row
+          owns it rather than either state (15 August).** That token is the mark's
+          inked height, measured, as a fraction of `--text-wordmark` — see
+          globals.css.
+
+          ⚠ **`h`, because a minimum does not do this job, and finding that out
+          took two goes.** A floor is only binding while the mark is the tallest
+          thing in the row, and it stopped being so the moment the type shrank:
+          at 2.25rem the ink was 27px and the field's 24px line box fitted inside
+          it; at 1.75rem the ink is 21px and the field pushed the row back out to
+          24, resizing the masthead under the tap exactly as before. **The
+          masthead's height is a property of the masthead, not of whatever is
+          currently inside it.**
+
+          The field then overhangs the row by (24 − ink)/2 at each end — 1.5px at
+          this size. Nothing clips it: there is no `overflow` here, and the
+          overhang is spent into the header's own `--masthead-gap` padding, which
+          is 10px. The two glyphs are 20px and have about a pixel of headroom, so
+          **if either the icons or the field grow, this row silently overflows
+          rather than growing** — which is the deliberate trade, and the thing to
+          re-measure if the masthead ever gains a third state.
+
+          Everything else follows from putting the number here:
 
           - **Both states are the same height by construction**, so tapping the
             field cannot resize the masthead. They were left to match each other
@@ -1476,15 +1496,16 @@ export function Shell({
             trimmed box to 17px, the two header glyphs became the tallest thing
             in the row at 20px, and the field's 24px line box made the search
             state 4px taller than the resting one.
-          - **The header is 10 + 27 + 10 = 47px**, which is exactly the
-            `2.9375rem` `main` pads for below. That number used to run about 10px
-            generous, because the row's height was whatever its tallest child
-            happened to be.
-          - **The visible air is `--masthead-gap` at both ends.** The mark's 17px
-            box centres in 27px with 5px either side, and its ink overhangs that
-            box by 5px either side, so the ink fills the row exactly and the
-            paddings mean what they say — which is what that token's own note
-            claims and, until now, was not true.
+          - **The header is `--masthead-gap` + the ink + `--masthead-gap`**, which
+            is exactly what `main` pads for below, because that padding is now
+            the same expression. It used to run about 10px generous, because the
+            row's height was whatever its tallest child happened to be.
+          - **The visible air is `--masthead-gap` at both ends.** The trimmed mark
+            centres in the row, and its ink overhangs its own box by the same
+            amount at each end, so the ink fills the row exactly and the paddings
+            mean what they say — which is what that token's own note claims and,
+            until this, was not true. At 28px: a 13.2px box in a 21px row, ink
+            overhanging by 3.9 each way, 10px of visible air above and below.
 
           ⚠ **The bottom `--masthead-gap` moved from this row up to the `header`,
           and it had to.** `min-height` on a border box is satisfied by padding,
@@ -1497,7 +1518,7 @@ export function Shell({
 
           If the mark's word or case changes, this changes with it.
         */}
-        <div className="gutter flex min-h-[1.6875rem] items-center justify-between">
+        <div className="gutter flex h-[var(--wordmark-ink)] items-center justify-between">
           {searchAtTop ? (
             <div className="flex w-full min-w-0 items-center gap-1.5">
               <span className="text-muted shrink-0">
@@ -1843,34 +1864,32 @@ export function Shell({
         **The top padding is the header plus the gap**, and it has to be, because
         the header is `fixed` and holds no space open itself.
 
-        `2.9375rem` is the header, and it is not a guess — it is `MASTHEAD_GAP`
-        above the mark, the mark's trimmed box, and `MASTHEAD_GAP` below it:
+        **The header term is no longer a literal**, and that is the point of it.
+        It is `--masthead-gap` above the mark, the mark's ink, and
+        `--masthead-gap` below it — the same three the header itself is built
+        from, written the same way, so the two cannot disagree:
 
-          0.625rem  +  1.6875rem  +  0.625rem  =  2.9375rem
-          (10px)       (27px)        (10px)       (47px)
+          var(--masthead-gap) * 2  +  var(--wordmark-ink)
 
-        The middle term is the mark after its trims, `(1.2778 − 0.25 − 0.2778) ×
-        36px`, and it is the one term that is a consequence rather than a
-        decision — **if `--text-wordmark`, the trims or the mark's case move,
-        this moves with them.**
+        `--wordmark-ink` is the measured inked height as a fraction of
+        `--text-wordmark`; see globals.css for the measurement and for the warning
+        that the fraction is a property of the *word*, not of the size.
 
-        **It was 3.375rem while the mark read `again`**, whose `g` put 8px of ink
-        below the baseline and made the trimmed box 34px rather than 27. The mark
-        became `need` on 15 August, which has no descender, and 2.9375rem is the
-        number this file already carried for the descender-less case — it was
-        here for part of 10 August, while the mark was in caps. The spacing never
-        changed; the thing being spaced did, and this number is the only place
-        that fact is written down.
+        **It was three different literals in eight days** — 3.375rem for `again`,
+        2.9375rem for the caps pass and again for `need`, 2.125rem-worth of
+        argument in between — and each one was a fact about a typeface written
+        down in a component, needing a hand edit nobody would remember to make.
+        The type size then changed on 15 August, hours after the last of them,
+        which is exactly the failure the expression removes.
 
         ⚠ **It used to run about 10px generous and now does not.** Measured at
-        390px before this change: the header reported 44.02px against the 54 the
-        old number claimed, because the row's height was whatever its tallest
-        child happened to be — `wordmark`'s `line-height: 1` wins over
-        `wordmark-trim`'s `1.2778`, so the mark's box is never the size the trim
-        intends and the ink overhangs it by 5px at each end. Giving the row its
-        own 27px closes the gap: the header measures 47px, this pads 47, and the
-        `0.5rem` here and in the header's shadow still meet the way their notes
-        require.
+        390px before this: the header reported 44.02px against the 54 the literal
+        claimed, because the row's height was whatever its tallest child happened
+        to be — `wordmark`'s `line-height: 1` wins over `wordmark-trim`'s
+        `1.2778`, so the mark's box is never the size the trim intends and the ink
+        overhangs it at each end. Giving the row its own `--wordmark-ink` closes
+        the gap, and the `0.5rem` here and in the header's shadow still meet the
+        way their notes require.
 
         `1.5rem` is the gap, and it is the same 1.5rem as the header's shadow
         offset. Those two must stay equal: the shadow is what keeps the distance
@@ -1920,7 +1939,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_2.9375rem_+_0.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap)*2_+_var(--wordmark-ink)_+_0.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
