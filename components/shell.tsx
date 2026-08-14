@@ -174,51 +174,43 @@ const KEYBOARD_SETTLE_MS = 500
 const KEYBOARD_ARRIVAL_MS = 700
 
 /**
- * The keyboard's height, as measured the last time one was open.
- *
  * ─────────────────────────────────────────────────────────────────────────────
- *  Why a remembered number is worth more than a measured one here
+ *  There was a remembered keyboard height here — 15 August
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * **The bump on tapping the field is iOS moving the web view, not the page.**
- * Measured on the handset, installed: the wordmark, the header icons and the
- * poster wall all move together — so `position: fixed` elements move — while
- * every quantity the page can see holds still. `scrY 0`, `docT 0`, `vv.t 0`,
- * `sTop 0`, and the wall's client rect pinned at 109 through the whole focus.
- * Nothing inside the document can move a fixed element without moving one of
- * those, so the movement is happening underneath the page's own coordinate
- * system, where nothing here can observe or undo it.
+ * `lastKeyboardOverlap`, mirrored to `localStorage` under `again:keyboard-overlap`
+ * and read back by `rememberedOverlap()`. It existed to answer an impossible
+ * question: **how tall is a keyboard that has not appeared yet.**
  *
- * It is standalone keyboard avoidance. The focused field sits at the foot of a
- * 797px layout viewport, the keyboard covers the bottom 333 of it, so UIKit
- * lifts the view to reveal the field. `useKeyboardPin` then raises the bar clear
- * of the keys, the field is no longer covered, and iOS puts the view back —
- * which is the drop. **The bump and the drop are iOS reacting to us, one beat
- * apart**, and three attempts to correct the movement failed because there was
- * never anything on this side to correct.
+ * The question was forced by where the field was. The bump on tapping it was
+ * UIKit lifting the whole web view to reveal a field the keyboard was about to
+ * cover — measured on the handset, installed, with every quantity the page can
+ * see holding still (`scrY 0`, `docT 0`, `vv.t 0`, `sTop 0`) while the wordmark,
+ * the icons and the wall all moved together. Nothing on this side could observe
+ * or undo it, so the only move left was to leave iOS nothing to reveal: get the
+ * bar clear of the keyboard *at the instant of focus*, which is before the
+ * keyboard can be measured. The one number available that early was last time's.
  *
- * So the answer is to leave it nothing to reveal: the bar has to be clear of the
- * keyboard *at the instant of focus*, before the keyboard has arrived and
- * therefore before it can be measured. The only number available that early is
- * the one from last time — and a keyboard's height does not change between two
- * taps of the same field on the same device.
+ * ⚠ **It only ever grew, and that is what the user saw on 14 August.** The two
+ * directions of error cost differently — remembering too little reproduced the
+ * bump, remembering too much parked the bar a touch high — so it kept the
+ * maximum ever measured. The gap under a bar parked high is the overshoot, and
+ * `groundFor` had been painting black over it since 11 August. Delete the
+ * decoration and the overshoot is simply visible. **Reported as "a slither of a
+ * gap between the top of the keyboard and the bottom of the search bar",
+ * installed only** — a Safari tab hides it in the toolbar band, and the keyboard
+ * there is 271 against 333 standalone.
  *
- * **Confirmed on the handset, 11 August**: with the lift applied at
- * `pointerdown` and focus called by hand — see `onDockPointerDown` — the second
- * tap of a launch was smooth and the clamp counted zero document scrolls. The
- * first tap bumped only because nothing was remembered yet, which is what the
- * persistence removes: the height survives launches in `localStorage`, so it is
- * known from the first tap of every session after the very first.
+ * **The question is gone rather than answered better.** The field no longer goes
+ * anywhere near the keyboard: on a tap it docks at the masthead — see
+ * `searchAtTop` — so nothing needs to know a keyboard's height before it arrives,
+ * and no gap can open under anything. A number that cannot be known in time is
+ * not a number to estimate; it is a sign that something is in the wrong place.
  *
- * It only ever grows — the larger of memory and measurement, mirrored to
- * storage. The two directions of error cost differently: remembering too little
- * reproduces the native bump this exists to prevent, remembering too much parks
- * the bar a touch high for the few frames before the real measurement lands.
- * Growth is the cheap side.
+ * ⚠ `--keyboard-overlap` is a different quantity and is **still measured**, by
+ * `floor()`. That one is taken while the keyboard is up, needs no prediction,
+ * and is what keeps the last row of a long list reachable.
  */
-let lastKeyboardOverlap = 0
-
-const OVERLAP_KEY = 'again:keyboard-overlap'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -287,19 +279,15 @@ function suppressTapAftermath() {
 }
 
 /**
- * The remembered height, hydrated from storage on first use. Module state is
- * asked first: storage can throw and is slower, and after the first keyboard of
- * a session the module already knows.
+ * The id of the field that the masthead holds while a search is being typed.
+ *
+ * Named rather than reached for through a ref, because the element it points at
+ * does not exist when the tap that needs it begins — see `onBarPointerDown`. The
+ * three `SearchField`s each carry their own id for the reason that component's
+ * note gives: they are all in the document at once and a shared id would give two
+ * `<label for>` one target.
  */
-function rememberedOverlap(): number {
-  if (lastKeyboardOverlap > 0) return lastKeyboardOverlap
-  try {
-    lastKeyboardOverlap = Number(window.localStorage.getItem(OVERLAP_KEY)) || 0
-  } catch {
-    // Private mode or storage denied: the first tap of a launch bumps, as before.
-  }
-  return lastKeyboardOverlap
-}
+const TOP_FIELD_ID = 'search-top'
 
 /**
  * The smallest viewport change worth treating as a keyboard.
@@ -429,49 +417,86 @@ export function Shell({
   const keyboardFocusAtRef = useRef(0)
 
   /*
-    **The pre-lift moved from focus to pointerdown, because focus is after the
-    verdict.** Measured on `51d9b16`: the bar was in position through the whole
-    arrival — peak `ERR` read 0 — and iOS still scrolled the document by the full
-    keyboard height (`clmp 1 max 333`). If the reveal were computed from where
-    the field was once the focus *event* had run, that scroll would have been
-    zero. So the decision is made in the native focus machinery, before the DOM
-    handler fires, and a pre-lift written there is always one verdict late.
+    Whether the masthead is currently holding the search field rather than the
+    wordmark — see the note on `onBarPointerDown`.
 
-    `pointerdown` is before any of it: the dock is lifted there, so by the time
-    anything computes what needs revealing, the field is already above where the
-    keyboard will land.
+    **Below the `rail` breakpoint only**, because it is the phone's bar that
+    rests where a keyboard lands. Above it the field is at the foot of the
+    content column, there is no masthead to move it into, and the dock keeps the
+    thermostat pin in `useKeyboardPin` that it has always had.
+
+    Set from a touch `pointerdown` and cleared when the field gives up focus, so
+    the row is up before iOS decides whether anything needs revealing and gone
+    the moment the keyboard is.
+  */
+  const [searchAtTop, setSearchAtTop] = useState(false)
+
+  /*
+    ───────────────────────────────────────────────────────────────────────────
+     The field docks at the masthead to be typed in — 15 August
+    ───────────────────────────────────────────────────────────────────────────
+
+    **The bar rests at the foot of the screen and the field is typed in at the
+    top of it.** Tapping the resting bar puts a search row in the masthead and
+    focuses that, so the keyboard rises over the wall with nothing underneath it
+    to dodge.
+
+    This replaces a pre-lift: the bar used to jump upward by a remembered
+    keyboard height at `pointerdown`, land in mid-air, and wait about three
+    hundred milliseconds for the keys to arrive under it. Both of the things
+    reported on 14 August came from that — the jump itself, and a sliver of gap
+    wherever the remembered height overshot the real one. Neither is
+    representable now: the field's position no longer depends on a keyboard's
+    height, so there is no number to be wrong and no gap for it to be wrong by.
+
+    ⚠ **What carries over, and it is the load-bearing part: the field has to be
+    out of the keyboard's way *before* iOS decides whether to reveal it.**
+    Measured on `51d9b16`: the bar was in position through the whole arrival —
+    peak `ERR` read 0 — and iOS still scrolled the document by the full keyboard
+    height (`clmp 1 max 333`). The verdict is reached in native focus machinery
+    before any DOM handler runs, so anything arranged at focus is a verdict late.
+
+    `pointerdown` is before all of it. The masthead row is put up there, and by
+    the time anything computes what needs revealing, the field being focused is
+    at the top of the screen where no keyboard will ever reach.
 
     ⚠ **The focus itself happens at `pointerup`, and that split is load-bearing.**
-    The first version called `focus()` here, in the same handler as the lift —
+    The first version called `focus()` in the same handler that moved things —
     and on the handset the bump was gone *and no keyboard ever arrived*. iOS
     does not grant a keyboard for a focus arranged while the finger is still
-    down; it grants one for a focus made by a completed tap. So the lift takes
-    the earliest moment and the focus takes the latest one, which is also the
-    order the two need anyway — style is long flushed by the time the tap ends,
-    so the verdict reads the lifted rect.
+    down; it grants one for a focus made by a completed tap. So the move takes
+    the earliest moment and the focus takes the latest, which is also the order
+    the two need anyway: React has long flushed the masthead row by the time the
+    tap ends, so the field is really there to be focused and the verdict reads it
+    where it really is.
 
-    The pair stays matched across the movement because touch pointers have
+    The pair stays matched across the change because touch pointers have
     **implicit pointer capture**: every pointer event after `pointerdown` is
-    delivered to the same element, even though the bar has moved 333px out from
-    under the finger in between. A `click` could not be trusted for that; this
-    can.
+    delivered to the element that received it, whatever has happened to the
+    layout in between. A `click` could not be trusted for that; this can.
+
+    ⚠ **The tap lands on the resting bar and the focus goes somewhere else** —
+    `TOP_FIELD_ID`, not the input under the finger. Focusing the one that was
+    touched is what used to put a field at the foot of the screen and start the
+    whole avoidance problem. The fallback is the touched input, and it exists
+    only for the case where React has somehow not flushed: a rare bump beats a
+    tap that does nothing.
 
     `preventScroll` covers the separate scroll `focus()` itself can request; the
     keyboard reveal is not that scroll, which is why the option alone never
     fixed anything.
 
     A gesture can end somewhere other than a tap — a drag, or a cancel — and
-    that would leave the bar lifted over nothing with no keyboard coming.
-    `pointerup` treats real movement as "not a tap" and puts the bar back, and
-    `pointercancel` puts it back unconditionally.
+    that would leave a search row in the masthead with no keyboard coming.
+    `pointerup` treats real movement as "not a tap" and puts the masthead back,
+    and `pointercancel` puts it back unconditionally.
 
     ⚠ **The tap's aftermath is silenced twice, and both are needed.** For
     touch, the mouse events are dispatched *after* `pointerup`, hit-tested at
-    the touch point — where the bar no longer is, because the lift moved it.
-    They land on whatever sits behind: first observed as the keyboard being
-    granted and taken back a beat later, then — with `pointerdown` cancelled —
-    as the intent sheet opening for the poster that happened to be under the
-    finger.
+    the touch point. They land on whatever sits behind: first observed as the
+    keyboard being granted and taken back a beat later, then — with `pointerdown`
+    cancelled — as the intent sheet opening for the poster that happened to be
+    under the finger.
 
     Cancelling `pointerdown` suppresses the *compatibility* events, mousedown
     and mouseup, and the blur their defaults carry. But `click` is deliberately
@@ -484,84 +509,68 @@ export function Shell({
     **The whole row is the field, not just the input's own 24px box.** The
     input sits centred in a 42px row, and a tap in the strip above or below it
     has the row as its target — which fell through to the native path: iOS's
-    own touch adjustment focused the input anyway, without the lift, and the
-    bump came back. Observed as "it works near the bottom edge, but it bumps".
-    Any non-interactive target inside the dock now counts as the field; the
-    chevron and the collection links are interactive and keep themselves.
+    own touch adjustment focused the input where it stood, and the bump came
+    back. Observed as "it works near the bottom edge, but it bumps". Any
+    non-interactive target inside the bar counts as the field; the chevron and
+    the collection links are interactive and keep themselves.
 
     **Touch only.** A mouse needs none of this — no keyboard, no reveal, no
     bump — and cancelling its pointerdown would break click-to-place-caret in
-    a field that still holds text.
+    a field that still holds text. It is also why a desk never sees the masthead
+    row: nothing there ever calls for one.
   */
-  const pendingTapRef = useRef<{
-    input: HTMLInputElement
-    el: HTMLElement
-    dropsSafeArea: boolean
-    y: number
-  } | null>(null)
+  const pendingTapRef = useRef<{ input: HTMLInputElement; y: number } | null>(null)
 
-  function restDock(el: HTMLElement, dropsSafeArea: boolean) {
-    el.style.transform = ''
-    if (dropsSafeArea) el.style.paddingBottom = ''
-  }
-
-  /** The input a tap on the dock means, or null where it means something else. */
-  function dockInput(dock: HTMLElement, target: EventTarget | null): HTMLInputElement | null {
+  /** The input a tap on the bar means, or null where it means something else. */
+  function barInput(bar: HTMLElement, target: EventTarget | null): HTMLInputElement | null {
     if (!(target instanceof Element)) return null
-    /* Buttons and links in the dock are their own answer — the chevron, the
-       collections. Everything else in a dock is the field's furniture. */
+    /* Buttons and links in the bar are their own answer — the chevron, the
+       collections. Everything else in it is the field's furniture. */
     if (target.closest('button, a')) return null
     if (target instanceof HTMLInputElement) return target
-    return dock.querySelector('input')
+    return bar.querySelector('input')
   }
 
-  function onDockPointerDown(event: React.PointerEvent<HTMLElement>, dropsSafeArea = false) {
+  function onBarPointerDown(event: React.PointerEvent<HTMLElement>) {
     if (event.pointerType === 'mouse') return
-    const el = event.currentTarget
-    const input = dockInput(el, event.target)
+    if (searchAtTop) return
+    const input = barInput(event.currentTarget, event.target)
     if (!input) return
-    if (document.activeElement === input) return
-    const overlap = rememberedOverlap()
-    if (overlap <= 0) return
 
     /* See the note above — this is what stops the synthesized mouse events
-       landing behind the moved bar and blurring the focus arranged below. */
+       landing behind the bar and blurring the focus arranged above. */
     event.preventDefault()
 
-    el.style.transform = `translateY(${-overlap}px)`
-    /*
-      The home-indicator clearance comes off in the same write as the lift: a
-      keyboard covers the indicator, so the inset becomes dead space holding the
-      row off the keys. Only the phone's bar carries one — see `dropsSafeArea`.
-    */
-    if (dropsSafeArea) el.style.paddingBottom = '0px'
-    pendingTapRef.current = { input, el, dropsSafeArea, y: event.clientY }
+    setSearchAtTop(true)
+    pendingTapRef.current = { input, y: event.clientY }
   }
 
-  function onDockPointerUp(event: React.PointerEvent<HTMLElement>) {
+  function onBarPointerUp(event: React.PointerEvent<HTMLElement>) {
     const pending = pendingTapRef.current
     pendingTapRef.current = null
     if (!pending) return
 
     /* A finger that travelled was scrolling, not tapping. */
     if (Math.abs(event.clientY - pending.y) > TAP_SLOP) {
-      restDock(pending.el, pending.dropsSafeArea)
+      setSearchAtTop(false)
       return
     }
 
     suppressTapAftermath()
-    pending.input.focus({ preventScroll: true })
+    const top = document.getElementById(TOP_FIELD_ID)
+    const field = top instanceof HTMLInputElement ? top : pending.input
+    field.focus({ preventScroll: true })
 
-    /* If the keyboard is refused anyway, do not leave the bar lifted over nothing. */
+    /* If the keyboard is refused anyway, do not leave a search row in the
+       masthead with nothing typing into it. */
     window.setTimeout(() => {
-      if (document.activeElement !== pending.input) restDock(pending.el, pending.dropsSafeArea)
+      if (document.activeElement !== field) setSearchAtTop(false)
     }, 400)
   }
 
-  function onDockPointerCancel() {
-    const pending = pendingTapRef.current
+  function onBarPointerCancel() {
+    if (pendingTapRef.current) setSearchAtTop(false)
     pendingTapRef.current = null
-    if (pending) restDock(pending.el, pending.dropsSafeArea)
   }
 
   /*
@@ -613,9 +622,29 @@ export function Shell({
   */
   const dismissTapRef = useRef<{ y: number } | null>(null)
 
-  /** Whether a tap landed in the page itself, rather than in a portalled dock. */
+  /**
+   * Whether a tap landed in the page itself, rather than on a surface that is
+   * holding the field.
+   *
+   * ⚠ **The masthead becomes such a surface, and forgetting that killed the ×
+   * for the second time.** The docks are portalled to `document.body`, so DOM
+   * containment answers for them by itself — that was the fix on 11 August. The
+   * masthead is *not* portalled: it is inside `#scroll-root`, so once it holds
+   * the field, every tap on the field and on its × was arriving here as a tap on
+   * the page, dismissing the keyboard and swallowing the very click that was
+   * meant to clear the query. Reproduced in a browser within minutes of the
+   * change, which is the only reason it is not a third handset report.
+   *
+   * The exemption is conditional rather than permanent, and that is the whole of
+   * the argument for it: **the surface holding the field is never "the page"**.
+   * While the masthead holds the wordmark it is page like anything else, and a
+   * tap on it dismisses — the deliberate second tap the note above describes.
+   */
   function inThePage(event: React.PointerEvent<HTMLElement>) {
-    return event.target instanceof Node && event.currentTarget.contains(event.target)
+    if (!(event.target instanceof Node)) return false
+    if (!event.currentTarget.contains(event.target)) return false
+    if (searchAtTop && event.target instanceof Element && event.target.closest('header')) return false
+    return true
   }
 
   function onContentPointerDown(event: React.PointerEvent<HTMLElement>) {
@@ -702,46 +731,36 @@ export function Shell({
   }
 
   /*
-    `dropsSafeArea` is passed rather than looked up, because reaching for the
-    memoised `docks` array from an event handler is enough to stop the React
-    Compiler preserving that memo — and the two call sites each already know
-    which dock they are.
+    A keyboard is being asked for. Both surfaces that can hold a field wear this
+    — the masthead below `rail`, the dock above it — because what it records is
+    "a keyboard is on its way", which is true wherever the field happens to be.
+
+    ⚠ **There was a pre-lift written here, and it is gone.** It raised the dock by
+    a remembered keyboard height so iOS would find nothing to reveal. The field is
+    not down there any more; see `onBarPointerDown` and the note where
+    `lastKeyboardOverlap` used to be.
+
+    The settle window it feeds is still needed, and for its original reason: the
+    keyboard's arrival lands as one large scroll event, indistinguishable from a
+    hard flick, and the collection bar must not recede for it.
   */
-  function onDockFocus(event: React.FocusEvent<HTMLElement>, dropsSafeArea = false) {
+  function onDockFocus(event: React.FocusEvent<HTMLElement>) {
     if (!(event.target instanceof HTMLInputElement)) return
     keyboardOpeningRef.current = true
     keyboardFocusAtRef.current = performance.now()
     setReceded({ route: pathname, hidden: false })
-
-    /*
-      **Get out from behind the keyboard before iOS notices the field is there.**
-      See `lastKeyboardOverlap` for the measurement this rests on.
-
-      Written here rather than in an effect because *here* is the focus event
-      itself — the earliest moment in the browser at which anything can happen.
-      An effect is a render away, and a render is a frame, and one frame is
-      already too late: iOS begins its avoidance animation with the keyboard's.
-
-      It is an estimate and it does not have to be right. `useKeyboardPin`
-      measures the real position on the next frame and every frame after, so
-      being a few pixels out costs nothing — the only job here is that the field
-      not be *underneath the keyboard* when iOS looks. The transform written is
-      the same shape the hook writes, so the hook's own correction replaces it
-      rather than fighting it.
-
-      `currentTarget` is the dock: this handler is on the dock, and the field
-      that fired it is inside. No lookup, and no question of picking the one
-      that is on screen — the one that took the focus is by definition it.
-    */
-    const overlap = rememberedOverlap()
-    if (overlap <= 0) return
-    const el = event.currentTarget
-    el.style.transform = `translateY(${-overlap}px)`
-    if (dropsSafeArea) el.style.paddingBottom = '0px'
   }
 
+  /*
+    The masthead gives the wordmark back when the field gives up focus, whatever
+    took it away — a tap on the page, a drag, Escape, the keyboard's own dismiss
+    key, or a navigation. **One exit for every way out**, rather than a list of
+    the ways in that has to be kept complete.
+  */
   function onDockBlur(event: React.FocusEvent<HTMLElement>) {
-    if (event.target instanceof HTMLInputElement) keyboardOpeningRef.current = false
+    if (!(event.target instanceof HTMLInputElement)) return
+    keyboardOpeningRef.current = false
+    setSearchAtTop(false)
   }
 
   /*
@@ -749,6 +768,10 @@ export function Shell({
     it is the only route to the field, and adding is what the app is for.
   */
   const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
+
+  /* What the bar is actually showing, which is not the same question while the
+     masthead has the field — see the note at the render. */
+  const barShows = searchAtTop ? 'nav' : barMode
 
   /*
     Whether hydration has finished, which is when a portal may be opened.
@@ -791,20 +814,18 @@ export function Shell({
   const scrollRef = useRef<HTMLDivElement>(null)
 
   /*
-    Keeps whichever search dock is on screen on the keyboard's top edge — see
-    `useKeyboardPin`.
+    Keeps the rail's search dock on the keyboard's top edge — see `useKeyboardPin`.
 
-    **There are two docks, and a phone reaches both of them.** The bar at the
-    foot is `rail:hidden` and the row above the posters is `hidden rail:flex`, so
-    the breakpoint chooses; and 45rem is 720px, which most handsets clear the
-    moment they are turned on their side. Pinning only the phone's bar left the
-    landscape field — the one actually on screen — sitting behind the keyboard.
+    ⚠ **The phone's bar left this on 15 August, and only the rail's dock is
+    pinned now.** Below `rail` the field is not at the foot of the screen while it
+    is being typed in; it is in the masthead, where no keyboard reaches, so there
+    is nothing to hold anywhere. Above `rail` the field really is at the foot of
+    the content column — that is every iPad, since 45rem is 720px and the
+    narrowest of them is 768 — and that surface still needs the thermostat.
 
-    Each dock carries a zero-height twin with its own positioning and nothing
-    else. That is what the hook measures: see the note on `useKeyboardPin`.
+    The dock carries a zero-height twin with its own positioning and nothing else.
+    That is what the hook measures: see the note on `useKeyboardPin`.
   */
-  const barRef = useRef<HTMLElement>(null)
-  const anchorRef = useRef<HTMLDivElement>(null)
   const railRef = useRef<HTMLDivElement>(null)
   const railAnchorRef = useRef<HTMLDivElement>(null)
   /* The bottom of the layout viewport — see the element itself, and `floor`. */
@@ -812,18 +833,11 @@ export function Shell({
 
   /*
     Memoised because the hook subscribes against it: a fresh array literal every
-    render would tear down and rebuild five listeners on each keystroke. Refs are
+    render would tear down and rebuild the listeners on each keystroke. Refs are
     stable for the life of the component, so there is nothing for this to depend
     on.
   */
-  const docks = useMemo<SearchDock[]>(
-    () => [
-      /* The phone's bar wears the home-indicator inset, which a keyboard covers. */
-      { el: barRef, anchor: anchorRef, dropsSafeArea: true },
-      { el: railRef, anchor: railAnchorRef },
-    ],
-    [],
-  )
+  const docks = useMemo<SearchDock[]>(() => [{ el: railRef, anchor: railAnchorRef }], [])
 
   useKeyboardPin(searchFocused, scrollRef, floorAnchorRef, docks)
 
@@ -1123,30 +1137,23 @@ export function Shell({
     >
     <div className="rail:pl-68 mx-auto flex min-h-svh w-full max-w-6xl flex-col">
       {/*
-        The two references for `useKeyboardPin`. Each carries its dock's
-        positioning and nothing else — no transform, no recede, no padding — so
-        it reports where an untransformed fixed element actually lands on this
-        device. Zero size, no paint, no hit area: they exist to be measured.
+        The references for `useKeyboardPin`. Each carries its dock's positioning
+        and nothing else — no transform, no recede, no padding — so it reports
+        where an untransformed fixed element actually lands on this device. Zero
+        size, no paint, no hit area: they exist to be measured.
 
-        They wear their dock's breakpoint too, so exactly one of them is ever
-        laid out, and the hook picks the pair that is.
+        ⚠ **There were two of these until 15 August.** The phone's bar had a twin
+        at `bottom-0` wearing `rail:hidden`; it went with the pre-lift, because
+        the bar is no longer moved to meet a keyboard and so nothing needs to
+        know where it rests. The rail's twin hangs off `top-0` and `h-svh` rather
+        than `bottom-0` — see the rail dock itself for why.
 
-        The second hangs off `top-0` and `h-svh` rather than `bottom-0` — see the
-        rail dock itself for why — so its resting edge is not the same line as the
-        bar's, and it needs a twin of its own shape rather than a share of that
-        one.
-
-        **Portalled with their docks**, or they would be measuring a box the
-        docks are no longer in.
+        **Portalled with its dock**, or it would be measuring a box the dock is
+        no longer in.
       */}
       {portalReady &&
         createPortal(
           <>
-            <div
-              ref={anchorRef}
-              aria-hidden
-              className="rail:hidden pointer-events-none fixed inset-x-0 bottom-0 h-0"
-            />
             <div
               ref={railAnchorRef}
               aria-hidden
@@ -1163,8 +1170,10 @@ export function Shell({
               the screen. Measuring the overlap against that would report a
               keyboard the size of the whole page.
 
-              Unlike the two above it wears no breakpoint: the floor is the floor
-              at every width, and both docks need it.
+              Unlike the one above it wears no breakpoint: the floor is the floor
+              at every width, and `safe-bottom` needs it at all of them — a
+              keyboard still covers the foot of a phone's results wall even
+              though nothing is docked down there any more.
 
               Measured rather than derived from `innerHeight` or `clientHeight`,
               which is the same choice `floor` and the pin already make — those
@@ -1321,14 +1330,17 @@ export function Shell({
         `transition-[translate]` for the same reason the phone's bar has it:
         `useKeyboardPin` writes `transform` here and it must be instant, so the
         two properties are kept apart even though nothing animates this one yet.
+
+        ⚠ **No pointer handlers here since 15 August.** It carried the three that
+        arranged the pre-lift, and there is no pre-lift: this dock is held on the
+        keyboard by measurement alone, which is what it had before the phone's
+        problems were ever brought to it. A tap on the field focuses the field,
+        the way it does anywhere else on the web.
       */}
       {portalReady &&
         createPortal(
           <div
             ref={railRef}
-            onPointerDownCapture={onDockPointerDown}
-            onPointerUpCapture={onDockPointerUp}
-            onPointerCancelCapture={onDockPointerCancel}
             onFocusCapture={onDockFocus}
             onBlurCapture={onDockBlur}
             className="rail:flex pointer-events-none fixed top-0 right-0 left-[calc(max(0px,50%_-_36rem)_+_17rem)] z-10 hidden h-svh flex-col justify-end transition-[translate]"
@@ -1421,8 +1433,52 @@ export function Shell({
         ground exactly, and a shadow that is one shade off reads as a band across
         the screen. If `--color-bg` ever moves, this moves with it by hand.
       */}
-      <header className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] shadow-[0_0.5rem_0_0_#000]">
+      {/*
+        ─────────────────────────────────────────────────────────────────────
+         It holds the search field while one is being typed in (15 August)
+        ─────────────────────────────────────────────────────────────────────
+
+        **This is where the field goes, and the whole point is that a keyboard
+        never reaches here.** See `onBarPointerDown` for what it replaced and
+        why the swap has to happen at `pointerdown`.
+
+        ⚠ **Both states are 24px of content, and that is what keeps the header's
+        box identical.** Measured in a browser at 390px rather than derived: the
+        wordmark sets a 36px line and `wordmark-trim` takes 9px off the top and
+        3px off the bottom, so its *margin* box is 24px — the row measures 34.02px
+        with its own 10px of bottom padding, and the header 44.02px. The field's
+        line box is `leading-6`, which is the same 24. So the two states already
+        agree by construction and `min-h-6` is a floor rather than a correction:
+        it says what the row depends on, and stops the row collapsing if the
+        input's type is ever restyled smaller.
+
+        Getting this wrong would not misalign the header — it would shift the
+        entire poster wall the moment the field is tapped, because `main`'s top
+        padding is a fixed literal that cannot know which state is up.
+
+        The wordmark and the two glyphs are gone for as long as the field is up.
+        That is deliberate: a masthead has one job at a time, and while you are
+        typing the field is it. They come back on blur, which is every way out —
+        see `onDockBlur`.
+
+        Focus and blur are captured here for the same reason the rail's dock
+        captures them: this is now one of the two surfaces that can hold a field.
+      */}
+      <header
+        onFocusCapture={onDockFocus}
+        onBlurCapture={onDockBlur}
+        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] shadow-[0_0.5rem_0_0_#000]"
+      >
         <div className="gutter flex items-center justify-between pb-[var(--masthead-gap)]">
+          {searchAtTop ? (
+            <div className="flex min-h-6 w-full min-w-0 items-center gap-1.5">
+              <span className="text-muted shrink-0">
+                <ChevronIcon />
+              </span>
+              <SearchField id={TOP_FIELD_ID} />
+            </div>
+          ) : (
+            <>
           {/*
             `wordmark-trim` contains the descender so it cannot reach what
             follows, and takes back the diacritic space "again" never uses, so
@@ -1490,6 +1546,8 @@ export function Shell({
               <ProfileIcon />
             </Link>
           </div>
+            </>
+          )}
         </div>
       </header>
 
@@ -1541,21 +1599,19 @@ export function Shell({
         not spend rules on decoration.
       */
       <nav
-        ref={barRef}
         aria-label="Main"
-        /* The phone's bar is the one whose bottom padding is a home-indicator
-           inset — see `dropsSafeArea` on `SearchDock`. */
-        onPointerDownCapture={(event) => onDockPointerDown(event, true)}
-        onPointerUpCapture={onDockPointerUp}
-        onPointerCancelCapture={onDockPointerCancel}
-        onFocusCapture={(event) => onDockFocus(event, true)}
-        onBlurCapture={onDockBlur}
+        /* A tap on the field here puts the field in the masthead and focuses it
+           there — see `onBarPointerDown`. The bar itself does not move. */
+        onPointerDownCapture={onBarPointerDown}
+        onPointerUpCapture={onBarPointerUp}
+        onPointerCancelCapture={onBarPointerCancel}
         /*
-          `transition-[translate]`, not `transition-transform`. Two things move
-          this element: the recede slide writes `translate` and wants its 300ms,
-          while `useKeyboardPin` writes `transform` and must be instant.
-          Tailwind's `transition-transform` covers both properties at once,
-          which would make the bar visibly chase the keyboard.
+          `transition-[translate]` rather than `transition-transform`, still. The
+          recede slide writes `translate` and wants its 300ms; nothing writes
+          `transform` here any more, and naming the one property keeps it that
+          way — a later `transform` would be animated by accident under the
+          shorthand, which is exactly how the bar once ended up visibly chasing
+          a keyboard.
         */
         /*
           ───────────────────────────────────────────────────────────────────
@@ -1581,11 +1637,11 @@ export function Shell({
           must come out at zero and change nothing. A floor of even half a rem
           would have lifted the bar in exactly the place it was already right.
 
-          ⚠ **`useKeyboardPin` overwrites this to `0px` while a keyboard is
-          open** and clears the override when it closes, because a keyboard
-          covers the indicator and the clearance becomes dead space holding the
-          row off the keys. Anything written here has to survive being replaced
-          and restored — which is why it is a class and not an inline style.
+          ⚠ **`useKeyboardPin` used to overwrite this to `0px` while a keyboard
+          was open**, because the bar was being held against the keys and the
+          clearance became dead space between the two. It is not held against
+          anything any more — the keyboard simply covers it — so the inset stands
+          at all times and nothing writes this from JS.
         */
         className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[max(0px,calc(env(safe-area-inset-bottom)_-_1rem))] transition-[translate] duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
@@ -1657,18 +1713,30 @@ export function Shell({
           <button
             type="button"
             onClick={() => setBarMode((m) => (m === 'search' ? 'nav' : 'search'))}
-            aria-expanded={barMode === 'nav'}
-            aria-label={barMode === 'search' ? 'Show collections' : 'Search'}
+            aria-expanded={barShows === 'nav'}
+            aria-label={barShows === 'search' ? 'Show collections' : 'Search'}
             className="text-muted hover:text-text tap-target flex shrink-0 items-center self-stretch pr-1 transition-colors"
           >
             <ChevronIcon
               className={`transition-transform duration-200 ${
-                barMode === 'nav' ? 'rotate-180' : ''
+                barShows === 'nav' ? 'rotate-180' : ''
               }`}
             />
           </button>
 
-          {barMode === 'search' ? (
+          {/*
+            ⚠ **`barShows`, not `barMode` — the bar gives the prompt up while the
+            masthead is holding the field.** Two search fields on screen at once
+            is the state this would otherwise render for the three hundred
+            milliseconds before the keyboard covers this one, and a duplicate
+            prompt reads as a fault. The collections take the row instead, which
+            is the other thing it is for, so the swap looks like navigation coming
+            back rather than search going away twice.
+
+            `barMode` itself is untouched by any of this, so whichever state the
+            chevron was left in is the state that returns on blur.
+          */}
+          {barShows === 'search' ? (
             <SearchField id="search-bar" />
           ) : (
             /*
@@ -1895,18 +1963,19 @@ type SearchDock = {
    * either laid out together or not at all.
    */
   anchor: React.RefObject<HTMLElement | null>
-  /**
-   * Whether the dock's bottom padding is home-indicator clearance rather than
-   * design spacing. An open keyboard covers the indicator, so that padding is
-   * dead space holding the row off the keys — dropped while the keyboard is up
-   * and restored with it.
-   */
-  dropsSafeArea?: boolean
 }
 
 /**
  * Holds whichever search dock is on screen on the top edge of an open keyboard,
  * and holds the foot of the page above it.
+ *
+ * ⚠ **Only the rail's dock is passed to this now (15 August), and the second job
+ * is the one that still runs everywhere.** Below `rail` the field moves to the
+ * masthead to be typed in — see `searchAtTop` — so nothing is docked where a
+ * keyboard lands and `measure()` finds no laid-out dock to hold. `floor()` does
+ * not care which layout is up: a keyboard covers the foot of a phone's results
+ * wall whether or not anything is sitting there, and `--keyboard-overlap` is
+ * what makes the last row reachable.
  *
  * **Two jobs, because they are one measurement.** Both need the bottom edge of
  * the visible area, and both need re-reading on the same five events; splitting
@@ -1983,7 +2052,6 @@ function useKeyboardPin(
       const el = dock.el.current
       if (!el) return
       el.style.transform = ''
-      if (dock.dropsSafeArea) el.style.paddingBottom = ''
     }
 
     const measure = () => {
@@ -2046,42 +2114,18 @@ function useKeyboardPin(
         stay level with the keyboard. The clamp discarded exactly that, which is
         why the bar floated mid-results from a few hundred pixels in.
       */
-      let lift = vv.offsetTop + vv.height - anchor.getBoundingClientRect().bottom
+      const lift = vv.offsetTop + vv.height - anchor.getBoundingClientRect().bottom
 
       /*
-        **Do not undo the pre-lift while waiting for the keyboard to arrive.**
-
-        `onDockFocus` raises the bar clear of where the keyboard is about to be,
-        so that iOS has no covered field to reveal — see `lastKeyboardOverlap`.
-        This function then ran on the very next frame, found a viewport that had
-        not shrunk yet, measured a lift of zero, and wrote `transform = ''`.
-
-        The pre-lift was therefore destroyed about one frame after it was
-        applied, every time, which is why it changed nothing. A thermostat that
-        switches the heating off because the room is not yet cold.
-
-        Zero is not "the bar is where it should be" during the arrival window; it
-        is "no keyboard has been seen yet". While that is true and a height is
-        remembered, the assumption stands. The moment the viewport actually
-        shrinks the measurement is non-zero and takes over on its own.
-
-        Outside the window this is skipped entirely, so a bar with no keyboard
-        under it still returns to rest.
+        ⚠ **There was a guard here holding a pre-lift in place, and it went with
+        the pre-lift (15 August).** While a remembered keyboard height existed,
+        a measured lift of zero could mean either "the dock is where it should
+        be" or "no keyboard has turned up yet", and this preferred the second
+        reading for the length of the arrival window — otherwise the thermostat
+        wrote `transform = ''` one frame after the pre-lift and undid it every
+        time. Nothing pre-lifts now, so zero means the one thing it says.
       */
-      const remembered = rememberedOverlap()
-      if (Math.abs(lift) < 1 && remembered > 0 && performance.now() < until) {
-        lift = -remembered
-      }
-
       el.style.transform = lift ? `translateY(${lift}px)` : ''
-      /*
-        ⚠ **The phone's bar only.** `dropsSafeArea` stands in for "this dock
-        rests on the bottom edge of the screen", which is what makes the
-        home-indicator inset dead space once a keyboard covers it. The rail's
-        dock is a full-height column whose visible band is at the foot of the
-        *content*, and it wears no such inset.
-      */
-      if (shown.dropsSafeArea) el.style.paddingBottom = '0px'
     }
 
     /*
@@ -2126,20 +2170,15 @@ function useKeyboardPin(
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
 
       /*
-        Remembered for the *next* focus, which is the only moment it is worth
-        anything — see `lastKeyboardOverlap` for why it only grows. A zero is
-        the keyboard being closed, and writing that down would throw away the
-        number the next tap needs.
+        ⚠ **This used to be written down for the next tap, and it is not any
+        more (15 August).** The number was kept in a module variable and in
+        `localStorage`, always the largest ever seen, so that a field about to be
+        focused could be moved clear of a keyboard that did not exist yet. Nothing
+        needs to predict a keyboard now — see the note where `lastKeyboardOverlap`
+        used to be — so the measurement is used where it is taken and nowhere
+        else. There is no stored value left to go stale, and `again:keyboard-overlap`
+        can be deleted from storage by anyone who still has one; nothing reads it.
       */
-      const rounded = Math.round(overlap)
-      if (rounded > lastKeyboardOverlap) {
-        lastKeyboardOverlap = rounded
-        try {
-          window.localStorage.setItem(OVERLAP_KEY, String(rounded))
-        } catch {
-          // Nothing to do — the in-memory copy still improves this session.
-        }
-      }
     }
 
     /*
