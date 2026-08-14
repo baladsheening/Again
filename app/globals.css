@@ -107,10 +107,20 @@
    * moment turquoise appears on anything that is not the caret, it stops saying
    * the app is listening.**
    *
-   * 9.3:1 against the true-black ground, well past the 3:1 WCAG 1.4.11 asks of a
-   * graphical control. Cooler than anything else in the palette on purpose —
-   * `--color-text`, the accent and the active red are all warm, so this reads as
-   * a different kind of thing rather than as another member of the set.
+   * 9.3:1 against the true-black ground — measured at 9.27 — well past the 3:1
+   * WCAG 1.4.11 asks of a graphical control. Cooler than anything else in the
+   * palette on purpose: `--color-text`, the accent and the active red are all
+   * warm, so it reads as a different kind of thing rather than as another member
+   * of the set.
+   *
+   * ⚠ **Unused since the same day, and kept rather than deleted.** The chevron
+   * went back to `text-muted` on instruction, which restores §11's position that
+   * this palette carries two meaningful colours. The value stays because it is
+   * measured and argued and putting it back is one class in
+   * `components/shell.tsx` — the same reason `--font-ojuju` outlived its own
+   * replacement and was there when it was wanted again. **If it is ever used for
+   * anything other than the caret, delete it instead**: a third colour is only
+   * defensible for a claim the other two cannot make.
    */
   --color-caret: #3fbfae;
 

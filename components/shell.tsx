@@ -699,8 +699,50 @@ export function Shell({
     if (!inThePage(event)) return
     /* Asked of the DOM rather than of `searchFocused`, because the question is
        "is a keyboard up", and the answer is whichever field holds the caret. */
-    if (!(document.activeElement instanceof HTMLInputElement)) return
+    const caret = document.activeElement instanceof HTMLInputElement
+    /*
+      ⚠ **Also armed for a bar standing over an empty field with no caret in
+      it.** That state is three taps away — type, tap the page to put the
+      keyboard down, press the × — and until 15 August nothing here could reach
+      it, because arming required a focused input and there was none. The bar
+      would sit there empty with the arrow as its only exit. A gesture aimed at
+      the page puts away whatever search furniture has nothing in it, caret or no
+      caret; see `onDockBlur` for the rule this is the other half of.
+    */
+    if (!caret && !(searchAtTop && query === '')) return
     dismissTapRef.current = { y: event.clientY }
+  }
+
+  /**
+   * Put away whatever the gesture was aimed past — the keyboard if one is up,
+   * and the search bar if there is nothing in it.
+   *
+   * Shared by the tap and the drag so the two cannot drift: they are one rule
+   * about gestures meant for the page, and it took a fix to each of them
+   * separately on 14 August before that was written down.
+   */
+  function dismissForPageGesture(swallowTap: boolean) {
+    const field = document.activeElement
+    const hasCaret = field instanceof HTMLInputElement
+    const closesBar = searchAtTop && query === ''
+
+    /*
+      ⚠ **Nothing to put away means nothing to swallow.** A bar standing over a
+      query with no caret in it is not furniture in the way — it is the label on
+      the results you are looking at — so a tap past it is an ordinary tap and
+      the poster under it should open. Swallowing unconditionally here ate that
+      tap, which is a dropped tap: the exact failure the two notes above are
+      about, arrived at from the other direction. The suppression is only ever
+      earned by something actually being dismissed.
+    */
+    if (!hasCaret && !closesBar) return
+
+    /* The same swallow the dock uses, for the same burst: `click` is not a
+       compatibility event and arrives whatever is done to the pointer. Not on a
+       drag — the scroll it started is the thing that was asked for. */
+    if (swallowTap) suppressTapAftermath()
+    if (hasCaret) field.blur()
+    if (closesBar) setSearchAtTop(false)
   }
 
   /*
@@ -750,11 +792,10 @@ export function Shell({
     if (!pending) return
     if (Math.abs(event.clientY - pending.y) <= TAP_SLOP) return
 
-    /* Cleared before the blur, so the `pointerup` ending this drag finds nothing
-       pending and cannot swallow a tap that was never made. */
+    /* Cleared before the dismissal, so the `pointerup` ending this drag finds
+       nothing pending and cannot swallow a tap that was never made. */
     dismissTapRef.current = null
-    const field = document.activeElement
-    if (field instanceof HTMLInputElement) field.blur()
+    dismissForPageGesture(false)
   }
 
   function onContentPointerUp(event: React.PointerEvent<HTMLElement>) {
@@ -764,13 +805,7 @@ export function Shell({
     if (!inThePage(event)) return
     if (Math.abs(event.clientY - pending.y) > TAP_SLOP) return
 
-    const field = document.activeElement
-    if (!(field instanceof HTMLInputElement)) return
-
-    /* The same swallow the dock uses, for the same burst: `click` is not a
-       compatibility event and arrives whatever is done to the pointer. */
-    suppressTapAftermath()
-    field.blur()
+    dismissForPageGesture(true)
   }
 
   function onContentPointerCancel() {
@@ -799,15 +834,32 @@ export function Shell({
   }
 
   /*
-    The masthead gives the wordmark back when the field gives up focus, whatever
-    took it away — a tap on the page, a drag, Escape, the keyboard's own dismiss
-    key, or a navigation. **One exit for every way out**, rather than a list of
-    the ways in that has to be kept complete.
+    The masthead gives the wordmark back when the field gives up focus — a tap on
+    the page, a drag, Escape, the keyboard's own dismiss key, a navigation. **One
+    exit for every way out**, rather than a list of the ways in that has to be
+    kept complete.
+
+    ⚠ **Except while there is something in the field, and that exception is the
+    point.** Losing focus and losing the search are different events, and this
+    treated them as one: type "alien", tap the page to put the keyboard away, and
+    the bar vanished while a wall of results for "alien" stayed on screen. A
+    screen full of matches with nothing on it saying what was matched — and no
+    way to amend the query except opening search again to find the word still
+    there. Reported 15 August.
+
+    So focus decides the *keyboard* and the query decides the *bar*. The two ways
+    out both go through an empty field: the arrow clears before it blurs, and the
+    × clears while holding focus so the next blur closes it. Nothing else has to
+    know.
+
+    The blink follows focus rather than the row, so a bar left standing over a
+    query sits quiet — which is now a distinction worth drawing, and was not when
+    the row only ever existed while focused.
   */
   function onDockBlur(event: React.FocusEvent<HTMLElement>) {
     if (!(event.target instanceof HTMLInputElement)) return
     keyboardOpeningRef.current = false
-    setSearchAtTop(false)
+    if (query === '') setSearchAtTop(false)
   }
 
   /*
@@ -846,6 +898,7 @@ export function Shell({
   const portalReady = useSyncExternalStore(subscribeToNothing, onClient, onServer)
 
   const {
+    query,
     active: searchActive,
     focused: searchFocused,
     results,
@@ -1609,6 +1662,13 @@ export function Shell({
                 control is for. A hairline ring would be a second boundary drawn
                 where the fill already draws one.
 
+                **`/60`, directed 15 August: a tad more see-through.** At full
+                strength the chip sits at 1.29:1 against the ground, which is the
+                separation that token was chosen for; at 60% it comes to about
+                1.17:1 — present enough to read as a surface, quiet enough not to
+                announce itself next to a wordmark. It is one number, so more or
+                less subtle is one character.
+
                 `tap-target` still applies: 25.75px is well under the 44px floor.
                 Its expansion reaches about 9px past the circle, which clears the
                 chevron and stops well short of the input — see the warning on
@@ -1620,7 +1680,7 @@ export function Shell({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={exitSearch}
                 aria-label="Leave search"
-                className="bg-surface text-muted hover:text-text tap-target flex size-[var(--wordmark-ink)] shrink-0 items-center justify-center rounded-full transition-colors"
+                className="bg-surface/60 text-muted hover:text-text tap-target flex size-[var(--wordmark-ink)] shrink-0 items-center justify-center rounded-full transition-colors"
               >
                 <ArrowLeftIcon />
               </button>
@@ -1635,15 +1695,19 @@ export function Shell({
                 `searchFocused` rather than `searchAtTop`, so it stops the moment
                 the caret goes rather than the moment the row does.
 
-                **Turquoise** — `--color-caret`, directed 15 August, and the third
-                meaningful colour in this palette. The token's own note carries the
-                scarcity rule it now lives under; the short version is that it
-                means *the app is listening* and must never appear on anything
-                else. It is the colour whether or not the blink is running, because
-                what it marks is the field being live rather than the animation.
+                ⚠ **It was turquoise for one commit and is `text-muted` again** —
+                directed, 15 August. `--color-caret` is left defined and unused in
+                globals.css, the way `--font-ojuju` was: the value is measured and
+                argued, and putting it back is this one class. What the revert
+                restores is §11's position that this palette has two meaningful
+                colours, which is worth more than the signal a third was buying.
+
+                The blink is doing the work on its own — nothing else on a matte
+                black screen moves — so the colour was saying a second time what
+                the motion already said.
               */}
               <span
-                className={`text-caret shrink-0 ${searchFocused ? 'animate-caret' : ''}`}
+                className={`text-muted shrink-0 ${searchFocused ? 'animate-caret' : ''}`}
               >
                 <ChevronIcon />
               </span>
