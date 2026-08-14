@@ -114,16 +114,31 @@
   --breakpoint-rail: 45rem;
 
   /*
-    A `--animate-caret` lived here — a 1.06s step-end blink for a hand-drawn
-    caret in the search field, at the interval terminals use.
+    A 1.06s step-end blink, at the interval terminals use.
 
-    Removed 10 August with the element it animated. The blink ran while the
-    field was *unfocused*, which is the one time it was not true, and the span
-    unmounting on focus shifted the placeholder 7px. The browser's own caret
-    does the job correctly and costs nothing. See `components/search-field.tsx`
-    for the full argument, and docs/decisions.md for why the original was
-    defensible enough to have been built.
+    ─────────────────────────────────────────────────────────────────────────
+     This was deleted on 10 August and is back the right way round
+    ─────────────────────────────────────────────────────────────────────────
+
+    It animated a hand-drawn caret in the search field, and both halves of that
+    were wrong: **it blinked while the field was *unfocused***, which is the one
+    time the claim was false, and the span unmounted on focus, shifting the
+    placeholder 7px. The removal note said what the correct version would be —
+    blink when you tap in — and that the browser's own caret already did it.
+
+    What it animates now is the **chevron** beside the field in the masthead, and
+    only while that field holds focus. Directed on 15 August. The chevron is
+    already there and already points at the field, so nothing mounts or unmounts
+    and nothing moves; the blink is a state on a glyph that was going to be drawn
+    regardless. That is the difference from the version that was deleted.
+
+    ⚠ **`50%` alone, with 0% and 100% left implicit**, so the resting value is
+    the element's own opacity. The `prefers-reduced-motion` block below runs every
+    animation once at 0.01ms, which means whatever the *last* keyframe says is
+    what those users see — and a keyframe list ending at `opacity: 0` would hide
+    the chevron outright for them.
   */
+  --animate-caret: caret 1.06s step-end infinite;
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
@@ -394,6 +409,13 @@
   ::selection {
     background-color: var(--color-text);
     color: var(--color-bg);
+  }
+}
+
+/* See `--animate-caret` for why only the midpoint is declared. */
+@keyframes caret {
+  50% {
+    opacity: 0;
   }
 }
 

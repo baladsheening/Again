@@ -9,9 +9,10 @@ import { createPortal } from 'react-dom'
 import { authClient } from '@/lib/auth-client'
 import type { OwnerView } from '@/lib/db'
 import { COLLECTIONS } from '@/lib/vocabulary'
+import { ArrowLeftIcon } from './icon-arrow-left'
 import { ChevronIcon } from './icon-chevron'
-import { HomeIcon } from './icon-home'
 import { ProfileIcon } from './icon-profile'
+import { SearchIcon } from './icon-search'
 import { PosterWall } from './poster-wall'
 import { SearchField } from './search-field'
 import { useSearch, type SearchFailure } from './search-provider'
@@ -506,46 +507,67 @@ export function Shell({
     swallows the whole burst at the document, capture-phase, for just longer
     than it takes to arrive.
 
-    **The whole row is the field, not just the input's own 24px box.** The
-    input sits centred in a 42px row, and a tap in the strip above or below it
-    has the row as its target — which fell through to the native path: iOS's
-    own touch adjustment focused the input where it stood, and the bump came
-    back. Observed as "it works near the bottom edge, but it bumps". Any
-    non-interactive target inside the bar counts as the field; the chevron and
-    the collection links are interactive and keep themselves.
+    ⚠ **The handlers sit on the `header`, not on the button that starts this.**
+    The button is inside the half of the masthead that `searchAtTop` replaces, so
+    it is unmounted between `pointerdown` and `pointerup` — and a capture target
+    removed from the document releases its implicit capture, after which the
+    `pointerup` hit-tests wherever the finger now is, which is the field that has
+    taken the button's place. The header survives both, so it hears the whole
+    gesture whichever way the browser resolves it. **Anything that swaps itself
+    out mid-gesture has to be listened to from something that does not.**
 
     **Touch only.** A mouse needs none of this — no keyboard, no reveal, no
-    bump — and cancelling its pointerdown would break click-to-place-caret in
-    a field that still holds text. It is also why a desk never sees the masthead
-    row: nothing there ever calls for one.
+    bump — and cancelling its pointerdown would break click-to-place-caret in a
+    field that still holds text. A mouse takes the plain `onClick` on the button
+    instead, and `pendingFocusRef` below is what gets the caret into a field that
+    does not exist yet at the moment of the click. It is also why a desk never
+    sees the masthead row: nothing there ever calls for one.
   */
-  const pendingTapRef = useRef<{ input: HTMLInputElement; y: number } | null>(null)
+  const pendingTapRef = useRef<{ y: number } | null>(null)
 
-  /** The input a tap on the bar means, or null where it means something else. */
-  function barInput(bar: HTMLElement, target: EventTarget | null): HTMLInputElement | null {
-    if (!(target instanceof Element)) return null
-    /* Buttons and links in the bar are their own answer — the chevron, the
-       collections. Everything else in it is the field's furniture. */
-    if (target.closest('button, a')) return null
-    if (target instanceof HTMLInputElement) return target
-    return bar.querySelector('input')
+  /**
+   * A focus owed to a field that has not rendered yet — the mouse path only.
+   *
+   * Touch cannot use this. iOS grants a keyboard for a focus made *inside* a
+   * completed tap and refuses one arranged from an effect a frame later, which
+   * is measured and is the whole reason `pointerup` calls `focus()` by hand. A
+   * click has no keyboard to be refused, so it can afford to wait a render.
+   */
+  const pendingFocusRef = useRef(false)
+
+  /** Where the caret goes when the masthead takes the field. */
+  function focusTopField() {
+    const field = document.getElementById(TOP_FIELD_ID)
+    if (field instanceof HTMLInputElement) field.focus({ preventScroll: true })
+    return field instanceof HTMLInputElement
   }
 
-  function onBarPointerDown(event: React.PointerEvent<HTMLElement>) {
+  useEffect(() => {
+    if (!searchAtTop || !pendingFocusRef.current) return
+    pendingFocusRef.current = false
+    focusTopField()
+  }, [searchAtTop])
+
+  /** Whether a gesture landed on the control that opens search. */
+  function onSearchTrigger(target: EventTarget | null) {
+    return target instanceof Element && !!target.closest('[data-opens-search]')
+  }
+
+  function onMastheadPointerDown(event: React.PointerEvent<HTMLElement>) {
     if (event.pointerType === 'mouse') return
     if (searchAtTop) return
-    const input = barInput(event.currentTarget, event.target)
-    if (!input) return
+    if (!onSearchTrigger(event.target)) return
 
     /* See the note above — this is what stops the synthesized mouse events
-       landing behind the bar and blurring the focus arranged above. */
+       landing on the row that replaces the button and blurring the focus
+       arranged there. */
     event.preventDefault()
 
     setSearchAtTop(true)
-    pendingTapRef.current = { input, y: event.clientY }
+    pendingTapRef.current = { y: event.clientY }
   }
 
-  function onBarPointerUp(event: React.PointerEvent<HTMLElement>) {
+  function onMastheadPointerUp(event: React.PointerEvent<HTMLElement>) {
     const pending = pendingTapRef.current
     pendingTapRef.current = null
     if (!pending) return
@@ -557,20 +579,45 @@ export function Shell({
     }
 
     suppressTapAftermath()
-    const top = document.getElementById(TOP_FIELD_ID)
-    const field = top instanceof HTMLInputElement ? top : pending.input
-    field.focus({ preventScroll: true })
+    focusTopField()
 
     /* If the keyboard is refused anyway, do not leave a search row in the
        masthead with nothing typing into it. */
     window.setTimeout(() => {
-      if (document.activeElement !== field) setSearchAtTop(false)
+      if (document.activeElement?.id !== TOP_FIELD_ID) setSearchAtTop(false)
     }, 400)
   }
 
-  function onBarPointerCancel() {
+  function onMastheadPointerCancel() {
     if (pendingTapRef.current) setSearchAtTop(false)
     pendingTapRef.current = null
+  }
+
+  /** The mouse and keyboard route in, where no gesture timing is at stake. */
+  function openSearch() {
+    if (searchAtTop) return
+    pendingFocusRef.current = true
+    setSearchAtTop(true)
+  }
+
+  /*
+    Out of search and back to the screen underneath — the arrow at the left of
+    the field.
+
+    **It does not navigate.** Search replaces the content of whatever route you
+    are on rather than taking you to one of its own, so the way back is to stop
+    searching; sending you to `/` instead would lose your place in a collection
+    to a search you abandoned, which is the thing the note on the wall says this
+    design exists to avoid. The wordmark is the way home and is back on screen
+    the moment this runs.
+
+    Same three steps as Escape, which has always done this from the keyboard.
+  */
+  function exitSearch() {
+    clear()
+    const field = document.getElementById(TOP_FIELD_ID)
+    if (field instanceof HTMLInputElement) field.blur()
+    setSearchAtTop(false)
   }
 
   /*
@@ -764,14 +811,20 @@ export function Shell({
   }
 
   /*
-    Which of the two things the bar is holding. Search is the default: on a phone
-    it is the only route to the field, and adding is what the app is for.
-  */
-  const [barMode, setBarMode] = useState<'search' | 'nav'>('search')
+    ───────────────────────────────────────────────────────────────────────────
+     There was a `barMode` here, and a chevron that toggled it — 15 August
+    ───────────────────────────────────────────────────────────────────────────
 
-  /* What the bar is actually showing, which is not the same question while the
-     masthead has the field — see the note at the render. */
-  const barShows = searchAtTop ? 'nav' : barMode
+    The bar at the foot held either a search field or the four collections, and
+    the chevron swapped them. **The bar no longer holds a field at all**, so
+    there is one thing left in it and nothing to toggle: search moved to a glyph
+    in the masthead, where it is one tap rather than two and where it does not
+    have to share a 375px line with four labels.
+
+    That also retires the argument this state existed to settle — that the
+    collection line and a field could not both fit — along with a whole mode the
+    rest of the shell had to ask about.
+  */
 
   /*
     Whether hydration has finished, which is when a portal may be opened.
@@ -801,6 +854,7 @@ export function Shell({
     retryAfter,
     loadMore,
     retry,
+    clear,
   } = useSearch()
 
   /*
@@ -1461,6 +1515,9 @@ export function Shell({
         captures them: this is now one of the two surfaces that can hold a field.
       */}
       <header
+        onPointerDownCapture={onMastheadPointerDown}
+        onPointerUpCapture={onMastheadPointerUp}
+        onPointerCancelCapture={onMastheadPointerCancel}
         onFocusCapture={onDockFocus}
         onBlurCapture={onDockBlur}
         className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] pb-[var(--masthead-gap)] shadow-[0_0.5rem_0_0_#000]"
@@ -1523,7 +1580,48 @@ export function Shell({
         <div className="gutter flex h-[var(--wordmark-ink)] items-center justify-between">
           {searchAtTop ? (
             <div className="flex w-full min-w-0 items-center gap-1.5">
-              <span className="text-muted shrink-0">
+              {/*
+                The way out, and the only control in this row that is not the
+                field. See `exitSearch` — it leaves search rather than navigating,
+                because search replaced the page you were on rather than taking
+                you to one of its own.
+
+                ⚠ **The blur is prevented on both pointers, and it has to be.**
+                Focus leaving the field runs `onDockBlur`, which puts the masthead
+                back — so without this the row would unmount between the press and
+                the `click`, and the arrow would do nothing at all. That is
+                exactly how the × died on 11 August, and again on the 15th by a
+                different route; a control that removes its own surface has to
+                hold focus until its click has landed.
+
+                `tap-target` takes a 12px glyph to the 44px floor without moving
+                anything, and `-ml-1` pulls the expanded area back off the gutter
+                so the row still starts on the same line the wordmark does.
+              */}
+              <button
+                type="button"
+                onPointerDown={(event) => event.preventDefault()}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={exitSearch}
+                aria-label="Leave search"
+                className="text-muted hover:text-text tap-target -ml-1 shrink-0 transition-colors"
+              >
+                <ArrowLeftIcon />
+              </button>
+
+              {/*
+                The chevron points at the field, and blinks while the field has
+                the caret — directed 15 August. See `--animate-caret` in
+                globals.css for why a blink deleted on 10 August is defensible
+                here and was not there: nothing mounts, unmounts or moves, and it
+                makes its claim at the one time the claim is true.
+
+                `searchFocused` rather than `searchAtTop`, so it stops the moment
+                the caret goes rather than the moment the row does.
+              */}
+              <span
+                className={`text-muted shrink-0 ${searchFocused ? 'animate-caret' : ''}`}
+              >
                 <ChevronIcon />
               </span>
               <SearchField id={TOP_FIELD_ID} />
@@ -1542,50 +1640,57 @@ export function Shell({
           </Link>
 
           {/*
-            The two glyphs. Home moved up here from the head of the collection
-            row on 9 August, which is where it had been since it was a way back
-            to the top of the app rather than a destination — now that it is the
-            poster wall it belongs with the other place you go rather than with
-            the collections you filter between.
+            ───────────────────────────────────────────────────────────────────
+             Profile, then search — 15 August
+            ───────────────────────────────────────────────────────────────────
 
-            It also buys the collection line about 33px, which it needed: with
-            the house and its dot in it the row ran past a 375px screen and
-            wrapped.
+            **The house is gone and search has its place**, directed. Search had
+            no route of its own once the bar at the foot stopped carrying a
+            field, and between the two, it is the one nobody would guess at:
+            **the wordmark has always linked home**, which is the convention a
+            masthead is read by, so removing the explicit control costs a glyph
+            and no destination.
 
-            The wordmark still links home too. That is a duplicate address and
-            deliberately so — a masthead that does not go home reads as broken,
-            and this is the explicit control rather than the convention.
+            ⚠ **It does cost something, and it is worth knowing.** The old note
+            here argued Home was a destination in its own right and deserved the
+            explicit control. On a phone `/` is now reachable only through the
+            wordmark, and the wordmark is the half of this row that `searchAtTop`
+            replaces — so while you are typing there is no way home at all. The
+            arrow beside the field is the way out of that state, which is why it
+            exists rather than being left to a tap on the page.
+
+            **Search sits on the right, profile to its left** — also directed, and
+            the swap is the sound way round: search is what a thumb reaches for
+            repeatedly and the right edge is where it lands, while a profile is
+            looked at rarely.
 
             `-my-3/py-3` takes both tap targets to the full header height; the
             gap between them is what keeps the two 44px areas from meeting.
+
+            `data-opens-search` rather than a ref or a class: the gesture is heard
+            at the `header`, which has to recognise this control by looking at the
+            event's target — see `onMastheadPointerDown` for why it cannot listen
+            on the button itself.
           */}
           {/*
-            `text-active` — lacquer red — on whichever of the two you are
-            currently looking at. See the token in globals.css for the scarcity
-            rule it inherits and for why it must never become the error colour.
+            `text-active` — lacquer red — on the profile when you are looking at
+            it. See the token in globals.css for the scarcity rule it inherits and
+            for why it must never become the error colour.
 
-            These are the only two places it appears. An unlabelled glyph has no
-            word to carry its state, so it needs the colour more than a label
-            does; the collections in the bottom bar still mark the current one
-            with full-strength text, which is a deliberate difference rather than
-            an oversight — they are words, and a word can say where it is by
-            getting brighter.
+            An unlabelled glyph has no word to carry its state, so it needs the
+            colour more than a label does; the collections in the bottom bar still
+            mark the current one with full-strength text, which is a deliberate
+            difference rather than an oversight — they are words, and a word can
+            say where it is by getting brighter.
 
-            Colour is not the only signal either way: `aria-current="page"` is on
-            both, so nothing here depends on being able to see red.
+            **Search takes no `aria-current` and no red.** It is not a place, and
+            colouring it would say you were somewhere. When it is active this row
+            is not on screen at all.
+
+            Colour is not the only signal: `aria-current="page"` carries the
+            profile's state, so nothing depends on being able to see red.
           */}
           <div className="flex items-center gap-5">
-            <Link
-              href="/"
-              aria-label="Home"
-              aria-current={pathname === '/' ? 'page' : undefined}
-              className={`-my-3 py-3 transition-colors ${
-                pathname === '/' ? 'text-active' : 'text-muted hover:text-text'
-              }`}
-            >
-              <HomeIcon />
-            </Link>
-
             <Link
               href="/profile"
               aria-label="Profile"
@@ -1596,6 +1701,17 @@ export function Shell({
             >
               <ProfileIcon />
             </Link>
+
+            <button
+              type="button"
+              data-opens-search
+              onClick={openSearch}
+              aria-label="Search"
+              aria-expanded={searchAtTop}
+              className="text-muted hover:text-text -my-3 py-3 transition-colors"
+            >
+              <SearchIcon />
+            </button>
           </div>
             </>
           )}
@@ -1651,11 +1767,13 @@ export function Shell({
       */
       <nav
         aria-label="Main"
-        /* A tap on the field here puts the field in the masthead and focuses it
-           there — see `onBarPointerDown`. The bar itself does not move. */
-        onPointerDownCapture={onBarPointerDown}
-        onPointerUpCapture={onBarPointerUp}
-        onPointerCancelCapture={onBarPointerCancel}
+        /*
+          ⚠ **No pointer handlers here since 15 August.** It carried the three
+          that opened the masthead's field, because the field was in this bar and
+          a tap on it had to be intercepted. The bar holds only the collections
+          now — search is a glyph in the masthead and opens from there — so the
+          links in here are their own answer, the way links are everywhere else.
+        */
         /*
           `transition-[translate]` rather than `transition-transform`, still. The
           recede slide writes `translate` and wants its 300ms; nothing writes
@@ -1745,86 +1863,54 @@ export function Shell({
           see the note in place of `groundFor` at the top of this file. **The gap
           is accepted now. Do not fill it a third time.**
         */}
-        <div className="gutter flex min-h-10.5 items-center gap-2">
+        {/*
+          ⚠ **There was a chevron here that toggled this row between a search
+          field and the collections. Both it and the field are gone — 15 August.**
+          The bar holds one thing now, so there is nothing to toggle and nothing
+          to name: search moved to a glyph in the masthead, where it costs one tap
+          rather than two and does not have to share a 375px line with four
+          labels. See the note where `barMode` used to be.
+
+          The row keeps its 42px. It was a fixed height because the two states
+          were not naturally the same one; with a single state it could be left to
+          the content, and is not — the collections wrap to two lines at 320px and
+          the height is what keeps that from moving the bar under a thumb.
+        */}
+        <div className="gutter flex min-h-10.5 items-center">
           {/*
-            The one control that is always there. It points right at a field
-            waiting to be typed into, and flips to point back the way it came
-            once the collections are showing — the same glyph doing the same job
-            in both directions, rather than two icons that have to be learned.
+            Dotted, not spaced. Labels separated by gaps alone read as loose
+            words; a `·` between them makes one line of navigation, which is
+            what it is — and it is the same separator the entry rows use
+            between a title and its year, so the app has one way of saying
+            "and then this".
 
-            `self-stretch` rather than the negative margins it used to carry:
-            with the row at a fixed height the button can simply take all of it,
-            which is both simpler and immune to the height changing again.
-            `pr-1` gives it width without pushing the field along.
+            **The counts come off here**, and that is most of what makes the
+            line fit. The four labels come to about 236px at the caption size
+            and the gaps to 48px, against the ~335px a 375px handset leaves
+            after the gutter — with more room again now that the chevron and its
+            `gap-2` have gone with the field. Four counts would add another 80px
+            and put it back over. The rail has two edges to hang a label and a
+            numeral from; a single line has one, so the count is the thing that
+            gives.
 
-            42px is under the 44px floor, so `tap-target` adds the last two
-            without moving anything — which is the whole reason that utility
-            exists rather than being padding.
+            `flex-wrap` with `justify-center` is kept for 320px, where it is
+            still tight. The padding under `main` clears two lines for exactly
+            that reason: content hidden behind a fixed bar is a worse failure
+            than a little dead space above it.
           */}
-          <button
-            type="button"
-            onClick={() => setBarMode((m) => (m === 'search' ? 'nav' : 'search'))}
-            aria-expanded={barShows === 'nav'}
-            aria-label={barShows === 'search' ? 'Show collections' : 'Search'}
-            className="text-muted hover:text-text tap-target flex shrink-0 items-center self-stretch pr-1 transition-colors"
-          >
-            <ChevronIcon
-              className={`transition-transform duration-200 ${
-                barShows === 'nav' ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          {/*
-            ⚠ **`barShows`, not `barMode` — the bar gives the prompt up while the
-            masthead is holding the field.** Two search fields on screen at once
-            is the state this would otherwise render for the three hundred
-            milliseconds before the keyboard covers this one, and a duplicate
-            prompt reads as a fault. The collections take the row instead, which
-            is the other thing it is for, so the swap looks like navigation coming
-            back rather than search going away twice.
-
-            `barMode` itself is untouched by any of this, so whichever state the
-            chevron was left in is the state that returns on blur.
-          */}
-          {barShows === 'search' ? (
-            <SearchField id="search-bar" />
-          ) : (
-            /*
-              Dotted, not spaced. Labels separated by gaps alone read as loose
-              words; a `·` between them makes one line of navigation, which is
-              what it is — and it is the same separator the entry rows use
-              between a title and its year, so the app has one way of saying
-              "and then this".
-
-              **The counts come off here**, and that is most of what makes the
-              line fit. The four labels come to about 236px at the caption size
-              and the gaps to 48px, against the ~335px a 375px handset leaves
-              after the gutter — comfortable now that the house glyph has moved
-              to the header and taken its dot and two gaps with it. Four counts
-              would add another 80px and put it back over. The rail has two edges
-              to hang a label and a numeral from; a single line has one, so the
-              count is the thing that gives.
-
-              `flex-wrap` with `justify-center` is kept for 320px, where it is
-              still tight. The padding under `main` clears two lines for exactly
-              that reason: content hidden behind a fixed bar is a worse failure
-              than a little dead space above it.
-            */
-            <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-2.5">
-              {COLLECTION_LINKS.map((link, i) => (
-                <Fragment key={link.href}>
-                  {i > 0 && <Dot />}
-                  <CollectionLink
-                    {...link}
-                    count={counts[link.view]}
-                    active={pathname === link.href}
-                    layout="inline"
-                  />
-                </Fragment>
-              ))}
-            </div>
-          )}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-2.5">
+            {COLLECTION_LINKS.map((link, i) => (
+              <Fragment key={link.href}>
+                {i > 0 && <Dot />}
+                <CollectionLink
+                  {...link}
+                  count={counts[link.view]}
+                  active={pathname === link.href}
+                  layout="inline"
+                />
+              </Fragment>
+            ))}
+          </div>
         </div>
           </nav>,
           document.body,
