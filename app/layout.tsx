@@ -4,34 +4,42 @@ import { IBM_Plex_Mono, IBM_Plex_Sans, Ojuju, Space_Grotesk } from 'next/font/go
 import './globals.css'
 
 /**
- * The wordmark, and only the wordmark (§11 is silent on the name itself).
- * Static single weight — only the mark uses this, so the variable range is
- * payload nobody spends. See docs/decisions.md.
+ * The previous wordmark face, kept on purpose rather than deleted — switching
+ * between the two is one line in `globals.css`, where `--font-display` chooses.
+ *
+ * **`preload: false` is what stops the unused one costing anything.**
+ * `@font-face` is lazy: a browser fetches a font only when text actually uses
+ * the family, and nothing uses this one now. What would fetch it regardless is
+ * next/font's default preload hint, so that is the thing turned off. The
+ * declaration stays, the variable stays, the download does not happen.
+ *
+ * ⚠ **This flag and `--font-display` are one decision written in two files.**
+ * It has been on both faces now — Space Grotesk carried it until 9 August, Ojuju
+ * from then until 15 August, and Space Grotesk again since. Leaving it on the
+ * face in use costs a render-blocking fetch nobody asked for; leaving it off
+ * both costs the mark a flash of fallback on first paint.
  */
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
   subsets: ['latin'],
   weight: '500',
   display: 'swap',
+  preload: false,
 })
 
 /**
- * The previous wordmark face, kept on purpose rather than deleted — switching
- * back is one line in `globals.css`, where `--font-display` chooses between
- * them.
+ * The wordmark, and only the wordmark (§11 is silent on the name itself).
+ * Static single weight — only the mark uses this, so the variable range is
+ * payload nobody spends. See docs/decisions.md.
  *
- * **`preload: false` is what stops that costing anything.** `@font-face` is
- * lazy: a browser fetches a font only when text actually uses the family, and
- * nothing uses this one now. What would fetch it regardless is next/font's
- * default preload hint, so that is the thing turned off. The declaration stays,
- * the variable stays, the download does not happen.
+ * **Back in use since 15 August**, on the instruction that Space Grotesk did not
+ * work for the mark. It set the mark from 9 August until then.
  */
 const ojuju = Ojuju({
   variable: '--font-ojuju',
   subsets: ['latin'],
   weight: '500',
   display: 'swap',
-  preload: false,
 })
 
 /** §11: IBM Plex Sans for interface and body. Avoid Inter. */
@@ -55,7 +63,7 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Need',
+  title: 'Again',
   description: 'Things to try. Things to do again.',
   /*
     Installed to the home screen, the app runs without Safari's chrome — see
@@ -69,7 +77,7 @@ export const metadata: Metadata = {
   */
   appleWebApp: {
     capable: true,
-    title: 'Need',
+    title: 'Again',
     /*
       The web view extends under the status bar rather than being pushed below a
       black strip, which is the same arrangement `viewportFit: 'cover'` already

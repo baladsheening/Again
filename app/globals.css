@@ -131,11 +131,18 @@
   /*
     The wordmark and nothing else — see the `wordmark` utility below.
 
-    Space Grotesk since 9 August. `--font-ojuju` is still defined and still
-    loaded lazily (see app/layout.tsx), so switching back is this line and
-    nothing else.
+    **Ojuju again since 15 August**, on the instruction that Space Grotesk did
+    not work for the mark. It set it from 9 August until then, and is still
+    defined and now loaded lazily instead (see app/layout.tsx), so switching is
+    this line plus the `preload` flag there.
+
+    ⚠ **This line is never only a line.** The `wordmark-trim` numbers below and
+    the two ratios at the foot of this block are all measurements of a *specific
+    face at a specific word* — declared ascent and descent differ between faces,
+    so a change of font moves every one of them. They were re-measured for Ojuju
+    on 15 August; the note on `wordmark-trim` says which are which.
   */
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
 
   /*
     The named sizes. Everything else is `text-sm` or `text-xs`, which needs no
@@ -251,19 +258,25 @@
    * 36px — so every change of size silently needed three hand edits, and the one
    * that mattered would have been the one nobody made. They read these instead.
    *
-   * ⚠ **Both ratios assume a mark with no descender**, which is what `need` is.
-   * Measured at 36px in Space Grotesk 500, from the table on `wordmark-trim`:
+   * ⚠ **Both are properties of the face *and* the word — Ojuju setting `Again`.**
+   * Re-measured 15 August when the face changed back; see the table on
+   * `wordmark-trim` for the full set and for the warning against scaling one
+   * face's numbers into another's.
    *
-   *   ink height   27/36 = 0.75      (26px above the baseline, 1px below)
-   *   slack below  5/36  = 0.1389    (the box holds 11px of descender, 1 is used)
+   *   ink     0.92     0.71 above the baseline, 0.21 below (the `g`)
+   *   slack  −0.135    where the ink stops relative to an untrimmed box's bottom
    *
-   * For a word with a descender — `again` was one — they are 34/36 = 0.9444 and
-   * 3/36 = 0.0833. Changing the word means re-measuring these, not guessing them;
-   * the instruction at the top of `wordmark` is the whole reason both cases have
-   * ever been written down.
+   * ⚠ **The slack is negative, and the sign is the whole meaning of it.** At
+   * `line-height: 1` Ojuju's content area is 1.41em, so the baseline sits at
+   * 0.925em and the `g` reaches 1.135 — the ink hangs *below* its own box rather
+   * than stopping short of it. Space Grotesk setting `need` was +0.1389, the
+   * other way round. Everything reading this adds it, so the sign carries the
+   * case without anyone branching on it: a gap under the mark is
+   * `14px − slack`, which shrinks when the ink stops short and grows when it
+   * hangs over.
    */
-  --wordmark-ink: calc(var(--text-wordmark) * 0.75);
-  --wordmark-slack: calc(var(--text-wordmark) * 0.1389);
+  --wordmark-ink: calc(var(--text-wordmark) * 0.92);
+  --wordmark-slack: calc(var(--text-wordmark) * -0.135);
 }
 
 @layer base {
@@ -610,7 +623,9 @@
   font-family: var(--font-display);
   font-weight: 500;
   /*
-    **Capitalised, 15 August.** Directed, with the size — the mark reads *Need*.
+    **Capitalised, 15 August.** Directed, with the size — the mark reads *Again*,
+    set in Ojuju. It read *Need* in Space Grotesk for a few hours the same day;
+    both were reverted, the capitalisation and the size were not.
 
     The case has now been all three twice over: `lowercase` until 9 August,
     capitalised that day, caps on the morning of the 10th, back to lower case the
@@ -618,11 +633,11 @@
     by argument, so the thing to preserve is not the value but the property that
     makes changing it cheap — **one declaration, not four JSX strings.**
 
-    ⚠ **This particular change moved no other number, and that was checked
-    rather than assumed.** `Need` measures 26px above the baseline and 1px below
-    at 36px, the same as `need`: capitalising an initial that already reaches the
-    ascender line changes nothing about the inked box. Lower case and capitalised
-    measured the same for `again` too, for the same reason.
+    ⚠ **Case moves no other number, and that is checked rather than assumed each
+    time.** `Again` and `again` measure identically in Ojuju, as `Need` and `need`
+    did in Space Grotesk: capitalising an initial that already reaches the line
+    the ascenders set changes nothing about the inked box. **A change of face or
+    of word is the opposite** — see the table on `wordmark-trim`.
 
     The mark appears in four places: the phone header, the rail, `/sign-in` and
     `/reset-password`. Four literals are four things that can drift, and a
@@ -695,31 +710,30 @@
  * The mark went to caps and back to lower case the same day, and measuring all
  * three cases is what makes the next change of mind a two-line edit:
  *
+ * ⚠ **Everything below is per-face. The old table was Space Grotesk's and is
+ * gone rather than kept, because none of it transferred.** Ojuju 500, as ratios
+ * of the type size so they hold at any:
+ *
  * | | ink above baseline | ink below | inked height |
  * |---|---|---|---|
- * | `Need` (**current**) | 26px | 1px (the `e`'s overshoot) | 27px |
- * | `need` | 26px | 1px | 27px |
- * | `again` | 26px | 8px (the `g`) | 34px |
- * | `Again` | 26px | 8px | 34px |
- * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | 27px |
+ * | `Again` (**current**) | 0.71 | 0.21 (the `g`) | 0.92 |
+ * | `again` | 0.71 | 0.21 | 0.92 |
+ * | `Need` | 0.74 | 0.02 | 0.76 |
+ * | `need` | 0.74 | 0.02 | 0.76 |
  *
- * **The top never moves.** 26px in every row — the `d`'s ascender, the dot of
- * the `i` and the capital `A` all reach the same line. Only the bottom is a
- * question, and the only question it asks is whether the word has a descender.
+ * **Case is free; the word is not.** Capitalised and lower case measure the same
+ * in both faces, because the initial of either word already reaches the line the
+ * `g`'s bowl or the `d`'s ascender sets. What moves the numbers is whether the
+ * word has a descender — and how far the *face* hangs it, which is the part that
+ * cannot be carried from one typeface to another.
  *
- * ⚠ **`need` measures identically to `AGAIN`**, so the numbers recorded for the
- * caps pass were the ones the rename needed: `margin-bottom` −0.2778em and
- * `main`'s padding in `components/shell.tsx` 2.9375rem. Re-measured on 15 August
- * against the real face rather than trusted — `again` 26/8/34, `need` 26/1/27, at
- * 36px in Space Grotesk 500 — which is what the instruction at the top of
- * `wordmark` asks for and is the only reason this was a three-line edit.
- *
- * ⚠ **The rem figure above is history now.** `main`'s padding and the masthead
- * row read `--wordmark-ink` instead, so the size is one token and these ratios
- * are what carry it — see the note on those two. What still has to be re-measured
- * by hand is a change of *word*, because a descender changes both ratios: for
- * one that has a descender the pair is −0.0833em and 0.9444 rather than
- * −0.2778em and 0.75.
+ * ⚠ **`main`'s padding, the masthead row and the gap under the mark on the auth
+ * pages all read `--wordmark-ink` and `--wordmark-slack`**, so a change of size
+ * is one token and needs nothing here. A change of *word* or of *face* needs
+ * this whole block re-measured. Do that by running the real face in a browser
+ * and reading `TextMetrics`, not by scaling the previous set — Space Grotesk to
+ * Ojuju moved every one of the five numbers, including two that had never moved
+ * through three changes of case.
  *
  * That leaves **9px of nothing above the letters and 3px below them**, which the
  * negative margins remove, leaving an element whose outer box is the inked
@@ -732,14 +746,19 @@
  * sides and means what it says.
  */
 @utility wordmark-trim {
-  line-height: 1.2778;
-  margin-top: -0.25em;
   /*
-    **−0.2778em because the mark is `need`, which has no descender** — 15 August.
-    It was −0.0833em for `again`, whose `g` hangs 8px below the baseline. Both
-    numbers come from the table above and both were measured, not derived; the
-    top trim did not move, because the ink above the baseline is 26px in every
-    case this mark has ever been set in.
+    **All three are Ojuju's, re-measured 15 August.** They were Space Grotesk's
+    — 1.2778 / −0.25 / −0.0833 — and not one of them survived the change of face,
+    because every one is a difference between a *declared* metric and an inked
+    one and both differ per typeface. Ojuju declares a 1.13 ascent and a 0.28
+    descent against Space Grotesk's 0.9722 and 0.3056, and sets `Again` with
+    0.71 above the baseline and 0.21 below against 0.7222 and 0.2222.
+
+    Derived, not typed: `line-height` is the declared content area, and each
+    margin is the dead space at that end — `-(ascent − inkAbove)` and
+    `-(descent − inkBelow)`.
   */
-  margin-bottom: -0.2778em;
+  line-height: 1.41;
+  margin-top: -0.42em;
+  margin-bottom: -0.07em;
 }

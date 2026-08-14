@@ -28,11 +28,12 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
     <main className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12 [--safe-bottom-base:3rem]">
       {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
       <div className="my-auto flex w-full flex-col gap-7">
-        {/* 14px of visible air, less the slack a descender-less mark leaves
-            inside its own box. Full argument in app/sign-in/page.tsx — and the
-            two must stay equal, since this block reads the same on both pages. */}
+        {/* 14px of visible air, adjusted by wherever this face stops the mark's
+            ink relative to its box — negative for Ojuju, which hangs the `g`
+            below it. Full argument in app/sign-in/page.tsx — and the two must
+            stay equal, since this block reads the same on both pages. */}
         <div className="flex flex-col gap-[calc(14px_-_var(--wordmark-slack))] text-start">
-          <h1 className="wordmark text-wordmark">Need</h1>
+          <h1 className="wordmark text-wordmark">Again</h1>
           {/* Same tier as the sign-in tagline — this block has to read the same
               way on both pages, and an expired link is not a footnote. */}
           <p className="text-muted text-sm">

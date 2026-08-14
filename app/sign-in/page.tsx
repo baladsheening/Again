@@ -74,28 +74,28 @@ export default async function SignInPage() {
           **14px of visible air, expressed as what it is** (15 August).
 
           The h1's box is `--text-wordmark` tall (`wordmark` sets `line-height:
-          1`), but the ink inside it is not centred — the baseline sits low, and
-          with a descender-less mark the ink stops short of the bottom of the box
-          by `--wordmark-slack`. So the gap the eye sees is the box gap plus that
-          slack, and the box gap has to be the difference.
+          1`), but the ink inside it is not centred on that box — so the gap the
+          eye sees is the box gap plus wherever the ink actually stops, which is
+          `--wordmark-slack`. The box gap is the difference, and 14 is the design
+          constant.
 
-          With `again` the `g` hung 2px *below* its box and a 16px `gap-4` read as
-          14. `need` has no descender, so the same `gap-4` read as 21 and the
-          tagline visibly drifted off the mark; it was briefly the literal 9px,
-          which is the number this page also carried for the few hours the mark
-          was in caps on 10 August, for exactly the same reason.
+          ⚠ **The slack is negative for this mark**, because Ojuju hangs `Again`'s
+          `g` below the box rather than stopping short of it — so this subtraction
+          makes the gap *bigger*, not smaller, and lands at about 17.8px of box
+          for 14px of visible air. Do not "simplify" the minus sign away; it is
+          what lets one expression serve both kinds of face without a branch.
 
-          It is not a literal now, because the type size changed the same day and
-          9px stopped being right. 14 is the design constant; the slack is
-          measured and scales with the mark.
+          It has been three literals — `gap-4`, then 9px when the mark had no
+          descender, then wrong again when the type size changed hours later.
+          None of them are the number now; the measurement is.
 
-          ⚠ **This is a consequence of the mark's *word*, not its size or case.**
-          A word with a descender changes `--wordmark-slack`, `wordmark-trim` and
-          the masthead row together — the table on `wordmark-trim` has both sets
-          of measurements, and says to re-measure rather than reason.
+          ⚠ **This follows the mark's *word* and *face*, not its size or case.**
+          Either changes `--wordmark-slack`, `wordmark-trim` and the masthead row
+          together — the table on `wordmark-trim` has the measurements and says to
+          re-measure rather than reason.
         */}
         <div className="flex flex-col gap-[calc(14px_-_var(--wordmark-slack))] text-start">
-          <h1 className="wordmark text-wordmark">Need</h1>
+          <h1 className="wordmark text-wordmark">Again</h1>
           {/*
             Holding this on one line is what set the stacked container to
             `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the

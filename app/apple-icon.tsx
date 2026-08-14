@@ -51,8 +51,8 @@ export default function AppleIcon() {
           fontSize: 116,
           /*
             The wordmark's own initial, in the wordmark's own case. The mark was
-            in caps for part of 10 August, read `again` until 15 August and now
-            reads `Need` — if it moves again, this moves with it.
+            in caps for part of 10 August, read `Need` for a few hours on
+            15 August and reads `Again` — if it moves again, this moves with it.
 
             ⚠ **`fontSize` here does not follow `--text-wordmark`, deliberately.**
             An icon is sized to fill a 180px square, not to sit in a header, so
@@ -62,7 +62,7 @@ export default function AppleIcon() {
           letterSpacing: '-0.04em',
         }}
       >
-        N
+        A
       </div>
     ),
     size,

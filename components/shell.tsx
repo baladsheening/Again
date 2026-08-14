@@ -1223,7 +1223,7 @@ export function Shell({
         className="gutter rail:fixed rail:top-0 rail:left-[max(0px,calc(50%_-_36rem))] rail:z-10 rail:flex rail:h-svh rail:w-56 rail:flex-col rail:py-10 hidden shrink-0"
       >
         <Link href="/" className="wordmark text-wordmark-rail">
-          Need
+          Again
         </Link>
 
         <nav aria-label="Main" className="mt-12 flex flex-col gap-4">
@@ -1474,19 +1474,22 @@ export function Shell({
           ⚠ **`h`, because a minimum does not do this job, and finding that out
           took two goes.** A floor is only binding while the mark is the tallest
           thing in the row, and it stopped being so the moment the type shrank:
-          at 2.25rem the ink was 27px and the field's 24px line box fitted inside
-          it; at 1.75rem the ink is 21px and the field pushed the row back out to
-          24, resizing the masthead under the tap exactly as before. **The
-          masthead's height is a property of the masthead, not of whatever is
-          currently inside it.**
+          in Space Grotesk at 2.25rem the ink was 27px and the field's 24px line
+          box fitted inside it; at 1.75rem the ink was 21px and the field pushed
+          the row back out to 24, resizing the masthead under the tap exactly as
+          before. **The masthead's height is a property of the masthead, not of
+          whatever is currently inside it.**
 
-          The field then overhangs the row by (24 − ink)/2 at each end — 1.5px at
-          this size. Nothing clips it: there is no `overflow` here, and the
-          overhang is spent into the header's own `--masthead-gap` padding, which
-          is 10px. The two glyphs are 20px and have about a pixel of headroom, so
-          **if either the icons or the field grow, this row silently overflows
-          rather than growing** — which is the deliberate trade, and the thing to
-          re-measure if the masthead ever gains a third state.
+          The margin it has is a property of the face, so it is not to be relied
+          on. Ojuju's `Again` inks 0.92 of the type size — 25.75px at 1.75rem —
+          so the field's 24px line box and the two 20px glyphs both sit inside
+          the row with room. Space Grotesk's `need` inked 0.75, and at the same
+          size the field overhung by 1.5px at each end. **Either way nothing
+          clips**: there is no `overflow` here and an overhang is spent into the
+          header's own 10px of `--masthead-gap`. But a face or a size that takes
+          the ink below 24px puts the field back outside the row, so **this is the
+          thing to re-measure whenever the mark changes**, and the reason the row
+          is `h` rather than `min-h` in the first place.
 
           Everything else follows from putting the number here:
 
@@ -1501,11 +1504,10 @@ export function Shell({
             the same expression. It used to run about 10px generous, because the
             row's height was whatever its tallest child happened to be.
           - **The visible air is `--masthead-gap` at both ends.** The trimmed mark
-            centres in the row, and its ink overhangs its own box by the same
-            amount at each end, so the ink fills the row exactly and the paddings
-            mean what they say — which is what that token's own note claims and,
-            until this, was not true. At 28px: a 13.2px box in a 21px row, ink
-            overhanging by 3.9 each way, 10px of visible air above and below.
+            is exactly its own ink, so it fills the row and the paddings mean what
+            they say — which is what that token's own note claims and, until this,
+            was not true. Measured at 1.75rem in Ojuju: a 45.75px header, 9.97px
+            of air above the letters and 9.78 below.
 
           ⚠ **The bottom `--masthead-gap` moved from this row up to the `header`,
           and it had to.** `min-height` on a border box is satisfied by padding,
@@ -1536,7 +1538,7 @@ export function Shell({
             globals.css.
           */}
           <Link href="/" className="wordmark wordmark-trim text-wordmark">
-            Need
+            Again
           </Link>
 
           {/*
