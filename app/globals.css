@@ -579,17 +579,18 @@
   font-family: var(--font-display);
   font-weight: 500;
   /*
-    **Set in lower case, 10 August.** Directed — the mark reads *again*.
+    **Set in lower case, 10 August.** Directed — the mark reads *need* as of
+    15 August, and read *again* before that.
 
-    The case has now been all three in two days: `lowercase` until 9 August,
-    capitalised that day, caps on the morning of the 10th and back to lower case
-    the same afternoon. It is settled by eye rather than by argument, so the
-    thing to preserve is not the value but the property that makes changing it
-    cheap — **one declaration, not four JSX strings.**
+    The case has been all three: `lowercase` until 9 August, capitalised that
+    day, caps on the morning of the 10th and back to lower case the same
+    afternoon. It is settled by eye rather than by argument, so the thing to
+    preserve is not the value but the property that makes changing it cheap —
+    **one declaration, not four JSX strings.**
 
     The mark appears in four places: the phone header, the rail, `/sign-in` and
     `/reset-password`. Four literals are four things that can drift, and a
-    transform keeps them one thing. It is also why the DOM text stays "Again"
+    transform keeps them one thing. It is also why the DOM text stays "Need"
     everywhere — `<title>`, prose and the accessible name all get the app's name
     spelled as a word, whatever this line is currently doing to it.
 
@@ -659,18 +660,24 @@
  *
  * | | ink above baseline | ink below | inked height |
  * |---|---|---|---|
- * | `again` (**current**) | 26px | 8px (the `g`) | 34px |
+ * | `need` (**current**) | 26px | 1px (the `e`'s overshoot) | 27px |
+ * | `again` | 26px | 8px (the `g`) | 34px |
  * | `Again` | 26px | 8px | 34px |
  * | `AGAIN` | 26px | 1px (the `G`'s overshoot) | 27px |
  *
- * **Lower case and capitalised measure the same**, which is why going back to
- * `again` restored the numbers this project had before the caps pass rather than
- * needing new ones: the `g` sets the bottom either way, and the top is 26px in
- * all three — the dot of the `i` reaches as high as the capital A does.
+ * **The top never moves.** 26px in every row — the `d`'s ascender, the dot of
+ * the `i` and the capital `A` all reach the same line. Only the bottom is a
+ * question, and the only question it asks is whether the word has a descender.
  *
- * Only caps differ, and only at the bottom. If the mark ever goes back to them,
- * `margin-bottom` is −0.2778em and `main`'s padding in `components/shell.tsx`
- * is 2.9375rem.
+ * ⚠ **`need` measures identically to `AGAIN`**, so the numbers recorded for the
+ * caps pass were the ones the rename needed: `margin-bottom` −0.2778em and
+ * `main`'s padding in `components/shell.tsx` 2.9375rem. Re-measured on 15 August
+ * against the real face rather than trusted — `again` 26/8/34, `need` 26/1/27, at
+ * 36px in Space Grotesk 500 — which is what the instruction at the top of
+ * `wordmark` asks for and is the only reason this was a three-line edit.
+ *
+ * The descender-less numbers are the ones to keep if the mark ever moves again;
+ * for a word with a descender the pair is −0.0833em and 3.375rem.
  *
  * That leaves **9px of nothing above the letters and 3px below them**, which the
  * negative margins remove, leaving an element whose outer box is the inked
@@ -685,5 +692,12 @@
 @utility wordmark-trim {
   line-height: 1.2778;
   margin-top: -0.25em;
-  margin-bottom: -0.0833em;
+  /*
+    **−0.2778em because the mark is `need`, which has no descender** — 15 August.
+    It was −0.0833em for `again`, whose `g` hangs 8px below the baseline. Both
+    numbers come from the table above and both were measured, not derived; the
+    top trim did not move, because the ink above the baseline is 26px in every
+    case this mark has ever been set in.
+  */
+  margin-bottom: -0.2778em;
 }

@@ -55,7 +55,7 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Again',
+  title: 'Need',
   description: 'Things to try. Things to do again.',
   /*
     Installed to the home screen, the app runs without Safari's chrome — see
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
   */
   appleWebApp: {
     capable: true,
-    title: 'Again',
+    title: 'Need',
     /*
       The web view extends under the status bar rather than being pushed below a
       black strip, which is the same arrangement `viewportFit: 'cover'` already

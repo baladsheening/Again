@@ -71,24 +71,27 @@ export default async function SignInPage() {
           uses a physical direction, so this stays correct under `dir="rtl"`.
         */}
         {/*
-          `gap-4`, and it is worth knowing why it briefly was not (10 August).
+          `gap-[9px]`, and the odd number is the whole point (15 August).
 
           The h1's box is 36px (`wordmark` sets `line-height: 1`), but the ink
-          inside it is not centred: the baseline lands 30px down, so the mark's
-          `g` hangs 2px *below* its own box. The gap the eye sees is the box gap
-          plus that overhang — 14px of visible air from a 16px `gap-4`.
+          inside it is not centred: the baseline lands 30px down. With `again`
+          the `g` hung 2px *below* that box, so a 16px `gap-4` read as 14px of
+          visible air. `need` has no descender — its ink stops 5px *above* the
+          box — so the same `gap-4` would read as 21px, the tagline visibly
+          drifting off the mark. 9px restores the 14 the eye was getting.
 
-          While the mark was in caps it had no descender, the ink stopped 5px
-          *above* the box, and the same `gap-4` read as 21px — the tagline
-          visibly drifting off the mark. It was cut to 9px for those few hours
-          and is back now that the `g` is.
+          This is not a new number. It is the one this page carried for the few
+          hours the mark was in caps on 10 August, for exactly the same reason:
+          a word with no descender.
 
-          ⚠ **This gap is a consequence of the mark's case**, which is set by
-          one `text-transform` in globals.css. If the case changes again, this
-          number and the header trims in `components/shell.tsx` change with it.
+          ⚠ **This gap is a consequence of the mark's word and case**, and it is
+          set in one `text-transform` in globals.css. If either changes, this
+          number, `wordmark-trim` and `main`'s top padding in
+          `components/shell.tsx` all change with it — the table on `wordmark-trim`
+          has the measurements.
         */}
-        <div className="flex flex-col gap-4 text-start">
-          <h1 className="wordmark text-wordmark">Again</h1>
+        <div className="flex flex-col gap-[9px] text-start">
+          <h1 className="wordmark text-wordmark">Need</h1>
           {/*
             Holding this on one line is what set the stacked container to
             `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the

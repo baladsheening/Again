@@ -51,13 +51,13 @@ export default function AppleIcon() {
           fontSize: 116,
           /*
             The wordmark's own initial, in the wordmark's own case. The mark was
-            in caps for part of 10 August and is now `Again` — if it moves again,
-            this moves with it.
+            in caps for part of 10 August, read `again` until 15 August and now
+            reads `need` — if it moves again, this moves with it.
           */
           letterSpacing: '-0.04em',
         }}
       >
-        A
+        n
       </div>
     ),
     size,

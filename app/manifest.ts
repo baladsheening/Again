@@ -33,8 +33,8 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Again',
-    short_name: 'Again',
+    name: 'Need',
+    short_name: 'Need',
     description: 'Things to try. Things to do again.',
     start_url: '/',
     scope: '/',
