@@ -1282,6 +1282,46 @@ markup keeps the attribute, so an unknown utility is inert rather than an error 
 `text-live`, `backdrop-blur-xl`, `bg-bg/60` and both `env()` calcs were confirmed
 as real rules in the output.
 
+#### Bigger, a blink, and a tick where there is one
+
+**13px against the tier's 11**, set by overriding `--text-micro` on the element
+rather than adding a second size class. `micro` reads that token for its size, so
+one arbitrary property scales this caption alone — no duplicated tracking and
+transform, and no two size declarations racing to win on emission order, which is
+the trap the `input-text` note describes.
+
+**The blink is a remount, not an animation state.** A CSS animation runs when an
+element is inserted and not when its text changes, so the span carrying the word
+is keyed by the word: a new label is a new element and the animation replays. It
+also blinks on first mount, which costs nothing, because at rest the masthead is
+up and the caption is behind it.
+
+⚠ **The last keyframe is `opacity: 1` on purpose.** The reduced-motion block runs
+every animation once at 0.01ms, so the final keyframe is what the element is left
+showing — a blink written as `0% { opacity: 0 }` alone would leave the caption
+permanently invisible for anyone who asked for less movement. The caret's note
+records the same trap from the other side.
+
+**A haptic at the crossing, and ⚠ it does nothing on the device this is installed
+on.** There is no Vibration API in Safari, in a tab or standalone. It is written
+as `navigator.vibrate?.(12)` — a capability check rather than a platform check,
+per `CLAUDE.md`, so it simply does not run where the method is absent and needs
+no change if it ever arrives. On Android it also stays quiet until the page has
+sticky user activation, so the first crossing of a session can be silent there
+too. Offered and kept because Android is one of the four shipping surfaces; if
+that stops being true, this is three lines to delete.
+
+#### Tailwind reads comments, and compiled one
+
+> **Do not spell a class's own syntax into a comment.** The scanner treats the
+> file as text and has no idea what a comment is.
+
+A sentence explaining the `--text-micro` override wrote the arbitrary-property
+syntax out as an example, and a rule with a literal ellipsis for a value appeared
+in the production stylesheet. Harmless, unused, and only found because the
+compiled CSS was being read rather than trusted — which is the second thing that
+check caught in one session.
+
 **Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
 is unreachable from the environment this was built in, so the call is checked
 only by types and by sharing its Zod schema with `searchFilms`, which does work

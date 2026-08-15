@@ -199,6 +199,20 @@
   */
   --animate-caret: caret 1.06s step-end infinite;
 
+  /**
+   * The home wall's caption, announcing that it has just become a different
+   * word — see `components/cinema-wall.tsx`.
+   *
+   * **One blink, not a pulse.** It runs once because the caption changes once
+   * per crossing; anything repeating would be a mechanism announcing itself,
+   * which is the argument that removed the loading caption from the wall.
+   *
+   * 420ms is slow enough to be seen at the edge of vision — the caption is not
+   * what anyone is looking at when it changes — and short enough to be over
+   * before the eye arrives.
+   */
+  --animate-caption: caption-swap 420ms ease-out;
+
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
@@ -475,6 +489,32 @@
 @keyframes caret {
   50% {
     opacity: 0;
+  }
+}
+
+/**
+ * The home wall's caption announcing that it has changed — see
+ * `--animate-caption`.
+ *
+ * ⚠ **`100%` is declared and is `opacity: 1`, which is not decoration.** The
+ * `prefers-reduced-motion` block below runs every animation once at 0.01ms, so
+ * whatever the last keyframe says is what the element is left showing. A blink
+ * written as `0% { opacity: 0 }` alone would leave the caption *invisible* for
+ * anyone who asked for less movement — the same trap the caret's note describes
+ * from the other side.
+ */
+@keyframes caption-swap {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
   }
 }
 
