@@ -268,7 +268,7 @@ export async function inCinemas(region: string | null): Promise<CinemaListing> {
   /*
     **Every page of a list, not the first twenty.**
 
-    ⚠ **This took one page each until 16 August, and it was reported as a film
+    ⚠ **This took one page each until 15 August, and it was reported as a film
     missing from the wall** — something on in the UK that was simply below the
     twentieth most popular result. The wall was not *what is on*; it was *the
     twenty most popular things that are on*, and nothing on screen said so.

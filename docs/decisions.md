@@ -1311,7 +1311,7 @@ sticky user activation, so the first crossing of a session can be silent there
 too. Offered and kept because Android is one of the four shipping surfaces; if
 that stops being true, this is three lines to delete.
 
-#### A film missing from the wall, and two causes behind it — 16 August
+#### A film missing from the wall, and two causes behind it
 
 Reported by checking the wall against UK cinema listings: mostly right, with one
 title on in cinemas and absent. Both causes are structural and neither was
