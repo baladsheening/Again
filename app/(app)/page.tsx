@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 
+import { CinemaWall } from '@/components/cinema-wall'
 import { PosterWall } from '@/components/poster-wall'
 import { getMyProfile, getSessionUser } from '@/lib/db'
-import type { FilmSearchResult } from '@/lib/domain'
 import { viewerRegion } from '@/lib/region'
 import { inCinemas, type CinemaListing } from '@/lib/tmdb'
 
@@ -24,36 +24,6 @@ import { inCinemas, type CinemaListing } from '@/lib/tmdb'
  * degrades to an empty wall with search still available, and is logged rather
  * than thrown.
  */
-
-/**
- * One labelled half of the wall.
- *
- * **The heading is sticky, so one label is on screen the whole way down.** As
- * *Coming soon* arrives it pushes *In cinemas* out and takes the top — which is
- * how a list section header behaves on a phone, and needs no scroll listener, no
- * state and no client component to do it. The sections are adjacent for that
- * reason: the spacing between them is `pb` *inside* the first, so the second
- * heading arrives the instant the first section's box ends. A gap between them
- * would leave a moment with no label pinned at all.
- *
- * ⚠ **It sits below the masthead deliberately, at `z-10` against its `z-20`.**
- * So while the masthead is up the label is behind it, and it appears as the
- * masthead recedes — which is to say it is there exactly while you are scrolling
- * down through posters, and gives the top strip back to the mark when you scroll
- * up. `main` carries `isolate`, so that ordering is guaranteed rather than a
- * coincidence of two numbers in different stacking contexts.
- *
- * `bg-bg` because a pinned label with no ground has posters sliding through the
- * letters.
- */
-function Section({ title, films }: { title: string; films: FilmSearchResult[] }) {
-  return (
-    <section className="pb-6">
-      <h2 className="micro text-muted bg-bg sticky top-0 z-10 py-3">{title}</h2>
-      <PosterWall films={films} />
-    </section>
-  )
-}
 
 export default async function HomePage() {
   const sessionUser = await getSessionUser()
@@ -79,29 +49,27 @@ export default async function HomePage() {
   const { nowShowing, comingSoon } = listing
 
   /*
-    **The page's heading is `sr-only`, and the two visible ones are its
-    sections.** That is the honest structure: the labels below name halves of the
-    wall rather than the page, and stating what the page is once, invisibly, is
-    cheaper than promoting one section to stand for both.
+    **The page's heading is `sr-only`, and the visible caption is not it.** The
+    caption names whichever half of the wall you are looking at and changes as
+    you scroll, so it describes a moment rather than a page — which is the one
+    thing an `<h1>` may not do. A quiet line saying what the whole screen is
+    costs nothing and holds still.
 
-    The country is deliberately absent. It was in this line for a few hours on
-    15 August — the wall named the country its release dates were filtered to, so
-    that a wrong guess from an IP would read as wrong rather than as baffling —
-    and it was cut back to the two words on instruction. What that costs is
-    written down in docs/decisions.md; putting it back is this string.
+    ⚠ **The country is absent from the caption and present in the request**, and
+    the two have been confused once already. `viewerRegion()` still goes to TMDB
+    and the wall is still this country's releases; what was cut on 15 August is
+    the *word*, not the filtering. The cost of losing it is that a wrong guess
+    from an IP is now silent — see docs/decisions.md.
   */
   return (
     <>
       <h1 className="sr-only">In cinemas and coming soon</h1>
 
       {nowShowing.length === 0 && comingSoon.length === 0 ? (
-        /* One empty state rather than two, since neither half has anything. */
+        /* One empty state rather than a caption over nothing. */
         <PosterWall films={[]} />
       ) : (
-        <>
-          {nowShowing.length > 0 && <Section title="In cinemas" films={nowShowing} />}
-          {comingSoon.length > 0 && <Section title="Coming soon" films={comingSoon} />}
-        </>
+        <CinemaWall nowShowing={nowShowing} comingSoon={comingSoon} />
       )}
     </>
   )

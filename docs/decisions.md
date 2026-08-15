@@ -1176,10 +1176,37 @@ wall into a legible one. Without it a wrong guess is silent, and looks like the
 app being broken rather than the app being wrong about where you are. Putting it
 back is one string in `app/(app)/page.tsx`.
 
-**Sticky, and it cost nothing to make it so.** Each section's heading pins while
-its section is in view and is pushed out by the next — list-section behaviour,
-done with `position: sticky` alone. No scroll listener, no state, no client
-component, and nothing to keep in step with the recede signal.
+**Sticky, and the first attempt at it was wrong.** Each section got its own
+heading, pinning and being pushed out by the next — list-section behaviour, pure
+CSS, no listener and no state. It shipped and was rejected on sight, for the
+reason that is obvious once seen: **the second heading is a permanent band in the
+document.** *Coming soon* existed on the page whether or not you had reached it,
+and scrolling past it read as passing a divider rather than as one label changing
+its mind.
+
+**One slot, one label.** The caption sticks for the whole scroll and swaps its
+text at the seam; between the grids there is nothing but the row gap, so the two
+halves read as one wall with a change of subject.
+
+That costs the CSS-only property, and buys the thing that was asked for. An
+`IntersectionObserver` watches a 1px seam, with the root's top edge pulled down
+by the caption's own measured height — which is what makes the swap happen when
+the seam reaches *the label* rather than when it reaches the top of the screen.
+Still nothing per frame, and nothing reading `scrollY`.
+
+Both directions come out of one reading: `isIntersecting` goes false at the top
+of the root *and* at the bottom, so the sign of `boundingClientRect.top` is what
+separates them. Scrolling back up restores the label without a second observer.
+
+⚠ **And it pinned under the status bar.** At `top: 0` the label sat beneath the
+clock on the handset, reported within minutes. The masthead has cleared
+`env(safe-area-inset-top)` since the first week; a second pinned surface needed
+telling separately, because the inset is a property of the screen and not of the
+element that happened to learn about it first.
+
+> **Every new pinned surface re-opens the safe area.** Nothing inherits it, and
+> the failure is invisible on any device without a notch — which is every device
+> this project builds on.
 
 ⚠ **It sits *below* the masthead on purpose**, `z-10` against `z-20`, with `main`'s
 `isolate` making that ordering a guarantee rather than a coincidence of two
@@ -1189,12 +1216,14 @@ down through posters, and hands the top strip back to the mark when you scroll
 up. The two behaviours were designed hours apart and this is the only place they
 meet.
 
-The sections are adjacent, with their spacing as padding *inside* each rather
-than a gap between them. A gap would leave a moment with no label pinned at all.
+`/`'s `<h1>` is `sr-only` as a result. The visible caption names whichever half
+you are looking at and changes as you scroll, so it describes a moment rather
+than a page — which is the one thing a page heading may not do.
 
-`/`'s `<h1>` is `sr-only` again as a result: the two visible labels name halves of
-the wall, not the page, and promoting one of them to stand for both would be a
-worse description than a quiet line that says what the whole screen is.
+⚠ **The country being absent from the caption is not the region being absent from
+the request**, and the two were confused within the hour. `viewerRegion()` still
+goes to TMDB and the wall is still filtered to the viewer's country. What was cut
+is the word on screen. The cost is only that a wrong guess is now silent.
 
 **Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
 is unreachable from the environment this was built in, so the call is checked

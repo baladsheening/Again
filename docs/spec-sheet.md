@@ -143,12 +143,17 @@ each is a line rather than a preference: it shows no availability, it is ordered
 by release date rather than popularity so that it cannot become a chart, and it
 does not accumulate or respond to anything you did yesterday.
 
-**The wall is in two labelled halves**: films already released, newest first,
-under *In cinemas*; then films not yet out, soonest first, under *Coming soon*.
-Each label is sticky, so one of them is on screen the whole way down and the
-second pushes the first out as you cross into it. They sit below the masthead in
-z-order, so a label appears as the masthead recedes and yields the top strip back
-to the mark when it returns.
+**The wall is in two halves under one caption**: films already released, newest
+first; then films not yet out, soonest first. The caption is a single sticky
+element reading *In cinemas*, which changes to *Coming soon* as the seam between
+the halves reaches it. There is no second heading and no divider — nothing
+between the grids but the row gap.
+
+It sits below the masthead in z-order, so it appears as the masthead recedes and
+yields the top strip back to the mark when it returns. **It clears
+`env(safe-area-inset-top)` in its own right**: every pinned surface must, because
+nothing inherits the inset and the failure is invisible on any screen without a
+notch.
 
 **Whatever a label says must be true of the data.** TMDB filters by release dates
 in a country and knows nothing about screens: a film released weeks ago stays in
