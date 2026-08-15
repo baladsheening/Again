@@ -37,6 +37,20 @@ const SEARCH_TTL = 60 * 60
 const IN_CINEMAS_TTL = 60 * 60 * 6
 
 /**
+ * How many pages of each cinema listing to pull.
+ *
+ * A ceiling rather than a target: `wholeList` asks for `total_pages` and stops
+ * there, so a market with two pages costs two calls. This exists so that a
+ * malformed `total_pages` — or a market far larger than any expected — cannot
+ * turn one page render into a hundred upstream requests.
+ *
+ * Ten pages is two hundred films per list, which is past the size of any
+ * national theatrical listing TMDB carries. If a market ever hits it, the wall
+ * silently loses its tail and this is the number to raise.
+ */
+const LIST_PAGE_CAP = 10
+
+/**
  * TMDB pages search results twenty at a time and refuses to go past page 500,
  * so about ten thousand results are reachable for a broad query. The cap is
  * theirs, not ours — asking for 501 is a 400 rather than an empty page.
@@ -219,11 +233,9 @@ export async function searchFilms(query: string, page = 1): Promise<FilmSearchPa
  * brief spends a paragraph warning about. Sorting by release date makes it a
  * calendar instead: what is on now, then what is coming.
  *
- * Posterless films are dropped rather than given a placeholder. The screen is
- * nothing but artwork, so a film with none has nothing to contribute to it.
- *
- * `Promise.all`, so the two calls cost one round trip rather than two. A failure
- * in either propagates — see the caller for what an empty screen looks like.
+ * **It is every page of both lists**, not the first twenty of each — see
+ * `wholeList`. A failure anywhere in it propagates; see the caller for what an
+ * empty screen looks like.
  */
 export type CinemaListing = {
   /** Released, most recently first. */
@@ -247,61 +259,80 @@ export async function inCinemas(region: string | null): Promise<CinemaListing> {
   */
   const scope = region ? `&region=${region}` : ''
 
-  const [playing, upcoming] = await Promise.all([
-    tmdb(`/movie/now_playing?language=en-US&page=1${scope}`, IN_CINEMAS_TTL),
-    tmdb(`/movie/upcoming?language=en-US&page=1${scope}`, IN_CINEMAS_TTL),
-  ])
-
   const parse = (raw: unknown) => {
     const parsed = searchResponse.safeParse(raw)
     if (!parsed.success) throw new TmdbError('Unexpected TMDB list response', 502)
     return parsed.data
   }
 
-  const films = [parse(playing), parse(upcoming)].flatMap((list) => list.results)
+  /*
+    **Every page of a list, not the first twenty.**
 
-  // The two lists overlap around a release date, and a wall that shows the same
-  // poster twice looks like a bug rather than a coincidence.
-  const seen = new Set<number>()
-  const showable = films.filter((r) => {
-    if (!r.poster_path || seen.has(r.id)) return false
-    seen.add(r.id)
-    return true
-  })
+    ⚠ **This took one page each until 16 August, and it was reported as a film
+    missing from the wall** — something on in the UK that was simply below the
+    twentieth most popular result. The wall was not *what is on*; it was *the
+    twenty most popular things that are on*, and nothing on screen said so.
+
+    **Depth is nearly free here, and that is the whole difference from search.**
+    `searchFilms` pages lazily because a query runs on a debounce measured in
+    tens of milliseconds, so an eagerly-fetched page is fetched again for every
+    letter typed on the way to a word. This is one fixed set behind a six-hour
+    cache keyed by URL, shared by everyone in a region — so a five-page listing
+    costs five upstream calls per region per six hours however many people open
+    the app, and buys completeness rather than more of a ranking.
+
+    Page one first, because `total_pages` is only knowable from a response; the
+    rest go together. Two round trips, not N.
+  */
+  const wholeList = async (path: string) => {
+    const first = parse(await tmdb(`${path}&page=1`, IN_CINEMAS_TTL))
+    const pages = Math.min(first.total_pages ?? 1, LIST_PAGE_CAP)
+    if (pages < 2) return first.results
+
+    const rest = await Promise.all(
+      Array.from({ length: pages - 1 }, (_, i) => tmdb(`${path}&page=${i + 2}`, IN_CINEMAS_TTL)),
+    )
+    return [...first.results, ...rest.flatMap((raw) => parse(raw).results)]
+  }
+
+  const [playing, coming] = await Promise.all([
+    wholeList(`/movie/now_playing?language=en-US${scope}`),
+    wholeList(`/movie/upcoming?language=en-US${scope}`),
+  ])
 
   /*
-    **Two groups, because the wall labels them.**
+    **Which half a film belongs in is the endpoint that returned it.**
 
-    ⚠ **This is the third ordering in one day, and the two before it are worth
-    knowing.** It sorted newest-first until 15 August — `upcoming` descending, so
-    the wall opened on the film furthest from being watchable while what was
-    actually on sat below the fold, and the comment above had claimed *"what is
-    on now, then what is coming"* the whole time without the code doing it. That
-    was replaced by a single comparator measuring distance from today in both
-    directions, which put "out last week" beside "out next week" and needed no
-    record of which endpoint a film came from.
+    ⚠ **It used to be inferred from `release_date`, and that was wrong twice
+    over.** The lists were merged and then split again by comparing that field
+    to today — discarding the one piece of ground truth in the response, since
+    `now_playing` *means* showing and `upcoming` *means* not yet. And the field
+    it inferred from is not reliably the regional date: a film out here now but
+    released later in the United States reads as unreleased and lands under
+    *Coming soon*, which is a wrong claim made confidently.
 
-    **Labels are what ended that.** A caption reading *In cinemas* and then
-    *Coming soon* as you scroll needs a boundary to change at, and a wall that
-    fans outward from today has no such row — released and unreleased alternate
-    all the way down. So the groups come back, and each is ordered towards the
-    present: the newest release at the top of one, the soonest arrival at the top
-    of the other.
+    So the date no longer decides anything. It orders each group, where being
+    approximate costs a poster two rows out of place rather than a false label.
 
-    **Today is compared as a string.** Both sides are ISO `YYYY-MM-DD`, which
-    sorts lexicographically, so nothing is parsed into a `Date` and no timezone
-    enters into it. The server runs UTC; a boundary an hour either side of
-    midnight is a poster in the neighbouring section for one day.
+    The `seen` set is shared and `nowShowing` is built first, so a film in both
+    lists is showing rather than coming — and the wall never draws the same
+    poster twice, which reads as a bug rather than a coincidence.
 
-    **An undated film counts as showing.** It cannot support the claim *coming
-    soon*, which is about a future date it does not have, and dropping it would
-    lose a poster over a missing field. The empty-string compare sorts it to the
-    end of the section, where a film nobody can date belongs.
+    Posterless films are dropped rather than given a placeholder. The screen is
+    nothing but artwork, so a film with none has nothing to contribute to it.
   */
-  const today = new Date().toISOString().slice(0, 10)
-  const showing = (date?: string) => !date || date <= today
+  const seen = new Set<number>()
+  const showable = (films: typeof playing) =>
+    films.filter((r) => {
+      if (!r.poster_path || seen.has(r.id)) return false
+      seen.add(r.id)
+      return true
+    })
 
-  type Listed = (typeof showable)[number]
+  const showing = showable(playing)
+  const soon = showable(coming)
+
+  type Listed = (typeof playing)[number]
   const toResult = (r: Listed): FilmSearchResult => ({
     externalId: String(r.id),
     title: r.title,
@@ -309,14 +340,24 @@ export async function inCinemas(region: string | null): Promise<CinemaListing> {
     posterPath: r.poster_path ?? null,
   })
 
+  /*
+    Each group ordered towards the present: the newest release at the top of one,
+    the soonest arrival at the top of the other. ISO dates sort
+    lexicographically, so nothing is parsed into a `Date` and no timezone enters
+    into it.
+
+    An undated film sorts last in either group. Descending gets that from the
+    empty string; ascending needs the sentinel, or a missing date would sort
+    ahead of every real one and lead the section.
+  */
+  const UNDATED = '9999-99-99'
+
   return {
-    nowShowing: showable
-      .filter((r) => showing(r.release_date))
+    nowShowing: showing
       .sort((a, b) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
       .map(toResult),
-    comingSoon: showable
-      .filter((r) => !showing(r.release_date))
-      .sort((a, b) => (a.release_date ?? '').localeCompare(b.release_date ?? ''))
+    comingSoon: soon
+      .sort((a, b) => (a.release_date || UNDATED).localeCompare(b.release_date || UNDATED))
       .map(toResult),
   }
 }

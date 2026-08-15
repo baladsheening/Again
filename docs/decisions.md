@@ -1311,6 +1311,50 @@ sticky user activation, so the first crossing of a session can be silent there
 too. Offered and kept because Android is one of the four shipping surfaces; if
 that stops being true, this is three lines to delete.
 
+#### A film missing from the wall, and two causes behind it — 16 August
+
+Reported by checking the wall against UK cinema listings: mostly right, with one
+title on in cinemas and absent. Both causes are structural and neither was
+visible from here, since TMDB's host is unreachable from this environment.
+
+**It only ever asked for page one.** Twenty from `now_playing`, twenty from
+`upcoming`. A national listing runs well past that, so the wall was not *what is
+on* but *the twenty most popular things that are on* — and nothing on screen said
+so, which is the part that makes it a fault rather than a limit.
+
+**Depth is nearly free here, and that is the whole difference from search.**
+`searchFilms` pages lazily because a query runs on a debounce of tens of
+milliseconds, so an eagerly-fetched page is fetched again for every letter typed
+on the way to a word. This is one fixed set behind a six-hour cache keyed by URL
+and shared by everyone in a region: a five-page listing costs five upstream calls
+per region per six hours however many people open the app. The argument that
+made search lazy is the argument that makes this eager, and they only look
+contradictory.
+
+**The second cause is wrong however the first turns out.** Which half a film
+belonged in was inferred by comparing `release_date` to today — after merging the
+two lists, which threw away the one piece of ground truth in the response.
+`now_playing` *means* showing and `upcoming` *means* not yet. Worse, the field it
+inferred from is not reliably the regional date, so a film out here now but
+released later in the United States reads as unreleased and lands under *Coming
+soon*: a wrong claim, made confidently, on the one screen whose labels are the
+whole point.
+
+> Where a source already states a fact, do not re-derive it from a field that
+> merely correlates with it.
+
+The date now orders each group and classifies nothing, which is a job where being
+approximate costs a poster two rows out of place rather than a false label.
+
+⚠ **"Accurate always everywhere" has a ceiling, and it is worth naming before it
+disappoints.** What this buys is completeness *within TMDB* for the viewer's
+country. It cannot buy: a film TMDB has no regional release date for, a
+long-running title that has aged out of the `now_playing` window while still
+being on, or a repertory screening of an old film, which has no new release date
+and is therefore in neither list. The wall is honest about *releases*, not about
+*screens* — the same boundary the caption may never cross, recorded above under
+*Country is the ceiling*.
+
 #### Tailwind reads comments, and compiled one
 
 > **Do not spell a class's own syntax into a comment.** The scanner treats the
