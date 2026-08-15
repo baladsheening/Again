@@ -384,13 +384,30 @@ export function Shell({
   const showCollections = pathname !== '/profile'
 
   /*
-    The collection bar recedes as you scroll down and comes back the moment you
-    scroll up, which is the behaviour the browser's own address bar has — the
-    two now move together rather than one sitting still while the other slides.
+    **Both bars recede as you scroll down and come back the moment you scroll
+    up**, which is the behaviour the browser's own address bar has — the three of
+    them now move together rather than one sitting still while the others slide.
 
-    The header does not do this. It is `sticky` and stays put, because it is the
-    only thing on the screen that says where you are, and a mark that comes and
-    goes reads as a rendering fault rather than as a gesture.
+    ⚠ **The masthead was excluded from this until 15 August, and the note here
+    argued for excluding it**: it is the only thing on screen that says where you
+    are, and a mark that comes and goes reads as a rendering fault rather than as
+    a gesture. Directed otherwise. What that reasoning was protecting is carried
+    by two rules instead — the masthead never recedes while it is holding the
+    field (`mastheadHidden`), and leaving search reveals both bars
+    (`onDockBlur`) — so the mark is gone only while a wall is being scrolled
+    past, and never at a moment when something is being asked of it.
+
+    ⚠ **It costs more here than it does at the foot, which is worth knowing
+    before anything about it is tuned.** Since search became a glyph in the
+    masthead, the wordmark is the only route to `/` on a phone and that glyph is
+    the only route to the field — so both leave with it. `ALWAYS_SHOWN_ABOVE` and
+    the return on the first upward movement are what keep that affordable, and
+    they are the numbers to reach for if it ever feels like a trap rather than a
+    gesture.
+
+    **One signal drives both surfaces.** A second listener measuring the same
+    scroll would be a second threshold to keep in step, and the two would
+    disagree on the frame a flick reverses.
 
     Read through `requestAnimationFrame` rather than on the event: `scrollY`
     forces layout, and doing that on every scroll event of a momentum flick is
@@ -431,6 +448,18 @@ export function Shell({
     the moment the keyboard is.
   */
   const [searchAtTop, setSearchAtTop] = useState(false)
+
+  /*
+    The masthead recedes on the same signal as the bar at the foot — **except
+    while it is holding the field.** A masthead that slid away mid-search would
+    take the query, the caret and the only way out of search with it, and the
+    scroll that triggered it would usually be someone reaching for a result.
+
+    That exception is the whole difference between the two surfaces, which is why
+    it is spelled here rather than folded into `receded`: the signal is about the
+    page moving, and this is about what the masthead currently is.
+  */
+  const mastheadHidden = collectionsHidden && !searchAtTop
 
   /*
     ───────────────────────────────────────────────────────────────────────────
@@ -859,7 +888,22 @@ export function Shell({
   function onDockBlur(event: React.FocusEvent<HTMLElement>) {
     if (!(event.target instanceof HTMLInputElement)) return
     keyboardOpeningRef.current = false
-    if (query === '') setSearchAtTop(false)
+    if (query !== '') return
+
+    setSearchAtTop(false)
+
+    /*
+      **Leaving search is an arrival, so both bars come back.** Same argument as
+      stamping `receded` with the route it was hidden on: a bar off-screen on
+      arrival is a screen with no navigation on it, and that is too expensive to
+      hold with an argument about which gesture counts as upward.
+
+      It is load-bearing for the masthead rather than merely tidy. Scroll a wall
+      of results, then close search: `searchAtTop` goes false and the mark comes
+      back into a header that `collectionsHidden` would slide away on the same
+      frame — the way out of search taking the way home with it.
+    */
+    setReceded({ route: pathname, hidden: false })
   }
 
   /*
@@ -1573,7 +1617,22 @@ export function Shell({
         onPointerCancelCapture={onMastheadPointerCancel}
         onFocusCapture={onDockFocus}
         onBlurCapture={onDockBlur}
-        className="bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] pb-[var(--masthead-gap)] shadow-[0_0.5rem_0_0_#000]"
+        /*
+          `transition-[translate]` and 300ms, matching the bar at the foot
+          exactly — the two are one gesture and any difference between them would
+          read as one of them lagging.
+
+          ⚠ **The recede is `100% + 0.5rem`, not `100%`.** The shadow paints
+          `0.5rem` of ground *below* the element so posters pass under the mark
+          without showing through it; move the header by its own height alone and
+          that strip stays behind, clipping the top of the wall by 8px on a
+          ground it happens to match. The literal is the same `0.5rem` that
+          `main`'s top padding carries — see the shadow above and the coupling
+          table in docs/plan.md.
+        */
+        className={`bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] pb-[var(--masthead-gap)] shadow-[0_0.5rem_0_0_#000] transition-[translate] duration-300 ${
+          mastheadHidden ? 'translate-y-[calc(-100%_-_0.5rem)]' : 'translate-y-0'
+        }`}
       >
         {/*
           ⚠ **`h-[var(--wordmark-ink)]` — a height, not a minimum — and the row
