@@ -1145,6 +1145,57 @@ visible except the first:
   name gets an `sr-only` fallback, since a heading that disappears with its data
   is the same fault one layer down.
 
+### Two words, and they change as you scroll — later the same day
+
+Directed after seeing it: the caption should read **In cinemas**, and then
+**Coming soon** once you reach the first row of films that are not out yet. No
+country, no date.
+
+**It is not a shorter caption. It is a different wall**, and that is the part
+worth recording. A label that changes at the first row of *coming soon* needs
+such a row to exist, and a wall that fans outward from today has none — released
+and unreleased alternate all the way down. So the fan-out ends and the two groups
+come back, each ordered towards the present: newest release at the top of one,
+soonest arrival at the top of the other.
+
+**Three orderings in one day**, which is the useful thing here rather than the
+destination. Newest-first (wrong, and contradicting its own comment since
+9 August), then distance-from-today (right for an unlabelled wall), then two
+groups (right for a labelled one). Each was correct for the screen it was built
+against, and what changed underneath them was whether the wall speaks.
+
+**The `dates` parse went with the caption that read it.** It had one reader,
+which is now two fixed words, and unread parsing is the kind of thing that
+survives for a year because nobody is sure. The one-line restoration is written
+at the point it was removed from.
+
+⚠ **What the shorter caption costs, stated once so it is not rediscovered.** The
+country was there because the region is guessed from an IP: when it is wrong — a
+traveller, a VPN — that word was the only thing that turned a strange-looking
+wall into a legible one. Without it a wrong guess is silent, and looks like the
+app being broken rather than the app being wrong about where you are. Putting it
+back is one string in `app/(app)/page.tsx`.
+
+**Sticky, and it cost nothing to make it so.** Each section's heading pins while
+its section is in view and is pushed out by the next — list-section behaviour,
+done with `position: sticky` alone. No scroll listener, no state, no client
+component, and nothing to keep in step with the recede signal.
+
+⚠ **It sits *below* the masthead on purpose**, `z-10` against `z-20`, with `main`'s
+`isolate` making that ordering a guarantee rather than a coincidence of two
+numbers. So the label is hidden while the masthead is up and appears as the
+masthead recedes — which is to say it is present exactly while you are scrolling
+down through posters, and hands the top strip back to the mark when you scroll
+up. The two behaviours were designed hours apart and this is the only place they
+meet.
+
+The sections are adjacent, with their spacing as padding *inside* each rather
+than a gap between them. A gap would leave a moment with no label pinned at all.
+
+`/`'s `<h1>` is `sr-only` again as a result: the two visible labels name halves of
+the wall, not the page, and promoting one of them to stand for both would be a
+worse description than a quiet line that says what the whole screen is.
+
 **Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
 is unreachable from the environment this was built in, so the call is checked
 only by types and by sharing its Zod schema with `searchFilms`, which does work

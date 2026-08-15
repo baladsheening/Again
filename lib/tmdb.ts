@@ -54,18 +54,17 @@ const searchResponse = z.object({
   page: z.number().optional(),
   total_pages: z.number().optional(),
   /*
-    **How far the window reaches**, which only the two list endpoints send —
-    `/search/movie` has no such thing, hence optional here as well.
+    ⚠ **There was a `dates` object parsed here for a few hours on 15 August.**
+    The two list endpoints send the window they were asked for, and it was read
+    so the wall's caption could say how far "coming soon" reaches. The caption
+    was then cut back to two words on instruction, which left the field with no
+    reader — so it is gone rather than kept in case.
 
-    It is the answer to a question the app could not previously make: *how soon
-    is "coming soon"?* The window was arriving in every response and being
-    discarded on parse, so the wall knew its own span and never said it.
-
-    Optional for the same reason as the paging fields above. A caption that
-    quietly loses its date is better than a wall that throws because TMDB
-    reshaped an envelope.
+    If a date is ever wanted back, it is `dates: z.object({ minimum: z.string(),
+    maximum: z.string() }).optional()`, optional because `/search/movie` parses
+    with this schema too and has no such envelope. The answer it gave is
+    otherwise visible as the last poster in *Coming soon*.
   */
-  dates: z.object({ minimum: z.string(), maximum: z.string() }).optional(),
   results: z.array(
     z.object({
       id: z.number(),
@@ -227,13 +226,10 @@ export async function searchFilms(query: string, page = 1): Promise<FilmSearchPa
  * in either propagates — see the caller for what an empty screen looks like.
  */
 export type CinemaListing = {
-  films: FilmSearchResult[]
-  /**
-   * The last date the listing reaches, ISO, or `null` when TMDB did not say —
-   * see `dates` on the response schema. The caller turns it into the caption's
-   * "to 12 September"; nothing else reads it.
-   */
-  through: string | null
+  /** Released, most recently first. */
+  nowShowing: FilmSearchResult[]
+  /** Not yet released, soonest first. */
+  comingSoon: FilmSearchResult[]
 }
 
 export async function inCinemas(region: string | null): Promise<CinemaListing> {
@@ -262,70 +258,66 @@ export async function inCinemas(region: string | null): Promise<CinemaListing> {
     return parsed.data
   }
 
-  const lists = [parse(playing), parse(upcoming)]
-  const films = lists.flatMap((list) => list.results)
-
-  /*
-    **The far edge of the two windows together**, which is what the wall can
-    honestly claim to reach — the lists are merged, so neither endpoint's span
-    describes it alone.
-
-    ISO dates sort lexicographically, so `sort().at(-1)` is the latest without
-    parsing anything into a `Date`. `null` when neither response carried the
-    field, which is the caption losing a clause rather than inventing one.
-  */
-  const through =
-    lists
-      .map((list) => list.dates?.maximum)
-      .filter((date): date is string => Boolean(date))
-      .sort()
-      .at(-1) ?? null
+  const films = [parse(playing), parse(upcoming)].flatMap((list) => list.results)
 
   // The two lists overlap around a release date, and a wall that shows the same
   // poster twice looks like a bug rather than a coincidence.
   const seen = new Set<number>()
+  const showable = films.filter((r) => {
+    if (!r.poster_path || seen.has(r.id)) return false
+    seen.add(r.id)
+    return true
+  })
 
   /*
-    **Nearest to today first, in both directions.**
+    **Two groups, because the wall labels them.**
 
-    ⚠ This sorted newest-first until 15 August, which is `upcoming` descending —
-    so the wall opened on the film furthest from being watchable and what is
-    actually on was below the fold. The comment above already claimed it was
-    *"what is on now, then what is coming"*; the sort had been the other way
-    round the whole time.
+    ⚠ **This is the third ordering in one day, and the two before it are worth
+    knowing.** It sorted newest-first until 15 August — `upcoming` descending, so
+    the wall opened on the film furthest from being watchable while what was
+    actually on sat below the fold, and the comment above had claimed *"what is
+    on now, then what is coming"* the whole time without the code doing it. That
+    was replaced by a single comparator measuring distance from today in both
+    directions, which put "out last week" beside "out next week" and needed no
+    record of which endpoint a film came from.
 
-    It matters because the wall is a prompt and a prompt works on recognition.
-    The far end of `upcoming` is posters for films nobody has seen a trailer for.
+    **Labels are what ended that.** A caption reading *In cinemas* and then
+    *Coming soon* as you scroll needs a boundary to change at, and a wall that
+    fans outward from today has no such row — released and unreleased alternate
+    all the way down. So the groups come back, and each is ordered towards the
+    present: the newest release at the top of one, the soonest arrival at the top
+    of the other.
 
-    **Distance, rather than two blocks.** One comparator, no record needed of
-    which endpoint a film arrived from, and it puts "out last week" beside "out
-    next week" — which is how anyone thinks about the cinema.
+    **Today is compared as a string.** Both sides are ISO `YYYY-MM-DD`, which
+    sorts lexicographically, so nothing is parsed into a `Date` and no timezone
+    enters into it. The server runs UTC; a boundary an hour either side of
+    midnight is a poster in the neighbouring section for one day.
 
-    `MAX_SAFE_INTEGER` and not `Infinity` for undated films: two of those would
-    subtract to `NaN`, and a comparator returning `NaN` has no defined ordering.
-    They sort last either way, which an empty-string compare did not manage.
+    **An undated film counts as showing.** It cannot support the claim *coming
+    soon*, which is about a future date it does not have, and dropping it would
+    lose a poster over a missing field. The empty-string compare sorts it to the
+    end of the section, where a film nobody can date belongs.
   */
-  const now = Date.now()
-  const fromToday = (date?: string) => {
-    const at = date ? Date.parse(date) : NaN
-    return Number.isNaN(at) ? Number.MAX_SAFE_INTEGER : Math.abs(at - now)
-  }
+  const today = new Date().toISOString().slice(0, 10)
+  const showing = (date?: string) => !date || date <= today
+
+  type Listed = (typeof showable)[number]
+  const toResult = (r: Listed): FilmSearchResult => ({
+    externalId: String(r.id),
+    title: r.title,
+    year: yearOf(r.release_date),
+    posterPath: r.poster_path ?? null,
+  })
 
   return {
-    through,
-    films: films
-      .filter((r) => {
-        if (!r.poster_path || seen.has(r.id)) return false
-        seen.add(r.id)
-        return true
-      })
-      .sort((a, b) => fromToday(a.release_date) - fromToday(b.release_date))
-      .map((r) => ({
-        externalId: String(r.id),
-        title: r.title,
-        year: yearOf(r.release_date),
-        posterPath: r.poster_path ?? null,
-      })),
+    nowShowing: showable
+      .filter((r) => showing(r.release_date))
+      .sort((a, b) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
+      .map(toResult),
+    comingSoon: showable
+      .filter((r) => !showing(r.release_date))
+      .sort((a, b) => (a.release_date ?? '').localeCompare(b.release_date ?? ''))
+      .map(toResult),
   }
 }
 

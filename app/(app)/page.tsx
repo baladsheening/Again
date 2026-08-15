@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { PosterWall } from '@/components/poster-wall'
 import { getMyProfile, getSessionUser } from '@/lib/db'
+import type { FilmSearchResult } from '@/lib/domain'
 import { viewerRegion } from '@/lib/region'
 import { inCinemas, type CinemaListing } from '@/lib/tmdb'
 
@@ -25,57 +26,33 @@ import { inCinemas, type CinemaListing } from '@/lib/tmdb'
  */
 
 /**
- * The line above the wall, which is also the page's heading.
+ * One labelled half of the wall.
  *
- * **It exists because the wall was mute.** Forty posters with nothing saying
- * what they are, why these, or how far ahead they run — reported 15 August, and
- * correctly. It is one line rather than two section headings: the wall sorts
- * outward from today in both directions (see `inCinemas`), and headings would
- * mean splitting that back into blocks to label them.
+ * **The heading is sticky, so one label is on screen the whole way down.** As
+ * *Coming soon* arrives it pushes *In cinemas* out and takes the top — which is
+ * how a list section header behaves on a phone, and needs no scroll listener, no
+ * state and no client component to do it. The sections are adjacent for that
+ * reason: the spacing between them is `pb` *inside* the first, so the second
+ * heading arrives the instant the first section's box ends. A gap between them
+ * would leave a moment with no label pinned at all.
  *
- * ⚠ **Every clause has to be true, and one tempting one is not.** *Showing near
- * you* would be false: TMDB filters by release dates in a country, not by what
- * is on a screen anywhere. A film released here six weeks ago stays in the
- * listing after it has left every cinema, and tonight's repertory screening of
- * something from 1974 is not in it at all. The caption says where and when, and
- * claims nothing about a venue.
+ * ⚠ **It sits below the masthead deliberately, at `z-10` against its `z-20`.**
+ * So while the masthead is up the label is behind it, and it appears as the
+ * masthead recedes — which is to say it is there exactly while you are scrolling
+ * down through posters, and gives the top strip back to the mark when you scroll
+ * up. `main` carries `isolate`, so that ordering is guaranteed rather than a
+ * coincidence of two numbers in different stacking contexts.
  *
- * **Naming the country is not decoration.** The region is guessed from an IP
- * (`viewerRegion`), so it is occasionally wrong — and when it is, this line is
- * the only thing that makes a strange-looking wall legible instead of baffling.
- * `Intl.DisplayNames` is in the runtime, so no table of country names and no
- * dependency.
- *
- * **Assembled from clauses rather than written as a sentence**, because either
- * half can be missing: no region off Vercel, no dates if TMDB reshapes the
- * envelope. Each absence drops a clause and the rest still reads.
- *
- * A preposition is deliberately avoided — *in the United Kingdom* needs an
- * article that *in France* does not, and that is a table of exceptions to
- * maintain for no gain over a dash.
+ * `bg-bg` because a pinned label with no ground has posters sliding through the
+ * letters.
  */
-function captionFor(listing: CinemaListing, region: string | null): string {
-  const place = region ? new Intl.DisplayNames(['en'], { type: 'region' }).of(region) : null
-
-  /*
-    `timeZone: 'UTC'` because TMDB sends a plain `YYYY-MM-DD`, which parses as
-    UTC midnight. Formatted in a negative-offset zone it would render as the
-    previous day — invisible on Vercel, which runs UTC, and wrong anywhere else.
-  */
-  const until = listing.through
-    ? new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        timeZone: 'UTC',
-      }).format(new Date(listing.through))
-    : null
-
-  const qualifiers: string[] = []
-  if (place) qualifiers.push(place)
-  if (until) qualifiers.push(`to ${until}`)
-
-  const base = 'In cinemas and coming soon'
-  return qualifiers.length > 0 ? `${base} — ${qualifiers.join(', ')}` : base
+function Section({ title, films }: { title: string; films: FilmSearchResult[] }) {
+  return (
+    <section className="pb-6">
+      <h2 className="micro text-muted bg-bg sticky top-0 z-10 py-3">{title}</h2>
+      <PosterWall films={films} />
+    </section>
+  )
 }
 
 export default async function HomePage() {
@@ -92,25 +69,40 @@ export default async function HomePage() {
     It keeps `inCinemas()` a pure function of its arguments, and therefore
     testable without a request.
   */
-  const region = await viewerRegion()
-
-  let listing: CinemaListing = { films: [], through: null }
+  let listing: CinemaListing = { nowShowing: [], comingSoon: [] }
   try {
-    listing = await inCinemas(region)
+    listing = await inCinemas(await viewerRegion())
   } catch (cause) {
     console.error('Home: TMDB listings unavailable', cause)
   }
 
+  const { nowShowing, comingSoon } = listing
+
   /*
-    The caption renders even when the listing failed. It is the page's heading
-    before it is a description of the wall, and a screen with no heading is the
-    fault this was half built to fix — see the accessibility contract in
-    docs/spec-sheet.md.
+    **The page's heading is `sr-only`, and the two visible ones are its
+    sections.** That is the honest structure: the labels below name halves of the
+    wall rather than the page, and stating what the page is once, invisibly, is
+    cheaper than promoting one section to stand for both.
+
+    The country is deliberately absent. It was in this line for a few hours on
+    15 August — the wall named the country its release dates were filtered to, so
+    that a wrong guess from an IP would read as wrong rather than as baffling —
+    and it was cut back to the two words on instruction. What that costs is
+    written down in docs/decisions.md; putting it back is this string.
   */
   return (
     <>
-      <h1 className="micro text-muted mb-4">{captionFor(listing, region)}</h1>
-      <PosterWall films={listing.films} />
+      <h1 className="sr-only">In cinemas and coming soon</h1>
+
+      {nowShowing.length === 0 && comingSoon.length === 0 ? (
+        /* One empty state rather than two, since neither half has anything. */
+        <PosterWall films={[]} />
+      ) : (
+        <>
+          {nowShowing.length > 0 && <Section title="In cinemas" films={nowShowing} />}
+          {comingSoon.length > 0 && <Section title="Coming soon" films={comingSoon} />}
+        </>
+      )}
     </>
   )
 }

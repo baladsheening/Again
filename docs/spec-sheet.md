@@ -143,14 +143,19 @@ each is a line rather than a preference: it shows no availability, it is ordered
 by release date rather than popularity so that it cannot become a chart, and it
 does not accumulate or respond to anything you did yesterday.
 
-Ordering runs outward from today in both directions, so what is on now leads and
-what is coming follows. One caption sits above it — at the caption tier, and
-doubling as the page's heading — naming what the wall is, the country its release
-dates are filtered to, and the date its window reaches. **Every clause must be
-true of the data**: TMDB filters by release dates in a country and knows nothing
-about screens, so the wall may never claim anything is showing near anybody. The
-country comes from the request and is a guess; naming it is what makes a wrong
-guess legible rather than baffling.
+**The wall is in two labelled halves**: films already released, newest first,
+under *In cinemas*; then films not yet out, soonest first, under *Coming soon*.
+Each label is sticky, so one of them is on screen the whole way down and the
+second pushes the first out as you cross into it. They sit below the masthead in
+z-order, so a label appears as the masthead recedes and yields the top strip back
+to the mark when it returns.
+
+**Whatever a label says must be true of the data.** TMDB filters by release dates
+in a country and knows nothing about screens: a film released weeks ago stays in
+the listing after it has left every cinema, and a repertory screening of an old
+film is not in it at all. **The wall may never claim anything is showing near
+anybody.** Country is the finest the data goes, and below it there is nothing but
+venues and showtimes, which are out of scope by §2.
 
 ---
 
