@@ -1083,6 +1083,68 @@ what is coming"* since 9 August; the code had never done it. It sorts by distanc
 from today now, in both directions, which is one comparator and puts "out last
 week" beside "out next week".
 
+### Country is the ceiling, not a stage on the way to something better
+
+Asked immediately afterwards: *how regional is the regionalisation?* Country
+only, and it is worth writing down why that is the end of the road rather than
+the first step of it.
+
+`region` filters **release dates in a country**. It knows nothing about screens.
+A film released here six weeks ago stays in `now_playing` after it has left every
+cinema, and tonight's repertory screening of something from 1974 is not in the
+listing at all, because it has no new release date. So the wall is right about
+the country and blind to everything below it.
+
+**Below country there is nothing but venues and showtimes**, which is the
+acquisition side of the line drawn earlier the same day in *What Again is for*.
+There is no intermediate granularity to want. If the wall ever looks
+approximate, that is the data being honest rather than a setting missing.
+
+### The wall says what it is, and the app finally has headings
+
+Reported in the same breath: *there is still no indicator to users that these are
+on-now and on-soon movies where they are*, and *how soon are the on-soon films?*
+Both were true, and the second had an answer the app was throwing away.
+
+**TMDB sends the window in every list response** — a `dates` object beside
+`results` — and the Zod schema parsed `page`, `total_pages` and `results` only.
+The wall knew its own span and never said it. It is one optional field now,
+optional for the same reason the paging fields are: a caption that quietly loses
+a clause beats a wall that throws because an envelope was reshaped.
+
+**One line, not two section headings.** Headings for *On now* and *Coming soon*
+would mean splitting the wall back into two blocks, and the sort deliberately
+fans outward from today in both directions so that "out last week" sits beside
+"out next week". The caption describes the whole thing instead, at the `micro`
+tier — whose own note already describes this use: *the app's own words about
+someone else's content*.
+
+⚠ **The tempting clause is the false one.** *Showing near you* is what a reader
+wants it to say and it cannot be said, for the reason above. The line states
+where and when and claims nothing about a venue.
+
+**Naming the country is not decoration.** The region is a guess from an IP, so it
+is occasionally wrong — and when it is, this line is the only thing that turns a
+strange-looking wall into a legible one. `Intl.DisplayNames` is in the runtime,
+so it costs no table of country names and no dependency. A preposition is avoided
+on purpose: *in the United Kingdom* wants an article that *in France* does not,
+and that is a list of exceptions to maintain for no gain over a dash.
+
+**And it turned out the app had no `<h1>` anywhere at all.** Not on `/`, not on
+the four collections, not on `/profile` — while `docs/spec-sheet.md` asked for
+one meaningful heading per page. Three answers, and none of them adds anything
+visible except the first:
+
+- `/` takes the caption, which was going to exist anyway.
+- The four collections take an `sr-only` heading reading `COLLECTIONS`, because
+  the bar at the foot and the rail already name each one on screen — a visible
+  heading would name it twice, which is the duplication the 9 August redesign
+  removed when `/` and `/me` were two doors onto one list.
+- `/profile` promotes the display name from `<p>` to `<h1>`. It was already the
+  largest type on that screen; only the tag was wrong. An account with no display
+  name gets an `sr-only` fallback, since a heading that disappears with its data
+  is the same fault one layer down.
+
 **Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
 is unreachable from the environment this was built in, so the call is checked
 only by types and by sharing its Zod schema with `searchFilms`, which does work

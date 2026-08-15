@@ -53,6 +53,19 @@ const searchResponse = z.object({
   */
   page: z.number().optional(),
   total_pages: z.number().optional(),
+  /*
+    **How far the window reaches**, which only the two list endpoints send —
+    `/search/movie` has no such thing, hence optional here as well.
+
+    It is the answer to a question the app could not previously make: *how soon
+    is "coming soon"?* The window was arriving in every response and being
+    discarded on parse, so the wall knew its own span and never said it.
+
+    Optional for the same reason as the paging fields above. A caption that
+    quietly loses its date is better than a wall that throws because TMDB
+    reshaped an envelope.
+  */
+  dates: z.object({ minimum: z.string(), maximum: z.string() }).optional(),
   results: z.array(
     z.object({
       id: z.number(),
@@ -213,7 +226,17 @@ export async function searchFilms(query: string, page = 1): Promise<FilmSearchPa
  * `Promise.all`, so the two calls cost one round trip rather than two. A failure
  * in either propagates — see the caller for what an empty screen looks like.
  */
-export async function inCinemas(region: string | null): Promise<FilmSearchResult[]> {
+export type CinemaListing = {
+  films: FilmSearchResult[]
+  /**
+   * The last date the listing reaches, ISO, or `null` when TMDB did not say —
+   * see `dates` on the response schema. The caller turns it into the caption's
+   * "to 12 September"; nothing else reads it.
+   */
+  through: string | null
+}
+
+export async function inCinemas(region: string | null): Promise<CinemaListing> {
   /*
     **Region filters release dates to a country** — see `viewerRegion()` for
     where it comes from and why it is a guess rather than a setting. `null`
@@ -233,11 +256,30 @@ export async function inCinemas(region: string | null): Promise<FilmSearchResult
     tmdb(`/movie/upcoming?language=en-US&page=1${scope}`, IN_CINEMAS_TTL),
   ])
 
-  const films = [playing, upcoming].flatMap((raw) => {
+  const parse = (raw: unknown) => {
     const parsed = searchResponse.safeParse(raw)
     if (!parsed.success) throw new TmdbError('Unexpected TMDB list response', 502)
-    return parsed.data.results
-  })
+    return parsed.data
+  }
+
+  const lists = [parse(playing), parse(upcoming)]
+  const films = lists.flatMap((list) => list.results)
+
+  /*
+    **The far edge of the two windows together**, which is what the wall can
+    honestly claim to reach — the lists are merged, so neither endpoint's span
+    describes it alone.
+
+    ISO dates sort lexicographically, so `sort().at(-1)` is the latest without
+    parsing anything into a `Date`. `null` when neither response carried the
+    field, which is the caption losing a clause rather than inventing one.
+  */
+  const through =
+    lists
+      .map((list) => list.dates?.maximum)
+      .filter((date): date is string => Boolean(date))
+      .sort()
+      .at(-1) ?? null
 
   // The two lists overlap around a release date, and a wall that shows the same
   // poster twice looks like a bug rather than a coincidence.
@@ -269,19 +311,22 @@ export async function inCinemas(region: string | null): Promise<FilmSearchResult
     return Number.isNaN(at) ? Number.MAX_SAFE_INTEGER : Math.abs(at - now)
   }
 
-  return films
-    .filter((r) => {
-      if (!r.poster_path || seen.has(r.id)) return false
-      seen.add(r.id)
-      return true
-    })
-    .sort((a, b) => fromToday(a.release_date) - fromToday(b.release_date))
-    .map((r) => ({
-      externalId: String(r.id),
-      title: r.title,
-      year: yearOf(r.release_date),
-      posterPath: r.poster_path ?? null,
-    }))
+  return {
+    through,
+    films: films
+      .filter((r) => {
+        if (!r.poster_path || seen.has(r.id)) return false
+        seen.add(r.id)
+        return true
+      })
+      .sort((a, b) => fromToday(a.release_date) - fromToday(b.release_date))
+      .map((r) => ({
+        externalId: String(r.id),
+        title: r.title,
+        year: yearOf(r.release_date),
+        posterPath: r.poster_path ?? null,
+      })),
+  }
 }
 
 /**

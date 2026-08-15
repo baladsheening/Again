@@ -182,7 +182,10 @@ or seen on the handset.
       development always renders the unregioned wall. On the deployed app, check
       that the first posters are films actually on here rather than American
       release dates — that is both halves of the 15 August change at once, since
-      the sort now leads with what is nearest to today.
+      the sort now leads with what is nearest to today. **The caption above the
+      wall states the country and the window it reaches**, so it reports its own
+      verdict: a missing country means the region was not read, and a missing
+      date means TMDB did not send `dates`.
 - [ ] **The masthead recede on a phone.** Built 15 August against the collection
       bar's existing signal. It never recedes while it holds the field, and
       leaving search reveals both bars; what wants looking at is whether losing

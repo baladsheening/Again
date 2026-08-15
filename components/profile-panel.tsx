@@ -44,7 +44,22 @@ export function ProfilePanel({
           this does not pre-empt that. It shows your own name to you, which no
           visibility rule has an opinion about.
         */}
-        {displayName && <p className="title">{displayName}</p>}
+        {/*
+          **It is the `<h1>`, because it already was one in everything but the
+          tag.** The page had no heading until 15 August and nor did any other
+          signed-in route; here the largest type on the screen is the person's
+          name, so the fix is to say so rather than to add a second thing. `p` to
+          `h1` is block to block with the same class, so nothing moves.
+
+          The `sr-only` fallback is for an account with no display name, which is
+          allowed — the field is optional at onboarding. A page whose heading
+          disappears with its data is the same fault one layer down.
+        */}
+        {displayName ? (
+          <h1 className="title">{displayName}</h1>
+        ) : (
+          <h1 className="sr-only">Profile</h1>
+        )}
 
         {/* Sans, not mono: a displayed handle is a name, not data (§11). */}
         <span className="text-muted text-sm">@{handle}</span>

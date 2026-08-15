@@ -143,6 +143,15 @@ each is a line rather than a preference: it shows no availability, it is ordered
 by release date rather than popularity so that it cannot become a chart, and it
 does not accumulate or respond to anything you did yesterday.
 
+Ordering runs outward from today in both directions, so what is on now leads and
+what is coming follows. One caption sits above it — at the caption tier, and
+doubling as the page's heading — naming what the wall is, the country its release
+dates are filtered to, and the date its window reaches. **Every clause must be
+true of the data**: TMDB filters by release dates in a country and knows nothing
+about screens, so the wall may never claim anything is showing near anybody. The
+country comes from the request and is a guess; naming it is what makes a wrong
+guess legible rather than baffling.
+
 ---
 
 ## 5. Search
@@ -213,7 +222,9 @@ duplicate and failure must read differently.
 ## 7. Accessibility
 
 - One meaningful heading per page; every navigation region labelled; current
-  routes carry `aria-current="page"`.
+  routes carry `aria-current="page"`. On the four collections the heading is
+  `sr-only`, because the bar and the rail already name them on screen and a
+  visible one would name each twice.
 - Icon-only controls have accessible names.
 - State is never carried by colour alone.
 - Dialogs trap focus, close on Escape and backdrop, and return focus.
