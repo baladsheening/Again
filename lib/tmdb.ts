@@ -27,6 +27,12 @@ const SEARCH_TTL = 60 * 60
  * means four upstream calls a day however many people open the app, which is the
  * point: this is the one request every signed-in session makes before it does
  * anything else, so it is the one that must never be per-user.
+ *
+ * **Per region since 15 August, and still never per user.** The region rides in
+ * the URL, and Next's data cache keys on the URL — so it fragments into four
+ * calls a day for each country anybody opens the app from, and no further. That
+ * is the right granularity: two people in the same country are asking the same
+ * question and should not each pay for it.
  */
 const IN_CINEMAS_TTL = 60 * 60 * 6
 
@@ -207,10 +213,24 @@ export async function searchFilms(query: string, page = 1): Promise<FilmSearchPa
  * `Promise.all`, so the two calls cost one round trip rather than two. A failure
  * in either propagates — see the caller for what an empty screen looks like.
  */
-export async function inCinemas(): Promise<FilmSearchResult[]> {
+export async function inCinemas(region: string | null): Promise<FilmSearchResult[]> {
+  /*
+    **Region filters release dates to a country** — see `viewerRegion()` for
+    where it comes from and why it is a guess rather than a setting. `null`
+    omits it and takes TMDB's default, which is what every viewer got before
+    15 August and is still what development sees.
+
+    ⚠ **Region, not language.** `language` stays `en-US` deliberately. It decides
+    the *title* TMDB returns, and the title on the wall is the title copied into
+    `items` the moment somebody taps a poster — so localising it would write a
+    French name into a row that a mutual track then reads, and `lib/overlap.ts`
+    joins on `items`. The dates are regional; the canonical name is not.
+  */
+  const scope = region ? `&region=${region}` : ''
+
   const [playing, upcoming] = await Promise.all([
-    tmdb('/movie/now_playing?language=en-US&page=1', IN_CINEMAS_TTL),
-    tmdb('/movie/upcoming?language=en-US&page=1', IN_CINEMAS_TTL),
+    tmdb(`/movie/now_playing?language=en-US&page=1${scope}`, IN_CINEMAS_TTL),
+    tmdb(`/movie/upcoming?language=en-US&page=1${scope}`, IN_CINEMAS_TTL),
   ])
 
   const films = [playing, upcoming].flatMap((raw) => {
@@ -222,13 +242,40 @@ export async function inCinemas(): Promise<FilmSearchResult[]> {
   // The two lists overlap around a release date, and a wall that shows the same
   // poster twice looks like a bug rather than a coincidence.
   const seen = new Set<number>()
+
+  /*
+    **Nearest to today first, in both directions.**
+
+    ⚠ This sorted newest-first until 15 August, which is `upcoming` descending —
+    so the wall opened on the film furthest from being watchable and what is
+    actually on was below the fold. The comment above already claimed it was
+    *"what is on now, then what is coming"*; the sort had been the other way
+    round the whole time.
+
+    It matters because the wall is a prompt and a prompt works on recognition.
+    The far end of `upcoming` is posters for films nobody has seen a trailer for.
+
+    **Distance, rather than two blocks.** One comparator, no record needed of
+    which endpoint a film arrived from, and it puts "out last week" beside "out
+    next week" — which is how anyone thinks about the cinema.
+
+    `MAX_SAFE_INTEGER` and not `Infinity` for undated films: two of those would
+    subtract to `NaN`, and a comparator returning `NaN` has no defined ordering.
+    They sort last either way, which an empty-string compare did not manage.
+  */
+  const now = Date.now()
+  const fromToday = (date?: string) => {
+    const at = date ? Date.parse(date) : NaN
+    return Number.isNaN(at) ? Number.MAX_SAFE_INTEGER : Math.abs(at - now)
+  }
+
   return films
     .filter((r) => {
       if (!r.poster_path || seen.has(r.id)) return false
       seen.add(r.id)
       return true
     })
-    .sort((a, b) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
+    .sort((a, b) => fromToday(a.release_date) - fromToday(b.release_date))
     .map((r) => ({
       externalId: String(r.id),
       title: r.title,

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { PosterWall } from '@/components/poster-wall'
 import { getMyProfile, getSessionUser } from '@/lib/db'
 import type { FilmSearchResult } from '@/lib/domain'
+import { viewerRegion } from '@/lib/region'
 import { inCinemas } from '@/lib/tmdb'
 
 /**
@@ -30,9 +31,16 @@ export default async function HomePage() {
   const profile = await getMyProfile(sessionUser)
   if (!profile) redirect('/onboarding')
 
+  /*
+    The region is passed in rather than reached for inside `lib/tmdb.ts`, which
+    is the same shape as `lib/db/` taking the `SessionUser` as an argument: the
+    module that talks to an upstream service does not also decide who is asking.
+    It keeps `inCinemas()` a pure function of its arguments, and therefore
+    testable without a request.
+  */
   let films: FilmSearchResult[] = []
   try {
-    films = await inCinemas()
+    films = await inCinemas(await viewerRegion())
   } catch (cause) {
     console.error('Home: TMDB listings unavailable', cause)
   }
