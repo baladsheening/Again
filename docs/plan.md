@@ -22,7 +22,8 @@ Current at `0f52dba`, 15 August 2026.
 | 0 — foundations | Neon, Drizzle schema + migrations, Better Auth, `lib/db/` convention | **Done.** Verified against the live DB |
 | 0.5 — account recovery | Password reset, auth rate limiting, `lib/email.ts` | **Done.** Reset proven end to end to a real inbox |
 | 1 — single player | Profiles, capture, entries, collections, resolve flow, the visual system, the phone shell | **Done and deployed.** Judged on hardware over four sessions |
-| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | **Not started. This is the next work** |
+| pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Planned, nothing built.** This is the next work |
+| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | Not started |
 | 3 — overlap | Trigger + notification rows, `/notifications`, `/overlap` picker. In-app only | Not started |
 | 4 — swap | Full flow, blind commit enforced in the data layer, `landed` | Not started |
 | 5 — PWA + push | Manifest, service worker, VAPID, subscriptions, install prompt | Manifest and install exist; push does not |
@@ -41,6 +42,20 @@ outranks them without a reason written down.
 One line each. The detail is further down, or in `decisions.md` where it is a
 question rather than a task.
 
+### Pre-phase 2 — the next work
+
+- [ ] **The wall claims *In cinemas* and cannot support it.** Relabel to something
+      TMDB can carry. Unblocked, and the wording is a decision. → *Pre-phase 2,
+      Stage 0*
+- [ ] **D1: does Again become cinema-aware at all?** Everything else about
+      showtimes waits on this. → *Pre-phase 2, the three gates*
+- [ ] **D2: which showtimes provider**, if D1 is yes. Trial key, one venue, one
+      day, one question about TMDB ids. → *Pre-phase 2, Stage 1*
+- [ ] **D3: how the app learns where someone is.** Country from an IP is all it
+      has. → *Pre-phase 2, Stage 2*
+- [ ] **Separate the production and development databases.** Required either way,
+      and required before two accounts exist. → *Pre-phase 2, Stage 4*
+
 ### The product
 
 - [ ] **Phase 2** — tracks, `/u/[handle]`, visibility, copy. → *What is next*
@@ -52,15 +67,12 @@ question rather than a task.
 - [ ] **A verified sending domain in `EMAIL_FROM`.** Resend's shared sender
       delivers only to the address that owns the account, so a second user's
       reset mail fails silently on their side. → *Blocking*
-- [ ] **Separate the production and development databases.** One Neon database
-      serves both, so a stray local test row is real data. → *Blocking*
 
 ### Correctness nobody has looked at yet
 
 - [ ] **The masthead field on the handset.** The device produced the reports that
       caused it; the result has not been seen there. → *Verification debt*
 - [ ] **Split-screen and 200% zoom**, in one browser session. → *Verification debt*
-- [ ] **Deep paging against the real API.** Nobody has scrolled past page 1.
 
 ### Smaller, unscheduled
 
@@ -98,9 +110,141 @@ looking for it.
 
 ---
 
+## Pre-phase 2
+
+Everything that has to happen before tracks are built. **None of it is
+implemented.** Stage 0 is the only part safe to do without an answer; the rest
+waits on the gates below.
+
+### The problem, stated once
+
+The wall says *In cinemas*, and TMDB cannot support that sentence. `now_playing`
+is a `discover` call over **release dates**; TMDB holds no record of when a film
+leaves a cinema and no cinema programming at all. Their own forum states it:
+*"it may not be very accurate, as TMDB has the premiered release date but doesn't
+have the date that ended in the cinema."*
+
+Checked on 15 August against one venue's published programme (Picturehouse
+Central): films on the wall under *In cinemas* showing nowhere in the UK, films on
+at that venue absent from the wall entirely, and a major release missing from both
+halves. Paging every list did not fix it and could not — it is the wrong question,
+not too few answers. Repertory and re-release screenings, which are a large part
+of that venue's programme, have no new release date and are structurally invisible.
+
+⚠ **The label created the fault.** Until 14 August the wall was unlabelled posters
+and made no checkable claim. Everything below follows from choosing whether to
+support the sentence or stop saying it.
+
+### The three gates
+
+None is answered. Each blocks what follows it.
+
+**D1 — does Again become cinema-aware at all?** A screening is an *occasion*, so
+the line recorded in `decisions.md` permits it where a streaming link is refused.
+That makes it allowed, not decided. It brings a monthly bill, a location feature,
+and the first data in the product that **decays** — a showtime is true for a day.
+⚠ It also fails §13's test outright: cinema listings make the app more useful to a
+stranger with no friends on it.
+
+**D2 — which provider, if D1 is yes.** Evaluated 15 August, prices as published:
+
+| Provider | Coverage | Price |
+|---|---|---|
+| UK Cinema API | 18 UK chains inc. Picturehouse, Curzon, Everyman, Odeon, Cineworld, Vue, plus select independents; booking links, formats, accessibility and event screenings; daily | £49/mo, £499/yr. **UK only** |
+| International Showtimes | 120+ markets, ~25,000 cinemas, deep booking links, **native TMDB id matching** | from €149/mo **per market**; 7-day free trial |
+| MovieGlu | 125 countries | quote only |
+
+Scraping is not an option: CineList and its successors were killed by Cloudflare,
+and a per-chain scraper is a per-chain maintenance obligation in every market.
+
+**D3 — how the app learns where someone is.** Country from an IP is all it knows,
+and cinemas are local. Browser geolocation, a stored postcode, or a chosen city —
+each is user context, which `decisions.md` deferred deliberately, and each needs
+`/settings`, which does not exist.
+
+### Stage 0 — Stop making the claim
+
+**Do this regardless of every gate, and first.** The home screen currently states
+something false, and the cheapest correct fix is to stop stating it. Relabel the
+first half to something TMDB can support — *New releases*, *Just released*, or no
+label — and leave *Coming soon*, which is a release-date claim and therefore true.
+
+It is not throwaway work. Even with showtimes there is a "recently released" tier,
+and the wall's actual job (§8: a capture prompt for what you have been meaning to
+see) never needed a listing.
+
+⚠ **The exact wording is a decision, not a task.** It is the one thing on the home
+screen a new account is guaranteed to read.
+
+### Stage 1 — Evaluate a provider, on a trial key
+
+Bounded, a week, and it produces a written verdict rather than code.
+
+- Take the International Showtimes 7-day trial.
+- **The one question that decides the integration: how cleanly do their films map
+  to TMDB ids?** `items` is keyed on TMDB ids and `lib/overlap.ts` joins on
+  `items`, so a provider returning titles means building a matching layer, which
+  is where this class of integration usually fails.
+- **The acceptance test is the one the app already failed**: for one venue and one
+  day, the provider's list must match that venue's published programme. Compare
+  against Picturehouse Central, which is the ground truth that found this.
+- Price UK Cinema API against the same test. It is a fifth of the cost and covers
+  one country, which may be the right trade while there is one user.
+- Record the verdict in `decisions.md` whichever way it goes.
+
+### Stage 2 — Location
+
+Blocks stage 3 and nothing else. Needs D3, `/settings`, and a decision about
+whether a refused permission degrades to country-level or to no wall at all.
+
+### Stage 3 — Build it, only if D1 is yes
+
+- One provider, one adapter, in `lib/showtimes/`. **No abstraction layer** —
+  `decisions.md` argues against speculative generality under *What not to build*,
+  and the insurance is the schema.
+- Provenance on every screening: source and when it was last checked. This is the
+  first thing in the product that can be out of date, and the expansion model's
+  freshness rule exists for exactly it.
+- The wall becomes what is showing near you, with an honest coverage line — *"from
+  the cinemas we cover in your area"*, never an implied all.
+- ⚠ **No booking link.** The line is acquisition versus occasion; a checkout is the
+  wrong side of it and starts pulling the whole product towards being a listings
+  business.
+
+### Stage 4 — Split the databases
+
+Independent of everything above and required either way. Production and
+development share one Neon database; Phase 2's checkpoint is *two accounts on two
+devices*, so the test accounts would be created in the database the live site
+reads. A Neon branch for local development, production left on main, `.env.local`
+repointed.
+
+### Not in scope here
+
+Global coverage claims, venue pages, seat maps, ticket prices, anything a stranger
+with no friends on Again would open the app for. Kinds beyond film.
+
+### Exit criteria
+
+Pre-phase 2 is done when the wall says only what it can support, the databases are
+separate, and **D1 is answered either way and written down.** Building showtimes is
+not required to leave this stage — deciding about them is.
+
+⚠ **Recorded because it was argued and not taken:** the recommendation was Stage 0
+now and showtimes after Phase 2, on the grounds that tracks and convergence are
+what the app is for and neither exists. Sequencing this before Phase 2 is a
+deliberate choice against that advice, which is a fine thing to be — it is here so
+nobody re-derives the argument in a month.
+
+---
+
 ## What is next
 
 Ordered, and each is genuinely blocked by the one above it.
+
+### 0. Pre-phase 2
+
+The section above. Stage 0 and Stage 4 are unblocked today; the rest waits on D1.
 
 ### 1. Phase 2 — tracks and the other person
 
@@ -146,6 +290,13 @@ not*. What it changes here:
 - **If occurrences are ever built:** only against a want already held, shared
   with someone who already tracks you back, no booking link, and not before
   Phase 4. The line is *acquisition versus occasion*.
+
+⚠ **D1 in *Pre-phase 2* reopened the second and fourth of those the same day**,
+and from the honest direction: not a roadmap wanting occurrences, but the wall
+being caught making a claim TMDB cannot support. Nothing above is withdrawn — the
+aim is unchanged and the line still holds — but *not before Phase 4* is now
+something to decide rather than something decided. The trigger those entries named
+was evidence from real use, and this is that, arriving early.
 - **The app feeling inert is Phase 2's absence, not a design fault.** The
   designed supply of new things is other people. Do not answer it with content.
 
@@ -173,20 +324,12 @@ or seen on the handset.
 - [ ] **The 90ms debounce on mobile data**, where it may be spending requests the
       next keystroke throws away. The lever is `DEBOUNCE_MS` in
       `components/search-provider.tsx`.
-- [ ] **`inCinemas()` against the real API.** Probably already answered — the
-      13 August handset reports are about posters being covered, which means
-      posters were on screen — but confirm it on `/` rather than in search
-      results. An empty wall with search still working is its designed failure.
-- [ ] **The regional wall, which can only be checked in production.**
-      `x-vercel-ip-country` is written at the edge and does not exist locally, so
-      development always renders the unregioned wall. On the deployed app, check
-      that the first posters are films actually on here rather than American
-      release dates — that is both halves of the 15 August change at once, since
-      the wall now leads with *In cinemas* and what was released most recently.
-      ⚠ **The caption stopped naming the country on 15 August**, so a wrong or
-      unread region is now silent — the check is whether the films under *In
-      cinemas* are ones actually out here, and there is nothing on screen that
-      will tell you if they are not.
+- [x] ~~**`inCinemas()` and the regional wall against the real API.**~~ Answered
+      on 15 August by checking the deployed wall against UK listings, and the
+      answer was that it is **wrong on its own terms** — see *Pre-phase 2*. The
+      endpoint parses, the region reaches TMDB, the ordering is right, and none of
+      that makes *In cinemas* true. What was verification debt is now a product
+      decision.
 - [ ] **The masthead recede on a phone.** Built 15 August against the collection
       bar's existing signal. It never recedes while it holds the field, and
       leaving search reveals both bars; what wants looking at is whether losing

@@ -1355,6 +1355,52 @@ and is therefore in neither list. The wall is honest about *releases*, not about
 *screens* — the same boundary the caption may never cross, recorded above under
 *Country is the ceiling*.
 
+#### And paging did not fix it, because it was the wrong question
+
+Checked against a real venue's programme the same day: films under *In cinemas*
+showing nowhere in the UK, films on at Picturehouse Central missing from the wall
+entirely, and a major release absent from both halves. **The fix above was not
+the fix.**
+
+⚠ **Correct the record on one thing said here hours earlier.** The suspicion that
+`release_date` might not be the regional date was wrong — TMDB uses the regional
+release date when `region` is set. The provenance change stands on its own merits;
+the diagnosis attached to it did not.
+
+**The real cause is that the data does not exist.** `now_playing` is a `discover`
+call behind the scenes, over **release dates**, and TMDB's own forum states the
+limit: *"it may not be very accurate, as TMDB has the premiered release date but
+doesn't have the date that ended in the cinema."* There is no record of a film
+leaving a cinema and no cinema programming at all. So a film that opened five
+weeks ago and has closed is still listed; one still running has aged out of the
+window; and repertory screenings, which are much of an independent cinema's
+programme, have no new release date and can never appear.
+
+**No endpoint fixes this.** `/discover` with theatrical release types is the same
+data through the same door. Depth was never the problem.
+
+> **The label created the fault.** Until the caption existed the wall made no
+> checkable claim, and nobody could catch it being wrong. Adding *In cinemas*
+> turned a prompt into a statement about the world.
+
+Which leaves exactly two honest moves: support the sentence, or stop saying it.
+`docs/plan.md` carries both as *Pre-phase 2*, with the provider prices as
+evaluated, and the decision is open.
+
+**Two things found in that evaluation that are worth keeping whatever is
+decided:**
+
+- **TMDB id matching is the integration**, not the showtimes. `items` is keyed on
+  TMDB ids and `lib/overlap.ts` joins on `items`, so a provider returning titles
+  means building a matching layer — which is where this class of integration
+  usually fails. One provider advertises native TMDB ids; that is worth more than
+  its price difference.
+- **"Accurate where the user is" needs to know where the user is.** All the app
+  has is a country, from an IP. Cinemas are local, so showtimes imply a location
+  permission or a stored postcode — user context, deferred deliberately in *What
+  Again is for*, and needing a `/settings` that does not exist. The data source is
+  the visible cost; this is the one that gets underestimated.
+
 #### Tailwind reads comments, and compiled one
 
 > **Do not spell a class's own syntax into a comment.** The scanner treats the
