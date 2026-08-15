@@ -153,7 +153,15 @@ It sits below the masthead in z-order, so it appears as the masthead recedes and
 yields the top strip back to the mark when it returns. **It clears
 `env(safe-area-inset-top)` in its own right**: every pinned surface must, because
 nothing inherits the inset and the failure is invisible on any screen without a
-notch.
+notch. The bar reaches the top edge of the screen — no strip of artwork above it
+— and gives the inset back in flow with a negative margin, so it costs no space
+under the masthead.
+
+*In cinemas* is set in recording red (`--color-live`) and *Coming soon* in muted;
+the colour is a second signal for a distinction the two words already carry in
+full, so nothing depends on seeing it. The bar is translucent over a backdrop
+blur, and is **the only translucent surface in the app** — a second one makes it
+a theme rather than a bar.
 
 **Whatever a label says must be true of the data.** TMDB filters by release dates
 in a country and knows nothing about screens: a film released weeks ago stays in

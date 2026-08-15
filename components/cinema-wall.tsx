@@ -13,24 +13,16 @@ import { PosterWall } from './poster-wall'
  * per section, each pinning and being pushed out by the next — list-section
  * behaviour, and pure CSS. It was rejected on sight for the reason that is
  * obvious once seen: the second heading is a permanent band sitting in the
- * document between the two grids, so *Coming soon* exists on the page whether or
- * not you have reached it, and scrolling past it reads as passing a divider
+ * document between the two grids, so *Coming soon* existed on the page whether
+ * or not you had reached it, and scrolling past it read as passing a divider
  * rather than as one label changing its mind.
  *
  * **One slot, one label.** The caption sticks for the whole scroll and swaps its
  * text at the seam; there is nothing between the grids except the row gap.
  *
- * **An observer rather than a scroll listener.** The seam is a 1px element and
- * `IntersectionObserver` reports it crossing the caption's own lower edge, so
- * nothing runs per frame and nothing measures `scrollY`. The root's top edge is
- * pulled down by the caption's measured height, which is what makes the swap
- * happen when the seam reaches the label rather than when it reaches the top of
- * the screen.
- *
- * Both directions come from one reading. `isIntersecting` goes false at the top
- * *and* at the bottom of the root, so the sign of `boundingClientRect.top` is
- * what tells those apart — above the line is *Coming soon*, below is still
- * *In cinemas*, and scrolling back up restores it without a second observer.
+ * **An observer rather than a scroll listener.** The seam is a ten-pixel element
+ * and `IntersectionObserver` reports it crossing the caption's own lower edge, so
+ * nothing runs per frame and nothing measures `scrollY`.
  */
 export function CinemaWall({
   nowShowing,
@@ -49,12 +41,37 @@ export function CinemaWall({
     const line = caption.current
     if (!mark || !line) return
 
+    /*
+      The caption's full box height, which — because it pins at `top: 0` — is
+      exactly where its lower edge sits once pinned. Pulling the root's top edge
+      down by it is what makes the swap happen when the seam reaches *the label*
+      rather than when it reaches the top of the screen.
+    */
+    const edge = Math.round(line.getBoundingClientRect().height)
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry) return
-        setPast(!entry.isIntersecting && entry.boundingClientRect.top < 0)
+
+        /*
+          ⚠ **Compared against the root's edge, not against zero, and getting
+          that wrong is why this did nothing at all when it first shipped.**
+
+          `boundingClientRect` is viewport-relative while `rootMargin` moves the
+          root's edge down to `edge`, so the callback fires as the seam crosses
+          `edge` — at which moment `top` is still a positive number about equal
+          to it. Testing `top < 0` was therefore false at the only moment the
+          test was ever run, and no further callback comes: an observer reports
+          crossings, not positions, so the label sat on *In cinemas* for the
+          whole wall.
+
+          `rootBounds` already carries the margin, so it is the honest source
+          for that line; `edge` stands in on the browsers that leave it null.
+        */
+        const line = entry.rootBounds?.top ?? edge
+        setPast(!entry.isIntersecting && entry.boundingClientRect.top <= line)
       },
-      { rootMargin: `-${Math.round(line.getBoundingClientRect().height)}px 0px 0px 0px` },
+      { rootMargin: `-${edge}px 0px 0px 0px` },
     )
 
     observer.observe(mark)
@@ -64,18 +81,30 @@ export function CinemaWall({
   /*
     A listing with nothing released opens on *Coming soon* rather than lying for
     the length of one screen. There is no seam to observe in that case either, so
-    the state below never moves and this is the whole of it.
+    the state above never moves and this is the whole of it.
   */
-  const label = past || nowShowing.length === 0 ? 'Coming soon' : 'In cinemas'
+  const live = !past && nowShowing.length > 0
 
   return (
     <div>
       {/*
-        ⚠ **`top` is the safe-area inset, not zero.** Pinned at zero the label
-        sits under the status bar and the clock is drawn over it — reported on
-        the handset within minutes of shipping, and the exact fault
-        `env(safe-area-inset-top)` exists for. The masthead has always cleared
-        this; a second pinned surface needed telling separately.
+        ⚠ **`top-0` with the inset as padding, and a negative margin cancelling
+        it in flow.** Three requirements meet on this one element and only this
+        spelling satisfies all three.
+
+        Pinned at the inset instead, the bar floats with a strip of screen above
+        it that posters scroll through — reported, and the reason this changed.
+        Pinned at zero with no padding, the label sits under the clock — also
+        reported, an hour earlier. So the box has to start at the very top and
+        carry the inset as padding, exactly as the masthead does.
+
+        That would then cost the inset again as dead space *in flow*, where the
+        bar sits below a masthead that has already cleared it — about 47px of
+        nothing on a notched phone before the first poster. The negative margin
+        is that height given back: the box is pulled up behind the masthead,
+        which is opaque and one layer above, so the space it occupies is space
+        the masthead was already covering. On a screen with no inset both values
+        are zero and this reads exactly as it always did.
 
         ⚠ **It sits below the masthead on purpose**, `z-10` against its `z-20`,
         which `main`'s `isolate` makes a guarantee rather than a coincidence of
@@ -84,14 +113,29 @@ export function CinemaWall({
         while you are scrolling down through posters, and handing the top strip
         back to the mark when you scroll up.
 
-        `bg-bg` because a pinned label with no ground has posters sliding
-        through the letters.
+        **Glass rather than a ground.** Directed. `bg-bg/60` with a backdrop blur
+        rather than the flat `bg-bg` this had, so the artwork passing underneath
+        stays legible as movement without the letters sitting on top of it. It is
+        the first translucent surface in the app and the only one; §11's matte
+        black is otherwise unbroken, and a second one would make this a theme
+        rather than a bar.
       */}
       <h2
         ref={caption}
-        className="micro text-muted bg-bg sticky top-[env(safe-area-inset-top)] z-10 py-3"
+        className={`micro bg-bg/60 sticky top-0 z-10 mt-[calc(-1_*_env(safe-area-inset-top))] pt-[calc(env(safe-area-inset-top)_+_0.75rem)] pb-3 backdrop-blur-xl ${
+          /*
+            Recording red for the half that is on now — see `--color-live`, which
+            carries the argument for a second red and the scarcity rule that
+            keeps it meaning something. *Coming soon* stays muted: the point of
+            the colour is the distinction, and colouring both would erase it.
+
+            Nothing depends on seeing it. The two words carry the whole of the
+            meaning on their own.
+          */
+          live ? 'text-live' : 'text-muted'
+        }`}
       >
-        {label}
+        {live ? 'In cinemas' : 'Coming soon'}
       </h2>
 
       {nowShowing.length > 0 && <PosterWall films={nowShowing} />}

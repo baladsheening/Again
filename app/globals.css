@@ -124,6 +124,33 @@
    */
   --color-caret: #3fbfae;
 
+  /**
+   * Recording red. **The word "In cinemas" on the home wall, and nothing else.**
+   *
+   * Directed 15 August, in those terms — the red of a live indicator, for the
+   * half of the wall that is on now as against the half that is not yet.
+   *
+   * ⚠ **This is a second red, and that is the cost.** `--color-active` is the
+   * lacquer red that marks the current glyph in the masthead; this is brighter
+   * and more saturated on purpose, because two reds a viewer cannot tell apart
+   * would be worse than one red doing two jobs. They are never adjacent — the
+   * active red marks Search or Profile, and neither is current on `/`, which is
+   * the only route this appears on.
+   *
+   * The scarcity rule that applies to amber, to the active red and to the caret
+   * applies here word for word: **the moment this appears on anything that is
+   * not a live-now marker, it stops saying anything is live.** In particular it
+   * is still not the error colour — `docs/decisions.md` has refused a red for
+   * failure twice, and this makes that refusal more important rather than less,
+   * since there are now two reds for an error message to be confused with.
+   *
+   * 5.9:1 against the true-black ground, so it clears AA for body text as well
+   * as the 3:1 WCAG 1.4.11 asks of a graphical control — which matters here
+   * because the colour is carrying a distinction that the two words also carry
+   * in full. Nothing depends on seeing it.
+   */
+  --color-live: #ff3b30;
+
   /*
     The width at which the shell becomes a rail.
 

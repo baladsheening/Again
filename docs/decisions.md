@@ -1225,6 +1225,63 @@ the request**, and the two were confused within the hour. `viewerRegion()` still
 goes to TMDB and the wall is still filtered to the viewer's country. What was cut
 is the word on screen. The cost is only that a wrong guess is now silent.
 
+### Four more from the handset, and the label had never once changed
+
+#### The swap never fired, and the reason generalises
+
+The observer was given a `rootMargin` pulling the root's top edge down to the
+caption's lower edge, so that the label would change when the seam reached *it*
+rather than the top of the screen. The callback then tested
+`boundingClientRect.top < 0`.
+
+**Those are two different lines.** `boundingClientRect` is viewport-relative; the
+margin moved the root's edge to 38px. So the callback fired as the seam crossed
+38 — at which moment `top` was about +38, and the test was false. And that is the
+only moment it ever runs:
+
+> **An observer reports crossings, not positions.** A test that is false at the
+> crossing is false forever, because nothing calls back to ask again.
+
+It read as the feature being absent rather than broken, which is what took a
+report to find. `rootBounds` already carries the margin and is the honest source
+for that line; the measured height stands in where a browser leaves it null.
+
+#### The bar goes to the top of the screen, and the inset is given back
+
+Three requirements meet on one element, and only one spelling satisfies all
+three. Pinned at the inset, a strip of screen sits above it with posters running
+through — reported. Pinned at zero without padding, the label is drawn under the
+clock — reported an hour earlier. So the box starts at zero and carries the inset
+as padding, which is what the masthead has always done.
+
+That would then spend the inset again as dead space *in flow*, where the bar sits
+below a masthead that has already cleared it — about 47px of nothing before the
+first poster. A negative top margin of the same inset gives it back: the box is
+pulled up behind the masthead, which is opaque and one layer above, so the space
+it takes is space already covered. On a screen with no inset both values are zero
+and nothing about it exists.
+
+#### A second red, and glass
+
+Both directed. `--color-live` is documented at the token, including the cost: it
+is the **second** red in a palette whose argument is scarcity, and it is brighter
+than `--color-active` on purpose, since two reds a viewer cannot tell apart would
+be worse than one red doing two jobs. They are never adjacent — the active red
+marks Search or Profile and neither is current on `/`. It is still not the error
+colour, and there being two reds now makes that refusal more important rather
+than less.
+
+The caption is the app's **first and only translucent surface**: `bg-bg/60` over a
+backdrop blur, so artwork passing underneath reads as movement without the
+letters sitting on it. §11's matte black is otherwise unbroken, and a second such
+surface would make this a theme rather than a bar.
+
+⚠ **All five new utilities were checked in the compiled CSS, not inferred from a
+green build.** Tailwind emits nothing for a class it does not recognise and the
+markup keeps the attribute, so an unknown utility is inert rather than an error —
+`text-live`, `backdrop-blur-xl`, `bg-bg/60` and both `env()` calcs were confirmed
+as real rules in the output.
+
 **Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
 is unreachable from the environment this was built in, so the call is checked
 only by types and by sharing its Zod schema with `searchFilms`, which does work
