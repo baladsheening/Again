@@ -22,6 +22,7 @@ v1 is films only.
 |---|---|
 | [`docs/plan.md`](docs/plan.md) | Build order, current state, and what must not be forgotten |
 | [`docs/decisions.md`](docs/decisions.md) | Why things are the way they are, and what is still open |
+| [`docs/spec-sheet.md`](docs/spec-sheet.md) | What must be true on every screen, and the checks that prove it |
 | [`CLAUDE.md`](CLAUDE.md) | The rules for building — read before changing anything structural |
 
 ## Stack

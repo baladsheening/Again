@@ -39,35 +39,6 @@ track becomes mutual, scoped to that one pair. Second caller, same module — it
 does not scatter the logic, which is what §3 cares about. Belongs in Phase 2,
 when tracking is built.
 
-### Rate limiting is not real without Upstash
-
-`lib/rate-limit.ts` falls back to an in-process `Map` when
-`UPSTASH_REDIS_REST_URL` is unset. That is fine locally and **is not protection
-in production**: each serverless instance gets its own memory, so an attacker
-simply lands on a different one.
-
-§10 lists rate limiting as non-negotiable from the first commit, and the code is
-there — but the backing store is not. `rateLimitIsDurable()` reports which mode
-is live. Needs Upstash credentials before any real deployment.
-
-**Enforced as of 8 August 2026:** `scripts/preflight.mjs` fails a production
-build when the credentials are missing. The gate has to sit *before* the deploy,
-because the fallback is undetectable after it — the app looks healthy, responds
-normally, and simply does not limit anything. Previews and local builds print the
-same findings and carry on. This is the enforcement, not the fix: the credentials
-themselves are still outstanding, and this entry stays open until they exist.
-
-The comment in `lib/rate-limit.ts` previously said `assertRateLimitConfigured()`
-was "called at the point of deploy readiness". No such function was ever written,
-and `rateLimitIsDurable()` has no callers either — the file described a guard it
-did not have. The comment now names the script that does the work.
-
-This got more serious once auth started going through it. `LIMITS.auth` guards
-sign-in, sign-up and password reset, so the in-process fallback is now standing
-in front of the account boundary and an emailed bearer token, not only the TMDB
-proxy. Better Auth's own limiter is no help here — it defaults to in-memory too,
-which is the identical hole.
-
 ### Swap landing versus the unique constraint
 
 §7.4 lands each side's picks in the other's wants. §10 says adding the same item
@@ -115,6 +86,21 @@ works is the definition of the wrong order.
 **Decision for now: keep, do not build.** Revisit when there are enough real
 users that a single undifferentiated list of people is visibly wrong — which is
 also the first moment there is any evidence about what a group should do.
+
+**Sharpened 15 August, to one observable request.** A track is all-or-nothing, so
+the moment groups become necessary is the first time somebody wants a want kept
+from a *particular* person while it stays visible to everyone else — family
+against friends. Until that is asked for, tracks do the job, and there are
+already two pressure valves: `done` is private from everyone, and the note will
+be. Naming a cluster so a convergence can say where it came from is pleasant and
+is not a reason to build an administrative surface.
+
+**The preparation is already done, and it is §3.** Visibility scoping is the
+expensive kind of feature because it changes who can see what on every read — but
+every read already goes through `lib/db/` on a `SessionUser`, so a group scope is
+a filter added in one layer rather than a rule hunted through the app. That rule
+was written for privacy; it happens to be the groups insurance too. Nothing else
+needs doing in advance.
 
 **The identity half is separate and is happening sooner.** "Names for people who
 know you, handles for strangers" needs settling in Phase 2, when `/u/[handle]`
@@ -218,10 +204,30 @@ the viewer, so none of it was ever going to be statically cached.
 
 Lives in `proxy.ts` — Next.js 16 renamed the `middleware` convention.
 
-### Upstash over Vercel KV
+### Upstash over Vercel KV, and the fallback that had to be closed
 
 §10 permits either. Upstash keeps rate limiting portable if the app ever leaves
 Vercel; Vercel KV would not.
+
+**This was an open question until 8 August**, and the reason is worth keeping:
+`lib/rate-limit.ts` falls back to an in-process `Map` when
+`UPSTASH_REDIS_REST_URL` is unset, which is fine locally and **is not protection
+in production** — each serverless instance gets its own memory, so an attacker
+simply lands on a different one. It mattered more once `LIMITS.auth` began
+guarding sign-in, sign-up and password reset, putting the fallback in front of
+the account boundary and an emailed bearer token rather than only the TMDB proxy.
+Better Auth's own limiter is no help: it defaults to in-memory too, which is the
+identical hole.
+
+Closed twice over. `scripts/preflight.mjs` fails a production build without the
+credentials, because the fallback is undetectable after a deploy — the app looks
+healthy, responds normally and simply does not limit anything. And the
+credentials now exist and were verified against the live service (a pipelined
+`INCR`/`EXPIRE` in London, counter 1 → 2, TTL 60s, key removed).
+
+⚠ **Still per IP rather than per email address**, so a distributed attacker could
+fill one person's inbox with reset mail. The fix means reading the request body
+in `app/api/auth/[...all]/route.ts`; deliberately not built.
 
 ### `unoptimized: true` on images
 
@@ -1039,6 +1045,44 @@ counter is that it makes the app more useful to a *member* in the same motion,
 by removing the blank screen §8 warned about; but the test is failed, not
 passed, and that is the thing to weigh if this ever feels like the wrong product.
 
+### The wall is regional, and its sort was backwards — 15 August
+
+Two changes, both directed, and the first is the one with an argument in it.
+
+**"In cinemas" is a claim about a place, and it was being made about the United
+States to everybody.** TMDB defaults `now_playing` and `upcoming` to the US when
+no `region` is given, so a London wall opened on American release dates that run
+weeks or months out of step with the ones down the road. The region now comes off
+the request — `x-vercel-ip-country`, validated, in `lib/region.ts` — and rides in
+the URL, so Next's data cache fragments by country rather than by person.
+
+**It is a guess and it is allowed to be.** An IP is wrong for a traveller and for
+anyone on a VPN. Nothing stores it, nothing filters a query by it, and the worst
+case is somebody seeing another country's release dates — which is exactly what
+everybody saw before. A setting would be right rather than usually right, and it
+costs a column, a screen and a question asked of someone who opened the app to
+look at posters. The deferred user-context model in *What Again is for* is the
+same judgement.
+
+⚠ **This does not move the §2 line, and it is worth being explicit about why,
+because it looks like it might.** Regionalising does not add a claim — it makes
+the claim already on screen true. The wall still says nothing about which cinema,
+at what time, for how much, or how to get in, and none of those may be added. An
+incorrect claim is not the safer side of that boundary.
+
+**Region, not language**, and the reason is in `items`. `language` decides the
+title TMDB returns, and the title on the wall is the title copied into `items`
+when somebody taps a poster — so localising it would write a French name into a
+row that a mutual track reads in English, and `lib/overlap.ts` joins on `items`.
+Dates are regional; the canonical name is not.
+
+**The sort was newest-first, which is `upcoming` descending** — so the wall
+opened on the film furthest from being watchable and what is actually on was
+below the fold. The comment above the function had claimed *"what is on now, then
+what is coming"* since 9 August; the code had never done it. It sorts by distance
+from today now, in both directions, which is one comparator and puts "out last
+week" beside "out next week".
+
 **Unverified:** `inCinemas()` has never run against the real API. TMDB's API host
 is unreachable from the environment this was built in, so the call is checked
 only by types and by sharing its Zod schema with `searchFilms`, which does work
@@ -1087,6 +1131,12 @@ because the thing that starts an add may be a 110px poster halfway down a grid
 or a field pinned to the bottom of the screen, and neither has room to answer in.
 
 ### Space Grotesk, capitalised — and the old face kept
+
+> ⚠ **Superseded 15 August: the face is Ojuju again, at 1.75rem.** Every
+> measurement in this entry describes Space Grotesk and none of it is current.
+> Kept for the two things that outlived it — why the capitalisation is a deletion
+> rather than a string, and why the losing face is left declared and lazy. See
+> *The masthead takes the typing*.
 
 **Directed 9 August.** `--font-display` is Space Grotesk and the mark reads
 *Again* rather than *again*.
@@ -1318,6 +1368,13 @@ The original was defensible, which is why it was built. It is recorded here so
 the argument for it is not made again.
 
 ### The mark's case: caps, then back to lower — both on 10 August
+
+> ⚠ **Superseded 15 August.** The mark is capitalised, in Ojuju, at 1.75rem, and
+> the numbers below are Space Grotesk at 36px. **The mechanism this entry
+> describes is also gone**: the trims and paddings no longer have to be moved by
+> hand, because `--wordmark-ink` and `--wordmark-slack` express them against
+> `--text-wordmark`. Kept for the argument that a `text-transform` beats four
+> literals, and for the record of a decision that has now moved five times.
 
 Directed twice in one day. The mark went `Again` → `AGAIN` in the morning and
 `AGAIN` → `again` in the afternoon, and it is now set in lower case.
@@ -1807,6 +1864,299 @@ something moved — this nearly produced a wrong conclusion in the other directi
 
 ---
 
+## The masthead takes the typing, and three mechanisms retire — 14–15 August
+
+Directed across one evening in several passes: the house glyph becomes a search
+glyph, search and profile swap sides, the field leaves the bottom bar and opens
+across the top of the masthead, a back arrow sits beside it, and the mark goes
+back to Ojuju — capitalised, and smaller. `db0a207` through `0f52dba`.
+
+The mechanisms are documented where each one lives; `components/shell.tsx` and
+`app/globals.css` carry the measurements and the warnings. This entry is for what
+is not local to any of them.
+
+### Moving the typing to the top is the fix the whole keyboard stack stood in for
+
+The field went into the phone's bottom bar on 9 August because the collection
+line already ran to within about 15px of a 375px screen and there was no width
+left for a field beside it. The bar then held one of two things with a chevron
+swapping them, and the rest of the shell had to ask which. **All of that is
+gone** — the bar holds one thing, `barMode` went with the field, and the
+argument the mode existed to settle stopped existing rather than being won.
+
+The larger cost it removed is the keyboard. A field at the bottom of a phone is a
+field the keyboard covers, and everything built for it between 11 and 14 August
+was an attempt to answer one question: *how tall is a keyboard that has not
+appeared yet.* It is not answerable — iOS decides the reveal before any script
+runs — so the app estimated it from last time's measurement, kept the maximum
+ever seen, and painted black under the lifted bar to hide the error.
+
+> A number that cannot be known in time is not a number to estimate. It is a sign
+> that something is in the wrong place.
+
+Retired by name, and all three are recorded at their sites rather than here:
+`lastKeyboardOverlap` and `rememberedOverlap()`, and `groundFor` for the second
+and final time — its own note now says do not build a third one. `--keyboard-overlap`
+survives, because `floor()` measures it *while* the keyboard is up, needs no
+prediction, and is what keeps the last row of a long list reachable.
+
+**This is `CLAUDE.md`'s rule in its cleanest instance so far.** Remove the
+mechanism, then the condition it fails under, and only then correct it. Three
+mechanisms came out and the symptom left with them, on every device at once.
+
+### One fault, three times: a control that removes its own surface
+
+The × on 11 August, the search button that is unmounted between its own
+`pointerdown` and `pointerup`, and the back arrow that blurs the field it lives
+in — the same fault arrived at from three directions, and each was found
+separately.
+
+> A control that removes its own surface has to be listened to from something
+> that outlives the gesture, and has to hold focus until its click has landed.
+
+The header outlives both halves of the masthead, so the gesture is heard there.
+The arrow prevents its own blur on both pointers. Neither is a workaround for a
+platform; both are consequences of asking an element to survive its own
+disappearance.
+
+### The mark: Ojuju again, capitalised, and the size is a knob now
+
+Space Grotesk set the mark from 9 August until this session, on the instruction
+that it did not work for it. Ojuju is back, setting `Again` at 1.75rem, down from
+2.25. The mark also read `Need` for a few hours (`ece1113`) before being reverted
+— recorded for the same reason the case changes of 10 August are: **the round
+trip is the useful part**, and this one has now happened three times.
+
+The part that matters is not the face. Every previous change of face, case or
+size needed hand edits in three places, because the trims were measurements taken
+at 36px of a specific face setting a specific word, and the masthead's height and
+`main`'s top padding were px and rem derived from them. They read
+`--wordmark-ink` (0.92) and `--wordmark-slack` (−0.135) now, both expressed
+against `--text-wordmark`, so the size is one line and the numbers cannot fall
+out of step with it.
+
+**`docs/plan.md` carried a table called *Numbers that must move together*, and
+most of it described exactly this coupling. It is retired with the coupling**,
+which is the honest way for that table to end — not by being maintained, but by
+the mechanism it warned about being removed.
+
+⚠ **The two ratios are properties of the face *and* the word.** Ojuju hangs
+`Again`'s `g` below its own box, which is why the slack is negative where Space
+Grotesk setting `need` was positive. A new face or a new word re-opens both.
+
+### A third colour, added and taken back the same evening
+
+`--color-caret: #3fbfae` gave the search chevron a turquoise blink, argued at the
+token: a caret reports a *system state* — the app is listening — which is neither
+of the two claims the palette already makes, and platforms tint their own carets
+for that reason. Measured 9.27:1 on the true-black ground, and deliberately cool
+against a palette that is warm throughout.
+
+**Reverted within the hour, on instruction.** The chevron is `text-muted` again
+and the token stays defined and unused, the way `--font-ojuju` outlived its own
+replacement and was there when it was wanted back. What the revert restores is
+§11's position that this palette carries two meaningful colours — amber for
+overlap, lacquer red for *you are here* — and the point that decided it: on a
+matte black screen the blink was already the only thing moving.
+
+### The caret came back, turned the right way round
+
+Deleted on 10 August for blinking while the field was *unfocused* — making its
+claim at the one moment it was false, and shifting the placeholder 7px when it
+unmounted. It is back as a state on a glyph that is drawn anyway, keyed to focus,
+so nothing mounts, unmounts or moves. Only the midpoint keyframe is declared, so
+the reduced-motion block leaves the chevron visible rather than hidden.
+
+The entry recording its deletion stands. The argument against the old one was
+correct and is not the argument against this one.
+
+### Focus decides the keyboard; the query decides the bar
+
+Typing `alien` and then tapping the page used to take the bar away and leave a
+wall of matches with nothing on screen saying what was matched, and no way to
+amend the query except opening search again to find the word still in it. The bar
+now survives the keyboard, and both ways out already pass through an empty field,
+so nothing else had to learn the rule.
+
+⚠ **A tap with nothing to dismiss is an ordinary tap.** The first version of that
+swallowed unconditionally whenever the bar was up, which ate a tap aimed at a
+poster — a dropped tap, which is the exact failure the whole dismissal design is
+about, arrived at from the other side. Suppression has to be earned by something
+actually being put away.
+
+### And then the masthead recedes too — 15 August
+
+Directed, and it reverses a position this file's own code held in a comment: the
+header stayed put while the bar at the foot slid, *because it is the only thing
+on screen that says where you are, and a mark that comes and goes reads as a
+rendering fault rather than as a gesture*.
+
+**That reasoning was right, and it is now carried by two rules instead of by an
+exemption.** The masthead does not recede while it is holding the search field —
+sliding it away mid-search would take the query, the caret and the only way out
+with it — and leaving search reveals both bars, so the mark cannot return to a
+header that is about to slide away on the same frame.
+
+⚠ **The recede costs more at the top than at the foot, and only since 14 August.**
+With the house glyph gone the wordmark is the only route to `/` on a phone, and
+the search glyph is the only route to the field, so both leave with the masthead.
+The 32px floor and the return on the first upward movement are what make that
+affordable; they are the numbers to reach for if it ever reads as a trap rather
+than a gesture.
+
+**One signal, two surfaces.** The existing scroll listener already computes
+`receded`, stamped with the route it was hidden on, and the masthead derives from
+it. A second listener measuring the same scroll would be a second threshold to
+keep in step, and the two would disagree on the frame a flick reverses.
+
+The one number that is not shared: the masthead moves by its own height **plus
+the `0.5rem` of its shadow**, which paints ground below the element so posters
+pass under the mark. Moving it by 100% alone leaves that strip behind, clipping
+the top of the wall against a ground it happens to match — invisible in a
+screenshot and wrong.
+
+⚠ **Not verified anywhere.** Typecheck, lint and a production build pass, and by
+this file's own standard that says nothing about whether a screen behaves. This
+one is a gesture, so it wants a phone.
+
+### What is verified, and what is not
+
+Driven against the running app at 390×780 and at desk width: 30 assertions for
+`ea1f914`, 35 for `e6d972b`, 42 plus 8 for `0f52dba`. Typecheck, lint and a
+production build are clean throughout.
+
+The handset was not silent this week — three reports came off it on 13 and
+14 August (a black sheet over the posters, flicker while scrolling with the
+keyboard up, and a slither of a gap under the bar), and all three are answered
+above. ⚠ **What has not been looked at on hardware is the result**: the masthead
+field itself, on the device that produced the reports.
+
+---
+
+## What Again is for, and the map it is not — 15 August
+
+Asked directly, after a read-through of every document in the project: what is
+the long-term aim even if we start with movies, and is the *living map of things
+you could do* in the expansion reference really a different product, or a sharp
+distinction drawn where there is none?
+
+### The aim is the convergence graph
+
+Again is a private record of what someone would try and what they would return
+to, held by people who track each other, where the event that matters is two of
+them independently wanting the same thing. It improves as the graph gets denser
+and degrades as it gets wider — §13's two hundred people in twelve clusters
+against a million spread evenly. The asset is `entries` × `tracks` × `items` in
+our own Postgres, which *Third-party dependencies* below already identifies as
+the one thing that cannot be replaced.
+
+Films are the first kind, not the shape. §2 has always allowed a second one.
+
+### The living map is not a different aim — it is the same mechanism, second trigger
+
+This was first framed as two different products, and that was too strong. Both
+are the same proposition: an intent you have already expressed becomes
+actionable. Convergence is one trigger — someone you track wants it too. A
+screening on Saturday is another — the world makes it possible. Neither is
+discovery, and the expansion reference was right to say the personal layer should
+*"prefer explicit intent over inferred taste"*.
+
+**What separates them is truth decay, and that is the whole of it.** A
+convergence is computed from rows we own and cannot be wrong. An occurrence is a
+claim about the world that rots — the screening moves, the price changes, it
+sells out. It would be the first thing in the product capable of lying to
+someone, in a product whose entire proposition is that what it says is true. That
+is a reason to sequence it late and build it with provenance, not a reason to
+call it a different company.
+
+### The line, stated better than §2 states it
+
+§2 bans *"availability, acquisition or where to get it"*, and every example on
+its list — streaming lookup, library availability, retailer links, price
+tracking, ownership inventory — is about acquiring a thing to consume alone. A
+screening is not that. It is an occasion, at a time and a place, that two people
+can attend together, which is the thing this app says it exists to produce.
+
+> **Acquisition makes the app a remote control. Occasion makes it a diary.**
+
+That is the line to hold, and it is sharper than "availability" because it
+explains *why* a streaming deep-link is wrong where "the Prince Charles has it on
+Saturday" might not be.
+
+Even under it, **no booking link.** The moment there is a checkout the incentive
+to become a listings product starts pulling on everything else in the design.
+
+### Decided: not now, and the order matters more than the rule
+
+If occurrences are ever built, they fire only against a want already held, shared
+with someone who already tracks you back — no browse, no availability filter, no
+surface a stranger can use. And not before Phase 4, because the answer to *the
+app feels inert* is other people, and other people do not exist in it yet.
+
+### The passivity question, which is the same question
+
+Asked in the same session: with no browse and no discovery, does the app reduce
+to typing in things you happened to walk past? Three things are true.
+
+- **It already isn't.** The poster wall answered exactly this on 9 August — *"the
+  thing it was worst at was the moment before capture"* — and it carries three
+  tests it must keep passing: not availability, not ranked or personalised, not a
+  feed.
+- **The designed supply is other people.** The README's founding line is that a
+  go-back-tos list *is* the recommendation, the way a bookshelf tells you more
+  than a list someone writes for you. Phase 2 gives `/u/[handle]` and copying with
+  `source='copy'`. The proof that browsing a friend's shelf is designed behaviour
+  rather than tolerated is §6's suppression rule: nobody writes a suppression rule
+  for an activity they do not expect people to perform.
+- **None of it is built.** Phases 2 to 4 are the supply, and §13 puts 100% of the
+  value there.
+
+> The app is not too passive by design. It is passive because the half that
+> supplies it has not been built yet.
+
+### The database is not being prepared for this, and the reasoning is already in this file
+
+*What not to build* argues it under third-party dependencies: the insurance is
+the schema, not the code, and a provider abstraction is speculative generality.
+Three things make the wait safe:
+
+- **An `occurrences` table is additive.** New table, foreign key to `items`;
+  `entries`, `tracks` and `notifications` do not change shape. Building it later
+  costs one migration and touches nothing that exists.
+- **Identity is the one expensive retrofit** — what counts as the same thing when
+  a film arrives from TMDB and from a cinema's feed. `items.external_source`
+  exists for it and is deliberately not in the unique constraint.
+- **And even that is cheap while there is one source**, because duplicates cannot
+  exist. It becomes expensive on the day a second source lands.
+
+**So the preparation is due when the second source arrives, and not before.** The
+trigger belongs in the table at the end of *When to revisit*, where the provider
+migration row already says to settle the constraint and deduplication together.
+
+### The shape that was sketched, kept in one paragraph
+
+`docs/product-reference_for expansion.md` held this and has been removed, since
+everything else in it either duplicated this file or was overtaken. Worth
+keeping in case the trigger ever fires: the category-neutral concepts were a
+**thing** (film, exhibition, concert), an **occurrence** (a specific screening or
+performance), a **place**, a **source**, an **availability** state backed by
+evidence, the person's **context** (location, travel tolerance, budget,
+accessibility — all optional and user-controlled), their **intent**, and
+**provenance** on every field: source, timestamp, extraction confidence, last
+verification. Category specifics belong in adapters rather than in the core, and
+the product must never imply complete coverage — *"12 opportunities found from
+the sources currently covered in your area"*, never *all* of them.
+
+That paragraph is the whole of what a future version needs to start from. The
+529 lines around it were a plan for building it now, which is the part that was
+declined.
+
+**What would change all of this:** a dozen real people using the app with their
+shelves visible to each other, and it still feeling like there is nothing to open
+it for. That is evidence. A roadmap wanting it is not.
+
+---
+
 ## Third-party dependencies
 
 ### Where TMDB actually sits
@@ -1934,11 +2284,21 @@ at all. Typecheck, lint, build and all 21 server assertions passed throughout.
 Fixed in `a4bd90b` — **a passing data layer says nothing about whether the
 product works.**
 
-Still unverified: anything on hardware, and the visual design of the signed-in
-app, which no human has seen — there is no account to sign in with, so every
-visual judgement so far has been of `/sign-in`. And no deployment exists. §12
-wants each phase shipped to Vercel before the next starts. Neon is in
-`eu-west-2` (London), so Vercel's function region should be `lhr1`.
+**All three of the things that paragraph used to end on have since happened**, and
+they are kept here as the shape of the gap rather than as the gap itself: there
+was no deployment (there is one, from 8 August, in `lhr1` beside Neon in
+`eu-west-2`), there was no account (there is, and the signed-in app has been
+judged repeatedly since), and nothing had run on hardware (it has, and the
+handset has produced findings on 8, 11, 13 and 14 August that nothing else
+could).
+
+What is still unverified is smaller and more specific, and it is listed in
+`docs/plan.md` rather than duplicated here. The standing lesson is the one this
+section exists for:
+
+> A passing data layer says nothing about whether the product works, and a
+> passing build says nothing about whether a screen does. Every fault that
+> mattered in this project was found by looking at it.
 
 Re-verify with:
 

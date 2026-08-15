@@ -725,15 +725,21 @@
 
     The mark appears in four places: the phone header, the rail, `/sign-in` and
     `/reset-password`. Four literals are four things that can drift, and a
-    transform keeps them one thing. It is also why the DOM text stays "Need"
+    transform keeps them one thing. It is also why the DOM text stays "Again"
     everywhere — `<title>`, prose and the accessible name all get the app's name
     spelled as a word, whatever this line is currently doing to it.
 
-    ⚠ **Changing this is never only a CSS change.** The header's mark is trimmed
-    to its own ink, so the case decides how tall that box is: lower case and
-    capitalised both run 34px at 36px, caps 27px. `MARK_TRIM_BOTTOM` and `main`'s
-    top padding in `components/shell.tsx` follow it, and so does the gap under
-    the mark on the two auth pages. Re-measure; do not reason.
+    ⚠ **This used to be more than a CSS change, and between these two values it
+    is not any more.** The header's mark is trimmed to its own ink, so the case
+    decides how tall that box is, and the masthead row and `main`'s top padding
+    were hand-derived numbers in `components/shell.tsx` that had to be moved with
+    it. They read `--wordmark-ink` and `--wordmark-slack` now.
+
+    ⚠ **Full caps is still a re-measurement, and so is a new word or face.** The
+    two ratios are measured from Ojuju setting `Again`; lower case and capitalised
+    share them because the `g` sets the bottom either way, and caps has no
+    descender at all — it ran 27px against 34px at 36px in the previous face.
+    Re-measure; do not reason.
   */
   text-transform: capitalize;
   /*
