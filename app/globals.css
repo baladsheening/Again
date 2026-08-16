@@ -329,6 +329,20 @@
   --radius-artwork: 0.25rem;
 
   /**
+   * What the home wall's caption blurs the artwork by **at its foot**. At its
+   * head it is twice this — see the two layers in `components/cinema-wall.tsx`,
+   * where the second reads this token and multiplies it.
+   *
+   * It is the 24px that `backdrop-blur-xl` was giving before the band was given
+   * a ramp, named because two things depend on it now and the second is derived
+   * from the first: **blurs compose in quadrature**, so a layer of `√3` times
+   * this over a layer of this comes to exactly twice it. Change the number and
+   * the doubling still holds; change the *doubling* and the √3 has to be
+   * re-derived.
+   */
+  --blur-band: 24px;
+
+  /**
    * The air above and below the wordmark in the phone header — the *visible*
    * air, measured to the letters rather than to the box they sit in.
    *

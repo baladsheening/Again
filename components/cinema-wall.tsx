@@ -24,6 +24,29 @@ import { PosterWall } from './poster-wall'
  * than the boundary between them — see the note on the effect, which is a bug
  * report and the reason.
  */
+
+/**
+ * The band appearing as the mark goes, worn by **each layer of it** rather than
+ * by the box that holds them.
+ *
+ * ⚠ **That is not a style choice: an element at less than full opacity forms a
+ * backdrop root, and a backdrop root leaves a descendant's `backdrop-filter`
+ * nothing to sample.** Measured in a browser against a hard edge — with the
+ * parent at `opacity: 0.5` the child's blur came out at 0.8px of softening,
+ * which is none; the same blur on the element that carries the opacity measured
+ * 40.5, which is the 62.5 of a full-strength blur seen through half an alpha.
+ * Put the fade on the `h2` and the glass would arrive un-blurred and snap into
+ * focus at the end of every reveal.
+ *
+ * So the three layers fade together and separately. `--masthead-hem`, the row
+ * height and the indent still come from tokens; only this repeats, and it
+ * repeats as one string rather than as three that could drift.
+ *
+ * `rail:opacity-100` because above the breakpoint there is no mark to be absent
+ * — see `data-masthead` in `components/shell.tsx`.
+ */
+const REVEAL =
+  'opacity-0 transition-opacity duration-300 group-data-[masthead=gone]/masthead:opacity-100 rail:opacity-100'
 export function CinemaWall({
   nowShowing,
   comingSoon,
@@ -223,21 +246,27 @@ export function CinemaWall({
         while you are scrolling down through posters, and handing the top strip
         back to the mark when you scroll up.
 
-        **Glass rather than a ground.** Directed. `bg-bg/60` with a backdrop blur
+        **Glass rather than a ground.** Directed. `bg-bg/60` over a backdrop blur
         rather than the flat `bg-bg` this had, so the artwork passing underneath
         stays legible as movement without the letters sitting on top of it. It is
         the first translucent surface in the app and the only one; §11's matte
         black is otherwise unbroken, and a second one would make this a theme
         rather than a bar.
 
+        ⚠ **The glass is not on this element any more — it is two layers inside
+        it**, because the blur ramps up the band and an element cannot hold two
+        strengths of it. See the note on the layers below; the short version is
+        that anything carrying a `backdrop-filter` becomes a backdrop root and
+        would leave its own children nothing to blur.
+
         **`rounded-b-artwork` is the posters' own corner** — directed 16 August,
         and the radius is a token because it is a relationship rather than a
         value, see globals.css. It reads here and not on the mark's banner: this
         band is the width of the wall, so its lower corners land over the first
         and last column of posters, while the mark's run to the screen's edges
-        where there is nothing behind them but ground. The blur is clipped by the
-        radius too, so the corner is a corner rather than a square of blur under
-        a rounded fill.
+        where there is nothing behind them but ground. `overflow-hidden` carries
+        the corner down to both layers, so the glass is cut to the same shape as
+        the box rather than sitting square under a rounded fill.
       */}
       {/*
         **An arbitrary property overriding the tier's own token, rather than a
@@ -305,7 +334,7 @@ export function CinemaWall({
       */}
       <h2
         ref={caption}
-        className={`micro bg-bg/60 masthead-box rounded-b-artwork group-data-[masthead=gone]/masthead:opacity-100 rail:mt-[calc(-1_*_env(safe-area-inset-top))] rail:opacity-100 sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] opacity-0 transition-opacity duration-300 [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
+        className={`micro masthead-box rounded-b-artwork rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] overflow-hidden [--text-micro:0.8125rem] pl-[var(--type-indent)] ${
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that
@@ -318,6 +347,48 @@ export function CinemaWall({
           live ? 'text-live' : 'text-muted'
         }`}
       >
+        {/*
+          ─────────────────────────────────────────────────────────────────────
+           The glass is two layers, and the blur ramps up it — 16 August
+          ─────────────────────────────────────────────────────────────────────
+
+          Directed: the band's blur should double from its foot to its head,
+          linearly. **`backdrop-filter` cannot be graded** — it is one strength
+          over the whole element — so the ramp is two blurs stacked, the upper
+          one masked to fade in toward the top.
+
+          ⚠ **They have to be siblings, and that took measuring.** An element
+          with a `backdrop-filter` *is a backdrop root*, so a child of it has no
+          page left to blur: nested, the second layer changed a hard edge's
+          softening by 0.0px. Which is why the `h2` above gives up the blur it
+          used to carry — it would have made itself the root of its own layers.
+
+          ⚠ **Blurs compose in quadrature, so the upper layer is not the target.**
+          To land on `2b` over a base of `b` it must be `b√3` — 41.57 against 24,
+          not 48. Measured on a hard edge, in edge widths where a flat `blur(24)`
+          reads 62.5 and a flat `blur(48)` reads 124.0: the two stacked at 24 and
+          41.57 read **125.0**, and a top layer of 48 overshoots to 134.
+
+          Masked with a plain linear alpha, the ramp measured 121 · 107 · 91 ·
+          76.8 · **65.5** down the band — 48 at the head, 24 at the foot, and
+          near enough a straight line between them. The mask is alpha rather than
+          luminance, which is what `to top, transparent, black` gives.
+
+          **The tint rides the lower layer**, not the `h2` and not the upper one.
+          On the `h2` it would be painted *behind* both layers and blurred by
+          them, which softens the band's own bottom edge; on the upper one it
+          would fade out with the mask. On the lower one it is uniform across the
+          band, and the upper layer blurring a uniform tint returns the same tint.
+
+          `overflow-hidden` on the `h2` is what gives both layers the banner's
+          rounded feet without either carrying the radius.
+        */}
+        <span aria-hidden className={`${REVEAL} bg-bg/60 backdrop-blur-band absolute inset-0`} />
+        <span
+          aria-hidden
+          className={`${REVEAL} absolute inset-0 backdrop-blur-[calc(var(--blur-band)_*_1.7320508)] [mask-image:linear-gradient(to_top,transparent,black)] [-webkit-mask-image:linear-gradient(to_top,transparent,black)]`}
+        />
+
         {/*
           The row, and it is the masthead's row: the same height, centred the
           same way. It is a wrapper rather than classes on the label itself
@@ -360,7 +431,9 @@ export function CinemaWall({
           posters have not moved — at rest the words rise off the wall by the
           same amount they rise when pinned.
         */}
-        <span className="mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]">
+        <span
+          className={`${REVEAL} relative mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]`}
+        >
           {/*
             **Keyed by the word, which is what replays the blink.** A CSS
             animation runs when an element is inserted, not when its text
