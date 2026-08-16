@@ -398,17 +398,27 @@ export function CinemaWall({
           above both blurs, where nothing filters it and it stays exactly as
           steep as it is written.
 
-          **Its shape is the band's own anatomy, not a number.** `--band-solid`
-          is `--masthead-height` less one `--masthead-gap`, which is where the
-          row's letters end. Above that line the ground is flat: the status bar's
-          clock and battery sit on it, then the air, then the label. Below it the
-          ground falls to the resting tint across exactly `--masthead-gap` +
-          `--masthead-hem` — the band's own foot, 16px at any type size, so the
-          bar dissolves into the wall rather than ending at a line.
+          **Its shape is a strip the page can name.** `--band-solid` is
+          `env(safe-area-inset-top)`: the ground holds at full strength for
+          exactly the depth of the status bar — where iOS draws the clock, the
+          signal and the battery, over which it has no say — and eases away
+          through everything below it, the caption's row included.
 
-          88% through the row against 60% at the foot. The first is most of the
+          ⚠ **Held flat through the row instead for one commit, and it was
+          rejected on sight.** `--masthead-height` less a `--masthead-gap` puts
+          the flat region's edge exactly where the letters end, which reads as a
+          near-solid slab with a 16px lip rather than as glass. The instinct it
+          fails is the right one: **a band that is flat for most of its height is
+          not a gradient, it is a bar with a soft edge.** Starting the fall at
+          the status bar's foot gives the ramp the whole rest of the band to
+          happen in, and the row still sits high on it.
+
+          88% at the top against 60% at the band's foot. The first is most of the
           way to the flat `bg-bg` the rest of the app is made of; the second is
-          the glass this band has always been.
+          the glass this band has always been. Where there is no inset — a tab,
+          Android, the desk — the flat region is zero and this is a plain linear
+          fade, which is what it should be when there is no status bar to sit
+          under.
 
           Both layers are `inset-0`, so they are the box exactly and nothing here
           needs clipping — the `overflow-hidden` that cut them to the banner's
@@ -421,7 +431,7 @@ export function CinemaWall({
         />
         <span
           aria-hidden
-          className={`${REVEAL} absolute inset-0 [--band-solid:calc(var(--masthead-height)_-_var(--masthead-gap))] [background-image:linear-gradient(to_bottom,color-mix(in_srgb,var(--color-bg)_88%,transparent)_var(--band-solid),color-mix(in_srgb,var(--color-bg)_60%,transparent))]`}
+          className={`${REVEAL} absolute inset-0 [--band-solid:env(safe-area-inset-top)] [background-image:linear-gradient(to_bottom,color-mix(in_srgb,var(--color-bg)_88%,transparent)_var(--band-solid),color-mix(in_srgb,var(--color-bg)_60%,transparent))]`}
         />
 
         {/*
