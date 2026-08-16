@@ -183,13 +183,28 @@ export function CinemaWall({
         nothing to pin until you had scrolled past it. Asked for on 16 August:
         the caption should appear when the mark goes, and not before.
 
-        `--masthead-height` is that distance. Pulling the box up by exactly it
-        lands its top `0.5rem` below the screen's — the same `0.5rem` the
-        masthead paints as a shadow beneath itself, so the protruding strip is
-        covered by construction rather than by luck. The label is therefore
-        behind the mark from the first paint, `sticky` has already reached its
-        `top-0` before the first flick, and there is no state in which both are
-        on screen at once.
+        `--masthead-clearance` is that distance — the mark's box and its hem, the
+        same quantity `main` pads its top by. Pulling the box up by exactly it
+        lands this band **on** the masthead's painted band: same top edge, same
+        bottom edge, one banner that changes what it says. The wall is untouched
+        by the move, because the margin cancels the height the box would
+        otherwise cost in flow.
+
+        ⚠ **Sitting under the mark is no longer what hides it, and that is the
+        second half of the same report.** A pull-down at the top rubber-bands the
+        document while the `fixed` header stays with the viewport, so the label
+        slid out from under it and was visible on the opening screen. Covering is
+        not hiding: it holds only while the two move together, and overscroll is
+        the case where the platform moves them apart. So the caption reads the
+        mark's own state — `data-masthead` on `#scroll-root`, see the note there
+        — and is painted only while the mark is away. Nothing the scroller does
+        can put it on screen beside the mark now, because it is not a question
+        about position any more.
+
+        The fade is the masthead's own 300ms, so the two are one movement: the
+        mark slides off while the label comes up behind it, and back the other
+        way. Instant would blink the label out at the start of the return, three
+        hundred milliseconds before the mark had covered the space it left.
 
         **The wall comes up by the height of the caption**, which is the visible
         half of the change: the posters now begin at `main`'s padding, where
@@ -281,7 +296,7 @@ export function CinemaWall({
       */}
       <h2
         ref={caption}
-        className={`micro bg-bg/60 masthead-box rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-height))] [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
+        className={`micro bg-bg/60 masthead-box group-data-[masthead=gone]/masthead:opacity-100 rail:mt-[calc(-1_*_env(safe-area-inset-top))] rail:opacity-100 sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] opacity-0 transition-opacity duration-300 [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that
@@ -299,6 +314,20 @@ export function CinemaWall({
           same way. It is a wrapper rather than classes on the label itself
           because the label remounts on every crossing — see below — and a box
           that has to hold still is not a thing to rebuild.
+
+          ⚠ **`mb-[var(--masthead-hem)]` is the hem, and it is a margin here
+          because the masthead's is a shadow.** Asked on 16 August why the mark's
+          banner runs deeper than this one: it does, by exactly this, because the
+          header paints `--masthead-hem` of ground below itself to stop posters
+          showing through the gap it keeps from the wall. Deleting that gap is
+          the thing not to do — the note on the token says why — so the band that
+          had no hem grows one instead, and the two banners now paint to the same
+          line.
+
+          On the row rather than as a second `padding-bottom` on the `h2`:
+          `masthead-box` already sets that property, and two rules writing one
+          property leaves the answer to emission order. A margin inside the box
+          adds the same height and cannot race anything.
 
           ⚠ **Less the descender, which is what makes it look in line rather than
           merely level — 16 August.** Reported: on the same line as the mark, and
@@ -322,7 +351,7 @@ export function CinemaWall({
           posters have not moved — at rest the words rise off the wall by the
           same amount they rise when pinned.
         */}
-        <span className="flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]">
+        <span className="mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]">
           {/*
             **Keyed by the word, which is what replays the blink.** A CSS
             animation runs when an element is inserted, not when its text

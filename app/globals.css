@@ -359,6 +359,39 @@
   );
 
   /**
+   * The hem: the strip of ground the masthead paints below itself, and the gap
+   * that strip fills.
+   *
+   * The mark keeps this much air between itself and the wall, and the header
+   * paints it as a `box-shadow` so that posters passing underneath do not show
+   * through the gap. It therefore has to be the same number in four places —
+   * the shadow, the distance `main` clears, the extra the recede travels so the
+   * strip leaves with the bar, and the caption's own band, which has no shadow
+   * and grows by it instead.
+   *
+   * **It was `0.5rem` written out in three of them until 16 August**, with a row
+   * in docs/plan.md asking whoever changed one to remember the others. A token
+   * is that row retired.
+   *
+   * ⚠ **Shortening the mark's banner by deleting this is the thing not to do.**
+   * It has been tried: collapsing the space under the mark to `--masthead-gap`
+   * alone made the `g`'s descender look met by the posters, and this slack is
+   * what fixed it. If the two banners ever need to match again, grow the
+   * caption's — that is what it does now.
+   */
+  --masthead-hem: 0.5rem;
+
+  /**
+   * What the masthead claims: its box and its hem.
+   *
+   * `main` pads its top by exactly this, because the header is `fixed` and holds
+   * no space open itself. The home wall's caption pulls itself up by exactly
+   * this, which lands its box on the masthead's painted box — the same top edge,
+   * the same bottom edge — so the two are one banner that changes what it says.
+   */
+  --masthead-clearance: calc(var(--masthead-height) + var(--masthead-hem));
+
+  /**
    * How far type sits in from the gutter, where the artwork does not.
    *
    * The gutter is where the *wall* starts: the poster grid runs edge to edge

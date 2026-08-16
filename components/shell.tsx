@@ -1281,6 +1281,35 @@ export function Shell({
     <div
       id="scroll-root"
       ref={scrollRef}
+      /*
+        ─────────────────────────────────────────────────────────────────────
+         Whether the mark is on screen, said out loud — 16 August
+        ─────────────────────────────────────────────────────────────────────
+
+        **The home wall's caption is the mark's absence, and this is how it
+        knows.** It used to be hidden by being underneath the masthead, which is
+        opaque and one layer above — and that works for as long as the two move
+        together. They do not: a pull-down at the top rubber-bands the document
+        while a `fixed` header stays with the viewport, so the caption slid out
+        from under the mark and was visible on the opening screen. Reported.
+
+        **Covering is not hiding.** Anything that depends on one element sitting
+        over another depends on the two never moving apart, and overscroll is
+        exactly the case where the platform moves them apart. So the caption
+        stops asking to be covered and reads the state instead: it is painted
+        when the mark is away and not otherwise, whatever the scroller is doing.
+
+        An attribute rather than context, because that is the whole of what has
+        to travel: one boolean, from here to a component two levels down, with no
+        provider, no subscription and no re-render of anything that does not care.
+        `main` is a sibling of the header and an ancestor of the caption, so a
+        class on this element reaches it in CSS alone.
+
+        **Not a `style` attribute**, which the CSP forbids outright — see the
+        note on `wordmark-trim` in globals.css.
+      */
+      className="group/masthead"
+      data-masthead={mastheadHidden ? 'gone' : 'up'}
       onPointerDownCapture={onContentPointerDown}
       onPointerMoveCapture={onContentPointerMove}
       onPointerUpCapture={onContentPointerUp}
@@ -1670,13 +1699,16 @@ export function Shell({
           exactly — the two are one gesture and any difference between them would
           read as one of them lagging.
 
-          ⚠ **The recede is `100% + 0.5rem`, not `100%`.** The shadow paints
-          `0.5rem` of ground *below* the element so posters pass under the mark
-          without showing through it; move the header by its own height alone and
-          that strip stays behind, clipping the top of the wall by 8px on a
-          ground it happens to match. The literal is the same `0.5rem` that
-          `main`'s top padding carries — see the shadow above and the coupling
-          table in docs/plan.md.
+          ⚠ **The recede is `100% + the hem`, not `100%`.** The shadow paints
+          `--masthead-hem` of ground *below* the element so posters pass under
+          the mark without showing through it; move the header by its own height
+          alone and that strip stays behind, clipping the top of the wall by 8px
+          on a ground it happens to match.
+
+          **All four sites read the token now** — this, the shadow, `main`'s top
+          padding and the caption's own band. It was `0.5rem` written out three
+          times with a row in docs/plan.md asking whoever changed one to remember
+          the rest.
         */
         /*
           ⚠ **`masthead-box` is the two paddings, and it is shared** — the home
@@ -1685,8 +1717,8 @@ export function Shell({
           used to be spelled out here, which meant one file's idea of the
           masthead and another's could disagree by an edit.
         */
-        className={`bg-bg rail:hidden masthead-box fixed inset-x-0 top-0 z-20 shadow-[0_0.5rem_0_0_#000] transition-[translate] duration-300 ${
-          mastheadHidden ? 'translate-y-[calc(-100%_-_0.5rem)]' : 'translate-y-0'
+        className={`bg-bg rail:hidden masthead-box fixed inset-x-0 top-0 z-20 shadow-[0_var(--masthead-hem)_0_0_#000] transition-[translate] duration-300 ${
+          mastheadHidden ? 'translate-y-[calc(-100%_-_var(--masthead-hem))]' : 'translate-y-0'
         }`}
       >
         {/*
@@ -2164,12 +2196,12 @@ export function Shell({
         **The top padding is the header plus the gap**, and it has to be, because
         the header is `fixed` and holds no space open itself.
 
-        **The header term is `--masthead-height`**, and it stopped being spelled
-        out here on 16 August. It was the same expression as the token — the
-        notch, `--masthead-gap`, the mark's ink, `--masthead-gap` — written a
-        second time in a second file, which is one edit away from two files
-        disagreeing about how tall the masthead is. The home wall's caption now
-        needs the same quantity, so there would have been three.
+        **The whole term is `--masthead-clearance`**, and it stopped being
+        spelled out here on 16 August. It was the same expression as the token —
+        the notch, `--masthead-gap`, the mark's ink, `--masthead-gap`, the hem —
+        written a second time in a second file, which is one edit away from two
+        files disagreeing about how tall the masthead is. The home wall's caption
+        pulls itself up by the same quantity, so there would have been three.
 
         `--wordmark-ink` is the measured inked height as a fraction of
         `--text-wordmark`; see globals.css for the measurement and for the warning
@@ -2188,17 +2220,18 @@ export function Shell({
         to be — `wordmark`'s `line-height: 1` wins over `wordmark-trim`'s
         `1.2778`, so the mark's box is never the size the trim intends and the ink
         overhangs it at each end. Giving the row its own `--wordmark-ink` closes
-        the gap, and the `0.5rem` here and in the header's shadow still meet the
-        way their notes require.
+        the gap.
 
-        `1.5rem` is the gap, and it is the same 1.5rem as the header's shadow
-        offset. Those two must stay equal: the shadow is what keeps the distance
-        identical once the page scrolls and content starts passing under the
-        mark. **Three numbers move together** — this padding, that shadow, and
-        the header's own paddings above.
+        **The gap under the mark is `--masthead-hem`, and it is the same token as
+        the header's shadow.** They have to be equal — the shadow is what keeps
+        the distance identical once the page scrolls and content starts passing
+        under the mark — and since 16 August they are equal by being one number
+        rather than by being remembered. **Nothing here moves separately** from
+        the header's own paddings any more; this whole padding is two tokens.
 
         The notch inset is added rather than folded in, because it is clearance
-        rather than height and varies by device.
+        rather than height and varies by device — it is inside
+        `--masthead-height`, at the point where the header spends it too.
 
         Written as literals rather than as the constants above because Tailwind
         reads class names as text: a template value here would compile to
@@ -2239,7 +2272,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(var(--masthead-height)_+_0.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[var(--masthead-clearance)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >
