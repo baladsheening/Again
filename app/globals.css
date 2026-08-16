@@ -210,6 +210,21 @@
    * 420ms is slow enough to be seen at the edge of vision — the caption is not
    * what anyone is looking at when it changes — and short enough to be over
    * before the eye arrives.
+   *
+   * ⚠ **It rises into place, and the movement is the part that can be seen.**
+   * Reported 16 August: the band's own flash, added for exactly this, changed
+   * nothing anybody noticed. The arithmetic says why — at the caption's row the
+   * ground has already taken 76–88% of the artwork's light, so a flash to solid
+   * moves the screen by 5% over a dark poster and 14% over a middling one, and
+   * no luminance cue does much better in a black app without reading as a
+   * flashbang.
+   *
+   * **Movement has no such ceiling and no dependence on what is behind it.**
+   * Peripheral vision is built for motion and is poor at colour and detail —
+   * which also means the red was never doing anything out there. `0.8em` over
+   * the first 126ms measures 10.4px at about 80px a second: a roll rather than a
+   * jump, and the one part of this the corner of an eye is equipped to catch.
+   * The blink follows it, unchanged, once the word is in place.
    */
   --animate-caption: caption-swap 420ms ease-out;
 
@@ -678,15 +693,18 @@
 @keyframes caption-swap {
   0% {
     opacity: 0;
+    translate: 0 0.8em;
   }
   30% {
     opacity: 1;
+    translate: 0 0;
   }
   55% {
     opacity: 0.25;
   }
   100% {
     opacity: 1;
+    translate: 0 0;
   }
 }
 
