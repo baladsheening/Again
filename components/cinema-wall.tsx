@@ -480,17 +480,38 @@ export function CinemaWall({
           className={`${REVEAL} relative mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]`}
         >
           {/*
-            **Keyed by the word, which is what replays the blink.** A CSS
-            animation runs when an element is inserted, not when its text
-            changes, so without a changing key the caption would swap silently
-            after the first time. Remounting one span is the cheapest way to say
-            "this is new" and needs no animation state of its own.
+            **It blinks when the word changes and when the band arrives, and
+            those are two different mechanisms.**
 
-            It also blinks on first mount, which costs nothing: at rest the
-            masthead is up and this is behind it, so the only blink anybody sees
-            is one that follows a crossing.
+            *Keyed by the word* is the first. A CSS animation runs when an
+            element is inserted, not when its text changes, so without a changing
+            key the caption would swap silently after the first time. Remounting
+            one span is the cheapest way to say "this is new" and needs no
+            animation state of its own.
+
+            ⚠ **That alone made the two labels behave differently, which is the
+            16 August report.** *Coming soon* always arrives by the word
+            changing, so it always blinked. *In cinemas* is usually already
+            mounted when the mark recedes — it has been sitting there behind it
+            since the page loaded — so the band appeared and the word just sat
+            there.
+
+            *Applied by the state* is the second, and it is why this is a variant
+            rather than a plain class. An animation starts when `animation-name`
+            goes from none to a name, so hanging it on `data-masthead` starts it
+            at the exact moment the band is revealed — for either word, however
+            long it has been mounted. Unconditionally applied it could never do
+            that: the property would already be set, and a value that does not
+            change does not restart anything.
+
+            Above `rail` the mark is not there to recede, so the animation is
+            applied outright and the key is the only trigger — which is what this
+            has always done at that width.
           */}
-          <span key={label} className="animate-caption">
+          <span
+            key={label}
+            className="group-data-[masthead=gone]/masthead:animate-caption rail:animate-caption"
+          >
             {label}
           </span>
         </span>
