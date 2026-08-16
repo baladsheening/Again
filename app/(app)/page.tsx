@@ -55,7 +55,16 @@ export default async function HomePage() {
     thing an `<h1>` may not do. A quiet line saying what the whole screen is
     costs nothing and holds still.
 
-    ⚠ **The country is absent from the caption and present in the request**, and
+    ⚠ **It read *In cinemas and coming soon* until 16 August, and that was the
+    same false claim one layer down.** D1 was answered `no` — the app is not
+    cinema-aware, TMDB knows release dates and not screens — and the visible
+    caption went with it (see `CAPTION` in `components/cinema-wall.tsx`).
+    Removing a sentence from the screen while leaving it in the accessibility
+    tree would be hiding the claim rather than dropping it. *New releases* is
+    what the data can carry: the first half is TMDB's recent-release window for
+    this country and the second is dated but unreleased.
+
+    ⚠ **The country is absent from the heading and present in the request**, and
     the two have been confused once already. `viewerRegion()` still goes to TMDB
     and the wall is still this country's releases; what was cut on 15 August is
     the *word*, not the filtering. The cost of losing it is that a wrong guess
@@ -63,7 +72,7 @@ export default async function HomePage() {
   */
   return (
     <>
-      <h1 className="sr-only">In cinemas and coming soon</h1>
+      <h1 className="sr-only">New releases and coming soon</h1>
 
       {nowShowing.length === 0 && comingSoon.length === 0 ? (
         /* One empty state rather than a caption over nothing. */

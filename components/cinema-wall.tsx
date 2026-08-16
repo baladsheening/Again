@@ -9,6 +9,11 @@ import { PosterWall } from './poster-wall'
  * The home wall in two halves under **one** caption, which changes from
  * *In cinemas* to *Coming soon* as the first unreleased row arrives.
  *
+ * ⚠ **The caption is switched off — see `CAPTION` below, which is why and what
+ * turns it on.** Everything this comment describes is built, measured and
+ * unrendered; the two halves ship without it. Read that note before changing
+ * anything here, because the reason is a product decision rather than a fault.
+ *
  * ⚠ **There were two sticky headings here for about an hour on 15 August**, one
  * per section, each pinning and being pushed out by the next — list-section
  * behaviour, and pure CSS. It was rejected on sight for the reason that is
@@ -24,6 +29,46 @@ import { PosterWall } from './poster-wall'
  * than the boundary between them — see the note on the effect, which is a bug
  * report and the reason.
  */
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The caption is switched off, and this line is what brings it back
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **D1 was answered `no` on 16 August: Again does not become cinema-aware now**
+ * — the gate is named in *Pre-phase 2* in `docs/plan.md` and the decision is
+ * written up in `docs/decisions.md`. TMDB holds release dates and no cinema
+ * programming at all, so *In cinemas* was a sentence its data could not support.
+ * There were two honest moves — pay for showtimes, or stop saying it — and this
+ * is the second.
+ *
+ * **The wall is unlabelled again and makes no checkable claim**, which is what
+ * it was until 14 August. A prompt cannot be wrong; a statement about the world
+ * can.
+ *
+ * ⚠ **Nothing below is deleted, and that is structural rather than
+ * sentimental.** Showtimes are coming back as a paid feature, and when they do
+ * this band is the surface they are said on: the label, the glass, the blink,
+ * the two halves and the placement shared with the mark are the shape that data
+ * arrives in. Every number in here was measured against a real face on a real
+ * screen, and deleting it means measuring all of them again.
+ *
+ * **So it stays as live code rather than as a comment.** It is type-checked on
+ * every build, linted with everything else, and its classes are still emitted by
+ * Tailwind — which is the whole difference between a feature waiting and a
+ * comment rotting. Commented-out JSX compiles nothing, drifts with the code
+ * around it, and fails on the day somebody uncomments it.
+ *
+ * ⚠ **The `: boolean` is load-bearing.** Annotated, both branches stay live to
+ * the compiler. As a bare `false` the checker treats everything behind it as
+ * unreachable, which is the rot this spelling exists to avoid.
+ *
+ * **Flipping it is the whole restoration.** Back with it come the glass band,
+ * the word that changes at the seam, the blink, the haptic and the observer.
+ * Not conditional on it: the two halves, which stay ordered as they are — see
+ * `inCinemas` in `lib/tmdb.ts`, which still returns both.
+ */
+const CAPTION: boolean = false
 
 /**
  * The band appearing as the mark goes, worn by **each layer of it** rather than
@@ -90,7 +135,8 @@ export function CinemaWall({
   useEffect(() => {
     const half = showing.current
     const line = caption.current
-    if (!bothHalves || !half || !line) return
+    /* `CAPTION` off means there is no label to keep true, so nothing is watched. */
+    if (!CAPTION || !bothHalves || !half || !line) return
 
     /*
       The caption's full box height, which — because it pins at `top: 0` — is
@@ -192,6 +238,8 @@ export function CinemaWall({
   */
   const settled = useRef(false)
   useEffect(() => {
+    /* Nothing crosses while the label is off, and a tick would mark nothing. */
+    if (!CAPTION) return
     if (!settled.current) {
       settled.current = true
       return
@@ -353,229 +401,231 @@ export function CinemaWall({
         what keeps it hidden until it is wanted, since the header is opaque, one
         layer above, and paints a further `0.5rem` of ground below itself.
       */}
-      <h2
-        ref={caption}
-        className={`micro masthead-box rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] [--text-micro:0.8125rem] pl-[var(--type-indent)] ${
-          /*
-            Recording red for the half that is on now — see `--color-live`, which
-            carries the argument for a second red and the scarcity rule that
-            keeps it meaning something. *Coming soon* stays uncoloured: the point
-            of the red is the distinction, and colouring both would erase it.
+      {CAPTION && (
+        <h2
+          ref={caption}
+          className={`micro masthead-box rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] [--text-micro:0.8125rem] pl-[var(--type-indent)] ${
+            /*
+              Recording red for the half that is on now — see `--color-live`, which
+              carries the argument for a second red and the scarcity rule that
+              keeps it meaning something. *Coming soon* stays uncoloured: the point
+              of the red is the distinction, and colouring both would erase it.
 
-            Nothing depends on seeing it. The two words carry the whole of the
-            meaning on their own.
+              Nothing depends on seeing it. The two words carry the whole of the
+              meaning on their own.
 
-            ⚠ **`text-text/80`, not `text-muted` — 16 August, directed: less
-            muted.** `--color-muted` is `--color-text` at 60%, and it is tuned
-            for text on ground. This text is on glass over artwork that is
-            moving, so 40% of every letterform was the wall: measured at the
-            caption's row, 6.07:1 over a dark poster, 5.61 over a middling one
-            and **4.49 over a bright one** — the last of those is the 4.5:1 floor
-            for text this size, which makes it the one marginal thing in the
-            band rather than merely a quiet one. At 80% it reads 10.43 / 8.91 /
-            6.63 and half as much wall comes through the letters.
+              ⚠ **`text-text/80`, not `text-muted` — 16 August, directed: less
+              muted.** `--color-muted` is `--color-text` at 60%, and it is tuned
+              for text on ground. This text is on glass over artwork that is
+              moving, so 40% of every letterform was the wall: measured at the
+              caption's row, 6.07:1 over a dark poster, 5.61 over a middling one
+              and **4.49 over a bright one** — the last of those is the 4.5:1 floor
+              for text this size, which makes it the one marginal thing in the
+              band rather than merely a quiet one. At 80% it reads 10.43 / 8.91 /
+              6.63 and half as much wall comes through the letters.
 
-            **It is deliberately still brighter than the red**, which measures
-            5.79:1 here — as the muted value already was. The red does not carry
-            by being lighter; it carries by being the only colour on the screen
-            and by naming the half that is on.
-          */
-          live ? 'text-live' : 'text-text/80'
-        }`}
-      >
-        {/*
-          ─────────────────────────────────────────────────────────────────────
-           The glass is two layers, and the blur ramps up it — 16 August
-          ─────────────────────────────────────────────────────────────────────
-
-          Directed: the band's blur should double from its foot to its head,
-          linearly. **`backdrop-filter` cannot be graded** — it is one strength
-          over the whole element — so the ramp is two blurs stacked, the upper
-          one masked to fade in toward the top.
-
-          ⚠ **They have to be siblings, and that took measuring.** An element
-          with a `backdrop-filter` *is a backdrop root*, so a child of it has no
-          page left to blur: nested, the second layer changed a hard edge's
-          softening by 0.0px. Which is why the `h2` above gives up the blur it
-          used to carry — it would have made itself the root of its own layers.
-
-          ⚠ **Blurs compose in quadrature, so the upper layer is not the target.**
-          To land on `2b` over a base of `b` it must be `b√3` — 41.57 against 24,
-          not 48. Measured on a hard edge, in edge widths where a flat `blur(24)`
-          reads 62.5 and a flat `blur(48)` reads 124.0: the two stacked at 24 and
-          41.57 read **125.0**, and a top layer of 48 overshoots to 134.
-
-          Masked with a plain linear alpha, the ramp measured 121 · 107 · 91 ·
-          76.8 · **65.5** down the band — 48 at the head, 24 at the foot, and
-          near enough a straight line between them. The mask is alpha rather than
-          luminance, which is what `to top, transparent, black` gives.
-
-          ─────────────────────────────────────────────────────────────────────
-           The ground is a third layer, on its own curve — 16 August
-          ─────────────────────────────────────────────────────────────────────
-
-          Directed: darker at the top, and **the gradient should accentuate the
-          row the caption sits in.**
-
-          ⚠ **The ground and the blur want different shapes, so they stopped
-          sharing one.** The blur is depth: it should ramp the whole way up the
-          band, which is what the mask above does. The ground is emphasis: its
-          job is to make the label read as a label, which means being at full
-          strength *through the row* and letting go below it. Riding one mask
-          forces one curve on both, and the curve that suits either is wrong for
-          the other.
-
-          So the tint left the lower blur layer — where it was flat, because the
-          upper layer would have blurred any gradient it held into something
-          smoothed and lighter than asked for — and became a layer of its own,
-          above both blurs, where nothing filters it and it stays exactly as
-          steep as it is written.
-
-          **Its shape is a strip the page can name.** `--band-solid` is
-          `env(safe-area-inset-top)`: the ground holds at full strength for
-          exactly the depth of the status bar — where iOS draws the clock, the
-          signal and the battery, over which it has no say — and eases away
-          through everything below it, the caption's row included.
-
-          ⚠ **Held flat through the row instead for one commit, and it was
-          rejected on sight.** `--masthead-height` less a `--masthead-gap` puts
-          the flat region's edge exactly where the letters end, which reads as a
-          near-solid slab with a 16px lip rather than as glass. The instinct it
-          fails is the right one: **a band that is flat for most of its height is
-          not a gradient, it is a bar with a soft edge.** Starting the fall at
-          the status bar's foot gives the ramp the whole rest of the band to
-          happen in, and the row still sits high on it.
-
-          88% at the top against 60% at the band's foot. The first is most of the
-          way to the flat `bg-bg` the rest of the app is made of; the second is
-          the glass this band has always been. Where there is no inset — a tab,
-          Android, the desk — the flat region is zero and this is a plain linear
-          fade, which is what it should be when there is no status bar to sit
-          under.
-
-          Both layers are `inset-0`, so they are the box exactly and nothing here
-          needs clipping — the `overflow-hidden` that cut them to the banner's
-          rounded feet went when the corners did.
-        */}
-        <span aria-hidden className={`${REVEAL} backdrop-blur-band absolute inset-0`} />
-        <span
-          aria-hidden
-          className={`${REVEAL} absolute inset-0 backdrop-blur-[calc(var(--blur-band)_*_1.7320508)] [mask-image:linear-gradient(to_top,transparent,black)] [-webkit-mask-image:linear-gradient(to_top,transparent,black)]`}
-        />
-        <span
-          aria-hidden
-          className={`${REVEAL} absolute inset-0 [--band-solid:env(safe-area-inset-top)] [background-image:linear-gradient(to_bottom,color-mix(in_srgb,var(--color-bg)_88%,transparent)_var(--band-solid),color-mix(in_srgb,var(--color-bg)_60%,transparent))]`}
-        />
-
-        {/*
-          **The blink, moved onto something big enough to see.** A sheet of plain
-          ground that steps solid on the first frame, holds for 80ms and eases
-          out — see `--animate-band`, which carries the measurement: the word is
-          2.57% of this band's area, and peripheral vision reads area and rate,
-          not colour or letterforms.
-
-          It wears no `REVEAL`. Its resting state is gone at every width, and the
-          animation is the only thing that ever shows it, so the state variant
-          governs whether it may run rather than whether it is there.
-
-          **Keyed like the word, and for the same reason.** The variant starts it
-          when the band is revealed; the key starts it again when the word
-          changes underneath an already-open band, where the state has not moved.
-          Between them it fires on both, and on nothing else.
-
-          It sits above the glass and below the label, so what it interrupts is
-          the artwork rather than the word — for those 80ms the letters are on
-          solid ground, which is also what covers the swap from one word to the
-          other.
-        */}
-        <span
-          key={label}
-          aria-hidden
-          className="bg-bg group-data-[masthead=gone]/masthead:animate-band rail:animate-band absolute inset-0 opacity-0"
-        />
-
-        {/*
-          The row, and it is the masthead's row: the same height, centred the
-          same way. It is a wrapper rather than classes on the label itself
-          because the label remounts on every crossing — see below — and a box
-          that has to hold still is not a thing to rebuild.
-
-          ⚠ **`mb-[var(--masthead-hem)]` is the hem, and it is a margin here
-          because the masthead's is a shadow.** Asked on 16 August why the mark's
-          banner runs deeper than this one: it does, by exactly this, because the
-          header paints `--masthead-hem` of ground below itself to stop posters
-          showing through the gap it keeps from the wall. Deleting that gap is
-          the thing not to do — the note on the token says why — so the band that
-          had no hem grows one instead, and the two banners now paint to the same
-          line.
-
-          On the row rather than as a second `padding-bottom` on the `h2`:
-          `masthead-box` already sets that property, and two rules writing one
-          property leaves the answer to emission order. A margin inside the box
-          adds the same height and cannot race anything.
-
-          ⚠ **Less the descender, which is what makes it look in line rather than
-          merely level — 16 August.** Reported: on the same line as the mark, and
-          optically low against it.
-
-          It was centred honestly and that was the fault. `--wordmark-ink` is
-          cap-to-tail, so its centre is not the centre anyone sees — a reader
-          takes a word between its cap line and its baseline and discounts the
-          `g`'s tail, which is a stroke rather than mass. The two centres are
-          half a descender apart, and the caption was sitting on the lower one.
-
-          `pb-[var(--wordmark-drop)]` takes the tail off the bottom of the row,
-          so what is centred in is exactly the band the eye reads. **A
-          subtraction, not a nudge**: no lift is written here, nothing is tuned
-          to a screenshot, and a change of size or face moves it through the same
-          two tokens that move everything else about the mark.
-
-          It lifts the label in both states at once, which is the other half of
-          what was asked. The padding is inside a box whose height has not
-          changed, so the glass band is still exactly the masthead's and the
-          posters have not moved — at rest the words rise off the wall by the
-          same amount they rise when pinned.
-        */}
-        <span
-          className={`${WORD} relative mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]`}
+              **It is deliberately still brighter than the red**, which measures
+              5.79:1 here — as the muted value already was. The red does not carry
+              by being lighter; it carries by being the only colour on the screen
+              and by naming the half that is on.
+            */
+            live ? 'text-live' : 'text-text/80'
+          }`}
         >
           {/*
-            **It blinks when the word changes and when the band arrives, and
-            those are two different mechanisms.**
+            ─────────────────────────────────────────────────────────────────────
+             The glass is two layers, and the blur ramps up it — 16 August
+            ─────────────────────────────────────────────────────────────────────
 
-            *Keyed by the word* is the first. A CSS animation runs when an
-            element is inserted, not when its text changes, so without a changing
-            key the caption would swap silently after the first time. Remounting
-            one span is the cheapest way to say "this is new" and needs no
-            animation state of its own.
+            Directed: the band's blur should double from its foot to its head,
+            linearly. **`backdrop-filter` cannot be graded** — it is one strength
+            over the whole element — so the ramp is two blurs stacked, the upper
+            one masked to fade in toward the top.
 
-            ⚠ **That alone made the two labels behave differently, which is the
-            16 August report.** *Coming soon* always arrives by the word
-            changing, so it always blinked. *In cinemas* is usually already
-            mounted when the mark recedes — it has been sitting there behind it
-            since the page loaded — so the band appeared and the word just sat
-            there.
+            ⚠ **They have to be siblings, and that took measuring.** An element
+            with a `backdrop-filter` *is a backdrop root*, so a child of it has no
+            page left to blur: nested, the second layer changed a hard edge's
+            softening by 0.0px. Which is why the `h2` above gives up the blur it
+            used to carry — it would have made itself the root of its own layers.
 
-            *Applied by the state* is the second, and it is why this is a variant
-            rather than a plain class. An animation starts when `animation-name`
-            goes from none to a name, so hanging it on `data-masthead` starts it
-            at the exact moment the band is revealed — for either word, however
-            long it has been mounted. Unconditionally applied it could never do
-            that: the property would already be set, and a value that does not
-            change does not restart anything.
+            ⚠ **Blurs compose in quadrature, so the upper layer is not the target.**
+            To land on `2b` over a base of `b` it must be `b√3` — 41.57 against 24,
+            not 48. Measured on a hard edge, in edge widths where a flat `blur(24)`
+            reads 62.5 and a flat `blur(48)` reads 124.0: the two stacked at 24 and
+            41.57 read **125.0**, and a top layer of 48 overshoots to 134.
 
-            Above `rail` the mark is not there to recede, so the animation is
-            applied outright and the key is the only trigger — which is what this
-            has always done at that width.
+            Masked with a plain linear alpha, the ramp measured 121 · 107 · 91 ·
+            76.8 · **65.5** down the band — 48 at the head, 24 at the foot, and
+            near enough a straight line between them. The mask is alpha rather than
+            luminance, which is what `to top, transparent, black` gives.
+
+            ─────────────────────────────────────────────────────────────────────
+             The ground is a third layer, on its own curve — 16 August
+            ─────────────────────────────────────────────────────────────────────
+
+            Directed: darker at the top, and **the gradient should accentuate the
+            row the caption sits in.**
+
+            ⚠ **The ground and the blur want different shapes, so they stopped
+            sharing one.** The blur is depth: it should ramp the whole way up the
+            band, which is what the mask above does. The ground is emphasis: its
+            job is to make the label read as a label, which means being at full
+            strength *through the row* and letting go below it. Riding one mask
+            forces one curve on both, and the curve that suits either is wrong for
+            the other.
+
+            So the tint left the lower blur layer — where it was flat, because the
+            upper layer would have blurred any gradient it held into something
+            smoothed and lighter than asked for — and became a layer of its own,
+            above both blurs, where nothing filters it and it stays exactly as
+            steep as it is written.
+
+            **Its shape is a strip the page can name.** `--band-solid` is
+            `env(safe-area-inset-top)`: the ground holds at full strength for
+            exactly the depth of the status bar — where iOS draws the clock, the
+            signal and the battery, over which it has no say — and eases away
+            through everything below it, the caption's row included.
+
+            ⚠ **Held flat through the row instead for one commit, and it was
+            rejected on sight.** `--masthead-height` less a `--masthead-gap` puts
+            the flat region's edge exactly where the letters end, which reads as a
+            near-solid slab with a 16px lip rather than as glass. The instinct it
+            fails is the right one: **a band that is flat for most of its height is
+            not a gradient, it is a bar with a soft edge.** Starting the fall at
+            the status bar's foot gives the ramp the whole rest of the band to
+            happen in, and the row still sits high on it.
+
+            88% at the top against 60% at the band's foot. The first is most of the
+            way to the flat `bg-bg` the rest of the app is made of; the second is
+            the glass this band has always been. Where there is no inset — a tab,
+            Android, the desk — the flat region is zero and this is a plain linear
+            fade, which is what it should be when there is no status bar to sit
+            under.
+
+            Both layers are `inset-0`, so they are the box exactly and nothing here
+            needs clipping — the `overflow-hidden` that cut them to the banner's
+            rounded feet went when the corners did.
+          */}
+          <span aria-hidden className={`${REVEAL} backdrop-blur-band absolute inset-0`} />
+          <span
+            aria-hidden
+            className={`${REVEAL} absolute inset-0 backdrop-blur-[calc(var(--blur-band)_*_1.7320508)] [mask-image:linear-gradient(to_top,transparent,black)] [-webkit-mask-image:linear-gradient(to_top,transparent,black)]`}
+          />
+          <span
+            aria-hidden
+            className={`${REVEAL} absolute inset-0 [--band-solid:env(safe-area-inset-top)] [background-image:linear-gradient(to_bottom,color-mix(in_srgb,var(--color-bg)_88%,transparent)_var(--band-solid),color-mix(in_srgb,var(--color-bg)_60%,transparent))]`}
+          />
+
+          {/*
+            **The blink, moved onto something big enough to see.** A sheet of plain
+            ground that steps solid on the first frame, holds for 80ms and eases
+            out — see `--animate-band`, which carries the measurement: the word is
+            2.57% of this band's area, and peripheral vision reads area and rate,
+            not colour or letterforms.
+
+            It wears no `REVEAL`. Its resting state is gone at every width, and the
+            animation is the only thing that ever shows it, so the state variant
+            governs whether it may run rather than whether it is there.
+
+            **Keyed like the word, and for the same reason.** The variant starts it
+            when the band is revealed; the key starts it again when the word
+            changes underneath an already-open band, where the state has not moved.
+            Between them it fires on both, and on nothing else.
+
+            It sits above the glass and below the label, so what it interrupts is
+            the artwork rather than the word — for those 80ms the letters are on
+            solid ground, which is also what covers the swap from one word to the
+            other.
           */}
           <span
             key={label}
-            className="group-data-[masthead=gone]/masthead:animate-caption rail:animate-caption"
+            aria-hidden
+            className="bg-bg group-data-[masthead=gone]/masthead:animate-band rail:animate-band absolute inset-0 opacity-0"
+          />
+
+          {/*
+            The row, and it is the masthead's row: the same height, centred the
+            same way. It is a wrapper rather than classes on the label itself
+            because the label remounts on every crossing — see below — and a box
+            that has to hold still is not a thing to rebuild.
+
+            ⚠ **`mb-[var(--masthead-hem)]` is the hem, and it is a margin here
+            because the masthead's is a shadow.** Asked on 16 August why the mark's
+            banner runs deeper than this one: it does, by exactly this, because the
+            header paints `--masthead-hem` of ground below itself to stop posters
+            showing through the gap it keeps from the wall. Deleting that gap is
+            the thing not to do — the note on the token says why — so the band that
+            had no hem grows one instead, and the two banners now paint to the same
+            line.
+
+            On the row rather than as a second `padding-bottom` on the `h2`:
+            `masthead-box` already sets that property, and two rules writing one
+            property leaves the answer to emission order. A margin inside the box
+            adds the same height and cannot race anything.
+
+            ⚠ **Less the descender, which is what makes it look in line rather than
+            merely level — 16 August.** Reported: on the same line as the mark, and
+            optically low against it.
+
+            It was centred honestly and that was the fault. `--wordmark-ink` is
+            cap-to-tail, so its centre is not the centre anyone sees — a reader
+            takes a word between its cap line and its baseline and discounts the
+            `g`'s tail, which is a stroke rather than mass. The two centres are
+            half a descender apart, and the caption was sitting on the lower one.
+
+            `pb-[var(--wordmark-drop)]` takes the tail off the bottom of the row,
+            so what is centred in is exactly the band the eye reads. **A
+            subtraction, not a nudge**: no lift is written here, nothing is tuned
+            to a screenshot, and a change of size or face moves it through the same
+            two tokens that move everything else about the mark.
+
+            It lifts the label in both states at once, which is the other half of
+            what was asked. The padding is inside a box whose height has not
+            changed, so the glass band is still exactly the masthead's and the
+            posters have not moved — at rest the words rise off the wall by the
+            same amount they rise when pinned.
+          */}
+          <span
+            className={`${WORD} relative mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]`}
           >
-            {label}
+            {/*
+              **It blinks when the word changes and when the band arrives, and
+              those are two different mechanisms.**
+
+              *Keyed by the word* is the first. A CSS animation runs when an
+              element is inserted, not when its text changes, so without a changing
+              key the caption would swap silently after the first time. Remounting
+              one span is the cheapest way to say "this is new" and needs no
+              animation state of its own.
+
+              ⚠ **That alone made the two labels behave differently, which is the
+              16 August report.** *Coming soon* always arrives by the word
+              changing, so it always blinked. *In cinemas* is usually already
+              mounted when the mark recedes — it has been sitting there behind it
+              since the page loaded — so the band appeared and the word just sat
+              there.
+
+              *Applied by the state* is the second, and it is why this is a variant
+              rather than a plain class. An animation starts when `animation-name`
+              goes from none to a name, so hanging it on `data-masthead` starts it
+              at the exact moment the band is revealed — for either word, however
+              long it has been mounted. Unconditionally applied it could never do
+              that: the property would already be set, and a value that does not
+              change does not restart anything.
+
+              Above `rail` the mark is not there to recede, so the animation is
+              applied outright and the key is the only trigger — which is what this
+              has always done at that width.
+            */}
+            <span
+              key={label}
+              className="group-data-[masthead=gone]/masthead:animate-caption rail:animate-caption"
+            >
+              {label}
+            </span>
           </span>
-        </span>
-      </h2>
+        </h2>
+      )}
 
       {/*
         **The half, boxed, because the half is what the observer watches.** A

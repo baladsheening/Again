@@ -35,7 +35,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Again',
     short_name: 'Again',
-    description: 'Things to try. Things to do again.',
+    /* The tagline, the same string `app/layout.tsx` sets as the description. */
+    description: 'things to try. things to try again.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

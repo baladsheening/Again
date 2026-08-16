@@ -48,22 +48,29 @@ export default async function SignInPage() {
         symmetric about it. Padding the light side makes it symmetric, which moves
         the pair by half of what you add.
 
-        **The correction changes side with the pointer**, which is why there are
-        two classes rather than one with an override:
+        **Both corrections are on the bottom since 16 August**, when the tagline
+        became two lines and the header grew 20px:
 
-          mouse  100px above the pair, 94px below  → 6px short  → pad bottom 6
-          touch  100px above the pair, 104px below → 4px over   → pad top 4
+          mouse  113.76px above the pair, 94px below  → 19.76 → pad bottom 20
+          touch  113.76px above the pair, 104px below →  9.76 → pad bottom 10
 
-        Touch is heavier below because `control-box` grows the fields and the
-        button to 48px there while the header and the 12px switches do not move.
-        Both numbers are the difference itself, derived from the control heights
-        and gaps in `components/sign-in-form.tsx` — the switches' `mt-4` is inside
-        the 94/104, so it counted twice when it was added. Neither depends on the
-        safe-area inset, unlike the `--safe-bottom-base` lever this replaced, so
-        both hold on any screen. A device that reports neither pointer gets no
-        correction and is 3px low, which is the right way to fail.
+        Touch is lighter because `control-box` grows the fields and the button to
+        48px there, which adds 10px below the pair while the header and the 12px
+        switches do not move. Both numbers are the difference itself, and both are
+        **measured in a browser rather than derived** — the .76 is the mark's ink
+        and is rounded away deliberately.
+
+        ⚠ **The touch number changed side, not just size.** It was `pt-1` — 4px on
+        top, because the block used to be heavier *below* on a coarse pointer. One
+        line of tagline was enough to reverse that, which is the argument for
+        measuring these rather than adjusting them.
+
+        Neither depends on the safe-area inset, unlike the `--safe-bottom-base`
+        lever this replaced, so both hold on any screen. A device that reports
+        neither pointer gets no correction and sits about 10px low, which is the
+        right way to fail.
       */}
-      <div className="my-auto flex w-full flex-col gap-7 pointer-coarse:pt-1 pointer-fine:pb-[6px]">
+      <div className="my-auto flex w-full flex-col gap-7 pointer-coarse:pb-[10px] pointer-fine:pb-[20px]">
         {/*
           `text-start`, not `text-left`: the mark and tagline hang off the same
           edge as the first input, and which edge that is follows the writing
@@ -97,13 +104,33 @@ export default async function SignInPage() {
         <div className="flex flex-col gap-[calc(14px_-_var(--wordmark-slack))] text-start">
           <h1 className="wordmark text-wordmark">Again</h1>
           {/*
-            Holding this on one line is what set the stacked container to
-            `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the
-            gutter — narrower than the sentence, and narrower than any phone
-            made in years. Shrinking the type to fit 280px was the wrong lever;
-            the container was the thing that was wrong.
+            Holding a line of this on one line is what set the stacked container
+            to `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the
+            gutter — narrower than the sentence, and narrower than any phone made
+            in years. Shrinking the type to fit 280px was the wrong lever; the
+            container was the thing that was wrong.
+
+            **Two lines since 16 August**, and they are one block rather than two
+            children of the header: the gap above is the mark-to-tagline distance
+            and is far too much between two lines that restate each other. Sitting
+            them in their own wrapper with no gap gives them the leading of a
+            wrapped paragraph, which is what they are.
+
+            ⚠ **The second line is the longer one now** — 43 characters against
+            35 — so it is what the container's width has to hold. Measured at
+            320px, the tightest screen this app targets: it still sets on one
+            line, with the container at 280px after the gutter. It is the line to
+            check against if this copy is ever rewritten longer, and a wrap would
+            put the form a further 10px low.
+
+            ⚠ **Adding this line moved both correction numbers above**, because it
+            grew the block over the field pair by 20px — and it reversed the sign
+            of one of them. They are measured, not reasoned.
           */}
-          <p className="text-muted text-sm">Things to try. Things to do again.</p>
+          <div>
+            <p className="text-muted text-sm">things to try. things to try again.</p>
+            <p className="text-muted text-sm">the things i want. the things i’d buy again.</p>
+          </div>
         </div>
 
         <SignInForm />

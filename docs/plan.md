@@ -11,7 +11,8 @@ keeps things.
 **Ship each phase to Vercel before starting the next** (§12). A phase is not done
 because the code exists.
 
-Current at `0f52dba`, 15 August 2026.
+Current at `d1e8117` plus the caption switch-off carried in this commit,
+16 August 2026.
 
 ---
 
@@ -22,7 +23,7 @@ Current at `0f52dba`, 15 August 2026.
 | 0 — foundations | Neon, Drizzle schema + migrations, Better Auth, `lib/db/` convention | **Done.** Verified against the live DB |
 | 0.5 — account recovery | Password reset, auth rate limiting, `lib/email.ts` | **Done.** Reset proven end to end to a real inbox |
 | 1 — single player | Profiles, capture, entries, collections, resolve flow, the visual system, the phone shell | **Done and deployed.** Judged on hardware over four sessions |
-| pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Planned, nothing built.** This is the next work |
+| pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Two of three done, 16 August.** D1 answered `no`, the caption switched off and shipped. **The database split is all that remains** |
 | 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | Not started |
 | 3 — overlap | Trigger + notification rows, `/notifications`, `/overlap` picker. In-app only | Not started |
 | 4 — swap | Full flow, blind commit enforced in the data layer, `landed` | Not started |
@@ -44,17 +45,19 @@ question rather than a task.
 
 ### Pre-phase 2 — the next work
 
-- [ ] **The wall claims *In cinemas* and cannot support it.** Relabel to something
-      TMDB can carry. Unblocked, and the wording is a decision. → *Pre-phase 2,
-      Stage 0*
-- [ ] **D1: does Again become cinema-aware at all?** Everything else about
-      showtimes waits on this. → *Pre-phase 2, the three gates*
-- [ ] **D2: which showtimes provider**, if D1 is yes. Trial key, one venue, one
-      day, one question about TMDB ids. → *Pre-phase 2, Stage 1*
-- [ ] **D3: how the app learns where someone is.** Country from an IP is all it
-      has. → *Pre-phase 2, Stage 2*
+- [x] ~~**The wall claims *In cinemas* and cannot support it.**~~ Answered
+      16 August as **no label**: the caption is switched off and the wall makes no
+      checkable claim. The `sr-only` heading went with it.
+- [x] ~~**D1: does Again become cinema-aware at all?**~~ **No** — 16 August, and
+      it is a *not yet*: showtimes return as a **paid feature**. Written up in
+      `decisions.md`.
+- [ ] **D2 and D3 are parked rather than answered** — the provider, and how the
+      app learns where someone is. They wake when showtimes are bought; the
+      prices as evaluated on 15 August are below, and the location question is
+      the one that gets underestimated.
 - [ ] **Separate the production and development databases.** Required either way,
-      and required before two accounts exist. → *Pre-phase 2, Stage 4*
+      and required before two accounts exist. **The only thing left in
+      pre-phase 2.** → *Pre-phase 2, Stage 4*
 
 ### The product
 
@@ -112,9 +115,17 @@ looking for it.
 
 ## Pre-phase 2
 
-Everything that has to happen before tracks are built. **None of it is
-implemented.** Stage 0 is the only part safe to do without an answer; the rest
-waits on the gates below.
+Everything that has to happen before tracks are built.
+
+> **Answered 16 August. D1 is `no`, Stage 0 is done, and the database split is all
+> that is left.** Again does not become cinema-aware now; showtimes return as a
+> **paid feature**, so D2 and D3 are parked rather than decided. The wall carries
+> **no label** — the caption is built, measured and switched off behind one
+> constant, not deleted. The whole account is in `decisions.md` under *D1 is
+> answered `no`*.
+>
+> The rest of this section is kept as written, because it is the brief for the day
+> showtimes are bought. Read the stages as *waiting*, not as *pending*.
 
 ### The problem, stated once
 
@@ -137,7 +148,8 @@ support the sentence or stop saying it.
 
 ### The three gates
 
-None is answered. Each blocks what follows it.
+**D1 is answered `no`, 16 August.** D2 and D3 are parked behind it — they wake
+when showtimes are bought, and neither has been evaluated beyond what is here.
 
 **D1 — does Again become cinema-aware at all?** A screening is an *occasion*, so
 the line recorded in `decisions.md` permits it where a streaming link is refused.
@@ -162,23 +174,35 @@ and cinemas are local. Browser geolocation, a stored postcode, or a chosen city 
 each is user context, which `decisions.md` deferred deliberately, and each needs
 `/settings`, which does not exist.
 
-### Stage 0 — Stop making the claim
+### Stage 0 — Stop making the claim — **done, 16 August**
 
-**Do this regardless of every gate, and first.** The home screen currently states
-something false, and the cheapest correct fix is to stop stating it. Relabel the
-first half to something TMDB can support — *New releases*, *Just released*, or no
-label — and leave *Coming soon*, which is a release-date claim and therefore true.
+**Chosen: no label.** Of the three on offer — *New releases*, *Just released*, or
+no label — the third. The caption is switched off, the wall makes no checkable
+claim, and it is what it was until 14 August: posters that prompt a capture.
 
-It is not throwaway work. Even with showtimes there is a "recently released" tier,
-and the wall's actual job (§8: a capture prompt for what you have been meaning to
-see) never needed a listing.
+**Nothing was deleted.** The band, the word that changes at the seam, the glass,
+the blink and the placement shared with the mark are live code behind
+`const CAPTION: boolean = false` in `components/cinema-wall.tsx`. Flipping it is
+the whole restoration. `decisions.md` carries why that spelling rather than a
+commented-out block, and what it costs.
 
-⚠ **The exact wording is a decision, not a task.** It is the one thing on the home
-screen a new account is guaranteed to read.
+⚠ **Two halves are kept**, though the label they were built for is gone. They are
+ordering now rather than structure, and they are the structure the caption returns
+into.
 
-### Stage 1 — Evaluate a provider, on a trial key
+⚠ **The `sr-only` heading went with the words.** It read *In cinemas and coming
+soon*; removing a claim from the screen while leaving it in the accessibility tree
+is hiding it rather than dropping it. It reads *New releases and coming soon*.
 
-Bounded, a week, and it produces a written verdict rather than code.
+⚠ **`--color-live` is defined and unused**, and that was the better outcome than
+relabelling: the red's whole argument is that it marks *the half that is on now*,
+which a release date is not. It means what it always meant on the day showtimes
+arrive.
+
+### Stage 1 — Evaluate a provider, on a trial key — **parked**
+
+Bounded, a week, and it produces a written verdict rather than code. Nothing here
+starts until showtimes are being bought.
 
 - Take the International Showtimes 7-day trial.
 - **The one question that decides the integration: how cleanly do their films map
@@ -192,12 +216,12 @@ Bounded, a week, and it produces a written verdict rather than code.
   one country, which may be the right trade while there is one user.
 - Record the verdict in `decisions.md` whichever way it goes.
 
-### Stage 2 — Location
+### Stage 2 — Location — **parked**
 
 Blocks stage 3 and nothing else. Needs D3, `/settings`, and a decision about
 whether a refused permission degrades to country-level or to no wall at all.
 
-### Stage 3 — Build it, only if D1 is yes
+### Stage 3 — Build it, when showtimes are bought — **parked**
 
 - One provider, one adapter, in `lib/showtimes/`. **No abstraction layer** —
   `decisions.md` argues against speculative generality under *What not to build*,
@@ -211,7 +235,7 @@ whether a refused permission degrades to country-level or to no wall at all.
   wrong side of it and starts pulling the whole product towards being a listings
   business.
 
-### Stage 4 — Split the databases
+### Stage 4 — Split the databases — **the only thing left**
 
 Independent of everything above and required either way. Production and
 development share one Neon database; Phase 2's checkpoint is *two accounts on two
@@ -230,11 +254,17 @@ Pre-phase 2 is done when the wall says only what it can support, the databases a
 separate, and **D1 is answered either way and written down.** Building showtimes is
 not required to leave this stage — deciding about them is.
 
-⚠ **Recorded because it was argued and not taken:** the recommendation was Stage 0
-now and showtimes after Phase 2, on the grounds that tracks and convergence are
-what the app is for and neither exists. Sequencing this before Phase 2 is a
-deliberate choice against that advice, which is a fine thing to be — it is here so
-nobody re-derives the argument in a month.
+**Two of the three are met.** The wall claims nothing, and D1 is answered and
+written up. **The databases are still one**, so pre-phase 2 is not finished and
+Phase 2 must not start ahead of it — its checkpoint is two accounts, and they would
+be created in the database the live site reads.
+
+⚠ **The advice that was argued and not taken on 15 August is the position again.**
+It was: Stage 0 now, showtimes after the product exists, on the grounds that tracks
+and convergence are what the app is for and neither exists. Sequencing showtimes
+ahead of Phase 2 was a deliberate choice against it; answering D1 `no` on 16 August
+returns to it. Kept because the round trip is the useful part — the argument was
+made, overridden, and then arrived at anyway from the other direction.
 
 ---
 
@@ -242,9 +272,12 @@ nobody re-derives the argument in a month.
 
 Ordered, and each is genuinely blocked by the one above it.
 
-### 0. Pre-phase 2
+### 0. Pre-phase 2 — **one thing left: split the databases**
 
-The section above. Stage 0 and Stage 4 are unblocked today; the rest waits on D1.
+Stage 0 is done and D1 is answered `no`. What remains is the Neon branch, and it
+is an hour of ops that cannot be retrofitted once two people have rows in one
+database. Alongside it, and for the same reason, `EMAIL_FROM` still has no
+verified domain — see *Blocking before anyone else signs up*.
 
 ### 1. Phase 2 — tracks and the other person
 
@@ -297,6 +330,11 @@ being caught making a claim TMDB cannot support. Nothing above is withdrawn — 
 aim is unchanged and the line still holds — but *not before Phase 4* is now
 something to decide rather than something decided. The trigger those entries named
 was evidence from real use, and this is that, arriving early.
+
+**Closed on 16 August: D1 is `no`, so *not before Phase 4* stands.** Showtimes
+return as a paid feature, which is a *when* rather than an *if* — and the
+conditions above are not re-opened by that intent. Only against a want already
+held, shared with someone who already tracks you back, and no booking link.
 - **The app feeling inert is Phase 2's absence, not a design fault.** The
   designed supply of new things is other people. Do not answer it with content.
 
@@ -335,7 +373,21 @@ or seen on the handset.
       leaving search reveals both bars; what wants looking at is whether losing
       the wordmark and the search glyph mid-scroll reads as a gesture or as a
       trap. The knobs are `ALWAYS_SHOWN_ABOVE` and the return on first upward
-      movement.
+      movement. **Exercised all day on 16 August** — the caption's reveal is the
+      recede's other half, and five reports came off the handset from scrolling
+      it — with nothing said about the mark leaving. That is evidence of absence
+      rather than a verdict, so this stays open until somebody says it either way.
+**Three items went dormant with the caption on 16 August**, and they are kept
+because they come back the day `CAPTION` is flipped — none of them is a fault, and
+each is a measurement nobody has taken:
+
+- **The band's ground on a real notch.** It holds full strength for
+  `env(safe-area-inset-top)` and eases away below it, measured only against a
+  *simulated* 47px inset in a browser.
+- ***Coming soon* at `text-text/80`** was the last change of the day and was never
+  reported back on. Everything before it was on the device within minutes.
+- **The caption above `rail`**, where it is an ordinary sticky heading and every
+  `data-masthead` variant is bypassed by a `rail:` prefix — reasoned, not seen.
 
 ---
 
@@ -346,19 +398,26 @@ fixed once. All are in `components/shell.tsx` unless noted.
 
 | | |
 |---|---|
-| `shadow-[0_0.5rem_0_0_#000]` on the masthead ↔ the `+ 0.5rem` in `main`'s `pt-[calc(…)]` | keeps the mark-to-poster distance identical scrolled and at rest |
 | foot `left-[calc(max(0px,50%_-_36rem)_+_17rem)]` + inner `gutter max-w-3xl` ↔ `rail:pl-68` and `rail:max-w-3xl` on `main` | puts the rail search row's two edges on the posters' two edges |
 | foot `pb-9` ↔ rail `py-10` | 4px, so the search and *Sign out* share a baseline rather than a box edge |
 | `MIN_QUERY` ↔ the Zod schema in `app/api/search/route.ts` ↔ the guard in `lib/tmdb.ts` | the search floor lives in three files |
-| `--wordmark-ink` / `--wordmark-slack` ↔ the typeface **and the word** | measured, not derived. A change of face or of the word re-opens both |
+| `--wordmark-ink` / `--wordmark-drop` / `--wordmark-slack` ↔ the typeface **and the word** | measured, not derived. A change of face or of the word re-opens all three |
 
-**Two rows retired on 15 August, and not by being maintained.** The masthead's
+**Three rows retired now, and none of them by being maintained.** The masthead's
 height and `main`'s top padding used to be hand-derived from a trim measured at
 36px, so a change of size, case or face needed three edits and the one that
-mattered was the one nobody made. They read `--wordmark-ink` and
-`--wordmark-slack` now, so the size is one line in `app/globals.css`. The
-remaining dependency is the last row above: the ratios describe a *face setting a
-word*, and both are warned about at the token.
+mattered was the one nobody made; they read `--wordmark-ink` and
+`--wordmark-slack` since 15 August, so the size is one line in `app/globals.css`.
+The hem went the same way on 16 August — `0.5rem` had been written out in the
+masthead's shadow, in `main`'s top padding and in the recede's extra travel, and
+four sites read `--masthead-hem` and `--masthead-clearance` now, the caption's own
+band among them.
+
+The remaining dependency is the last row above: the ratios describe a *face
+setting a word*, and all three are warned about at the token. `--wordmark-drop`
+joined them on 16 August — it is the descender's depth, subtracted from the
+caption's row so that what is centred is the band the eye reads rather than the
+box.
 
 **How to measure any of it:** a temporary route under `app/` rendering
 `CaptureProvider` → `SearchProvider` → `Shell` with a fake `PosterWall`, plus a

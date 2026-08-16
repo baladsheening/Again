@@ -3,13 +3,15 @@
 What must be true on every surface. Rules, not reasoning — `docs/decisions.md`
 holds why, and where a rule here has a story behind it, that is where it is.
 
-**Two kinds of line, marked throughout.** Most of this describes what the app
+**Three kinds of line, marked throughout.** Most of this describes what the app
 already does, and exists so that a change which breaks it is recognised as a
 regression rather than discovered later. Lines marked **[unbuilt]** are targets
 nobody has met yet, and each one is also in `docs/plan.md` so it can be
-scheduled.
+scheduled. Lines marked **[off]** are built and deliberately not rendered — the
+rules still hold, and they hold again the moment the switch is flipped.
 
-Current at `0f52dba`, 15 August 2026.
+Current at `d1e8117` plus the caption switch-off carried in this commit,
+16 August 2026.
 
 ## Provenance, and what was struck
 
@@ -98,6 +100,20 @@ side of it is a consequence rather than the definition.
 Every fixed surface reserves matching scroll clearance. No last row, last poster,
 toast or dialog action may sit underneath furniture.
 
+**The page box is the screen.** `viewport-fit=cover` lets the page paint into the
+status-bar band, and `100svh` does not grow to include it — so the page's minimum
+height is `100svh` *plus* the top inset. Without it, a route whose content does
+not overflow ends one inset above the foot of the glass and the bar at the foot
+lands on that line rather than on the screen's: reported on 16 August as the
+collection bar sitting 47px high on *Go-back-tos* and correct on *Wants*. It is a
+no-op in a tab, on Android and on the desk, where the inset is 0.
+
+**Two surfaces share one placement**, the mark and the wall's caption, because
+they are the same corner of the screen at two moments. The air, the row height and
+the horizontal indent are read from tokens by both; neither writes a number of its
+own. Anything that places them separately shows up as the top-left corner of the
+app stepping sideways or up during a scroll.
+
 ---
 
 ## 3. Collection lists
@@ -143,32 +159,67 @@ each is a line rather than a preference: it shows no availability, it is ordered
 by release date rather than popularity so that it cannot become a chart, and it
 does not accumulate or respond to anything you did yesterday.
 
-**The wall is in two halves under one caption**: films already released, newest
-first; then films not yet out, soonest first. The caption is a single sticky
-element reading *In cinemas*, which changes to *Coming soon* as the seam between
-the halves reaches it. There is no second heading and no divider — nothing
-between the grids but the row gap.
-
-It sits below the masthead in z-order, so it appears as the masthead recedes and
-yields the top strip back to the mark when it returns. **It clears
-`env(safe-area-inset-top)` in its own right**: every pinned surface must, because
-nothing inherits the inset and the failure is invisible on any screen without a
-notch. The bar reaches the top edge of the screen — no strip of artwork above it
-— and gives the inset back in flow with a negative margin, so it costs no space
-under the masthead.
-
-*In cinemas* is set in recording red (`--color-live`) and *Coming soon* in muted;
-the colour is a second signal for a distinction the two words already carry in
-full, so nothing depends on seeing it. The bar is translucent over a backdrop
-blur, and is **the only translucent surface in the app** — a second one makes it
-a theme rather than a bar.
+**The wall is in two halves and carries no caption**: films already released,
+newest first; then films not yet out, soonest first, with nothing between the
+grids but the row gap. **Nothing on this screen may make a claim about what is
+showing anywhere.** The posters are a capture prompt, and a prompt cannot be
+wrong.
 
 **Whatever a label says must be true of the data.** TMDB filters by release dates
 in a country and knows nothing about screens: a film released weeks ago stays in
 the listing after it has left every cinema, and a repertory screening of an old
 film is not in it at all. **The wall may never claim anything is showing near
 anybody.** Country is the finest the data goes, and below it there is nothing but
-venues and showtimes, which are out of scope by §2.
+venues and showtimes, which are out of scope by §2 until they are bought.
+
+That rule is why the caption is off, and it survives it: it governs any label this
+screen is ever given, including the `sr-only` heading, which says *New releases and
+coming soon* because that is a release-date fact.
+
+**[off]** — everything from here to the end of this section is **built, measured
+and switched off**, behind `CAPTION` in `components/cinema-wall.tsx`. D1 was
+answered `no` on 16 August and showtimes return as a paid feature; these are the
+rules that come back with them, and they are kept here for the same reason the
+code is kept. The two halves above are what the caption returns into.
+
+The caption is a single sticky element reading *In cinemas*, which changes to
+*Coming soon* as the seam between the halves reaches it. There is no second
+heading and no divider.
+
+**It is painted while the mark is away and not otherwise**, off the same state the
+masthead's recede is driven by, and it lands on the masthead's own painted band —
+same top edge, same bottom edge, one banner that changes what it says. Being
+*underneath* the masthead is not what hides it: z-order holds only while two
+elements move together, and an overscroll at the top separates them. It gives its
+whole height back in flow with a negative margin, so it costs no space above the
+wall. **It clears `env(safe-area-inset-top)` in its own right**: every pinned
+surface must, because nothing inherits the inset and the failure is invisible on
+any screen without a notch. The bar reaches the top edge of the screen, with no
+strip of artwork above it.
+
+**The caption's state is a half of the wall, never the seam between the halves.**
+*In cinemas* means some of what is on now is still below the caption. An observer
+watching the boundary cannot report a jump past it — a fast flick or a
+scroll-to-top puts the seam on both sides of the root between two frames, and the
+label is then wrong until somebody scrolls back through it.
+
+*In cinemas* is set in recording red (`--color-live`) and *Coming soon* at 80% of
+the ink; the colour is a second signal for a distinction the two words already
+carry in full, so nothing depends on seeing it. ⚠ **`--color-muted` may not be
+used on this band** — it is tuned for text on ground, and over moving artwork it
+measures 4.49:1 on a bright poster, which is the floor.
+
+The band is translucent over a backdrop blur and is **the only translucent surface
+in the app** — a second one makes it a theme rather than a bar. Its blur doubles
+from foot to head and its ground holds at full strength for the depth of the
+status bar before easing away; the two ride separate curves, because the blur is
+depth and the ground is emphasis.
+
+**A change of label announces itself once, by movement.** The word rises into
+place and the band flashes with it, on both triggers: the band being revealed, and
+the word changing while the band is already open. Neither a colour nor a word is a
+peripheral cue — the label's ink is 2.57% of the band's area — and nothing here
+may repeat or pulse, which would be a mechanism announcing itself.
 
 ---
 

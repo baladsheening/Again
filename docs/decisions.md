@@ -537,17 +537,47 @@ confirming on a real phone — see the Phase 5 PWA work.
 
 ### The tagline
 
-*What would you try, and try again?* — in the `<meta description>` and under the
-mark on sign-in, and nowhere else.
+**Two lines since 16 August, directed, and set exactly as they were written:**
 
-It names the two states directly: **would try** is a want, **try again** is a
-go-back-to. The whole data model in six words, and the app's name becomes the
-payoff rather than a label sitting above unrelated copy.
+> things to try. things to try again.
+> the things i want. the things i’d buy again.
 
-The question mark is correct because it is one question with a compound verb —
-"what would you try, and *what would you* try again" — not two questions joined
-by a comma. An earlier draft was two clauses and took a full stop for that
-reason; the reason left when the draft did.
+The first is the tagline proper and is the string in the `<meta description>` and
+the manifest. The second sits under it on `/sign-in` and nowhere else — a link
+preview shows one sentence on its own, and the pair reads as a lockup rather than
+as a description.
+
+**It still names the two states, which is the job.** *Things to try* is a want,
+*things to try again* is a go-back-to, and the second line says the same thing
+again in the app's own vocabulary. The name is still the payoff rather than a
+label over unrelated copy.
+
+**Three things about it are new and are worth naming, because none is accidental:**
+
+- **It is lower case throughout, including the `i`**, under a capitalised mark.
+  Written that way and set that way.
+- **It speaks in the first person.** Everywhere else the app addresses the reader;
+  this is the reader talking. The line is a person describing their own list,
+  which is what the product holds.
+- ⚠ **It says *buy*.** §2's ban is on availability and acquisition as *features* —
+  retailer links, price tracking, ownership inventory — and a word in a tagline is
+  not one of those. But the line drawn in *What Again is for* is *acquisition
+  makes the app a remote control; occasion makes it a diary*, and this is the
+  acquisition word. Recorded rather than argued: it was asked for directly, and
+  it is one string if it ever reads wrong.
+
+**What it replaced, and why the replacement is not a downgrade of the argument.**
+The old line was *What would you try, and try again?*, and this file used to
+defend its question mark at length — one question with a compound verb, not two
+questions joined by a comma. That reasoning was sound and it went with the draft.
+Two statements need no question mark, and they buy something the question did not:
+the second line is a **restatement**, so the pair works the way a headline and a
+standfirst work.
+
+⚠ **A tagline is a layout dependency on this page.** Adding the second line grew
+the header by 20px and moved both optical-centring corrections — one of them
+changed *side*. See *Centring the fields, not the block* below, and re-measure
+rather than adjust if this copy changes again.
 
 ### The sign-in form is stacked at every width
 
@@ -606,18 +636,29 @@ the thing that should *look* centred is the field pair, and the block is not
 symmetric about it. Padding the light side makes it symmetric, which moves the
 pair by half of what you add.
 
-**The correction changes side with the pointer**, so there are two classes rather
-than one with an override:
+**Both corrections are on the bottom since 16 August**, when the tagline became
+two lines and the header grew 20px:
 
 ```
-mouse  100px above the pair, 94px below  → 6px short → pointer-fine:pb-[6px]
-touch  100px above the pair, 104px below → 4px over  → pointer-coarse:pt-1
+mouse  113.76px above the pair, 94px below  → 19.76 → pointer-fine:pb-[20px]
+touch  113.76px above the pair, 104px below →  9.76 → pointer-coarse:pb-[10px]
 ```
 
-Touch is heavier below because `control-box` grows the fields and the button to
-48px there while the header and the 12px switches do not move. A device
-reporting neither pointer gets no correction and sits 3px low, which is the right
-way to fail.
+Touch is lighter because `control-box` grows the fields and the button to 48px
+there, which adds 10px below the pair while the header and the 12px switches do
+not move. A device reporting neither pointer gets no correction and sits about
+10px low, which is the right way to fail.
+
+⚠ **The touch correction changed side, not merely size.** It was `pt-1` — 4px on
+*top*, because on a coarse pointer the block used to be heavier below. One line of
+tagline reversed that. **These numbers cannot be adjusted by reasoning about the
+direction of the last change**, which is the trap this pair has now sprung twice;
+measure the imbalance and pad the lighter side.
+
+**Measured rather than compiled this time**, driving the real page at 390×780
+touch, 1440×900 mouse and 320×568 touch: the pair's centre lands 0.11px from the
+content box's centre at all three. The residual .76 in the table is the mark's ink
+and is rounded away deliberately.
 
 Two declarations do it, and the split between them is the point:
 
@@ -639,12 +680,16 @@ worth remembering, not the number.
 
 **Both numbers are derived, not chosen.** They are the header-above minus
 switches-below difference at each control size, so anything that changes the
-form's rhythm makes them wrong, and they have already moved twice: closing the
-submit button's `mt-1` took them from 18/8 to 22/12, and setting the switches
-`mt-4` below the button took them to 6/4 and flipped the touch one's sign. Both
-were verified by compiling `app/globals.css` through `@tailwindcss/postcss`
-directly — the dev server serves a cached CSS chunk that can lag a source edit by
-several minutes, and it will happily show you a class you have deleted.
+form's rhythm makes them wrong, and they have now moved three times: closing the
+submit button's `mt-1` took them from 18/8 to 22/12, setting the switches `mt-4`
+below the button took them to 6/4 and flipped the touch one's sign, and the
+tagline's second line took them to 20/10 and flipped it back. **Two of those three
+were a change to the copy or the spacing, not to the correction** — which is the
+whole reason this note exists. The first two were verified by compiling
+`app/globals.css` through `@tailwindcss/postcss` directly, because the dev server
+serves a cached CSS chunk that can lag a source edit by several minutes and will
+happily show you a class you have deleted; the third was measured in the page
+itself, which is better and is what to do next time.
 
 **It is per-page, not a token**, because the imbalance is per-page. /onboarding
 has a two-line heading and a three-line paragraph over one field and would need
@@ -1216,6 +1261,13 @@ down through posters, and hands the top strip back to the mark when you scroll
 up. The two behaviours were designed hours apart and this is the only place they
 meet.
 
+> ⚠ **The last sentence of that paragraph was false, and was reported on
+> 16 August.** The z-order holds only while the two elements move together, and an
+> overscroll at the top separates them — so the caption slid out from under the
+> mark on the opening screen. It reads `data-masthead` now rather than relying on
+> being covered, and the negative margin is the whole of `--masthead-clearance`
+> rather than the notch. See *The caption becomes the masthead's other half*.
+
 `/`'s `<h1>` is `sr-only` as a result. The visible caption names whichever half
 you are looking at and changes as you scroll, so it describes a moment rather
 than a page — which is the one thing a page heading may not do.
@@ -1228,6 +1280,12 @@ is the word on screen. The cost is only that a wrong guess is now silent.
 ### Four more from the handset, and the label had never once changed
 
 #### The swap never fired, and the reason generalises
+
+> ⚠ **Superseded 16 August, by a second bug in the same observer.** The
+> `rootBounds` comparison this entry arrives at is gone — the observer watches a
+> *half* rather than the seam, so nothing asks where anything is. The rule below
+> survives intact and is the reason both bugs took a report. See *A boundary
+> cannot report a jump*.
 
 The observer was given a `rootMargin` pulling the root's top edge down to the
 caption's lower edge, so that the label would change when the seam reached *it*
@@ -1261,6 +1319,14 @@ pulled up behind the masthead, which is opaque and one layer above, so the space
 it takes is space already covered. On a screen with no inset both values are zero
 and nothing about it exists.
 
+> ⚠ **The margin was the wrong quantity, and it took until 16 August to see it.**
+> Cancelling the inset alone leaves the box in flow *below* a masthead that has
+> already cleared the notch, so the label hung under the mark from the first paint
+> instead of waiting behind it. It is `--masthead-clearance` now — the masthead's
+> whole box and its hem — which lands the caption's band exactly on the
+> masthead's painted one. The `top-0`-with-padding spelling above is unchanged and
+> still correct.
+
 #### A second red, and glass
 
 Both directed. `--color-live` is documented at the token, including the cost: it
@@ -1275,6 +1341,12 @@ The caption is the app's **first and only translucent surface**: `bg-bg/60` over
 backdrop blur, so artwork passing underneath reads as movement without the
 letters sitting on it. §11's matte black is otherwise unbroken, and a second such
 surface would make this a theme rather than a bar.
+
+> ⚠ **It is three layers as of 16 August**, because the blur ramps up the band and
+> an element cannot hold two strengths of one. The 60% survives as the ground's
+> value at the band's foot. *Coming soon* also left `--color-muted` that day: a
+> token tuned for text on ground is a different value on glass. See *The glass is
+> three layers* and *The one marginal thing in the band*.
 
 ⚠ **All five new utilities were checked in the compiled CSS, not inferred from a
 green build.** Tailwind emits nothing for a class it does not recognise and the
@@ -1295,6 +1367,15 @@ element is inserted and not when its text changes, so the span carrying the word
 is keyed by the word: a new label is a new element and the animation replays. It
 also blinks on first mount, which costs nothing, because at rest the masthead is
 up and the caption is behind it.
+
+> ⚠ **That is half the mechanism, and the missing half meant one of the two words
+> never blinked at all** — reported 16 August. A remount fires on a change of
+> *word*, which is the only way *Coming soon* ever arrives; *In cinemas* is
+> already mounted when the mark recedes. The animation hangs on `data-masthead`
+> now and the key covers a crossing while the band is already up. The blink also
+> moved onto the band and the word rises into place, because a word is 2.57% of
+> the band's area and too small to be seen out of the corner of an eye. See *The
+> blink had never fired for one of the two words*.
 
 ⚠ **The last keyframe is `opacity: 1` on purpose.** The reduced-motion block runs
 every animation once at 0.01ms, so the final keyframe is what the element is left
@@ -1386,6 +1467,8 @@ data through the same door. Depth was never the problem.
 Which leaves exactly two honest moves: support the sentence, or stop saying it.
 `docs/plan.md` carries both as *Pre-phase 2*, with the provider prices as
 evaluated, and the decision is open.
+
+The architectural conclusion is sound: either change the label to `New releases`, or pay for and integrate genuine showtime data.
 
 **Two things found in that evaluation that are worth keeping whatever is
 decided:**
@@ -2483,6 +2566,448 @@ declined.
 **What would change all of this:** a dozen real people using the app with their
 shelves visible to each other, and it still feeling like there is nothing to open
 it for. That is evidence. A roadmap wanting it is not.
+
+---
+
+## The caption becomes the masthead's other half — 16 August
+
+Fifteen passes over one screen, `f5cb915` through `d1e8117`, directed throughout.
+`main` deploys on every push, so each change was on the handset within a minute of
+landing and most of what follows was **reported rather than reasoned** — eight
+reports came off the device between them, and two of those contradicted notes this
+file had already written.
+
+The mechanisms live where they run: `components/cinema-wall.tsx` holds the caption
+and its layers, `app/globals.css` the tokens and the two keyframe sets,
+`components/shell.tsx` the state the caption reads. This entry is for what is not
+local to any of them.
+
+### One slot occupied at two moments
+
+The mark and the wall's caption are the same corner of the screen at different
+times — the masthead slides off on a downward scroll and the caption pins in the
+strip it vacates. That was already the arrangement on 15 August, and the two were
+*matched* rather than shared: two elements that happened to agree.
+
+They now share three terms, none of which is a number written at either site:
+`masthead-box` (the air above and below, the notch cleared), the row at
+`h-[var(--wordmark-ink)]` with its contents centred, and `--type-indent` for the
+horizontal fraction. A change of size, face or gap moves both surfaces or neither.
+
+**The failure that argues for sharing is not a misalignment, it is a movement.**
+Two placements that agree today show up, when one of them drifts, as the top-left
+corner of the app stepping sideways or up during a scroll — a movement with no
+cause a person can name, which is the worst kind. Alignment is the visible half;
+the invisible half is that there is nothing left to keep in step.
+
+⚠ **The letters still start 1px apart and that is deliberate.** Both text origins
+land at 26px; Ojuju's `A` carries a side bearing at 28px that 13px capitals do
+not. Correcting it needs a per-face, per-*glyph* nudge, and the caption is two
+words with no one glyph to correct against. Where the text is set *from* is the
+stable thing to align.
+
+### Covering is not hiding
+
+⚠ Reported: a pull-down at the top of the wall showed the caption. It was hidden
+by sitting underneath the masthead — `z-10` against `z-20`, opaque, one layer
+above — and an overscroll rubber-bands the document while a `fixed` header stays
+with the viewport, so the two came apart and the label slid out from under the
+mark on the opening screen.
+
+> **Covering is not hiding.** It holds only while the two elements move together,
+> and overscroll is exactly the case where the platform moves them apart.
+
+So the caption stopped asking to be covered and reads the mark's state instead:
+`data-masthead` on `#scroll-root`, which the shell already computes for the
+masthead's own recede. An attribute rather than context, because one boolean is
+the whole of what has to travel — no provider, no subscription, and `main` is a
+sibling of the header, so it arrives at the caption in CSS alone. The fade is the
+masthead's own 300ms, so the two are one movement rather than two.
+
+⚠ **And it settled a claim two notes had been making since 15 August that neither
+had checked.** Both said the label was hidden at rest. It was not: the negative
+margin cancelled `env(safe-area-inset-top)` and nothing else, which left the box
+in flow *below* a masthead that had already cleared the notch — so the label hung
+under the mark from the first paint, and `sticky` had nothing to pin until you had
+scrolled past it. The pull is `--masthead-clearance` now, the whole of what the
+masthead claims, which lands the band exactly on the masthead's painted band.
+
+### One token retires a row of the coupling table
+
+Asked in the same breath: why does the mark's banner run 8px deeper than the
+caption's? The boxes were already identical. The difference is the `box-shadow`
+the header paints below itself, which fills the gap it keeps from the wall so that
+posters do not show through it.
+
+Deleting that gap is the thing not to do — it has been tried, and collapsing the
+space under the mark made the `g`'s descender look met by the posters. So the band
+with no hem grows one instead, as a margin on its row, and the two banners paint
+to one line.
+
+That number is `--masthead-hem`, and `--masthead-clearance` is the box and the hem
+together. It had been `0.5rem` written out in the shadow, in `main`'s top padding
+and in the recede's extra travel, with a row in `docs/plan.md` asking whoever
+changed one to remember the rest. **Four sites read one token now, and that row is
+retired** — the second coupling this month to leave that table by being removed
+rather than by being maintained.
+
+### A boundary cannot report a jump
+
+⚠ Reported from the handset: in *Coming soon*, tapping the status bar to fly to
+the top left the caption reading *Coming soon* over the first row of what is on
+now, and only scrolling back down through the crossing put it right.
+
+The observer watched the ten-pixel seam between the two grids, and the seam's two
+states are one state to an observer — out of view above and out of view below are
+both `isIntersecting: false`. Going from one to the other without stopping in
+between is not a change, so nothing calls back. The label was never stale; it was
+never told.
+
+> **An observer holds a state, and can only report the states its subject can
+> distinguish.** If a subject can be on both sides of the root between two frames,
+> the subject is wrong — no amount of correcting the callback reaches it.
+
+So the subject is a **half** rather than the boundary. *In cinemas* is precisely
+"some of what is on now is still below the caption", which is a state the two
+answers differ on, so every crossing raises a callback whatever route it takes, at
+any speed, including none. The swap point does not move — the grid's bottom edge
+*is* the seam's top edge — and the comparison against `rootBounds.top` that
+15 August added disappears with it, since it only existed because the boolean
+could not tell above from below.
+
+**That is two bugs in one observer in two days, and they are the same bug.** The
+first tested a position at the only moment the position was never right; this one
+watched a subject that could not tell two situations apart. Both read as the
+feature being absent rather than broken, which is why both took a report from a
+person holding a phone.
+
+⚠ **Still an observer rather than a scroll listener, and now for a better reason
+than cheapness.** iOS withholds events during momentum — this shell has been
+bitten by that once already, where `USER_SCROLL_GRACE_MS` used to be — while
+intersections are recomputed from layout on every rendering opportunity, delivered
+events or not. A scroll listener would answer the jump correctly and reopen that.
+
+### `svh` is not the screen
+
+⚠ Reported: installed, tapping *Go-back-tos*, *Fixtures* or *Archive* moved the
+collection bar up the screen and left it there. *Wants* — nineteen entries — and
+the home wall did not. The three are the same component with the same props; the
+only difference between them is whether the content overflows.
+
+Measured off three screenshots, 1170×2532 on a 390×844 handset: the bar's labels
+sit 35.0 CSS px above the foot of the screen on the wall and on Wants, and 81.7 on
+Go-back-tos. The difference is 47.0 exactly, which is that device's
+`env(safe-area-inset-top)` — confirmed in the same images by the mark, which lands
+at the inset plus `--masthead-gap`.
+
+> **`viewport-fit=cover` lets the page paint into the status-bar band. `100svh`
+> does not grow to include it.** So a page whose content does not overflow ends
+> one inset above the foot of the glass, and anything measured against the page
+> box lands on that line rather than on the screen's.
+
+`min-h-[calc(100svh_+_env(safe-area-inset-top))]` states the thing that is true —
+the page box is the screen — and is a no-op everywhere else, since the inset reads
+0 in a Safari tab, on Android and on the desk. `/profile` gains the same 47px,
+which is the identical fault seen from the other end: that page is composed around
+its own bottom-left corner and was landing above the foot.
+
+⚠ **The number was already written in the file from another day's measuring, and
+nobody had subtracted it.** The note where `lastKeyboardOverlap` used to be calls
+this "an 797px handset"; 844 − 797 is the 47. A measurement recorded during one
+investigation is evidence in the next one only if somebody goes back and reads it.
+
+### The tail is a stroke, not mass
+
+⚠ Reported: the caption sits on the mark's line and looks low against it. It was
+centred honestly, and that was the fault.
+
+`--wordmark-ink` is cap-to-tail, so the centre of that box is not the centre
+anybody sees — a reader takes a word between its cap line and its baseline and
+discounts the `g`'s tail, which is a stroke rather than mass. The two centres are
+exactly half a descender apart, and the caption was sitting on the lower one.
+
+`--wordmark-drop` (0.21 of the type size, the same 0.21 the ink's own note has
+recorded since the face changed back) is now named, because something subtracts
+it: the caption's row takes it as padding at the foot, leaving exactly the band
+the eye reads to centre in. **A subtraction rather than a nudge** — no lift is
+written anywhere, nothing is tuned against a screenshot, and a change of size or
+face moves it through the same tokens that move everything else about the mark.
+
+Measured at 390px with both real faces: the capitals now centre 0.27px from the
+mark's cap-to-baseline centre, where they were 2.7px below it.
+
+### The glass is three layers, and two of them had to be measured first
+
+Directed: the band's blur should double from its foot to its head, linearly; and
+the ground should be darker at the top, where the clock and the battery sit, and
+should accentuate the row the caption is in.
+
+**`backdrop-filter` is one strength over a whole element**, so a ramp is two blurs
+stacked with the upper one masked to fade in toward the top. Three things had to
+be measured before any of it could be written, and each changed the answer:
+
+- ⚠ **They must be siblings, not nested.** An element carrying a
+  `backdrop-filter` *is* a backdrop root, so a child of it has no page left to
+  blur — stacked inside, the second layer changed a hard edge's softening by
+  0.0px. That is also why the `h2` gives up the blur it used to carry.
+- ⚠ **Blurs compose in quadrature, so the upper layer is not the target.** To land
+  on `2b` over a base of `b` it must be `b√3` — 41.57 against 24, not 48. The two
+  stacked read 125.0 in edge widths where a flat `blur(48)` reads 124.0; a top
+  layer of 48 overshoots to 134.
+- ⚠ **The reveal cannot sit on the box that holds them.** An element below full
+  opacity forms a backdrop root too, so a fade on the parent leaves both layers
+  blurring nothing for the length of it — 0.8px of softening under a parent at
+  0.5, against 40.5 for the same blur on the element carrying the opacity. The
+  three layers fade together and separately, off one string.
+
+**The ground then had to stop sharing the blur's mask.** The blur is depth and
+should ramp the whole way up the band; the ground is emphasis, and its job is to
+make the label read as a label. One mask forces one curve on both, and the curve
+that suits either is wrong for the other. So the tint became a third layer above
+both blurs, where nothing filters it.
+
+⚠ **Its first shape was flat through the row, and that was rejected on sight.**
+Holding full strength down to where the letters end puts the flat region's edge at
+84% of the band's height, leaving 16px for the fall.
+
+> A band that is flat for most of its height is not a gradient. It is a bar with a
+> soft lip.
+
+`--band-solid` is `env(safe-area-inset-top)` instead — the one strip of the band
+the page can name, and the one with a reason to be solid, since iOS draws the
+clock, the signal and the battery over it and gives the page no say in how. Below
+that line the ground eases away through everything else, the caption's row
+included, which gives the ramp fifty pixels to happen in rather than sixteen. 88%
+at the top against the 60% glass at the foot. Where there is no inset — a tab,
+Android, the desk — the flat region is zero and it is a plain linear fade, which
+is what it should be when there is no status bar to sit under.
+
+### The blink had never fired for one of the two words
+
+⚠ Reported: *Coming soon* blinks when it appears and *In cinemas* does not.
+
+The animation was applied outright and replayed by the span remounting on a
+changed key, so it fired on a **change of word** — which is the only way *Coming
+soon* ever arrives. *In cinemas* is usually mounted already when the mark recedes;
+it has been sitting behind it since the page loaded, so the band appeared and the
+word just sat there. It had fired once on load, behind an opaque masthead, and
+never again.
+
+An animation starts when `animation-name` goes from none to a name, which is
+exactly the moment `data-masthead` flips — so the animation hangs on the state
+now, and the key stays for a crossing that happens while the band is already up.
+**Two triggers, two different events, neither doing the other's job.** Applied
+unconditionally it could never have done the first: the property is already set,
+and a value that does not change restarts nothing.
+
+**Then the blink was moved onto something big enough to see.** Measured off a
+rendered band, the label's ink is **2.57% of the band's area**, so a full swing on
+it moves as much light as a 2.6% change across the whole bar — against a wall of
+artwork in motion, which is the only time it ever fires.
+
+> Peripheral vision reads luminance transients over **area**, and is nearly blind
+> to colour and to detail. A word is not a cue; neither is a colour.
+
+So a sheet of plain ground sits above the glass and below the label, steps solid
+on the first frame, holds 80ms and eases out — a step because what gets detected
+is the rate of change, and an eased onset of the same depth reads as half of one.
+
+⚠ **And that flash changed nothing anybody noticed, which is the arithmetic that
+should have been done before it was built.** A black flash can only subtract the
+light the artwork is still contributing, and at the caption's row the ground has
+already taken 76–88% of it: in perceptual terms 12 → 0 over a dark poster (5% of
+the scale), 36 → 0 over a middling one (14%), 59 → 0 over a bright one (23%). A
+light flash is uniform and no stronger — 8, 7 and 6% — because there is only so
+far a black app can move without reading as a flashbang.
+
+> **Movement has no such ceiling and no dependence on what is behind it.**
+
+So the word rises into place: `0.8em` over the first 126ms, measured at 10.4px and
+about 80px a second — a roll rather than a jump. The blink follows it unchanged
+once the word has landed, so it is still one gesture and still one event. The
+band's flash stays, because it is worth most over bright artwork, which is exactly
+where the caption is hardest to read, and costs nothing where it is worth least.
+
+**The word stopped fading out in the same pass.** ⚠ Reported: flying to the top
+from *Coming soon* showed a glimpse of a red *In cinemas* on the way — the glass
+fading over 300ms while the observer, watching the wall come back up, flipped the
+word underneath it. A label announcing itself on its way out, during transit
+nobody reads. The glass keeps its fade, because a band that vanishes on the frame
+the mark starts sliding back leaves the top strip bare; the word does not need
+one, since **its entrance is the blink and its exit should be the moment it stops
+being true.**
+
+### Four pixels, and a corner taken back
+
+`--masthead-gap` is 8px, from 10. It is the only air in a banner — the rest is the
+mark's own ink and the notch — so it is the only honest place to take height from,
+and `masthead-box` is worn by both surfaces, so both lose the same 4px and the
+wall comes up by it.
+
+⚠ **The token's note had argued for 10 over 8, and that argument had expired
+without anyone noticing.** It was measured under Space Grotesk, before the trims
+were re-measured for Ojuju on 15 August. Re-measured with the face that ships, at
+8px the ink clears by 7.25 above and 8.5 below. **A measurement written as a rule
+outlives the thing it measured**, which is the same failure as the two notes that
+claimed the caption was hidden.
+
+Both banners took the posters' own corner on their lower edge, by
+`--radius-artwork` rather than by two `rounded`s that agree because Tailwind's
+default is the same number twice. It lasted one commit and was reverted on the
+caption, directed; the mark keeps it. ⚠ **The curve only ever read on one of
+them** — the caption's band is the width of the wall, so its corners land over the
+first and last column of posters, while the mark's runs to the screen's edges
+where there is only ground behind it and a curve cut into black shows nothing.
+
+### The one marginal thing in the band
+
+Directed: *Coming soon* is too muted. `--color-muted` is `--color-text` at 60% and
+it is tuned for text **on ground**; this text is on glass over artwork that is
+moving, so 40% of every letterform was the wall showing through it.
+
+Measured at the caption's row with the wall through the letters: 6.07:1 over a
+dark poster, 5.61 over a middling one, and **4.49 over a bright one** — which is
+the 4.5:1 floor for text this size. So it was not merely quiet, it was sitting on
+the line. `text-text/80` reads 10.43 / 8.91 / 6.63 and lets half as much wall
+through.
+
+It stays brighter than the live red, which measures 5.79:1 on the same band, as
+the muted value already did. **The red has never carried by being lighter** — it
+carries by being the only colour on the screen and by naming the half that is on.
+
+> A token tuned against one background is not a value, it is a measurement of that
+> background. The first translucent surface in the app is where every one of them
+> gets re-opened.
+
+### What is verified, and what is not
+
+Every change was measured in a browser at 390px before it shipped, several against
+a simulated 47px notch, and the observer rewrite was run against both mechanisms
+on one page. Typecheck, lint and a production build are clean.
+
+**The handset carried this session rather than checking it afterwards**, which is
+new: eight of the findings above are reports, and each fix was back on the device
+minutes later.
+
+⚠ **What has not been looked at:** the last change — the 80% ink — has not been
+reported back on. The band's ground ramp has been measured only against a
+simulated inset, never against a real notch. And nothing today was seen above the
+`rail` breakpoint, where the caption is an ordinary sticky heading and every
+`data-masthead` variant is bypassed by a `rail:` — reasoned, and not looked at.
+
+---
+
+## D1 is answered `no`, and the caption is switched off rather than cut — 16 August
+
+**Again does not become cinema-aware now.** That is the gate `docs/plan.md` names
+as D1, and it is answered the same evening the caption was finished — which is
+the awkward order, and the right one.
+
+**It is a "not yet" rather than a "no".** Directed: showtimes come back as a
+**paid feature**. So D2 (which provider) and D3 (how the app learns where someone
+is) are not answered, they are parked, and the prices evaluated on 15 August stand
+as the starting point for whenever that is.
+
+### Why no, on the evidence already in this file
+
+- **It fails §13's test outright**, and it is the only thing on the roadmap that
+  does. Cinema listings make the app more useful to a stranger with no friends on
+  it.
+- **It would be the first thing in the product that decays.** A convergence is
+  computed from rows we own and cannot be wrong; a showtime is true for a day.
+  *The line, stated better than §2 states it* permits an occasion, and permitting
+  is not the same as being ready to be wrong in public.
+- **It needs a location, which needs `/settings`, which does not exist.** All the
+  app has is a country from an IP, and cinemas are local. That is the cost this
+  class of integration gets wrong, not the data.
+- **€149/mo per market, or £49 UK-only, for one user with nobody to converge
+  with.** Phases 2 to 4 are unbuilt, and §13 puts 100% of the value there.
+
+The recommendation recorded in `docs/plan.md` on 15 August — Stage 0 now,
+showtimes after the product exists — is therefore the position again, and the ⚠
+noting that it had been argued and not taken can rest.
+
+### Stage 0 is resolved as **no label**
+
+`docs/plan.md` offered three: *New releases*, *Just released*, or no label.
+Directed: no label. The wall carries no caption at all, which is what it was until
+14 August.
+
+**That is the cheapest correct answer and it is not a retreat.** The label created
+the fault — until it existed the wall made no checkable claim and nobody could
+catch it being wrong. Take the words away and the posters are a capture prompt
+again. **A prompt cannot be wrong; a statement about the world can.**
+
+⚠ **It also saves the second red, which relabelling would have quietly spent.**
+`--color-live` was argued as marking *the half that is on now* — a fact about
+screens. Under *New releases* it would have been colouring a release date, which
+is not a fact worth a colour under §11's one-signal-one-fact rule, and the token
+would have been re-purposed rather than kept. Switched off, its argument survives
+intact: when showtimes are bought, *In cinemas* is true again and the red means
+what it always meant.
+
+### Switched off as live code, not commented out
+
+Directed: keep everything, comment it out. Offered two spellings and the second
+was taken —
+
+- **(a) Comment the JSX and CSS out in place.** Easy to read, and it rots:
+  commented code is not type-checked, not linted, and drifts with everything
+  around it until the day somebody uncomments it and it does not work.
+- **(b) Keep it as live code and stop rendering it.** One annotated constant,
+  `CAPTION`, in `components/cinema-wall.tsx`. The band, the observer, the haptic
+  and the blink all hang off it; the two halves do not, and still ship.
+
+> **A feature that is waiting should stay in the checker's sight. A feature that
+> is commented out is a promise nobody is keeping.**
+
+⚠ **`const CAPTION: boolean = false`, and the annotation is load-bearing.** As a
+bare literal the compiler narrows it and treats everything behind it as
+unreachable, which is the same rot in a different spelling. Annotated, both
+branches stay live: the JSX is type-checked, the classes are still scanned by
+Tailwind, and turning it back on is that one word.
+
+**What that costs, stated so nobody is surprised by it:** the band's rules are
+still emitted into the stylesheet, unused, and `data-masthead` is still written
+onto `#scroll-root` with nothing reading it. Both are the price of the restoration
+being one line, and both are small.
+
+**This project already keeps things this way and has been repaid for it.**
+`--color-caret` was measured, argued, reverted within the hour and left defined;
+`--font-ojuju` outlived its own replacement and was wanted back four days later.
+The tokens the caption owns — `--color-live`, `--wordmark-drop`, `--blur-band`,
+`--animate-caption`, `--animate-band` — stay defined for the same reason.
+
+### The heading went with the words
+
+⚠ `/`'s `sr-only` `<h1>` read *In cinemas and coming soon*. Removing a sentence
+from the screen while leaving it in the accessibility tree is **hiding the claim
+rather than dropping it**, and it is the same claim TMDB cannot support. It reads
+*New releases and coming soon* now: the first half is TMDB's recent-release window
+for the viewer's country and the second is dated but unreleased, both of which are
+release-date facts.
+
+That the visible surface says nothing and the heading says something is not an
+inconsistency. A page needs one meaningful heading, and the wall needs no caption
+to be a wall.
+
+**Two halves are kept**, directed. They exist because a label had to change
+between them, so with no label they are ordering rather than structure — and they
+are the structure the caption returns into. `inCinemas` is untouched.
+
+### What would change this
+
+Paying for showtime data, which is the stated intent. When that happens, the
+conditions in *What Again is for* still hold and are not re-opened by this entry:
+only against a want already held, shared with someone who already tracks you back,
+provenance on every screening, an honest coverage line, and **no booking link.**
+
+**Verified in a browser** at 390×780, signed in, against the real listing: no
+caption in the DOM at rest or after scrolling, both grids present, 303 posters, the
+first poster's top at 49.75 against `main`'s 49.76 of padding — so the wall begins
+exactly where content begins on every other screen and nothing was left behind by
+the element that used to pull itself up over it. No console errors. Typecheck, lint
+and a production build are clean.
 
 ---
 

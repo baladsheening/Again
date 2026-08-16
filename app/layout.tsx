@@ -64,7 +64,16 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: 'Again',
-  description: 'Things to try. Things to do again.',
+  /*
+    The tagline, and it is the tagline that lives here rather than a description
+    written for this slot — see `app/sign-in/page.tsx`, where the same line sits
+    under the mark, and `docs/decisions.md` for why the two are one string.
+
+    ⚠ **The second line on the sign-in page is deliberately not here.** This is a
+    sentence a search result or a link preview shows on its own, and the pair
+    reads as a lockup rather than as a description.
+  */
+  description: 'things to try. things to try again.',
   /*
     Installed to the home screen, the app runs without Safari's chrome — see
     `app/manifest.ts` for why that is worth having rather than merely tidy.
