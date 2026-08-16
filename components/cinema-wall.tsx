@@ -359,13 +359,28 @@ export function CinemaWall({
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that
-            keeps it meaning something. *Coming soon* stays muted: the point of
-            the colour is the distinction, and colouring both would erase it.
+            keeps it meaning something. *Coming soon* stays uncoloured: the point
+            of the red is the distinction, and colouring both would erase it.
 
             Nothing depends on seeing it. The two words carry the whole of the
             meaning on their own.
+
+            ⚠ **`text-text/80`, not `text-muted` — 16 August, directed: less
+            muted.** `--color-muted` is `--color-text` at 60%, and it is tuned
+            for text on ground. This text is on glass over artwork that is
+            moving, so 40% of every letterform was the wall: measured at the
+            caption's row, 6.07:1 over a dark poster, 5.61 over a middling one
+            and **4.49 over a bright one** — the last of those is the 4.5:1 floor
+            for text this size, which makes it the one marginal thing in the
+            band rather than merely a quiet one. At 80% it reads 10.43 / 8.91 /
+            6.63 and half as much wall comes through the letters.
+
+            **It is deliberately still brighter than the red**, which measures
+            5.79:1 here — as the muted value already was. The red does not carry
+            by being lighter; it carries by being the only colour on the screen
+            and by naming the half that is on.
           */
-          live ? 'text-live' : 'text-muted'
+          live ? 'text-live' : 'text-text/80'
         }`}
       >
         {/*
