@@ -128,7 +128,8 @@ export function CinemaWall({
         it that posters scroll through — reported, and the reason this changed.
         Pinned at zero with no padding, the label sits under the clock — also
         reported, an hour earlier. So the box has to start at the very top and
-        carry the inset as padding, exactly as the masthead does.
+        carry the inset as padding, which is what `masthead-box` is: **the
+        masthead's own paddings, worn rather than matched.**
 
         That would then cost the inset again as dead space *in flow*, where the
         bar sits below a masthead that has already cleared it — about 47px of
@@ -167,9 +168,58 @@ export function CinemaWall({
         stylesheet with a literal ellipsis for a value, from the sentence that
         used to be here.
       */}
+      {/*
+        ─────────────────────────────────────────────────────────────────────
+         Pinned, this is the masthead — 16 August
+        ─────────────────────────────────────────────────────────────────────
+
+        **Where the label settles is where the mark stands.** Scrolling down
+        slides the masthead off the top of the screen and pins this in the strip
+        it vacates, so the two are one slot occupied at two different moments.
+        Anything that placed them separately would show as the top-left corner
+        of the app stepping sideways or up on a scroll — a movement with no
+        cause a person could name, which is the worst kind.
+
+        So the placement is not matched, it is **shared**, in all three terms:
+
+        - `masthead-box` — the air above and below, notch included. One
+          declaration in globals.css, worn by the header and by this.
+        - `h-[var(--wordmark-ink)]` on the row, contents centred, exactly as the
+          header's row does it. The mark is trimmed to fill that height, so
+          centring a 13px line in the same box puts these letters through the
+          middle of where that word was.
+        - `--type-indent`, the same fraction in from the gutter the mark carries.
+
+        None of the three is a number written here, so a change of type size,
+        face or gap moves both surfaces together or neither.
+
+        **Measured rather than reasoned**, at 390px with both real faces: the two
+        bands are 45.75px, the row is 25.75, and the caption's capitals centre
+        0.33px above the mark's ink — which is also, at this size, the centre of
+        its lowercase mass. Its baseline sits 2.83px higher than the mark's,
+        because the rule here is *centred in the row*, which is the rule the
+        header already applies to everything in that row except the mark itself.
+
+        ⚠ **The letters start 1px apart and that is left alone.** Both text
+        origins land at 26px; Ojuju's `A` carries a side bearing at 28px that
+        13px capitals do not, so the mark's ink begins at 27 and the caption's at
+        26. Correcting it would mean a per-face, per-*glyph* nudge — and the
+        caption has two words, so there is no one glyph to correct against. The
+        stable thing to align is where the text is set from, which is what
+        `--type-indent` does.
+
+        **The indent is padding rather than a margin, and the row is inside the
+        glass**: the band still spans the column and blurs the artwork passing
+        under it. The indent says where the *letters* start, not where the bar
+        does.
+
+        The band is therefore exactly as tall as the masthead — which is also
+        what keeps it hidden until it is wanted, since the header is opaque, one
+        layer above, and paints a further `0.5rem` of ground below itself.
+      */}
       <h2
         ref={caption}
-        className={`micro bg-bg/60 sticky top-0 z-10 mt-[calc(-1_*_env(safe-area-inset-top))] [--text-micro:0.8125rem] pt-[calc(env(safe-area-inset-top)_+_0.75rem)] pb-3 backdrop-blur-xl ${
+        className={`micro bg-bg/60 masthead-box sticky top-0 z-10 mt-[calc(-1_*_env(safe-area-inset-top))] [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that
@@ -183,18 +233,26 @@ export function CinemaWall({
         }`}
       >
         {/*
-          **Keyed by the word, which is what replays the blink.** A CSS animation
-          runs when an element is inserted, not when its text changes, so without
-          a changing key the caption would swap silently after the first time.
-          Remounting one span is the cheapest way to say "this is new" and needs
-          no animation state of its own.
-
-          It also blinks on first mount, which costs nothing: at rest the
-          masthead is up and this is behind it, so the only blink anybody sees is
-          one that follows a crossing.
+          The row, and it is the masthead's row: the same height, centred the
+          same way. It is a wrapper rather than classes on the label itself
+          because the label remounts on every crossing — see below — and a box
+          that has to hold still is not a thing to rebuild.
         */}
-        <span key={label} className="animate-caption">
-          {label}
+        <span className="flex h-[var(--wordmark-ink)] items-center">
+          {/*
+            **Keyed by the word, which is what replays the blink.** A CSS
+            animation runs when an element is inserted, not when its text
+            changes, so without a changing key the caption would swap silently
+            after the first time. Remounting one span is the cheapest way to say
+            "this is new" and needs no animation state of its own.
+
+            It also blinks on first mount, which costs nothing: at rest the
+            masthead is up and this is behind it, so the only blink anybody sees
+            is one that follows a crossing.
+          */}
+          <span key={label} className="animate-caption">
+            {label}
+          </span>
         </span>
       </h2>
 

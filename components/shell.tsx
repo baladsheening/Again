@@ -1630,7 +1630,14 @@ export function Shell({
           `main`'s top padding carries — see the shadow above and the coupling
           table in docs/plan.md.
         */
-        className={`bg-bg rail:hidden fixed inset-x-0 top-0 z-20 pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap))] pb-[var(--masthead-gap)] shadow-[0_0.5rem_0_0_#000] transition-[translate] duration-300 ${
+        /*
+          ⚠ **`masthead-box` is the two paddings, and it is shared** — the home
+          wall's caption wears the same utility, because it pins to this strip of
+          screen as this slides off it. See the utility in globals.css; the pair
+          used to be spelled out here, which meant one file's idea of the
+          masthead and another's could disagree by an edit.
+        */
+        className={`bg-bg rail:hidden masthead-box fixed inset-x-0 top-0 z-20 shadow-[0_0.5rem_0_0_#000] transition-[translate] duration-300 ${
           mastheadHidden ? 'translate-y-[calc(-100%_-_0.5rem)]' : 'translate-y-0'
         }`}
       >
@@ -1780,8 +1787,19 @@ export function Shell({
             the element's outer box is the inked bounds. The measurements, and
             what to change if the mark's case moves again, are on the utility in
             globals.css.
+
+            **`pl-[var(--type-indent)]` is the horizontal half of the same
+            idea**, and it is shared with the wall's caption rather than owned
+            here — see the token. The mark sits a fraction in from the gutter
+            that the posters below it run flush to; the caption that replaces it
+            when this recedes sits in by the same amount, so the corner holds
+            still through the swap.
+
+            Padding rather than a margin, so the tap area still reaches the
+            gutter: the mark is the only route to `/` on a phone, and an indent
+            is not a reason to make it a smaller target.
           */}
-          <Link href="/" className="wordmark wordmark-trim text-wordmark">
+          <Link href="/" className="wordmark wordmark-trim text-wordmark pl-[var(--type-indent)]">
             Again
           </Link>
 

@@ -336,6 +336,31 @@
   --masthead-gap: 0.625rem;
 
   /**
+   * How far type sits in from the gutter, where the artwork does not.
+   *
+   * The gutter is where the *wall* starts: the poster grid runs edge to edge
+   * inside it. The two things that sit above that grid — the mark in the
+   * masthead, and the wall's own caption — are set a fraction in from it, so
+   * that words read as laid over the wall rather than as another column of it.
+   *
+   * **One token, because the two are never on screen together.** The caption is
+   * `z-10` under the masthead's `z-20`, so it appears exactly as the mark
+   * recedes and takes the same top-left corner — see `components/cinema-wall.tsx`.
+   * Two numbers would be one corner shifting sideways as one label replaced the
+   * other, on a scroll, which is the kind of movement nobody can attribute to
+   * anything. One number cannot do it.
+   *
+   * Settled by eye rather than derived, like the scale above. Below about 4px an
+   * indent stops reading as one and starts reading as a near miss; much past
+   * this and the caption stops belonging to the grid underneath it.
+   *
+   * The glyphs at the right of the masthead are deliberately **not** indented:
+   * they are furniture rather than type, and they hold the line the last column
+   * of posters holds.
+   */
+  --type-indent: 0.375rem;
+
+  /**
    * The mark's inked height, and the dead space under it — both as a fraction of
    * `--text-wordmark`, so that changing the size is one line again.
    *
@@ -550,6 +575,35 @@
 @utility gutter {
   padding-left: max(1.25rem, env(safe-area-inset-left));
   padding-right: max(1.25rem, env(safe-area-inset-right));
+}
+
+/**
+ * The masthead's own box — the air above and below its row, with the notch
+ * cleared at the top.
+ *
+ * **Two elements wear it, and that is the whole reason it exists.** The header
+ * in `components/shell.tsx`, and the home wall's caption in
+ * `components/cinema-wall.tsx`, which pins to the top of the screen as the
+ * header slides off it. They are the same strip of screen at two different
+ * moments, so the caption has to land exactly where the mark was — and the way
+ * to guarantee that is for both to read one declaration rather than to carry
+ * matching pairs of numbers in two files.
+ *
+ * The other half of the shape is the row itself: `h-[var(--wordmark-ink)]` with
+ * its contents centred, which both also do. That one is already a token, so it
+ * is a word rather than an expression at each site.
+ *
+ * **The notch is added rather than folded in.** It is clearance, not spacing,
+ * and it varies by device — see `--masthead-gap`, which is the spacing and is
+ * the same on every screen.
+ *
+ * ⚠ `main`'s top padding still spells the sum out — this pair plus the row plus
+ * `0.5rem` — because it is padding on a third element that has to clear all of
+ * it, not the box itself. See the note there.
+ */
+@utility masthead-box {
+  padding-top: calc(env(safe-area-inset-top) + var(--masthead-gap));
+  padding-bottom: var(--masthead-gap);
 }
 
 /**
