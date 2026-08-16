@@ -2164,12 +2164,12 @@ export function Shell({
         **The top padding is the header plus the gap**, and it has to be, because
         the header is `fixed` and holds no space open itself.
 
-        **The header term is no longer a literal**, and that is the point of it.
-        It is `--masthead-gap` above the mark, the mark's ink, and
-        `--masthead-gap` below it — the same three the header itself is built
-        from, written the same way, so the two cannot disagree:
-
-          var(--masthead-gap) * 2  +  var(--wordmark-ink)
+        **The header term is `--masthead-height`**, and it stopped being spelled
+        out here on 16 August. It was the same expression as the token — the
+        notch, `--masthead-gap`, the mark's ink, `--masthead-gap` — written a
+        second time in a second file, which is one edit away from two files
+        disagreeing about how tall the masthead is. The home wall's caption now
+        needs the same quantity, so there would have been three.
 
         `--wordmark-ink` is the measured inked height as a fraction of
         `--text-wordmark`; see globals.css for the measurement and for the warning
@@ -2239,7 +2239,7 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(env(safe-area-inset-top)_+_var(--masthead-gap)*2_+_var(--wordmark-ink)_+_0.5rem)] ${
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[calc(var(--masthead-height)_+_0.5rem)] ${
           showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
         }`}
       >

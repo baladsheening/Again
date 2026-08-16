@@ -161,9 +161,9 @@ export function CinemaWall({
   return (
     <div>
       {/*
-        ⚠ **`top-0` with the inset as padding, and a negative margin cancelling
-        it in flow.** Three requirements meet on this one element and only this
-        spelling satisfies all three.
+        ⚠ **`top-0` with the inset as padding, and a negative margin putting the
+        whole box behind the mark.** Three requirements meet on this one element
+        and only this spelling satisfies all three.
 
         Pinned at the inset instead, the bar floats with a strip of screen above
         it that posters scroll through — reported, and the reason this changed.
@@ -172,13 +172,34 @@ export function CinemaWall({
         carry the inset as padding, which is what `masthead-box` is: **the
         masthead's own paddings, worn rather than matched.**
 
-        That would then cost the inset again as dead space *in flow*, where the
-        bar sits below a masthead that has already cleared it — about 47px of
-        nothing on a notched phone before the first poster. The negative margin
-        is that height given back: the box is pulled up behind the masthead,
-        which is opaque and one layer above, so the space it occupies is space
-        the masthead was already covering. On a screen with no inset both values
-        are zero and this reads exactly as it always did.
+        ─────────────────────────────────────────────────────────────────────
+         The margin is the whole masthead now, not the notch — 16 August
+        ─────────────────────────────────────────────────────────────────────
+
+        ⚠ **The two notes below claimed the label was hidden at rest, and it was
+        not.** It cancelled `env(safe-area-inset-top)` only, which left the box
+        sitting in flow *below* a masthead that had already cleared it — so the
+        label hung under the mark on the opening screen, and `sticky` had
+        nothing to pin until you had scrolled past it. Asked for on 16 August:
+        the caption should appear when the mark goes, and not before.
+
+        `--masthead-height` is that distance. Pulling the box up by exactly it
+        lands its top `0.5rem` below the screen's — the same `0.5rem` the
+        masthead paints as a shadow beneath itself, so the protruding strip is
+        covered by construction rather than by luck. The label is therefore
+        behind the mark from the first paint, `sticky` has already reached its
+        `top-0` before the first flick, and there is no state in which both are
+        on screen at once.
+
+        **The wall comes up by the height of the caption**, which is the visible
+        half of the change: the posters now begin at `main`'s padding, where
+        content begins on every other screen, instead of a caption's height
+        below it.
+
+        **Above `rail` the pull is the notch again**, because there is no
+        masthead up there to hide behind and nothing to be revealed from under.
+        The caption is an ordinary sticky heading at the top of the column there,
+        exactly as before.
 
         ⚠ **It sits below the masthead on purpose**, `z-10` against its `z-20`,
         which `main`'s `isolate` makes a guarantee rather than a coincidence of
@@ -260,7 +281,7 @@ export function CinemaWall({
       */}
       <h2
         ref={caption}
-        className={`micro bg-bg/60 masthead-box sticky top-0 z-10 mt-[calc(-1_*_env(safe-area-inset-top))] [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
+        className={`micro bg-bg/60 masthead-box rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-height))] [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that

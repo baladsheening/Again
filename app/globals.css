@@ -336,6 +336,29 @@
   --masthead-gap: 0.625rem;
 
   /**
+   * How tall the masthead is: the notch, the air, the mark's ink, the air.
+   *
+   * Two things need this and neither is the masthead. `main` pads its top by
+   * this plus `0.5rem`, because the header is `fixed` and holds no space open
+   * itself. The home wall's caption pulls itself up by exactly this, which is
+   * what puts it *behind* the mark at rest so that it appears only as the mark
+   * recedes — see `components/cinema-wall.tsx`.
+   *
+   * ⚠ **It is the same three terms `masthead-box` sets and the row carries, and
+   * that is a structure to keep rather than a number to check.** Nothing here is
+   * a literal: change the size, the face or the gap and the utility, the row and
+   * this all move together, because all three are written from `--masthead-gap`
+   * and `--wordmark-ink`. What would break it is a masthead built differently —
+   * a second row, a rule, a border — and that is the moment to come back here.
+   *
+   * `main`'s padding spelled these three out until 16 August, which was the same
+   * expression in a second file and one edit away from disagreeing with this.
+   */
+  --masthead-height: calc(
+    env(safe-area-inset-top) + var(--masthead-gap) * 2 + var(--wordmark-ink)
+  );
+
+  /**
    * How far type sits in from the gutter, where the artwork does not.
    *
    * The gutter is where the *wall* starts: the poster grid runs edge to edge
