@@ -213,6 +213,35 @@
    */
   --animate-caption: caption-swap 420ms ease-out;
 
+  /**
+   * The **band** acknowledging that its word has changed — see the flash layer
+   * in `components/cinema-wall.tsx`. It runs with the caption's own blink, at
+   * the same moment, and it exists because that blink cannot be seen.
+   *
+   * ⚠ **A word is too small a thing to notice out of the corner of an eye.**
+   * Measured off a rendered band: the label's ink is **2.57%** of the band's
+   * area, so a full swing on it moves as much light as a 2.6% change across the
+   * whole bar — against a wall of artwork in motion, which is the only time this
+   * ever fires. Peripheral vision reads luminance transients over area and is
+   * nearly blind to colour and to detail, so neither the red nor the letterforms
+   * are doing anything out there. The band is about forty times the area.
+   *
+   * **A step, not a fade.** What gets detected is the rate of change, so this
+   * arrives at full strength on the first frame and holds ~80ms before easing
+   * out. An eased onset of the same depth reads as half of one.
+   *
+   * **Still one event.** Two or three cycles would be nearly impossible to miss
+   * and would also read as an alert, which is the argument that keeps
+   * `--animate-caption` to a single blink. This is that same blink, moved onto
+   * something big enough to see.
+   *
+   * ⚠ The flash is black, so its strength depends on how much artwork the band
+   * is letting through — which is the right way round: it is loudest over bright
+   * posters, where the caption is hardest to read, and quietest over dark ones,
+   * where it already stands out.
+   */
+  --animate-band: band-swap 330ms ease-out;
+
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
@@ -658,6 +687,29 @@
   }
   100% {
     opacity: 1;
+  }
+}
+
+/**
+ * The band behind the caption, stepping solid and easing back — see
+ * `--animate-band` for why this is the cue and the word's blink is not.
+ *
+ * ⚠ **`100%` is `opacity: 0`, and here that is the *resting* value rather than
+ * the visible one** — the opposite of `caption-swap` above, and correct for the
+ * same reason. This element is invisible except while it runs, so the
+ * `prefers-reduced-motion` block below, which ends every animation on its last
+ * keyframe, leaves it exactly where it belongs: gone.
+ *
+ * The first two stops are one value, which is the step: full on the first frame,
+ * held for 80ms of the 330, then out. There is no fade in, on purpose.
+ */
+@keyframes band-swap {
+  0%,
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 

@@ -47,6 +47,24 @@ import { PosterWall } from './poster-wall'
  */
 const REVEAL =
   'opacity-0 transition-opacity duration-300 group-data-[masthead=gone]/masthead:opacity-100 rail:opacity-100'
+
+/**
+ * The same reveal for the word, **without the cross-fade**.
+ *
+ * ⚠ **Reported 16 August: flying to the top from *Coming soon* shows a glimpse
+ * of a red *In cinemas* on the way.** That is the glass fading out over 300ms
+ * while the observer, watching the wall come back up, flips the word underneath
+ * it. A jump to the top is transit — nobody reads a caption during it, and the
+ * place it lands has no caption at all — so what was on screen was a label
+ * announcing itself on its way out.
+ *
+ * The glass keeps its fade, because a band that vanishes on the frame the mark
+ * starts sliding back leaves the top strip bare for three hundred milliseconds.
+ * The word does not need one: **its entrance is the blink**, and its exit should
+ * be the moment it stops being true. So it appears and vanishes outright, and
+ * the glass dissolves around it.
+ */
+const WORD = 'opacity-0 group-data-[masthead=gone]/masthead:opacity-100 rail:opacity-100'
 export function CinemaWall({
   nowShowing,
   comingSoon,
@@ -435,6 +453,33 @@ export function CinemaWall({
         />
 
         {/*
+          **The blink, moved onto something big enough to see.** A sheet of plain
+          ground that steps solid on the first frame, holds for 80ms and eases
+          out — see `--animate-band`, which carries the measurement: the word is
+          2.57% of this band's area, and peripheral vision reads area and rate,
+          not colour or letterforms.
+
+          It wears no `REVEAL`. Its resting state is gone at every width, and the
+          animation is the only thing that ever shows it, so the state variant
+          governs whether it may run rather than whether it is there.
+
+          **Keyed like the word, and for the same reason.** The variant starts it
+          when the band is revealed; the key starts it again when the word
+          changes underneath an already-open band, where the state has not moved.
+          Between them it fires on both, and on nothing else.
+
+          It sits above the glass and below the label, so what it interrupts is
+          the artwork rather than the word — for those 80ms the letters are on
+          solid ground, which is also what covers the swap from one word to the
+          other.
+        */}
+        <span
+          key={label}
+          aria-hidden
+          className="bg-bg group-data-[masthead=gone]/masthead:animate-band rail:animate-band absolute inset-0 opacity-0"
+        />
+
+        {/*
           The row, and it is the masthead's row: the same height, centred the
           same way. It is a wrapper rather than classes on the label itself
           because the label remounts on every crossing — see below — and a box
@@ -477,7 +522,7 @@ export function CinemaWall({
           same amount they rise when pinned.
         */}
         <span
-          className={`${REVEAL} relative mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]`}
+          className={`${WORD} relative mb-[var(--masthead-hem)] flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]`}
         >
           {/*
             **It blinks when the word changes and when the band arrives, and
