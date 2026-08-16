@@ -20,9 +20,9 @@ import { PosterWall } from './poster-wall'
  * **One slot, one label.** The caption sticks for the whole scroll and swaps its
  * text at the seam; there is nothing between the grids except the row gap.
  *
- * **An observer rather than a scroll listener.** The seam is a ten-pixel element
- * and `IntersectionObserver` reports it crossing the caption's own lower edge, so
- * nothing runs per frame and nothing measures `scrollY`.
+ * **An observer rather than a scroll listener**, and it watches a *half* rather
+ * than the boundary between them — see the note on the effect, which is a bug
+ * report and the reason.
  */
 export function CinemaWall({
   nowShowing,
@@ -32,56 +32,97 @@ export function CinemaWall({
   comingSoon: FilmSearchResult[]
 }) {
   const caption = useRef<HTMLHeadingElement>(null)
-  const seam = useRef<HTMLDivElement>(null)
+  const showing = useRef<HTMLDivElement>(null)
 
   const [past, setPast] = useState(false)
 
+  /*
+    There is only a crossing to watch when there are two halves to cross
+    between. **The seam used to carry this by not existing** — with one half
+    there was no element to observe and the effect fell out at its first line.
+    The subject is a grid now, and a grid is there either way, so the condition
+    is stated rather than implied: without it, reaching the foot of a listing
+    with nothing coming would announce *Coming soon* over an empty page.
+  */
+  const bothHalves = nowShowing.length > 0 && comingSoon.length > 0
+
   useEffect(() => {
-    const mark = seam.current
+    const half = showing.current
     const line = caption.current
-    if (!mark || !line) return
+    if (!bothHalves || !half || !line) return
 
     /*
       The caption's full box height, which — because it pins at `top: 0` — is
       exactly where its lower edge sits once pinned. Pulling the root's top edge
-      down by it is what makes the swap happen when the seam reaches *the label*
+      down by it is what makes the swap happen when the wall reaches *the label*
       rather than when it reaches the top of the screen.
     */
     const edge = Math.round(line.getBoundingClientRect().height)
 
+    /*
+      ─────────────────────────────────────────────────────────────────────────
+       It watches a half, because a boundary cannot report a jump — 16 August
+      ─────────────────────────────────────────────────────────────────────────
+
+      ⚠ **Reported from the handset**: in *Coming soon*, tapping the status bar
+      to fly to the top left the caption reading *Coming soon* over the first
+      row of what is on now, and only scrolling back down through the crossing
+      would put it right.
+
+      **This observed the ten-pixel seam, and an observer reports changes.** The
+      seam's two states are the same state to it — out of view above and out of
+      view below are both `isIntersecting: false` — so going from one to the
+      other without stopping in between is not a change and raises no callback.
+      An instant scroll to the top is exactly that, and a hard enough flick can
+      be too, since intersections are computed per rendering opportunity and a
+      fast scroll can put the seam on both sides of the line in consecutive
+      frames. The label was never stale; it was never told.
+
+      **So the subject is a half rather than the boundary.** *In cinemas* is
+      precisely "some of what is on now is still below the caption", and that is
+      a state an observer can hold rather than an event it can miss: the two
+      answers differ in `isIntersecting`, so every crossing between them raises
+      a callback whatever route it takes, at any speed, including none.
+
+      That deletes the comparison this used to make against `rootBounds.top` —
+      the position test that was needed because the boolean could not tell above
+      from below. Nothing here asks where anything is any more.
+
+      The swap point does not move: the grid's bottom edge *is* the seam's top
+      edge, so "the grid has left the band" and "the seam has entered it" name
+      the same pixel.
+
+      **Both mechanisms were run on one page in a browser before this changed.**
+      Walked down a step at a time they agree, swapping at the same scroll
+      position. Jumped from deep in *Coming soon* to the top, the seam holds
+      *Coming soon* and does not recover on any later jump; the half reads *In
+      cinemas*. And from a fresh load, jumping straight down leaves the seam on
+      *In cinemas* — the same defect the other way round, which nobody had hit
+      because nothing jumps down a page by itself.
+
+      ⚠ **Still an observer rather than a scroll listener, and now for a better
+      reason than cheapness.** iOS withholds events during momentum — this shell
+      has been bitten by that once already, see the note where
+      `USER_SCROLL_GRACE_MS` used to be in `components/shell.tsx` — while
+      intersections are recomputed from layout on every rendering opportunity,
+      delivered events or not. A scroll listener would answer the jump correctly
+      and reopen that.
+    */
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry) return
-
-        /*
-          ⚠ **Compared against the root's edge, not against zero, and getting
-          that wrong is why this did nothing at all when it first shipped.**
-
-          `boundingClientRect` is viewport-relative while `rootMargin` moves the
-          root's edge down to `edge`, so the callback fires as the seam crosses
-          `edge` — at which moment `top` is still a positive number about equal
-          to it. Testing `top < 0` was therefore false at the only moment the
-          test was ever run, and no further callback comes: an observer reports
-          crossings, not positions, so the label sat on *In cinemas* for the
-          whole wall.
-
-          `rootBounds` already carries the margin, so it is the honest source
-          for that line; `edge` stands in on the browsers that leave it null.
-        */
-        const line = entry.rootBounds?.top ?? edge
-        setPast(!entry.isIntersecting && entry.boundingClientRect.top <= line)
+        if (entry) setPast(!entry.isIntersecting)
       },
       { rootMargin: `-${edge}px 0px 0px 0px` },
     )
 
-    observer.observe(mark)
+    observer.observe(half)
     return () => observer.disconnect()
-  }, [])
+  }, [bothHalves])
 
   /*
     A listing with nothing released opens on *Coming soon* rather than lying for
-    the length of one screen. There is no seam to observe in that case either, so
-    the state above never moves and this is the whole of it.
+    the length of one screen. `bothHalves` is false in that case, so nothing is
+    observed, `past` never moves, and this line is the whole of it.
   */
   const live = !past && nowShowing.length > 0
   const label = live ? 'In cinemas' : 'Coming soon'
@@ -256,17 +297,26 @@ export function CinemaWall({
         </span>
       </h2>
 
-      {nowShowing.length > 0 && <PosterWall films={nowShowing} />}
+      {/*
+        **The half, boxed, because the half is what the observer watches.** A
+        plain block around a grid that is already a block, so it adds no layout
+        and its lower edge is the grid's own — see the effect for why the state
+        is a region rather than the line at the end of it.
+      */}
+      {nowShowing.length > 0 && (
+        <div ref={showing}>
+          <PosterWall films={nowShowing} />
+        </div>
+      )}
 
       {/*
-        The seam: the thing the observer watches, and the gap between the two
-        grids in one element. `h-2.5` is `gap-2.5` from the wall, so the rhythm
-        of the rows carries across the join and the two grids read as one wall
-        with a change of subject rather than as two lists.
+        The seam, and it is now only the gap between the two grids — the
+        observer stopped watching it on 16 August. `h-2.5` is `gap-2.5` from the
+        wall, so the rhythm of the rows carries across the join and the two
+        grids read as one wall with a change of subject rather than as two
+        lists.
       */}
-      {nowShowing.length > 0 && comingSoon.length > 0 && (
-        <div ref={seam} aria-hidden className="h-2.5" />
-      )}
+      {bothHalves && <div aria-hidden className="h-2.5" />}
 
       {comingSoon.length > 0 && <PosterWall films={comingSoon} />}
     </div>
