@@ -377,20 +377,51 @@ export function CinemaWall({
           near enough a straight line between them. The mask is alpha rather than
           luminance, which is what `to top, transparent, black` gives.
 
-          **The tint rides the lower layer**, not the `h2` and not the upper one.
-          On the `h2` it would be painted *behind* both layers and blurred by
-          them, which softens the band's own bottom edge; on the upper one it
-          would fade out with the mask. On the lower one it is uniform across the
-          band, and the upper layer blurring a uniform tint returns the same tint.
+          ─────────────────────────────────────────────────────────────────────
+           The ground is a third layer, on its own curve — 16 August
+          ─────────────────────────────────────────────────────────────────────
+
+          Directed: darker at the top, and **the gradient should accentuate the
+          row the caption sits in.**
+
+          ⚠ **The ground and the blur want different shapes, so they stopped
+          sharing one.** The blur is depth: it should ramp the whole way up the
+          band, which is what the mask above does. The ground is emphasis: its
+          job is to make the label read as a label, which means being at full
+          strength *through the row* and letting go below it. Riding one mask
+          forces one curve on both, and the curve that suits either is wrong for
+          the other.
+
+          So the tint left the lower blur layer — where it was flat, because the
+          upper layer would have blurred any gradient it held into something
+          smoothed and lighter than asked for — and became a layer of its own,
+          above both blurs, where nothing filters it and it stays exactly as
+          steep as it is written.
+
+          **Its shape is the band's own anatomy, not a number.** `--band-solid`
+          is `--masthead-height` less one `--masthead-gap`, which is where the
+          row's letters end. Above that line the ground is flat: the status bar's
+          clock and battery sit on it, then the air, then the label. Below it the
+          ground falls to the resting tint across exactly `--masthead-gap` +
+          `--masthead-hem` — the band's own foot, 16px at any type size, so the
+          bar dissolves into the wall rather than ending at a line.
+
+          88% through the row against 60% at the foot. The first is most of the
+          way to the flat `bg-bg` the rest of the app is made of; the second is
+          the glass this band has always been.
 
           Both layers are `inset-0`, so they are the box exactly and nothing here
           needs clipping — the `overflow-hidden` that cut them to the banner's
           rounded feet went when the corners did.
         */}
-        <span aria-hidden className={`${REVEAL} bg-bg/60 backdrop-blur-band absolute inset-0`} />
+        <span aria-hidden className={`${REVEAL} backdrop-blur-band absolute inset-0`} />
         <span
           aria-hidden
           className={`${REVEAL} absolute inset-0 backdrop-blur-[calc(var(--blur-band)_*_1.7320508)] [mask-image:linear-gradient(to_top,transparent,black)] [-webkit-mask-image:linear-gradient(to_top,transparent,black)]`}
+        />
+        <span
+          aria-hidden
+          className={`${REVEAL} absolute inset-0 [--band-solid:calc(var(--masthead-height)_-_var(--masthead-gap))] [background-image:linear-gradient(to_bottom,color-mix(in_srgb,var(--color-bg)_88%,transparent)_var(--band-solid),color-mix(in_srgb,var(--color-bg)_60%,transparent))]`}
         />
 
         {/*
