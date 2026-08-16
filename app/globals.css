@@ -361,22 +361,24 @@
   --type-indent: 0.375rem;
 
   /**
-   * The mark's inked height, and the dead space under it — both as a fraction of
-   * `--text-wordmark`, so that changing the size is one line again.
+   * The mark's inked height, the depth of its descender, and the dead space
+   * under it — all three as a fraction of `--text-wordmark`, so that changing
+   * the size is one line again.
    *
-   * ⚠ **These two are why the size is a knob rather than a small project.** The
+   * ⚠ **These are why the size is a knob rather than a small project.** The
    * `wordmark-trim` margins are in `em` and have always scaled by themselves,
    * but the masthead row's height and `main`'s top padding in
    * `components/shell.tsx` were px and rem derived from a measurement taken at
    * 36px — so every change of size silently needed three hand edits, and the one
    * that mattered would have been the one nobody made. They read these instead.
    *
-   * ⚠ **Both are properties of the face *and* the word — Ojuju setting `Again`.**
-   * Re-measured 15 August when the face changed back; see the table on
-   * `wordmark-trim` for the full set and for the warning against scaling one
+   * ⚠ **All three are properties of the face *and* the word — Ojuju setting
+   * `Again`.** Re-measured 15 August when the face changed back; see the table
+   * on `wordmark-trim` for the full set and for the warning against scaling one
    * face's numbers into another's.
    *
    *   ink     0.92     0.71 above the baseline, 0.21 below (the `g`)
+   *   drop     0.21    that 0.21 on its own — the `g`'s tail
    *   slack  −0.135    where the ink stops relative to an untrimmed box's bottom
    *
    * ⚠ **The slack is negative, and the sign is the whole meaning of it.** At
@@ -389,6 +391,22 @@
    * hangs over.
    */
   --wordmark-ink: calc(var(--text-wordmark) * 0.92);
+  /**
+   * The descender's depth, and it exists to be **taken back off** the row.
+   *
+   * `--wordmark-ink` is cap-to-tail, so the centre of that box is not the centre
+   * anybody sees: the eye reads a word between its cap line and its baseline and
+   * discounts the tail, which is a stroke rather than mass. The two centres are
+   * exactly half of this apart — which is why something centred honestly in the
+   * mark's row reads as sitting low, reported on the wall's caption on
+   * 16 August.
+   *
+   * Subtracting it from the bottom of that row leaves precisely the band the eye
+   * reads, so anything centred in what remains is optically in line with the
+   * mark rather than merely level with it. See `components/cinema-wall.tsx`,
+   * which is the one thing that does this.
+   */
+  --wordmark-drop: calc(var(--text-wordmark) * 0.21);
   --wordmark-slack: calc(var(--text-wordmark) * -0.135);
 }
 

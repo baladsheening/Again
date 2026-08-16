@@ -278,8 +278,30 @@ export function CinemaWall({
           same way. It is a wrapper rather than classes on the label itself
           because the label remounts on every crossing — see below — and a box
           that has to hold still is not a thing to rebuild.
+
+          ⚠ **Less the descender, which is what makes it look in line rather than
+          merely level — 16 August.** Reported: on the same line as the mark, and
+          optically low against it.
+
+          It was centred honestly and that was the fault. `--wordmark-ink` is
+          cap-to-tail, so its centre is not the centre anyone sees — a reader
+          takes a word between its cap line and its baseline and discounts the
+          `g`'s tail, which is a stroke rather than mass. The two centres are
+          half a descender apart, and the caption was sitting on the lower one.
+
+          `pb-[var(--wordmark-drop)]` takes the tail off the bottom of the row,
+          so what is centred in is exactly the band the eye reads. **A
+          subtraction, not a nudge**: no lift is written here, nothing is tuned
+          to a screenshot, and a change of size or face moves it through the same
+          two tokens that move everything else about the mark.
+
+          It lifts the label in both states at once, which is the other half of
+          what was asked. The padding is inside a box whose height has not
+          changed, so the glass band is still exactly the masthead's and the
+          posters have not moved — at rest the words rise off the wall by the
+          same amount they rise when pinned.
         */}
-        <span className="flex h-[var(--wordmark-ink)] items-center">
+        <span className="flex h-[var(--wordmark-ink)] items-center pb-[var(--wordmark-drop)]">
           {/*
             **Keyed by the word, which is what replays the blink.** A CSS
             animation runs when an element is inserted, not when its text
