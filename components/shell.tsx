@@ -1286,7 +1286,55 @@ export function Shell({
       onPointerUpCapture={onContentPointerUp}
       onPointerCancelCapture={onContentPointerCancel}
     >
-    <div className="rail:pl-68 mx-auto flex min-h-svh w-full max-w-6xl flex-col">
+    {/*
+      ─────────────────────────────────────────────────────────────────────────
+       The page box is the screen, and `svh` is not the screen — 16 August
+      ─────────────────────────────────────────────────────────────────────────
+
+      **The top inset is added back to `min-h-svh`, and it is the fix for a
+      reported fault.** Installed, tapping *Go-back-tos*, *Fixtures* or *Archive*
+      moved the collection bar 47px up the screen and left it there. *Wants* —
+      nineteen entries — and the home wall did not. The pages are the same
+      component with the same props; the only difference between them is whether
+      the content overflows.
+
+      **Measured off three screenshots**, 1170×2532 on a 390×844 handset: the
+      bar's labels sit 35.0 CSS px above the foot of the screen on the home wall
+      and on Wants, and 81.7 on Go-back-tos. The difference is 47.0 exactly, and
+      47 is this device's `env(safe-area-inset-top)` — confirmed in the same
+      images by the masthead, whose mark lands at 57.3, the inset plus
+      `--masthead-gap`. The top of the page is identical on all three, so
+      nothing above moved.
+
+      **`100svh` in an installed app is the screen less the status-bar band.**
+      `viewport-fit=cover` lets the page paint into that band — which is what
+      every `env(safe-area-inset-top)` in this file is spending — but the
+      viewport unit does not grow to match it. This file already had the number
+      written down from another day's measuring and nobody had subtracted it:
+      the note where `lastKeyboardOverlap` used to be calls this "an 797px
+      handset", and 844 − 797 is the 47.
+
+      So a page whose content does not overflow ends 47px above the foot of the
+      glass. Whatever iOS then does with `position: fixed` in that state, the bar
+      lands on *that* line rather than on the screen's — and a page with enough
+      in it to scroll never shows it, which is why every screen this was built
+      against looked right.
+
+      Adding the inset back states the one thing that is actually true: **the
+      page box is the screen.** It is a no-op everywhere else — the inset reads 0
+      in a Safari tab, where the toolbar occupies that band, and 0 on Android and
+      on the desk — so nothing outside the installed app moves by a pixel.
+
+      The cost, installed, is that a page with two entries in it can now be
+      dragged by those 47px. That is what a page which reaches the bottom of the
+      screen costs, and every page with content in it already pays it.
+
+      ⚠ **If this ever stops holding, measure `innerHeight` against
+      `screen.height` on the device before touching anything else.** The whole
+      fault is the difference between those two numbers, and it is invisible in
+      every browser on a desk.
+    */}
+    <div className="rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col">
       {/*
         The references for `useKeyboardPin`. Each carries its dock's positioning
         and nothing else — no transform, no recede, no padding — so it reports
