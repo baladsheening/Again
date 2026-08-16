@@ -1717,7 +1717,22 @@ export function Shell({
           used to be spelled out here, which meant one file's idea of the
           masthead and another's could disagree by an edit.
         */
-        className={`bg-bg rail:hidden masthead-box fixed inset-x-0 top-0 z-20 shadow-[0_var(--masthead-hem)_0_0_#000] transition-[translate] duration-300 ${
+        /*
+          `rounded-b-artwork` — the posters' own corner, directed 16 August, and
+          the shadow takes it too: a `box-shadow` follows the border radius, so
+          the hem is the same shape 8px lower and the banner's painted silhouette
+          is one rectangle with two rounded feet. The radius is half the hem, so
+          the curve is covered rather than clipped.
+
+          ⚠ **It will not read at this width.** The corners sit at the screen's
+          own edges, and the wall is inset by the `gutter` — so there is black
+          behind them and a curve cut into black shows nothing. The caption's
+          band is the wall's width, so its corners land over posters and its
+          curve does read. Bringing this ground in to the column would make the
+          pair identical; that is a change to the masthead's shape rather than to
+          its corners, so it is not made here.
+        */
+        className={`bg-bg rail:hidden masthead-box rounded-b-artwork fixed inset-x-0 top-0 z-20 shadow-[0_var(--masthead-hem)_0_0_#000] transition-[translate] duration-300 ${
           mastheadHidden ? 'translate-y-[calc(-100%_-_var(--masthead-hem))]' : 'translate-y-0'
         }`}
       >

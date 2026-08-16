@@ -135,7 +135,11 @@ export function PosterWall({
               // does — "Aftersun" alone would announce a link to a page that
               // does not exist.
               aria-label={`Add ${film.title}${film.year ? `, ${film.year}` : ''}`}
-              className="focus-visible:outline-text block w-full overflow-hidden rounded transition-opacity hover:opacity-80"
+              /* `rounded-artwork`, not `rounded`: the two banners that pass over
+                 this wall round their lower corners by the same token, and a
+                 shared corner is a relationship rather than a value they each
+                 happen to hold. See `--radius-artwork` in globals.css. */
+              className="focus-visible:outline-text rounded-artwork block w-full overflow-hidden transition-opacity hover:opacity-80"
             >
               <Image
                 src={src}

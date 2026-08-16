@@ -229,6 +229,15 @@ export function CinemaWall({
         the first translucent surface in the app and the only one; §11's matte
         black is otherwise unbroken, and a second one would make this a theme
         rather than a bar.
+
+        **`rounded-b-artwork` is the posters' own corner** — directed 16 August,
+        and the radius is a token because it is a relationship rather than a
+        value, see globals.css. It reads here and not on the mark's banner: this
+        band is the width of the wall, so its lower corners land over the first
+        and last column of posters, while the mark's run to the screen's edges
+        where there is nothing behind them but ground. The blur is clipped by the
+        radius too, so the corner is a corner rather than a square of blur under
+        a rounded fill.
       */}
       {/*
         **An arbitrary property overriding the tier's own token, rather than a
@@ -296,7 +305,7 @@ export function CinemaWall({
       */}
       <h2
         ref={caption}
-        className={`micro bg-bg/60 masthead-box group-data-[masthead=gone]/masthead:opacity-100 rail:mt-[calc(-1_*_env(safe-area-inset-top))] rail:opacity-100 sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] opacity-0 transition-opacity duration-300 [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
+        className={`micro bg-bg/60 masthead-box rounded-b-artwork group-data-[masthead=gone]/masthead:opacity-100 rail:mt-[calc(-1_*_env(safe-area-inset-top))] rail:opacity-100 sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] opacity-0 transition-opacity duration-300 [--text-micro:0.8125rem] pl-[var(--type-indent)] backdrop-blur-xl ${
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that

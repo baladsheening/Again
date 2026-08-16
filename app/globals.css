@@ -313,6 +313,22 @@
   --text-micro: 0.6875rem;
 
   /**
+   * The corner the artwork is cut with, and now the banners that pass over it.
+   *
+   * **A name rather than two defaults that happen to agree.** The posters were
+   * `rounded` and the banners would have been `rounded-b` — both 0.25rem,
+   * matching only because Tailwind's default is the same number in two places.
+   * Asked on 16 August for the banners to carry *the posters'* corner, which is
+   * a relationship rather than a value, so it is written as one.
+   *
+   * Whatever this becomes, the wall and the two bands over it round by it
+   * together. Nothing else in the app reads it: the surfaces that are chips and
+   * sheets — the capture card, the intent sheet, the form controls — have their
+   * own scale and are not artwork.
+   */
+  --radius-artwork: 0.25rem;
+
+  /**
    * The air above and below the wordmark in the phone header — the *visible*
    * air, measured to the letters rather than to the box they sit in.
    *
@@ -324,16 +340,30 @@
    * clearance, not spacing, and counting it as spacing is what makes a mark
    * drift down the screen by however much inset a given device reports.
    *
-   * 10px rather than 8: measured in a browser, the trims below land the visible
-   * gaps within 0.2px of this number at both ends, so it is the gap rather than
-   * an approximation of it, and 8 was tight enough that any remaining error
-   * showed up as a collision.
+   * **8px since 16 August, directed: both banners a little shorter.** This is
+   * the only air in them — the rest is the mark's own ink and the notch — so it
+   * is the only honest place to take height from, and it takes it from both at
+   * once because `masthead-box` is worn by the header and by the wall's caption
+   * alike. 4px off each.
+   *
+   * ⚠ **This note argued for 10 over 8, and that argument has expired.** It read:
+   * *8 was tight enough that any remaining error showed up as a collision* —
+   * measured under Space Grotesk, before the trims were re-measured for Ojuju on
+   * 15 August. Re-measured at 390px with the face that actually ships: at 8px
+   * the ink clears by 7.25 above and 8.5 below, and 16.5 to the first poster
+   * with the hem. Nothing is near a collision. The number to watch is not this
+   * one but the overhang — the ink runs about 0.75px past the row at the top —
+   * so this must stay comfortably above that, and it is by an order.
+   *
+   * ⚠ **Equal to `--masthead-hem` at present, and not the same quantity.** One
+   * is the air inside the banner, the other is the ground it paints below
+   * itself; they were 10 and 8 last week and either can move without the other.
    *
    * **It lives here rather than in `components/shell.tsx`, and that is a
    * Content-Security-Policy constraint, not a preference** — see the note on
    * `wordmark-trim` below.
    */
-  --masthead-gap: 0.625rem;
+  --masthead-gap: 0.5rem;
 
   /**
    * How tall the masthead is: the notch, the air, the mark's ink, the air.
