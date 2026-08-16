@@ -259,14 +259,17 @@ export function CinemaWall({
         that anything carrying a `backdrop-filter` becomes a backdrop root and
         would leave its own children nothing to blur.
 
-        **`rounded-b-artwork` is the posters' own corner** — directed 16 August,
-        and the radius is a token because it is a relationship rather than a
-        value, see globals.css. It reads here and not on the mark's banner: this
-        band is the width of the wall, so its lower corners land over the first
-        and last column of posters, while the mark's run to the screen's edges
-        where there is nothing behind them but ground. `overflow-hidden` carries
-        the corner down to both layers, so the glass is cut to the same shape as
-        the box rather than sitting square under a rounded fill.
+        ⚠ **This band had the posters' corner on its feet for one commit, and it
+        is square again — directed, 16 August.** It was `rounded-b-artwork`, with
+        `overflow-hidden` carrying the curve down to both glass layers; both are
+        gone, and the second went with the first because with nothing to round it
+        was clipping a pair of layers that already fit the box exactly.
+
+        The mark's banner still carries the corner. It has never read there — the
+        header runs to the screen's edges, where there is only ground behind it —
+        so the pair look the same either way, which is why removing one is not a
+        pair that has drifted. `--radius-artwork` stays: the wall is what it is
+        named for, and the posters are still cut with it.
       */}
       {/*
         **An arbitrary property overriding the tier's own token, rather than a
@@ -334,7 +337,7 @@ export function CinemaWall({
       */}
       <h2
         ref={caption}
-        className={`micro masthead-box rounded-b-artwork rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] overflow-hidden [--text-micro:0.8125rem] pl-[var(--type-indent)] ${
+        className={`micro masthead-box rail:mt-[calc(-1_*_env(safe-area-inset-top))] sticky top-0 z-10 mt-[calc(-1_*_var(--masthead-clearance))] [--text-micro:0.8125rem] pl-[var(--type-indent)] ${
           /*
             Recording red for the half that is on now — see `--color-live`, which
             carries the argument for a second red and the scarcity rule that
@@ -380,8 +383,9 @@ export function CinemaWall({
           would fade out with the mask. On the lower one it is uniform across the
           band, and the upper layer blurring a uniform tint returns the same tint.
 
-          `overflow-hidden` on the `h2` is what gives both layers the banner's
-          rounded feet without either carrying the radius.
+          Both layers are `inset-0`, so they are the box exactly and nothing here
+          needs clipping — the `overflow-hidden` that cut them to the banner's
+          rounded feet went when the corners did.
         */}
         <span aria-hidden className={`${REVEAL} bg-bg/60 backdrop-blur-band absolute inset-0`} />
         <span
