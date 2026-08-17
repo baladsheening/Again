@@ -22,10 +22,28 @@ import { nameFor } from '@/lib/domain'
 export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
   return (
     <section className="flex flex-col">
-      <h2 className="micro text-muted mb-1">People</h2>
+      {/*
+        **The label descends to its text; the text does not rise to the label.**
+        The gap between them was 28px — 4px of margin plus the paragraph's own
+        24px of top padding — which read as two separate things rather than a
+        caption and its sentence.
+
+        Closing it from above: 20px comes off the paragraph's top padding and goes
+        onto the heading's top margin, so the paragraph's first line stays exactly
+        where it was (92px down the page) and *People* drops 20px to meet it. The
+        ink gap is 8px. Moving the paragraph up instead would have closed the same
+        distance and taken the section's whole body with it.
+
+        `mt-5` is unconditional, so the heading sits in the same place whether or
+        not there is anyone in the list — its position is a property of the
+        section, not of its contents. The populated case keeps its own 24px to the
+        first row, because that 20px belongs to the row's `py-5` rhythm and is
+        shared with every other list in the app.
+      */}
+      <h2 className="micro text-muted mt-5 mb-1">People</h2>
 
       {people.length === 0 ? (
-        <p className="text-muted max-w-sm py-6 text-sm">
+        <p className="text-muted max-w-sm pt-1 pb-6 text-sm">
           Nobody yet. You reach someone by their handle — there is no directory
           and no search for strangers. Ask a friend for theirs.
         </p>
