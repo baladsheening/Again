@@ -39,6 +39,19 @@ export const LIMITS = {
   */
   search: { requests: 120, windowSeconds: 60 },
   entryCreate: { requests: 60, windowSeconds: 60 },
+  /*
+    Tracking has its own bucket because it is the only mutation whose cost lands
+    on somebody else: becoming mutual runs the §6 fan-out across everything the
+    pair holds in common, so it can write a notification per shared item. It is
+    also the one relation that can be withdrawn and re-made, and each transition
+    into mutuality legitimately fires again.
+
+    Thirty a minute is far above tracking people you know and far below anything
+    that could be used to rattle someone's notifications. See
+    `docs/decisions.md` — the durable answer is remembering what has already been
+    said, which is Phase 3's problem, not a lower number here.
+  */
+  track: { requests: 30, windowSeconds: 60 },
   swapInitiate: { requests: 5, windowSeconds: 300 },
 } as const satisfies Record<string, Limit>
 

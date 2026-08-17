@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 
 import {
   addEntry,
+  copyEntry,
   requireSessionUser,
   resolveEntry,
   undoEntry,
@@ -113,6 +114,35 @@ export async function undoEntryAction(entryId: string): Promise<ActionResult> {
 
   refresh()
   return { ok: true, value: null }
+}
+
+/**
+ * Copy an entry off someone else's page (§6). The id is theirs, not yours —
+ * `copyEntry` resolves the item and the owner from it, and refuses a `done` row.
+ *
+ * Rate limited on `entryCreate` rather than a bucket of its own: it creates an
+ * entry, and the fact that the item came off someone's page does not make it a
+ * different kind of write.
+ */
+export async function copyEntryAction(
+  sourceEntryId: string,
+): Promise<ActionResult<{ created: boolean }>> {
+  const sessionUser = await requireSessionUser()
+
+  if (!entryIdSchema.safeParse(sourceEntryId).success) {
+    return { ok: false, message: 'Unknown entry.' }
+  }
+
+  for (const identifier of [sessionUser.id, clientIp(await headers())]) {
+    const limit = await rateLimit('entryCreate', identifier)
+    if (!limit.ok) return { ok: false, message: 'Slow down a moment.' }
+  }
+
+  const result = await copyEntry(sessionUser, sourceEntryId)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  refresh()
+  return { ok: true, value: { created: result.value.created } }
 }
 
 /** v1 offers `see` and `own` for films, default first (§8). */

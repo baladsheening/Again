@@ -3011,6 +3011,216 @@ and a production build are clean.
 
 ---
 
+## Phase 2: the other person — 17 August
+
+Tracks, `/u/[handle]`, copying, and the identity question that had to be settled
+before the route existed. §13 calls the multiplayer half 80% of the work and 100%
+of the value; this is the first of it.
+
+### Names for people who know you, handles for everyone else
+
+One function, `nameFor` in `lib/domain.ts`. A mutual track shows the display
+name; everything else shows `@handle`.
+
+**Knowing someone is a mutual track**, which is the whole reason this needed no
+new object: the condition was already in the schema because §6 requires it for
+overlap. The identity rule is a *read* of a relation that had to exist anyway, so
+it does not wait on groups (see *Groups* above, where the identity half is
+explicitly separated from the group question).
+
+It returns the handle **with its `@`**, so no call site decides whether to add
+one. A caller that branches on `mutual` itself is a second copy of the rule and
+will drift from it — which is also why `listMyTracks` computes `mutual` in the
+data layer rather than handing callers two booleans.
+
+⚠ **Inbound-only is deliberately not announced.** Somebody tracking you with no
+track back sees the same page a stranger does, and the control still reads
+*Track*. Announcing it would be a follower notification — the §2 shape this
+design avoids — and it would publish a one-sided interest the other person never
+chose to make visible. The value is not lost: pressing *Track* is exactly the
+moment the pair becomes mutual, which is what the notification would have been
+prompting.
+
+### The app was asking for a name twice, and the wrong one won
+
+Found by driving the rule against real rows, not by reading it: `nameFor` fell
+back to `@collateralflora` for the only real account, because
+`profiles.display_name` was null.
+
+Sign-up collects a name into Better Auth's `user.name`
+(`components/sign-in-form.tsx`). Onboarding then collects an **optional**
+`profiles.display_name`. §5's rule reads the second one, so anyone who typed
+their name at sign-up and skipped the optional field was shown to their friends
+as a handle. **The rule never fired for the account that had already given its
+name.**
+
+`createProfile` now falls back to `user.name` when the optional field is blank,
+and the optional field survives as an override — the name you go by is not always
+the name on the account.
+
+⚠ **The fallback has to refuse an address.** Sign-up does `name: name || email`,
+so `user.name` can *be* the account's email. Seeding a display name from it
+unchecked would have put people's email addresses in front of their friends,
+which is worse than having no name. `usableAsDisplayName` rejects anything
+containing `@` — which covers that case by construction rather than by comparing
+against one particular address, and is right on its own terms, since `@` is how
+this app writes a handle.
+
+The existing row was backfilled on both databases, rehearsed on `development`
+first, with assertions that nobody who already had a name could lose or change
+one and that nothing could end up holding an address.
+
+### Overlap's second trigger, and what it cost to find
+
+The carry-forward item, open since §6 was first read: the fan-out ran on entry
+insert and on state change, so two people who already held matching wants and
+*then* tracked each other produced nothing. No entry moved. That is §13's
+seed-time case exactly — a dozen friends joining in a week and backfilling their
+lists before the graph is complete — so **the case it missed was the app's first
+impression.**
+
+`runOverlapForNewMutual` is a second **caller** of `lib/overlap.ts`, not a second
+copy of it: same `classify`, same writer, scoped to the one pair, and still one
+set-based statement (`entries` joined to itself on `item_id`).
+
+It fires only on the transition into mutuality, and `onConflictDoNothing` on the
+composite primary key is what decides that — a constraint rather than a check
+someone has to remember. An already-mutual pair pressing *Track* again cannot
+reach it.
+
+`writeNotifications` came out of this. Both entry points go through it, and it
+takes **the item per match rather than per batch** — which is what lets the pair
+fan-out stay one INSERT while spanning many items. A writer that assumed one item
+would have forced a query per item, the exact per-row shape §6 rules out.
+
+⚠ **The burst is uncapped, and that is a decision with a date on it.** Two people
+with forty items in common produce forty matches each at the moment they connect.
+While notifications are in-app that is the *value* of connecting arriving at once
+— the app has nowhere else to say it. It stops being obviously right when push
+exists, and `docs/plan.md` carries it into Phase 5, where the worker is written.
+
+⚠ **Untracking and re-tracking legitimately fires again**, because mutuality is
+genuinely re-established. The durable answer is remembering what has already been
+said, which is Phase 3's problem; the interim guard is `LIMITS.track`, a bucket of
+its own because tracking is the only mutation whose cost lands on somebody else.
+
+### Untracking deletes its row, and §5 is not violated
+
+*Nothing is ever deleted* is a rule about **entries**: resolving one changes its
+state because having wanted something remains true, and the history is the point.
+
+A track is not a record of an event. It is a live statement about who may see your
+list, and a statement you cannot withdraw is not a statement. There is also no
+state a withdrawn track could sit in that would not amount to *a list of people
+you stopped following*, which is a worse thing to keep than the row.
+
+No fan-out on the way out. §6 fires on convergence, never on its loss, and should
+not gain a notification for a match going away.
+
+### Their page is visible without tracking
+
+A stranger who knows the handle sees the same two lists a mutual does. §5 makes
+`done` the private state and nothing else, and **§6's suppression rule is the
+proof this is intended** — it exists precisely because browsing someone's page
+and copying off it is expected behaviour. If the page needed permission, that
+rule would have nothing to suppress.
+
+What a track changes is overlap and naming, not access.
+
+`state = 'done'` never appears there, and the page does not filter for it:
+`listEntriesForOtherUser` does, unconditionally, and `PublicView` cannot express
+the archive. The guarantee stays one layer down, because a regression would not be
+visible on the page.
+
+### Copying always lands as a want
+
+`copyEntry` takes **the entry id the caller was already shown**, never an item id,
+so a client cannot name a row it was never given. Three properties fall out of
+that shape rather than out of instructions:
+
+- **A `done` entry cannot be copied** — the same unconditional exclusion as the
+  list, spelled again because this is a second door onto the same rows. It answers
+  `not_found` rather than `forbidden`, deliberately: *that exists but is private*
+  is itself the leak.
+- **It always lands as `want`.** Copying someone's fixture must not assert that
+  you own the thing, and copying a go-back-to must not claim you have been. The
+  intent carries over; the state does not.
+- **`sourceUserId` is read from the row, never taken from the caller**, because it
+  is the input to §6's suppression rule. A caller that could name its own source
+  could switch suppression off — which would turn copying somebody's list into a
+  way of pinging them.
+
+The button says *Add to wants* rather than *Copy*: what happens is that it joins
+your wants, and the copying is an implementation detail only §6 cares about. The
+idempotent path reports *Already in your wants*, because a button that silently
+does nothing reads as broken.
+
+### `PersonRow` is not `EntryRow` with a flag
+
+The two rows differ by which actions they may offer, and that is exactly the
+difference §5 cares about. A public row must be **structurally incapable** of
+rendering *Seen it*, and the way to guarantee that is for the component not to
+import the action at all.
+
+A shared row with a `mine` prop would put the owner's resolve flow one boolean
+away from a page it must never appear on, and that boolean would be passed by a
+page whose author had forgotten why it mattered. The type ratio, the hairline and
+the poster reveal are shared — by being the same classes, not the same component.
+
+### A way in, or the route does not exist
+
+`/u/[handle]` was unreachable: §2 rules out discovery and search for strangers, so
+the only route to a person is a handle someone gave you. `TrackedPeople` on
+`/profile` is a list of people you have already reached, not a directory.
+
+It sits **above** the identity block, because that block is anchored to the
+bottom-left corner at every width on purpose.
+
+⚠ **Whether a track is mutual is legible there without being labelled**: `nameFor`
+shows a name for a mutual and `@handle` for everyone else, so a row wearing a
+handle is a track that has not been returned. That is the identity rule doing the
+work rather than a badge repeating it — and the reason not to add a *mutual* tag,
+which would state the same fact twice and give the weaker version its own weight.
+
+### Verified through the product, 37 assertions
+
+Driven in a real browser at 390×780 against the `development` branch — the real
+button, the real Server Action, the real data layer — with the assertions about
+what was *written* read straight out of the database. That combination is the
+point: a screen that looks right says nothing about whether the fan-out wrote
+anything.
+
+The relationship was walked through all three states, stranger → tracking →
+mutual → stranger again, and the naming followed it in both directions. All six
+notifications appeared on the transition into mutuality, and the three cases that
+must produce **silence** did: the pair sharing only an intent, the resolved `done`
+entry, and the entry copied off the other person.
+
+⚠ **Two things this did not cover**, both recorded in `docs/plan.md`: a *populated*
+Fixtures section on somebody's page (the account under test holds none, and an
+empty section renders nothing by design), and any of it on hardware.
+
+⚠ **Three lessons from the probe itself**, all of which cost time:
+
+1. **The shell's masthead is a `<header>` too**, so `header button` matched the
+   search glyph and the probe waited twenty seconds for a label that was never
+   coming. Scope into `main`.
+2. **Never index into a list that the thing under test mutates.** Adding replaces
+   that row's button with a report, so every later index shifts by one — an
+   earlier run clicked `nth(1)` after the first add and silently exercised a
+   different film. Address rows by title.
+3. **Assert a 404 on the status, not the words.** Next's own error page reads
+   empty via `innerText` before hydration; the status is the contract.
+
+⚠ **TMDB is unreachable from this machine again** —
+`UNABLE_TO_VERIFY_LEAF_SIGNATURE`, TLS interception on the local network — so `/`
+wedges in development and the probe signs in over the API and injects the cookie
+rather than driving the form. The note in the memory file saying TMDB *is*
+reachable from the dev server was true on 11 August and is not now. Nothing about
+the deployed app is affected.
+
+---
+
 ## The databases are two — 17 August
 
 The last thing in pre-phase 2, and the only one that could not be retrofitted.

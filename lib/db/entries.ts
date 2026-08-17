@@ -206,6 +206,58 @@ export async function addEntry(
 }
 
 /**
+ * Copy something off someone else's page (§6, `source = 'copy'`).
+ *
+ * The caller passes the **entry id it can already see**, never an item id: the
+ * item is resolved here, so a client cannot name a row it was never shown.
+ *
+ * Three things this gets right by construction rather than by instruction:
+ *
+ *   - **A `done` entry cannot be copied.** The same unconditional exclusion as
+ *     `listEntriesForOtherUser`, spelled again here because this is a second
+ *     door onto the same rows. It returns `not_found` rather than `forbidden`,
+ *     deliberately: *that exists but is private* is itself the leak (§5.3).
+ *   - **It always lands as a `want`.** Copying someone's fixture must not assert
+ *     that you own the thing too, and copying a go-back-to must not claim you
+ *     have been. `addEntry` writes `state: 'want'` for everyone, so the intent
+ *     carries over and the state does not.
+ *   - **`sourceUserId` is read from the row, never taken from the caller**,
+ *     because it is the input to §6's suppression rule. A caller that could
+ *     name its own source could switch the suppression off, which would turn
+ *     copying someone's list into a way of pinging them.
+ */
+export async function copyEntry(
+  sessionUser: SessionUser,
+  sourceEntryId: string,
+): Promise<Result<{ entry: Entry; created: boolean }>> {
+  const [source] = await db
+    .select({
+      itemId: entries.itemId,
+      intent: entries.intent,
+      ownerId: entries.userId,
+      state: entries.state,
+    })
+    .from(entries)
+    .where(and(eq(entries.id, sourceEntryId), ne(entries.state, 'done')))
+    .limit(1)
+
+  if (!source) return err('not_found', 'That is no longer there.')
+
+  // Copying your own entry is the same item under the same intent, which the
+  // unique constraint would swallow as a no-op — say so instead of pretending.
+  if (source.ownerId === sessionUser.id) {
+    return err('conflict', 'That one is already yours.')
+  }
+
+  return addEntry(sessionUser, {
+    itemId: source.itemId,
+    intent: source.intent,
+    source: 'copy',
+    sourceUserId: source.ownerId,
+  })
+}
+
+/**
  * Resolve a want (§8). `keep` answers the single question — *Go back?* for an
  * experience, *Keeping it?* for an object.
  *

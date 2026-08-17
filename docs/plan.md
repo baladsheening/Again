@@ -24,7 +24,7 @@ Current at `1f6ae2c` plus the database split carried in this commit,
 | 0.5 — account recovery | Password reset, auth rate limiting, `lib/email.ts` | **Done.** Reset proven end to end to a real inbox |
 | 1 — single player | Profiles, capture, entries, collections, resolve flow, the visual system, the phone shell | **Done and deployed.** Judged on hardware over four sessions |
 | pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Done, 17 August.** D1 answered `no`, the caption switched off, the databases separated and the test accounts cleared |
-| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | **Next.** Nothing is in front of it |
+| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | **Mostly built, 17 August.** All four exist and are verified through the product with two accounts — 37 assertions. **Not deployed, and the private note is not built** |
 | 3 — overlap | Trigger + notification rows, `/notifications`, `/overlap` picker. In-app only | Not started |
 | 4 — swap | Full flow, blind commit enforced in the data layer, `landed` | Not started |
 | 5 — PWA + push | Manifest, service worker, VAPID, subscriptions, install prompt | Manifest and install exist; push does not |
@@ -63,9 +63,15 @@ question rather than a task.
 
 ### The product
 
-- [ ] **Phase 2** — tracks, `/u/[handle]`, visibility, copy. → *What is next*
+- [x] ~~**Phase 2** — tracks, `/u/[handle]`, visibility, copy.~~ Built 17 August
+      and verified with two accounts through the real UI. **Still to do inside
+      Phase 2:** the private note, and shipping it. → `decisions.md`, *Phase 2:
+      the other person*
 - [ ] **A private one-line note on your own entry.** Decided 8 August, needs a
-      column and a migration. → *Carry-forward, Phase 2*
+      column and a migration. **The last thing in Phase 2.** → *Carry-forward,
+      Phase 2*
+- [ ] **Ship Phase 2 to Vercel.** §12: a phase is not done because the code
+      exists. Nothing is deployed since `0e006a5`.
 
 ### Before a second person can use it
 
@@ -362,6 +368,14 @@ or seen on the handset.
       320px. Treat the result as a verdict on `--breakpoint-rail: 45rem`: an iPad
       halved falls below it and gets the phone layout, which is either the
       breakpoint being honest about layout or a device rule in disguise.
+- [ ] **Phase 2 on hardware.** All of it — `/u/[handle]`, the track control, *Add
+      to wants*, the People list — has only been driven in a browser at 390×780.
+      Nothing has been seen on the handset, and every finding that mattered in this
+      project came from looking at it.
+- [ ] **A populated Fixtures section on somebody's page.** The account under test
+      holds no fixtures, and an empty section renders nothing by design, so the
+      populated case is reasoned rather than seen. It is the surface `lend` points
+      at.
 - [ ] **Deep paging against the real API.** Search results are confirmed on the
       deployed app; nobody has scrolled a broad query — `b`, or `star` — past the
       first twenty to check the posters keep coming and never repeat. TMDB's host
@@ -459,25 +473,25 @@ not an oversight — the reasoning is in `decisions.md`.
 
 ### Phase 2
 
-- [ ] **Overlap must fire when a track becomes mutual.** §6 only runs the fan-out
-      on entry insert and state change, so two people who already hold matching
-      wants and *then* start tracking each other produce nothing. That is exactly
-      the seed-time case §13 describes — a dozen friends joining in a week and
-      backfilling before the graph is complete — so the app's first impression is
-      the case it currently misses. Fix: call the same `lib/overlap.ts` fan-out
-      from the track mutation, scoped to that pair.
-- [ ] **§13 test one:** another user's `done` entries are never returned.
-      `listEntriesForOtherUser` exists and is written for it.
-- [ ] **The private note must not reach `/u/[handle]`.** When
-      `listEntriesForOtherUser` gains its projection, `note` stays out of it and
-      out of any type that projection returns. Same shape as the `done`
-      exclusion: nothing fails, nobody notices, and the guarantee is gone.
-- [ ] **Decide what a person is called before `/u/[handle]` exists.** *People who
-      know you should see your name; the handle is for strangers who land on your
-      page.* Half of it already exists and is unused — `profiles.display_name` is
-      collected at onboarding and already preferred over the handle in
-      `lib/overlap.ts`. Mutual track = name, otherwise handle, is the obvious
-      reading and matches §5's shape. Worth stating before it is assumed.
+- [x] ~~**Overlap must fire when a track becomes mutual.**~~ Built 17 August as
+      `runOverlapForNewMutual` — a second caller of `lib/overlap.ts`, scoped to
+      the pair, one set-based statement, firing only on the transition into
+      mutuality. Verified from the real button: six notifications, and silence in
+      the three cases that must be silent.
+- [x] ~~**Decide what a person is called before `/u/[handle]` exists.**~~ Mutual
+      track = display name, otherwise `@handle`, in one function (`nameFor`). It
+      also turned up a fault: the app asked for a name twice and the optional one
+      won even when blank, so the rule had never fired for the only real account.
+- [ ] **§13 test one, as a *test*:** another user's `done` entries are never
+      returned. The behaviour is verified — twice on 17 August, in the data layer
+      and through the page — but **there is no test suite in this repository**, so
+      nothing stops it regressing. That is the honest state: §13 asks for a test
+      and what exists is a probe that was thrown away. Deciding whether this
+      project gets a runner is its own small decision.
+- [ ] **The private note must not reach `/u/[handle]`.** The projection does not
+      exist yet because the column does not. When it arrives, `note` stays out of
+      it and out of any type it returns. Same shape as the `done` exclusion:
+      nothing fails, nobody notices, and the guarantee is gone.
 - [ ] **Build the private note.** One nullable text column on `entries`, bounded
       by Zod at the boundary, read and written through `lib/db/entries.ts` on the
       `SessionUser`. The identifier is `note` — `no-restricted-syntax` fails the
@@ -511,6 +525,11 @@ not an oversight — the reasoning is in `decisions.md`.
 
 ### Phase 5
 
+- [ ] **The mutual-track fan-out is uncapped.** Two people with forty items in
+      common produce forty notifications each the moment they connect. In-app that
+      is the value of connecting arriving at once; as a push it is a flood. Decide
+      when the worker is written, not before — `decisions.md`, *Overlap's second
+      trigger*.
 - [ ] **TMDB attribution.** A licence condition of the free key: the required
       sentence plus their logo, less prominent than our own branding. Belongs in
       `/settings`.

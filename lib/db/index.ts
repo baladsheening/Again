@@ -53,6 +53,7 @@ export {
   countMyEntries,
   listEntriesForOtherUser,
   addEntry,
+  copyEntry,
   resolveEntry,
   undoEntry,
   UNDO_WINDOW_MS,
