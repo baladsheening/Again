@@ -3526,6 +3526,49 @@ worth keeping.
   a rounded border is the combination WebKit has a history of rendering wrong, and
   these are buttons rather than glass.
 
+### ⚠ Open: should there be a synopsis at all?
+
+Raised 17 August, as a question rather than a change. **It is not settled and
+nothing below is a decision.**
+
+**What it is doing there.** The screen exists to answer *what is this* for a
+poster on the wall you do not recognise, and title, director, year and runtime may
+not answer it for an unfamiliar film. That is the whole case, and it is a real
+one.
+
+**What is uncomfortable about it.**
+
+- §2's closing test is *if a feature request makes the app more useful to a
+  stranger, it is probably wrong* — and **a synopsis is the most stranger-facing
+  thing on any screen in this product.** It is precisely what you need if you know
+  nothing about the film and precisely what you skip if a friend has already told
+  you about it, which is the case this app is built around.
+- It is the most catalogue-like element in an app that is deliberately not a
+  catalogue. Every listings product leads with it.
+- §11 says type is the entire design, and this is the only place where the type on
+  screen is **somebody else's prose** rather than the app's own words or a
+  person's.
+- It costs a third of the screen for something read once.
+
+**The question underneath the question: what is the bottom third for?** If the
+synopsis goes, the honest candidates are:
+
+1. **Nothing** — artwork to the foot, with the title and the `+` over it. The
+   screen becomes a poster and an action, which is the smallest thing that answers
+   the tap.
+2. **Who else has it.** Overlap is the one moment the product exists for, and *two
+   people you know want this* is a better reason to add something than a plot
+   summary. That is Phase 3 material and does not exist yet — **which raises the
+   possibility that the synopsis is standing in the space overlap is meant to
+   occupy**, and that the right time to answer this is when there is something to
+   put there.
+3. **The private note**, which has a column, a bound, a mutation and a test, and
+   still has nowhere in the UI to be offered.
+
+⚠ **Do not resolve this by deleting the synopsis and leaving a gap.** The question
+is what the bottom third is for; removing its current occupant without answering
+that is how a screen ends up with a third of itself unaccounted for.
+
 ### The synopsis is fetched, never stored
 
 `/api/film/[id]` answers both halves in one round trip — what the film is, from

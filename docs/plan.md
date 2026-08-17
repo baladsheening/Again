@@ -85,6 +85,13 @@ question rather than a task.
       enough room on a short screen, whether the green reads as *on your list*
       rather than as *that worked*, and whether losing the band costs anything on
       an add made from the search dropdown rather than the wall.
+      ⚠ **Open, raised 17 August: should the screen have a synopsis at all?** §2's
+      closing test is that a feature useful to a stranger is probably wrong, and a
+      plot summary is the most stranger-facing thing in the app. The real question
+      is what the bottom third is *for* — nothing, the private note, or **who else
+      has it**, which is Phase 3's and may be what that space was always holding.
+      Do not answer it by deleting the synopsis and leaving a gap. →
+      `decisions.md`, *Open: should there be a synopsis at all?*
       ⚠ **The green's terms are in `--color-listed` and are the part to defend.**
       It marks a state rather than an event, it is deliberately *not* the
       satisfied-want tick, and it is measured quieter than the accent. Each of

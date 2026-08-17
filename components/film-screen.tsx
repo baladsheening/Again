@@ -139,17 +139,18 @@ const ARTWORK = 'h-2/3'
  * cause and it is not this file's arithmetic that is wrong.
  */
 /*
-  ⚠ **`size-7`, down from 9 then 8 on 17 August, and `tap-target` is why that is
-  free.** The visible shape is 28px and the hit area stays 44px — the utility
-  centres a transparent pseudo-element on the control and floors it at the touch
-  minimum, so the mark can be as small as it looks right without the target
+  ⚠ **`size-6`, down from 9 then 8 then 7 across 17 August, and `tap-target` is
+  why that is free.** The visible shape is 24px and the hit area stays 44px — the
+  utility centres a transparent pseudo-element on the control and floors it at the
+  touch minimum, so the mark can be as small as it looks right without the target
   following it down. Shrinking a control that carried its own hit area would have
   been a legibility change *and* an accessibility one.
 
-  ⚠ **A rounded square rather than a circle, directed 17 August.** `rounded-lg` is
-  8px on a 28px box: unmistakably a square with soft corners, where the 12px step
-  above it would read as a circle again at this size and the 4px below it as a
-  sharp chip.
+  ⚠ **A rounded square rather than a circle, directed 17 August — and the corner
+  shrinks with the box or it stops being one.** `rounded-md` is 6px on 24px, the
+  same quarter-of-the-side the previous pair held at 8 on 28. Holding the radius
+  still while the box came down would have walked the shape back toward the circle
+  it was asked to stop being: at 24px, an 8px corner is a third of the side.
 
   **Deliberately not `--radius-artwork`.** That token is the corner the posters and
   the banners over them share, and its own note says nothing else reads it — chips
@@ -158,7 +159,7 @@ const ARTWORK = 'h-2/3'
   invent a relationship that is not there.
 */
 const CONTROL =
-  'bg-text/8 backdrop-blur-band tap-target flex size-7 shrink-0 items-center justify-center rounded-lg'
+  'bg-text/8 backdrop-blur-band tap-target flex size-6 shrink-0 items-center justify-center rounded-md'
 
 type Details = {
   synopsis: string | null
@@ -806,12 +807,18 @@ function AddControl({
  * §11 permits known icons, and a plus is the known one for "add this". Same
  * inline-rather-than-a-package reasoning as `icon-close.tsx`, and `currentColor`
  * so the control's own state decides its colour.
+ *
+ * ⚠ **14px, following the box down on 17 August.** A plus is two strokes and no
+ * interior, so it needs air around it to read as a mark rather than as a fill: at
+ * 16px in a 24px box it left 4px a side and looked crowded. This holds roughly
+ * the proportion it had at 28, which is what "smaller" was asking for — the
+ * control, not the glyph inside it pressing against the corners.
  */
 function PlusIcon() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       viewBox="0 0 12 12"
       fill="none"
       stroke="currentColor"
