@@ -414,11 +414,24 @@ export function FilmScreen({
               the whole block, which means the control's position would depend on
               the length of a film's name.
 
+              ⚠ **No `justify-between`: the control follows the title rather than
+              holding the right edge.** Asked for on 17 August — *bring it closer
+              to the title*. Pushed to the gutter it was a control at the far side
+              of the screen from the thing it acts on, and on a short name that is
+              most of the width of a phone. The heading takes its own text's width
+              and the circle sits at the end of it, so the pair reads as one line
+              rather than as two ends of a row.
+
+              A long title still wraps to the full column and the circle still ends
+              up at the edge — the two cases have the same rule and only look
+              different because the title's width differs, which is the right kind
+              of difference to have.
+
               `min-w-0` on the heading because a flex child will not shrink below
               its content otherwise, and a long title would push the control off
               the gutter instead of wrapping.
             */}
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
               <h2 className="title min-w-0">{film.title}</h2>
 
               {/*
