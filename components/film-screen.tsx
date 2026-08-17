@@ -585,7 +585,14 @@ export function FilmScreen({
         <div className="flex min-h-0 flex-1 flex-col pt-6">
           <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
 
-          <div className="gutter mt-3 min-h-0 flex-1 overflow-y-auto pb-5">
+          {/*
+            `safe-bottom` is back on the scroller, because the scroller is the last
+            thing in the column again — the *Close* that briefly sat under it is
+            gone. There is no visible way out now: the artwork closes on a tap, and
+            Escape closes from a keyboard. Same as `PosterReveal`, which has never
+            had one either.
+          */}
+          <div className="gutter safe-bottom mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
             <p className="text-sm">
               {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
             </p>
@@ -611,47 +618,6 @@ export function FilmScreen({
               8 August, and it has survived every surface this message has lived on.
             */}
             {error && <p className="mt-6 text-sm">{error}</p>}
-          </div>
-
-          {/*
-            --- the way out ---------------------------------------------------
-
-            **A word at the foot, not a circle on the poster.** It was a black
-            disc in the artwork's top-left corner; this is where it landed on
-            17 August, and the reasons are §11's rather than this screen's.
-
-            **Type-first.** This app takes furniture *off* pictures — the lists
-            lost their thumbnails for the same reason. A circle sitting on a
-            poster is a control drawn on top of the one thing the screen is for;
-            a word in the type column is a control where the app keeps its
-            controls.
-
-            **Thumb height.** The top-left corner of a large phone is the hardest
-            place on the screen to reach one-handed, and it was holding the only
-            visible way out. The foot is where a thumb already is.
-
-            ⚠ **Outside the scroller, and that is the part that matters.** It is a
-            sibling of the pane above rather than the last thing in it, so a long
-            synopsis cannot push it below the fold. **A close you have to scroll
-            to find is worse than one you cannot reach** — which is the failure
-            this move would otherwise have swapped one for.
-
-            No rule along the top: the ground does the separating, as it does
-            under the masthead and over the collections bar. `components/profile-panel.tsx`
-            makes the same call for the same reason.
-
-            `micro`, so it reads as the app's caption tier rather than as a second
-            action competing with the intents above it. Escape still closes, and
-            always did — this is the affordance, not the mechanism.
-          */}
-          <div className="gutter safe-bottom shrink-0 [--safe-bottom-base:1.25rem]">
-            <button
-              type="button"
-              onClick={() => ref.current?.close()}
-              className="text-muted hover:text-text micro tap-target transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
