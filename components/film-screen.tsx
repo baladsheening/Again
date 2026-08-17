@@ -71,17 +71,9 @@ const ARTWORK = 'h-2/3'
 /**
  * The one circle on the artwork.
  *
- * ⚠ **A ring in `currentColor`, and the ring is the whole point of the shape now.**
- * Asked for on 17 August: the outline should be on the `+` rather than on the
- * close. It is — and the close no longer has a circle at all, having moved to the
- * foot as a word, so there is exactly one ringed control on this screen and it is
- * the one the screen exists for.
- *
- * **`border-current` rather than a colour**, so the ring is whatever the glyph
- * inside it is: paper while it is a `+`, green once it is a tick. A fixed white
- * ring around a green tick would be two claims about one control — the outline
- * saying *button* and the mark saying *listed* — and the second is the one worth
- * hearing. One state, one colour, ring and glyph together.
+ * ⚠ **No ring. It had one for a single commit and it is reverted** — a hairline
+ * in `currentColor`, added on 17 August so the outline sat on the `+` rather than
+ * on the close, and rejected on sight. The fill alone is the shape.
  *
  * ⚠ **`black/70` and no blur, and both halves are deliberate.** These sit over
  * whatever the poster happens to be, so the ground has to be dark enough to carry
@@ -105,7 +97,7 @@ const ARTWORK = 'h-2/3'
  * the foot of the app is where glass belongs; this is a button.
  */
 const CONTROL =
-  'bg-black/70 border-current tap-target flex size-9 shrink-0 items-center justify-center rounded-full border'
+  'bg-black/70 tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
 
 type Details = {
   synopsis: string | null
@@ -428,19 +420,49 @@ export function FilmScreen({
           */}
           <div
             aria-hidden
-            className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/70 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/70 to-transparent"
           />
 
           {/*
-            ⚠ **Nothing is drawn on the artwork's top line any more.** The close
-            was up here — a second black circle in the corner — and it moved to the
-            foot on 17 August. What that buys is the whole top of the poster: the
-            two thirds of the screen this screen is *about* now carries the title,
-            the credit and the one control that acts on them, and nothing else.
-          */}
+            ─────────────────────────────────────────────────────────────────────
+             The artwork is the way back — 17 August
+            ─────────────────────────────────────────────────────────────────────
 
-          {/* --- what it is, over the foot of the artwork --------------------- */}
-          <div className="gutter absolute inset-x-0 bottom-0 pb-5">
+            Directed: tapping the artwork returns you to the wall. Which is the
+            interaction `PosterReveal` in `poster.tsx` has had since 8 August —
+            *tap the title, see the poster; tap anywhere, close it* — and the
+            reason it works there is the reason it works here: a picture that
+            opened on a tap is a picture that should shut on one.
+
+            ⚠ **A `<button>` covering the artwork, not an `onClick` on the div.**
+            The same call the intent sheet's scrim made, in its own words: a click
+            handler on a div is something only a mouse can find, while a button is
+            reachable from a keyboard and announced as a control. It costs one
+            element and it is the difference between an affordance and a secret.
+
+            **Nothing is excluded by name.** The layer below it is artwork, the
+            layer above it is the title block, and that block is
+            `pointer-events-none` with the `+` alone restoring them — so a tap on
+            the poster, on the title, on the credit line or on the empty half of
+            that row all reach this, and only the one control does not. No
+            `closest()` check, no list of things to ignore, nothing to keep in step
+            when something is added to the block later.
+          */}
+          <button
+            type="button"
+            onClick={() => ref.current?.close()}
+            aria-label="Close"
+            className="absolute inset-0"
+          />
+
+          {/*
+            --- what it is, over the foot of the artwork ---------------------
+
+            `pointer-events-none`, so this block is *read* rather than tapped and
+            everything under it is the artwork's own close button — see the note
+            there. The `+` inside puts them back for itself.
+          */}
+          <div className="gutter pointer-events-none absolute inset-x-0 bottom-0 pb-5">
             {/*
               ─────────────────────────────────────────────────────────────────
                The `+` ends the title, on whichever line the title ends
@@ -503,7 +525,7 @@ export function FilmScreen({
                 rather than *that worked*. See `--color-listed` in globals.css for
                 what that distinction costs and why it is drawn that way round.
               */}
-              <span className="inline-flex h-[1lh] items-center align-middle">
+              <span className="pointer-events-auto inline-flex h-[1lh] items-center align-middle">
                 <AddControl
                   state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
                   label={specFor('film', primary).wantLabel}
