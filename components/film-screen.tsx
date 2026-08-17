@@ -133,6 +133,63 @@ export function FilmScreen({
   }, [])
 
   /*
+    ───────────────────────────────────────────────────────────────────────────
+     The wall is where you left it — 17 August
+    ───────────────────────────────────────────────────────────────────────────
+
+    **Objective, in the words it was reported in: you should not be able to swipe
+    while a poster is open and find yourself somewhere else on the wall when you
+    close it.**
+
+    ⚠ **The first attempt is reverted, and the reason it was the wrong shape is
+    worth more than the reason it did not work.** It was `touch-none` on the
+    artwork, `overscroll-contain` on the pane and `overscroll-none` on the
+    dialog — three declarations, each blocking one route by which a gesture can
+    reach the document. That is a defence built from a *list*, and a list is only
+    as good as its completeness: momentum after the finger has gone, a wheel over
+    a margin, a focus that reveals something, the browser's own address-bar
+    reflow. Every one of those is another line, and the failure of any one of
+    them looks exactly like the failure the report describes.
+
+    **This does not care how the page moved.** Two lines, in the order they
+    matter:
+
+    1. **The document is held still while the screen is open.** `overflow:
+       hidden` on the root removes the scroll range, so there is nothing to
+       scroll into and the position cannot change. This is the lock globals.css
+       records taking *off* on 13 August — and the note there is about a lock
+       that was permanent, which cost Safari's address-bar collapse and
+       pull-to-refresh on every screen in the app. Neither of those means
+       anything under a modal that covers the viewport, and it is put back the
+       moment the screen closes.
+    2. **The position is put back regardless.** `scrollY` is read on the way in
+       and restored on the way out, so if the lock is defeated on some engine —
+       and iOS has defeated more than one scroll lock in this project's lifetime
+       — the objective still holds. The first line is why nothing moves; the
+       second is why it does not matter if it does.
+
+    `behavior: 'instant'` because `html` sets `scroll-behavior: smooth`, and a
+    restore is not a journey — smooth would animate the wall back under you.
+
+    Written through the CSSOM rather than as a class, and that is a CSP
+    requirement rather than a preference: `style-src` has no `unsafe-inline`, so
+    a rendered `style` attribute is dropped in production while `el.style.x` from
+    JS is untouched. See the note on `wordmark-trim` in globals.css.
+  */
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overflow
+    const y = window.scrollY
+
+    root.style.overflow = 'hidden'
+
+    return () => {
+      root.style.overflow = previous
+      window.scrollTo({ top: y, behavior: 'instant' })
+    }
+  }, [])
+
+  /*
     The details, and whether it is already on your list — one request, see
     `app/api/film/[id]/route.ts`.
 
