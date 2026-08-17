@@ -5,6 +5,7 @@ import { createContext, use, useEffect, useRef, useState, useTransition } from '
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { FilmSearchResult, Intent } from '@/lib/domain'
 import { intentsFor, specFor } from '@/lib/vocabulary'
+import { HapticSwitch, haptic } from './haptics'
 import { TickIcon } from './icon-tick'
 import { Poster } from './poster'
 
@@ -126,28 +127,6 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       }
       // The same title, now with something to undo. Only the mark changes.
       setAdded({ title: film.title, entryId: result.value.entryId })
-
-      /*
-        The light haptic asked for with the tick, fired at the same moment — the
-        row exists, so the confirmation is honest.
-
-        ⚠ **It does nothing on iOS, which is the surface this was asked from.**
-        Safari implements no Vibration API at all, on any iOS version; this is
-        not a prefix or a permission away. The one known iOS route is a hidden
-        `<input type="checkbox" switch>` toggled through its label, and it is no
-        use here even setting aside what it is: that trick needs a live user
-        gesture, and this fires after a network round trip, by which time the
-        gesture is long over.
-
-        So it is written as the standard call and feature-detected, which is
-        exactly what it would be if iOS shipped the API tomorrow. **The tick is
-        the confirmation on every surface; the haptic is an addition where the
-        platform has one.** Android gets it now.
-
-        10ms is the conventional light tap. Anything longer is a buzz, and a buzz
-        for an add is the phone asking to be noticed rather than answering.
-      */
-      navigator.vibrate?.(10)
     })
   }
 
@@ -164,6 +143,9 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
   return (
     <CaptureContext.Provider value={{ choose: setChosen }}>
       {children}
+
+      {/* Mounted once for the app — see `haptics.tsx` for why it is a checkbox. */}
+      <HapticSwitch />
 
       {chosen && (
         <IntentSheet film={chosen} onPick={add} onClose={() => setChosen(null)} />
@@ -378,10 +360,20 @@ function IntentSheet({
           </div>
         </div>
 
+        {/*
+          `haptic()` on the tap itself, not on the server's answer — see
+          `haptics.tsx`. iOS only plays one inside a live gesture, and this is the
+          gesture: the finger is still on the control that means *add this*. What
+          the phone is answering is the tap, which is the honest thing for a
+          haptic to answer; the tick is what answers the add.
+        */}
         <div className="flex flex-col items-start gap-3">
           <button
             type="button"
-            onClick={() => onPick(film, primary)}
+            onClick={() => {
+              haptic()
+              onPick(film, primary)
+            }}
             className="border-rule hover:border-text w-full rounded border px-4 py-3 text-left text-sm transition-colors"
           >
             {specFor('film', primary).wantLabel}
@@ -391,7 +383,10 @@ function IntentSheet({
             <button
               key={intent}
               type="button"
-              onClick={() => onPick(film, intent)}
+              onClick={() => {
+                haptic()
+                onPick(film, intent)
+              }}
               className="text-muted hover:text-text tap-target text-left text-sm underline underline-offset-4 transition-colors"
             >
               {specFor('film', intent).wantLabel}
