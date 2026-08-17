@@ -59,8 +59,21 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
 
         Both states wear it. A shape that arrived only once the list was empty
         would be a container that came and went with the data.
+
+        ⚠ **`/40`, and full-strength `bg-surface` was wrong here — reported as
+        "way too grey".** The token is tuned for things that are *meant* to read as
+        raised off the ground: the intent sheet, the capture field, the toast. At
+        full strength it is 1.29:1 against pure black, which is the whole point of
+        a card and far too much for a container whose job is to group two lines of
+        quiet text. At 40% it composites to #0d0d0c over the black ground —
+        about 1.09:1 — which reads as a shape without reading as a panel.
+
+        Opacity rather than a new colour, deliberately: it stays a tint of the same
+        warm charcoal, so the pill cannot drift away from the palette's warmth the
+        way a hand-picked near-black would. `bg-surface/60` on the search bar's back
+        arrow is the same move.
       */}
-      <div className="bg-surface mt-1 flex w-fit max-w-sm flex-col rounded-2xl p-4">
+      <div className="bg-surface/40 mt-1 flex w-fit max-w-sm flex-col rounded-2xl p-4">
         <h2 className="micro text-muted mb-2">People</h2>
 
         {people.length === 0 ? (
