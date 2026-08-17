@@ -170,6 +170,23 @@ export const entries = pgTable(
     state: text('state').$type<EntryState>().notNull(),
     /** Experiences only; rewatches, revisits. Objects have no return count. */
     returnCount: integer('return_count').notNull().default(0),
+    /**
+     * A private one-line note on your own entry (§4-adjacent, decided 8 August).
+     *
+     * ⚠ **Owner only, forever.** It is why you added the thing, not what you
+     * thought of it — the distinction that keeps it on the right side of §4's ban
+     * on review, rating, score and favourite. It is unstructured and nobody else
+     * can read it, so there is nothing to aggregate and nothing to compare.
+     *
+     * ⚠ **It must never appear in `listEntriesForOtherUser`'s projection**, which
+     * is why that function selects columns by name instead of the whole row. See
+     * the note there — this is the third guarantee in the product that fails
+     * without a symptom.
+     *
+     * The identifier is `note`. `no-restricted-syntax` fails the build on
+     * `review`, correctly.
+     */
+    note: text('note'),
     source: text('source').$type<EntrySource>().notNull().default('self'),
     sourceUserId: uuid('source_user_id').references(() => profiles.id, {
       onDelete: 'set null',

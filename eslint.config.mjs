@@ -22,7 +22,21 @@ const eslintConfig = defineConfig([
      * `lib/db/`. There is no RLS backstop, so a query that forgets to filter is
      * caught here or not at all.
      */
-    ignores: ['lib/db/**', 'lib/auth.ts', 'lib/overlap.ts', 'drizzle.config.ts'],
+    /*
+      `tests/**` is exempt for one reason, and it is the reason the tests exist:
+      they arrange their fixtures with the raw driver so that a bug in `lib/db/`
+      cannot quietly set up the conditions its own guarantee is being checked
+      against. A test that inserted a private note *through* the layer would be
+      asking the layer whether it agrees with itself.
+    */
+    ignores: [
+      'lib/db/**',
+      'lib/auth.ts',
+      'lib/overlap.ts',
+      'drizzle.config.ts',
+      'tests/**',
+      'vitest.config.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

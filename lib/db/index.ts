@@ -54,12 +54,21 @@ export {
   listEntriesForOtherUser,
   addEntry,
   copyEntry,
+  setEntryNote,
+  NOTE_MAX,
   resolveEntry,
   undoEntry,
   UNDO_WINDOW_MS,
   toEntryCard,
 } from './entries'
-export type { OwnerView, PublicView, EntryWithItem, Page } from './entries'
+export type {
+  OwnerView,
+  PublicView,
+  EntryWithItem,
+  PublicEntry,
+  PublicEntryWithItem,
+  Page,
+} from './entries'
 
 export { upsertItem } from './items'
 export type { ItemInput } from './items'

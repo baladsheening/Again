@@ -17,10 +17,38 @@ export type PublicView = 'live' | 'go_back_tos' | 'fixtures'
 export type EntryWithItem = { entry: Entry; item: Item }
 
 /**
+ * What another person's entry may be.
+ *
+ * ⚠ **Named columns, never `entries`.** `select({ entry: entries })` returns
+ * whatever the table happens to hold, so the day a private column is added it is
+ * already in every public read — nothing fails, nothing looks wrong, and the
+ * guarantee is gone. `note` is that column. Listing the public ones by hand means
+ * a new private field is excluded by default rather than by memory.
+ *
+ * Adding a column here is a decision to publish it. Do not spread `entries`.
+ */
+const PUBLIC_ENTRY_COLUMNS = {
+  id: entries.id,
+  userId: entries.userId,
+  itemId: entries.itemId,
+  intent: entries.intent,
+  state: entries.state,
+  returnCount: entries.returnCount,
+  source: entries.source,
+  sourceUserId: entries.sourceUserId,
+  createdAt: entries.createdAt,
+  resolvedAt: entries.resolvedAt,
+} as const
+
+export type PublicEntry = Omit<Entry, 'note'>
+export type PublicEntryWithItem = { entry: PublicEntry; item: Item }
+
+/**
  * Reduce a row to what a view needs (§10, and the Next.js data-security
  * guide). `user_id`, `source_user_id` and the timestamps stay on the server.
  */
-export function toEntryCard({ entry, item }: EntryWithItem): EntryCard {
+/** Takes the public shape, so it cannot be the thing that carries `note` out. */
+export function toEntryCard({ entry, item }: PublicEntryWithItem): EntryCard {
   const metadata = (item.metadata ?? {}) as { posterPath?: string | null }
   return {
     id: entry.id,
@@ -310,6 +338,37 @@ export async function resolveEntry(
   sake of tidiness. It costs nothing to leave.
 */
 
+/** §10 bounds it at the boundary; this is the same number, owned here. */
+export const NOTE_MAX = 140
+
+/**
+ * Write the private note on your own entry.
+ *
+ * Filtered on `userId` as well as `id`, so the only entry you can annotate is one
+ * you own — the same clause that makes `resolveEntry` safe. An empty string clears
+ * it to `null` rather than storing a blank, so "no note" has one representation.
+ *
+ * Not covered by the undo window and not deleted by it: a note is a correction to
+ * your own record, and there is nothing to take back but the text itself.
+ */
+export async function setEntryNote(
+  sessionUser: SessionUser,
+  entryId: string,
+  note: string | null,
+): Promise<Result<PublicEntry & { note: string | null }>> {
+  const trimmed = note?.trim() ?? ''
+  if (trimmed.length > NOTE_MAX) return err('invalid', 'That note is too long.')
+
+  const [updated] = await db
+    .update(entries)
+    .set({ note: trimmed === '' ? null : trimmed })
+    .where(and(eq(entries.id, entryId), eq(entries.userId, sessionUser.id)))
+    .returning()
+
+  if (!updated) return err('not_found', 'No such entry.')
+  return ok(updated)
+}
+
 /**
  * The one exception to "nothing is ever deleted" (§5.1): a 10-second undo on
  * creation, for typos. Bounded by `created_at` in SQL rather than trusted from
@@ -392,9 +451,9 @@ export async function listEntriesForOtherUser(
   targetUserId: string,
   view: PublicView,
   { limit = PAGE_SIZE, offset = 0 }: Page = {},
-): Promise<EntryWithItem[]> {
+): Promise<PublicEntryWithItem[]> {
   const rows = await db
-    .select({ entry: entries, item: items })
+    .select({ entry: PUBLIC_ENTRY_COLUMNS, item: items })
     .from(entries)
     .innerJoin(items, eq(items.id, entries.itemId))
     .where(

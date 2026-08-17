@@ -3221,6 +3221,102 @@ the deployed app is affected.
 
 ---
 
+## `/profile`, the private note, and two tests — 17 August
+
+Six commits on `/profile` and one on the note. The reasoning that has to survive:
+
+### The foot stops jumping, and both feet read one number
+
+`/profile` is the only route with the collections bar hidden, so its *Sign out* sat
+wherever content ended and the foot of the screen moved as you entered and left.
+The bar's geometry is `--collections-inset` and `--collections-row` now, read by
+both screens. ⚠ **The inset is the home-indicator band *less a centimetre*** — the
+whole band is right in a Safari tab and wrong installed. Measured 0px drift:
+21.01px above the foot on a phone, 47.15px above `rail`, which is the rail's own
+line.
+
+⚠ **`foot-collections` / `foot-bare` are `@utility` blocks, not arbitrary
+properties in a class string.** Two declarations of one custom property at equal
+specificity are resolved by stylesheet order, which a class attribute cannot state;
+`@variant rail` nested inside `@utility` can.
+
+### The name came off, and the pill went quiet
+
+Nobody needs telling their own name, and the rail carries `@handle` alone — so the
+two corners now agree. `display_name` still feeds `nameFor` for people who track
+you back, which is the audience it was collected for.
+
+Removing it exposed an outline defect this session had introduced: with People above
+and identity pinned to the foot, the handle as `<h1>` gave *h2 then h1*. The page's
+`<h1>` is `sr-only` in the page, where it can precede the `<h2>`.
+
+The pill is the **first surface in the app with a fill and no hairline**. Full
+strength `bg-surface` was rejected on sight — it is 1.29:1 against black, which is
+what a card wants and far too much for grouping two lines of quiet text. `/40`
+composites to `#0d0d0c`, about 1.09:1. ⚠ **Use opacity, never a hand-picked
+near-black:** a tint of the same charcoal cannot drift out of the palette's warmth.
+
+### Nothing at that screen's edges moves
+
+Handle and *Sign out* are a fixed foot below `rail`; `main` reserves their height
+through `--profile-foot`, written as *handle font size + `--collections-row`* rather
+than as 56px. Verified across a real scroll — 253px on a phone, 147px on a desk —
+mark and identity unmoved at both.
+
+⚠ **Above `rail` the block is hidden, not repositioned.** The rail already carries
+the same two things in the same corner, fixed, so this was a duplicate — and it was
+the thing scrolling, 184px of travel while the rail's copy held still. The
+alternative was a second set of coupled numbers to hold a second copy of what was
+already on screen.
+
+⚠ **The masthead never could recede here** — the recede listener returns early on
+`!showCollections` and `receded` is stamped with the route it hid on. Nothing was
+broken; `mastheadHidden` now states `showCollections` outright so the guarantee is a
+property of the masthead rather than a consequence of two things elsewhere.
+
+### The private note, and why the projection changed shape
+
+One nullable column, bounded at 140 by `NOTE_MAX`, written through
+`setEntryNote(SessionUser, …)` filtered on `userId` as well as `id`. Empty clears to
+`null`, so "no note" has one representation.
+
+⚠ **`listEntriesForOtherUser` no longer selects `entries`.** It selects
+`PUBLIC_ENTRY_COLUMNS` by name. `select({ entry: entries })` returns whatever the
+table happens to hold, so the day a private column is added it is already in every
+public read — nothing fails, nothing looks wrong, and the guarantee is gone. Listing
+the public columns means a new private field is excluded **by default rather than by
+memory**. Adding one to that object is a decision to publish it.
+
+**Where the note is offered in the UI is still not decided**, and `plan.md` always
+said it was the small part. The column, the bound, the mutation and the exclusion
+are done and tested.
+
+### A test file, and deliberately not a suite
+
+`npm test` — Vitest, one file, six assertions, three guarantees: another person's
+`done` never returned, the note never in a public projection, `getSwap` blind until
+both commit.
+
+⚠ **The argument against a real suite still stands.** Every fault that has mattered
+in this project was found by driving the app and looking at it, and no unit test
+would have caught any of them. What is here is the opposite case — guarantees that
+fail with **no symptom**, where a passing build and a screen that looks right are
+both consistent with the guarantee being gone.
+
+Three things worth knowing about the setup:
+
+- ⚠ **It writes, and it refuses to run against production** — the same
+  `PRODUCTION_DB_HOST` check `preflight` uses.
+- ⚠ **`server-only` is not an installed package**; Next resolves it. Vitest aliases
+  it to a stub, which removes nothing — the rule exists to stop a *client bundle*
+  importing `lib/db/`, and a test process is not one.
+- **Fixtures are written with the raw driver**, and `tests/**` is exempt from the
+  §3 import ban for that reason: a test that inserted a note *through* the layer
+  would be asking the layer whether it agrees with itself. `SessionUser` is cast
+  there and nowhere else.
+
+---
+
 ## The databases are two — 17 August
 
 The last thing in pre-phase 2, and the only one that could not be retrofitted.

@@ -7,6 +7,8 @@ import { headers } from 'next/headers'
 import {
   addEntry,
   copyEntry,
+  setEntryNote,
+  NOTE_MAX,
   requireSessionUser,
   resolveEntry,
   undoEntry,
@@ -143,6 +145,33 @@ export async function copyEntryAction(
 
   refresh()
   return { ok: true, value: { created: result.value.created } }
+}
+
+const noteSchema = z.string().max(NOTE_MAX)
+
+/**
+ * The private note. Zod bounds it here because §10 asks for a schema at every
+ * boundary; the data layer checks the same length, and the two agree through
+ * `NOTE_MAX` rather than by both spelling a number.
+ */
+export async function setEntryNoteAction(
+  entryId: string,
+  note: string,
+): Promise<ActionResult> {
+  const sessionUser = await requireSessionUser()
+
+  if (!entryIdSchema.safeParse(entryId).success) {
+    return { ok: false, message: 'Unknown entry.' }
+  }
+  if (!noteSchema.safeParse(note).success) {
+    return { ok: false, message: `Keep it under ${NOTE_MAX} characters.` }
+  }
+
+  const result = await setEntryNote(sessionUser, entryId, note)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  refresh()
+  return { ok: true, value: null }
 }
 
 /** v1 offers `see` and `own` for films, default first (§8). */

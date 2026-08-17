@@ -11,8 +11,8 @@ keeps things.
 **Ship each phase to Vercel before starting the next** (§12). A phase is not done
 because the code exists.
 
-Current at `1f6ae2c` plus the database split carried in this commit,
-17 August 2026.
+Current at `01771f1` plus the private note and the test file carried in this
+commit, 17 August 2026.
 
 ---
 
@@ -24,7 +24,7 @@ Current at `1f6ae2c` plus the database split carried in this commit,
 | 0.5 — account recovery | Password reset, auth rate limiting, `lib/email.ts` | **Done.** Reset proven end to end to a real inbox |
 | 1 — single player | Profiles, capture, entries, collections, resolve flow, the visual system, the phone shell | **Done and deployed.** Judged on hardware over four sessions |
 | pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Done, 17 August.** D1 answered `no`, the caption switched off, the databases separated and the test accounts cleared |
-| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | **Mostly built, 17 August.** All four exist and are verified through the product with two accounts — 37 assertions. **Not deployed, and the private note is not built** |
+| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | **Done, 17 August, apart from where the note is offered.** Verified through the product with two accounts (37 assertions) and deployed; the note has a column, a bound, a mutation and a test |
 | 3 — overlap | Trigger + notification rows, `/notifications`, `/overlap` picker. In-app only | Not started |
 | 4 — swap | Full flow, blind commit enforced in the data layer, `landed` | Not started |
 | 5 — PWA + push | Manifest, service worker, VAPID, subscriptions, install prompt | Manifest and install exist; push does not |
@@ -67,11 +67,12 @@ question rather than a task.
       and verified with two accounts through the real UI. **Still to do inside
       Phase 2:** the private note, and shipping it. → `decisions.md`, *Phase 2:
       the other person*
-- [ ] **A private one-line note on your own entry.** Decided 8 August, needs a
-      column and a migration. **The last thing in Phase 2.** → *Carry-forward,
-      Phase 2*
-- [ ] **Ship Phase 2 to Vercel.** §12: a phase is not done because the code
-      exists. Nothing is deployed since `0e006a5`.
+- [x] ~~**A private one-line note on your own entry.**~~ Built 17 August: one
+      nullable column, bounded at 140 by `NOTE_MAX`, written through
+      `setEntryNote` on the `SessionUser`, and excluded from the public projection
+      by name rather than by memory. **What is left is where it is offered in the
+      UI**, which was always the undecided half.
+- [x] ~~**Ship Phase 2 to Vercel.**~~ Deployed, nine commits on 17 August.
 
 ### Before a second person can use it
 
@@ -482,16 +483,12 @@ not an oversight — the reasoning is in `decisions.md`.
       track = display name, otherwise `@handle`, in one function (`nameFor`). It
       also turned up a fault: the app asked for a name twice and the optional one
       won even when blank, so the rule had never fired for the only real account.
-- [ ] **§13 test one, as a *test*:** another user's `done` entries are never
-      returned. The behaviour is verified — twice on 17 August, in the data layer
-      and through the page — but **there is no test suite in this repository**, so
-      nothing stops it regressing. That is the honest state: §13 asks for a test
-      and what exists is a probe that was thrown away. Deciding whether this
-      project gets a runner is its own small decision.
-- [ ] **The private note must not reach `/u/[handle]`.** The projection does not
-      exist yet because the column does not. When it arrives, `note` stays out of
-      it and out of any type it returns. Same shape as the `done` exclusion:
-      nothing fails, nobody notices, and the guarantee is gone.
+- [x] ~~**§13 test one, as a *test*.**~~ `npm test` — Vitest, one file, six
+      assertions. Not a suite, and `decisions.md` carries the argument for keeping
+      it that way.
+- [x] ~~**The private note must not reach `/u/[handle]`.**~~
+      `listEntriesForOtherUser` selects `PUBLIC_ENTRY_COLUMNS` by name, so a new
+      private column is excluded by default. Covered by the test above.
 - [ ] **Build the private note.** One nullable text column on `entries`, bounded
       by Zod at the boundary, read and written through `lib/db/entries.ts` on the
       `SessionUser`. The identifier is `note` — `no-restricted-syntax` fails the
@@ -513,6 +510,20 @@ not an oversight — the reasoning is in `decisions.md`.
       say six. Six are built.
 - [ ] **Read through the counterpart copy** for `guide` and `lend`, which was
       invented and marked as invented in `notificationCopy`.
+
+### Scale, when there is any
+
+Neither is a task today, and both are cheap to state and expensive to discover late.
+
+- [ ] **The `development` branch is a copy of production data.** Free and sensible
+      with one user; the moment there are real users it is a copy of their rows on a
+      laptop. The answer then is a schema-only branch plus a synthetic seed, not a
+      data clone. Reconsider the first time somebody other than the owner has rows.
+- [ ] **There is no credential rotation story.** The dev branch password has passed
+      through a terminal, nothing rotates, and one role does both migrations and
+      application queries. Least privilege and rotation are the two halves; neither
+      is worth building before there is data worth protecting, and both get harder
+      the longer they wait.
 
 ### Phase 4
 
