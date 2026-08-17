@@ -37,6 +37,37 @@ export type NotificationKind =
   | 'landed'
 
 /**
+ * How a person is named on screen (§5): *people who know you should see your
+ * name; the handle is for strangers who land on your page.*
+ *
+ * **Knowing someone is a mutual track** — the same relation §6 already requires
+ * for overlap. That is the whole reason this needs no new object: the condition
+ * was in the schema before the question was asked, so the rule is a read rather
+ * than a feature. It is also why groups are not required to answer it (see
+ * `docs/decisions.md`, *Groups*).
+ *
+ * `displayName` is optional at onboarding, so a mutual with no name still falls
+ * back to the handle. The fallback is not a degraded case — it is what someone
+ * who never filled the field in is called.
+ */
+export type PersonRef = {
+  handle: string
+  displayName: string | null
+  /** Both rows of `tracks` exist. Asymmetric following is not knowing. */
+  mutual: boolean
+}
+
+/**
+ * The one place the rule above is spelled. It returns the handle **with its `@`**
+ * so that no call site has to decide whether to add one — a handle is never
+ * shown without it, and a name is never shown with it. A caller that branches on
+ * `mutual` itself is a second copy of this rule and will drift from it.
+ */
+export function nameFor(person: PersonRef): string {
+  return person.mutual && person.displayName ? person.displayName : `@${person.handle}`
+}
+
+/**
  * A search hit, already reduced to what the app stores. The TMDB response shape
  * stops at the edge of `lib/tmdb.ts` — nothing downstream knows what a
  * `poster_path` or a `release_date` is.

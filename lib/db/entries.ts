@@ -292,8 +292,10 @@ async function fireOverlap(
   sessionUser: SessionUser,
   entry: Entry,
 ) {
+  // `displayName` as well as the handle: notifications only cross mutual tracks,
+  // which is the condition §5 attaches names to — see `nameFor` in lib/domain.ts.
   const [me] = await tx
-    .select({ handle: profiles.handle })
+    .select({ handle: profiles.handle, displayName: profiles.displayName })
     .from(profiles)
     .where(eq(profiles.id, sessionUser.id))
     .limit(1)
@@ -311,6 +313,7 @@ async function fireOverlap(
     {
       userId: entry.userId,
       handle: me.handle,
+      displayName: me.displayName,
       intent: entry.intent,
       state: entry.state,
       source: entry.source,

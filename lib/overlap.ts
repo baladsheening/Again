@@ -3,7 +3,7 @@ import 'server-only'
 import { sql } from 'drizzle-orm'
 
 import type { Executor } from '@/lib/db/client'
-import type { EntryState, Intent, NotificationKind } from '@/lib/domain'
+import { nameFor, type EntryState, type Intent, type NotificationKind } from '@/lib/domain'
 import { notifications } from '@/lib/db/schema'
 
 /**
@@ -178,6 +178,57 @@ export function classify(u: Side, v: Side): Match[] {
 /*  Entry point                                                                */
 /* -------------------------------------------------------------------------- */
 
+/** Enough of a profile to name someone in a notification. */
+export type Named = { handle: string; displayName: string | null }
+
+/**
+ * A notification only ever crosses a **mutual** track — that is the precondition
+ * of both fan-outs below, not an assumption made here — and a mutual track is
+ * exactly the condition §5 attaches names to. So `nameFor` is asked with
+ * `mutual: true` rather than being handed a third naming rule of its own.
+ */
+function notificationName(person: Named | undefined): string {
+  return person ? nameFor({ ...person, mutual: true }) : 'Someone'
+}
+
+/** A match and the thing it is about. One notification row. */
+type Pending = { match: Match; item: { id: string; title: string } }
+
+/**
+ * The single writer, and **one INSERT however many matches there are**. Both
+ * entry points reduce to matches plus a way of naming the people in them, so the
+ * row shape is written once — §6's warning about this module drifting applies
+ * hardest to the payload, which is what the UI reads.
+ *
+ * Taking the item per match rather than for the batch is what lets the pair
+ * fan-out below stay one statement: it spans many items, and a writer that
+ * assumed one would have forced a query per item — the exact per-row shape §6
+ * rules out for the fan-out itself.
+ */
+async function writeNotifications(
+  tx: Executor,
+  pending: Pending[],
+  names: ReadonlyMap<string, Named>,
+): Promise<Match[]> {
+  if (pending.length === 0) return []
+
+  await tx.insert(notifications).values(
+    pending.map(({ match, item }) => ({
+      userId: match.recipientId,
+      kind: match.kind satisfies NotificationKind,
+      payload: {
+        itemId: item.id,
+        title: item.title,
+        counterpartId: match.counterpartId,
+        counterpartName: notificationName(names.get(match.counterpartId)),
+        ...(match.guideHolder ? { guideHolder: true } : {}),
+      },
+    })),
+  )
+
+  return pending.map((p) => p.match)
+}
+
 /**
  * Run on insert into `entries`, and on any state change.
  *
@@ -187,36 +238,112 @@ export function classify(u: Side, v: Side): Match[] {
  */
 export async function runOverlap(
   tx: Executor,
-  actor: Side & { handle: string },
+  actor: Side & Named,
   item: { id: string; title: string },
 ): Promise<Match[]> {
   const counterparts = await findMutualCounterparts(tx, actor.userId, item.id)
 
-  const matches = counterparts.flatMap((v) => classify(actor, v))
-  if (matches.length === 0) return []
+  const names = new Map<string, Named>([[actor.userId, actor]])
+  for (const c of counterparts) names.set(c.userId, c)
 
-  const byId = new Map(counterparts.map((c) => [c.userId, c]))
-
-  await tx.insert(notifications).values(
-    matches.map((m) => ({
-      userId: m.recipientId,
-      kind: m.kind satisfies NotificationKind,
-      payload: {
-        itemId: item.id,
-        title: item.title,
-        counterpartId: m.counterpartId,
-        counterpartName:
-          m.counterpartId === actor.userId
-            ? actor.handle
-            : (byId.get(m.counterpartId)?.displayName ??
-              byId.get(m.counterpartId)?.handle ??
-              'Someone'),
-        ...(m.guideHolder ? { guideHolder: true } : {}),
-      },
-    })),
+  return writeNotifications(
+    tx,
+    counterparts.flatMap((v) => classify(actor, v).map((match) => ({ match, item }))),
+    names,
   )
+}
 
-  return matches
+/* -------------------------------------------------------------------------- */
+/*  The second trigger: a track becoming mutual                                */
+/* -------------------------------------------------------------------------- */
+
+type PairRow = {
+  itemId: string
+  title: string
+  aIntent: Intent
+  aState: EntryState
+  aSource: string
+  aSourceUserId: string | null
+  bIntent: Intent
+  bState: EntryState
+  bSource: string
+  bSourceUserId: string | null
+}
+
+/**
+ * §6 runs the fan-out on insert into `entries` and on state change, which misses
+ * the case where two people **already** hold matching wants and only then start
+ * tracking each other. No entry moves, so nothing fires.
+ *
+ * That is the seed-time case §13 describes — a dozen friends joining in a week
+ * and backfilling their lists before the graph is complete — so it is the app's
+ * first impression, and it was the one case the trigger did not cover.
+ *
+ * Same module, same `classify`, same writer: a second **caller**, not a second
+ * copy of the rules. Scoped to the one pair, and still one set-based statement —
+ * `entries` joined to itself on `item_id`, which is what
+ * `entries_item_intent_state_idx` and the `(user_id, item_id, intent)` unique
+ * index are both able to drive.
+ *
+ * ⚠ **Deliberately uncapped, and that is a decision with a date on it.** Two
+ * people with forty items in common produce forty matches per side at the moment
+ * they connect. While notifications are in-app that is the *value* of connecting
+ * arriving all at once rather than a flood — the app has nowhere else to say it.
+ * It stops being obviously right the moment push exists; `docs/plan.md` carries
+ * it into Phase 5, where the worker is written.
+ */
+export async function runOverlapForNewMutual(
+  tx: Executor,
+  a: { userId: string } & Named,
+  b: { userId: string } & Named,
+): Promise<Match[]> {
+  const result = await tx.execute(sql`
+    select
+      i.id              as "itemId",
+      i.title           as "title",
+      ea.intent         as "aIntent",
+      ea.state          as "aState",
+      ea.source         as "aSource",
+      ea.source_user_id as "aSourceUserId",
+      eb.intent         as "bIntent",
+      eb.state          as "bState",
+      eb.source         as "bSource",
+      eb.source_user_id as "bSourceUserId"
+    from entries ea
+    join entries eb
+      on eb.item_id = ea.item_id
+     and eb.user_id = ${b.userId}
+    join items i
+      on i.id = ea.item_id
+    where ea.user_id = ${a.userId}
+  `)
+
+  const names = new Map<string, Named>([
+    [a.userId, a],
+    [b.userId, b],
+  ])
+
+  const pending = (result.rows as unknown as PairRow[]).flatMap((row) => {
+    const item = { id: row.itemId, title: row.title }
+    return classify(
+      {
+        userId: a.userId,
+        intent: row.aIntent,
+        state: row.aState,
+        source: row.aSource,
+        sourceUserId: row.aSourceUserId,
+      },
+      {
+        userId: b.userId,
+        intent: row.bIntent,
+        state: row.bState,
+        source: row.bSource,
+        sourceUserId: row.bSourceUserId,
+      },
+    ).map((match) => ({ match, item }))
+  })
+
+  return writeNotifications(tx, pending, names)
 }
 
 /* -------------------------------------------------------------------------- */

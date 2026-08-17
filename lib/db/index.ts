@@ -45,6 +45,9 @@ export type { Result, ErrorCode } from './result'
 
 export { getMyProfile, getProfileByHandle, createProfile } from './profiles'
 
+export { getTrackState, listMyTracks, trackUser, untrackUser } from './tracks'
+export type { TrackState, TrackedPerson } from './tracks'
+
 export {
   listMyEntries,
   countMyEntries,
