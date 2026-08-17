@@ -2071,7 +2071,13 @@ export function Shell({
           anything any more — the keyboard simply covers it — so the inset stands
           at all times and nothing writes this from JS.
         */
-        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[max(0px,calc(env(safe-area-inset-bottom)_-_1rem))] transition-[translate] duration-300 ${
+        /*
+          ⚠ **The inset is `--collections-inset` now, not written out here.**
+          `/profile` has no collections and stands its *Sign out* on this exact
+          line, so the number has two readers — and the whole reasoning above is
+          why it is not simply `env(safe-area-inset-bottom)`. See globals.css.
+        */
+        className={`bg-bg rail:hidden fixed inset-x-0 bottom-0 z-20 pb-[var(--collections-inset)] transition-[translate] duration-300 ${
           collectionsHidden ? 'translate-y-full' : 'translate-y-0'
         }`}
       >
@@ -2135,7 +2141,7 @@ export function Shell({
           the content, and is not — the collections wrap to two lines at 320px and
           the height is what keeps that from moving the bar under a thumb.
         */}
-        <div className="gutter flex min-h-10.5 items-center">
+        <div className="gutter flex min-h-[var(--collections-row)] items-center">
           {/*
             Dotted, not spaced. Labels separated by gaps alone read as loose
             words; a `·` between them makes one line of navigation, which is
@@ -2287,8 +2293,31 @@ export function Shell({
         painting; it only removes the freedom to get it wrong.
       */}
       <main
-        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 rail:[--safe-bottom-base:6rem] isolate flex w-full min-w-0 flex-1 flex-col pt-[var(--masthead-clearance)] ${
-          showCollections ? '[--safe-bottom-base:6rem]' : '[--safe-bottom-base:2rem]'
+        className={`gutter safe-bottom rail:max-w-3xl rail:pt-10 isolate flex w-full min-w-0 flex-1 flex-col pt-[var(--masthead-clearance)] ${
+          /*
+            ⚠ **`/profile`'s floor is the collections bar's floor**, expressed
+            through the base rather than by a second rule writing
+            `padding-bottom` — two rules on one property is how a spacing bug
+            survives a fix, which is already the note above.
+
+            `safe-bottom` adds `env(safe-area-inset-bottom)` in full, and the bar
+            deliberately clears only the indicator inside it, so the base is
+            whatever cancels the difference: on a 47px inset it comes to −16px and
+            the total to 31px, and where there is no inset both terms are zero and
+            nothing moves. That lands *Sign out* on the line the four labels
+            vacate, instead of 2rem above it.
+          */
+          /*
+            Named utilities rather than a pair of arbitrary properties. Two
+            declarations of one custom property at equal specificity are resolved
+            by their order in the compiled stylesheet, which a class attribute
+            cannot state — so both states live in CSS, where the `rail:` override
+            is nested inside the utility it overrides. Measured at both widths:
+            21.01px from the foot on a phone, 47.15px above `rail`, which are the
+            collections' line and the rail's own line respectively. See
+            `foot-collections` / `foot-bare` in globals.css.
+          */
+          showCollections ? 'foot-collections' : 'foot-bare'
         }`}
       >
         {/*

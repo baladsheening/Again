@@ -505,6 +505,30 @@
   --type-indent: 0.375rem;
 
   /**
+   * The foot's geometry, below `rail`. Two numbers, and they exist as tokens for
+   * the same reason `--masthead-hem` does: more than one screen has to land on
+   * this line, and a number restated is a number that drifts.
+   *
+   * `--collections-inset` is how far the bar sits off the bottom of the screen.
+   * ⚠ **It is the home-indicator inset LESS a centimetre, floored at zero**, and
+   * that is not an approximation — the whole inset is right in a Safari tab and
+   * wrong installed, where there is no toolbar occupying the band and the bar
+   * rose 34px overnight. The indicator needs clearing, not the band it is quoted
+   * in. The full account is at the `<nav>` in `components/shell.tsx`.
+   *
+   * `--collections-row` is the height of the row the labels centre in. It is
+   * fixed rather than content-driven because the four labels wrap to two lines at
+   * 320px, and a bar that changes height under a thumb is worse than one with
+   * slack in it.
+   *
+   * **`/profile` reads both**, because it is the one screen with no collections
+   * and its *Sign out* stands on the line they vacate. Without that the foot
+   * jumped every time you opened your own profile — see `components/profile-panel.tsx`.
+   */
+  --collections-inset: max(0px, calc(env(safe-area-inset-bottom) - 1rem));
+  --collections-row: 2.625rem;
+
+  /**
    * The mark's inked height, the depth of its descender, and the dead space
    * under it — all three as a fraction of `--text-wordmark`, so that changing
    * the size is one line again.
@@ -828,6 +852,45 @@
   padding-bottom: calc(
     var(--safe-bottom-base, 0px) + env(safe-area-inset-bottom) + var(--keyboard-overlap, 0px)
   );
+}
+
+/**
+ * What `main` reserves at its foot, as two named states rather than four
+ * arbitrary properties in a class string.
+ *
+ * ⚠ **It is written here because the ordering is a property of the stylesheet,
+ * not of the class attribute.** The first attempt was a pair in one class string —
+ * `[--safe-bottom-base:…] rail:[--safe-bottom-base:2.5rem]` — and it measured
+ * wrong at desk width: the rail rule was absent from the served CSS and the desk
+ * layout silently took the phone's value. On a later compile it was present, so
+ * the likeliest cause is a stale build rather than a Tailwind fault, and no claim
+ * is made here that it cannot work.
+ *
+ * The reason to keep it in CSS anyway: two declarations of the *same* custom
+ * property at equal specificity are resolved by their order in the compiled
+ * output, and a class attribute has no way to state that order. `@variant` nested
+ * inside `@utility` does, in one place, visibly. The failure mode being guarded
+ * against is a layout that is right on the width you measured — which is the
+ * standing rule in CLAUDE.md.
+ *
+ * `foot-collections` clears the bar at the foot. `foot-bare` is for `/profile`,
+ * the one route with no bar: below `rail` its total comes out at exactly
+ * `--collections-inset`, because `safe-bottom` adds the whole home-indicator
+ * inset and the bar deliberately clears only the indicator inside it — so the
+ * base is whatever cancels the difference, and *Sign out* lands on the line the
+ * collections vacate. Above `rail` the answer is the rail's own `py-10`, since
+ * the thing in that corner is the rail.
+ */
+@utility foot-collections {
+  --safe-bottom-base: 6rem;
+}
+
+@utility foot-bare {
+  --safe-bottom-base: calc(var(--collections-inset) - env(safe-area-inset-bottom));
+
+  @variant rail {
+    --safe-bottom-base: 2.5rem;
+  }
 }
 
 /**
