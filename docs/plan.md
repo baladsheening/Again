@@ -73,6 +73,22 @@ question rather than a task.
       by name rather than by memory. **What is left is where it is offered in the
       UI**, which was always the undecided half.
 - [x] ~~**Ship Phase 2 to Vercel.**~~ Deployed, nine commits on 17 August.
+- [ ] **The film screen, and the fifth colour.** Built 17 August, directed, before
+      Phase 3 rather than after — the capture flow is what Phase 3's notifications
+      will be built against, and building overlap against a flow about to change
+      is the more expensive order. Tapping a poster opens the film: artwork across
+      the top half, synopsis below, a `+` on the artwork, a green tick when it is
+      on your list. **The intent sheet and the acknowledgement band are both
+      gone.** → `decisions.md`, *The film screen, and a fifth colour*
+      ⚠ **Unseen on hardware, all of it**, and three things in it want a phone
+      rather than an argument: whether `52svh` of artwork leaves the synopsis
+      enough room on a short screen, whether the green reads as *on your list*
+      rather than as *that worked*, and whether losing the band costs anything on
+      an add made from the search dropdown rather than the wall.
+      ⚠ **The green's terms are in `--color-listed` and are the part to defend.**
+      It marks a state rather than an event, it is deliberately *not* the
+      satisfied-want tick, and it is measured quieter than the accent. Each of
+      those is what stops a fifth colour costing the other four their meaning.
 
 ### Before a second person can use it
 

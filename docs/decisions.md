@@ -3448,6 +3448,105 @@ session.
 
 ---
 
+## The film screen, and a fifth colour — 17 August
+
+Directed, with a layout: tapping a poster opens the film — artwork edge to edge
+across the top half of the screen, synopsis below it, a `+` on the artwork, and a
+luminescent green tick when it is on your list.
+
+It replaces **two** surfaces. The intent sheet asked *see or a copy?* as a modal
+over the wall, and the acknowledgement band answered from the foot of the screen
+a second later. Neither exists now.
+
+### Why it is better, in one sentence
+
+The sheet asked which want you meant before saying what the film was, and the
+moment that matters is a poster on the wall you do not recognise. The screen
+answers *what is this* first and makes the add a control on the answer.
+
+That also retires the band: there is no longer a moment where something has been
+added and the thing you added is not in front of you, which is the gap the band
+was covering. §5.1's ten seconds survive as the tick itself — while the window is
+open the mark is the way back out, and after it the mark is a state rather than a
+control. A button that silently stopped working would be worse than one that was
+never a button.
+
+### The colour, and the terms it arrives on
+
+`--color-listed` is the **fifth** meaningful colour in a palette whose whole
+argument was that it had two. The terms matter more than the value:
+
+- **It marks a state, not an event.** `listMyEntriesForExternalId` asks before you
+  touch anything, so a film added last month opens green. A colour that only
+  appeared for a second after a tap would be a flourish, and §11 does not spend
+  colours on flourishes. This was the condition the colour was agreed under.
+- ⚠ **It is not the tick in `entry-row.tsx`, and that was the original plan.**
+  Proposed as "one green for both ticks", and wrong on inspection: that tick marks
+  a want that has been *satisfied* — watched — which is a different claim from
+  *listed*. Everything in a list is on the list. Tinting both would have given
+  green two meanings on its first day, which is how a palette stops meaning
+  anything.
+- ⚠ **Quieter than the accent, measured: 6.0:1 against the ground, against amber's
+  7.7:1.** Amber marks overlap, the one moment the product exists for; adding a
+  film is the most routine thing anybody does here. If the routine action were the
+  brightest thing on the screen the important one would stop being where the eye
+  goes. Any change to the value has to keep that gap — green also has the hue
+  advantage, peaking near 555nm, so parity in contrast would already read louder.
+
+### What it costs against §2
+
+⚠ **It is a step past "images beyond poster thumbnails".** The home wall took the
+first step and this is the second, taken deliberately rather than discovered
+later. What it does *not* do is add a second **kind** of image: this is the
+poster, cropped, not the backdrop still the reference layout used. One image type
+in the app, at three sizes, all from TMDB's CDN and never proxied (§10).
+
+Also refused, and worth naming because the reference layout leads with it: **no
+rating, no score, no stars.** The metadata line is director, year, runtime — the
+three things that decide whether you want a film tonight.
+
+### Both intents survive
+
+Intent is a property of the entry (§4), and a `+` alone would have collapsed it to
+whichever default it happened to carry. The primary is the circle on the artwork;
+*Want a copy* is a quiet control under the synopsis. That is §8's shape — one
+prominent action, the rarer one beneath it — and it is the only part of the sheet
+worth keeping.
+
+### Two things that would have shipped broken
+
+- **`next/image`'s `fill` renders its positioning as a `style` attribute**, and
+  the CSP drops style attributes in production while `next dev` allows them. It
+  would have laid out perfectly in development and collapsed on the deployed site
+  — the same divergence that cost a masthead and a wordmark on 10 August. Explicit
+  `width`/`height` with classes doing the layout.
+- **The controls were `black/50` and the green measured 1.7:1 over a bright
+  poster** — invisible on exactly the films most likely to have one. At 80% it is
+  4.0:1 and the plus is 11:1. No `backdrop-blur` on them either: a blur clipped to
+  a rounded border is the combination WebKit has a history of rendering wrong, and
+  these are buttons rather than glass.
+
+### The synopsis is fetched, never stored
+
+`/api/film/[id]` answers both halves in one round trip — what the film is, from
+TMDB, and whether it is already yours, from `lib/db/`. Two requests would mean a
+`+` that lies for as long as the second one takes.
+
+The synopsis and runtime are not written to `items`. §5's schema is a canonical
+row for a real thing, not a copy of somebody's catalogue; a stored synopsis goes
+stale and the app then has to decide whether to trust it.
+
+⚠ `Cache-Control: private` is load-bearing here rather than cautious. `/api/search`
+says private because the request is authenticated even though the answer is the
+same for everyone; **half of this answer is one person's own list.**
+
+### Unseen on hardware
+
+Built and deployed the same afternoon it was asked for. Nothing in it has been
+looked at on a phone.
+
+---
+
 ## Third-party dependencies
 
 ### Where TMDB actually sits
