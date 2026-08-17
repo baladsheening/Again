@@ -44,20 +44,55 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     the server answers. This replaced an optimistic row in the list underneath —
     there is no list underneath any more, so the confirmation has to be a
     sentence, and a sentence that waits for the network is not a confirmation.
+
+    ─────────────────────────────────────────────────────────────────────────────
+     One sentence, not two — 17 August
+    ─────────────────────────────────────────────────────────────────────────────
+
+    ⚠ **This was `adding` and `undo`, two states holding two sentences, and the
+    handover between them was visible.** Reported: *the message jumps, I think
+    it's because it starts with 'adding' before becoming 'added'.* It is: the
+    verb changes width, so the title after it slides, and the *Undo* beside it
+    arrives at the same moment.
+
+    **The fix is to stop having two sentences rather than to make the swap
+    smoother.** A transition between them would still be a transition — the
+    subtraction is that there was never anything for the second sentence to say
+    that the first did not. The add is optimistic already, by the paragraph
+    above; the only thing that actually arrives from the server is the *entry
+    id*, which is what makes an undo addressable. So that is the only thing that
+    changes, and it changes a control, not a word.
+
+    Failure still corrects the claim: both failure paths clear this and put an
+    error in its place, which is what optimistic means and is the same behaviour
+    the two-state version had.
   */
-  const [adding, setAdding] = useState<string | null>(null)
-  const [undo, setUndo] = useState<{ entryId: string; title: string } | null>(null)
+  const [added, setAdded] = useState<{ title: string; entryId: string | null } | null>(
+    null,
+  )
   const [error, setError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
 
   /* --- the undo window (§5.1) --------------------------------------------- */
 
+  /*
+    ⚠ **Keyed on the entry id arriving, not on the sentence appearing.** The
+    sentence is up from the tick of the tap, and starting the clock there would
+    spend the network's share of the ten seconds before there was anything to
+    undo. `added` changes identity when the id lands, so this effect runs then
+    and §5.1's window is ten seconds of *offer* rather than ten seconds minus
+    whatever the round trip cost.
+
+    While the id is null there is no timer, which is deliberate: the message
+    stands until the server answers one way or the other. An action that never
+    resolves leaves it standing, exactly as the `adding` state it replaces did.
+  */
   useEffect(() => {
-    if (!undo) return
-    const timer = setTimeout(() => setUndo(null), UNDO_WINDOW_MS)
+    if (!added?.entryId) return
+    const timer = setTimeout(() => setAdded(null), UNDO_WINDOW_MS)
     return () => clearTimeout(timer)
-  }, [undo])
+  }, [added])
 
   // Errors are not undo — they need clearing, but on a timer long enough to
   // read a sentence rather than the window for changing your mind.
@@ -70,31 +105,32 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
   function add(film: FilmSearchResult, intent: Intent) {
     setChosen(null)
     setError(null)
-    setUndo(null)
-    setAdding(film.title)
+    setAdded({ title: film.title, entryId: null })
 
     startTransition(async () => {
       const result = await addFilmAction({ externalId: film.externalId, intent })
-      setAdding(null)
 
       if (!result.ok) {
+        setAdded(null)
         setError(result.message)
         return
       }
       // Already on the list — say so rather than pretending something happened.
       // Idempotent by design (§10): the second add is a no-op, not a duplicate.
       if (!result.value.created) {
+        setAdded(null)
         setError(`${film.title} is already on your list.`)
         return
       }
-      setUndo({ entryId: result.value.entryId, title: film.title })
+      // The same sentence, now with something to undo. Only the control changes.
+      setAdded({ title: film.title, entryId: result.value.entryId })
     })
   }
 
   function undoAdd() {
-    if (!undo) return
-    const { entryId } = undo
-    setUndo(null)
+    const entryId = added?.entryId
+    if (!entryId) return
+    setAdded(null)
     startTransition(async () => {
       const result = await undoEntryAction(entryId)
       if (!result.ok) setError(result.message)
@@ -114,84 +150,117 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         offset is larger below the rail breakpoint because that is where the bar
         is; above it there is no bar and the line sits at the foot of the window.
 
-        `pointer-events-none` on the strip, restored on the line itself. The line
-        is the width of the column now, so what that spares is the strip's own
-        padding rather than the space either side of a short sentence — but a
-        surface that covers something still has to absorb the taps it covers, the
-        same argument the rail's search band makes in `components/shell.tsx`.
+        `pointer-events-none` on the strip, restored on the band — a surface that
+        covers something has to absorb the taps it covers, the same argument the
+        rail's search band makes in `components/shell.tsx`, and what the strip
+        spares is its own padding above the band.
 
         ─────────────────────────────────────────────────────────────────────────
-         The width of the column, not of the sentence — 17 August
+         Edge to edge, and the text keeps the gutter — 17 August
         ─────────────────────────────────────────────────────────────────────────
 
-        Directed. It hugged its text and centred, which made every message a
-        different size and put none of them on any line the app already holds:
-        the entry rows above it start at the gutter, and the acknowledgement of
-        an add started wherever that film's title happened to end.
+        Directed twice. It hugged its text and centred, which made every message a
+        different size; then it filled the column *inside* the gutter, which was
+        reported as still not edge to edge. It is a band now, not a pill: **the
+        ground runs to the screen edges and the sentence sits at the gutter**, the
+        way the masthead's mark does over the wall it covers. Rounded corners and
+        side hairlines went with the inset — both were properties of a shape that
+        stopped short of the edge, and a rounded full-bleed element only puts
+        notches in the corners of the screen.
 
-        ⚠ **"Screen width" is the column's width above `rail`, not the window's.**
-        Full bleed there would run the bar under the rail and frost the handle and
-        *Sign out* through it, since this comes later in the document and would
-        win. So the strip takes the content column's left edge — the shell's own
-        centring plus the 17rem of `rail:pl-68` — and the column's cap, which is
-        the same pair `main` and the rail's search dock are built from. Below
-        `rail` there is no rail and `left-0 right-0` is that same column.
+        ⚠ **"Edge to edge" is the column's left edge above `rail`, not the
+        window's.** Full bleed there would run the band under the rail and frost
+        the handle and *Sign out* through it, since this comes later in the
+        document and would win — the same reason the rail's own search band stops
+        short. So the strip takes the content column's left edge (the shell's
+        centring plus the 17rem of `rail:pl-68`) and runs to the right of the
+        window, while the sentence inside stops at `max-w-3xl`, which is `main`'s
+        own cap. Below `rail` there is no rail and `left-0 right-0` is the screen.
 
         `left-0 right-0` rather than `inset-x-0`, because the rail override is a
         `left`: two declarations of the same property resolve by cascade order,
         which a variant guarantees, and a physical property against a logical one
         does not.
       */}
-      {(adding || undo || error) && (
-        <div className="gutter rail:left-[calc(max(0px,50%_-_36rem)_+_17rem)] rail:max-w-3xl rail:pb-[calc(env(safe-area-inset-bottom)+1rem)] pointer-events-none fixed right-0 bottom-0 left-0 z-30 flex pb-[calc(env(safe-area-inset-bottom)+4.25rem)]">
+      {(added || error) && (
+        <div className="rail:left-[calc(max(0px,50%_-_36rem)_+_17rem)] rail:pb-[calc(env(safe-area-inset-bottom)+1rem)] pointer-events-none fixed right-0 bottom-0 left-0 z-30 pb-[calc(env(safe-area-inset-bottom)+4.25rem)]">
           {/*
             Glass, on the app's one glass strength — `backdrop-blur-band`, the
-            24px the home wall's caption frosts artwork by. Directed, and the wall
-            is why it is worth having: this bar answers a tap on a poster, so most
-            of the time the thing behind it is the moving grid those posters are
-            in. A blur is what turns that into a ground.
+            24px the home wall's caption frosts artwork by. The wall is why it is
+            worth having: this bar answers a tap on a poster, so most of the time
+            the thing behind it is the moving grid those posters are in.
 
-            ⚠ **`/70` is a legibility number, not a taste one.** The tint is what
-            stops the backdrop reaching the text: at 70% over a bright poster the
-            ground composites to about #4c4c4a, where `--color-text` reads 6.9:1.
-            Less tint is more glass and a worse floor — the wall's caption sits at
-            60% and measures 4.49:1 over the same poster, which its own note calls
-            the one marginal thing in the band.
+            ⚠ **`/60`, down from `/70`, because the glass could not be seen.**
+            Reported off the handset: no blur effect. The blur was never the thing
+            missing — it is the same declaration the caption band uses, and the
+            served CSS carries `-webkit-backdrop-filter` beside it — **it was the
+            tint sitting on top of it.** A backdrop is only visible in the
+            fraction of the surface that is not painted over: at 70% that is three
+            tenths of a *blurred* wall, which is a dark wash whichever way it is
+            filtered, and blurring something invisible looks exactly like not
+            blurring it. At 60% it is four tenths, which is the caption band's own
+            figure and is the fraction that reads as glass there.
 
-            ⚠ **Which is why nothing in here is `text-muted` any more.** It was on
-            the in-flight line and on *Undo*, and 60% of the text colour over that
-            same ground comes to 3.7:1 — under the 4.5:1 floor for text this size,
-            on the one control in the app with a ten-second life. Full strength
-            costs the hierarchy nothing: the ellipsis says the first is in flight,
-            and the underline says the second is a control.
+            **60% is also the floor, so it is where this stops.** Over a bright
+            poster the ground composites to about #5b5b59 and `--color-text` reads
+            5.4:1; at 50% it is #6a6a69 and 4.35:1, which is under the 4.5:1 AA
+            floor for text this size. The caption gets away with 60% of a *black*
+            tint; this is 60% of the warm charcoal, which is lighter, so the same
+            fraction buys a little less contrast and there is nothing left to
+            spend.
+
+            ⚠ **Losing the corner radius may matter here too, and that is a
+            second reason not to want it back.** WebKit has a long history of
+            `backdrop-filter` misbehaving when it has to be clipped to a rounded
+            border — sometimes painting the unclipped backdrop, sometimes nothing
+            at all. A square-edged band cannot meet that class of bug, so if the
+            glass now reads, this is part of why.
+
+            ⚠ **Nothing in here is `text-muted`.** It was on the in-flight line and
+            on *Undo*, and 60% of the text colour over that ground comes to 3.3:1
+            — under the floor, on the one control in the app with a ten-second
+            life. The underline says it is a control without a colour doing it.
           */}
-          <p className="border-rule bg-surface/70 backdrop-blur-band pointer-events-auto flex w-full items-center justify-between gap-3 rounded-md border px-4 py-2.5 text-sm">
-            {adding && <span className="truncate">Adding {adding}…</span>}
+          <div className="border-rule bg-surface/60 backdrop-blur-band pointer-events-auto border-y">
+            <p className="gutter rail:max-w-3xl flex items-center justify-between gap-3 py-2.5 text-sm">
+              {added && (
+                <>
+                  <span className="truncate">Added {added.title}.</span>
+                  {/*
+                    ⚠ **Rendered from the first frame and made invisible until
+                    there is an id**, rather than mounted when the id arrives.
+                    `visibility: hidden` keeps the box, so the sentence is laid out
+                    against its final width and *Undo* appearing moves nothing —
+                    which is the other half of the reported jump. It is out of the
+                    accessibility tree and untappable while hidden, so there is no
+                    control there to find until there is something to undo.
 
-            {undo && (
-              <>
-                <span className="truncate">Added {undo.title}.</span>
-                <button
-                  type="button"
-                  onClick={undoAdd}
-                  // A ten-second window (§5). Missing it because the target was
-                  // 30px wide is not a recoverable mistake.
-                  className="tap-target shrink-0 underline underline-offset-4"
-                >
-                  Undo
-                </button>
-              </>
-            )}
+                    A ten-second window (§5). Missing it because the target was
+                    30px wide is not a recoverable mistake, so `tap-target` stands.
+                  */}
+                  <button
+                    type="button"
+                    onClick={undoAdd}
+                    className={`tap-target shrink-0 underline underline-offset-4 ${
+                      added.entryId ? '' : 'invisible'
+                    }`}
+                  >
+                    Undo
+                  </button>
+                </>
+              )}
 
-            {/*
-              Full strength, not `text-muted`. A failure message set in the
-              colour reserved for de-emphasised metadata reads as an aside; see
-              docs/decisions.md, 8 August. Everything in this bar is full strength
-              since the glass — see the note above — so this is no longer the line
-              that stands apart, and the argument for it is unchanged either way.
-            */}
-            {error && <span>{error}</span>}
-          </p>
+              {/*
+                Full strength, not `text-muted`. A failure message set in the
+                colour reserved for de-emphasised metadata reads as an aside; see
+                docs/decisions.md, 8 August. Everything in this band is full
+                strength since the glass — see the note above — so this is no
+                longer the line that stands apart, and the argument for it is
+                unchanged either way.
+              */}
+              {error && <span>{error}</span>}
+            </p>
+          </div>
         </div>
       )}
     </CaptureContext.Provider>
