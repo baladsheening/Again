@@ -8,7 +8,6 @@ import type { FilmSearchResult, Intent } from '@/lib/domain'
 import { posterUrl } from '@/lib/posters'
 import { intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from './haptics'
-import { CloseIcon } from './icon-close'
 import { TickIcon } from './icon-tick'
 
 /**
@@ -70,7 +69,19 @@ const UNDO_WINDOW_MS = 10_000
 const ARTWORK = 'h-2/3'
 
 /**
- * The two circles on the artwork.
+ * The one circle on the artwork.
+ *
+ * ⚠ **A ring in `currentColor`, and the ring is the whole point of the shape now.**
+ * Asked for on 17 August: the outline should be on the `+` rather than on the
+ * close. It is — and the close no longer has a circle at all, having moved to the
+ * foot as a word, so there is exactly one ringed control on this screen and it is
+ * the one the screen exists for.
+ *
+ * **`border-current` rather than a colour**, so the ring is whatever the glyph
+ * inside it is: paper while it is a `+`, green once it is a tick. A fixed white
+ * ring around a green tick would be two claims about one control — the outline
+ * saying *button* and the mark saying *listed* — and the second is the one worth
+ * hearing. One state, one colour, ring and glyph together.
  *
  * ⚠ **`black/70` and no blur, and both halves are deliberate.** These sit over
  * whatever the poster happens to be, so the ground has to be dark enough to carry
@@ -94,7 +105,7 @@ const ARTWORK = 'h-2/3'
  * the foot of the app is where glass belongs; this is a button.
  */
 const CONTROL =
-  'bg-black/70 tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
+  'bg-black/70 border-current tap-target flex size-9 shrink-0 items-center justify-center rounded-full border'
 
 type Details = {
   synopsis: string | null
@@ -421,23 +432,12 @@ export function FilmScreen({
           />
 
           {/*
-            --- the way out, on the artwork's top line -----------------------
-
-            Alone up here since the `+` moved down to the title block on
-            17 August. It keeps the corner rather than moving with it: closing is
-            furniture, and furniture belongs at the edge of a screen, away from
-            the thing the screen is about.
+            ⚠ **Nothing is drawn on the artwork's top line any more.** The close
+            was up here — a second black circle in the corner — and it moved to the
+            foot on 17 August. What that buys is the whole top of the poster: the
+            two thirds of the screen this screen is *about* now carries the title,
+            the credit and the one control that acts on them, and nothing else.
           */}
-          <div className="gutter absolute inset-x-0 top-0 flex items-start pt-[calc(env(safe-area-inset-top)+0.75rem)]">
-            <button
-              type="button"
-              onClick={() => ref.current?.close()}
-              aria-label="Close"
-              className={CONTROL}
-            >
-              <CloseIcon />
-            </button>
-          </div>
 
           {/* --- what it is, over the foot of the artwork --------------------- */}
           <div className="gutter absolute inset-x-0 bottom-0 pb-5">
@@ -563,7 +563,7 @@ export function FilmScreen({
         <div className="flex min-h-0 flex-1 flex-col pt-6">
           <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
 
-          <div className="gutter safe-bottom mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
+          <div className="gutter mt-3 min-h-0 flex-1 overflow-y-auto pb-5">
             <p className="text-sm">
               {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
             </p>
@@ -589,6 +589,47 @@ export function FilmScreen({
               8 August, and it has survived every surface this message has lived on.
             */}
             {error && <p className="mt-6 text-sm">{error}</p>}
+          </div>
+
+          {/*
+            --- the way out ---------------------------------------------------
+
+            **A word at the foot, not a circle on the poster.** It was a black
+            disc in the artwork's top-left corner; this is where it landed on
+            17 August, and the reasons are §11's rather than this screen's.
+
+            **Type-first.** This app takes furniture *off* pictures — the lists
+            lost their thumbnails for the same reason. A circle sitting on a
+            poster is a control drawn on top of the one thing the screen is for;
+            a word in the type column is a control where the app keeps its
+            controls.
+
+            **Thumb height.** The top-left corner of a large phone is the hardest
+            place on the screen to reach one-handed, and it was holding the only
+            visible way out. The foot is where a thumb already is.
+
+            ⚠ **Outside the scroller, and that is the part that matters.** It is a
+            sibling of the pane above rather than the last thing in it, so a long
+            synopsis cannot push it below the fold. **A close you have to scroll
+            to find is worse than one you cannot reach** — which is the failure
+            this move would otherwise have swapped one for.
+
+            No rule along the top: the ground does the separating, as it does
+            under the masthead and over the collections bar. `components/profile-panel.tsx`
+            makes the same call for the same reason.
+
+            `micro`, so it reads as the app's caption tier rather than as a second
+            action competing with the intents above it. Escape still closes, and
+            always did — this is the affordance, not the mechanism.
+          */}
+          <div className="gutter safe-bottom shrink-0 [--safe-bottom-base:1.25rem]">
+            <button
+              type="button"
+              onClick={() => ref.current?.close()}
+              className="text-muted hover:text-text micro tap-target transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>
