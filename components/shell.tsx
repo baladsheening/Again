@@ -392,7 +392,7 @@ export function Shell({
     argued for excluding it**: it is the only thing on screen that says where you
     are, and a mark that comes and goes reads as a rendering fault rather than as
     a gesture. Directed otherwise. What that reasoning was protecting is carried
-    by two rules instead — the masthead never recedes while it is holding the
+    by two rules instead — the masthead never recedes while the caret is in the
     field (`mastheadHidden`), and leaving search reveals both bars
     (`onDockBlur`) — so the mark is gone only while a wall is being scrolled
     past, and never at a moment when something is being asked of it.
@@ -449,26 +449,7 @@ export function Shell({
   */
   const [searchAtTop, setSearchAtTop] = useState(false)
 
-  /*
-    The masthead recedes on the same signal as the bar at the foot — **except
-    while it is holding the field.** A masthead that slid away mid-search would
-    take the query, the caret and the only way out of search with it, and the
-    scroll that triggered it would usually be someone reaching for a result.
-
-    That exception is the whole difference between the two surfaces, which is why
-    it is spelled here rather than folded into `receded`: the signal is about the
-    page moving, and this is about what the masthead currently is.
-  */
-  /*
-    ⚠ **`showCollections` is stated here rather than relied on.** The recede
-    listener already returns early on a route without collections, and `receded`
-    is stamped with the route it hid on — so the masthead could not recede on
-    `/profile` anyway. Saying it in the expression makes it a property of the
-    masthead instead of a consequence of two things elsewhere, either of which
-    could be changed by someone with a different problem in front of them. That
-    screen's whole point is that nothing at its edges moves.
-  */
-  const mastheadHidden = showCollections && collectionsHidden && !searchAtTop
+  /* `mastheadHidden` is below, with the search state it reads. */
 
   /*
     ───────────────────────────────────────────────────────────────────────────
@@ -962,6 +943,61 @@ export function Shell({
     retry,
     clear,
   } = useSearch()
+
+  /*
+    The masthead recedes on the same signal as the bar at the foot — **except
+    while the caret is in the field.** A masthead that slid away mid-type would
+    take the query and the caret with it, and the scroll that moved it would not
+    be a scroll anybody made: it would be Safari revealing the focused field, or
+    `search-provider.tsx` putting the window back to the top for a new query.
+
+    That exception is the whole difference between the two surfaces, which is why
+    it is spelled here rather than folded into `receded`: the signal is about the
+    page moving, and this is about what the masthead is currently doing.
+
+    ─────────────────────────────────────────────────────────────────────────────
+     `searchFocused`, not `searchAtTop` — 17 August
+    ─────────────────────────────────────────────────────────────────────────────
+
+    Directed: search something, start scrolling, and the bar holding the query
+    should recede upward the way the collections recede down. It could not,
+    because the exception was written against `searchAtTop` — the row being *in*
+    the masthead — and that row deliberately outlives the keyboard. `onDockBlur`
+    keeps it up over a non-empty query, so the whole time a wall of results was
+    being read the masthead was pinned, which is exactly the time the screen is
+    wanted back.
+
+    **Focus is the honest spelling of what the exception was always protecting.**
+    Its own note said "the query, the caret and the only way out" — a caret is
+    focus, and a query on screen with no caret in it is a label, not an input.
+    The way out is one upward flick, which is the same way out the wordmark has
+    had since the masthead started receding at all.
+
+    ⚠ **On touch, focused-and-scrolling is very nearly unrepresentable anyway**,
+    which is why this is a small change rather than a new behaviour: since
+    14 August a drag aimed at the page blurs the field before the scroll gets
+    going (`onContentPointerMove`). So the first downward drag over results puts
+    the keyboard away, and the bar goes with the next one — the settle window
+    swallows the scroll the folding keyboard itself produces, exactly as it does
+    for the collections bar today. Both surfaces answer the same gesture on the
+    same frame, which is the whole point of one signal.
+
+    ⚠ **It has to be declared after `useSearch()`**, which is the only reason it
+    sits down here rather than with `searchAtTop`. `searchFocused` is a `const`
+    read during render, so a reference above that call is a temporal dead zone
+    error rather than a stale value — the compiler catches it, but the reason is
+    worth stating so it does not get moved back for tidiness.
+  */
+  /*
+    ⚠ **`showCollections` is stated here rather than relied on.** The recede
+    listener already returns early on a route without collections, and `receded`
+    is stamped with the route it hid on — so the masthead could not recede on
+    `/profile` anyway. Saying it in the expression makes it a property of the
+    masthead instead of a consequence of two things elsewhere, either of which
+    could be changed by someone with a different problem in front of them. That
+    screen's whole point is that nothing at its edges moves.
+  */
+  const mastheadHidden = showCollections && collectionsHidden && !searchFocused
 
   /*
     The element the page lives in — see the note on it in the render.

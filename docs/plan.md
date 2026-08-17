@@ -391,7 +391,7 @@ or seen on the handset.
       that makes *In cinemas* true. What was verification debt is now a product
       decision.
 - [ ] **The masthead recede on a phone.** Built 15 August against the collection
-      bar's existing signal. It never recedes while it holds the field, and
+      bar's existing signal. It never recedes while the caret is in the field, and
       leaving search reveals both bars; what wants looking at is whether losing
       the wordmark and the search glyph mid-scroll reads as a gesture or as a
       trap. The knobs are `ALWAYS_SHOWN_ABOVE` and the return on first upward
@@ -399,6 +399,11 @@ or seen on the handset.
       recede's other half, and five reports came off the handset from scrolling
       it — with nothing said about the mark leaving. That is evidence of absence
       rather than a verdict, so this stays open until somebody says it either way.
+      ⚠ **Widened 17 August, directed: it now recedes over search results too** —
+      the exemption was the row, and it is the caret. Unseen on hardware, and it
+      is the half of this item with no evidence at all: the gesture that reveals
+      it is the same one that folds the keyboard, so what wants checking is
+      whether the two read as one movement or as the screen coming apart.
 **Three items went dormant with the caption on 16 August**, and they are kept
 because they come back the day `CAPTION` is flipped — none of them is a fault, and
 each is a measurement nobody has taken:

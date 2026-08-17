@@ -2409,6 +2409,24 @@ sliding it away mid-search would take the query, the caret and the only way out
 with it — and leaving search reveals both bars, so the mark cannot return to a
 header that is about to slide away on the same frame.
 
+⚠ **The first of those two rules is narrower since 17 August: it is the caret,
+not the row.** Directed — search something, start scrolling, and the bar holding
+the query should recede the way the collections do. The exemption was written
+against `searchAtTop`, which is the row being *in* the masthead, and that row
+deliberately outlives the keyboard (`onDockBlur` keeps it up over a non-empty
+query) — so it pinned the masthead for the whole time a wall of results was being
+read, which is exactly when the screen is wanted back. It reads `searchFocused`
+now. The clause above says what it was always protecting: *the query, the caret
+and the only way out* — a caret is focus, and a query on screen with no caret in
+it is a label rather than an input. The second rule is untouched and is what
+keeps the mark from returning into a header that is about to leave.
+
+On touch this is a smaller change than it sounds, because focused-and-scrolling
+is very nearly unrepresentable: since 14 August a drag aimed at the page blurs
+the field before the scroll gets going. So the first drag folds the keyboard, the
+500ms settle window swallows the scroll that folding produces, and both surfaces
+leave together on the same gesture — which is the point of one signal.
+
 ⚠ **The recede costs more at the top than at the foot, and only since 14 August.**
 With the house glyph gone the wordmark is the only route to `/` on a phone, and
 the search glyph is the only route to the field, so both leave with the masthead.
