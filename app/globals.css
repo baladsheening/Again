@@ -383,6 +383,14 @@
    * this over a layer of this comes to exactly twice it. Change the number and
    * the doubling still holds; change the *doubling* and the √3 has to be
    * re-derived.
+   *
+   * ⚠ **Read from outside the wall since 17 August**, by the acknowledgement bar
+   * in `components/capture-provider.tsx`, which frosts the same artwork for the
+   * same reason — it answers a tap on a poster, so the grid is usually what is
+   * behind it. That makes this the app's *one* glass strength rather than the
+   * caption's own, and the name is now narrower than the thing. Rename it if a
+   * third surface reads it; splitting it into two numbers that happen to agree is
+   * what the rest of this file argues against.
    */
   --blur-band: 24px;
 

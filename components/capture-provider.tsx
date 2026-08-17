@@ -114,14 +114,59 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         offset is larger below the rail breakpoint because that is where the bar
         is; above it there is no bar and the line sits at the foot of the window.
 
-        `pointer-events-none` on the strip, restored on the line itself, so the
-        empty space either side of a short sentence does not eat taps meant for
-        whatever is underneath it.
+        `pointer-events-none` on the strip, restored on the line itself. The line
+        is the width of the column now, so what that spares is the strip's own
+        padding rather than the space either side of a short sentence — but a
+        surface that covers something still has to absorb the taps it covers, the
+        same argument the rail's search band makes in `components/shell.tsx`.
+
+        ─────────────────────────────────────────────────────────────────────────
+         The width of the column, not of the sentence — 17 August
+        ─────────────────────────────────────────────────────────────────────────
+
+        Directed. It hugged its text and centred, which made every message a
+        different size and put none of them on any line the app already holds:
+        the entry rows above it start at the gutter, and the acknowledgement of
+        an add started wherever that film's title happened to end.
+
+        ⚠ **"Screen width" is the column's width above `rail`, not the window's.**
+        Full bleed there would run the bar under the rail and frost the handle and
+        *Sign out* through it, since this comes later in the document and would
+        win. So the strip takes the content column's left edge — the shell's own
+        centring plus the 17rem of `rail:pl-68` — and the column's cap, which is
+        the same pair `main` and the rail's search dock are built from. Below
+        `rail` there is no rail and `left-0 right-0` is that same column.
+
+        `left-0 right-0` rather than `inset-x-0`, because the rail override is a
+        `left`: two declarations of the same property resolve by cascade order,
+        which a variant guarantees, and a physical property against a logical one
+        does not.
       */}
       {(adding || undo || error) && (
-        <div className="gutter rail:pb-[calc(env(safe-area-inset-bottom)+1rem)] pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center pb-[calc(env(safe-area-inset-bottom)+4.25rem)]">
-          <p className="border-rule bg-surface pointer-events-auto flex max-w-full items-center gap-3 rounded-md border px-4 py-2.5 text-sm">
-            {adding && <span className="text-muted truncate">Adding {adding}…</span>}
+        <div className="gutter rail:left-[calc(max(0px,50%_-_36rem)_+_17rem)] rail:max-w-3xl rail:pb-[calc(env(safe-area-inset-bottom)+1rem)] pointer-events-none fixed right-0 bottom-0 left-0 z-30 flex pb-[calc(env(safe-area-inset-bottom)+4.25rem)]">
+          {/*
+            Glass, on the app's one glass strength — `backdrop-blur-band`, the
+            24px the home wall's caption frosts artwork by. Directed, and the wall
+            is why it is worth having: this bar answers a tap on a poster, so most
+            of the time the thing behind it is the moving grid those posters are
+            in. A blur is what turns that into a ground.
+
+            ⚠ **`/70` is a legibility number, not a taste one.** The tint is what
+            stops the backdrop reaching the text: at 70% over a bright poster the
+            ground composites to about #4c4c4a, where `--color-text` reads 6.9:1.
+            Less tint is more glass and a worse floor — the wall's caption sits at
+            60% and measures 4.49:1 over the same poster, which its own note calls
+            the one marginal thing in the band.
+
+            ⚠ **Which is why nothing in here is `text-muted` any more.** It was on
+            the in-flight line and on *Undo*, and 60% of the text colour over that
+            same ground comes to 3.7:1 — under the 4.5:1 floor for text this size,
+            on the one control in the app with a ten-second life. Full strength
+            costs the hierarchy nothing: the ellipsis says the first is in flight,
+            and the underline says the second is a control.
+          */}
+          <p className="border-rule bg-surface/70 backdrop-blur-band pointer-events-auto flex w-full items-center justify-between gap-3 rounded-md border px-4 py-2.5 text-sm">
+            {adding && <span className="truncate">Adding {adding}…</span>}
 
             {undo && (
               <>
@@ -131,7 +176,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
                   onClick={undoAdd}
                   // A ten-second window (§5). Missing it because the target was
                   // 30px wide is not a recoverable mistake.
-                  className="text-muted hover:text-text tap-target shrink-0 underline underline-offset-4 transition-colors"
+                  className="tap-target shrink-0 underline underline-offset-4"
                 >
                   Undo
                 </button>
@@ -141,7 +186,9 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
             {/*
               Full strength, not `text-muted`. A failure message set in the
               colour reserved for de-emphasised metadata reads as an aside; see
-              docs/decisions.md, 8 August.
+              docs/decisions.md, 8 August. Everything in this bar is full strength
+              since the glass — see the note above — so this is no longer the line
+              that stands apart, and the argument for it is unchanged either way.
             */}
             {error && <span>{error}</span>}
           </p>
