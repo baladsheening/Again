@@ -73,6 +73,18 @@ question rather than a task.
       by name rather than by memory. **What is left is where it is offered in the
       UI**, which was always the undecided half.
 - [x] ~~**Ship Phase 2 to Vercel.**~~ Deployed, nine commits on 17 August.
+- [ ] **A haptic on the tap that adds a film. Still wanted, not yet possible.**
+      Directed 17 August and built the same day; **removed the same day** because
+      it was never felt. Android has it and keeps it — `navigator.vibrate(10)` in
+      `lib/haptics.ts`, fired synchronously inside the handler. **iOS Safari
+      implements no Vibration API on any version**, and the one known workaround —
+      Safari 17.4's `switch` checkbox toggled through its label — was built in two
+      variants and produced nothing on the handset. The mechanism is deleted so it
+      cannot read as a working feature; **the want is this row.** →
+      `decisions.md`, *Haptics: wanted, and not possible on iOS today*
+      ⚠ Before anyone builds it again: confirm a haptic fires on *some* web page on
+      the device first. System Haptics being off, or Low Power Mode, produce the
+      identical symptom and were never ruled out from this machine.
 - [ ] **The film screen, and the fifth colour.** Built 17 August, directed, before
       Phase 3 rather than after — the capture flow is what Phase 3's notifications
       will be built against, and building overlap against a flow about to change

@@ -7,7 +7,7 @@ import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { FilmSearchResult, Intent } from '@/lib/domain'
 import { posterUrl } from '@/lib/posters'
 import { intentsFor, specFor } from '@/lib/vocabulary'
-import { haptic } from './haptics'
+import { haptic } from '@/lib/haptics'
 import { TickIcon } from './icon-tick'
 
 /**
@@ -319,8 +319,9 @@ export function FilmScreen({
   }, [undoable])
 
   function add(intent: Intent) {
-    // Inside the gesture: iOS plays a haptic for a tap and not for what follows
-    // one. See `haptics.tsx`.
+    // Inside the gesture: a haptic answers a finger, and every platform that has
+    // one refuses it once the gesture is over. See `lib/haptics.ts` — on iOS this
+    // currently does nothing, and that is not for want of trying.
     haptic()
     setError(null)
     // Optimistic, like every add in this app has been: the mark is the answer to

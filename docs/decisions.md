@@ -3526,6 +3526,48 @@ worth keeping.
   a rounded border is the combination WebKit has a history of rendering wrong, and
   these are buttons rather than glass.
 
+### Haptics: wanted, and not possible on iOS today
+
+Directed on 17 August — a light haptic when a film is added — and then, the same
+afternoon, **removed**: it was never felt on the handset.
+
+**Android has it and keeps it.** `navigator.vibrate(10)` in `lib/haptics.ts`,
+called as the first statement in the `+`'s handler. Ten milliseconds is the
+conventional light tap; longer is a buzz, and a buzz for an add is the phone
+asking to be noticed rather than answering.
+
+**iOS Safari implements no Vibration API on any version** — not behind a prefix,
+not behind a permission. That is the whole of the problem and nothing in the app
+can route around it.
+
+**What was tried, so nobody tries it twice.** Safari 17.4 added the `switch`
+attribute for checkboxes, and toggling one through its label is widely reported to
+play the system's own light haptic. It was built as a hidden pair mounted once for
+the app and clicked from the tap handler. Two variants:
+
+1. Hidden with `sr-only` — a 1px box clipped with `clip-path: inset(50%)`.
+2. Hidden with `opacity: 0` on a real 44px box, laid out and painted, on the
+   theory that the haptic rides the switch's *animation* and an engine may skip
+   animating something clipped out of existence.
+
+Neither produced anything perceptible. **The call was never in doubt** — it is the
+first statement in the handler, before any state change — so the failure is
+downstream of the app in every version.
+
+⚠ **Deleted rather than left in place, and that is the part to keep.** A mechanism
+that does nothing is worse than no mechanism: it reads as a working feature to
+whoever finds it next, it costs a hidden interactive element in every signed-in
+page, and it makes the *absence* of haptics look like a bug in this code rather
+than a gap in the platform. The want does not go with it — it is open in
+`docs/plan.md`.
+
+**What would reopen it:** Safari shipping the Vibration API, or a specified web
+haptics API, or a first-hand demonstration that the checkbox trick works in a PWA
+context this project can reproduce. Two things outside the app produce the same
+symptom and were never ruled out from here — System Haptics being off in Settings,
+and Low Power Mode — so a future attempt should start by confirming a haptic on
+*any* web page on the device before touching this code.
+
 ### ⚠ Open: should there be a synopsis at all?
 
 Raised 17 August, as a question rather than a change. **It is not settled and

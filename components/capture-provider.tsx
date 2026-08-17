@@ -4,7 +4,6 @@ import { createContext, use, useState } from 'react'
 
 import type { FilmSearchResult } from '@/lib/domain'
 import { FilmScreen } from './film-screen'
-import { HapticSwitch } from './haptics'
 
 /**
  * Adding a film, from wherever the film came from.
@@ -47,8 +46,11 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     <CaptureContext.Provider value={{ choose: setChosen }}>
       {children}
 
-      {/* Mounted once for the app — see `haptics.tsx` for why it is a checkbox. */}
-      <HapticSwitch />
+      {/*
+        A `HapticSwitch` was mounted here — a hidden `<input type="checkbox"
+        switch>` that iOS was supposed to buzz when toggled. It never buzzed. See
+        `lib/haptics.ts`, and `docs/plan.md` for the want it leaves open.
+      */}
 
       {chosen && <FilmScreen film={chosen} onClose={() => setChosen(null)} />}
     </CaptureContext.Provider>
