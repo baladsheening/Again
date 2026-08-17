@@ -377,8 +377,15 @@ export function FilmScreen({
             className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/70 to-transparent"
           />
 
-          {/* --- the two controls, on the artwork's top line ------------------ */}
-          <div className="gutter absolute inset-x-0 top-0 flex items-start justify-between pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+          {/*
+            --- the way out, on the artwork's top line -----------------------
+
+            Alone up here since the `+` moved down to the title block on
+            17 August. It keeps the corner rather than moving with it: closing is
+            furniture, and furniture belongs at the edge of a screen, away from
+            the thing the screen is about.
+          */}
+          <div className="gutter absolute inset-x-0 top-0 flex items-start pt-[calc(env(safe-area-inset-top)+0.75rem)]">
             <button
               type="button"
               onClick={() => ref.current?.close()}
@@ -387,27 +394,6 @@ export function FilmScreen({
             >
               <CloseIcon />
             </button>
-
-            {/*
-              ⚠ **The slot is drawn from the first frame and its contents are not.**
-              `marks === null` is *not yet known*, and a `+` drawn then would be
-              claiming the film is not on your list before anything has asked. So
-              the circle is there — the layout is settled, nothing moves — and the
-              glyph inside it waits for the answer.
-
-              The tick is green, and the green means *this is on your list* rather
-              than *that worked*. See `--color-listed` in globals.css for what that
-              distinction costs and why it is drawn that way round.
-            */}
-            <AddControl
-              state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
-              label={specFor('film', primary).wantLabel}
-              undoable={Boolean(undoablePrimary)}
-              onAdd={() => add(primary)}
-              onUndo={() =>
-                undoablePrimary && undo(primary, undoablePrimary.entryId)
-              }
-            />
           </div>
 
           {/* --- what it is, over the foot of the artwork --------------------- */}
@@ -435,6 +421,36 @@ export function FilmScreen({
                 .filter(Boolean)
                 .join(' · ')}
             </p>
+
+            {/*
+              **Under the credit line, directed 17 August.** It was in the top
+              right, opposite the close — which put the one thing this screen is
+              *for* in the corner reserved for furniture, as far from the title as
+              the artwork allows. Here it reads as the action on the film it names:
+              title, who made it, and then the thing you do about it.
+
+              ⚠ **The slot is drawn from the first frame and its contents are not.**
+              `marks === null` is *not yet known*, and a `+` drawn then would be
+              claiming the film is not on your list before anything has asked. So
+              the circle is there — the layout is settled, nothing moves — and the
+              glyph inside it waits for the answer. That mattered more in the
+              corner than it does here, and it still matters: this block sits on
+              the artwork's foot, so anything that changes size in it moves the
+              credit line above it.
+
+              The tick is green, and the green means *this is on your list* rather
+              than *that worked*. See `--color-listed` in globals.css for what that
+              distinction costs and why it is drawn that way round.
+            */}
+            <div className="mt-4">
+              <AddControl
+                state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
+                label={specFor('film', primary).wantLabel}
+                undoable={Boolean(undoablePrimary)}
+                onAdd={() => add(primary)}
+                onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
+              />
+            </div>
           </div>
         </div>
 
