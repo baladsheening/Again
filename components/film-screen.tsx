@@ -691,8 +691,16 @@ export function FilmScreen({
 
           The `gutter` sits on the heading and the scroller separately rather than
           on the column, so that the writing scrolls under a heading that is inset
-          to the same line — and so the scrollbar, where there is one, lands at the
-          pane's edge rather than inside the text.
+          to the same line.
+
+          ⚠ **`scrollbar-none`, because the bar was making a claim about the wrong
+          thing.** Reported 17 August: an indicator still appeared and moved under
+          a drag with a poster open, reading as *your scrolling is having an
+          effect*. It was — on this pane, which really does scroll — but on a
+          screen whose whole promise is that the wall behind it is frozen, a moving
+          bar at the right edge is a statement about the page. The pane still
+          scrolls; it simply stops reporting it. See the utility in globals.css for
+          what that costs.
         */}
         <div className="flex min-h-0 flex-1 flex-col pt-6">
           <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
@@ -704,7 +712,7 @@ export function FilmScreen({
             Escape closes from a keyboard. Same as `PosterReveal`, which has never
             had one either.
           */}
-          <div className="gutter safe-bottom mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
+          <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
             <p className="text-sm">
               {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
             </p>

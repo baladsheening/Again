@@ -1017,6 +1017,36 @@
 }
 
 /**
+ * Scroll without a scrollbar.
+ *
+ * **One caller: the synopsis on the film screen** — see `components/film-screen.tsx`.
+ * Reported 17 August: with a poster open, an indicator still appeared and moved
+ * under a drag, *giving the impression that their scrolls might be having an
+ * effect*. They were, on the synopsis pane, which is genuinely scrollable — but on
+ * a screen whose whole promise is that the wall behind it is frozen, **a moving
+ * bar at the right edge is a claim about the page, not about a pane.** The
+ * distinction is obvious in the DOM and invisible to a thumb.
+ *
+ * Both spellings, and both are needed: `scrollbar-width` is the standard and
+ * WebKit does not implement it, `::-webkit-scrollbar` is WebKit's and nothing
+ * else honours it. Neither is a browser sniff — each is the property its own
+ * engine reads, and an engine that reads neither simply keeps its scrollbar.
+ *
+ * ⚠ **It hides the affordance along with the bar.** A long synopsis now gives no
+ * sign that it continues below the fold, and the honest replacement if that
+ * matters is a fade at the pane's foot rather than the bar coming back. Do not
+ * reach for this anywhere content is *primarily* navigated by scrolling — the
+ * lists, the wall — where the bar is the only thing saying how much is left.
+ */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/**
  * A 44×44 minimum hit area for small text controls, added *without* changing
  * layout — the whole resolve flow is plain text buttons around 20px tall, and
  * padding them to 44px would blow the list spacing apart on every screen to fix
