@@ -53,8 +53,21 @@ import { TickIcon } from './icon-tick'
  */
 const UNDO_WINDOW_MS = 10_000
 
-/** Half the screen for the artwork, the rest for the words. */
-const ARTWORK = 'h-[52svh]'
+/**
+ * Two thirds of the screen for the artwork, the rest for the words. Directed
+ * 17 August, up from a half.
+ *
+ * ⚠ **A fraction of the parent, not of the viewport.** It was `h-[52svh]`, and
+ * `svh` is the *screen*, which is not the same thing as the box this sits in —
+ * the dialog is `h-full` today, so they agree, and they would stop agreeing the
+ * moment anything gained a margin or the layout took an inset. `h-2/3` is two
+ * thirds of whatever it is inside, which is what "two thirds" was asked for.
+ *
+ * The pane below takes the remainder and scrolls, so a long synopsis costs a
+ * scroll rather than a squeeze — and `Want a copy`, which sits under it, can now
+ * fall below the fold on a wordy film. That is the trade this fraction makes.
+ */
+const ARTWORK = 'h-2/3'
 
 /**
  * The two circles on the artwork.
