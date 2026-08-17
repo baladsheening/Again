@@ -96,28 +96,40 @@ const ARTWORK = 'h-2/3'
  *  Glass, 17 August — and the fill had to invert to get there
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Asked for: make the circle more glass-like, with a blur. Adding
- * `backdrop-blur-band` alone would have changed nothing anybody could see, and
- * the arithmetic says why — **this control sits inside the scrim's `from-black`
- * end**, so whatever is behind it has already been taken most of the way to
- * black. A darker tint over near-black artwork is a dark disc whether it is
- * blurred or not.
+ * Asked for: make the circle more glass-like, with a blur. Then, once it had one:
+ * *it looks a bit grey, I want a frosted glass effect.*
  *
- * So the tint inverted rather than thinned. `bg-text/10` is a tenth of the aged
- * paper, which composites to about `#171716` over the scrim: a faint *lit* disc
- * rather than a dark one, which is what frosted glass looks like on a dark
- * ground. **Warm, not white** — `--color-text` rather than a cool `white/10`, or
- * the one glass control in the app would be the one thing in it that is not warm.
+ * ⚠ **Both reports are about the same thing, and it is not in this class.** It
+ * read grey because it *was* grey — a flat `#171716` with nothing varying inside
+ * it. **Frost is blurred content, and there was no content**: this control sits
+ * at the foot of the scrim, and the scrim's lower end was solid black, so the
+ * backdrop being blurred was a sheet of black. Blur a flat colour and you get the
+ * flat colour back.
+ *
+ * **So the fix is in the gradient, not the disc** — see the scrim in the render,
+ * which stops at 80% instead of reaching solid. A fifth of the poster now reaches
+ * this control, and the blur has something to smear: over a warm poster the disc
+ * picks up warmth and loses saturation against its surroundings, which is what
+ * frosted glass does and what no tint can imitate on its own.
+ *
+ * The tint stays, thinned to `text/8`, and it is doing a different job from the
+ * frost: **it is the floor.** Over a dark passage of artwork there is nothing to
+ * blur and nothing to see, and a control that disappears on dark posters would be
+ * worse than one that is flat on all of them. Eight percent of the aged paper is
+ * the least that keeps the shape findable when the picture behind it is black.
+ * **Warm, not white** — `--color-text` rather than a cool `white/8`, or the one
+ * glass control in the app would be the one thing in it that is not warm.
  *
  * `backdrop-blur-band` is the app's single glass strength, the 24px the home
  * wall's caption frosts artwork by. There is one number for glass here and this
  * is now its second reader.
  *
- * Contrast, over the scrim it actually sits on: the `+` reads about 15:1 and the
- * green tick about 5:1, both comfortably past the 3:1 WCAG 1.4.11 asks of a
- * graphical control. ⚠ **That depends on the scrim, not on this class.** A light
- * tint over a *bright* backdrop would flip both — so if the gradient behind the
- * title block is ever lightened, these two numbers have to be taken again.
+ * ⚠ **The contrast floor moved with the scrim, and this is where it now sits.**
+ * Worst case is the brightest poster: the scrim lets through about 40/255, the
+ * tint lifts it to about `#373737`, and against that the `+` reads 9.3:1 and the
+ * green tick 3.3:1 — past the 3:1 WCAG 1.4.11 asks of a graphical control, and
+ * not past it by much. **The tick is the number to watch.** Lightening the scrim
+ * further, or thickening this tint, spends it.
  *
  * ⚠ **This reverses a caution written here on the same day**, and the caution
  * still holds as a thing to watch rather than as a reason not to: WebKit has a
@@ -126,8 +138,16 @@ const ARTWORK = 'h-2/3'
  * circle ever shows a square of blur or no blur at all on iOS, that is the known
  * cause and it is not this file's arithmetic that is wrong.
  */
+/*
+  ⚠ **`size-8`, down from `size-9` on 17 August, and `tap-target` is why that is
+  free.** The visible circle is 32px and the hit area stays 44px — the utility
+  centres a transparent pseudo-element on the control and floors it at the touch
+  minimum, so the mark can be as small as it looks right without the target
+  following it down. Shrinking a control that carried its own hit area would have
+  been a legibility change *and* an accessibility one.
+*/
 const CONTROL =
-  'bg-text/10 backdrop-blur-band tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
+  'bg-text/8 backdrop-blur-band tap-target flex size-8 shrink-0 items-center justify-center rounded-full'
 
 type Details = {
   synopsis: string | null
@@ -452,10 +472,26 @@ export function FilmScreen({
             same argument the wall's caption band makes — a gradient rather than a
             blur here because the artwork below the words is what the screen is
             for, and a blur would take the bottom third of it.
+
+            ⚠ **It stops at 80% rather than reaching solid black, and that is what
+            makes the `+` frosted rather than grey.** Reported 17 August: the glass
+            circle looked grey. It was — a flat tint over a flat ground, because
+            the backdrop it was blurring at this height was *solid black*, and a
+            blurred flat colour is that colour. Letting a fifth of the poster reach
+            the bottom of the gradient gives the blur something to work on, and
+            frost is blurred content or it is nothing. **The control's own classes
+            could not have fixed this.**
+
+            The cost is paid in text contrast and it is affordable: against the
+            brightest poster the ground here goes from black to about `#282828`,
+            where the title still reads 11:1 and the credit line 5:1. ⚠ Taking it
+            below 80% keeps going in the same direction — a little more frost, a
+            little less floor — and the number that runs out first is the green
+            tick's, at 3.3:1 today. See `CONTROL`.
           */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/70 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/80 via-black/60 to-transparent"
           />
 
           {/*
