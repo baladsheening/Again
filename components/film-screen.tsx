@@ -319,8 +319,42 @@ export function FilmScreen({
         Full bleed on black. `backdrop:bg-black` spelled out rather than taken
         from the token, for the reason `PosterReveal` gives: this is black because
         artwork wants nothing behind it, not because it inherits the app's ground.
+
+        ─────────────────────────────────────────────────────────────────────────
+         `h-dvh` and `overflow-hidden`: the dialog was the thing scrolling
+        ─────────────────────────────────────────────────────────────────────────
+
+        Reported: a scrollbar on the right while swiping, even though the wall
+        behind was correctly held still. Both halves of that were true, and
+        together they name the culprit — **it was not the document, it was this
+        element.**
+
+        Two facts meet. A `<dialog>`'s UA style is `overflow: auto`, so it becomes
+        a scroller the moment its content is taller than it is. And `h-full` on a
+        modal dialog is 100% of the *initial containing block*, which is the
+        **layout** viewport — the full height of the screen including the strip
+        Safari's address bar is sitting over. So on a phone with chrome showing,
+        the box was taller than the visible area by exactly the height of that
+        bar, and the overflow it produced was scrollable and indicated.
+
+        Nothing moved on the wall because the lock was working. What moved was the
+        screen itself, inside a box slightly too tall for the window.
+
+        `h-dvh` is the *visible* viewport rather than the layout one, so there is
+        nothing left over to scroll. `overflow-hidden` is the guarantee rather
+        than the fix: whatever any engine decides the height should be, this
+        element is never a scroll container, so it can never indicate or absorb a
+        gesture again.
+
+        ⚠ **`dvh` rather than `svh`.** `svh` is the *smallest* viewport, which
+        would leave a strip of the screen unpainted whenever the address bar is
+        already collapsed. The usual objection to `dvh` — that it changes as the
+        chrome moves, resizing the layout underneath you — does not reach here:
+        Safari collapses its bar in response to the *document* scrolling, and the
+        document is locked for as long as this screen is open. See the effect
+        above.
       */
-      className="m-0 h-full max-h-none w-full max-w-none bg-black p-0 text-text backdrop:bg-black"
+      className="m-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black"
     >
       {/*
         `max-w-md` and centred. Above `rail` a takeover the width of a desk would
