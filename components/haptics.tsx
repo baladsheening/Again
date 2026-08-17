@@ -38,8 +38,25 @@ const SWITCH_ID = 'haptic-switch'
  *
  * ⚠ **`sr-only`, not `hidden` or `opacity-0` on a `fixed` box.** The element has
  * to be laid out for the click to reach it; a `display: none` control is not
- * clickable and takes the haptic with it. `sr-only` clips it to a pixel and
- * leaves it in the layout.
+ * clickable and takes the haptic with it.
+ *
+ * ⚠ **It was `sr-only` and that is the likeliest reason nothing was felt.**
+ * Reported 17 August: no perceptible haptic on the `+`. The call fires — it is the
+ * first statement in the handler — so what failed is downstream of it, and the
+ * one candidate that is actually under this file's control is *how* the switch was
+ * hidden. `sr-only` collapses an element to a 1px box and clips it with
+ * `clip-path: inset(50%)`; **the haptic is attached to the switch animating, and
+ * an engine is free to skip animating something clipped out of existence.**
+ *
+ * So it is hidden by transparency instead. The pair is a real 44px box, laid out,
+ * painted and on screen — `opacity-0` and `pointer-events-none`, so it is
+ * invisible and untouchable while still being a thing the compositor has to draw.
+ * That is the difference between *not shown* and *not there*, and it is the only
+ * lever this file has.
+ *
+ * The input sits inside the label rather than beside it with a `for`, which is
+ * one fewer thing to go wrong: a label wrapping its control forwards the click by
+ * containment.
  *
  * `aria-hidden` and `tabIndex={-1}` because it is a mechanism, not a control:
  * nothing should be able to reach it with a keyboard, and no screen reader should
@@ -55,18 +72,19 @@ export function HapticSwitch() {
   const attrs = { switch: '' } as Record<string, string>
 
   return (
-    <>
-      <label htmlFor={SWITCH_ID} className="sr-only" aria-hidden="true" />
+    <label
+      id={SWITCH_ID}
+      aria-hidden="true"
+      className="pointer-events-none fixed bottom-0 left-0 size-11 opacity-0"
+    >
       <input
         {...attrs}
-        id={SWITCH_ID}
         type="checkbox"
         tabIndex={-1}
-        aria-hidden="true"
-        className="sr-only"
+        className="size-full"
         onChange={() => {}}
       />
-    </>
+    </label>
   )
 }
 
@@ -81,7 +99,8 @@ export function haptic() {
   navigator.vibrate?.(10)
 
   // iOS. The label rather than the input: clicking the label is what the
-  // behaviour is attached to.
-  const label = document.querySelector(`label[for="${SWITCH_ID}"]`)
+  // behaviour is attached to, and the label wraps the input so the click reaches
+  // it by containment.
+  const label = document.getElementById(SWITCH_ID)
   if (label instanceof HTMLLabelElement) label.click()
 }
