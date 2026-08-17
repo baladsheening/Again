@@ -134,7 +134,13 @@ export function PosterWall({
               // action rather than the name, because that is what activating it
               // does — "Aftersun" alone would announce a link to a page that
               // does not exist.
-              aria-label={`Add ${film.title}${film.year ? `, ${film.year}` : ''}`}
+              //
+              // ⚠ **"Open", not "Add", since 17 August.** This used to add the
+              // film in two taps through the intent sheet; it opens the film
+              // screen now, and the add is a control in there. A label naming an
+              // action the control no longer performs is worse than a bare title,
+              // because it is confidently wrong rather than merely thin.
+              aria-label={`Open ${film.title}${film.year ? `, ${film.year}` : ''}`}
               /* `rounded-artwork`, not `rounded`: the two banners that pass over
                  this wall round their lower corners by the same token, and a
                  shared corner is a relationship rather than a value they each

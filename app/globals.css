@@ -151,6 +151,43 @@
    */
   --color-live: #ff3b30;
 
+  /**
+   * **"This is on your list", on the film screen and nowhere else.**
+   *
+   * Directed 17 August, as a *luminescent green tick* on the control that adds a
+   * film. It arrives under the same scarcity rule as everything above it, and
+   * this is the fifth meaningful colour in a palette whose argument was that it
+   * had two — so the terms it arrives on matter more than the value:
+   *
+   * ⚠ **It marks a state, not an event.** The green is on the tick that says a
+   * film is on your list — which is why `listMyEntriesForExternalId` exists and
+   * why the screen asks it *before* you touch anything. A colour that only ever
+   * appeared for a second after a tap would be a flourish on a confirmation, and
+   * §11 does not spend colours on flourishes. It is the same mark whether you
+   * added the film just now or last month.
+   *
+   * ⚠ **It is NOT the tick in `entry-row.tsx`, and that was the first plan.** That
+   * tick marks a want that has been *satisfied* — watched, resolved — which is a
+   * different claim from *listed*. Tinting both would have given green two
+   * meanings on its first day, which is exactly how a palette stops meaning
+   * anything. Everything in a list is on the list; the interesting thing there is
+   * whether it is done, and that stays `currentColor`.
+   *
+   * ⚠ **Quieter than the accent, measured: 6.0:1 against the true-black ground,
+   * against amber's 7.7:1.** That ordering is the point rather than a
+   * coincidence. Amber marks overlap, which is the one moment the product exists
+   * for; adding a film is the most routine thing anybody does here. If the
+   * routine action were the brightest thing on the screen, the important one
+   * would stop being the thing the eye goes to. **Any change to this value has to
+   * keep that gap** — green also has the hue advantage, since the eye peaks near
+   * 555nm, so parity in contrast would already read as louder.
+   *
+   * Well past the 3:1 WCAG 1.4.11 asks of a graphical control, and past 4.5:1
+   * too, which matters because the tick sits over poster artwork as well as over
+   * the ground.
+   */
+  --color-listed: #4f9860;
+
   /*
     The width at which the shell becomes a rail.
 

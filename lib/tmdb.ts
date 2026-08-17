@@ -94,6 +94,14 @@ const detailsResponse = z.object({
   title: z.string(),
   release_date: z.string().optional(),
   poster_path: z.string().nullable().optional(),
+  /**
+   * The synopsis. **Empty string rather than absent** for a film TMDB has no
+   * write-up for, which is common enough on older and non-English titles that the
+   * screen has to have an answer for it — see `film-screen.tsx`.
+   */
+  overview: z.string().nullable().optional(),
+  /** Minutes. Null for anything unreleased or unmeasured. */
+  runtime: z.number().nullable().optional(),
   credits: z
     .object({
       crew: z.array(z.object({ job: z.string(), name: z.string() })).optional(),
@@ -101,12 +109,27 @@ const detailsResponse = z.object({
     .optional(),
 })
 
+/**
+ * ⚠ **Two consumers now, and they want different halves of it.** `addFilmAction`
+ * reads the first four to fill `items.metadata`; the film screen reads the
+ * synopsis and the runtime and never persists them. They stay one type and one
+ * request because they are one document upstream, and TMDB's own cache
+ * (`DETAILS_TTL`) makes the second read free.
+ *
+ * **The synopsis and the runtime are deliberately not written to `items`.** §5's
+ * schema is a canonical row for a real thing, not a copy of somebody's
+ * catalogue; a synopsis stored here is a synopsis that goes stale and that the
+ * app then has to decide whether to trust. It is fetched where it is shown.
+ */
 export type FilmDetails = {
   externalId: string
   title: string
   year: number | null
   posterPath: string | null
   directors: string[]
+  synopsis: string | null
+  /** Minutes. */
+  runtime: number | null
 }
 
 async function tmdb(path: string, revalidate: number): Promise<unknown> {
@@ -387,5 +410,9 @@ export async function getFilm(externalId: string): Promise<FilmDetails | null> {
     directors: (d.credits?.crew ?? [])
       .filter((c) => c.job === 'Director')
       .map((c) => c.name),
+    // Empty string and absent both mean the same thing to a reader, so they mean
+    // the same thing here. The screen has one branch, not two.
+    synopsis: d.overview?.trim() || null,
+    runtime: d.runtime || null,
   }
 }

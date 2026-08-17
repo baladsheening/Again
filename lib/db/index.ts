@@ -51,6 +51,7 @@ export type { TrackState, TrackedPerson } from './tracks'
 export {
   listMyEntries,
   countMyEntries,
+  listMyEntriesForExternalId,
   listEntriesForOtherUser,
   addEntry,
   copyEntry,
@@ -65,6 +66,7 @@ export type {
   OwnerView,
   PublicView,
   EntryWithItem,
+  ListedEntry,
   PublicEntry,
   PublicEntryWithItem,
   Page,

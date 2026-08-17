@@ -8,7 +8,7 @@ import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { runOverlap } from '@/lib/overlap'
 import { specFor } from '@/lib/vocabulary'
-import type { EntryCard, EntrySource, Intent } from '@/lib/domain'
+import type { EntryCard, EntrySource, Intent, Kind } from '@/lib/domain'
 
 /** §5 Views. `archive` is deliberately absent from `PublicView` — see below. */
 export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive'
@@ -231,6 +231,49 @@ export async function addEntry(
     await fireOverlap(tx, sessionUser, inserted)
     return ok({ entry: inserted, created: true })
   })
+}
+
+/**
+ * What this user already has for one catalogue item, named the way the catalogue
+ * names it rather than by our `items.id`.
+ *
+ * **The film screen is the caller** (`components/film-screen.tsx`): it opens on a
+ * TMDB id off the wall or a search result, and it has to know whether that film
+ * is already on your list before you touch anything. That is the whole
+ * justification for the green — a colour that only ever appeared for a second
+ * after a tap would be decoration, and §11 does not spend colours on decoration.
+ *
+ * ⚠ **Owner-only, and it deliberately includes `done`.** §5 makes the archive
+ * private *from other people*; this is your own read of your own rows, filtered
+ * on `sessionUser.id` like everything else in this layer. A film you have watched
+ * is still on your list, so it still answers yes — and it has to, or the screen
+ * would offer to add something `addEntry` will refuse as a duplicate.
+ *
+ * The bound is not pagination so much as arithmetic: `entries` is unique on
+ * (user, item, intent), so this can return at most one row per intent and there
+ * are two for a film. `LIMIT` is there because §10 says no unbounded select, and
+ * a ceiling that can never be reached is the cheapest kind to have.
+ */
+export type ListedEntry = { entryId: string; intent: Intent; state: EntryState }
+
+export async function listMyEntriesForExternalId(
+  sessionUser: SessionUser,
+  input: { kind: Kind; externalId: string },
+): Promise<ListedEntry[]> {
+  const rows = await db
+    .select({ id: entries.id, intent: entries.intent, state: entries.state })
+    .from(entries)
+    .innerJoin(items, eq(entries.itemId, items.id))
+    .where(
+      and(
+        eq(entries.userId, sessionUser.id),
+        eq(items.kind, input.kind),
+        eq(items.externalId, input.externalId),
+      ),
+    )
+    .limit(8)
+
+  return rows.map((r) => ({ entryId: r.id, intent: r.intent, state: r.state }))
 }
 
 /**
