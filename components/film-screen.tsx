@@ -442,78 +442,68 @@ export function FilmScreen({
           {/* --- what it is, over the foot of the artwork --------------------- */}
           <div className="gutter absolute inset-x-0 bottom-0 pb-5">
             {/*
-              **The `+` sits on the title's line, directed 17 August.** It has been
-              in two places before this: the artwork's top right, opposite the
-              close, which put the one thing this screen is *for* in the corner
-              reserved for furniture; and under the credit line, which read as an
-              afterthought to the metadata rather than as the action on the film.
-              On the title's own line it is unambiguous — this is the film, and
-              this is what you do about it.
+              ─────────────────────────────────────────────────────────────────
+               The `+` ends the title, on whichever line the title ends
+              ─────────────────────────────────────────────────────────────────
 
-              ⚠ **`items-start`, so a title that wraps does not move it.** The
-              circle is 36px against a 25px line box, so aligning to the top puts
-              it beside the *first* line and leaves it there whether the title runs
-              to one line or three. `items-center` would have centred it against
-              the whole block, which means the control's position would depend on
-              the length of a film's name.
+              It has been in three places today: the artwork's top right, opposite
+              the close, which put the one thing this screen is *for* in the corner
+              reserved for furniture; under the credit line, which read as an
+              afterthought to the metadata; and beside the title in a flex row,
+              which was right for a one-line name and wrong for every other —
+              a row aligns the control to the *block*, so a title that ran to three
+              lines left the control floating beside the first with two lines of
+              nothing under it.
 
-              ⚠ **Which is why the circle is centred inside a box one line tall
-              rather than aligned to the row.** Reported: it sat low. It did, and
-              the arithmetic says by how much — `items-start` puts a 36px circle's
-              *top* on the line box's top, so its centre lands 18px down while the
-              first line's centre is at 12.6px. Five and a half pixels below where
-              the eye expects it, on the largest type in the app.
+              ⚠ **So it is not beside the heading any more, it is inside it.** The
+              control is inline content, after the last word, with an ordinary
+              space in front of it: it flows, so it ends up at the end of the last
+              line whatever that line turns out to be, at any width and any length
+              of name. There is no case analysis and no breakpoint — the same rule
+              produces the one-line answer and the four-line answer.
 
-              The wrapper is `h-[1lh]` wearing `title`, so it is exactly one line
-              of the heading beside it — the same font size, the same line height,
-              and it follows the type step at 64rem without anything here knowing
-              the number. The circle centres in that and overflows it evenly.
-              **Derived, not measured**: a `mt-` of five-and-a-half pixels would be
-              right at 22px type and wrong at 28px.
+              ⚠ **`h-[1lh]` on the wrapper is what stops the last line growing.**
+              An inline box 36px tall inside a 25px line would push that line
+              taller than the ones above it, and uneven leading in a wrapped title
+              is the sort of thing you see without being able to name. The wrapper
+              is exactly one line high — it wears `title`, so it takes the
+              heading's own size and line height and follows the type step at 64rem
+              without knowing the number — and the circle centres in it and
+              overflows evenly, which costs the line box nothing.
 
-              What remains is about 1.5px: a line box holds room for descenders, so
-              its centre sits a little below the cap-to-baseline band the eye
-              actually reads. `--wordmark-drop` in globals.css is the same
-              correction made explicitly, and is where to look if this still reads
-              low. It is not made here because 1.5px does not earn a second number.
+              `align-middle` puts that box's centre a half-pixel from the line's
+              own centre. The alternative, baseline alignment, would hang it from
+              the text's baseline and put it low again — which is what was reported
+              of the previous arrangement, where a 36px circle's *top* met the line
+              box's top and its centre landed five and a half pixels below the
+              type's.
 
               ⚠ `1lh` is Safari 16.4 and Chrome 109. Where it is not understood the
               declaration is dropped, the wrapper takes its content's height, and
-              the circle lands exactly where it did before — the old behaviour, not
-              a broken one.
+              the only cost is that the final line of a wrapped title is a few
+              pixels taller than its siblings. Degrades to ugly, never to broken.
 
-              ⚠ **No `justify-between`: the control follows the title rather than
-              holding the right edge.** Asked for on 17 August — *bring it closer
-              to the title*. Pushed to the gutter it was a control at the far side
-              of the screen from the thing it acts on, and on a short name that is
-              most of the width of a phone. The heading takes its own text's width
-              and the circle sits at the end of it, so the pair reads as one line
-              rather than as two ends of a row.
-
-              A long title still wraps to the full column and the circle still ends
-              up at the edge — the two cases have the same rule and only look
-              different because the title's width differs, which is the right kind
-              of difference to have.
-
-              `min-w-0` on the heading because a flex child will not shrink below
-              its content otherwise, and a long title would push the control off
-              the gutter instead of wrapping.
+              ⚠ **`aria-label` on the heading, because the control lives in it
+              now.** A heading takes its accessible name from its contents, so
+              without this it would announce as *"The Zone of Interest, Want to
+              see"* — the title welded to a button's label. The label pins the
+              heading to the film's name; the button keeps its own name and stays a
+              separate stop for anything navigating by control.
             */}
-            <div className="flex items-start gap-3">
-              <h2 className="title min-w-0">{film.title}</h2>
-
+            <h2 className="title" aria-label={film.title}>
+              {film.title}{' '}
               {/*
                 ⚠ **The slot is drawn from the first frame and its contents are
                 not.** `marks === null` is *not yet known*, and a `+` drawn then
                 would be claiming the film is not on your list before anything has
-                asked. The circle is there, so the layout is settled and the title
-                beside it never reflows; the glyph inside waits for the answer.
+                asked. The circle is there, so the line is laid out and the title
+                never reflows around it; the glyph inside waits for the answer.
 
                 The tick is green, and the green means *this is on your list*
                 rather than *that worked*. See `--color-listed` in globals.css for
                 what that distinction costs and why it is drawn that way round.
               */}
-              <span className="title flex h-[1lh] shrink-0 items-center">
+              <span className="inline-flex h-[1lh] items-center align-middle">
                 <AddControl
                   state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
                   label={specFor('film', primary).wantLabel}
@@ -522,7 +512,7 @@ export function FilmScreen({
                   onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
                 />
               </span>
-            </div>
+            </h2>
 
             <p className="text-muted mt-2 text-sm">
               {/*
@@ -627,8 +617,15 @@ function AddControl({
   onAdd: () => void
   onUndo: () => void
 }) {
+  /*
+    ⚠ **`span`, not `div`, in both non-button states.** This control is inline
+    content inside the `<h2>` now, and a heading takes phrasing content — a `div`
+    there is invalid markup that browsers repair by guessing. `CONTROL` sets
+    `display: flex`, so what the element is called changes nothing about how it
+    draws.
+  */
   if (state === 'unknown') {
-    return <div aria-hidden className={`${CONTROL} opacity-40`} />
+    return <span aria-hidden className={`${CONTROL} opacity-40`} />
   }
 
   if (state === 'listed') {
@@ -639,9 +636,13 @@ function AddControl({
     */
     if (!undoable) {
       return (
-        <div className={`${CONTROL} text-listed`} role="img" aria-label={`${label} — on your list`}>
+        <span
+          className={`${CONTROL} text-listed`}
+          role="img"
+          aria-label={`${label} — on your list`}
+        >
           <TickIcon />
-        </div>
+        </span>
       )
     }
     return (
