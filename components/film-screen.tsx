@@ -398,7 +398,49 @@ export function FilmScreen({
 
           {/* --- what it is, over the foot of the artwork --------------------- */}
           <div className="gutter absolute inset-x-0 bottom-0 pb-5">
-            <h2 className="title">{film.title}</h2>
+            {/*
+              **The `+` sits on the title's line, directed 17 August.** It has been
+              in two places before this: the artwork's top right, opposite the
+              close, which put the one thing this screen is *for* in the corner
+              reserved for furniture; and under the credit line, which read as an
+              afterthought to the metadata rather than as the action on the film.
+              On the title's own line it is unambiguous — this is the film, and
+              this is what you do about it.
+
+              ⚠ **`items-start`, so a title that wraps does not move it.** The
+              circle is 36px against a 25px line box, so aligning to the top puts
+              it beside the *first* line and leaves it there whether the title runs
+              to one line or three. `items-center` would have centred it against
+              the whole block, which means the control's position would depend on
+              the length of a film's name.
+
+              `min-w-0` on the heading because a flex child will not shrink below
+              its content otherwise, and a long title would push the control off
+              the gutter instead of wrapping.
+            */}
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="title min-w-0">{film.title}</h2>
+
+              {/*
+                ⚠ **The slot is drawn from the first frame and its contents are
+                not.** `marks === null` is *not yet known*, and a `+` drawn then
+                would be claiming the film is not on your list before anything has
+                asked. The circle is there, so the layout is settled and the title
+                beside it never reflows; the glyph inside waits for the answer.
+
+                The tick is green, and the green means *this is on your list*
+                rather than *that worked*. See `--color-listed` in globals.css for
+                what that distinction costs and why it is drawn that way round.
+              */}
+              <AddControl
+                state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
+                label={specFor('film', primary).wantLabel}
+                undoable={Boolean(undoablePrimary)}
+                onAdd={() => add(primary)}
+                onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
+              />
+            </div>
+
             <p className="text-muted mt-2 text-sm">
               {/*
                 Director, year, runtime — the three things that decide whether you
@@ -421,70 +463,60 @@ export function FilmScreen({
                 .filter(Boolean)
                 .join(' · ')}
             </p>
-
-            {/*
-              **Under the credit line, directed 17 August.** It was in the top
-              right, opposite the close — which put the one thing this screen is
-              *for* in the corner reserved for furniture, as far from the title as
-              the artwork allows. Here it reads as the action on the film it names:
-              title, who made it, and then the thing you do about it.
-
-              ⚠ **The slot is drawn from the first frame and its contents are not.**
-              `marks === null` is *not yet known*, and a `+` drawn then would be
-              claiming the film is not on your list before anything has asked. So
-              the circle is there — the layout is settled, nothing moves — and the
-              glyph inside it waits for the answer. That mattered more in the
-              corner than it does here, and it still matters: this block sits on
-              the artwork's foot, so anything that changes size in it moves the
-              credit line above it.
-
-              The tick is green, and the green means *this is on your list* rather
-              than *that worked*. See `--color-listed` in globals.css for what that
-              distinction costs and why it is drawn that way round.
-            */}
-            <div className="mt-4">
-              <AddControl
-                state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
-                label={specFor('film', primary).wantLabel}
-                undoable={Boolean(undoablePrimary)}
-                onAdd={() => add(primary)}
-                onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
-              />
-            </div>
           </div>
         </div>
 
-        {/* --- the synopsis, and the other intent --------------------------- */}
-        <div className="gutter safe-bottom flex-1 overflow-y-auto pt-6 [--safe-bottom-base:1.5rem]">
-          <h3 className="micro text-muted">Synopsis</h3>
-          <p className="mt-3 text-sm">
-            {details === null
-              ? ''
-              : (details.synopsis ??
-                'No synopsis for this one.')}
-          </p>
+        {/*
+          --- the synopsis, and the other intent ---------------------------
 
-          <div className="mt-8 flex flex-col items-start gap-4">
-            {secondary.map((intent) => (
-              <SecondaryIntent
-                key={intent}
-                label={specFor('film', intent).wantLabel}
-                state={marks === null ? 'unknown' : marks[intent] ? 'listed' : 'absent'}
-                undoable={undoable?.intent === intent}
-                onAdd={() => add(intent)}
-                onUndo={() => {
-                  if (undoable?.intent === intent) undo(intent, undoable.entryId)
-                }}
-              />
-            ))}
+          **The word holds still and the writing moves under it**, directed
+          17 August. The heading used to scroll away with its own paragraph, which
+          made a long synopsis a wall of text with nothing naming it once you were
+          three lines in.
+
+          ⚠ **`min-h-0` on both this column and the scroller inside it, and it is
+          the whole mechanism.** A flex item's automatic minimum size is its
+          content, so a `flex-1` child with more text than room grows the column
+          instead of scrolling — the overflow never happens, so `overflow-y-auto`
+          has nothing to do and the artwork above gets squeezed instead. Setting
+          the floor to zero is what lets the box be smaller than what is in it,
+          which is the precondition for scrolling at all.
+
+          The `gutter` sits on the heading and the scroller separately rather than
+          on the column, so that the writing scrolls under a heading that is inset
+          to the same line — and so the scrollbar, where there is one, lands at the
+          pane's edge rather than inside the text.
+        */}
+        <div className="flex min-h-0 flex-1 flex-col pt-6">
+          <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
+
+          <div className="gutter safe-bottom mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
+            <p className="text-sm">
+              {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
+            </p>
+
+            <div className="mt-8 flex flex-col items-start gap-4">
+              {secondary.map((intent) => (
+                <SecondaryIntent
+                  key={intent}
+                  label={specFor('film', intent).wantLabel}
+                  state={marks === null ? 'unknown' : marks[intent] ? 'listed' : 'absent'}
+                  undoable={undoable?.intent === intent}
+                  onAdd={() => add(intent)}
+                  onUndo={() => {
+                    if (undoable?.intent === intent) undo(intent, undoable.entryId)
+                  }}
+                />
+              ))}
+            </div>
+
+            {/*
+              Full strength, not `text-muted` — a failure set in the colour reserved
+              for de-emphasised metadata reads as an aside. docs/decisions.md,
+              8 August, and it has survived every surface this message has lived on.
+            */}
+            {error && <p className="mt-6 text-sm">{error}</p>}
           </div>
-
-          {/*
-            Full strength, not `text-muted` — a failure set in the colour reserved
-            for de-emphasised metadata reads as an aside. docs/decisions.md,
-            8 August, and it has survived every surface this message has lived on.
-          */}
-          {error && <p className="mt-6 text-sm">{error}</p>}
         </div>
       </div>
     </dialog>
