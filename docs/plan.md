@@ -73,6 +73,43 @@ question rather than a task.
       by name rather than by memory. **What is left is where it is offered in the
       UI**, which was always the undecided half.
 - [x] ~~**Ship Phase 2 to Vercel.**~~ Deployed, nine commits on 17 August.
+- [ ] **The film screen arrives in two stages, and the second one is visible.**
+      Reported on the handset, 17 August: tap a poster and the screen opens
+      properly, but **the title is there before the director and the synopsis
+      are** — *it's suboptimal*. Nothing is broken; this is the design showing its
+      seam. Title, year and artwork come off the poster that was tapped, so the
+      screen paints on the first frame; director, runtime and synopsis come from
+      `/api/film/[id]`, so they land a round trip later. `film-screen.tsx` calls
+      that *nothing waits for it*, and against a spinner it is right — against a
+      screen that fills in under your eyes it is not.
+      **Candidates, and they are not the same kind of fix.** *Prefetch* removes
+      the wait: fire the request on the poster's `pointerdown`, or for the first
+      rows on render, so the answer is in flight before the dialog mounts — the
+      route is already cached (`private, max-age=15`) and a small client cache
+      keyed by external id would make a re-open instant. *Reservation* removes the
+      movement: the credit line is one line, so holding its height stops the
+      synopsis jumping when it arrives. **Probably both** — one for the pause, one
+      for the lurch. ⚠ Do not answer it with a spinner over artwork we already
+      have; that trades a seam for a wait.
+- [ ] **A scrollbar still appears over the artwork, where nothing scrolls.**
+      Reported 17 August, after `scrollbar-none` went on the synopsis pane: swiping
+      the top two thirds still shows a moving indicator, *even if it has no effect
+      on anything* — which is exactly the impression the scroll lock exists to
+      prevent.
+      ⚠ **Find which element owns it before applying anything**, because the fix
+      differs and the wrong guess is invisible. The dialog is `overflow-hidden`,
+      the artwork block is `overflow-hidden`, and the document is locked
+      (`overflow: hidden` on the root, set from `film-screen.tsx`) — so on paper
+      nothing there can scroll, and something is indicating anyway. The candidates
+      are the document still flashing its indicator under a drag despite the lock,
+      the centred `max-w-md` column, and the dialog itself.
+      Options once it is known: `scrollbar-none` on that element; `touch-action:
+      none` on the artwork, which stops the gesture reaching any scroller at all
+      and was **built and reverted on 17 August** as part of a different approach
+      to the wall problem — worth reading that revert before rebuilding it; or the
+      utility applied to the root while the screen is open. ⚠ **Do not sprinkle
+      `scrollbar-none` around** — its own note in globals.css warns against it
+      anywhere content is primarily navigated by scrolling.
 - [ ] **A haptic on the tap that adds a film. Still wanted, not yet possible.**
       Directed 17 August and built the same day; **removed the same day** because
       it was never felt. Android has it and keeps it — `navigator.vibrate(10)` in
