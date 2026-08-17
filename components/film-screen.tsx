@@ -72,12 +72,21 @@ const ARTWORK = 'h-2/3'
 /**
  * The two circles on the artwork.
  *
- * ⚠ **`black/80` and no blur, and both halves are deliberate.** These sit over
+ * ⚠ **`black/70` and no blur, and both halves are deliberate.** These sit over
  * whatever the poster happens to be, so the ground has to be dark enough to carry
- * a stroke icon against a bright one: at 80% over a bright poster the circle
- * composites to about #282828, where the tick's green reads 4.0:1 and the plus
- * reads 11:1. At 50% the green fell to 1.7:1 — a mark you could not see on the
- * films most likely to have a bright poster.
+ * a stroke icon against a bright one. Measured against the worst case — a bright
+ * poster with no scrim over it — the green tick reads 3.2:1 at 70%, 4.0 at 80%
+ * and 1.7 at 50%, against the 3:1 WCAG 1.4.11 asks of a graphical control. **70%
+ * is therefore near the floor and not a number to keep loosening by eye.**
+ *
+ * ⚠ **In practice both circles sit on ground that is nearly black anyway, and
+ * that is worth knowing before this is tuned again.** Asked on 17 August for a
+ * touch more see-through; it went 80 → 70. But the `+` moved onto the title's
+ * line, which is inside the scrim's `from-black` end, so what shows through is a
+ * poster that has already been taken most of the way to black. **If the point is
+ * to see artwork through the control, the thing to change is the scrim's depth,
+ * not this alpha** — going further here spends the contrast floor and buys almost
+ * nothing visible.
  *
  * No `backdrop-blur`, because a blur clipped to a rounded border is the exact
  * combination WebKit has a history of rendering wrong, and a control that
@@ -85,7 +94,7 @@ const ARTWORK = 'h-2/3'
  * the foot of the app is where glass belongs; this is a button.
  */
 const CONTROL =
-  'bg-black/80 tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
+  'bg-black/70 tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
 
 type Details = {
   synopsis: string | null
@@ -414,6 +423,31 @@ export function FilmScreen({
               the whole block, which means the control's position would depend on
               the length of a film's name.
 
+              ⚠ **Which is why the circle is centred inside a box one line tall
+              rather than aligned to the row.** Reported: it sat low. It did, and
+              the arithmetic says by how much — `items-start` puts a 36px circle's
+              *top* on the line box's top, so its centre lands 18px down while the
+              first line's centre is at 12.6px. Five and a half pixels below where
+              the eye expects it, on the largest type in the app.
+
+              The wrapper is `h-[1lh]` wearing `title`, so it is exactly one line
+              of the heading beside it — the same font size, the same line height,
+              and it follows the type step at 64rem without anything here knowing
+              the number. The circle centres in that and overflows it evenly.
+              **Derived, not measured**: a `mt-` of five-and-a-half pixels would be
+              right at 22px type and wrong at 28px.
+
+              What remains is about 1.5px: a line box holds room for descenders, so
+              its centre sits a little below the cap-to-baseline band the eye
+              actually reads. `--wordmark-drop` in globals.css is the same
+              correction made explicitly, and is where to look if this still reads
+              low. It is not made here because 1.5px does not earn a second number.
+
+              ⚠ `1lh` is Safari 16.4 and Chrome 109. Where it is not understood the
+              declaration is dropped, the wrapper takes its content's height, and
+              the circle lands exactly where it did before — the old behaviour, not
+              a broken one.
+
               ⚠ **No `justify-between`: the control follows the title rather than
               holding the right edge.** Asked for on 17 August — *bring it closer
               to the title*. Pushed to the gutter it was a control at the far side
@@ -445,13 +479,15 @@ export function FilmScreen({
                 rather than *that worked*. See `--color-listed` in globals.css for
                 what that distinction costs and why it is drawn that way round.
               */}
-              <AddControl
-                state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
-                label={specFor('film', primary).wantLabel}
-                undoable={Boolean(undoablePrimary)}
-                onAdd={() => add(primary)}
-                onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
-              />
+              <span className="title flex h-[1lh] shrink-0 items-center">
+                <AddControl
+                  state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
+                  label={specFor('film', primary).wantLabel}
+                  undoable={Boolean(undoablePrimary)}
+                  onAdd={() => add(primary)}
+                  onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
+                />
+              </span>
             </div>
 
             <p className="text-muted mt-2 text-sm">
