@@ -5,6 +5,7 @@ import { createContext, use, useEffect, useRef, useState, useTransition } from '
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { FilmSearchResult, Intent } from '@/lib/domain'
 import { intentsFor, specFor } from '@/lib/vocabulary'
+import { TickIcon } from './icon-tick'
 import { Poster } from './poster'
 
 /**
@@ -46,22 +47,23 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     sentence, and a sentence that waits for the network is not a confirmation.
 
     ─────────────────────────────────────────────────────────────────────────────
-     One sentence, not two — 17 August
+     No sentence at all: the title, and then a tick — 17 August
     ─────────────────────────────────────────────────────────────────────────────
 
     ⚠ **This was `adding` and `undo`, two states holding two sentences, and the
     handover between them was visible.** Reported: *the message jumps, I think
-    it's because it starts with 'adding' before becoming 'added'.* It is: the
-    verb changes width, so the title after it slides, and the *Undo* beside it
-    arrives at the same moment.
+    it's because it starts with 'adding' before becoming 'added'.* It did: the
+    verb changed width, so the title after it slid, and the *Undo* beside it
+    arrived in the same frame.
 
-    **The fix is to stop having two sentences rather than to make the swap
-    smoother.** A transition between them would still be a transition — the
-    subtraction is that there was never anything for the second sentence to say
-    that the first did not. The add is optimistic already, by the paragraph
-    above; the only thing that actually arrives from the server is the *entry
-    id*, which is what makes an undo addressable. So that is the only thing that
-    changes, and it changes a control, not a word.
+    Directed, and it goes further than dropping the second sentence: **the band
+    shows the film's title, and the add is confirmed by a tick rather than by a
+    word.** Which is the better answer for the same reason the jump happened —
+    there was never anything a verb could say that the title did not. The tap
+    said *add this*; the title says *this*; the only thing that actually arrives
+    from the server is the **entry id**, which is what makes an undo addressable.
+    So the id is the only thing that changes, and it changes a mark and a
+    control, never the text.
 
     Failure still corrects the claim: both failure paths clear this and put an
     error in its place, which is what optimistic means and is the same behaviour
@@ -122,8 +124,30 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         setError(`${film.title} is already on your list.`)
         return
       }
-      // The same sentence, now with something to undo. Only the control changes.
+      // The same title, now with something to undo. Only the mark changes.
       setAdded({ title: film.title, entryId: result.value.entryId })
+
+      /*
+        The light haptic asked for with the tick, fired at the same moment — the
+        row exists, so the confirmation is honest.
+
+        ⚠ **It does nothing on iOS, which is the surface this was asked from.**
+        Safari implements no Vibration API at all, on any iOS version; this is
+        not a prefix or a permission away. The one known iOS route is a hidden
+        `<input type="checkbox" switch>` toggled through its label, and it is no
+        use here even setting aside what it is: that trick needs a live user
+        gesture, and this fires after a network round trip, by which time the
+        gesture is long over.
+
+        So it is written as the standard call and feature-detected, which is
+        exactly what it would be if iOS shipped the API tomorrow. **The tick is
+        the confirmation on every surface; the haptic is an addition where the
+        platform has one.** Android gets it now.
+
+        10ms is the conventional light tap. Anything longer is a buzz, and a buzz
+        for an add is the phone asking to be noticed rather than answering.
+      */
+      navigator.vibrate?.(10)
     })
   }
 
@@ -222,31 +246,53 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
             life. The underline says it is a control without a colour doing it.
           */}
           <div className="border-rule bg-surface/60 backdrop-blur-band pointer-events-auto border-y">
-            <p className="gutter rail:max-w-3xl flex items-center justify-between gap-3 py-2.5 text-sm">
+            {/*
+              `role="status"` because the visible text no longer says what
+              happened — the tick does. It is a polite live region, so the mark
+              arriving inside it is announced as *Added.* rather than passing in
+              silence. Nothing announced before this change, so the initial
+              appearance is no worse than it was and the confirmation is better.
+            */}
+            <p
+              role="status"
+              className="gutter rail:max-w-3xl flex items-center justify-between gap-3 py-2.5 text-sm"
+            >
               {added && (
                 <>
-                  <span className="truncate">Added {added.title}.</span>
+                  <span className="truncate">{added.title}</span>
                   {/*
                     ⚠ **Rendered from the first frame and made invisible until
                     there is an id**, rather than mounted when the id arrives.
-                    `visibility: hidden` keeps the box, so the sentence is laid out
-                    against its final width and *Undo* appearing moves nothing —
-                    which is the other half of the reported jump. It is out of the
-                    accessibility tree and untappable while hidden, so there is no
-                    control there to find until there is something to undo.
+                    `visibility: hidden` keeps the box, so the title is laid out
+                    against its final width and the tick and *Undo* appearing move
+                    nothing — which is the other half of the reported jump. Both
+                    are out of the accessibility tree and untappable while hidden,
+                    so there is no control to find and nothing announced until
+                    there is something to undo.
+
+                    The tick is the app's own — the one on a satisfied want in
+                    `entry-row.tsx` — because "done with this" is the claim in both
+                    places and §11 permits the known icon for it. `currentColor`,
+                    so it stays out of the amber that marks overlap.
 
                     A ten-second window (§5). Missing it because the target was
                     30px wide is not a recoverable mistake, so `tap-target` stands.
                   */}
-                  <button
-                    type="button"
-                    onClick={undoAdd}
-                    className={`tap-target shrink-0 underline underline-offset-4 ${
+                  <span
+                    className={`flex shrink-0 items-center gap-3 ${
                       added.entryId ? '' : 'invisible'
                     }`}
                   >
-                    Undo
-                  </button>
+                    <TickIcon />
+                    <span className="sr-only">Added.</span>
+                    <button
+                      type="button"
+                      onClick={undoAdd}
+                      className="tap-target underline underline-offset-4"
+                    >
+                      Undo
+                    </button>
+                  </span>
                 </>
               )}
 
