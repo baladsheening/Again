@@ -3011,6 +3011,119 @@ and a production build are clean.
 
 ---
 
+## The databases are two — 17 August
+
+The last thing in pre-phase 2, and the only one that could not be retrofitted.
+
+### What was wrong
+
+One Neon database served both jobs. `DATABASE_URL` in `.env.local` and
+`DATABASE_URL` in the Vercel project were the same string, and Vercel held it as
+**one record targeting Production and Preview together** — a shape that is easy
+to miss, because the dashboard lists a variable once and shows the targets in a
+column nobody reads. Three consequences:
+
+- `npm run dev` wrote to the database the live site reads.
+- Every preview deployment did too.
+- `npm run db:migrate` migrated production. There was no rehearsal anywhere.
+
+None of it had cost anything, because there was one user and every row was his.
+"Development data" and "real data" were the same rows.
+
+### Why it had to be now rather than during Phase 2
+
+Phase 2's checkpoint is §12's, taken literally: two accounts on two devices
+seeing each other correctly. Reaching it means making, breaking and remaking a
+track between two accounts, repeatedly — and Phase 2 is also where the two
+functions carrying **silent** guarantees arrive, `listEntriesForOtherUser`
+excluding `done` and the private `note` staying out of the shared projection.
+Those want exercising against rows that can be thrown away, because the whole
+property of that class of bug is that nothing looks wrong when it breaks.
+
+And the cost curve only goes one way. Splitting while every row belongs to one
+person is an ops task. Splitting after a second person's rows are interleaved
+with test rows is a data migration with a judgement call per row.
+
+### The shape
+
+A Neon branch, which is copy-on-write, so a clone of the data costs no storage
+and takes seconds:
+
+| | |
+|---|---|
+| `production` (default branch) | the live site. Untouched |
+| `development` (`br-lingering-union-zasig3cn`) | this machine **and** preview deployments |
+
+No code changed. `lib/db/client.ts` reads one variable and does not care which
+database answers, which is the property that made this an hour rather than a
+refactor.
+
+The branch came up as a true copy — 13 tables, all three migrations in
+`drizzle.__drizzle_migrations`, and the real data — so `npm run dev` works on
+the first run with a real signed-in account rather than an empty schema. That is
+also the argument for branching **with** data rather than taking a schema-only
+branch: a migration rehearsed against an empty database does not rehearse the
+half that goes wrong, which is the backfill.
+
+⚠ **Preview points at `development`, not at a third database.** A preview is a
+rehearsal, and giving it its own database would mean a third migration target
+and a third set of accounts for no gain. The rule it enforces is the one that
+matters: **nothing but production writes to production.**
+
+### Two hazards worth knowing about
+
+⚠ **`vercel env pull` overwrites `.env.local`** and would silently undo the
+repoint. The file already carries a `# Created by Vercel CLI` line, so it has
+been pulled at least once. Do not run it. Recover the development string with
+
+```
+npx neonctl connection-string development --project-id crimson-paper-70987817 --pooled
+```
+
+which is why the branch is named in this file and the string is not.
+
+⚠ **Vercel cannot narrow a record's targets in place.** Splitting one record
+into two is remove-then-add-twice, so there is a window with no `DATABASE_URL`
+on the project. It is harmless — environment variables bind when a deployment is
+built, so the running site keeps the value it already has — and production was
+re-added with the identical string, so even an immediate redeploy is a no-op.
+
+### The test accounts are gone from production
+
+Production held five users: one real, and four left by test harnesses — a
+`reset-test-…@example.com` from proving password reset on 7 August, and three
+`probe-…@example.com` from the browser-driven sessions on 11 August, one of them
+with 114 sessions behind it. None held an entry and none was the `source_user_id`
+of anyone else's, so removing them changed nothing but their own graph: −4 users,
+−4 accounts, −117 sessions, −1 profile, with **entries 22 → 22 and items 23 → 23**.
+
+⚠ **This is not a hole in §5.** *Nothing is ever deleted* is a rule about the
+product — resolving an entry changes its state, it never removes the row, and
+there is no delete action anywhere in the UI. It says nothing about fixtures left
+behind by a test harness, and leaving them would have meant a stranger's first
+sight of Again being a database with four fake people in it.
+
+Done in one transaction with the survivor's id, handle and entry counts asserted
+before and after, and `items` asserted unchanged because they are shared TMDB
+rows rather than anyone's data. **Rehearsed on `development` first, which is the
+first thing the split paid for** — the numbers above were read off the copy
+before production was touched.
+
+⚠ **The stored probe credential is dead.** `probe-msove4za@example.com` was the
+account previous sessions were told to reuse rather than making more. It is gone
+from both databases, and that is the right end state: probe accounts belong on
+`development`, where making one costs nothing. A future probe signs itself up.
+
+### What is still not split
+
+`BETTER_AUTH_SECRET`, Upstash and Resend are one instance each across both
+environments. None of them stores rows that belong to a person — a shared rate
+limiter is one counter, and the same auth secret across environments only means a
+session cookie would validate in either. Revisit if a second person ever holds a
+session.
+
+---
+
 ## Third-party dependencies
 
 ### Where TMDB actually sits

@@ -16,6 +16,10 @@
  * **Only production deploys fail.** Previews and local builds print the same
  * findings as notices and carry on, because a preview with no limiter is a
  * rehearsal and a local build with no limiter is Tuesday.
+ *
+ * The database check below is the exception: it fails a **preview** build too.
+ * A preview with no limiter is a rehearsal, but a preview writing to production
+ * is not a rehearsal at all — it is production, wearing a different URL.
  */
 
 import { existsSync } from 'node:fs'
@@ -32,6 +36,8 @@ const set = (name) => Boolean(process.env[name]?.trim())
 
 const failures = []
 const notices = []
+/** Fails any build, not only a production one. See the header. */
+const hardFailures = []
 
 if (!set('UPSTASH_REDIS_REST_URL') || !set('UPSTASH_REDIS_REST_TOKEN')) {
   failures.push(
@@ -70,6 +76,64 @@ if (!authUrl) {
   )
 }
 
+/*
+  The two databases, split 17 August. `production` serves the live site; the
+  `development` branch serves this machine and every preview deployment.
+
+  Nothing about a mispointing looks wrong from outside, which is the whole reason
+  it is checked here rather than trusted: Vercel holds environment variables as
+  one record per name with a list of targets, so the natural mistake — the one
+  this project actually made — is a single DATABASE_URL aimed at Production and
+  Preview together. `vercel env pull` reintroduces it locally in one command.
+
+  Only the production host is named, because it is the only one that must never
+  be reached by accident. It is a hostname, not a credential.
+
+  ⚠ If the production branch is ever recreated its endpoint id changes and this
+  constant goes stale — at which point the **production** build fails and says
+  so, rather than passing quietly. That direction is deliberate.
+*/
+const PRODUCTION_DB_HOST = 'ep-royal-math-zalwuq2s-pooler.c-2.eu-west-2.aws.neon.tech'
+
+const dbHost = (() => {
+  try {
+    return new URL(process.env.DATABASE_URL ?? '').hostname
+  } catch {
+    return ''
+  }
+})()
+
+if (dbHost) {
+  const onProductionDb = dbHost === PRODUCTION_DB_HOST
+
+  if (isProduction && !onProductionDb) {
+    hardFailures.push(
+      `A production build is pointed at ${dbHost}, which is not the production ` +
+        'database. Either the Vercel Production value is wrong, or the production ' +
+        'branch was recreated and PRODUCTION_DB_HOST in this file needs updating — ' +
+        'check which before changing anything.',
+    )
+  }
+
+  if (onProductionDb && process.env.VERCEL_ENV === 'preview') {
+    hardFailures.push(
+      'This preview is pointed at the production database. Previews belong on the ' +
+        'Neon `development` branch — a preview that writes to production is not a ' +
+        'rehearsal, it is production. Vercel is most likely holding one DATABASE_URL ' +
+        'record targeting Production and Preview together; it must be two records.',
+    )
+  }
+
+  if (onProductionDb && !onVercel) {
+    notices.push(
+      'DATABASE_URL points at the production database, so `npm run dev` and ' +
+        '`npm run db:migrate` write to what the live site reads. Local work belongs ' +
+        'on the Neon `development` branch — see .env.example. Most likely cause: ' +
+        '`vercel env pull` overwrote .env.local.',
+    )
+  }
+}
+
 if (set('RESEND_API_KEY') && !set('EMAIL_FROM')) {
   notices.push(
     "EMAIL_FROM is unset, so email sends from Resend's shared sender. That " +
@@ -79,6 +143,14 @@ if (set('RESEND_API_KEY') && !set('EMAIL_FROM')) {
 }
 
 for (const notice of notices) console.warn(`\n  note: ${notice}`)
+
+if (hardFailures.length > 0) {
+  console.error(
+    `\npreflight failed — refusing to build against the wrong database\n`,
+  )
+  for (const failure of hardFailures) console.error(`  - ${failure}\n`)
+  process.exit(1)
+}
 
 if (failures.length === 0) {
   console.log('preflight: ok')

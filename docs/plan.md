@@ -11,8 +11,8 @@ keeps things.
 **Ship each phase to Vercel before starting the next** (§12). A phase is not done
 because the code exists.
 
-Current at `d1e8117` plus the caption switch-off carried in this commit,
-16 August 2026.
+Current at `1f6ae2c` plus the database split carried in this commit,
+17 August 2026.
 
 ---
 
@@ -23,8 +23,8 @@ Current at `d1e8117` plus the caption switch-off carried in this commit,
 | 0 — foundations | Neon, Drizzle schema + migrations, Better Auth, `lib/db/` convention | **Done.** Verified against the live DB |
 | 0.5 — account recovery | Password reset, auth rate limiting, `lib/email.ts` | **Done.** Reset proven end to end to a real inbox |
 | 1 — single player | Profiles, capture, entries, collections, resolve flow, the visual system, the phone shell | **Done and deployed.** Judged on hardware over four sessions |
-| pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Two of three done, 16 August.** D1 answered `no`, the caption switched off and shipped. **The database split is all that remains** |
-| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | Not started |
+| pre-2 | Stop the wall claiming what it cannot support; decide whether Again becomes cinema-aware; split the databases | **Done, 17 August.** D1 answered `no`, the caption switched off, the databases separated and the test accounts cleared |
+| 2 — two players | Tracks, `/u/[handle]`, §5 visibility in `lib/db/`, copy with `source='copy'` | **Next.** Nothing is in front of it |
 | 3 — overlap | Trigger + notification rows, `/notifications`, `/overlap` picker. In-app only | Not started |
 | 4 — swap | Full flow, blind commit enforced in the data layer, `landed` | Not started |
 | 5 — PWA + push | Manifest, service worker, VAPID, subscriptions, install prompt | Manifest and install exist; push does not |
@@ -43,7 +43,7 @@ outranks them without a reason written down.
 One line each. The detail is further down, or in `decisions.md` where it is a
 question rather than a task.
 
-### Pre-phase 2 — the next work
+### Pre-phase 2 — **done, 17 August**
 
 - [x] ~~**The wall claims *In cinemas* and cannot support it.**~~ Answered
       16 August as **no label**: the caption is switched off and the wall makes no
@@ -51,13 +51,15 @@ question rather than a task.
 - [x] ~~**D1: does Again become cinema-aware at all?**~~ **No** — 16 August, and
       it is a *not yet*: showtimes return as a **paid feature**. Written up in
       `decisions.md`.
+- [x] ~~**Separate the production and development databases.**~~ Done 17 August.
+      A Neon `development` branch takes this machine **and** preview deployments;
+      `production` is the live site alone. The four test accounts left in
+      production by the reset and browser harnesses went with it. →
+      `decisions.md`, *The databases are two*
 - [ ] **D2 and D3 are parked rather than answered** — the provider, and how the
       app learns where someone is. They wake when showtimes are bought; the
       prices as evaluated on 15 August are below, and the location question is
       the one that gets underestimated.
-- [ ] **Separate the production and development databases.** Required either way,
-      and required before two accounts exist. **The only thing left in
-      pre-phase 2.** → *Pre-phase 2, Stage 4*
 
 ### The product
 
@@ -235,13 +237,20 @@ whether a refused permission degrades to country-level or to no wall at all.
   wrong side of it and starts pulling the whole product towards being a listings
   business.
 
-### Stage 4 — Split the databases — **the only thing left**
+### Stage 4 — Split the databases — **done, 17 August**
 
-Independent of everything above and required either way. Production and
-development share one Neon database; Phase 2's checkpoint is *two accounts on two
-devices*, so the test accounts would be created in the database the live site
-reads. A Neon branch for local development, production left on main, `.env.local`
-repointed.
+Independent of everything above and required either way. A Neon `development`
+branch (`br-lingering-union-zasig3cn`) serves this machine and preview
+deployments; `production` serves the live site and nothing else. Vercel's single
+`DATABASE_URL` record — which had targeted Production **and** Preview together —
+is now two records.
+
+⚠ **Do not run `vercel env pull`**: it overwrites `.env.local` and would undo the
+repoint silently. Recover the development string with `npx neonctl
+connection-string development --project-id crimson-paper-70987817 --pooled`.
+
+The four test accounts in production went at the same time, rehearsed on the new
+branch first. Full account in `decisions.md`, *The databases are two*.
 
 ### Not in scope here
 
@@ -254,10 +263,8 @@ Pre-phase 2 is done when the wall says only what it can support, the databases a
 separate, and **D1 is answered either way and written down.** Building showtimes is
 not required to leave this stage — deciding about them is.
 
-**Two of the three are met.** The wall claims nothing, and D1 is answered and
-written up. **The databases are still one**, so pre-phase 2 is not finished and
-Phase 2 must not start ahead of it — its checkpoint is two accounts, and they would
-be created in the database the live site reads.
+**All three are met, 17 August.** The wall claims nothing, D1 is answered and
+written up, and the databases are two. Phase 2 may start.
 
 ⚠ **The advice that was argued and not taken on 15 August is the position again.**
 It was: Stage 0 now, showtimes after the product exists, on the grounds that tracks
@@ -272,12 +279,12 @@ made, overridden, and then arrived at anyway from the other direction.
 
 Ordered, and each is genuinely blocked by the one above it.
 
-### 0. Pre-phase 2 — **one thing left: split the databases**
+### 0. Pre-phase 2 — **done**
 
-Stage 0 is done and D1 is answered `no`. What remains is the Neon branch, and it
-is an hour of ops that cannot be retrofitted once two people have rows in one
-database. Alongside it, and for the same reason, `EMAIL_FROM` still has no
-verified domain — see *Blocking before anyone else signs up*.
+Stage 0 is done, D1 is answered `no`, and the databases are two. One item that
+shared its reasoning is still open and is **not** a blocker for building Phase 2,
+only for a second person using it: `EMAIL_FROM` has no verified domain — see
+*Blocking before anyone else signs up*.
 
 ### 1. Phase 2 — tracks and the other person
 
@@ -435,9 +442,9 @@ route and run `npx next typegen` afterwards, or `tsc` fails on a stale route typ
       account.** Enough to prove reset works, not enough for a second person —
       they get a 403 that throws on our side and reads as silence on theirs.
       `scripts/preflight.mjs` prints this on every build until it is set.
-- [ ] **Separate the databases.** `DATABASE_URL` was copied from `.env.local` to
-      Vercel, so production and development share one Neon database. Fine for one
-      person; the moment a second joins, a local test row is somebody's data.
+- [x] ~~**Separate the databases.**~~ Done 17 August — a Neon `development`
+      branch for this machine and for previews, `production` for the live site
+      alone.
 
 Everything else that used to be on this list is done: Upstash, Resend, the
 `lhr1` region, and `BETTER_AUTH_URL`. `scripts/preflight.mjs` fails a production
