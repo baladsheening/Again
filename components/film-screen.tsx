@@ -253,39 +253,8 @@ export function FilmScreen({
         Full bleed on black. `backdrop:bg-black` spelled out rather than taken
         from the token, for the reason `PosterReveal` gives: this is black because
         artwork wants nothing behind it, not because it inherits the app's ground.
-
-        ─────────────────────────────────────────────────────────────────────────
-         Nothing behind this scrolls — 17 August
-        ─────────────────────────────────────────────────────────────────────────
-
-        Reported: the wall scrolled underneath an open poster. **A modal `<dialog>`
-        makes the page behind it inert, and inert is not the same as unscrollable**
-        — the top layer takes clicks and focus, and a touch drag still chains out
-        to the document underneath.
-
-        ⚠ **The obvious fix is a document lock, and this app has been there.** An
-        `overflow: hidden` on `html` sat in globals.css for eight days for a
-        different reason and cost Safari's address-bar collapse and
-        pull-to-refresh with it; the note there records taking it off and finding
-        it had never been needed. Reaching for it again would be re-adding a
-        global mechanism to fix a local condition — and on iOS it does not
-        reliably stop a touch drag anyway.
-
-        So the chaining is stopped where it starts, in three declarations that
-        each say what they are for:
-
-        - `overflow-hidden` makes this element a scroll container with nothing to
-          scroll, and `overscroll-none` stops a gesture that reaches its edge from
-          continuing into the document. That covers the black margins either side
-          of the column at desk widths, which belong to no pane.
-        - `touch-none` on the artwork — see the note there.
-        - `overscroll-contain` on the pane below it — see the note there.
-
-        None of them is a branch, a timeout or a number, and none of them can be
-        right on one engine and wrong on another: they are the platform's own
-        vocabulary for exactly this.
       */
-      className="m-0 h-full max-h-none w-full max-w-none overflow-hidden overscroll-none bg-black p-0 text-text backdrop:bg-black"
+      className="m-0 h-full max-h-none w-full max-w-none bg-black p-0 text-text backdrop:bg-black"
     >
       {/*
         `max-w-md` and centred. Above `rail` a takeover the width of a desk would
@@ -294,22 +263,7 @@ export function FilmScreen({
         — the same move the acknowledgement band makes at its own breakpoint.
       */}
       <div className="mx-auto flex h-full w-full max-w-md flex-col">
-        {/*
-          ⚠ **`touch-none`, and it does two jobs.** There is nothing to scroll in
-          this two thirds of the screen, so a drag here would otherwise chain
-          straight out to the wall behind — which is what was reported. It also
-          stops the browser's own pinch and double-tap zoom, which is the one
-          piece of the zoom work `PosterReveal` kept and for the same reason: an
-          unhandled pinch zooms the *page*, and iOS offers no way to put page zoom
-          back — `visualViewport.scale` is read-only and `maximum-scale` has been
-          ignored since iOS 10. Pinching a poster and closing would leave the wall
-          magnified with no way out short of a reload.
-
-          It does not touch taps. `touch-action` governs the browser's default
-          gestures, not event dispatch, so the close and add controls sitting on
-          this artwork are unaffected.
-        */}
-        <div className={`${ARTWORK} relative shrink-0 touch-none overflow-hidden`}>
+        <div className={`${ARTWORK} relative shrink-0 overflow-hidden`}>
           {small && (
             /*
               ⚠ **Two layers, and the small one is the point.** `w342` is what the
@@ -427,18 +381,8 @@ export function FilmScreen({
           </div>
         </div>
 
-        {/*
-          --- the synopsis, and the other intent ---------------------------
-
-          ⚠ **`overscroll-contain` rather than `touch-none`.** This pane has to
-          scroll, so the gesture cannot be refused — what has to be refused is
-          what happens when it *finishes*: without this, scrolling to the end of a
-          synopsis hands the rest of the drag to the document and the wall moves
-          behind. `contain` keeps the bounce at the ends and drops the chaining,
-          which is the same distinction the note on `html` in globals.css draws
-          between `contain` and `none`.
-        */}
-        <div className="gutter safe-bottom flex-1 overflow-y-auto overscroll-contain pt-6 [--safe-bottom-base:1.5rem]">
+        {/* --- the synopsis, and the other intent --------------------------- */}
+        <div className="gutter safe-bottom flex-1 overflow-y-auto pt-6 [--safe-bottom-base:1.5rem]">
           <h3 className="micro text-muted">Synopsis</h3>
           <p className="mt-3 text-sm">
             {details === null
