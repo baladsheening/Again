@@ -139,15 +139,26 @@ const ARTWORK = 'h-2/3'
  * cause and it is not this file's arithmetic that is wrong.
  */
 /*
-  ⚠ **`size-8`, down from `size-9` on 17 August, and `tap-target` is why that is
-  free.** The visible circle is 32px and the hit area stays 44px — the utility
+  ⚠ **`size-7`, down from 9 then 8 on 17 August, and `tap-target` is why that is
+  free.** The visible shape is 28px and the hit area stays 44px — the utility
   centres a transparent pseudo-element on the control and floors it at the touch
   minimum, so the mark can be as small as it looks right without the target
   following it down. Shrinking a control that carried its own hit area would have
   been a legibility change *and* an accessibility one.
+
+  ⚠ **A rounded square rather than a circle, directed 17 August.** `rounded-lg` is
+  8px on a 28px box: unmistakably a square with soft corners, where the 12px step
+  above it would read as a circle again at this size and the 4px below it as a
+  sharp chip.
+
+  **Deliberately not `--radius-artwork`.** That token is the corner the posters and
+  the banners over them share, and its own note says nothing else reads it — chips
+  and controls have their own scale and are not artwork. This sits *on* the
+  artwork without being any of it, and tying its corner to the poster's would
+  invent a relationship that is not there.
 */
 const CONTROL =
-  'bg-text/8 backdrop-blur-band tap-target flex size-8 shrink-0 items-center justify-center rounded-full'
+  'bg-text/8 backdrop-blur-band tap-target flex size-7 shrink-0 items-center justify-center rounded-lg'
 
 type Details = {
   synopsis: string | null
@@ -556,25 +567,53 @@ export function FilmScreen({
               produces the one-line answer and the four-line answer.
 
               ⚠ **`h-[1lh]` on the wrapper is what stops the last line growing.**
-              An inline box 36px tall inside a 25px line would push that line
-              taller than the ones above it, and uneven leading in a wrapped title
-              is the sort of thing you see without being able to name. The wrapper
-              is exactly one line high — it wears `title`, so it takes the
-              heading's own size and line height and follows the type step at 64rem
-              without knowing the number — and the circle centres in it and
-              overflows evenly, which costs the line box nothing.
+              An inline box taller than the line it sits in would push that line
+              past the ones above it, and uneven leading in a wrapped title is the
+              sort of thing you see without being able to name. The wrapper is
+              exactly one line high — it inherits the heading's size and line
+              height, so it follows the type step at 64rem without knowing the
+              number — and the mark centres in it and overflows evenly, which costs
+              the line box nothing.
 
-              `align-middle` puts that box's centre a half-pixel from the line's
-              own centre. The alternative, baseline alignment, would hang it from
-              the text's baseline and put it low again — which is what was reported
-              of the previous arrangement, where a 36px circle's *top* met the line
-              box's top and its centre landed five and a half pixels below the
-              type's.
+              ─────────────────────────────────────────────────────────────────
+               `align-middle` is not the middle the eye reads — 17 August
+              ─────────────────────────────────────────────────────────────────
 
-              ⚠ `1lh` is Safari 16.4 and Chrome 109. Where it is not understood the
-              declaration is dropped, the wrapper takes its content's height, and
-              the only cost is that the final line of a wrapped title is a few
-              pixels taller than its siblings. Degrades to ugly, never to broken.
+              Asked: *are we sure it sits optically in line with the words beside
+              it?* We were not, and it did not. **`vertical-align: middle` centres
+              a box on the x-height band by definition** — its whole meaning is
+              *baseline plus half the x-height* — and a title set in title case is
+              read against its **capitals**, not its x-height. The two bands do not
+              share a centre: for IBM Plex Sans, cap height is 0.698em and
+              x-height 0.516em, so the cap band's centre sits `(cap − x) / 2` —
+              about 2px at 22px type — **above** where `align-middle` puts things.
+
+              That is the correction, and it is written as the expression rather
+              than as the 2px: `bottom: calc((1cap - 1ex) / 2)` on a relatively
+              positioned box, which shifts it up by exactly that much. **`cap` and
+              `ex` are the font's own metrics**, so this stays right at 28px type
+              on a desk, and stays right if the face is ever changed — which a
+              measured margin would not. It is the same move `--wordmark-drop`
+              makes in globals.css: take the band the eye reads rather than the box
+              the layout gives you.
+
+              Relative positioning, so the shift is visual only and the line box is
+              untouched — a margin would have moved the layout and grown the line.
+
+              ⚠ **Also asked: which side is it on?** Whichever side the language
+              ends its lines on. The mark is inline content in the heading, not a
+              positioned element, so it flows — after the last word in English, and
+              at the left of the last line in an RTL context, with nothing here
+              needing to know which. Untested: nothing in this app sets `dir`, so
+              this is a property of the construction rather than something that has
+              been exercised.
+
+              ⚠ `1lh`, `1cap` and `1ex` — `ex` is universal; the other two are
+              Safari 16.4 and Chrome 109. Where either is not understood its
+              declaration is dropped on its own: without `lh` the final line of a
+              wrapped title is a few pixels taller than its siblings, without `cap`
+              the mark sits where it did before this note. Degrades to slightly
+              wrong, never to broken.
 
               ⚠ **`aria-label` on the heading, because the control lives in it
               now.** A heading takes its accessible name from its contents, so
@@ -596,7 +635,7 @@ export function FilmScreen({
                 rather than *that worked*. See `--color-listed` in globals.css for
                 what that distinction costs and why it is drawn that way round.
               */}
-              <span className="pointer-events-auto inline-flex h-[1lh] items-center align-middle">
+              <span className="pointer-events-auto relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
                 <AddControl
                   state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
                   label={specFor('film', primary).wantLabel}
