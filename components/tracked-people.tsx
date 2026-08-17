@@ -23,49 +23,72 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
   return (
     <section className="flex flex-col">
       {/*
-        **The label descends to its text; the text does not rise to the label.**
-        The gap between them was 28px — 4px of margin plus the paragraph's own
-        24px of top padding — which read as two separate things rather than a
-        caption and its sentence.
+        ──────────────────────────────────────────────────────────────────────
+         The pill (17 August)
+        ──────────────────────────────────────────────────────────────────────
 
-        Closing it from above: 20px comes off the paragraph's top padding and goes
-        onto the heading's top margin, so the paragraph's first line stays exactly
-        where it was (92px down the page) and *People* drops 20px to meet it. The
-        ink gap is 8px. Moving the paragraph up instead would have closed the same
-        distance and taken the section's whole body with it.
+        The heading and its body sit on a filled ground with rounded corners and
+        **no hairline**, which makes it the first surface in the app without one.
+        Every other use of `--color-surface` — the toast, the intent sheet, the
+        auth fields, the poster placeholder — pairs the fill with `border-rule
+        border`. Here the fill alone does the containing, on the argument that
+        already took the rule out from under the wordmark and off the top of the
+        foot bar: a border drawn around a shape that is already a shape names a
+        boundary the eye has got.
 
-        `mt-5` is unconditional, so the heading sits in the same place whether or
-        not there is anyone in the list — its position is a property of the
-        section, not of its contents. The populated case keeps its own 24px to the
-        first row, because that 20px belongs to the row's `py-5` rhythm and is
-        shared with every other list in the app.
+        **The spacing belongs to the pill now, not to its children.** The
+        heading's `mt-5` and the paragraph's `pt-1 pb-6` are gone — the outer air
+        is `p-4` and the 8px between label and sentence is a single `mb-2` rather
+        than two paddings that happened to sum to it.
+
+        ⚠ **`mt-1` is arithmetic, not taste.** The section's content box starts
+        50px down the page; 4px of margin plus 16px of padding puts the heading's
+        ink at 70 and the paragraph's first line at 92, which is exactly where
+        both sat before there was a pill. Adding a container moved nothing that
+        had already been settled.
+
+        ⚠ **What it does move is horizontal.** The text is inset 16px from the
+        pill's edge, so *People* no longer aligns with the left edge of type on
+        every other screen. That is what a pill is rather than a band — the
+        alternative is bleeding it out with a negative margin, which stops it
+        being a pill.
+
+        `w-fit max-w-sm` hugs the contents up to 24rem: on a phone that exceeds
+        the column so it fills it, and on a desk it stops at the measure instead
+        of running the width of the page.
+
+        Both states wear it. A shape that arrived only once the list was empty
+        would be a container that came and went with the data.
       */}
-      <h2 className="micro text-muted mt-5 mb-1">People</h2>
+      <div className="bg-surface mt-1 flex w-fit max-w-sm flex-col rounded-2xl p-4">
+        <h2 className="micro text-muted mb-2">People</h2>
 
-      {people.length === 0 ? (
-        <p className="text-muted max-w-sm pt-1 pb-6 text-sm">
-          Nobody yet. You reach someone by their handle — there is no directory
-          and no search for strangers. Ask a friend for theirs.
-        </p>
-      ) : (
-        <ul className="flex flex-col">
-          {people.map((person) => (
-            <li key={person.userId} className="border-rule border-b last:border-b-0">
-              {/*
-                `as Route` because the href is not a literal. Next's typed-routes
-                guide asks for exactly this cast on an interpolated path — the
-                handle comes out of the database, so no literal can cover it.
-              */}
-              <Link
-                href={`/u/${person.handle}` as Route}
-                className="hover:text-muted tap-target block py-5 text-lg transition-colors"
-              >
-                {nameFor(person)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+        {people.length === 0 ? (
+          <p className="text-muted text-sm">
+            Nobody yet. You reach someone by their handle — there is no directory
+            and no search for strangers. Ask a friend for theirs.
+          </p>
+        ) : (
+          <ul className="flex flex-col">
+            {people.map((person) => (
+              <li key={person.userId} className="border-rule border-b last:border-b-0">
+                {/*
+                  `as Route` because the href is not a literal. Next's
+                  typed-routes guide asks for exactly this cast on an interpolated
+                  path — the handle comes out of the database, so no literal can
+                  cover it.
+                */}
+                <Link
+                  href={`/u/${person.handle}` as Route}
+                  className="hover:text-muted tap-target block py-4 text-lg transition-colors"
+                >
+                  {nameFor(person)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   )
 }
