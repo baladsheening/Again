@@ -529,6 +529,23 @@
   --collections-row: 2.625rem;
 
   /**
+   * What `/profile`'s own foot occupies: the handle's line at `leading-none`
+   * above the sign-out row.
+   *
+   * Below `rail` that block is `position: fixed` — identity does not scroll away,
+   * the way the collections bar does not scroll away on every other screen — so
+   * `main` has to reserve its height or the last person in the list ends up
+   * behind it. `foot-bare` adds this to the inset for exactly that.
+   *
+   * ⚠ **Derived, not measured.** `0.875rem` is the handle's own font size, which
+   * is also its line box because it is set `leading-none`; the row is
+   * `--collections-row` because that is what puts *Sign out* on the collections'
+   * line. Change either and this follows, which is the point of writing it as a
+   * sum rather than as 56px.
+   */
+  --profile-foot: calc(0.875rem + var(--collections-row));
+
+  /**
    * The mark's inked height, the depth of its descender, and the dead space
    * under it — all three as a fraction of `--text-wordmark`, so that changing
    * the size is one line again.
@@ -886,8 +903,20 @@
 }
 
 @utility foot-bare {
-  --safe-bottom-base: calc(var(--collections-inset) - env(safe-area-inset-bottom));
+  /*
+    The collections' inset, plus the height of /profile's own fixed foot. Below
+    `rail` that foot is out of the flow, so this reservation is the only thing
+    keeping the end of a long People list from sitting behind it.
+  */
+  --safe-bottom-base: calc(
+    var(--collections-inset) - env(safe-area-inset-bottom) + var(--profile-foot)
+  );
 
+  /*
+    Above `rail` the block is back in the flow — the rail owns that corner and a
+    viewport-fixed foot would sit under the content column instead of in it — so
+    the reservation is the rail's own `py-10` and nothing more.
+  */
   @variant rail {
     --safe-bottom-base: 2.5rem;
   }

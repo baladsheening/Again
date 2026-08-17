@@ -459,7 +459,16 @@ export function Shell({
     it is spelled here rather than folded into `receded`: the signal is about the
     page moving, and this is about what the masthead currently is.
   */
-  const mastheadHidden = collectionsHidden && !searchAtTop
+  /*
+    ⚠ **`showCollections` is stated here rather than relied on.** The recede
+    listener already returns early on a route without collections, and `receded`
+    is stamped with the route it hid on — so the masthead could not recede on
+    `/profile` anyway. Saying it in the expression makes it a property of the
+    masthead instead of a consequence of two things elsewhere, either of which
+    could be changed by someone with a different problem in front of them. That
+    screen's whole point is that nothing at its edges moves.
+  */
+  const mastheadHidden = showCollections && collectionsHidden && !searchAtTop
 
   /*
     ───────────────────────────────────────────────────────────────────────────
