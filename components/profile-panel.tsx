@@ -23,76 +23,48 @@ import { authClient } from '@/lib/auth-client'
  * waiting on it (TMDB attribution, the iOS install note, and changing a
  * password you *do* know). None of them is built, and none was asked for.
  */
-export function ProfilePanel({
-  handle,
-  displayName,
-}: {
-  handle: string
-  displayName: string | null
-}) {
+export function ProfilePanel({ handle }: { handle: string }) {
   const router = useRouter()
 
   return (
     <div className="flex flex-1 flex-col">
       {/*
-        `gap-1` between the name row and *Sign out*, where the block used to run on
+        `gap-1` between the handle and *Sign out*, where the block used to run on
         `gap-4`. The sign-out row carries `--collections-row` of its own height now
         and centres inside it, so most of the old gap is inside that box — keeping
-        gap-4 as well would have added it twice and pushed the name up off the
-        corner it is anchored to.
+        gap-4 as well would have added it twice.
       */}
       <div className="mt-auto flex flex-col items-start gap-1">
         {/*
-          The name above the handle when there is one, because §5's shape is
-          that people who know you see your name — and on your own profile you
-          are the person who knows you best. `profiles.display_name` is
-          collected at onboarding and, until now, rendered nowhere: Phase 2 is
-          where it has to be decided properly (docs/plan.md carries it), and
-          this does not pre-empt that. It shows your own name to you, which no
-          visibility rule has an opinion about.
+          ⚠ **The display name was here and is gone (17 August).** It was set at
+          `title` size as the page's heading, with the handle beside it — and the
+          argument against it is simply that nobody needs telling their own name.
+          It was showing you the one fact you already have.
+
+          What it cost was agreement: the rail carries `@handle` alone in its own
+          bottom-left corner, so the same two things in the same corner at every
+          width were not in fact the same two things. They are now.
+
+          `display_name` itself is untouched and still does its job — §5's identity
+          rule (`nameFor`) shows it to people who track you back, which is the
+          audience it was collected for. This screen is not that audience.
+
+          ⚠ **It is not the `<h1>`, and that is a change of mind within the hour.**
+          The name used to be, on the argument that the identity is the heading — so
+          the handle inherited it. But the People list sits above this block and
+          carries an `<h2>`, and this block is pinned to the foot by `mt-auto`, so it
+          can never come first in the document. The outline read *h2 then h1*, which
+          is an outline defect, and it was one this session introduced by adding the
+          People section above an identity block that had always been the only thing
+          on the page.
+
+          The page's `<h1>` is `sr-only` in `app/(app)/profile/page.tsx`, where it
+          can precede the `<h2>`. Fixing the order was the option that did not
+          require unpinning this from the corner it is deliberately in.
+
+          Sans, not mono: a displayed handle is a name, not data (§11).
         */}
-        {/*
-          **It is the `<h1>`, because it already was one in everything but the
-          tag.** The page had no heading until 15 August and nor did any other
-          signed-in route; here the largest type on the screen is the person's
-          name, so the fix is to say so rather than to add a second thing. `p` to
-          `h1` is block to block with the same class, so nothing moves.
-
-          The `sr-only` fallback is for an account with no display name, which is
-          allowed — the field is optional at onboarding. A page whose heading
-          disappears with its data is the same fault one layer down.
-        */}
-        {/*
-          The handle sits **beside** the name rather than under it, and which side
-          it lands on is left to the writing direction: they are inline siblings in
-          a flex row, so `dir="rtl"` reverses them without a rule of its own. Any
-          `ml-`/`text-left` here would have been a second, silent decision about
-          language — the flow already knows.
-
-          `items-baseline` and not `items-center`: the two are 24px and 14px of
-          type, and centring their boxes would set the smaller one adrift of the
-          line the larger one sits on. A name and its handle read as one line, so
-          they share a baseline.
-
-          The `@` stays outside the `h1`. Both belong on the same line visually,
-          but the heading of this page is the person's name — folding the handle in
-          would make the accessibility tree announce *"Omar @collateralflora"* as
-          one heading.
-
-          The `sr-only` fallback is for an account with no display name, which is
-          allowed. In that case the handle is standing in as the name, which is
-          exactly what `nameFor` does everywhere else in the app.
-        */}
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          {displayName ? (
-            <h1 className="title">{displayName}</h1>
-          ) : (
-            <h1 className="sr-only">Profile</h1>
-          )}
-
-          {/* Sans, not mono: a displayed handle is a name, not data (§11). */}
-          <span className="text-muted text-sm">@{handle}</span>
-        </div>
+        <span className="text-muted text-sm">@{handle}</span>
 
         {/*
           ⚠ **`Sign out` stands on the collections' line.** This screen is the one

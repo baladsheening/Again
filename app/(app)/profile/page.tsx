@@ -29,8 +29,19 @@ export default async function ProfilePage() {
 
   return (
     <>
+      {/*
+        `sr-only`, and it lives here rather than in either child because it has to
+        come **first**: `TrackedPeople` carries an `<h2>` and `ProfilePanel` is
+        pinned to the foot of the screen by `mt-auto`, so neither of them can hold
+        the page's `<h1>` without the outline reading *h2 before h1*.
+
+        Hidden rather than drawn because both things on this screen already name
+        themselves — *People* above, your handle below — and a visible *Profile*
+        would be a third label saying what the tapped icon already said.
+      */}
+      <h1 className="sr-only">Profile</h1>
       <TrackedPeople people={people} />
-      <ProfilePanel handle={profile.handle} displayName={profile.displayName} />
+      <ProfilePanel handle={profile.handle} />
     </>
   )
 }
