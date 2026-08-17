@@ -36,12 +36,29 @@ import { TickIcon } from './icon-tick'
  * One image type in the app, at three sizes, all from TMDB's CDN (§10 — never
  * proxied).
  *
- * ⚠ **Both intents survive, and that is not optional.** Intent is a property of
- * the entry (§4), and a `+` alone would have collapsed it to whichever one the
- * default happened to be. The primary is the `+` on the artwork; the secondary is
- * a quiet control under the synopsis. Which is what the sheet offered — the same
- * two things, without a modal, and now with the film in front of you when you
- * choose.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  *Want a copy* is gone, and it takes a collection's inflow with it
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Directed 17 August. The screen offers one intent now: the `+` adds a
+ * *Want to see*, and there is no second control.
+ *
+ * ⚠ **This is a product change wearing the clothes of a layout change, and the
+ * consequence is worth writing down where the next person will meet it.** Intent
+ * is a property of the entry (§4) and `own` still exists everywhere else — in
+ * `lib/vocabulary.ts`, in the schema, in the resolve flow. What has gone is the
+ * only place a person could *create* one. So:
+ *
+ *   - **Nothing new lands in Fixtures.** `own` resolves to `fixture` (§5), and
+ *     with no way to make an `own` want, that collection can only grow by copying
+ *     someone else's — `copyEntry` carries the source's intent over deliberately.
+ *   - Existing `own` entries are untouched. Nothing is ever deleted (§5), and they
+ *     still resolve, still appear, still participate in overlap as the `lend`
+ *     match.
+ *
+ * If Fixtures is meant to stay a live collection, this is the thing to come back
+ * to — not by restoring a control that has been rejected, but by deciding where
+ * *Want a copy* belongs, if anywhere.
  */
 
 /**
@@ -75,29 +92,42 @@ const ARTWORK = 'h-2/3'
  * in `currentColor`, added on 17 August so the outline sat on the `+` rather than
  * on the close, and rejected on sight. The fill alone is the shape.
  *
- * ⚠ **`black/70` and no blur, and both halves are deliberate.** These sit over
- * whatever the poster happens to be, so the ground has to be dark enough to carry
- * a stroke icon against a bright one. Measured against the worst case — a bright
- * poster with no scrim over it — the green tick reads 3.2:1 at 70%, 4.0 at 80%
- * and 1.7 at 50%, against the 3:1 WCAG 1.4.11 asks of a graphical control. **70%
- * is therefore near the floor and not a number to keep loosening by eye.**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Glass, 17 August — and the fill had to invert to get there
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **In practice both circles sit on ground that is nearly black anyway, and
- * that is worth knowing before this is tuned again.** Asked on 17 August for a
- * touch more see-through; it went 80 → 70. But the `+` moved onto the title's
- * line, which is inside the scrim's `from-black` end, so what shows through is a
- * poster that has already been taken most of the way to black. **If the point is
- * to see artwork through the control, the thing to change is the scrim's depth,
- * not this alpha** — going further here spends the contrast floor and buys almost
- * nothing visible.
+ * Asked for: make the circle more glass-like, with a blur. Adding
+ * `backdrop-blur-band` alone would have changed nothing anybody could see, and
+ * the arithmetic says why — **this control sits inside the scrim's `from-black`
+ * end**, so whatever is behind it has already been taken most of the way to
+ * black. A darker tint over near-black artwork is a dark disc whether it is
+ * blurred or not.
  *
- * No `backdrop-blur`, because a blur clipped to a rounded border is the exact
- * combination WebKit has a history of rendering wrong, and a control that
- * sometimes has no ground is worse than one that is plainly opaque. The band at
- * the foot of the app is where glass belongs; this is a button.
+ * So the tint inverted rather than thinned. `bg-text/10` is a tenth of the aged
+ * paper, which composites to about `#171716` over the scrim: a faint *lit* disc
+ * rather than a dark one, which is what frosted glass looks like on a dark
+ * ground. **Warm, not white** — `--color-text` rather than a cool `white/10`, or
+ * the one glass control in the app would be the one thing in it that is not warm.
+ *
+ * `backdrop-blur-band` is the app's single glass strength, the 24px the home
+ * wall's caption frosts artwork by. There is one number for glass here and this
+ * is now its second reader.
+ *
+ * Contrast, over the scrim it actually sits on: the `+` reads about 15:1 and the
+ * green tick about 5:1, both comfortably past the 3:1 WCAG 1.4.11 asks of a
+ * graphical control. ⚠ **That depends on the scrim, not on this class.** A light
+ * tint over a *bright* backdrop would flip both — so if the gradient behind the
+ * title block is ever lightened, these two numbers have to be taken again.
+ *
+ * ⚠ **This reverses a caution written here on the same day**, and the caution
+ * still holds as a thing to watch rather than as a reason not to: WebKit has a
+ * history of misrendering `backdrop-filter` clipped to a rounded border —
+ * sometimes painting the backdrop unclipped, sometimes dropping it. If this
+ * circle ever shows a square of blur or no blur at all on iOS, that is the known
+ * cause and it is not this file's arithmetic that is wrong.
  */
 const CONTROL =
-  'bg-black/70 tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
+  'bg-text/10 backdrop-blur-band tap-target flex size-9 shrink-0 items-center justify-center rounded-full'
 
 type Details = {
   synopsis: string | null
@@ -121,7 +151,12 @@ export function FilmScreen({
   onClose: () => void
 }) {
   const ref = useRef<HTMLDialogElement>(null)
-  const [primary, ...secondary] = intentsFor('film')
+  /*
+    The first intent and only the first. `intentsFor` still returns both — the
+    vocabulary is unchanged — and this screen deliberately reads one of them; see
+    the note at the top for what that costs Fixtures.
+  */
+  const [primary] = intentsFor('film')
 
   const [details, setDetails] = useState<Details | null>(null)
   const [marks, setMarks] = useState<Marks>(null)
@@ -597,21 +632,6 @@ export function FilmScreen({
               {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
             </p>
 
-            <div className="mt-8 flex flex-col items-start gap-4">
-              {secondary.map((intent) => (
-                <SecondaryIntent
-                  key={intent}
-                  label={specFor('film', intent).wantLabel}
-                  state={marks === null ? 'unknown' : marks[intent] ? 'listed' : 'absent'}
-                  undoable={undoable?.intent === intent}
-                  onAdd={() => add(intent)}
-                  onUndo={() => {
-                    if (undoable?.intent === intent) undo(intent, undoable.entryId)
-                  }}
-                />
-              ))}
-            </div>
-
             {/*
               Full strength, not `text-muted` — a failure set in the colour reserved
               for de-emphasised metadata reads as an aside. docs/decisions.md,
@@ -698,68 +718,14 @@ function AddControl({
   )
 }
 
-/**
- * The other intent — *Want a copy* for a film. A quiet text control rather than a
- * second circle on the artwork: §8 wants one prominent action and the rarer one
- * beneath it, which is what the sheet did and the only part of the sheet worth
- * keeping.
- */
-function SecondaryIntent({
-  label,
-  state,
-  undoable,
-  onAdd,
-  onUndo,
-}: {
-  label: string
-  state: 'unknown' | 'absent' | 'listed'
-  undoable: boolean
-  onAdd: () => void
-  onUndo: () => void
-}) {
-  if (state === 'unknown') {
-    return <span aria-hidden className="text-muted text-sm opacity-40">{label}</span>
-  }
-
-  if (state === 'listed') {
-    const mark = (
-      <>
-        <span className="text-listed">
-          <TickIcon />
-        </span>
-        {label}
-      </>
-    )
-    if (!undoable) {
-      return (
-        <span className="text-muted flex items-center gap-2 text-sm">
-          {mark}
-          <span className="sr-only"> — on your list</span>
-        </span>
-      )
-    }
-    return (
-      <button
-        type="button"
-        onClick={onUndo}
-        className="text-muted tap-target flex items-center gap-2 text-sm underline underline-offset-4"
-      >
-        {mark}
-        <span className="sr-only"> — undo</span>
-      </button>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onAdd}
-      className="text-muted hover:text-text tap-target text-left text-sm underline underline-offset-4 transition-colors"
-    >
-      {label}
-    </button>
-  )
-}
+/*
+  A `SecondaryIntent` lived here — the quiet *Want a copy* control under the
+  synopsis — and it went with its call site on 17 August. Deleted rather than left
+  unreferenced, for the reason the `return-count` utility was deleted from
+  globals.css: a component with no callers is a component waiting to be reapplied
+  by someone who does not know why it existed. The reasoning that would matter to
+  whoever needs it back is at the top of this file, not here.
+*/
 
 /**
  * §11 permits known icons, and a plus is the known one for "add this". Same
