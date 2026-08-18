@@ -205,11 +205,32 @@ export function FilmScreen({
     inertness of everything behind it and Escape for nothing, all of which the
     sheet did by hand and did partially — `PosterReveal` in `poster.tsx` reached
     the same conclusion first.
+
+    ⚠ **There was a `close()` in the cleanup here and it made this screen
+    impossible to open in development.** A `<dialog>` fires `close` however it was
+    closed, and `onClose` clears the state that renders this component — so the
+    cleanup was asking to be unmounted. React runs every effect twice in
+    development (mount, clean up, mount again) to surface exactly this kind of
+    self-dependency, and it did: mount showed the dialog, the cleanup closed it,
+    the close event unmounted the screen, and the second mount had nothing left to
+    show. Nothing was wrong in production, where effects run once — which is why
+    it went unseen, and it would have stayed unseen for as long as the dev server
+    could not reach TMDB.
+
+    **The cleanup is gone rather than guarded, because it never had a job.**
+    Removing an open modal from the document takes it out of the top layer by
+    itself, and React removes it the moment this component unmounts. A flag saying
+    *this close is the machinery, not the person* was tried first and cannot work:
+    `close` is dispatched asynchronously, so the second mount clears the flag
+    before the event it was set for arrives.
+
+    `if (!dialog.open)` is what the removal costs, and it is the whole cost:
+    `showModal()` on a dialog that is already modal throws, and after the cleanup
+    stopped closing it, the second mount meets one.
   */
   useEffect(() => {
     const dialog = ref.current
-    dialog?.showModal()
-    return () => dialog?.close()
+    if (dialog && !dialog.open) dialog.showModal()
   }, [])
 
   /*
