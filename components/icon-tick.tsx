@@ -12,11 +12,18 @@
  * `currentColor` for the same reason: amber is reserved for overlap, so this
  * inherits the muted treatment around it.
  */
-export function TickIcon() {
+/**
+ * ⚠ **`size` exists for the film screen and defaults to the row's 12.** The mark
+ * beside a list row is set against 11px caps; the one in the film screen's
+ * control is set against a 24px box, and was asked to grow on 18 August. Passing
+ * it rather than changing the default keeps three call sites from moving because
+ * one of them was looked at.
+ */
+export function TickIcon({ size = 12 }: { size?: number }) {
   return (
     <svg
-      width="12"
-      height="12"
+      width={size}
+      height={size}
       viewBox="0 0 12 12"
       fill="none"
       stroke="currentColor"

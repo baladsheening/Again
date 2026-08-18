@@ -173,20 +173,29 @@
    * anything. Everything in a list is on the list; the interesting thing there is
    * whether it is done, and that stays `currentColor`.
    *
-   * ⚠ **Quieter than the accent, measured: 6.0:1 against the true-black ground,
-   * against amber's 7.7:1.** That ordering is the point rather than a
-   * coincidence. Amber marks overlap, which is the one moment the product exists
-   * for; adding a film is the most routine thing anybody does here. If the
-   * routine action were the brightest thing on the screen, the important one
-   * would stop being the thing the eye goes to. **Any change to this value has to
-   * keep that gap** — green also has the hue advantage, since the eye peaks near
-   * 555nm, so parity in contrast would already read as louder.
+   * ⚠⚠ **NEON, directed 18 August, and it inverts an ordering this note used to
+   * argue for.** It was `#4f9860` at 6.0:1 against the true-black ground, chosen
+   * to sit *below* amber's 7.7:1 on the reasoning that the routine action must
+   * not outshout the one the product exists for. **`#39ff6a` measures 15.7:1 on
+   * black and 9.4:1 on the film screen's glass, so the tick is now the loudest
+   * mark in the app** — brighter than the accent, and green has the hue advantage
+   * on top of that, since the eye peaks near 555nm.
    *
-   * Well past the 3:1 WCAG 1.4.11 asks of a graphical control, and past 4.5:1
-   * too, which matters because the tick sits over poster artwork as well as over
-   * the ground.
+   * The old argument is not withdrawn, it is overruled, and it is worth leaving
+   * standing so the cost is visible: **amber marking overlap is §11's one
+   * load-bearing colour rule, and this now competes with it.** The place that
+   * shows first is a wall where a film you have listed sits beside one that
+   * overlaps with somebody — Phase 3's surface, which does not exist yet. If
+   * amber stops being the thing the eye goes to when it does, this value is the
+   * first suspect and the ladder back is `#4f9860`.
+   *
+   * ⚠ **The contrast floor moved in the safe direction, which is the one mercy.**
+   * The film screen's glass panel was sized so the *old* green cleared 3:1 over a
+   * white poster at 3.61:1; this clears the same ground at 9.4:1. Lightening the
+   * glass is still governed by the panel's own note — that measurement was taken
+   * with the old value and the ordering it protects is no longer the binding one.
    */
-  --color-listed: #4f9860;
+  --color-listed: #39ff6a;
 
   /*
     The width at which the shell becomes a rail.
@@ -610,21 +619,34 @@
   --collections-row: 2.625rem;
 
   /**
-   * What `/profile`'s own foot occupies: the handle's line at `leading-none`
-   * above the sign-out row.
+   * What `/profile`'s own foot occupies: the sign-out pill above the handle's
+   * row.
+   *
+   * ⚠ **The two swapped on 18 August and this sum swapped with them.** It used to
+   * be the handle's line above the sign-out row; *Sign out* was asked to go on
+   * top, so the **handle** is now the bottom-most ink and it is the handle that
+   * takes `--collections-row` — the reason for that row is that whatever is last
+   * lands on the line the collections vacate, not that *Sign out* in particular
+   * does.
    *
    * Below `rail` that block is `position: fixed` — identity does not scroll away,
    * the way the collections bar does not scroll away on every other screen — so
    * `main` has to reserve its height or the last person in the list ends up
    * behind it. `foot-bare` adds this to the inset for exactly that.
    *
-   * ⚠ **Derived, not measured.** `0.875rem` is the handle's own font size, which
-   * is also its line box because it is set `leading-none`; the row is
-   * `--collections-row` because that is what puts *Sign out* on the collections'
-   * line. Change either and this follows, which is the point of writing it as a
-   * sum rather than as 56px.
+   * ⚠ **Derived, not measured, and every term names something real.** The pill is
+   * its own ink — `--text-micro` at the `micro` utility's 1.3 line — plus the
+   * `py-2` it wears, and the row below is `--collections-row` because that is what
+   * puts the last line on the collections'. Change the type scale, the utility's
+   * line height or the row and this follows; write it as 72px and it stops
+   * following anything.
+   *
+   * ⚠ **The `1rem` is the pill's padding and is the one term that lives in two
+   * files.** It is `py-2` in `components/profile-panel.tsx`. If that padding
+   * moves, this moves with it — there is no way to read a Tailwind class from
+   * here, and the alternative was a third custom property for eight pixels.
    */
-  --profile-foot: calc(0.875rem + var(--collections-row));
+  --profile-foot: calc(var(--text-micro) * 1.3 + 1rem + var(--collections-row));
 
   /**
    * The mark's inked height, the depth of its descender, and the dead space

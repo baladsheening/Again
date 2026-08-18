@@ -589,16 +589,18 @@ export function FilmScreen({
             posterPath={film.posterPath}
             title={film.title}
             pane
+            receded={false}
             dialogRef={ref}
           />
           <FilmBody key={film.externalId} film={film} pane />
         </div>
       ) : (
-        <div className="relative mx-auto h-full w-full max-w-md">
+        <div className="@container relative mx-auto h-full w-full max-w-md">
           <Artwork
             posterPath={film.posterPath}
             title={film.title}
             pane={false}
+            receded={receded}
             dialogRef={ref}
           />
 
@@ -688,7 +690,7 @@ export function FilmScreen({
                 aria-label="See the whole poster"
                 className="text-muted hover:text-text flex h-8 w-full shrink-0 cursor-pointer items-center justify-center transition-colors"
               >
-                <ChevronIcon className="rotate-90" />
+                <ChevronIcon className="rotate-90" size={16} />
               </button>
 
               <FilmBody key={film.externalId} film={film} pane={false} />
@@ -1241,11 +1243,13 @@ function Artwork({
   posterPath,
   title,
   pane,
+  receded,
   dialogRef,
 }: {
   posterPath: string | null
   title: string
   pane: boolean
+  receded: boolean
   dialogRef: React.RefObject<HTMLDialogElement | null>
 }) {
   /*
@@ -1292,18 +1296,34 @@ function Artwork({
   return (
     <div
       /*
-        ⚠ **Two boxes, and only one of them is a fraction.** The panel takes a
-        share of a column it sits inside, so it stays a flex child. The handset
-        takes the whole screen and lets the *picture* be its own size within it,
-        which is what makes the whole poster reachable: a 2:3 poster at full
-        width is 1.5× the width, and every phone is taller than that, so it
-        always fits above the fold with black beneath. There is no screen shape
-        on which this crops.
+        ⚠ **Two boxes, and the handset's is the one that moves.** The panel takes
+        a share of a column it sits inside, so it stays a flex child.
+
+        ⚠ **The handset's box fills the screen and shrinks to the poster —
+        18 August, second pass.** It was pinned at the poster's own shape, and the
+        report was the obvious one: *the poster does not fill the screen, it is
+        about two thirds of it.* It was 585 of 844, which is two thirds exactly.
+
+        So the box is the screen at rest and `150cqw` once the words are away, and
+        `object-cover` does the rest: taller than 2:3 it crops the sides to fill,
+        and at 2:3 it fits exactly — which is the whole poster, uncropped, which
+        is what the chevron is for.
+
+        ⚠ **`cqw`, not `vw`.** The column is capped at `max-w-md`, so a viewport
+        unit would be right on a phone and wrong on the first tablet under the
+        breakpoint. And `150` is not a chosen number: it is 1.5, which is what 2:3
+        means. Nothing here is tuned.
+
+        The height animates because a length can, and it lands in step with the
+        panel — one gesture, the words leaving and the picture unzooming together,
+        rather than two things moving on their own schedules.
       */
       className={
         pane
           ? `${ARTWORK_PANEL} relative shrink-0 overflow-hidden`
-          : 'absolute inset-0 overflow-hidden'
+          : `absolute inset-x-0 top-0 overflow-hidden transition-[height] duration-300 ${
+              receded ? 'h-[150cqw]' : 'h-full'
+            }`
       }
     >
       {src && (
@@ -1323,11 +1343,7 @@ function Artwork({
           alt={`Poster for ${title}`}
           width={2000}
           height={3000}
-          className={
-            pane
-              ? 'absolute inset-0 h-full w-full object-cover object-top'
-              : 'aspect-[2/3] h-auto w-full object-cover object-top'
-          }
+          className="absolute inset-0 h-full w-full object-cover object-top"
           priority
         />
       )}
@@ -1610,18 +1626,35 @@ function AddControl({
           role="img"
           aria-label={`${label} — on your list`}
         >
-          <TickIcon />
+          <TickIcon size={14} />
         </span>
       )
     }
+    /*
+      ⚠ **The ring is the only thing that says this is still a control, and it
+      is there for exactly as long as it is one — directed 18 August.** For
+      `UNDO_WINDOW_MS` after an add this is a button and afterwards it is a
+      marker, and until now the two were the same drawing: on a phone, where
+      there is no cursor to lift the ground under, nothing said the difference.
+
+      `ring-listed/45` rather than a new colour or a second glyph. It is the
+      control's own colour drawn around it rather than in it, so what changes is
+      *presence* rather than meaning — the tick still says the film is on your
+      list while the ring says the last ten seconds can be taken back.
+
+      It disappears by the state ending, not by an animation, so there is no
+      duration written down twice: `UNDO_WINDOW_MS` is the only place the ten
+      seconds exists, and this is drawn from `undoable` rather than from a clock
+      of its own.
+    */
     return (
       <button
         type="button"
         onClick={onUndo}
         aria-label="Undo"
-        className={`${CONTROL_PRESSABLE} text-listed`}
+        className={`${CONTROL_PRESSABLE} ring-listed/45 text-listed ring-1`}
       >
-        <TickIcon />
+        <TickIcon size={14} />
       </button>
     )
   }

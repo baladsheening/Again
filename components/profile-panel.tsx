@@ -106,8 +106,6 @@ export function ProfilePanel({ handle }: { handle: string }) {
 
           Sans, not mono: a displayed handle is a name, not data (§11).
         */}
-        <span className="text-muted text-sm leading-none">@{handle}</span>
-
         {/*
           ⚠ **`Sign out` stands on the collections' line.** This screen is the one
           place the bar at the foot is hidden (`showCollections` in
@@ -126,38 +124,58 @@ export function ProfilePanel({ handle }: { handle: string }) {
           render above `rail` at all now, so there is no width at which this row's
           42px is the wrong height.
         */}
+        {/*
+          ⚠ **A pill, directed 18 August, and squared to the People pill on the
+          same day.** It briefly wore `-ml-3`, which put its box outside the
+          gutter so its words stayed on the gutter line. That was answered: the
+          two pills on this screen should share an edge, so this one starts at
+          the gutter like People's does and carries the same 16px of padding, and
+          the handle below takes that 16 as an indent rather than this taking a
+          bleed. **The alignment is now the box AND the ink**, where it used to be
+          only the ink.
+
+          `bg-surface/40` is the People pill's fill, and the same argument: full
+          strength reads as grey furniture, this reads as a shape the word sits
+          in. ⚠ Neither has been seen on OLED, where a 1.09:1 ground may come to
+          nothing at all — if it does, the ladder is in globals.css and both
+          should move together rather than this one alone.
+
+          Its corners are 10px against the People pill's 16: a radius is read
+          against the box it turns, and 16 on something this short would close the
+          ends into a lozenge.
+
+          ⚠ **`py-2` is a term in `--profile-foot`.** That reservation is what
+          keeps the last person in a People list from ending up behind this block,
+          and it cannot read a class from here.
+        */}
+        <button
+          type="button"
+          onClick={async () => {
+            await authClient.signOut()
+            router.push('/sign-in')
+            router.refresh()
+          }}
+          className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target cursor-pointer rounded-[10px] px-4 py-2 transition-colors"
+        >
+          Sign out
+        </button>
+
+        {/*
+          ⚠ **The handle moved BELOW *Sign out* on 18 August**, and the row it now
+          sits in is the one *Sign out* used to hold. The rule that row exists for
+          is *whatever is last lands on the line the collections vacate* — it was
+          never about which of the two it was. `--profile-foot` in globals.css is
+          written as the new stack.
+
+          ⚠ **`pl-4` is the pill's own padding, so the two lines share a left
+          edge.** Asked for as *indented by the same amount* — the pill's box
+          starts at the gutter and its words 16px in, so the handle takes the same
+          16 and both sets of ink land at x=36, which is also where the People
+          pill's heading sits. Three things on one line rather than three lines
+          each nearly aligned.
+        */}
         <div className="flex min-h-[var(--collections-row)] items-center">
-          {/*
-            ⚠ **A pill, directed 18 August, and the negative margin is the point
-            of it.** `px-3` on a control sitting in the `gutter` would set its
-            words 12px in from the handle directly above, and the two lines have
-            been deliberately aligned since the block was built. Pulling the box
-            back by exactly its own padding puts the *ink* back on the gutter
-            line and lets the fill bleed toward the edge instead — so the pill is
-            new and nothing that was aligned has moved.
-
-            `bg-surface/40` is the People pill's fill on `/profile`, and it is
-            the same argument: full strength reads as grey furniture, this reads
-            as a shape the word is sitting in. ⚠ Neither has been seen on OLED,
-            where a 1.09:1 ground may come to nothing at all — if it does, the
-            ladder is in globals.css and both should move together rather than
-            this one alone.
-
-            Its corners are 10px against the People pill's 16: a radius is read
-            against the box it turns, and 16 on something this short would close
-            the ends into a lozenge.
-          */}
-          <button
-            type="button"
-            onClick={async () => {
-              await authClient.signOut()
-              router.push('/sign-in')
-              router.refresh()
-            }}
-            className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target -ml-3 cursor-pointer rounded-[10px] px-3 py-2 transition-colors"
-          >
-            Sign out
-          </button>
+          <span className="text-muted pl-4 text-sm leading-none">@{handle}</span>
         </div>
       </div>
     </div>
