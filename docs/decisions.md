@@ -3805,3 +3805,67 @@ Re-verify with:
 ```
 npm run typecheck && npm run lint && npm run build
 ```
+
+## Three surfaces, two rules: what the desk and the tablet get — 18 August
+
+Asked, before the last parked report was closed: give due consideration to the
+different versions' needs — the installed app, and the wider landings on tablets,
+laptops and desktops — and treat them differently.
+
+**The answer is not three designs.** Two layouts that can drift are two places for
+the same bug, and this project has been caught by that twice in a week (the CSP
+divergence between `next dev` and production; the installed app running a
+different bundle from the tab). What was actually wrong was subtler:
+
+> **The app branched on width and used it as a proxy for what kind of thing it was
+> running on.** On a tablet that proxy breaks — `--breakpoint-rail` catches every
+> tablet in portrait, so a tablet was getting the desk's *layout* by accident of
+> being 744px wide.
+
+So there are two rules, and everything falls out of them:
+
+- **Room follows width.** Columns, the reading measure, the rail, and whether a
+  screen can stand beside the page or has to cover it.
+- **Controls follow pointer.** Hit areas, hover, and anything about a finger.
+
+**The tablet decision, made under those rules and naming no device:** a tablet is
+a touch device with a desk's amount of room. It keeps the rail, keeps 44px
+targets, and its posture decides itself — portrait falls below `--breakpoint-pane`
+and takes the takeover, landscape falls above it and takes the panel. This holds
+for any tablet, which matters more for Android than for iPad: those run from about
+7" to 13", so a device assumption would have had to guess and a column measurement
+does not.
+
+⚠ **An audit of the pointer axis found it already right, and the case made for
+changing it was built on a bad example.** `hover:` is framework-gated by Tailwind
+into `@media (hover: hover)`, `tap-target` is already `@media (pointer: coarse)`,
+and the handful of `pointer-coarse:` uses are doing their job. **No width query was
+standing in for an input question.** The claim is recorded here because it was
+made confidently and was wrong, and the next person to reach for that work should
+know it has been looked at.
+
+**What was actually wrong on both the desk and the tablet was one thing: the
+takeover.** A 448px card blacking out a 1440px screen. That is `--breakpoint-pane`
+and the panel, and the reasoning is in `film-screen.tsx`.
+
+### Local development works again, and it is worth knowing how
+
+TMDB is blocked on this network — not TLS interception this time but a 451 block
+page for the host, so the dev server had no films and every screen that mattered
+was empty locally. That is why the film screen had a bug nobody could see: React's
+development double-invoke made it impossible to open, and the only way to reach it
+was a handset running a production build.
+
+The unblock is a Node-level stub of `globalThis.fetch` for `api.themoviedb.org`,
+preloaded with `NODE_OPTIONS=--require`, living in `node_modules/.probe` so it
+cannot be committed and no application code knows it exists. With it, the whole
+app drives in a real browser at any width. **Both of this session's layout
+findings — the panel's geometry and the 82px posters just above `rail` — came from
+measuring in that browser, not from reading the code.**
+
+⚠ Two traps met while building it, both of which will recur. A preloaded module
+must print nothing: npm shells out to `node -p` and parses the output, so one
+banner line breaks `npm run` itself. And every click on a server-rendered control
+must be retried until it takes effect — the button exists and is "actionable"
+before React has hydrated it, and a click inside that window does nothing at all,
+silently.
