@@ -541,7 +541,17 @@ export function FilmScreen({
     })
   }
 
-  const large = posterUrl(film.posterPath, 'original')
+  /*
+    ⚠ **The panel asks for the size it can show; the takeover asks for the size
+    it can show. Same rule, two boxes** — `lib/posters.ts` carries the arithmetic
+    for both, and neither number is a download budget.
+
+    Reported at the desk, and true before the artwork was keyed rather than
+    because of it: the picture paints in **from the top**. That is a large
+    baseline JPEG rendering as its bytes arrive, and the panel is 384 CSS px
+    wide, so `original` was about seven times the pixels that column can use.
+  */
+  const large = posterUrl(film.posterPath, pane ? 'w780' : 'original')
   const small = posterUrl(film.posterPath, 'w342')
   const listedPrimary = marks?.[primary]
   const undoablePrimary = undoable?.intent === primary ? undoable : null

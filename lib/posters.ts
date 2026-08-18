@@ -48,9 +48,28 @@ const CDN = 'https://image.tmdb.org/t/p'
  * once, so the size that is merely adequate per poster is the one that decides
  * whether the screen is usable on mobile data.
  */
+/**
+ * `w780` is the film **panel** — the mode that stands beside the wall above
+ * `--breakpoint-pane`, added 18 August. It is the same rule as everything above,
+ * applied to a box that did not exist when they were written: `--pane-column` is
+ * 24rem, so the artwork is 384 CSS px and `max-w-md` never binds. A 2x desk
+ * screen wants 768 real pixels for that and `w780` covers it outright.
+ *
+ * ⚠ **This is not the `w780` that was rejected**, and the distinction is the
+ * whole of the argument above: that one was `w780` stretched to ~1050 real
+ * pixels on a 3x phone, which is an upscale and looked it. Here it is a
+ * downscale on every desk display there is. **The takeover keeps `original`** —
+ * a handset renders it at ~1170 real pixels, where `w780` would be exactly the
+ * softness that was thrown out twice.
+ *
+ * What it buys is not bandwidth for its own sake. A panel swaps in place while
+ * you tap along the wall, so its artwork is fetched again and again, and an
+ * `original` is ~7x the bytes that column can show — which is what you were
+ * watching when the picture painted in from the top.
+ */
 export function posterUrl(
   posterPath: string | null,
-  size: 'w92' | 'w154' | 'w342' | 'original' = 'w154',
+  size: 'w92' | 'w154' | 'w342' | 'w780' | 'original' = 'w154',
 ) {
   if (!posterPath) return null
   return `${CDN}/${size}${posterPath}`
