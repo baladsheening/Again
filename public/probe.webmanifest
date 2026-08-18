@@ -1,0 +1,10 @@
+{
+  "name": "Again probe",
+  "short_name": "Probe",
+  "description": "Temporary instrument. Delete this icon once the reading is taken.",
+  "start_url": "/?probe",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
