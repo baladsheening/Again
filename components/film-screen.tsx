@@ -185,12 +185,6 @@ export function FilmScreen({
   */
   const pane = usePaneWidth()
 
-  /* ⚠ Temporary — see `Probe` at the foot of this file. Off unless `/?probe`. */
-  const [probing] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      new URLSearchParams(window.location.search).has('probe'),
-  )
   /*
     The first intent and only the first. `intentsFor` still returns both — the
     vocabulary is unchanged — and this screen deliberately reads one of them; see
@@ -696,7 +690,6 @@ export function FilmScreen({
         than any phone and does nothing. One layout, one class, right at both ends
         — the same move the acknowledgement band makes at its own breakpoint.
       */}
-      {probing && <Probe dialogRef={ref} />}
       <div className="mx-auto flex h-full w-full max-w-md flex-col">
         <div
           className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
@@ -1217,122 +1210,6 @@ function AddControl({
   by someone who does not know why it existed. The reasoning that would matter to
   whoever needs it back is at the top of this file, not here.
 */
-
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- *  ⚠ TEMPORARY. Delete with the report it was built for — the film screen's
- *  bottom half jumping upward on open, handset only, 18 August
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * **Three theories, three wrong.** The credit line wrapping (it moves the wrong
- * way, and downward by 20px); Safari's address bar re-expanding when the document
- * lock removes its scroll range (right mechanism, wrong surface — it was reported
- * installed, where there is no address bar); and the *See the poster* control
- * (removed from the handset a commit before the report survived a force-quit). So
- * this stops guessing and records what actually moves.
- *
- * **A log, not a live readout**, because the thing being caught is transient: it
- * samples every frame for three seconds from the moment the screen mounts and
- * keeps only the frames where something *changed*. A jump is then a row.
- *
- * The three viewport units are measured rather than assumed, and that is the
- * point of it. If `dvh` differs between two rows, the viewport moved under the
- * layout and nothing about the content is to blame. `svh` and `lvh` are there to
- * say which way — and because installed iOS has form here: `100svh` was measured
- * at 797 against an 844 screen on this handset, short by exactly
- * `env(safe-area-inset-top)`.
- *
- * ⚠ **It answered, and the answer is in the dialog's own note above: `dvh` fell
- * 844 → 797 at 45ms while `svh` and `lvh` held.** This is kept for one round only
- * — to confirm on the same instrument that the box now holds still — and then it
- * and `/probe.webmanifest` come out together. **It no longer measures the unit
- * the dialog is sized in**, which is the point: `dvh` may keep moving, and the
- * reading that matters now is that `dlg` does not.
- *
- * ⚠ **Built through the CSSOM, never `innerHTML` with a `style` attribute.** The
- * CSP in `proxy.ts` drops style attributes in production while `next dev` allows
- * them, so a gauge written that way would measure perfectly here and report zero
- * on the deployed site — which is the divergence that has already cost this
- * project a masthead and a wordmark.
- */
-function Probe({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
-  const [rows, setRows] = useState<string[]>([])
-
-  useEffect(() => {
-    const gauge = (height: string) => {
-      const el = document.createElement('div')
-      el.style.position = 'absolute'
-      el.style.top = '0'
-      el.style.left = '0'
-      el.style.width = '1px'
-      el.style.height = height
-      el.style.visibility = 'hidden'
-      el.style.pointerEvents = 'none'
-      document.body.appendChild(el)
-      return el
-    }
-
-    const dvh = gauge('100dvh')
-    const svh = gauge('100svh')
-    const lvh = gauge('100lvh')
-
-    const start = performance.now()
-    const log: string[] = []
-    let previous = ''
-    let frame = 0
-
-    const tick = () => {
-      const dialog = dialogRef.current
-      const high = (el: Element | null) =>
-        el ? Math.round(el.getBoundingClientRect().height) : -1
-      const top = (el: Element | null) =>
-        el ? Math.round(el.getBoundingClientRect().top) : -1
-
-      const line = [
-        `dvh${high(dvh)}`,
-        `svh${high(svh)}`,
-        `lvh${high(lvh)}`,
-        `win${window.innerHeight}`,
-        `vv${Math.round(window.visualViewport?.height ?? 0)}`,
-        `dlg${high(dialog)}`,
-        `art${high(dialog?.querySelector('div > div') ?? null)}`,
-        `crd${high(dialog?.querySelector('h2 ~ p') ?? null)}`,
-        `syn${top(dialog?.querySelector('h3') ?? null)}`,
-      ].join(' ')
-
-      if (line !== previous) {
-        previous = line
-        log.push(`${Math.round(performance.now() - start)}ms ${line}`)
-        setRows([...log])
-      }
-
-      if (performance.now() - start < 3000) frame = requestAnimationFrame(tick)
-    }
-
-    frame = requestAnimationFrame(tick)
-
-    return () => {
-      cancelAnimationFrame(frame)
-      dvh.remove()
-      svh.remove()
-      lvh.remove()
-    }
-  }, [dialogRef])
-
-  return (
-    /*
-      ⚠ Installed, the viewport's top edge is under the clock rather than below
-      it — a standalone web app is given the whole screen and the status bar is
-      drawn over it. The same 47px band that made the short-viewport unit come
-      up short on this handset in August.
-    */
-    <div className="pointer-events-none fixed top-[env(safe-area-inset-top)] left-0 z-50 bg-black/85 p-1.5 font-mono text-[9px] leading-tight text-white">
-      {rows.map((row) => (
-        <div key={row}>{row}</div>
-      ))}
-    </div>
-  )
-}
 
 /**
  * §11 permits known icons, and a plus is the known one for "add this". Same

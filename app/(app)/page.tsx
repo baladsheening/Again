@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { CinemaWall } from '@/components/cinema-wall'
@@ -25,27 +24,6 @@ import { inCinemas, type CinemaListing } from '@/lib/tmdb'
  * degrades to an empty wall with search still available, and is logged rather
  * than thrown.
  */
-
-/**
- * ⚠ **Temporary, and it is the only reason the probe is reachable installed.**
- * Goes with `Probe` at the foot of `components/film-screen.tsx`.
- *
- * From iOS 16.4 Safari takes the manifest's `start_url` when a page is added to
- * the Home Screen, so an icon added from `/?probe` opens `/` and the flag is
- * gone before the app has painted a frame. The block never appeared, and the
- * screen looked instrumented when it was not.
- *
- * A second manifest, linked only while the flag is present, names `/?probe` as
- * its own `start_url`. The icon then carries the flag into standalone, which
- * has no address bar to type it into. `app/manifest.ts` is untouched, so the
- * real app installs exactly as before.
- */
-export async function generateMetadata({
-  searchParams,
-}: PageProps<'/'>): Promise<Metadata> {
-  const probing = 'probe' in (await searchParams)
-  return probing ? { manifest: '/probe.webmanifest' } : {}
-}
 
 export default async function HomePage() {
   const sessionUser = await getSessionUser()
