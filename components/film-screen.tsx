@@ -7,6 +7,7 @@ import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { FilmSearchResult, Intent } from '@/lib/domain'
 import { claimFilmRequest } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
+import { PosterReveal } from './poster'
 import { intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
 import { TickIcon } from './icon-tick'
@@ -573,7 +574,24 @@ export function FilmScreen({
   return (
     <dialog
       ref={ref}
-      onClose={() => {
+      onClose={(event) => {
+        /*
+          ⚠ **React makes `close` propagate where the platform does not, and it
+          cost this screen its own life.** `close` is a non-bubbling event: a
+          native listener here would never hear a *nested* dialog close. React
+          delegates from the root and dispatches along the **React tree**, so the
+          full poster opened by `PosterReveal` — which is rendered inside this
+          dialog — closed this one with it. Expanding the poster and dismissing it
+          took the whole film screen back to the wall.
+
+          **This is the same lesson `shell.tsx` records from the other side**, where
+          a portalled dock's taps arrived at a handler on `#scroll-root` because
+          React propagates through the component tree rather than the DOM. There
+          it added listeners the DOM would not have; here it adds propagation the
+          DOM does not have. Ask the event which element it happened to.
+        */
+        if (event.target !== ref.current) return
+
         /*
           Consumed, not merely read: this flag is set immediately before a close
           this component caused, so the first `close` to arrive after it is that
@@ -938,6 +956,68 @@ export function FilmScreen({
                 .filter(Boolean)
                 .join(' · ')}
             </p>
+
+            {/*
+              ─────────────────────────────────────────────────────────────────
+               Seeing the poster is a control now, not the picture itself
+              ─────────────────────────────────────────────────────────────────
+
+              Asked, 18 August: can the poster in the panel be tapped to expand
+              it? **Not the picture — tapping the artwork closes the screen**, and
+              that is deliberate (17 August, *no visible way out: the artwork is
+              it*). Overloading it in the panel and not in the takeover would have
+              made the same tap mean two different things depending on how wide
+              the window was, which is the divergence this screen has otherwise
+              avoided. Directed instead: put the expand somewhere that is not the
+              image. **So the artwork still closes, at every width, and this is
+              the way to the full poster at every width.**
+
+              ⚠ **`PosterReveal`, not a second lightbox.** It has been doing
+              exactly this since 8 August for the lists — full bleed on black,
+              `object-contain`, `touch-none` because an unhandled pinch zooms the
+              *page* and iOS gives no way back, tap anywhere to close. Rebuilding
+              any of that here would be a second copy of reasoning that took a
+              day to settle. The words are its own: `see the poster` is already
+              what its `aria-label` says in the lists.
+
+              **It earns its place beyond consistency**, because the artwork above
+              is `object-cover object-top` and therefore cropped. This is the only
+              way to see the whole poster, which is a different thing from seeing
+              a bigger one.
+
+              ⚠ **Guarded on `large` rather than left to the component.**
+              `PosterReveal` renders its children unwrapped when there is no
+              artwork — right when the children are a film's title, wrong when
+              they are a label, which would leave the words *See the poster*
+              sitting there as text that does nothing.
+            */}
+            {large && (
+              <PosterReveal
+                posterPath={film.posterPath}
+                title={film.title}
+                /*
+                  The app's quiet text-button tier, the one the resolve actions
+                  wear in `entry-row.tsx`: muted 14px that takes full strength on
+                  hover, with `tap-target` giving it a 44px hit area without
+                  changing the line it sits on.
+
+                  ⚠ **No underline classes here on purpose.** `PosterReveal`
+                  brings its own — `decoration-rule` at a 6px offset, taking
+                  colour on hover — and a second `underline-offset` in this string
+                  would be two declarations of one property resolved by stylesheet
+                  order rather than by anything written down. It is also the right
+                  underline: this is the same affordance as *tap the title, see the
+                  poster* in the lists, so it should look like it.
+
+                  `micro` was tried first and was wrong. It uppercases, which put
+                  this in the same tier as the *Synopsis* heading directly below
+                  it — two labels stacked, one of which is secretly a control.
+                */
+                className="text-muted hover:text-text tap-target mt-3 block w-fit text-sm"
+              >
+                See the poster
+              </PosterReveal>
+            )}
         </div>
 
         {/*
