@@ -634,15 +634,46 @@ export function FilmScreen({
       ) : (
         <div className="@container relative mx-auto h-full w-full max-w-md">
           {/*
-            ⚠ **A blurred copy of the poster filled the surround here and was
-            rejected.** The question it answered stands and has no other answer: a
-            2:3 poster and a 0.46 screen are different shapes, so *whole* and
-            *full-bleed* are mutually exclusive for the picture, and the chevron
-            exists to make it whole. **Chosen instead: whole, centred, on black** —
-            the gaps split evenly above and below rather than falling entirely at
-            the foot, so it reads as a poster deliberately framed rather than one
-            that ran out of screen. See the centring on the box in `Artwork`.
+            ─────────────────────────────────────────────────────────────────────
+             The surround: blurred under a cursor, black under a thumb
+            ─────────────────────────────────────────────────────────────────────
+
+            The question both answer has no third answer: a 2:3 poster and a 0.46
+            screen are different shapes, so *whole* and *full-bleed* are mutually
+            exclusive for the picture, and the chevron exists to make it whole. So
+            when the words are away there is room left over, and something has to
+            be in it.
+
+            ⚠ **Two rulings, one for each surface, and this is the only place they
+            disagree about the same pixel.** On the handset it is **black** — the
+            poster centred and deliberately framed. On a narrowed desk window it is
+            **the same image, out of focus**, so the screen is full: cover-scaled,
+            `blur-2xl`, at 70% so the sharp one in front stays the subject.
+
+            ⚠ **`w342`, deliberately.** It is the size the wall already fetched, so
+            this costs no request at all, and there is no resolution left to see
+            after that blur. Asking for the large one would double the bytes of
+            every film opened to make an invisible difference.
+
+            ⚠ **`scale-110` is not decoration.** A blur samples past the element's
+            edges, where there is nothing, so an unscaled copy fades out at all
+            four sides and reads as a vignette nobody asked for.
+
+            It needs no state: at rest the sharp poster covers the screen and this
+            is invisible, so what reveals it is the same thing that makes room for
+            it. That is also why it has no bearing on the panel's contrast floor —
+            nothing is ever read against it.
           */}
+          {!touch && posterUrl(film.posterPath, 'w342') && (
+            <Image
+              src={posterUrl(film.posterPath, 'w342') as string}
+              alt=""
+              aria-hidden
+              width={342}
+              height={513}
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-2xl"
+            />
+          )}
           <Artwork
             posterPath={film.posterPath}
             title={film.title}

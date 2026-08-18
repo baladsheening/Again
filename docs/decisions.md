@@ -3985,10 +3985,41 @@ is in the hand — but it does mean the answer is never "is this a phone", and
 nothing downstream should be written as though it were.
 
 **What a narrow desk window gets:** the overlay's layout and the desk's
-typography — full-screen poster, glass panel, chevron, the whole poster centred on
-black when the words are away, and a sans synopsis that prints. The stacked
-arrangement (artwork a share of the column, words under it, *See the poster*) is
-the panel's alone again.
+typography — full-screen poster, glass panel, chevron, and a sans synopsis that
+prints. The stacked arrangement (artwork a share of the column, words under it,
+*See the poster*) is the panel's alone again.
+
+### The surround: blurred under a cursor, black under a thumb
+
+The question has no third answer — a 2:3 poster and a 0.46 screen are different
+shapes, so *whole* and *full-bleed* are mutually exclusive for the picture, and the
+chevron exists to make it whole. With the words away there is room left over and
+something has to be in it. **The two surfaces are ruled differently, and this is
+the only pixel they disagree about:**
+
+- **Under a thumb: black.** The poster centred, gaps split evenly above and below,
+  read as deliberately framed. `calc(50% - 75cqw)`.
+- **Under a cursor: the same image out of focus.** Cover-scaled, `blur-2xl`, at 70%
+  so the sharp one in front stays the subject, so the screen is full.
+
+It went on everywhere first, was rejected, came back, and the resolution is that it
+was only ever wrong on the phone. Worth stating plainly, since the code now carries
+both and a future reader will otherwise assume one of them is a leftover.
+
+⚠ **`w342`, deliberately** — the size the wall already fetched, so the surround
+costs no request at all, and there is no resolution left to see after that blur.
+
+⚠ **`scale-110` is not decoration.** A blur samples past the element's edges, where
+there is nothing, so an unscaled copy fades out on all four sides and reads as a
+vignette nobody asked for.
+
+⚠ **It has no bearing on the panel's contrast floor.** At rest the sharp poster
+covers the screen and the surround is invisible; it is only uncovered once the words
+have gone, so nothing is ever read against it.
+
+⚠ **A probe that wants the poster must not take `querySelector('img')`** — the
+surround is also an `img` and comes first. Select the one whose computed `filter`
+has no blur. Two assertions failed this way the moment it was added back.
 
 ⚠ **The stacked branch is still reached by only one condition, and that is worth
 keeping.** It is the same JSX for the panel as it ever was; the two axes cost two
