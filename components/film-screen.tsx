@@ -72,20 +72,26 @@ import { TickIcon } from './icon-tick'
 const UNDO_WINDOW_MS = 10_000
 
 /**
- * Two thirds of the screen for the artwork, the rest for the words. Directed
- * 17 August, up from a half.
+ * How much of the screen the artwork takes, and it is no longer one answer.
+ *
+ * **The handset is split evenly, directed 18 August.** It was `h-[52svh]` — a
+ * half — until 17 August, went to two thirds that day, and comes back to a half
+ * now that the words live *below* the picture rather than on it. That move took
+ * about a hundred pixels out of the synopsis at 390×844, and a half gives them
+ * back: the words are a pane of their own now, not a caption.
+ *
+ * **The panel keeps two thirds**, because it was looked at and approved at that
+ * proportion, and because a 24rem column is tall relative to its width — a half
+ * there would leave the poster too small to be the thing you are looking at.
  *
  * ⚠ **A fraction of the parent, not of the viewport.** It was `h-[52svh]`, and
  * `svh` is the *screen*, which is not the same thing as the box this sits in —
  * the dialog is `h-full` today, so they agree, and they would stop agreeing the
- * moment anything gained a margin or the layout took an inset. `h-2/3` is two
- * thirds of whatever it is inside, which is what "two thirds" was asked for.
- *
- * The pane below takes the remainder and scrolls, so a long synopsis costs a
- * scroll rather than a squeeze — and `Want a copy`, which sits under it, can now
- * fall below the fold on a wordy film. That is the trade this fraction makes.
+ * moment anything gained a margin or the layout took an inset. A fraction is a
+ * fraction of whatever it is inside, which is what was asked for both times.
  */
-const ARTWORK = 'h-2/3'
+const ARTWORK_PANEL = 'h-2/3'
+const ARTWORK_TAKEOVER = 'h-1/2'
 
 /**
  * The one mark beside the title.
@@ -178,6 +184,13 @@ export function FilmScreen({
     with itself.
   */
   const pane = usePaneWidth()
+
+  /* ⚠ Temporary — see `Probe` at the foot of this file. Off unless `/?probe`. */
+  const [probing] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).has('probe'),
+  )
   /*
     The first intent and only the first. `intentsFor` still returns both — the
     vocabulary is unchanged — and this screen deliberately reads one of them; see
@@ -659,8 +672,11 @@ export function FilmScreen({
         than any phone and does nothing. One layout, one class, right at both ends
         — the same move the acknowledgement band makes at its own breakpoint.
       */}
+      {probing && <Probe dialogRef={ref} />}
       <div className="mx-auto flex h-full w-full max-w-md flex-col">
-        <div className={`${ARTWORK} relative shrink-0 overflow-hidden`}>
+        <div
+          className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
+        >
           {small && (
             /*
               ⚠ **Two layers, and the small one is the point.** `w342` is what the
@@ -1177,6 +1193,109 @@ function AddControl({
   by someone who does not know why it existed. The reasoning that would matter to
   whoever needs it back is at the top of this file, not here.
 */
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  ⚠ TEMPORARY. Delete with the report it was built for — the film screen's
+ *  bottom half jumping upward on open, handset only, 18 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Three theories, three wrong.** The credit line wrapping (it moves the wrong
+ * way, and downward by 20px); Safari's address bar re-expanding when the document
+ * lock removes its scroll range (right mechanism, wrong surface — it was reported
+ * installed, where there is no address bar); and the *See the poster* control
+ * (removed from the handset a commit before the report survived a force-quit). So
+ * this stops guessing and records what actually moves.
+ *
+ * **A log, not a live readout**, because the thing being caught is transient: it
+ * samples every frame for three seconds from the moment the screen mounts and
+ * keeps only the frames where something *changed*. A jump is then a row.
+ *
+ * The three viewport units are measured rather than assumed, and that is the
+ * point of it. `100dvh` is what the dialog is sized in; if `dvh` differs between
+ * two rows, the viewport moved under the layout and nothing about the content is
+ * to blame. `svh` and `lvh` are there to say which way — and because installed iOS
+ * has form here: `100svh` was measured at 797 against an 844 screen on this
+ * handset, short by exactly `env(safe-area-inset-top)`.
+ *
+ * ⚠ **Built through the CSSOM, never `innerHTML` with a `style` attribute.** The
+ * CSP in `proxy.ts` drops style attributes in production while `next dev` allows
+ * them, so a gauge written that way would measure perfectly here and report zero
+ * on the deployed site — which is the divergence that has already cost this
+ * project a masthead and a wordmark.
+ */
+function Probe({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
+  const [rows, setRows] = useState<string[]>([])
+
+  useEffect(() => {
+    const gauge = (height: string) => {
+      const el = document.createElement('div')
+      el.style.position = 'absolute'
+      el.style.top = '0'
+      el.style.left = '0'
+      el.style.width = '1px'
+      el.style.height = height
+      el.style.visibility = 'hidden'
+      el.style.pointerEvents = 'none'
+      document.body.appendChild(el)
+      return el
+    }
+
+    const dvh = gauge('100dvh')
+    const svh = gauge('100svh')
+    const lvh = gauge('100lvh')
+
+    const start = performance.now()
+    const log: string[] = []
+    let previous = ''
+    let frame = 0
+
+    const tick = () => {
+      const dialog = dialogRef.current
+      const high = (el: Element | null) =>
+        el ? Math.round(el.getBoundingClientRect().height) : -1
+      const top = (el: Element | null) =>
+        el ? Math.round(el.getBoundingClientRect().top) : -1
+
+      const line = [
+        `dvh${high(dvh)}`,
+        `svh${high(svh)}`,
+        `lvh${high(lvh)}`,
+        `win${window.innerHeight}`,
+        `vv${Math.round(window.visualViewport?.height ?? 0)}`,
+        `dlg${high(dialog)}`,
+        `art${high(dialog?.querySelector('div > div') ?? null)}`,
+        `crd${high(dialog?.querySelector('h2 ~ p') ?? null)}`,
+        `syn${top(dialog?.querySelector('h3') ?? null)}`,
+      ].join(' ')
+
+      if (line !== previous) {
+        previous = line
+        log.push(`${Math.round(performance.now() - start)}ms ${line}`)
+        setRows([...log])
+      }
+
+      if (performance.now() - start < 3000) frame = requestAnimationFrame(tick)
+    }
+
+    frame = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      dvh.remove()
+      svh.remove()
+      lvh.remove()
+    }
+  }, [dialogRef])
+
+  return (
+    <div className="pointer-events-none fixed top-0 left-0 z-50 bg-black/85 p-1.5 font-mono text-[9px] leading-tight text-white">
+      {rows.map((row) => (
+        <div key={row}>{row}</div>
+      ))}
+    </div>
+  )
+}
 
 /**
  * §11 permits known icons, and a plus is the known one for "add this". Same
