@@ -127,6 +127,26 @@ export function ProfilePanel({ handle }: { handle: string }) {
           42px is the wrong height.
         */}
         <div className="flex min-h-[var(--collections-row)] items-center">
+          {/*
+            ⚠ **A pill, directed 18 August, and the negative margin is the point
+            of it.** `px-3` on a control sitting in the `gutter` would set its
+            words 12px in from the handle directly above, and the two lines have
+            been deliberately aligned since the block was built. Pulling the box
+            back by exactly its own padding puts the *ink* back on the gutter
+            line and lets the fill bleed toward the edge instead — so the pill is
+            new and nothing that was aligned has moved.
+
+            `bg-surface/40` is the People pill's fill on `/profile`, and it is
+            the same argument: full strength reads as grey furniture, this reads
+            as a shape the word is sitting in. ⚠ Neither has been seen on OLED,
+            where a 1.09:1 ground may come to nothing at all — if it does, the
+            ladder is in globals.css and both should move together rather than
+            this one alone.
+
+            Its corners are 10px against the People pill's 16: a radius is read
+            against the box it turns, and 16 on something this short would close
+            the ends into a lozenge.
+          */}
           <button
             type="button"
             onClick={async () => {
@@ -134,7 +154,7 @@ export function ProfilePanel({ handle }: { handle: string }) {
               router.push('/sign-in')
               router.refresh()
             }}
-            className="text-muted hover:text-text micro tap-target transition-colors"
+            className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target -ml-3 cursor-pointer rounded-[10px] px-3 py-2 transition-colors"
           >
             Sign out
           </button>

@@ -3869,3 +3869,45 @@ banner line breaks `npm run` itself. And every click on a server-rendered contro
 must be retried until it takes effect — the button exists and is "actionable"
 before React has hydrated it, and a click inside that window does nothing at all,
 silently.
+
+## A stamp is mono, and §11 does not name that use — 18 August
+
+*Synopsis* on the film screen was `micro`: small, capitals, a little tracking —
+the same label register as every other small heading in the app. Directed:
+set it as a **stamp**.
+
+The `stamp` utility in `globals.css` is mono, wider tracking and one step of
+weight. All three do work. Mono alone reads as a filename, tracking alone reads
+as a fashion caption, and weight alone just reads as a heavier label; together
+they read as something pressed onto the page rather than typeset on it.
+
+**The call this records: §11 reserves IBM Plex Mono for return counts and
+timestamps — for data — and a section heading is not data.** The extension is
+made deliberately and on one argument: mono's other quality is *impression*.
+Even widths and blunt terminals are what a rubber stamp has, and nothing in the
+sans does that. The alternative was a fourth typeface for a single word, which
+§11 would like considerably less than this, and which would have to be loaded,
+subset and paid for on every route to serve eight characters.
+
+It is scoped to one utility rather than applied as a class list, so the day
+this is regretted it is one block to delete and one class to change back. If a
+second thing ever wants to be stamped, it wears `stamp` — and if a third does,
+the question stops being about a heading and becomes a real change to §11.
+
+⚠ The trap it comes with: letter-spacing puts space after the **last** letter
+too, so a stamp's box is 0.22em wider than its ink on the right. Left-aligned
+to a gutter that is invisible. Centred, it will sit visibly off to the left.
+
+Two smaller calls made in the same pass, neither of which needed a decision but
+both of which have a reason worth keeping:
+
+- **The heading belongs to the synopsis, not to the screen.** A film TMDB has no
+  write-up for used to get *Synopsis* over the words *No synopsis for this one*
+  — a heading introducing its own absence. Both are gone; it is the title, the
+  credit line, and then black. Nothing shows while the answer is still unknown
+  either, which is the rule the `+` already follows.
+- **Only the two states that are buttons get a hover.** `CONTROL` is also the
+  settled tick and the empty box for *not yet known*; lifting those under a
+  cursor would promise a press that does nothing. `hover:` is not a desktop
+  branch — Tailwind wraps it in `(hover: hover)`, verified in the compiled
+  stylesheet — so a finger cannot leave a control stuck lit.

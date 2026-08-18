@@ -151,6 +151,27 @@ const ARTWORK_TAKEOVER = 'h-1/2'
 const CONTROL =
   'bg-text/8 tap-target flex size-6 shrink-0 items-center justify-center rounded-md'
 
+/**
+ * The same box when it is something you can press — directed 18 August, for a
+ * mouse: the `+` gave no sign it was a control until you clicked it.
+ *
+ * ⚠ **Only the two states that are buttons wear this.** `CONTROL` is also the
+ * settled tick and the empty box for *not yet known*, and lifting those under a
+ * cursor would promise a press that does nothing. The difference between a
+ * control and a marker is the whole of §5's argument for the tick ceasing to be
+ * a button after ten seconds.
+ *
+ * ⚠ **`hover:` is not a desktop branch.** Tailwind wraps it in `(hover: hover)`,
+ * so a finger cannot leave a control stuck in its hover state — which is the
+ * usual reason a mouse affordance goes wrong on a phone. `cursor-pointer` is
+ * needed outright: Tailwind's reset leaves a `<button>` on the default arrow.
+ *
+ * The lift is `bg-text/8` → `/16`, doubling a ground that is already faint. No
+ * colour change: amber is overlap and `--color-listed` is *on your list* (§11),
+ * and neither of those is *your mouse is here*.
+ */
+const CONTROL_PRESSABLE = `${CONTROL} cursor-pointer transition-colors hover:bg-text/16`
+
 type Details = {
   synopsis: string | null
   runtime: number | null
@@ -1022,7 +1043,22 @@ function FilmBody({
         what that costs.
       */}
       <div className="flex min-h-0 flex-1 flex-col pt-6">
-        <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
+        {/*
+          ⚠ **The heading is a property of there being a synopsis, not of the
+          screen — directed 18 August.** It used to stand over the words *No
+          synopsis for this one*, which is a heading introducing its own absence:
+          two lines to say nothing, on the one screen whose lower half is already
+          an open question. A film TMDB has no write-up for is the title and the
+          credit line, and then black.
+
+          **Nothing shows while the answer is unknown either.** `details` is
+          `null` until the round trip lands, so this appears with the words
+          rather than before them — the same rule the `+` follows two blocks up,
+          where an unknown list state draws nothing rather than guessing.
+        */}
+        {details?.synopsis && (
+          <h3 className="gutter stamp text-muted shrink-0">Synopsis</h3>
+        )}
 
         {/*
           `safe-bottom` is back on the scroller, because the scroller is the last
@@ -1032,10 +1068,9 @@ function FilmBody({
           had one either.
         */}
         <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
-          <PrintedSynopsis
-            text={details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
-            printing={pane}
-          />
+          {details?.synopsis && (
+            <PrintedSynopsis text={details.synopsis} printing={pane} />
+          )}
 
           {/*
             Full strength, not `text-muted` — a failure set in the colour reserved
@@ -1446,7 +1481,7 @@ function AddControl({
         type="button"
         onClick={onUndo}
         aria-label="Undo"
-        className={`${CONTROL} text-listed`}
+        className={`${CONTROL_PRESSABLE} text-listed`}
       >
         <TickIcon />
       </button>
@@ -1458,7 +1493,7 @@ function AddControl({
       type="button"
       onClick={onAdd}
       aria-label={label}
-      className={`${CONTROL} text-text`}
+      className={`${CONTROL_PRESSABLE} text-text`}
     >
       <PlusIcon />
     </button>

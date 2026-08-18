@@ -1197,6 +1197,37 @@
 }
 
 /**
+ * A word set as a stamp rather than as a heading — *Synopsis* on the film
+ * screen, 18 August.
+ *
+ * `micro` is a label: small, capitals, a little tracking. This is the same word
+ * pressed rather than typeset — mono, wider tracking, and one step of weight, so
+ * it reads as something applied to the page rather than written on it. The three
+ * together are what make a stamp; mono alone reads as a filename and tracking
+ * alone reads as a fashion caption.
+ *
+ * ⚠ **This puts mono somewhere §11 does not name.** The rule reserves IBM Plex
+ * Mono for return counts and timestamps — for data — and this is neither. The
+ * case for the extension is that mono's other quality is *impression*: even
+ * widths and slab-ish terminals are what a rubber stamp has, and no face in this
+ * project's set does that in the sans. The alternative was a fourth typeface for
+ * one word, which §11 would like considerably less. Recorded in
+ * docs/decisions.md.
+ *
+ * ⚠ **Tracking puts space after the LAST letter too**, so a stamp is 0.22em
+ * wider than its ink on the right. It is left-aligned to a gutter, where that is
+ * invisible; centre one and it will sit visibly off to the left.
+ */
+@utility stamp {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/**
  * A film title in a list, and the largest type in the signed-in app.
  *
  * Negative tracking because it is set large: type designed for body sizes opens
