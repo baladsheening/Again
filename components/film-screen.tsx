@@ -729,7 +729,40 @@ export function FilmScreen({
             />
           )}
           {large && (
+            /*
+              ⚠ **The `key` is the fix for a mismatch only the panel can have —
+              reported 18 August, at the desk: tap a second poster and the new
+              title, credit line and synopsis arrive while the *previous film's*
+              picture is still on screen, sometimes for seconds.**
+
+              Beside the wall this screen is not remounted when another poster is
+              tapped — `capture-provider.tsx` swaps the `film` prop and React
+              reconciles the same elements. The words are state and change on the
+              spot. **An `<img>` is not: a browser keeps painting the image it
+              has until the new `src` has downloaded and decoded.** So the layer
+              carrying `original` — 0.8–1.5MB, see `lib/posters.ts` — held the
+              last film's poster over the new one's words for as long as the
+              download took. Not always, because a film opened before is cached.
+
+              Keying it to the URL means the element's identity *is* the picture
+              it shows, so a change of film destroys it rather than mutating it.
+              A fresh `<img>` has nothing to paint, which is precisely what lets
+              the `w342` layer underneath do the job it was built for.
+
+              ⚠ **The small layer is deliberately NOT keyed.** Its `src` is in
+              the cache — the wall fetched it — so it swaps within a frame or
+              two, and leaving it mounted means that frame shows the previous
+              poster rather than black. Keying both would trade seconds of the
+              wrong film for a flash of no film, which is a worse thing to have
+              built on purpose.
+
+              ⚠ **Not a `key` on the screen itself**, which is the tidier-looking
+              version and does not work: `open` is imperative here (`show()` from
+              an effect, no attribute), so a remounted `<dialog>` paints one
+              frame closed. Every tap would blink.
+            */
             <Image
+              key={large}
               src={large}
               alt={`Poster for ${film.title}`}
               width={2000}
