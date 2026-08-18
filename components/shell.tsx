@@ -1450,7 +1450,12 @@ export function Shell({
       fault is the difference between those two numbers, and it is invisible in
       every browser on a desk.
     */}
-    <div className="rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col">
+    {/*
+      `pane-inset` is the room the film panel takes while one is open — see the
+      utility in globals.css. It reads a custom property with a zero fallback, so
+      nothing here knows whether a panel exists and nothing moves until one does.
+    */}
+    <div className="rail:pl-68 pane-inset mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col">
       {/*
         The references for `useKeyboardPin`. Each carries its dock's positioning
         and nothing else — no transform, no recede, no padding — so it reports

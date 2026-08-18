@@ -210,6 +210,42 @@
   --breakpoint-rail: 45rem;
 
   /*
+    The width at which the film screen stops covering the app and stands beside
+    it — 18 August.
+
+    **Same kind of number as `--breakpoint-rail`, derived the same way: from the
+    columns, not from a device.** Below this a poster's screen has to take the
+    viewport, because there is not room for the wall and the film at once. Above
+    it there is, and taking the viewport would mean blacking out a desk to show a
+    phone-sized card.
+
+    The arithmetic, at the band's own cap of 72rem: the rail spends 17rem, the
+    panel and its gutter spend `--pane-inset`, and what is left is the wall —
+    about 26rem of grid, which is three columns at a poster larger than the phone
+    shows. Below 72rem that subtraction leaves too little to be a wall.
+
+    ⚠ **It lands where it lands on tablets, and that is the point.** Portrait is
+    below it and gets the takeover; landscape is above it and gets the panel. No
+    rule anywhere names a device — a tablet is a touch device with a desk's amount
+    of room, so room decides the layout and the pointer decides the controls.
+  */
+  --breakpoint-pane: 72rem;
+
+  /*
+    The panel's own column, and the space it takes out of the page.
+
+    24rem is the reading width the screen already assumes: `max-w-md` caps its
+    column at 28rem and the artwork is what wants the width, so a narrower panel
+    would crop the poster rather than the words.
+
+    The gutter is 3rem, which is the gap the rail leaves on its side — the panel
+    is the rail's mirror and is positioned like it, so the two margins of the band
+    are the same shape.
+  */
+  --pane-column: 24rem;
+  --pane-inset: 27rem;
+
+  /*
     A 1.06s step-end blink, at the interval terminals use.
 
     ─────────────────────────────────────────────────────────────────────────
@@ -1022,6 +1058,28 @@
 @utility caret-deferred {
   & input:placeholder-shown {
     caret-color: transparent;
+  }
+}
+
+/**
+ * Room for the film panel, taken out of the page while one is open.
+ *
+ * **Driven by a custom property rather than by React state**, so the panel opens
+ * without the shell having to know it exists: `film-screen.tsx` sets
+ * `--pane-open` on the root while it is standing beside the page, and clears it
+ * on the way out. The same CSSOM route the scroll lock and `--keyboard-overlap`
+ * take, and for the same reason — a rendered `style` attribute is dropped by the
+ * CSP in production (see `proxy.ts`), while `el.style` from an effect is not.
+ *
+ * ⚠ **The fallback is what makes it safe.** `var(--pane-open, 0)` is zero
+ * everywhere the panel is not open, including every route that has never heard of
+ * it, so this reserves nothing until something asks. And it is inside the `pane`
+ * variant, so below that width — where the screen takes the viewport instead —
+ * the property can be set and still move nothing.
+ */
+@utility pane-inset {
+  @variant pane {
+    padding-right: calc(var(--pane-open, 0) * var(--pane-inset));
   }
 }
 

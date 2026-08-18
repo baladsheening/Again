@@ -121,7 +121,30 @@ export function PosterWall({
 
   return (
     <>
-    <ul className="rail:grid-cols-5 xl:grid-cols-6 grid grid-cols-3 gap-2.5">
+    {/*
+      ─────────────────────────────────────────────────────────────────────────
+       The columns are a property of the grid, not of the window — 18 August
+      ─────────────────────────────────────────────────────────────────────────
+
+      **They were `rail:grid-cols-5 xl:grid-cols-6`, which asks the viewport a
+      question only this box can answer.** It worked while the wall was the only
+      thing on the page and its width could be inferred from the window's. The
+      film panel breaks that inference: at 90rem the window is unchanged and this
+      grid is 26rem instead of 45rem, and six columns in 26rem is a poster the
+      size of a stamp.
+
+      A container query asks the box. One rule now covers a phone, a rail, a desk
+      and a desk with a panel open, with nothing to keep in step.
+
+      **The thresholds are measured, not chosen**, and they hold the wall where it
+      already was: 350px of grid stays 3 columns, 712px stays 5, 728px stays 6.
+      ⚠ **One width deliberately changes, because it was wrong.** Just above
+      `rail` the grid is 448px and the old rule put *five* columns in it — 82px
+      posters, **smaller than the same wall on a phone**, which is the opposite of
+      what more room should buy. It gets four.
+    */}
+    <div className="@container">
+    <ul className="@min-[26rem]:grid-cols-4 @min-[34rem]:grid-cols-5 @min-[45rem]:grid-cols-6 grid grid-cols-3 gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
         if (!src) return null
@@ -179,6 +202,7 @@ export function PosterWall({
         )
       })}
     </ul>
+    </div>
 
     {/*
       The tripwire, and nothing else.

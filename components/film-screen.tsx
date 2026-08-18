@@ -184,6 +184,17 @@ export function FilmScreen({
   onClose: () => void
 }) {
   const ref = useRef<HTMLDialogElement>(null)
+  /* Which shape it is open in, and whether the next `close` is ours — see below. */
+  const mode = useRef<'panel' | 'takeover' | null>(null)
+  const reopening = useRef(false)
+
+  /*
+    Whether there is room to stand beside the wall rather than cover it. The number
+    is `--breakpoint-pane` in globals.css and is read from there rather than
+    repeated here — a width that lives in two files is a width that will disagree
+    with itself.
+  */
+  const pane = usePaneWidth()
   /*
     The first intent and only the first. `intentsFor` still returns both — the
     vocabulary is unchanged — and this screen deliberately reads one of them; see
@@ -228,10 +239,67 @@ export function FilmScreen({
     `showModal()` on a dialog that is already modal throws, and after the cleanup
     stopped closing it, the second mount meets one.
   */
+  /*
+    `show()` beside the wall, `showModal()` over it — see the class list in the
+    render for why that is the whole of the difference between the two.
+
+    **It re-runs when the width crosses `pane`**, because a dialog cannot be moved
+    between the page and the top layer while it is open: rotating a tablet with a
+    film open has to close it and open it again in the other mode. Without that,
+    crossing upward leaves a 24rem panel wearing a full-screen backdrop, with the
+    wall visible behind it and unclickable.
+
+    ⚠ **Closing to re-open fires `close`, and `onClose` unmounts this screen.** The
+    ref says which kind of close it was, and the handler *consumes* it — that is
+    what makes it work where the same idea failed for the unmount case above.
+    `close` is queued rather than dispatched, so a flag that is only ever set
+    immediately before a close we caused is still true when that close arrives, and
+    is cleared by the handler that reads it.
+  */
   useEffect(() => {
     const dialog = ref.current
-    if (dialog && !dialog.open) dialog.showModal()
-  }, [])
+    if (!dialog) return
+
+    const wanted = pane ? 'panel' : 'takeover'
+    if (mode.current === wanted && dialog.open) return
+
+    if (dialog.open) {
+      reopening.current = true
+      dialog.close()
+    }
+
+    mode.current = wanted
+    if (pane) dialog.show()
+    else dialog.showModal()
+  }, [pane])
+
+  /*
+    Escape, which a modal dialog gets from the platform and a panel does not. One
+    listener, and only in the mode that lacks it — the takeover would end up
+    closing twice.
+  */
+  useEffect(() => {
+    if (!pane) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [pane, onClose])
+
+  /*
+    The room the panel takes out of the page — `pane-inset` in globals.css. Set
+    here rather than passed through the shell, so nothing between this component
+    and the layout has to carry a flag it would only forward.
+  */
+  useEffect(() => {
+    if (!pane) return
+    const root = document.documentElement
+    root.style.setProperty('--pane-open', '1')
+    return () => {
+      root.style.removeProperty('--pane-open')
+    }
+  }, [pane])
 
   /*
     ───────────────────────────────────────────────────────────────────────────
@@ -327,6 +395,14 @@ export function FilmScreen({
     JS is untouched. See the note on `wordmark-trim` in globals.css.
   */
   useEffect(() => {
+    /*
+      ⚠ **Only the takeover locks the document.** Beside the wall the whole point
+      is that the wall still scrolls, and the objective this lock exists for —
+      *you should not find yourself somewhere else when you close it* — is not at
+      risk when you can see where you are the entire time.
+    */
+    if (pane) return
+
     const root = document.documentElement
     const body = document.body
     const y = window.scrollY
@@ -353,7 +429,7 @@ export function FilmScreen({
       body.style.right = previous.right
       window.scrollTo({ top: y, behavior: 'instant' })
     }
-  }, [])
+  }, [pane])
 
   /*
     The details, and whether it is already on your list — one request, see
@@ -483,7 +559,18 @@ export function FilmScreen({
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={() => {
+        /*
+          Consumed, not merely read: this flag is set immediately before a close
+          this component caused, so the first `close` to arrive after it is that
+          one. Clearing it here is what stops the next real close being swallowed.
+        */
+        if (reopening.current) {
+          reopening.current = false
+          return
+        }
+        onClose()
+      }}
       aria-label={film.title}
       /*
         Full bleed on black. `backdrop:bg-black` spelled out rather than taken
@@ -524,7 +611,47 @@ export function FilmScreen({
         document is locked for as long as this screen is open. See the effect
         above.
       */
-      className="m-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black"
+      /*
+        ─────────────────────────────────────────────────────────────────────────
+         Above `pane` it stands beside the wall instead of covering it — 18 August
+        ─────────────────────────────────────────────────────────────────────────
+
+        **Directed: at desk and tablet-landscape widths the film sits beside the
+        wall and the wall stays live**, so tapping another poster swaps what is in
+        the panel rather than closing anything.
+
+        ⚠ **The expensive reading of that is wrong, and it is worth saying why.**
+        It sounds like "make the dialog non-modal", which means hand-building the
+        four things `<dialog>` was chosen for — focus containment, inertness,
+        Escape, and dismissal by tapping outside. **Three of them are things a live
+        wall must not have.** A panel beside the page does not trap focus, does not
+        make the page inert, and is emphatically not dismissed by clicking the
+        page, because clicking the page is how you change what it shows. Only
+        Escape survives, and Escape on a non-modal dialog is one listener — see the
+        effect above.
+
+        So this stays one element with one set of children, and the mode is data:
+        `show()` puts it in the page, `showModal()` puts it in the top layer, and
+        the class list says which shape it takes. **Two behaviours, no second
+        component and no second copy of the screen to keep in step.**
+
+        ⚠ **The panel is the rail's mirror.** `right: max(0px, 50% - 36rem)` is the
+        rail's own expression with the side flipped, so on a wide screen the panel
+        sits at the band's edge rather than the glass's and the composition stays
+        centred. The room it takes out of the page is `pane-inset` in globals.css,
+        driven by a custom property — the shell never learns this exists.
+
+        `z-30` because a dialog outside the top layer is an ordinary positioned
+        element again, and the masthead is `z-20`.
+      */
+      data-film-panel={pane ? '' : undefined}
+      className={
+        pane
+          ? /* `left-auto` because a `<dialog>`'s UA style pins both edges to zero,
+               and a left of zero beats a right of anything. */
+            'fixed top-0 left-auto right-[max(0px,calc(50%_-_36rem))] z-30 m-0 h-dvh max-h-none w-(--pane-column) max-w-none overflow-hidden bg-black p-0 text-text'
+          : 'm-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
+      }
     >
       {/*
         `max-w-md` and centred. Above `rail` a takeover the width of a desk would
@@ -848,6 +975,46 @@ export function FilmScreen({
       </div>
     </dialog>
   )
+}
+
+/**
+ * Whether there is room to stand beside the wall rather than cover it.
+ *
+ * ⚠ **The number is not here.** `--breakpoint-pane` is declared in globals.css,
+ * where the arithmetic that produced it is written down, and this reads it back
+ * off the root. A breakpoint spelled once in CSS and again in JavaScript is a
+ * breakpoint that will disagree with itself the first time either moves — and the
+ * disagreement would be invisible, since each half would look right on its own.
+ *
+ * `matchMedia` takes the value as written, `72rem` and all, so nothing here has to
+ * know what a rem is worth.
+ *
+ * Read synchronously on the first render rather than in an effect: this screen
+ * only ever mounts from a tap, so there is no server render to disagree with, and
+ * settling it a frame later would open every desk poster as a takeover and then
+ * snap it into a panel.
+ */
+function paneQuery(): MediaQueryList {
+  const width = getComputedStyle(document.documentElement)
+    .getPropertyValue('--breakpoint-pane')
+    .trim()
+  return window.matchMedia(`(min-width: ${width})`)
+}
+
+function usePaneWidth(): boolean {
+  const [pane, setPane] = useState(() =>
+    typeof window === 'undefined' ? false : paneQuery().matches,
+  )
+
+  useEffect(() => {
+    const query = paneQuery()
+    const onChange = () => setPane(query.matches)
+    onChange()
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+
+  return pane
 }
 
 /**
