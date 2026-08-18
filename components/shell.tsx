@@ -2234,47 +2234,7 @@ export function Shell({
           the content, and is not — the collections wrap to two lines at 320px and
           the height is what keeps that from moving the bar under a thumb.
         */}
-        <div className="gutter relative flex min-h-[var(--collections-row)] items-center">
-          {/*
-            ⚠ **The house is back at the head of this row (18 August), and it is
-            out of the flow — which is the second attempt.** It was here until
-            15 August, went to the masthead beside the profile glyph, and came off
-            when search took that half of the masthead; `icon-home.tsx` was kept
-            unreferenced through all of it.
-
-            The first cut put it in the flow with an equal spacer opposite, to keep
-            the collections centred on the screen rather than on what was left of
-            the row. That was 20px of icon, 20 of spacer and 24 of gap — **64px off
-            a line that had about 100 to spare, and it wrapped to two lines.**
-
-            Out of the flow it costs the line nothing at all: the collections span
-            exactly what they spanned before there was a house, and stay centred
-            because nothing took any width from them.
-
-            ⚠ **The overlay wears `gutter` rather than a `left` of its own.** An
-            absolute child is placed against the padding box, so `left-0` would put
-            the house at the glass edge; the gutter is
-            `max(1.25rem, env(safe-area-inset-left))` and it is not going to be
-            written down twice.
-
-            ⚠ **The house never takes `--color-active`.** Red is the profile
-            glyph's convention in the masthead; this sits in a row where *here* is
-            said with full-strength text, and it says it the same way. Asked for
-            directly, and it is also the better rule: one row, one signal.
-          */}
-          <div className="gutter pointer-events-none absolute inset-0 flex items-center">
-            <Link
-              href="/"
-              aria-label="Home"
-              aria-current={pathname === '/' ? 'page' : undefined}
-              className={`pointer-events-auto -my-3 py-3 transition-colors ${
-                pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
-              }`}
-            >
-              <HomeIcon />
-            </Link>
-          </div>
-
+        <div className="gutter flex min-h-[var(--collections-row)] items-center">
           {/*
             Dotted, not spaced. Labels separated by gaps alone read as loose
             words; a `·` between them makes one line of navigation, which is
@@ -2297,6 +2257,42 @@ export function Shell({
             than a little dead space above it.
           */}
           <div className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-2.5">
+            {/*
+              ⚠ **The house is a member of this line, not furniture beside it —
+              directed 18 August, and it is the third arrangement in a day.** It
+              went in as a flex sibling with an equal spacer opposite, which cost
+              the row 64px and wrapped it to two lines; then out of the flow in an
+              overlay, which cost nothing but left it standing apart from the thing
+              it belongs to. Asked for plainly: **a dot after it, and the whole
+              row — house included — centred.**
+
+              That is what this is, and it is the simplest of the three: the house
+              is the first item, a `Dot` follows it exactly as one follows every
+              other pair, and `justify-center` centres what is now one line of
+              navigation. Nothing is positioned, nothing is spaced against
+              anything, and there is no second copy of the gutter.
+
+              It also costs the line the least of the three arrangements that keep
+              the house visible: 14px and one dot, against 20px plus a 20px spacer
+              plus two gaps.
+
+              ⚠ **The house never takes `--color-active`.** Red is the profile
+              glyph's convention in the masthead; this row says *here* with
+              full-strength text, and `CollectionLink` beside it does the same.
+              One row, one signal.
+            */}
+            <Link
+              href="/"
+              aria-label="Home"
+              aria-current={pathname === '/' ? 'page' : undefined}
+              className={`tap-target -my-3 shrink-0 py-3 transition-colors ${
+                pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+              }`}
+            >
+              <HomeIcon />
+            </Link>
+            <Dot />
+
             {COLLECTION_LINKS.map((link, i) => (
               <Fragment key={link.href}>
                 {i > 0 && <Dot />}

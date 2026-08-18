@@ -592,7 +592,7 @@ export function FilmScreen({
             receded={false}
             dialogRef={ref}
           />
-          <FilmBody key={film.externalId} film={film} pane />
+          <FilmBody key={film.externalId} film={film} pane handle={null} />
         </div>
       ) : (
         <div className="@container relative mx-auto h-full w-full max-w-md">
@@ -716,30 +716,37 @@ export function FilmScreen({
 
             <div className="relative flex min-h-0 flex-1 flex-col">
               {/*
-                The handle. Full width so it is a band rather than a target to
-                hit, and the chevron is centred in it the way a sheet's grabber
-                is — §11 permits known icons and this is the known one for
-                *put this away*, turned a quarter.
+                ⚠ **The handle is in the title's row now, at the right — directed
+                18 August, and it is the third position for it.** It was a
+                full-width band above the words, centred like a sheet's grabber;
+                before that the band was 32px with the title's padding under it.
+                Neither was asked for again.
 
-                ⚠ **This band is the WHOLE gap above the title, and that is what
-                makes the chevron sit centred in it — directed 18 August.** It was
-                32px of band and then the title's own `pt-5`, which put the
-                chevron 8px from the panel's edge and 28px from the words: centred
-                in its own box and visibly not centred in the space. The title
-                drops its top padding on this surface and the band takes the sum,
-                so the two gaps are one number by construction rather than two
-                numbers that have to be kept equal.
+                ⚠ **`title` on the button is for its METRICS, not its type.** The
+                button holds an svg, so the face, the tracking and the balance are
+                inert — what it is there for is `line-height: 1.15` against
+                `--text-title`, which makes `h-[1lh]` exactly one line of the
+                heading beside it. The chevron then centres on that line at any
+                type size, including the step at 64rem, without a number here.
+                Same reasoning as the `+`'s `h-[1lh]` wrapper two blocks down; the
+                difference is that the `+` is inline content and this is a flex
+                child, so it takes the line's height rather than sitting in it.
               */}
-              <button
-                type="button"
-                onClick={() => setReceded(true)}
-                aria-label="See the whole poster"
-                className="text-muted hover:text-text flex h-13 w-full shrink-0 cursor-pointer items-center justify-center transition-colors"
-              >
-                <ChevronIcon className="rotate-90" size={16} />
-              </button>
-
-              <FilmBody key={film.externalId} film={film} pane={false} />
+              <FilmBody
+                key={film.externalId}
+                film={film}
+                pane={false}
+                handle={
+                  <button
+                    type="button"
+                    onClick={() => setReceded(true)}
+                    aria-label="See the whole poster"
+                    className="title text-muted hover:text-text tap-target flex h-[1lh] shrink-0 cursor-pointer items-center transition-colors"
+                  >
+                    <ChevronIcon className="rotate-90" size={16} />
+                  </button>
+                }
+              />
             </div>
           </div>
         </div>
@@ -789,9 +796,17 @@ export function FilmScreen({
 function FilmBody({
   film,
   pane,
+  handle,
 }: {
   film: FilmSearchResult
   pane: boolean
+  /*
+    The screen's own control, dropped into the title's row. It is passed rather
+    than built here because what it does — putting these words away — is a fact
+    about the screen and not about the film, and this component is rebuilt every
+    time the film changes. `null` beside the wall, where nothing recedes.
+  */
+  handle: React.ReactNode
 }) {
   /*
     The first intent and only the first. `intentsFor` still returns both — the
@@ -954,12 +969,25 @@ function FilmBody({
         one part of it and expect the control to read.
       */}
       {/*
-        ⚠ **The top padding is the panel's alone.** Beside the wall this is the
-        air between the artwork and the title. On the handset the chevron's band
-        above it is that air, and it has to be the whole of it or the chevron
-        cannot be centred in it — see the note on the handle.
+        ⚠ **A row, and it is the one shape the `+`'s note argues against — for a
+        different occupant.** That note explains why the *add* is inline content
+        rather than a flex sibling: a row aligns a control to the block, so a
+        three-line title would leave it floating beside the first line with two
+        lines of nothing under it. The handle is the opposite case. It belongs to
+        the panel rather than to the words, so beside the **first** line is
+        exactly where it should stay however long the name runs — `items-start`
+        says that, and `h-[1lh]` on the button makes "the first line" mean the
+        title's own line.
+
+        The words are wrapped in a column of their own because the credit line and
+        *See the poster* are the heading's siblings — without it they would become
+        flex items too and stand beside the title rather than under it. `min-w-0`
+        on that column so a long unbroken word cannot push the handle off the
+        gutter; the padding is back on this row for both surfaces now that the
+        band above it is gone.
       */}
-      <div className={`gutter shrink-0 ${pane ? 'pt-5' : ''}`}>
+      <div className="gutter flex shrink-0 items-start gap-3 pt-5">
+        <div className="min-w-0 flex-1">
           {/*
             ─────────────────────────────────────────────────────────────────
              The `+` ends the title, on whichever line the title ends
@@ -1177,6 +1205,9 @@ function FilmBody({
               See the poster
             </PosterReveal>
           )}
+        </div>
+
+        {handle}
       </div>
 
       {/*
@@ -1591,7 +1622,22 @@ function PrintedSynopsis({ text, printing }: { text: string; printing: boolean }
   }, [text, printing])
 
   return (
-    <p className="text-sm">
+    /*
+      ⚠ **Mono, directed 18 August: the same face as the word above it.** The
+      stamp took IBM Plex Mono for *impression*; the writing under it takes it for
+      agreement, so the block reads as one thing rather than as a mono label
+      stuck on a sans paragraph.
+
+      ⚠ **This is the second and larger extension of §11's mono rule**, which
+      reserves the face for return counts and timestamps. A heading was eight
+      characters; this is the longest run of prose in the app. Recorded in
+      docs/decisions.md with the first.
+
+      It suits the printing, at least, and that is a happy accident rather than
+      the reason: every character occupies the same width, so the words arrive on
+      a fixed grid and the line's front edge advances evenly.
+    */
+    <p className="font-mono text-sm">
       <span className="sr-only select-none">{text}</span>
       <span aria-hidden ref={host}>
         {[...text].map((character, index) => (
