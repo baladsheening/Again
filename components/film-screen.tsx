@@ -199,6 +199,18 @@ export function FilmScreen({
   const [, startTransition] = useTransition()
 
   /*
+    ⚠ **Temporary — see `Probe` at the foot of this file, and delete both with
+    the report they were built for.** Read once in an initialiser: this screen
+    only ever mounts from a tap, so there is no server render to disagree with,
+    and the guard is there in case that stops being true.
+  */
+  const [probing] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).has('probe'),
+  )
+
+  /*
     `showModal()` rather than an `open` attribute, and a `<dialog>` rather than the
     hand-built overlay the intent sheet was. It brings focus containment, the
     inertness of everything behind it and Escape for nothing, all of which the
@@ -498,6 +510,7 @@ export function FilmScreen({
         than any phone and does nothing. One layout, one class, right at both ends
         — the same move the acknowledgement band makes at its own breakpoint.
       */}
+      {probing && <Probe />}
       <div className="mx-auto flex h-full w-full max-w-md flex-col">
         <div className={`${ARTWORK} relative shrink-0 overflow-hidden`}>
           {small && (
@@ -876,6 +889,91 @@ function AddControl({
   by someone who does not know why it existed. The reasoning that would matter to
   whoever needs it back is at the top of this file, not here.
 */
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  ⚠ TEMPORARY. Delete this, and `probing` above, with the report it was built
+ *  for — the scrollbar over the artwork, 17–18 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **It exists because the symptom is on a handset and the reasoning has been
+ * wrong twice.** Every box between the artwork and the viewport was walked and
+ * none of them can scroll; the range was then taken away as well, and the bar is
+ * still there and still moving. That is two confident answers from static
+ * reading, so this stops reading and measures.
+ *
+ * **Off unless the URL says otherwise** — `/?probe`. It costs production nothing
+ * and it is not a feature; it is a torch.
+ *
+ * What each line is for:
+ *
+ * - `scrollY` and `root` — whether the document still has a range and a
+ *   position. With `body` out of the flow both should be gone: `scrollY` zero
+ *   and `scrollHeight` no taller than `clientHeight`.
+ * - `body` — **whether the writes landed at all.** The computed `position` is
+ *   read back rather than assumed, because the theory that CSP drops them is
+ *   cheap to eliminate and expensive to leave standing.
+ * - `vv` — the *visual* viewport. If the page is pinch-zoomed, Safari shows a
+ *   pan indicator that belongs to no element and that no scroll lock can touch.
+ *   `x1.00` rules it out; anything else and that is the whole answer.
+ * - `scrolls` — a capture-phase listener on the document, which hears every
+ *   element's scroll event whether or not it bubbles, and names the last one to
+ *   fire. **If the bar moves while this stays at zero, nothing in the DOM is
+ *   scrolling** and the indicator is the browser's own.
+ */
+function Probe() {
+  const [lines, setLines] = useState<string[]>([])
+
+  useEffect(() => {
+    let frame = 0
+    let scrolls = 0
+    let source = 'none'
+
+    const onScroll = (event: Event) => {
+      scrolls += 1
+      const target = event.target
+      source =
+        target instanceof Element
+          ? `${target.tagName.toLowerCase()}${target.id ? `#${target.id}` : ''} @${Math.round(target.scrollTop)}`
+          : `document @${Math.round(window.scrollY)}`
+    }
+
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true })
+
+    const tick = () => {
+      const root = document.documentElement
+      const body = document.body
+      const viewport = window.visualViewport
+
+      setLines([
+        `scrollY ${Math.round(window.scrollY)}`,
+        `root ${root.scrollHeight}/${root.clientHeight} ${getComputedStyle(root).overflow}`,
+        `body ${body.scrollHeight}/${body.clientHeight} ${getComputedStyle(body).position} top ${body.style.top || 'unset'}`,
+        viewport
+          ? `vv ${Math.round(viewport.height)} x${viewport.scale.toFixed(2)} off ${Math.round(viewport.offsetTop)}`
+          : 'vv none',
+        `scrolls ${scrolls} · ${source}`,
+      ])
+
+      frame = requestAnimationFrame(tick)
+    }
+
+    frame = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener('scroll', onScroll, { capture: true })
+    }
+  }, [])
+
+  return (
+    <div className="pointer-events-none fixed top-0 left-0 z-50 bg-black/85 p-2 font-mono text-[10px] leading-tight text-white">
+      {lines.map((line) => (
+        <div key={line.split(' ')[0]}>{line}</div>
+      ))}
+    </div>
+  )
+}
 
 /**
  * §11 permits known icons, and a plus is the known one for "add this". Same
