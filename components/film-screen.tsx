@@ -10,6 +10,7 @@ import { posterUrl } from '@/lib/posters'
 import { PosterReveal } from './poster'
 import { intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
+import { ChevronIcon } from './icon-chevron'
 import { TickIcon } from './icon-tick'
 
 /**
@@ -72,26 +73,26 @@ import { TickIcon } from './icon-tick'
 const UNDO_WINDOW_MS = 10_000
 
 /**
- * How much of the screen the artwork takes, and it is no longer one answer.
+ * How much of the panel the artwork takes. **The panel's only, since 18 August.**
  *
- * **The handset is split evenly, directed 18 August.** It was `h-[52svh]` — a
- * half — until 17 August, went to two thirds that day, and comes back to a half
- * now that the words live *below* the picture rather than on it. That move took
- * about a hundred pixels out of the synopsis at 390×844, and a half gives them
- * back: the words are a pane of their own now, not a caption.
- *
- * **The panel keeps two thirds**, because it was looked at and approved at that
- * proportion, and because a 24rem column is tall relative to its width — a half
- * there would leave the poster too small to be the thing you are looking at.
+ * It keeps two thirds because it was looked at and approved at that proportion,
+ * and because a 24rem column is tall relative to its width — a half there would
+ * leave the poster too small to be the thing you are looking at.
  *
  * ⚠ **A fraction of the parent, not of the viewport.** It was `h-[52svh]`, and
  * `svh` is the *screen*, which is not the same thing as the box this sits in —
  * the dialog is `h-full` today, so they agree, and they would stop agreeing the
- * moment anything gained a margin or the layout took an inset. A fraction is a
- * fraction of whatever it is inside, which is what was asked for both times.
+ * moment anything gained a margin or the layout took an inset.
+ *
+ * ⚠ **There is no takeover twin any more, and its absence is the design.** The
+ * handset ran `h-[52svh]`, then two thirds, then an even half — three numbers
+ * for one question, each of them a choice about how much poster to show. The
+ * poster now takes the width and whatever height 2:3 makes of it, and the words
+ * are a panel over the rest: **the size of the artwork stopped being a decision
+ * and became a consequence of the image.** Nothing to tune, and nothing that can
+ * be wrong on a screen shape nobody has met.
  */
 const ARTWORK_PANEL = 'h-2/3'
-const ARTWORK_TAKEOVER = 'h-1/2'
 
 /**
  * The one mark beside the title.
@@ -205,6 +206,13 @@ export function FilmScreen({
     with itself.
   */
   const pane = usePaneWidth()
+
+  /*
+    Whether the words have been pushed off the bottom to leave the poster whole
+    — the handset's only, and it lives here rather than in `FilmBody` because
+    the surface that brings them back is the picture, which is the screen's.
+  */
+  const [receded, setReceded] = useState(false)
 
   /*
     `showModal()` rather than an `open` attribute, and a `<dialog>` rather than the
@@ -575,15 +583,119 @@ export function FilmScreen({
         keyed.** See `Artwork` for why the element holding the poster is the one
         thing here that must survive a change of film.
       */}
-      <div className="mx-auto flex h-full w-full max-w-md flex-col">
-        <Artwork
-          posterPath={film.posterPath}
-          title={film.title}
-          pane={pane}
-          dialogRef={ref}
-        />
-        <FilmBody key={film.externalId} film={film} pane={pane} />
-      </div>
+      {pane ? (
+        <div className="mx-auto flex h-full w-full max-w-md flex-col">
+          <Artwork
+            posterPath={film.posterPath}
+            title={film.title}
+            pane
+            dialogRef={ref}
+          />
+          <FilmBody key={film.externalId} film={film} pane />
+        </div>
+      ) : (
+        <div className="relative mx-auto h-full w-full max-w-md">
+          <Artwork
+            posterPath={film.posterPath}
+            title={film.title}
+            pane={false}
+            dialogRef={ref}
+          />
+
+          {/*
+            ⚠ **One surface, two meanings, and the meaning is the state — the
+            way back, chosen 18 August.** Directed: the chevron takes the panel
+            *fully* off the bottom, so at the end of that travel there is
+            nothing left on screen but the poster and nothing left to grab.
+
+            A tap on the picture has closed this screen since 17 August and
+            still does — while the panel is up. With the panel away the same
+            surface brings it back, because the alternative was inventing a
+            floating control that would sit on the poster the gesture exists to
+            clear. **Its label changes with it**, so a keyboard and VoiceOver
+            reach the way back exactly as a finger does — which a swipe never
+            would, and this project's gesture record is 0 for 2.
+
+            The two are also in a sensible order: the tap always undoes the last
+            thing you asked for. Poster alone → the words back → the wall.
+          */}
+          <button
+            type="button"
+            onClick={() => (receded ? setReceded(false) : ref.current?.close())}
+            aria-label={receded ? 'Show the details' : 'Close'}
+            className="absolute inset-0"
+          />
+
+          {/*
+            ⚠ **The panel is glass over the poster, which is a reversal of this
+            morning and is directed.** `f6f479b` took the writing off the
+            picture and deleted the scrim, the frost and the contrast floor with
+            it, on the argument that legibility must not be a function of which
+            film you tapped. `docs/plan.md` parked the return with one
+            condition — **restore the whole recipe or none of it** — so the
+            ground below is measured rather than chosen, and it is what keeps
+            that argument true with the words back over the artwork.
+
+            ⚠ **Three siblings, never nested.** An element with a
+            `backdrop-filter` is a backdrop root, so a child of it has no page
+            left to blur — measured at 0.0 difference in August. The blur, the
+            ground and the words are siblings, and only the words are `relative`.
+
+            The travel is `translate-y-full`, which is this box's own height and
+            therefore exactly the distance to the bottom edge — no number to
+            keep in step with `top-1/2`, and none to be wrong on a screen nobody
+            has measured. `inert` because a panel that has left the screen
+            should not still be in the tab order.
+          */}
+          <div
+            inert={receded}
+            className={`absolute inset-x-0 top-1/2 bottom-0 flex flex-col overflow-hidden transition-transform duration-300 ${
+              receded ? 'translate-y-full' : 'translate-y-0'
+            }`}
+          >
+            <div className="absolute inset-0 backdrop-blur-2xl" />
+            {/*
+              ⚠ **80% is derived, not chosen, and the tick is what derives it.**
+              Measured over a **pure white** poster — the worst backdrop that can
+              exist, rather than the brightest one TMDB happens to serve — the
+              ground behind the words is `255 × (1 − alpha)`. At the 72% this was
+              first written with, that is rgb(70) and `--color-listed` lands at
+              **2.69:1 against a 3:1 minimum**: the same failure the old scrim had
+              at 3.3:1, which is why `f6f479b` deleted the whole arrangement.
+
+              At 80% the ground is rgb(51) and the three numbers are the tick at
+              **3.61:1**, the credit line and the stamp at **4.72:1** against 4.5,
+              and the title at **9.99:1**. Those hold on *every* poster, because
+              nothing can be brighter than the one they were measured on.
+
+              **So the glass is 20% of the picture, and that is the whole of what
+              the picture may contribute.** If this is ever lightened for looks,
+              the tick is the number that runs out first — and it runs out
+              silently, on somebody else's film.
+            */}
+            <div className="bg-bg/80 absolute inset-0" />
+
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              {/*
+                The handle. Full width so it is a band rather than a target to
+                hit, and the chevron is centred in it the way a sheet's grabber
+                is — §11 permits known icons and this is the known one for
+                *put this away*, turned a quarter.
+              */}
+              <button
+                type="button"
+                onClick={() => setReceded(true)}
+                aria-label="See the whole poster"
+                className="text-muted hover:text-text flex h-8 w-full shrink-0 cursor-pointer items-center justify-center transition-colors"
+              >
+                <ChevronIcon className="rotate-90" />
+              </button>
+
+              <FilmBody key={film.externalId} film={film} pane={false} />
+            </div>
+          </div>
+        </div>
+      )}
     </dialog>
   )
 }
@@ -1179,7 +1291,20 @@ function Artwork({
 
   return (
     <div
-      className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
+      /*
+        ⚠ **Two boxes, and only one of them is a fraction.** The panel takes a
+        share of a column it sits inside, so it stays a flex child. The handset
+        takes the whole screen and lets the *picture* be its own size within it,
+        which is what makes the whole poster reachable: a 2:3 poster at full
+        width is 1.5× the width, and every phone is taller than that, so it
+        always fits above the fold with black beneath. There is no screen shape
+        on which this crops.
+      */
+      className={
+        pane
+          ? `${ARTWORK_PANEL} relative shrink-0 overflow-hidden`
+          : 'absolute inset-0 overflow-hidden'
+      }
     >
       {src && (
         /*
@@ -1198,7 +1323,11 @@ function Artwork({
           alt={`Poster for ${title}`}
           width={2000}
           height={3000}
-          className="absolute inset-0 h-full w-full object-cover object-top"
+          className={
+            pane
+              ? 'absolute inset-0 h-full w-full object-cover object-top'
+              : 'aspect-[2/3] h-auto w-full object-cover object-top'
+          }
           priority
         />
       )}
@@ -1248,12 +1377,21 @@ function Artwork({
         exists.** They are below the picture, so they are simply not in the way.
       */}
 
-      <button
-        type="button"
-        onClick={() => dialogRef.current?.close()}
-        aria-label="Close"
-        className="absolute inset-0"
-      />
+      {/*
+        ⚠ **The panel's only.** On the handset the same surface has two jobs —
+        close, or bring the words back — and which one depends on state this
+        component does not have, so `FilmScreen` draws it there instead, over
+        the whole screen rather than over the picture. Beside the wall there is
+        no receding and nothing below the artwork to cover, so it stays here.
+      */}
+      {pane && (
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.close()}
+          aria-label="Close"
+          className="absolute inset-0"
+        />
+      )}
     </div>
   )
 }
