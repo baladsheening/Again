@@ -186,21 +186,6 @@ export function FilmScreen({
   const pane = usePaneWidth()
 
   /*
-    The first intent and only the first. `intentsFor` still returns both — the
-    vocabulary is unchanged — and this screen deliberately reads one of them; see
-    the note at the top for what that costs Fixtures.
-  */
-  const [primary] = intentsFor('film')
-
-  const [details, setDetails] = useState<Details | null>(null)
-  const [marks, setMarks] = useState<Marks>(null)
-  const [undoable, setUndoable] = useState<{ intent: Intent; entryId: string } | null>(
-    null,
-  )
-  const [error, setError] = useState<string | null>(null)
-  const [, startTransition] = useTransition()
-
-  /*
     `showModal()` rather than an `open` attribute, and a `<dialog>` rather than the
     hand-built overlay the intent sheet was. It brings focus containment, the
     inertness of everything behind it and Escape for nothing, all of which the
@@ -421,141 +406,6 @@ export function FilmScreen({
     }
   }, [pane])
 
-  /*
-    The details, and whether it is already on your list — one request, see
-    `app/api/film/[id]/route.ts`.
-
-    **Nothing waits for it.** The title, the year and the artwork all came off the
-    thing that was tapped, so the screen is complete from the first frame and this
-    fills in the synopsis and the marks. A spinner over a poster we already have
-    would be inventing a wait.
-
-    ⚠ **It is usually already in flight by the time this runs.** The poster starts
-    it on `pointerdown` and this claims it — see `lib/film-request.ts` for why the
-    hand-off is one request rather than a cache. `claimFilmRequest` starts its own
-    if there is nothing to claim, so this path does not depend on having been
-    prefetched and a screen opened some other way behaves identically.
-
-    Cancelled on unmount so closing the screen does not leave a request writing
-    into a component that has gone. The flag rather than the signal, because the
-    request may not be the one this effect created.
-  */
-  useEffect(() => {
-    let cancelled = false
-    const request = claimFilmRequest(film.externalId)
-
-    request.response
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
-      .then((body) => {
-        if (cancelled) return
-        setDetails({
-          synopsis: body.film?.synopsis ?? null,
-          runtime: body.film?.runtime ?? null,
-          directors: body.film?.directors ?? [],
-        })
-        const found: Marks = {}
-        for (const entry of body.listed ?? []) {
-          found[entry.intent as Intent] = { entryId: entry.entryId }
-        }
-        setMarks(found)
-      })
-      .catch(() => {
-        if (cancelled) return
-        /*
-          The synopsis is the part that fails softly — there is a line for that
-          below. The marks are not: an unknown list state stays unknown rather
-          than defaulting to "not on your list", because the `+` that would draw
-          is the one thing on this screen that can be wrong in a way you act on.
-        */
-        setDetails({ synopsis: null, runtime: null, directors: [] })
-      })
-
-    return () => {
-      cancelled = true
-      request.abort()
-    }
-  }, [film.externalId])
-
-  /* §5.1. The offer expires; the row does not (§5 — nothing is ever deleted). */
-  useEffect(() => {
-    if (!undoable) return
-    const timer = setTimeout(() => setUndoable(null), UNDO_WINDOW_MS)
-    return () => clearTimeout(timer)
-  }, [undoable])
-
-  function add(intent: Intent) {
-    // Inside the gesture: a haptic answers a finger, and every platform that has
-    // one refuses it once the gesture is over. See `lib/haptics.ts` — on iOS this
-    // currently does nothing, and that is not for want of trying.
-    haptic()
-    setError(null)
-    // Optimistic, like every add in this app has been: the mark is the answer to
-    // the tap, and the network is not part of the answer.
-    setMarks((current) => ({ ...(current ?? {}), [intent]: { entryId: null } }))
-
-    startTransition(async () => {
-      const result = await addFilmAction({ externalId: film.externalId, intent })
-
-      if (!result.ok) {
-        setMarks((current) => {
-          const next = { ...(current ?? {}) }
-          delete next[intent]
-          return next
-        })
-        setError(result.message)
-        return
-      }
-
-      setMarks((current) => ({
-        ...(current ?? {}),
-        [intent]: { entryId: result.value.entryId },
-      }))
-
-      /*
-        Only a real creation is undoable. Tapping `+` on something already on
-        your list is idempotent (§10) — it returns the row that was there, and
-        offering to undo it would be offering to delete something you did not
-        just add.
-      */
-      if (result.value.created) {
-        setUndoable({ intent, entryId: result.value.entryId })
-      }
-    })
-  }
-
-  function undo(intent: Intent, entryId: string) {
-    haptic()
-    setUndoable(null)
-    setMarks((current) => {
-      const next = { ...(current ?? {}) }
-      delete next[intent]
-      return next
-    })
-
-    startTransition(async () => {
-      const result = await undoEntryAction(entryId)
-      if (!result.ok) {
-        setError(result.message)
-        setMarks((current) => ({ ...(current ?? {}), [intent]: { entryId } }))
-      }
-    })
-  }
-
-  /*
-    ⚠ **The panel asks for the size it can show; the takeover asks for the size
-    it can show. Same rule, two boxes** — `lib/posters.ts` carries the arithmetic
-    for both, and neither number is a download budget.
-
-    Reported at the desk, and true before the artwork was keyed rather than
-    because of it: the picture paints in **from the top**. That is a large
-    baseline JPEG rendering as its bytes arrive, and the panel is 384 CSS px
-    wide, so `original` was about seven times the pixels that column can use.
-  */
-  const large = posterUrl(film.posterPath, pane ? 'w780' : 'original')
-  const small = posterUrl(film.posterPath, 'w342')
-  const listedPrimary = marks?.[primary]
-  const undoablePrimary = undoable?.intent === primary ? undoable : null
-
   return (
     <dialog
       ref={ref}
@@ -694,441 +544,647 @@ export function FilmScreen({
           : 'm-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
       }
     >
-      {/*
-        `max-w-md` and centred. Above `rail` a takeover the width of a desk would
-        be a poster stretched across a metre of screen; below it the cap is wider
-        than any phone and does nothing. One layout, one class, right at both ends
-        — the same move the acknowledgement band makes at its own breakpoint.
-      */}
-      <div className="mx-auto flex h-full w-full max-w-md flex-col">
-        <div
-          className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
-        >
-          {small && (
+      <FilmBody
+        key={film.externalId}
+        film={film}
+        pane={pane}
+        dialogRef={ref}
+      />
+    </dialog>
+  )
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Everything that belongs to one film, in a component whose identity is that
+ *  film — 18 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Reported at the desk: tap a second poster and the new title, credit line and
+ * synopsis arrive while the previous film's picture is still there.** Keying the
+ * artwork answered the picture, and looking for why exposed the rest of it.
+ *
+ * Beside the wall this screen is never remounted — `capture-provider.tsx` swaps
+ * the `film` prop — so **nothing here was ever reset**. For as long as the new
+ * film's request was in flight you were reading the last film's director, its
+ * synopsis and its **marks**: a green *already on your list* tick belonging to a
+ * film you had left. The fetch below calls the marks the one thing on this
+ * screen that can be wrong in a way you act on, and a swap made it exactly that.
+ * `undoable` and `error` crossed the same gap, and a slow add on one film landed
+ * in the next one's state.
+ *
+ * **The cheap answer is four `setX(null)` calls at the top of the fetch, and it
+ * is the shape this repository has already reverted twice** — a list that has to
+ * be complete, whose fifth entry is missing silently. So the boundary moved
+ * instead. The `<dialog>`, the mode it is open in and the document it locks
+ * belong to *the screen* and stay mounted; everything that describes *a film*
+ * lives here, under `key={film.externalId}`. A change of film destroys this and
+ * builds it again, so stale state is not cleaned up — **it cannot be held**.
+ *
+ * ⚠ **The dialog deliberately does NOT carry the key.** `open` is imperative
+ * here — `show()` and `showModal()` from an effect, never an attribute — so a
+ * remounted `<dialog>` paints one frame closed, and every tap along the wall
+ * would blink. The split is what lets the element survive while its contents do
+ * not.
+ *
+ * ⚠ **`dialogRef` rather than an `onClose` prop.** The artwork closes by calling
+ * `close()` on the element and the screen's own handler decides what that means.
+ * A child closing the screen through a callback would be a second route to the
+ * same place, and this file already records what two routes cost.
+ */
+function FilmBody({
+  film,
+  pane,
+  dialogRef,
+}: {
+  film: FilmSearchResult
+  pane: boolean
+  dialogRef: React.RefObject<HTMLDialogElement | null>
+}) {
+  /*
+    The first intent and only the first. `intentsFor` still returns both — the
+    vocabulary is unchanged — and this screen deliberately reads one of them; see
+    the note at the top for what that costs Fixtures.
+  */
+  const [primary] = intentsFor('film')
+
+  const [details, setDetails] = useState<Details | null>(null)
+  const [marks, setMarks] = useState<Marks>(null)
+  const [undoable, setUndoable] = useState<{ intent: Intent; entryId: string } | null>(
+    null,
+  )
+  const [error, setError] = useState<string | null>(null)
+  const [, startTransition] = useTransition()
+  /*
+    The details, and whether it is already on your list — one request, see
+    `app/api/film/[id]/route.ts`.
+
+    **Nothing waits for it.** The title, the year and the artwork all came off the
+    thing that was tapped, so the screen is complete from the first frame and this
+    fills in the synopsis and the marks. A spinner over a poster we already have
+    would be inventing a wait.
+
+    ⚠ **It is usually already in flight by the time this runs.** The poster starts
+    it on `pointerdown` and this claims it — see `lib/film-request.ts` for why the
+    hand-off is one request rather than a cache. `claimFilmRequest` starts its own
+    if there is nothing to claim, so this path does not depend on having been
+    prefetched and a screen opened some other way behaves identically.
+
+    Cancelled on unmount so closing the screen does not leave a request writing
+    into a component that has gone. The flag rather than the signal, because the
+    request may not be the one this effect created.
+  */
+  useEffect(() => {
+    let cancelled = false
+    const request = claimFilmRequest(film.externalId)
+
+    request.response
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((body) => {
+        if (cancelled) return
+        setDetails({
+          synopsis: body.film?.synopsis ?? null,
+          runtime: body.film?.runtime ?? null,
+          directors: body.film?.directors ?? [],
+        })
+        const found: Marks = {}
+        for (const entry of body.listed ?? []) {
+          found[entry.intent as Intent] = { entryId: entry.entryId }
+        }
+        setMarks(found)
+      })
+      .catch(() => {
+        if (cancelled) return
+        /*
+          The synopsis is the part that fails softly — there is a line for that
+          below. The marks are not: an unknown list state stays unknown rather
+          than defaulting to "not on your list", because the `+` that would draw
+          is the one thing on this screen that can be wrong in a way you act on.
+        */
+        setDetails({ synopsis: null, runtime: null, directors: [] })
+      })
+
+    return () => {
+      cancelled = true
+      request.abort()
+    }
+  }, [film.externalId])
+
+  /* §5.1. The offer expires; the row does not (§5 — nothing is ever deleted). */
+  useEffect(() => {
+    if (!undoable) return
+    const timer = setTimeout(() => setUndoable(null), UNDO_WINDOW_MS)
+    return () => clearTimeout(timer)
+  }, [undoable])
+
+  function add(intent: Intent) {
+    // Inside the gesture: a haptic answers a finger, and every platform that has
+    // one refuses it once the gesture is over. See `lib/haptics.ts` — on iOS this
+    // currently does nothing, and that is not for want of trying.
+    haptic()
+    setError(null)
+    // Optimistic, like every add in this app has been: the mark is the answer to
+    // the tap, and the network is not part of the answer.
+    setMarks((current) => ({ ...(current ?? {}), [intent]: { entryId: null } }))
+
+    startTransition(async () => {
+      const result = await addFilmAction({ externalId: film.externalId, intent })
+
+      if (!result.ok) {
+        setMarks((current) => {
+          const next = { ...(current ?? {}) }
+          delete next[intent]
+          return next
+        })
+        setError(result.message)
+        return
+      }
+
+      setMarks((current) => ({
+        ...(current ?? {}),
+        [intent]: { entryId: result.value.entryId },
+      }))
+
+      /*
+        Only a real creation is undoable. Tapping `+` on something already on
+        your list is idempotent (§10) — it returns the row that was there, and
+        offering to undo it would be offering to delete something you did not
+        just add.
+      */
+      if (result.value.created) {
+        setUndoable({ intent, entryId: result.value.entryId })
+      }
+    })
+  }
+
+  function undo(intent: Intent, entryId: string) {
+    haptic()
+    setUndoable(null)
+    setMarks((current) => {
+      const next = { ...(current ?? {}) }
+      delete next[intent]
+      return next
+    })
+
+    startTransition(async () => {
+      const result = await undoEntryAction(entryId)
+      if (!result.ok) {
+        setError(result.message)
+        setMarks((current) => ({ ...(current ?? {}), [intent]: { entryId } }))
+      }
+    })
+  }
+
+  /*
+    ⚠ **The panel asks for the size it can show; the takeover asks for the size
+    it can show. Same rule, two boxes** — `lib/posters.ts` carries the arithmetic
+    for both, and neither number is a download budget.
+
+    Reported at the desk, and true before the artwork was keyed rather than
+    because of it: the picture paints in **from the top**. That is a large
+    baseline JPEG rendering as its bytes arrive, and the panel is 384 CSS px
+    wide, so `original` was about seven times the pixels that column can use.
+  */
+  const large = posterUrl(film.posterPath, pane ? 'w780' : 'original')
+  const small = posterUrl(film.posterPath, 'w342')
+  const listedPrimary = marks?.[primary]
+  const undoablePrimary = undoable?.intent === primary ? undoable : null
+
+  return (
+    /*
+      `max-w-md` and centred. Above `rail` a takeover the width of a desk would
+      be a poster stretched across a metre of screen; below it the cap is wider
+      than any phone and does nothing. One layout, one class, right at both ends
+      — the same move the acknowledgement band makes at its own breakpoint.
+    */
+    <div className="mx-auto flex h-full w-full max-w-md flex-col">
+      <div
+        className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
+      >
+        {small && (
+          /*
+            ⚠ **Two layers, and the small one is the point.** `w342` is what the
+            wall already fetched, so it is in the browser's cache and paints on
+            the first frame; `original` arrives over it a moment later. Without
+            this the screen opens on an empty rectangle for as long as a 1MB
+            image takes on mobile data — which is the one thing a tap-to-open
+            screen must not do.
+
+            No state and no `onLoad`: the second image simply paints over the
+            first when it has something to paint. A fade would need to know when
+            that happened, and knowing costs a re-render to hide a transition
+            nobody asked for.
+          */
+          <Image
+            src={small}
+            alt=""
+            aria-hidden
             /*
-              ⚠ **Two layers, and the small one is the point.** `w342` is what the
-              wall already fetched, so it is in the browser's cache and paints on
-              the first frame; `original` arrives over it a moment later. Without
-              this the screen opens on an empty rectangle for as long as a 1MB
-              image takes on mobile data — which is the one thing a tap-to-open
-              screen must not do.
-
-              No state and no `onLoad`: the second image simply paints over the
-              first when it has something to paint. A fade would need to know when
-              that happened, and knowing costs a re-render to hide a transition
-              nobody asked for.
+              ⚠ **`width`/`height` and classes, never `fill`.** `fill` renders
+              its positioning as a `style` attribute, and the CSP in `proxy.ts`
+              drops every style attribute in production while `next dev` allows
+              them — so it would have laid out perfectly here and collapsed on
+              the deployed site. That divergence has already cost this project a
+              masthead and a wordmark (10 August); see the note on
+              `wordmark-trim` in globals.css. The numbers are the source's own
+              aspect, which is all they are for: the classes do the layout.
             */
-            <Image
-              src={small}
-              alt=""
-              aria-hidden
-              /*
-                ⚠ **`width`/`height` and classes, never `fill`.** `fill` renders
-                its positioning as a `style` attribute, and the CSP in `proxy.ts`
-                drops every style attribute in production while `next dev` allows
-                them — so it would have laid out perfectly here and collapsed on
-                the deployed site. That divergence has already cost this project a
-                masthead and a wordmark (10 August); see the note on
-                `wordmark-trim` in globals.css. The numbers are the source's own
-                aspect, which is all they are for: the classes do the layout.
-              */
-              width={342}
-              height={513}
-              className="absolute inset-0 h-full w-full object-cover object-top"
-              priority
-            />
-          )}
-          {large && (
-            /*
-              ⚠ **The `key` is the fix for a mismatch only the panel can have —
-              reported 18 August, at the desk: tap a second poster and the new
-              title, credit line and synopsis arrive while the *previous film's*
-              picture is still on screen, sometimes for seconds.**
-
-              Beside the wall this screen is not remounted when another poster is
-              tapped — `capture-provider.tsx` swaps the `film` prop and React
-              reconciles the same elements. The words are state and change on the
-              spot. **An `<img>` is not: a browser keeps painting the image it
-              has until the new `src` has downloaded and decoded.** So the layer
-              carrying `original` — 0.8–1.5MB, see `lib/posters.ts` — held the
-              last film's poster over the new one's words for as long as the
-              download took. Not always, because a film opened before is cached.
-
-              Keying it to the URL means the element's identity *is* the picture
-              it shows, so a change of film destroys it rather than mutating it.
-              A fresh `<img>` has nothing to paint, which is precisely what lets
-              the `w342` layer underneath do the job it was built for.
-
-              ⚠ **The small layer is deliberately NOT keyed.** Its `src` is in
-              the cache — the wall fetched it — so it swaps within a frame or
-              two, and leaving it mounted means that frame shows the previous
-              poster rather than black. Keying both would trade seconds of the
-              wrong film for a flash of no film, which is a worse thing to have
-              built on purpose.
-
-              ⚠ **Not a `key` on the screen itself**, which is the tidier-looking
-              version and does not work: `open` is imperative here (`show()` from
-              an effect, no attribute), so a remounted `<dialog>` paints one
-              frame closed. Every tap would blink.
-            */
-            <Image
-              key={large}
-              src={large}
-              alt={`Poster for ${film.title}`}
-              width={2000}
-              height={3000}
-              className="absolute inset-0 h-full w-full object-cover object-top"
-              priority
-            />
-          )}
-
-          {/*
-            ⚠ **The scrim is deleted, and it took three other things with it — 18
-            August.** It was a gradient over the foot of the artwork, stopped at
-            80% rather than solid black so the `+` would have something to frost
-            against, and it existed for exactly one reason: type was sitting on a
-            picture. **Directed: none of the writing overlaps the poster.** So
-            there is no type on the picture, and the scrim, the frost and the
-            contrast floor that governed both are gone with it.
-
-            What that bought, and it is worth stating because it was the argument
-            for doing it: **legibility no longer depends on which film you tapped.**
-            Over the brightest poster the title read 11:1 and the credit line 5:1,
-            and the green tick — the number this file told you to watch — sat at
-            3.3:1 against a 3:1 floor. On the flat ground below the artwork the
-            tick is `--color-listed` on black at **6.0:1** and the title is full
-            strength, on every poster there has ever been. A design whose contrast
-            is a function of the image is one that is wrong on some image you have
-            not met yet.
-          */}
-
-          {/*
-            ─────────────────────────────────────────────────────────────────────
-             The artwork is the way back — 17 August
-            ─────────────────────────────────────────────────────────────────────
-
-            Directed: tapping the artwork returns you to the wall. Which is the
-            interaction `PosterReveal` in `poster.tsx` has had since 8 August —
-            *tap the title, see the poster; tap anywhere, close it* — and the
-            reason it works there is the reason it works here: a picture that
-            opened on a tap is a picture that should shut on one.
-
-            ⚠ **A `<button>` covering the artwork, not an `onClick` on the div.**
-            The same call the intent sheet's scrim made, in its own words: a click
-            handler on a div is something only a mouse can find, while a button is
-            reachable from a keyboard and announced as a control. It costs one
-            element and it is the difference between an affordance and a secret.
-
-            **Nothing is excluded by name, and since 18 August nothing needs to
-            be.** This button is the only thing in the artwork block now. The title
-            and the credit line used to lie over it, which cost them
-            `pointer-events-none` and cost the `+` a `pointer-events-auto` to climb
-            back out — **three declarations arranging for a stack that no longer
-            exists.** They are below the picture, so they are simply not in the way.
-          */}
-          <button
-            type="button"
-            onClick={() => ref.current?.close()}
-            aria-label="Close"
-            className="absolute inset-0"
+            width={342}
+            height={513}
+            className="absolute inset-0 h-full w-full object-cover object-top"
+            priority
           />
-        </div>
+        )}
+        {large && (
+          /*
+            ⚠ **The `key` is the fix for a mismatch only the panel can have —
+            reported 18 August, at the desk: tap a second poster and the new
+            title, credit line and synopsis arrive while the *previous film's*
+            picture is still on screen, sometimes for seconds.**
+
+            Beside the wall this screen is not remounted when another poster is
+            tapped — `capture-provider.tsx` swaps the `film` prop and React
+            reconciles the same elements. The words are state and change on the
+            spot. **An `<img>` is not: a browser keeps painting the image it
+            has until the new `src` has downloaded and decoded.** So the layer
+            carrying `original` — 0.8–1.5MB, see `lib/posters.ts` — held the
+            last film's poster over the new one's words for as long as the
+            download took. Not always, because a film opened before is cached.
+
+            Keying it to the URL means the element's identity *is* the picture
+            it shows, so a change of film destroys it rather than mutating it.
+            A fresh `<img>` has nothing to paint, which is precisely what lets
+            the `w342` layer underneath do the job it was built for.
+
+            ⚠ **The small layer is deliberately NOT keyed.** Its `src` is in
+            the cache — the wall fetched it — so it swaps within a frame or
+            two, and leaving it mounted means that frame shows the previous
+            poster rather than black. Keying both would trade seconds of the
+            wrong film for a flash of no film, which is a worse thing to have
+            built on purpose.
+
+            ⚠ **Not a `key` on the screen itself**, which is the tidier-looking
+            version and does not work: `open` is imperative here (`show()` from
+            an effect, no attribute), so a remounted `<dialog>` paints one
+            frame closed. Every tap would blink.
+          */
+          <Image
+            key={large}
+            src={large}
+            alt={`Poster for ${film.title}`}
+            width={2000}
+            height={3000}
+            className="absolute inset-0 h-full w-full object-cover object-top"
+            priority
+          />
+        )}
 
         {/*
-          --- what it is, under the artwork -------------------------------
+          ⚠ **The scrim is deleted, and it took three other things with it — 18
+          August.** It was a gradient over the foot of the artwork, stopped at
+          80% rather than solid black so the `+` would have something to frost
+          against, and it existed for exactly one reason: type was sitting on a
+          picture. **Directed: none of the writing overlaps the poster.** So
+          there is no type on the picture, and the scrim, the frost and the
+          contrast floor that governed both are gone with it.
 
-          **Directed 18 August: none of the writing overlaps the poster.** This was
-          `absolute inset-x-0 bottom-0` over the foot of the artwork; it is an
-          ordinary block in the column now, and everything that existed to make
-          type survive a picture went with the move — see the note where the scrim
-          was.
-
-          `shrink-0` because the synopsis below is the `flex-1` that gives, and a
-          title that lost a line to a long write-up would be the wrong thing to
-          compress.
-
-          ⚠ **The `+` came down with the title, and that is a decision rather than
-          a consequence.** It is inline in the heading, so it followed the words by
-          construction — but it was asked for explicitly, with a note that it may
-          go back to **the poster's top right** later. If it does, it needs its
-          frost back, and the frost needs a scrim, and the scrim needs the contrast
-          floor: the note where the scrim was is the whole recipe. Do not restore
-          one part of it and expect the control to read.
+          What that bought, and it is worth stating because it was the argument
+          for doing it: **legibility no longer depends on which film you tapped.**
+          Over the brightest poster the title read 11:1 and the credit line 5:1,
+          and the green tick — the number this file told you to watch — sat at
+          3.3:1 against a 3:1 floor. On the flat ground below the artwork the
+          tick is `--color-listed` on black at **6.0:1** and the title is full
+          strength, on every poster there has ever been. A design whose contrast
+          is a function of the image is one that is wrong on some image you have
+          not met yet.
         */}
-        <div className="gutter shrink-0 pt-5">
-            {/*
-              ─────────────────────────────────────────────────────────────────
-               The `+` ends the title, on whichever line the title ends
-              ─────────────────────────────────────────────────────────────────
-
-              It has been in three places today: the artwork's top right, opposite
-              the close, which put the one thing this screen is *for* in the corner
-              reserved for furniture; under the credit line, which read as an
-              afterthought to the metadata; and beside the title in a flex row,
-              which was right for a one-line name and wrong for every other —
-              a row aligns the control to the *block*, so a title that ran to three
-              lines left the control floating beside the first with two lines of
-              nothing under it.
-
-              ⚠ **So it is not beside the heading any more, it is inside it.** The
-              control is inline content, after the last word, with an ordinary
-              space in front of it: it flows, so it ends up at the end of the last
-              line whatever that line turns out to be, at any width and any length
-              of name. There is no case analysis and no breakpoint — the same rule
-              produces the one-line answer and the four-line answer.
-
-              ⚠ **`h-[1lh]` on the wrapper is what stops the last line growing.**
-              An inline box taller than the line it sits in would push that line
-              past the ones above it, and uneven leading in a wrapped title is the
-              sort of thing you see without being able to name. The wrapper is
-              exactly one line high — it inherits the heading's size and line
-              height, so it follows the type step at 64rem without knowing the
-              number — and the mark centres in it and overflows evenly, which costs
-              the line box nothing.
-
-              ─────────────────────────────────────────────────────────────────
-               `align-middle` is not the middle the eye reads — 17 August
-              ─────────────────────────────────────────────────────────────────
-
-              Asked: *are we sure it sits optically in line with the words beside
-              it?* We were not, and it did not. **`vertical-align: middle` centres
-              a box on the x-height band by definition** — its whole meaning is
-              *baseline plus half the x-height* — and a title set in title case is
-              read against its **capitals**, not its x-height. The two bands do not
-              share a centre: for IBM Plex Sans, cap height is 0.698em and
-              x-height 0.516em, so the cap band's centre sits `(cap − x) / 2` —
-              about 2px at 22px type — **above** where `align-middle` puts things.
-
-              That is the correction, and it is written as the expression rather
-              than as the 2px: `bottom: calc((1cap - 1ex) / 2)` on a relatively
-              positioned box, which shifts it up by exactly that much. **`cap` and
-              `ex` are the font's own metrics**, so this stays right at 28px type
-              on a desk, and stays right if the face is ever changed — which a
-              measured margin would not. It is the same move `--wordmark-drop`
-              makes in globals.css: take the band the eye reads rather than the box
-              the layout gives you.
-
-              Relative positioning, so the shift is visual only and the line box is
-              untouched — a margin would have moved the layout and grown the line.
-
-              ⚠ **Also asked: which side is it on?** Whichever side the language
-              ends its lines on. The mark is inline content in the heading, not a
-              positioned element, so it flows — after the last word in English, and
-              at the left of the last line in an RTL context, with nothing here
-              needing to know which. Untested: nothing in this app sets `dir`, so
-              this is a property of the construction rather than something that has
-              been exercised.
-
-              ⚠ `1lh`, `1cap` and `1ex` — `ex` is universal; the other two are
-              Safari 16.4 and Chrome 109. Where either is not understood its
-              declaration is dropped on its own: without `lh` the final line of a
-              wrapped title is a few pixels taller than its siblings, without `cap`
-              the mark sits where it did before this note. Degrades to slightly
-              wrong, never to broken.
-
-              ⚠ **`aria-label` on the heading, because the control lives in it
-              now.** A heading takes its accessible name from its contents, so
-              without this it would announce as *"The Zone of Interest, Want to
-              see"* — the title welded to a button's label. The label pins the
-              heading to the film's name; the button keeps its own name and stays a
-              separate stop for anything navigating by control.
-            */}
-            <h2 className="title" aria-label={film.title}>
-              {film.title}{' '}
-              {/*
-                ⚠ **The slot is drawn from the first frame and its contents are
-                not.** `marks === null` is *not yet known*, and a `+` drawn then
-                would be claiming the film is not on your list before anything has
-                asked. The circle is there, so the line is laid out and the title
-                never reflows around it; the glyph inside waits for the answer.
-
-                The tick is green, and the green means *this is on your list*
-                rather than *that worked*. See `--color-listed` in globals.css for
-                what that distinction costs and why it is drawn that way round.
-              */}
-              <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
-                <AddControl
-                  state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
-                  label={specFor('film', primary).wantLabel}
-                  undoable={Boolean(undoablePrimary)}
-                  onAdd={() => add(primary)}
-                  onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
-                />
-              </span>
-            </h2>
-
-            {/*
-              ⚠ **`min-h-[1lh]` is the other half of the two-stage report** — the
-              lurch, where `lib/film-request.ts` takes the pause. This block is
-              `absolute bottom-0`, so it grows *upward*: a credit line that is
-              empty on the first frame and one line high a moment later drags the
-              title up with it, under your eyes, on the screen you just opened.
-
-              **The line is reserved, not the block.** One line is what this holds
-              on almost every film — the year alone is usually there from the
-              tapped poster — and the case that moves is the one where it is not:
-              a film with no year renders nothing at all until the request lands.
-              Reserving *two* would stop a long director list reflowing as well,
-              and would cost every other film a permanent empty line over its
-              artwork. That trade is not worth it; this one costs nothing.
-
-              `1lh` is the element's own line box, so it follows the type step at
-              64rem without knowing the number — the same reasoning as the `+`
-              wrapper above, including its Safari 16.4 floor. Where it is not
-              understood the declaration drops on its own and the behaviour is
-              what it was before this note.
-            */}
-            <p className="text-muted mt-2 min-h-[1lh] text-sm">
-              {/*
-                Director, year, runtime — the three things that decide whether you
-                want a film tonight, in the order you ask them. Joined with a
-                middot rather than laid out in rows: they are one line of
-                metadata, and three rows of one item each is a table of contents
-                for nothing.
-
-                §2 is the reason the list stops there. No rating, no score, no
-                stars — the reference layout leads with 5.1/10 and that is exactly
-                what this product does not do.
-              */}
-              {[
-                details?.directors.length
-                  ? `Directed by ${details.directors.join(', ')}`
-                  : null,
-                film.year ? String(film.year) : null,
-                details?.runtime ? `${details.runtime} min` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-
-            {/*
-              ─────────────────────────────────────────────────────────────────
-               Seeing the poster is a control now, not the picture itself
-              ─────────────────────────────────────────────────────────────────
-
-              Asked, 18 August: can the poster in the panel be tapped to expand
-              it? **Not the picture — tapping the artwork closes the screen**, and
-              that is deliberate (17 August, *no visible way out: the artwork is
-              it*). Overloading it in the panel and not in the takeover would have
-              made the same tap mean two different things depending on how wide
-              the window was, which is the divergence this screen has otherwise
-              avoided. Directed instead: put the expand somewhere that is not the
-              image. **So the artwork still closes, at every width, and this is
-              the way to the full poster at every width.**
-
-              ⚠ **`PosterReveal`, not a second lightbox.** It has been doing
-              exactly this since 8 August for the lists — full bleed on black,
-              `object-contain`, `touch-none` because an unhandled pinch zooms the
-              *page* and iOS gives no way back, tap anywhere to close. Rebuilding
-              any of that here would be a second copy of reasoning that took a
-              day to settle. The words are its own: `see the poster` is already
-              what its `aria-label` says in the lists.
-
-              **It earns its place beyond consistency**, because the artwork above
-              is `object-cover object-top` and therefore cropped. This is the only
-              way to see the whole poster, which is a different thing from seeing
-              a bigger one.
-
-              ⚠ **Guarded on `large` rather than left to the component.**
-              `PosterReveal` renders its children unwrapped when there is no
-              artwork — right when the children are a film's title, wrong when
-              they are a label, which would leave the words *See the poster*
-              sitting there as text that does nothing.
-            */}
-            {/*
-              ⚠ **Panel only, and that is a parked question rather than a
-              decision.** Directed 18 August: the handset goes back to what it was
-              before this control existed. It is not that the handset does not
-              want a way to the full poster — it is that **where** that control
-              goes there has not been settled, and a third line under the credit
-              line was not it. An open row in `docs/plan.md`.
-
-              Everything else about the two widths is identical: the words sit
-              below the artwork at both, and this is the only thing that differs.
-            */}
-            {pane && large && (
-              <PosterReveal
-                posterPath={film.posterPath}
-                title={film.title}
-                /*
-                  The app's quiet text-button tier, the one the resolve actions
-                  wear in `entry-row.tsx`: muted 14px that takes full strength on
-                  hover, with `tap-target` giving it a 44px hit area without
-                  changing the line it sits on.
-
-                  ⚠ **No underline classes here on purpose.** `PosterReveal`
-                  brings its own — `decoration-rule` at a 6px offset, taking
-                  colour on hover — and a second `underline-offset` in this string
-                  would be two declarations of one property resolved by stylesheet
-                  order rather than by anything written down. It is also the right
-                  underline: this is the same affordance as *tap the title, see the
-                  poster* in the lists, so it should look like it.
-
-                  `micro` was tried first and was wrong. It uppercases, which put
-                  this in the same tier as the *Synopsis* heading directly below
-                  it — two labels stacked, one of which is secretly a control.
-                */
-                className="text-muted hover:text-text tap-target mt-3 block w-fit text-sm"
-              >
-                See the poster
-              </PosterReveal>
-            )}
-        </div>
 
         {/*
-          --- the synopsis, and the other intent ---------------------------
+          ─────────────────────────────────────────────────────────────────────
+           The artwork is the way back — 17 August
+          ─────────────────────────────────────────────────────────────────────
 
-          **The word holds still and the writing moves under it**, directed
-          17 August. The heading used to scroll away with its own paragraph, which
-          made a long synopsis a wall of text with nothing naming it once you were
-          three lines in.
+          Directed: tapping the artwork returns you to the wall. Which is the
+          interaction `PosterReveal` in `poster.tsx` has had since 8 August —
+          *tap the title, see the poster; tap anywhere, close it* — and the
+          reason it works there is the reason it works here: a picture that
+          opened on a tap is a picture that should shut on one.
 
-          ⚠ **`min-h-0` on both this column and the scroller inside it, and it is
-          the whole mechanism.** A flex item's automatic minimum size is its
-          content, so a `flex-1` child with more text than room grows the column
-          instead of scrolling — the overflow never happens, so `overflow-y-auto`
-          has nothing to do and the artwork above gets squeezed instead. Setting
-          the floor to zero is what lets the box be smaller than what is in it,
-          which is the precondition for scrolling at all.
+          ⚠ **A `<button>` covering the artwork, not an `onClick` on the div.**
+          The same call the intent sheet's scrim made, in its own words: a click
+          handler on a div is something only a mouse can find, while a button is
+          reachable from a keyboard and announced as a control. It costs one
+          element and it is the difference between an affordance and a secret.
 
-          The `gutter` sits on the heading and the scroller separately rather than
-          on the column, so that the writing scrolls under a heading that is inset
-          to the same line.
-
-          ⚠ **`scrollbar-none`, because the bar was making a claim about the wrong
-          thing.** Reported 17 August: an indicator still appeared and moved under
-          a drag with a poster open, reading as *your scrolling is having an
-          effect*. It was — on this pane, which really does scroll — but on a
-          screen whose whole promise is that the wall behind it is frozen, a moving
-          bar at the right edge is a statement about the page. The pane still
-          scrolls; it simply stops reporting it. See the utility in globals.css for
-          what that costs.
+          **Nothing is excluded by name, and since 18 August nothing needs to
+          be.** This button is the only thing in the artwork block now. The title
+          and the credit line used to lie over it, which cost them
+          `pointer-events-none` and cost the `+` a `pointer-events-auto` to climb
+          back out — **three declarations arranging for a stack that no longer
+          exists.** They are below the picture, so they are simply not in the way.
         */}
-        <div className="flex min-h-0 flex-1 flex-col pt-6">
-          <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.close()}
+          aria-label="Close"
+          className="absolute inset-0"
+        />
+      </div>
+
+      {/*
+        --- what it is, under the artwork -------------------------------
+
+        **Directed 18 August: none of the writing overlaps the poster.** This was
+        `absolute inset-x-0 bottom-0` over the foot of the artwork; it is an
+        ordinary block in the column now, and everything that existed to make
+        type survive a picture went with the move — see the note where the scrim
+        was.
+
+        `shrink-0` because the synopsis below is the `flex-1` that gives, and a
+        title that lost a line to a long write-up would be the wrong thing to
+        compress.
+
+        ⚠ **The `+` came down with the title, and that is a decision rather than
+        a consequence.** It is inline in the heading, so it followed the words by
+        construction — but it was asked for explicitly, with a note that it may
+        go back to **the poster's top right** later. If it does, it needs its
+        frost back, and the frost needs a scrim, and the scrim needs the contrast
+        floor: the note where the scrim was is the whole recipe. Do not restore
+        one part of it and expect the control to read.
+      */}
+      <div className="gutter shrink-0 pt-5">
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             The `+` ends the title, on whichever line the title ends
+            ─────────────────────────────────────────────────────────────────
+
+            It has been in three places today: the artwork's top right, opposite
+            the close, which put the one thing this screen is *for* in the corner
+            reserved for furniture; under the credit line, which read as an
+            afterthought to the metadata; and beside the title in a flex row,
+            which was right for a one-line name and wrong for every other —
+            a row aligns the control to the *block*, so a title that ran to three
+            lines left the control floating beside the first with two lines of
+            nothing under it.
+
+            ⚠ **So it is not beside the heading any more, it is inside it.** The
+            control is inline content, after the last word, with an ordinary
+            space in front of it: it flows, so it ends up at the end of the last
+            line whatever that line turns out to be, at any width and any length
+            of name. There is no case analysis and no breakpoint — the same rule
+            produces the one-line answer and the four-line answer.
+
+            ⚠ **`h-[1lh]` on the wrapper is what stops the last line growing.**
+            An inline box taller than the line it sits in would push that line
+            past the ones above it, and uneven leading in a wrapped title is the
+            sort of thing you see without being able to name. The wrapper is
+            exactly one line high — it inherits the heading's size and line
+            height, so it follows the type step at 64rem without knowing the
+            number — and the mark centres in it and overflows evenly, which costs
+            the line box nothing.
+
+            ─────────────────────────────────────────────────────────────────
+             `align-middle` is not the middle the eye reads — 17 August
+            ─────────────────────────────────────────────────────────────────
+
+            Asked: *are we sure it sits optically in line with the words beside
+            it?* We were not, and it did not. **`vertical-align: middle` centres
+            a box on the x-height band by definition** — its whole meaning is
+            *baseline plus half the x-height* — and a title set in title case is
+            read against its **capitals**, not its x-height. The two bands do not
+            share a centre: for IBM Plex Sans, cap height is 0.698em and
+            x-height 0.516em, so the cap band's centre sits `(cap − x) / 2` —
+            about 2px at 22px type — **above** where `align-middle` puts things.
+
+            That is the correction, and it is written as the expression rather
+            than as the 2px: `bottom: calc((1cap - 1ex) / 2)` on a relatively
+            positioned box, which shifts it up by exactly that much. **`cap` and
+            `ex` are the font's own metrics**, so this stays right at 28px type
+            on a desk, and stays right if the face is ever changed — which a
+            measured margin would not. It is the same move `--wordmark-drop`
+            makes in globals.css: take the band the eye reads rather than the box
+            the layout gives you.
+
+            Relative positioning, so the shift is visual only and the line box is
+            untouched — a margin would have moved the layout and grown the line.
+
+            ⚠ **Also asked: which side is it on?** Whichever side the language
+            ends its lines on. The mark is inline content in the heading, not a
+            positioned element, so it flows — after the last word in English, and
+            at the left of the last line in an RTL context, with nothing here
+            needing to know which. Untested: nothing in this app sets `dir`, so
+            this is a property of the construction rather than something that has
+            been exercised.
+
+            ⚠ `1lh`, `1cap` and `1ex` — `ex` is universal; the other two are
+            Safari 16.4 and Chrome 109. Where either is not understood its
+            declaration is dropped on its own: without `lh` the final line of a
+            wrapped title is a few pixels taller than its siblings, without `cap`
+            the mark sits where it did before this note. Degrades to slightly
+            wrong, never to broken.
+
+            ⚠ **`aria-label` on the heading, because the control lives in it
+            now.** A heading takes its accessible name from its contents, so
+            without this it would announce as *"The Zone of Interest, Want to
+            see"* — the title welded to a button's label. The label pins the
+            heading to the film's name; the button keeps its own name and stays a
+            separate stop for anything navigating by control.
+          */}
+          <h2 className="title" aria-label={film.title}>
+            {film.title}{' '}
+            {/*
+              ⚠ **The slot is drawn from the first frame and its contents are
+              not.** `marks === null` is *not yet known*, and a `+` drawn then
+              would be claiming the film is not on your list before anything has
+              asked. The circle is there, so the line is laid out and the title
+              never reflows around it; the glyph inside waits for the answer.
+
+              The tick is green, and the green means *this is on your list*
+              rather than *that worked*. See `--color-listed` in globals.css for
+              what that distinction costs and why it is drawn that way round.
+            */}
+            <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
+              <AddControl
+                state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
+                label={specFor('film', primary).wantLabel}
+                undoable={Boolean(undoablePrimary)}
+                onAdd={() => add(primary)}
+                onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
+              />
+            </span>
+          </h2>
 
           {/*
-            `safe-bottom` is back on the scroller, because the scroller is the last
-            thing in the column again — the *Close* that briefly sat under it is
-            gone. There is no visible way out now: the artwork closes on a tap, and
-            Escape closes from a keyboard. Same as `PosterReveal`, which has never
-            had one either.
-          */}
-          <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
-            <p className="text-sm">
-              {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
-            </p>
+            ⚠ **`min-h-[1lh]` is the other half of the two-stage report** — the
+            lurch, where `lib/film-request.ts` takes the pause. This block is
+            `absolute bottom-0`, so it grows *upward*: a credit line that is
+            empty on the first frame and one line high a moment later drags the
+            title up with it, under your eyes, on the screen you just opened.
 
+            **The line is reserved, not the block.** One line is what this holds
+            on almost every film — the year alone is usually there from the
+            tapped poster — and the case that moves is the one where it is not:
+            a film with no year renders nothing at all until the request lands.
+            Reserving *two* would stop a long director list reflowing as well,
+            and would cost every other film a permanent empty line over its
+            artwork. That trade is not worth it; this one costs nothing.
+
+            `1lh` is the element's own line box, so it follows the type step at
+            64rem without knowing the number — the same reasoning as the `+`
+            wrapper above, including its Safari 16.4 floor. Where it is not
+            understood the declaration drops on its own and the behaviour is
+            what it was before this note.
+          */}
+          <p className="text-muted mt-2 min-h-[1lh] text-sm">
             {/*
-              Full strength, not `text-muted` — a failure set in the colour reserved
-              for de-emphasised metadata reads as an aside. docs/decisions.md,
-              8 August, and it has survived every surface this message has lived on.
+              Director, year, runtime — the three things that decide whether you
+              want a film tonight, in the order you ask them. Joined with a
+              middot rather than laid out in rows: they are one line of
+              metadata, and three rows of one item each is a table of contents
+              for nothing.
+
+              §2 is the reason the list stops there. No rating, no score, no
+              stars — the reference layout leads with 5.1/10 and that is exactly
+              what this product does not do.
             */}
-            {error && <p className="mt-6 text-sm">{error}</p>}
-          </div>
+            {[
+              details?.directors.length
+                ? `Directed by ${details.directors.join(', ')}`
+                : null,
+              film.year ? String(film.year) : null,
+              details?.runtime ? `${details.runtime} min` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             Seeing the poster is a control now, not the picture itself
+            ─────────────────────────────────────────────────────────────────
+
+            Asked, 18 August: can the poster in the panel be tapped to expand
+            it? **Not the picture — tapping the artwork closes the screen**, and
+            that is deliberate (17 August, *no visible way out: the artwork is
+            it*). Overloading it in the panel and not in the takeover would have
+            made the same tap mean two different things depending on how wide
+            the window was, which is the divergence this screen has otherwise
+            avoided. Directed instead: put the expand somewhere that is not the
+            image. **So the artwork still closes, at every width, and this is
+            the way to the full poster at every width.**
+
+            ⚠ **`PosterReveal`, not a second lightbox.** It has been doing
+            exactly this since 8 August for the lists — full bleed on black,
+            `object-contain`, `touch-none` because an unhandled pinch zooms the
+            *page* and iOS gives no way back, tap anywhere to close. Rebuilding
+            any of that here would be a second copy of reasoning that took a
+            day to settle. The words are its own: `see the poster` is already
+            what its `aria-label` says in the lists.
+
+            **It earns its place beyond consistency**, because the artwork above
+            is `object-cover object-top` and therefore cropped. This is the only
+            way to see the whole poster, which is a different thing from seeing
+            a bigger one.
+
+            ⚠ **Guarded on `large` rather than left to the component.**
+            `PosterReveal` renders its children unwrapped when there is no
+            artwork — right when the children are a film's title, wrong when
+            they are a label, which would leave the words *See the poster*
+            sitting there as text that does nothing.
+          */}
+          {/*
+            ⚠ **Panel only, and that is a parked question rather than a
+            decision.** Directed 18 August: the handset goes back to what it was
+            before this control existed. It is not that the handset does not
+            want a way to the full poster — it is that **where** that control
+            goes there has not been settled, and a third line under the credit
+            line was not it. An open row in `docs/plan.md`.
+
+            Everything else about the two widths is identical: the words sit
+            below the artwork at both, and this is the only thing that differs.
+          */}
+          {pane && large && (
+            <PosterReveal
+              posterPath={film.posterPath}
+              title={film.title}
+              /*
+                The app's quiet text-button tier, the one the resolve actions
+                wear in `entry-row.tsx`: muted 14px that takes full strength on
+                hover, with `tap-target` giving it a 44px hit area without
+                changing the line it sits on.
+
+                ⚠ **No underline classes here on purpose.** `PosterReveal`
+                brings its own — `decoration-rule` at a 6px offset, taking
+                colour on hover — and a second `underline-offset` in this string
+                would be two declarations of one property resolved by stylesheet
+                order rather than by anything written down. It is also the right
+                underline: this is the same affordance as *tap the title, see the
+                poster* in the lists, so it should look like it.
+
+                `micro` was tried first and was wrong. It uppercases, which put
+                this in the same tier as the *Synopsis* heading directly below
+                it — two labels stacked, one of which is secretly a control.
+              */
+              className="text-muted hover:text-text tap-target mt-3 block w-fit text-sm"
+            >
+              See the poster
+            </PosterReveal>
+          )}
+      </div>
+
+      {/*
+        --- the synopsis, and the other intent ---------------------------
+
+        **The word holds still and the writing moves under it**, directed
+        17 August. The heading used to scroll away with its own paragraph, which
+        made a long synopsis a wall of text with nothing naming it once you were
+        three lines in.
+
+        ⚠ **`min-h-0` on both this column and the scroller inside it, and it is
+        the whole mechanism.** A flex item's automatic minimum size is its
+        content, so a `flex-1` child with more text than room grows the column
+        instead of scrolling — the overflow never happens, so `overflow-y-auto`
+        has nothing to do and the artwork above gets squeezed instead. Setting
+        the floor to zero is what lets the box be smaller than what is in it,
+        which is the precondition for scrolling at all.
+
+        The `gutter` sits on the heading and the scroller separately rather than
+        on the column, so that the writing scrolls under a heading that is inset
+        to the same line.
+
+        ⚠ **`scrollbar-none`, because the bar was making a claim about the wrong
+        thing.** Reported 17 August: an indicator still appeared and moved under
+        a drag with a poster open, reading as *your scrolling is having an
+        effect*. It was — on this pane, which really does scroll — but on a
+        screen whose whole promise is that the wall behind it is frozen, a moving
+        bar at the right edge is a statement about the page. The pane still
+        scrolls; it simply stops reporting it. See the utility in globals.css for
+        what that costs.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col pt-6">
+        <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
+
+        {/*
+          `safe-bottom` is back on the scroller, because the scroller is the last
+          thing in the column again — the *Close* that briefly sat under it is
+          gone. There is no visible way out now: the artwork closes on a tap, and
+          Escape closes from a keyboard. Same as `PosterReveal`, which has never
+          had one either.
+        */}
+        <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
+          <p className="text-sm">
+            {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
+          </p>
+
+          {/*
+            Full strength, not `text-muted` — a failure set in the colour reserved
+            for de-emphasised metadata reads as an aside. docs/decisions.md,
+            8 August, and it has survived every surface this message has lived on.
+          */}
+          {error && <p className="mt-6 text-sm">{error}</p>}
         </div>
       </div>
-    </dialog>
+    </div>
   )
 }
 
