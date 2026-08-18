@@ -133,6 +133,20 @@ question rather than a task.
       when the scroll range changes, the same move `onViewport` already made for
       the visual viewport. That one is not a special case for this screen — any
       page that changes height was doing it.
+- [ ] **The `+` may go back onto the poster, at its top right. Parked, not
+      rejected.** Raised 18 August in the same breath as *none of the writing
+      overlaps the poster*, which moved the control down with the title because it
+      is inline in the heading. The want is for the add to sit **on** the artwork
+      again, in the corner, rather than beside the words.
+      ⚠ **It is not a one-line move back, and the reason is written where the scrim
+      used to be in `film-screen.tsx`.** A control on artwork needs to be legible
+      over *any* poster, which is what the frosted glass was for; frost is blurred
+      content, so it needs a scrim to have something to blur; and the scrim's stop
+      point is what set the contrast floor — the green tick was at **3.3:1 against
+      a 3:1 minimum** under the old arrangement, versus 6.0:1 where it sits now.
+      **Restore the whole recipe or none of it.** The top right is also the corner
+      the close used to occupy, and 17 August's note calls that "the corner reserved
+      for furniture" — worth re-reading before putting the screen's one action there.
 - [ ] **A haptic on the tap that adds a film. Still wanted, not yet possible.**
       Directed 17 August and built the same day; **removed the same day** because
       it was never felt. Android has it and keeps it — `navigator.vibrate(10)` in

@@ -159,8 +159,22 @@ const ARTWORK = 'h-2/3'
   artwork without being any of it, and tying its corner to the poster's would
   invent a relationship that is not there.
 */
+/*
+  ⚠ **`backdrop-blur-band` is gone, 18 August, and it is a subtraction rather than
+  a change.** The frost was blurring the poster showing through the scrim; the
+  words are below the artwork now and the ground behind this is flat black, and a
+  blurred flat colour is that colour — which is the lesson the note above records
+  from the other direction. It was doing nothing measurable, so it is not here.
+
+  **`bg-text/8` stays and its job changed.** It was the *floor*: the least tint
+  that kept the shape findable where the artwork behind it was dark. There is no
+  artwork behind it now, so it is simply the control's fill — 8% of the warm text
+  colour on black, which is the same near-black `/40` ladder the People pill uses.
+  Warm rather than a cool `white/8`, or the one filled control in the app would be
+  the one thing in it that is not warm.
+*/
 const CONTROL =
-  'bg-text/8 backdrop-blur-band tap-target flex size-6 shrink-0 items-center justify-center rounded-md'
+  'bg-text/8 tap-target flex size-6 shrink-0 items-center justify-center rounded-md'
 
 type Details = {
   synopsis: string | null
@@ -707,31 +721,24 @@ export function FilmScreen({
           )}
 
           {/*
-            The scrim. Type over artwork is unreadable without one, and this is the
-            same argument the wall's caption band makes — a gradient rather than a
-            blur here because the artwork below the words is what the screen is
-            for, and a blur would take the bottom third of it.
+            ⚠ **The scrim is deleted, and it took three other things with it — 18
+            August.** It was a gradient over the foot of the artwork, stopped at
+            80% rather than solid black so the `+` would have something to frost
+            against, and it existed for exactly one reason: type was sitting on a
+            picture. **Directed: none of the writing overlaps the poster.** So
+            there is no type on the picture, and the scrim, the frost and the
+            contrast floor that governed both are gone with it.
 
-            ⚠ **It stops at 80% rather than reaching solid black, and that is what
-            makes the `+` frosted rather than grey.** Reported 17 August: the glass
-            circle looked grey. It was — a flat tint over a flat ground, because
-            the backdrop it was blurring at this height was *solid black*, and a
-            blurred flat colour is that colour. Letting a fifth of the poster reach
-            the bottom of the gradient gives the blur something to work on, and
-            frost is blurred content or it is nothing. **The control's own classes
-            could not have fixed this.**
-
-            The cost is paid in text contrast and it is affordable: against the
-            brightest poster the ground here goes from black to about `#282828`,
-            where the title still reads 11:1 and the credit line 5:1. ⚠ Taking it
-            below 80% keeps going in the same direction — a little more frost, a
-            little less floor — and the number that runs out first is the green
-            tick's, at 3.3:1 today. See `CONTROL`.
+            What that bought, and it is worth stating because it was the argument
+            for doing it: **legibility no longer depends on which film you tapped.**
+            Over the brightest poster the title read 11:1 and the credit line 5:1,
+            and the green tick — the number this file told you to watch — sat at
+            3.3:1 against a 3:1 floor. On the flat ground below the artwork the
+            tick is `--color-listed` on black at **6.0:1** and the title is full
+            strength, on every poster there has ever been. A design whose contrast
+            is a function of the image is one that is wrong on some image you have
+            not met yet.
           */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/80 via-black/60 to-transparent"
-          />
 
           {/*
             ─────────────────────────────────────────────────────────────────────
@@ -750,13 +757,12 @@ export function FilmScreen({
             reachable from a keyboard and announced as a control. It costs one
             element and it is the difference between an affordance and a secret.
 
-            **Nothing is excluded by name.** The layer below it is artwork, the
-            layer above it is the title block, and that block is
-            `pointer-events-none` with the `+` alone restoring them — so a tap on
-            the poster, on the title, on the credit line or on the empty half of
-            that row all reach this, and only the one control does not. No
-            `closest()` check, no list of things to ignore, nothing to keep in step
-            when something is added to the block later.
+            **Nothing is excluded by name, and since 18 August nothing needs to
+            be.** This button is the only thing in the artwork block now. The title
+            and the credit line used to lie over it, which cost them
+            `pointer-events-none` and cost the `+` a `pointer-events-auto` to climb
+            back out — **three declarations arranging for a stack that no longer
+            exists.** They are below the picture, so they are simply not in the way.
           */}
           <button
             type="button"
@@ -764,15 +770,30 @@ export function FilmScreen({
             aria-label="Close"
             className="absolute inset-0"
           />
+        </div>
 
-          {/*
-            --- what it is, over the foot of the artwork ---------------------
+        {/*
+          --- what it is, under the artwork -------------------------------
 
-            `pointer-events-none`, so this block is *read* rather than tapped and
-            everything under it is the artwork's own close button — see the note
-            there. The `+` inside puts them back for itself.
-          */}
-          <div className="gutter pointer-events-none absolute inset-x-0 bottom-0 pb-5">
+          **Directed 18 August: none of the writing overlaps the poster.** This was
+          `absolute inset-x-0 bottom-0` over the foot of the artwork; it is an
+          ordinary block in the column now, and everything that existed to make
+          type survive a picture went with the move — see the note where the scrim
+          was.
+
+          `shrink-0` because the synopsis below is the `flex-1` that gives, and a
+          title that lost a line to a long write-up would be the wrong thing to
+          compress.
+
+          ⚠ **The `+` came down with the title, and that is a decision rather than
+          a consequence.** It is inline in the heading, so it followed the words by
+          construction — but it was asked for explicitly, with a note that it may
+          go back to **the poster's top right** later. If it does, it needs its
+          frost back, and the frost needs a scrim, and the scrim needs the contrast
+          floor: the note where the scrim was is the whole recipe. Do not restore
+          one part of it and expect the control to read.
+        */}
+        <div className="gutter shrink-0 pt-5">
             {/*
               ─────────────────────────────────────────────────────────────────
                The `+` ends the title, on whichever line the title ends
@@ -863,7 +884,7 @@ export function FilmScreen({
                 rather than *that worked*. See `--color-listed` in globals.css for
                 what that distinction costs and why it is drawn that way round.
               */}
-              <span className="pointer-events-auto relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
+              <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
                 <AddControl
                   state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
                   label={specFor('film', primary).wantLabel}
@@ -917,7 +938,6 @@ export function FilmScreen({
                 .filter(Boolean)
                 .join(' · ')}
             </p>
-          </div>
         </div>
 
         {/*
