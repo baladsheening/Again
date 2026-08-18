@@ -91,25 +91,32 @@ question rather than a task.
       synopsis jumping when it arrives. **Probably both** — one for the pause, one
       for the lurch. ⚠ Do not answer it with a spinner over artwork we already
       have; that trades a seam for a wait.
-- [ ] **A scrollbar still appears over the artwork, where nothing scrolls.**
-      Reported 17 August, after `scrollbar-none` went on the synopsis pane: swiping
-      the top two thirds still shows a moving indicator, *even if it has no effect
-      on anything* — which is exactly the impression the scroll lock exists to
-      prevent.
-      ⚠ **Find which element owns it before applying anything**, because the fix
-      differs and the wrong guess is invisible. The dialog is `overflow-hidden`,
-      the artwork block is `overflow-hidden`, and the document is locked
-      (`overflow: hidden` on the root, set from `film-screen.tsx`) — so on paper
-      nothing there can scroll, and something is indicating anyway. The candidates
-      are the document still flashing its indicator under a drag despite the lock,
-      the centred `max-w-md` column, and the dialog itself.
-      Options once it is known: `scrollbar-none` on that element; `touch-action:
-      none` on the artwork, which stops the gesture reaching any scroller at all
-      and was **built and reverted on 17 August** as part of a different approach
-      to the wall problem — worth reading that revert before rebuilding it; or the
-      utility applied to the root while the screen is open. ⚠ **Do not sprinkle
-      `scrollbar-none` around** — its own note in globals.css warns against it
-      anywhere content is primarily navigated by scrolling.
+- [x] ~~**A scrollbar still appears over the artwork, where nothing scrolls.**~~
+      Owner found and the range removed, 18 August. **Awaiting a look on the
+      handset** — it cannot be reproduced on a desk, where the old lock held.
+      **It was the document's.** Every box between the artwork and the viewport
+      was walked and none of them can scroll: the artwork block and the dialog are
+      `overflow-hidden`, the `max-w-md` column never sets `overflow` and a
+      `visible` box is not a scroll container, and the synopsis pane is a
+      *sibling* of the artwork rather than an ancestor — chaining goes up, never
+      across, so `scrollbar-none` sitting on that pane alone was never the gap.
+      The shape settled it on the handset in ten seconds: **a short stub, partway
+      down the track.** A stub means a long scroller and the wall is many screens
+      tall; partway down means it knew where you were.
+      **`overflow: hidden` on the root removes the user's ability to scroll, not
+      the range** — a clipped scroller keeps its scrollable overflow, which is
+      what the bar was describing. So `body` now leaves the flow while the screen
+      is open, because an out-of-flow box contributes nothing to scrollable
+      overflow: there is no range to be lenient about rather than a range that
+      must be refused. `top: -y` carries the position across it.
+      ⚠ **Two lessons worth more than the fix.** The `scrollY` restore was a
+      *backstop* — and a backstop is what let a broken lock ship looking fine,
+      which is the second time this project has hidden a cure behind a guard (see
+      globals.css, 13 August). And leaving the flow **is a scroll event**, twice,
+      which the masthead was differencing as a flick; `shell.tsx` now re-baselines
+      when the scroll range changes, the same move `onViewport` already made for
+      the visual viewport. That one is not a special case for this screen — any
+      page that changes height was doing it.
 - [ ] **A haptic on the tap that adds a film. Still wanted, not yet possible.**
       Directed 17 August and built the same day; **removed the same day** because
       it was never felt. Android has it and keeps it — `navigator.vibrate(10)` in

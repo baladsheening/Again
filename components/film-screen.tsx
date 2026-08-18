@@ -213,7 +213,7 @@ export function FilmScreen({
 
   /*
     ───────────────────────────────────────────────────────────────────────────
-     The wall is where you left it — 17 August
+     The wall is where you left it — 17 August, and actually so since the 18th
     ───────────────────────────────────────────────────────────────────────────
 
     **Objective, in the words it was reported in: you should not be able to swipe
@@ -230,22 +230,71 @@ export function FilmScreen({
     reflow. Every one of those is another line, and the failure of any one of
     them looks exactly like the failure the report describes.
 
-    **This does not care how the page moved.** Two lines, in the order they
+    **This does not care how the page moved: it takes the range away**, so there
+    is nowhere for any of those routes to arrive. Two lines, in the order they
     matter:
 
-    1. **The document is held still while the screen is open.** `overflow:
-       hidden` on the root removes the scroll range, so there is nothing to
-       scroll into and the position cannot change. This is the lock globals.css
-       records taking *off* on 13 August — and the note there is about a lock
-       that was permanent, which cost Safari's address-bar collapse and
-       pull-to-refresh on every screen in the app. Neither of those means
-       anything under a modal that covers the viewport, and it is put back the
-       moment the screen closes.
-    2. **The position is put back regardless.** `scrollY` is read on the way in
-       and restored on the way out, so if the lock is defeated on some engine —
-       and iOS has defeated more than one scroll lock in this project's lifetime
-       — the objective still holds. The first line is why nothing moves; the
-       second is why it does not matter if it does.
+    1. **The document has no scroll range while the screen is open.** `body` goes
+       out of flow, and an out-of-flow box contributes nothing to its ancestors'
+       scrollable overflow — so the range is not *refused*, it does not exist.
+       There is nothing left for an engine to be lenient about.
+    2. **The position is carried across it.** Taking the content out of flow
+       forces `scrollY` to zero, so `top: -y` holds the page where it was for as
+       long as the screen is open, and `scrollTo` puts it back on the way out.
+
+    ───────────────────────────────────────────────────────────────────────────
+     `overflow: hidden` on the root was the whole of line 1, and it was not
+     enough — 18 August
+    ───────────────────────────────────────────────────────────────────────────
+
+    Reported from the handset: with a poster open, **a short indicator appeared
+    partway down the right edge and moved under a drag** — over the artwork,
+    where nothing scrolls.
+
+    **Every box between that finger and the viewport was walked, and none of them
+    can scroll.** The artwork block and this dialog are `overflow-hidden`; the
+    column between them never sets `overflow`, and a `visible` box is not a scroll
+    container; and the synopsis pane — the one thing on this screen that really
+    does scroll — is a *sibling* of the artwork rather than an ancestor, so a
+    gesture on the poster cannot reach it. Chaining goes up, never across, which
+    is also why `scrollbar-none` sitting on that pane alone was never the gap.
+
+    **So the indicator was the document's, and its shape said so twice over.** A
+    stub means a long scroller, and the wall is many screens tall; *partway down*
+    means it knew where you were.
+
+    ⚠ **`overflow: hidden` on the root removes the user's ability to scroll, not
+    the range.** A clipped scroller keeps its scrollable overflow, which is
+    exactly what was left for an indicator to describe. Whether iOS was then
+    honouring the lock and drawing a bar for a scroller nobody could move, or
+    defeating it and letting the wall drift while line 2 quietly put it back,
+    **the two readings share a cause and a cure**: a range that should not have
+    been there. Line 1 no longer leaves one.
+
+    ⚠ **Which means line 2 changed jobs, and it is worth knowing which.** It was
+    a backstop — *the first line is why nothing moves, the second is why it does
+    not matter if it does* — and a backstop is what let a broken lock ship
+    looking fine. **A guard built beside a cure hides whether the cure works**:
+    globals.css says it about the last lock and it was true again about this one.
+    It is not a guard now, it is the mechanism that keeps the page's position
+    while the flow it lived in is gone.
+
+    ⚠ **This is the fixed body globals.css records removing on 13 August, and the
+    reason it is safe here is the reason written there.** What it cost was
+    Safari's address-bar collapse and pull-to-refresh — both responses to the
+    *document* scrolling, and neither of them means anything under a modal that
+    covers the viewport. It went out because it was permanent. This one lives as
+    long as one screen is open.
+
+    ⚠ **`left`/`right` rather than a width.** A fixed box shrinks to fit without
+    them, and the wall behind would reflow to its widest row while nobody can see
+    it, then reflow back on close — having moved the thing line 2 is trying to
+    put back.
+
+    ⚠ **Leaving the flow is itself a scroll event, and so is coming back.**
+    Neither is a gesture, and the masthead in `shell.tsx` differences one scroll
+    against the last — see the note on the scroll range there, which re-baselines
+    across a change of shape rather than reading it as a flick.
 
     `behavior: 'instant'` because `html` sets `scroll-behavior: smooth`, and a
     restore is not a journey — smooth would animate the wall back under you.
@@ -257,13 +306,29 @@ export function FilmScreen({
   */
   useEffect(() => {
     const root = document.documentElement
-    const previous = root.style.overflow
+    const body = document.body
     const y = window.scrollY
 
+    const previous = {
+      overflow: root.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+    }
+
     root.style.overflow = 'hidden'
+    body.style.position = 'fixed'
+    body.style.top = `${-y}px`
+    body.style.left = '0'
+    body.style.right = '0'
 
     return () => {
-      root.style.overflow = previous
+      root.style.overflow = previous.overflow
+      body.style.position = previous.position
+      body.style.top = previous.top
+      body.style.left = previous.left
+      body.style.right = previous.right
       window.scrollTo({ top: y, behavior: 'instant' })
     }
   }, [])

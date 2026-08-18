@@ -1062,6 +1062,12 @@ export function Shell({
     let frame = 0
 
     /*
+      **The shape of the thing being measured, so a change of shape is not read
+      as movement across it.** See `onScroll`.
+    */
+    let range = document.documentElement.scrollHeight
+
+    /*
       Armed at focus — the effect re-runs then, `searchFocused` being a
       dependency — and re-armed when the keyboard actually turns up.
 
@@ -1082,6 +1088,42 @@ export function Shell({
         frame = 0
         const y = Math.max(0, window.scrollY)
         const now = performance.now()
+
+        /*
+          ─────────────────────────────────────────────────────────────────────
+           A change of range is not a scroll — 18 August
+          ─────────────────────────────────────────────────────────────────────
+
+          **When the document's scroll range changes, every offset measured
+          against it changes with it, and none of that is movement.** The bar
+          reads one number against the last one, so a range that collapses to
+          nothing reports the whole page as a flick upward and reports it again,
+          downward, when the range comes back.
+
+          The case that found it: the film screen takes `body` out of the flow
+          while a poster is open, which is how it gets a document with no range
+          rather than one that has been asked not to scroll — see the note there.
+          `scrollY` is forced to zero on the way in and restored on the way out,
+          and without this the bar would be *hidden* on close whenever it had
+          been showing, from two events nobody made.
+
+          ⚠ **It is not a special case for that screen, and it must not become
+          one.** Anything that changes the height of the page does this: content
+          arriving below the fold, a section collapsing, an image settling into
+          its own aspect. Reacting to those was always wrong and this is where it
+          stops — the same move `onViewport` makes when the *visual* viewport
+          changes size, one line lower down and for the same reason.
+
+          `scrollHeight` is an integer, so subpixel reflow does not trip it, and
+          it is read once a frame inside the `requestAnimationFrame` that already
+          throttles this handler.
+        */
+        const height = document.documentElement.scrollHeight
+        if (height !== range) {
+          range = height
+          last = y
+          return
+        }
 
         /*
           This ref is set by the focus event itself, before the effect keyed by

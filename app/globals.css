@@ -673,6 +673,15 @@
    *
    * Nothing replaces it. `#scroll-root` is an ordinary block in the flow now and
    * the page scrolls the way every other page does.
+   *
+   * ⚠ **The same lock is back in one place, scoped to one screen — and finding
+   * it there is not this note being out of date.** `components/film-screen.tsx`
+   * puts `body` out of the flow for as long as a poster is open, which is the
+   * only way to have a document with *no range* rather than one that has been
+   * asked not to scroll. Everything this note says the lock costs is a response
+   * to the document scrolling, and none of it means anything under a modal that
+   * covers the viewport. **What was wrong was that it was permanent**, not that
+   * it existed. It comes off with the screen.
    */
   html {
     background-color: var(--color-bg);
