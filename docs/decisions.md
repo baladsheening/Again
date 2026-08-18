@@ -3911,3 +3911,67 @@ both of which have a reason worth keeping:
   cursor would promise a press that does nothing. `hover:` is not a desktop
   branch — Tailwind wraps it in `(hover: hover)`, verified in the compiled
   stylesheet — so a finger cannot leave a control stuck lit.
+
+## The film screen asks what is pointing at it, not how wide the window is — 18 August
+
+**The complaint that produced this: everything built for the phone was arriving
+in a maximally narrowed desk window.** The glass panel, the chevron, the
+full-screen poster and the mono synopsis were all asked for as *the phone
+experience*, and a narrow window was getting all four — because a narrow window
+and a phone were the same thing to `film-screen.tsx`. It had one signal,
+`--breakpoint-pane`, and used it for two different questions.
+
+They are two questions:
+
+- **`pane` — is there room to stand beside the wall?** A width. Below it the
+  screen is a modal takeover; at or above it, a 24rem panel with the wall live
+  beside it. Unchanged, and still `--breakpoint-pane`.
+- **`overlay` — is this being handled with a thumb?** A pointer. The words as
+  glass over a full-screen poster, a chevron that pushes them away, the poster
+  at `original` rather than `w780`, the synopsis in mono. `(pointer: coarse)`
+  and `!pane`.
+
+⚠ **`(pointer: coarse)` is a capability query, and that is what makes it
+allowed.** *How things get fixed* rules out "branches that sniff for a browser",
+and this is the opposite: it does not ask what the device is called, it asks what
+the person is pointing with — which is the thing the design actually depends on.
+A poster you push out of the way with your thumb is a different object from one
+you click past with a cursor. Two other places already ask the same question: the
+sign-in page's optical padding and the entry rows' spacing.
+
+⚠ **It stays testable, which was the one thing that could have killed it.** A
+browser can be told it has a coarse pointer — `hasTouch: true, isMobile: true` in
+Playwright — so the touch layout is still driven and measured in a browser rather
+than only on glass. `recede.mjs` now runs both: a coarse 390×844 context that
+must have the chevron, and a *fine* 390×844 context that must not. What the
+change removes is the layout appearing by accident when a window is dragged
+narrow.
+
+⚠ **The edges are real and are accepted.** An iPad with a trackpad reports fine
+and gets the stacked layout; a touchscreen laptop reports coarse and gets the
+overlay. Neither is wrong for the question being asked — both get what suits what
+is in the hand — but it does mean the answer is never "is this a phone", and
+nothing downstream should be written as though it were.
+
+**What a narrow desk window gets instead:** exactly what this screen was before
+18 August's evening — the artwork as a share of the column, the words under it on
+flat black, *See the poster* present, nothing receding. The same JSX branch as
+the panel, which is why the cost of the whole distinction is one boolean rather
+than a third layout to keep in step.
+
+### Mono reaches the synopsis, on one surface
+
+The `stamp` note above records mono arriving on a heading. It then went on the
+synopsis body everywhere, and came off the desk within the hour: **the
+instruction was to leave it as it is for the phone home app.** So the overlay's
+synopsis agrees with the stamp above it and the panel's stays sans.
+
+This is the larger of the two extensions to §11's reservation of mono for return
+counts and timestamps — a heading is eight characters, this is the longest run of
+prose in the app — and it now applies on exactly one of the three surfaces. The
+argument is the stamp's: impression rather than data, against a fourth typeface.
+
+⚠ **`printing` and `mono` are passed to `PrintedSynopsis` separately even though
+they are complements today.** The printing was asked for on the desk and the mono
+on the phone; folding them into one prop would mean that the day either moves,
+both move.

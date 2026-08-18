@@ -205,11 +205,24 @@ export function FilmScreen({
     repeated here — a width that lives in two files is a width that will disagree
     with itself.
   */
-  const pane = usePaneWidth()
+  const pane = useMatches(paneQuery)
+
+  /*
+    ⚠ **Two questions, and they are about different things.** `pane` is *is there
+    room to stand beside the wall* — a width. `overlay` is *is this being handled
+    with a thumb* — a pointer. The poster-and-glass arrangement answers the
+    second, and putting it behind the first is what let it leak into a narrowed
+    desk window. See `touchQuery`.
+
+    A width of `pane` wins outright: a 24rem column beside a live wall is not a
+    surface anything recedes into, whatever is pointing at it.
+  */
+  const touch = useMatches(touchQuery)
+  const overlay = touch && !pane
 
   /*
     Whether the words have been pushed off the bottom to leave the poster whole
-    — the handset's only, and it lives here rather than in `FilmBody` because
+    — the overlay's only, and it lives here rather than in `FilmBody` because
     the surface that brings them back is the picture, which is the screen's.
   */
   const [receded, setReceded] = useState(false)
@@ -583,60 +596,39 @@ export function FilmScreen({
         keyed.** See `Artwork` for why the element holding the poster is the one
         thing here that must survive a change of film.
       */}
-      {pane ? (
+      {!overlay ? (
+        /*
+          ⚠ **This is now BOTH the panel and a narrowed desk window**, which is
+          the point of `overlay`: the words sit under the artwork on flat black,
+          the picture is a share of the column, and nothing recedes. It is what
+          this screen was before 18 August's evening, and a cursor still gets it.
+        */
         <div className="mx-auto flex h-full w-full max-w-md flex-col">
           <Artwork
             posterPath={film.posterPath}
             title={film.title}
-            pane
+            overlay={false}
             receded={false}
             dialogRef={ref}
           />
-          <FilmBody key={film.externalId} film={film} pane handle={null} />
+          <FilmBody key={film.externalId} film={film} overlay={false} handle={null} />
         </div>
       ) : (
         <div className="@container relative mx-auto h-full w-full max-w-md">
           {/*
-            ⚠ **The ground, and it is the answer to a question that has no other
-            one — 18 August.** Asked: with the words away, why does the poster not
-            reach the bottom of the phone? Because it cannot. A 2:3 poster and a
-            0.46 screen are different shapes, so *whole* and *full-bleed* are
-            mutually exclusive for the picture itself — the chevron exists to make
-            it whole, which is the half that was chosen.
-
-            So the screen is filled by the same image rather than by the poster:
-            cover-scaled, blurred past recognition, and half strength so the sharp
-            one in front of it stays the subject. Nothing is cropped and nothing is
-            letterboxed into black.
-
-            ⚠ **`w342`, deliberately.** It is the size the wall already fetched, so
-            this costs no request at all, and there is no resolution left to see
-            after a 40px blur. Asking for the large one here would double the bytes
-            of every film opened to make an invisible difference.
-
-            ⚠ **`scale-110` is not decoration.** A blur samples past the element's
-            edges, where there is nothing, so an unscaled copy fades out at all
-            four sides and reads as a vignette nobody asked for.
-
-            It is drawn unconditionally and needs no state: at rest the poster
-            covers the screen and this is not visible, so what reveals it is the
-            same thing that makes room for it.
+            ⚠ **A blurred copy of the poster filled the surround here and was
+            rejected.** The question it answered stands and has no other answer: a
+            2:3 poster and a 0.46 screen are different shapes, so *whole* and
+            *full-bleed* are mutually exclusive for the picture, and the chevron
+            exists to make it whole. **Chosen instead: whole, centred, on black** —
+            the gaps split evenly above and below rather than falling entirely at
+            the foot, so it reads as a poster deliberately framed rather than one
+            that ran out of screen. See the centring on the box in `Artwork`.
           */}
-          {posterUrl(film.posterPath, 'w342') && (
-            <Image
-              src={posterUrl(film.posterPath, 'w342') as string}
-              alt=""
-              aria-hidden
-              width={342}
-              height={513}
-              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-2xl"
-            />
-          )}
-
           <Artwork
             posterPath={film.posterPath}
             title={film.title}
-            pane={false}
+            overlay
             receded={receded}
             dialogRef={ref}
           />
@@ -735,7 +727,7 @@ export function FilmScreen({
               <FilmBody
                 key={film.externalId}
                 film={film}
-                pane={false}
+                overlay
                 handle={
                   <button
                     type="button"
@@ -795,11 +787,15 @@ export function FilmScreen({
  */
 function FilmBody({
   film,
-  pane,
+  overlay,
   handle,
 }: {
   film: FilmSearchResult
-  pane: boolean
+  /*
+    Whether these words are glass over a poster rather than a block under one.
+    A pointer question, not a width one — see `touchQuery`.
+  */
+  overlay: boolean
   /*
     The screen's own control, dropped into the title's row. It is passed rather
     than built here because what it does — putting these words away — is a fact
@@ -1178,7 +1174,7 @@ function FilmBody({
             Everything else about the two widths is identical: the words sit
             below the artwork at both, and this is the only thing that differs.
           */}
-          {pane && film.posterPath && (
+          {!overlay && film.posterPath && (
             <PosterReveal
               posterPath={film.posterPath}
               title={film.title}
@@ -1266,7 +1262,22 @@ function FilmBody({
         */}
         <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
           {details?.synopsis && (
-            <PrintedSynopsis text={details.synopsis} printing={pane} />
+            /*
+              ⚠ **The two are complements today and are still passed
+              separately.** The printing was asked for on the desk and the mono
+              was asked for on the phone, so one boolean happens to answer both —
+              but they are different decisions, and folding them into one prop
+              would mean that the day either moves, both do.
+
+              ⚠ **A JSX comment cannot open a parenthesised expression** — this
+              is the third time that has cost a build in two days. Inside `{… && (`
+              the brace form is a syntax error and the plain form is not.
+            */
+            <PrintedSynopsis
+              text={details.synopsis}
+              printing={!overlay}
+              mono={overlay}
+            />
           )}
 
           {/*
@@ -1325,13 +1336,14 @@ function FilmBody({
 function Artwork({
   posterPath,
   title,
-  pane,
+  overlay,
   receded,
   dialogRef,
 }: {
   posterPath: string | null
   title: string
-  pane: boolean
+  /* Whether the picture is the screen or a share of a column. See `touchQuery`. */
+  overlay: boolean
   receded: boolean
   dialogRef: React.RefObject<HTMLDialogElement | null>
 }) {
@@ -1343,7 +1355,7 @@ function Artwork({
     the pixels it can use.
   */
   const small = posterUrl(posterPath, 'w342')
-  const large = posterUrl(posterPath, pane ? 'w780' : 'original')
+  const large = posterUrl(posterPath, overlay ? 'original' : 'w780')
 
   /*
     The URL that has finished decoding, not a boolean. Comparing it to the
@@ -1379,34 +1391,37 @@ function Artwork({
   return (
     <div
       /*
-        ⚠ **Two boxes, and the handset's is the one that moves.** The panel takes
-        a share of a column it sits inside, so it stays a flex child.
+        ⚠ **Two boxes, and only the overlay's moves.** Under a cursor the picture
+        is a share of a column it sits inside, so it stays a flex child.
 
-        ⚠ **The handset's box fills the screen and shrinks to the poster —
-        18 August, second pass.** It was pinned at the poster's own shape, and the
-        report was the obvious one: *the poster does not fill the screen, it is
-        about two thirds of it.* It was 585 of 844, which is two thirds exactly.
+        ⚠ **The overlay's box fills the screen and settles to the poster,
+        centred.** It was pinned at the poster's own shape first, which reported as
+        *the poster is only two thirds of the screen* — 585 of 844, two thirds
+        exactly. Then it filled the screen and shrank to the top, which left all
+        259px of the difference at the foot.
 
-        So the box is the screen at rest and `150cqw` once the words are away, and
-        `object-cover` does the rest: taller than 2:3 it crops the sides to fill,
-        and at 2:3 it fits exactly — which is the whole poster, uncropped, which
-        is what the chevron is for.
+        **It is centred now**, so the gaps split evenly and a whole poster reads as
+        framed rather than as one that ran out. `object-cover` does the shaping:
+        taller than 2:3 it crops the sides to fill, and at 2:3 it fits exactly,
+        which is the whole poster uncropped — the thing the chevron is for.
 
         ⚠ **`cqw`, not `vw`.** The column is capped at `max-w-md`, so a viewport
         unit would be right on a phone and wrong on the first tablet under the
-        breakpoint. And `150` is not a chosen number: it is 1.5, which is what 2:3
-        means. Nothing here is tuned.
+        breakpoint. **None of these are chosen numbers:** `150` is 1.5, which is
+        what 2:3 means, and `75` is half of it, which is what centring means.
+        `calc(50% - 75cqw)` puts the box's middle on the screen's middle without
+        knowing either height.
 
-        The height animates because a length can, and it lands in step with the
-        panel — one gesture, the words leaving and the picture unzooming together,
-        rather than two things moving on their own schedules.
+        Both properties animate because both are lengths, and they land in step
+        with the panel — one gesture, the words leaving and the picture settling
+        together, rather than two things moving on their own schedules.
       */
       className={
-        pane
-          ? `${ARTWORK_PANEL} relative shrink-0 overflow-hidden`
-          : `absolute inset-x-0 top-0 overflow-hidden transition-[height] duration-300 ${
-              receded ? 'h-[150cqw]' : 'h-full'
+        overlay
+          ? `absolute inset-x-0 overflow-hidden transition-[height,top] duration-300 ${
+              receded ? 'top-[calc(50%_-_75cqw)] h-[150cqw]' : 'top-0 h-full'
             }`
+          : `${ARTWORK_PANEL} relative shrink-0 overflow-hidden`
       }
     >
       {src && (
@@ -1483,7 +1498,7 @@ function Artwork({
         the whole screen rather than over the picture. Beside the wall there is
         no receding and nothing below the artwork to cover, so it stays here.
       */}
-      {pane && (
+      {!overlay && (
         <button
           type="button"
           onClick={() => dialogRef.current?.close()}
@@ -1519,8 +1534,10 @@ function Artwork({
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Directed: the synopsis arrives a character at a time, first to last, at the
- * speed someone reads quickly. Beside the wall only, for now — `printing` is the
- * whole of that decision and the handset is one word away from joining it.
+ * speed someone reads quickly. **Wherever there is a cursor** — `printing` is the
+ * whole of that decision, and it is now `!overlay` rather than a width, so a
+ * narrowed desk window prints and a phone does not. The phone got mono instead;
+ * the two were asked for on different surfaces and neither has crossed.
  *
  * ⚠ **Every character is in the layout from the first frame; only its ink
  * arrives.** The obvious build appends to a string, and it is the wrong one: the
@@ -1558,7 +1575,15 @@ const PRINT_WPM = 600
 /** English averages about 5.1 characters a word once the space is counted. */
 const PRINT_CHARS_PER_SECOND = (PRINT_WPM * 5.1) / 60
 
-function PrintedSynopsis({ text, printing }: { text: string; printing: boolean }) {
+function PrintedSynopsis({
+  text,
+  printing,
+  mono,
+}: {
+  text: string
+  printing: boolean
+  mono: boolean
+}) {
   const host = useRef<HTMLSpanElement>(null)
   const shown = useRef(0)
 
@@ -1623,21 +1648,21 @@ function PrintedSynopsis({ text, printing }: { text: string; printing: boolean }
 
   return (
     /*
-      ⚠ **Mono, directed 18 August: the same face as the word above it.** The
-      stamp took IBM Plex Mono for *impression*; the writing under it takes it for
-      agreement, so the block reads as one thing rather than as a mono label
-      stuck on a sans paragraph.
+      ⚠ **Mono on the touch surface only, and that is where it was asked for.**
+      It went on everywhere first and came off the desk within the hour; the
+      instruction was to leave it as it is *for the phone home app*. So the
+      overlay's synopsis agrees with the stamp above it and the panel's stays
+      sans, which is what it has always been.
 
-      ⚠ **This is the second and larger extension of §11's mono rule**, which
+      ⚠ **This is still the larger of two extensions to §11's mono rule**, which
       reserves the face for return counts and timestamps. A heading was eight
-      characters; this is the longest run of prose in the app. Recorded in
-      docs/decisions.md with the first.
+      characters; this is the longest run of prose in the app, and it is now on
+      exactly one of the three surfaces. Recorded in docs/decisions.md.
 
-      It suits the printing, at least, and that is a happy accident rather than
-      the reason: every character occupies the same width, so the words arrive on
-      a fixed grid and the line's front edge advances evenly.
+      Where it lands it suits the printing by accident rather than by design —
+      but the printing is on the *other* surface, so the two never meet.
     */
-    <p className="font-mono text-sm">
+    <p className={mono ? 'font-mono text-sm' : 'text-sm'}>
       <span className="sr-only select-none">{text}</span>
       <span aria-hidden ref={host}>
         {[...text].map((character, index) => (
@@ -1663,20 +1688,52 @@ function paneQuery(): MediaQueryList {
   return window.matchMedia(`(min-width: ${width})`)
 }
 
-function usePaneWidth(): boolean {
-  const [pane, setPane] = useState(() =>
-    typeof window === 'undefined' ? false : paneQuery().matches,
+/**
+ * ⚠ **A hand, not a width — directed 18 August.** Everything built for the phone
+ * was arriving in a maximally narrowed desk window, because a narrow window and a
+ * phone were the same thing to this component. They are not: **a poster you push
+ * out of the way with your thumb is a different object from one you click past
+ * with a cursor**, and the glass, the chevron and the full-screen picture were all
+ * asked for as the first.
+ *
+ * ⚠ **`(pointer: coarse)` is a capability, not a device.** CLAUDE.md rules out
+ * branches that sniff for a browser, and this is the opposite of that: it asks
+ * what the person is pointing with, which is the thing the design actually
+ * depends on. Two other places in the app already ask it — the sign-in page's
+ * optical padding and the entry rows' spacing.
+ *
+ * ⚠ **It stays testable.** A browser can be told it has a coarse pointer
+ * (`hasTouch: true, isMobile: true` in Playwright), so the touch layout is still
+ * driven and measured here rather than only on glass. What it can no longer do is
+ * appear by accident when a window is dragged narrow.
+ *
+ * ⚠ **An iPad with a trackpad reports fine, and a touchscreen laptop reports
+ * coarse.** Neither is wrong for this question — both get the layout that suits
+ * what is in their hand — but it does mean the answer is not "phone".
+ */
+function touchQuery(): MediaQueryList {
+  return window.matchMedia('(pointer: coarse)')
+}
+
+/**
+ * One subscription, two questions. `build` must be a module-level function so
+ * the effect's dependency is stable; passing an inline arrow would resubscribe
+ * on every render.
+ */
+function useMatches(build: () => MediaQueryList): boolean {
+  const [matches, setMatches] = useState(() =>
+    typeof window === 'undefined' ? false : build().matches,
   )
 
   useEffect(() => {
-    const query = paneQuery()
-    const onChange = () => setPane(query.matches)
+    const query = build()
+    const onChange = () => setMatches(query.matches)
     onChange()
     query.addEventListener('change', onChange)
     return () => query.removeEventListener('change', onChange)
-  }, [])
+  }, [build])
 
-  return pane
+  return matches
 }
 
 /**
