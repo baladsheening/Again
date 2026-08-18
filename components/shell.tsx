@@ -2234,34 +2234,46 @@ export function Shell({
           the content, and is not — the collections wrap to two lines at 320px and
           the height is what keeps that from moving the bar under a thumb.
         */}
-        <div className="gutter flex min-h-[var(--collections-row)] items-center gap-3">
+        <div className="gutter relative flex min-h-[var(--collections-row)] items-center">
           {/*
-            ⚠ **The house is back, at the head of this row — directed 18 August.**
-            It was here until 15 August, went to the masthead beside the profile
-            glyph, and came off entirely when search took that half of the
-            masthead. `components/icon-home.tsx` was kept unreferenced through all
-            of that, which is the only reason this is four lines: the note in it
-            about sizing against `ProfileIcon` is now stale, since what it has to
-            agree with is a row of 11px caps again.
+            ⚠ **The house is back at the head of this row (18 August), and it is
+            out of the flow — which is the second attempt.** It was here until
+            15 August, went to the masthead beside the profile glyph, and came off
+            when search took that half of the masthead; `icon-home.tsx` was kept
+            unreferenced through all of it.
 
-            ⚠ **The spacer opposite it is not decoration.** The links are centred
-            in what is left of the row, so an icon on one side alone would push
-            them 16px off the screen's centre — visible, and the kind of thing
-            that reads as a mistake without being one. An equal width on the other
-            side costs the line 32px it can afford: the labels come to about 236
-            of the ~335 a 390pt handset leaves after the gutter, and the row
-            already wraps to two lines at 320 with `main` reserving the space.
+            The first cut put it in the flow with an equal spacer opposite, to keep
+            the collections centred on the screen rather than on what was left of
+            the row. That was 20px of icon, 20 of spacer and 24 of gap — **64px off
+            a line that had about 100 to spare, and it wrapped to two lines.**
+
+            Out of the flow it costs the line nothing at all: the collections span
+            exactly what they spanned before there was a house, and stay centred
+            because nothing took any width from them.
+
+            ⚠ **The overlay wears `gutter` rather than a `left` of its own.** An
+            absolute child is placed against the padding box, so `left-0` would put
+            the house at the glass edge; the gutter is
+            `max(1.25rem, env(safe-area-inset-left))` and it is not going to be
+            written down twice.
+
+            ⚠ **The house never takes `--color-active`.** Red is the profile
+            glyph's convention in the masthead; this sits in a row where *here* is
+            said with full-strength text, and it says it the same way. Asked for
+            directly, and it is also the better rule: one row, one signal.
           */}
-          <Link
-            href="/"
-            aria-label="Home"
-            aria-current={pathname === '/' ? 'page' : undefined}
-            className={`-my-3 shrink-0 py-3 transition-colors ${
-              pathname === '/' ? 'text-active' : 'text-muted hover:text-text'
-            }`}
-          >
-            <HomeIcon />
-          </Link>
+          <div className="gutter pointer-events-none absolute inset-0 flex items-center">
+            <Link
+              href="/"
+              aria-label="Home"
+              aria-current={pathname === '/' ? 'page' : undefined}
+              className={`pointer-events-auto -my-3 py-3 transition-colors ${
+                pathname === '/' ? 'text-text' : 'text-muted hover:text-text'
+              }`}
+            >
+              <HomeIcon />
+            </Link>
+          </div>
 
           {/*
             Dotted, not spaced. Labels separated by gaps alone read as loose
@@ -2297,10 +2309,6 @@ export function Shell({
               </Fragment>
             ))}
           </div>
-
-          {/* The house's width, so the links centre on the row and not on what
-              is left of it. `aria-hidden` because it says nothing. */}
-          <span aria-hidden className="w-5 shrink-0" />
         </div>
           </nav>,
           document.body,

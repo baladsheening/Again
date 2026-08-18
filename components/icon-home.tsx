@@ -10,16 +10,17 @@
  * `currentColor` for the same reason: the accent is reserved for overlap, so
  * this inherits whatever the row around it is doing.
  *
- * **20px, matching `ProfileIcon`.** It was 14px while it sat at the head of the
- * collection row, sized against the 11px caps beside it; paired with the profile
- * glyph instead, the thing it has to agree with is that glyph, and two icons of
- * different sizes side by side read as a mistake rather than as a hierarchy.
+ * **14px, back at the head of the collection row (18 August).** It went to 20 to
+ * match `ProfileIcon` when the two were paired in the masthead; it is beside a
+ * row of 11px caps again, and the thing an icon has to agree with is whatever it
+ * is standing next to. 20 there was also 6px the row could not spare — it is what
+ * pushed the collections onto a second line.
  */
 export function HomeIcon() {
   return (
     <svg
-      width="20"
-      height="20"
+      width="14"
+      height="14"
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"

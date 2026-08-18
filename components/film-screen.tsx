@@ -596,6 +596,43 @@ export function FilmScreen({
         </div>
       ) : (
         <div className="@container relative mx-auto h-full w-full max-w-md">
+          {/*
+            ⚠ **The ground, and it is the answer to a question that has no other
+            one — 18 August.** Asked: with the words away, why does the poster not
+            reach the bottom of the phone? Because it cannot. A 2:3 poster and a
+            0.46 screen are different shapes, so *whole* and *full-bleed* are
+            mutually exclusive for the picture itself — the chevron exists to make
+            it whole, which is the half that was chosen.
+
+            So the screen is filled by the same image rather than by the poster:
+            cover-scaled, blurred past recognition, and half strength so the sharp
+            one in front of it stays the subject. Nothing is cropped and nothing is
+            letterboxed into black.
+
+            ⚠ **`w342`, deliberately.** It is the size the wall already fetched, so
+            this costs no request at all, and there is no resolution left to see
+            after a 40px blur. Asking for the large one here would double the bytes
+            of every film opened to make an invisible difference.
+
+            ⚠ **`scale-110` is not decoration.** A blur samples past the element's
+            edges, where there is nothing, so an unscaled copy fades out at all
+            four sides and reads as a vignette nobody asked for.
+
+            It is drawn unconditionally and needs no state: at rest the poster
+            covers the screen and this is not visible, so what reveals it is the
+            same thing that makes room for it.
+          */}
+          {posterUrl(film.posterPath, 'w342') && (
+            <Image
+              src={posterUrl(film.posterPath, 'w342') as string}
+              alt=""
+              aria-hidden
+              width={342}
+              height={513}
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-2xl"
+            />
+          )}
+
           <Artwork
             posterPath={film.posterPath}
             title={film.title}
@@ -683,12 +720,21 @@ export function FilmScreen({
                 hit, and the chevron is centred in it the way a sheet's grabber
                 is — §11 permits known icons and this is the known one for
                 *put this away*, turned a quarter.
+
+                ⚠ **This band is the WHOLE gap above the title, and that is what
+                makes the chevron sit centred in it — directed 18 August.** It was
+                32px of band and then the title's own `pt-5`, which put the
+                chevron 8px from the panel's edge and 28px from the words: centred
+                in its own box and visibly not centred in the space. The title
+                drops its top padding on this surface and the band takes the sum,
+                so the two gaps are one number by construction rather than two
+                numbers that have to be kept equal.
               */}
               <button
                 type="button"
                 onClick={() => setReceded(true)}
                 aria-label="See the whole poster"
-                className="text-muted hover:text-text flex h-8 w-full shrink-0 cursor-pointer items-center justify-center transition-colors"
+                className="text-muted hover:text-text flex h-13 w-full shrink-0 cursor-pointer items-center justify-center transition-colors"
               >
                 <ChevronIcon className="rotate-90" size={16} />
               </button>
@@ -907,7 +953,13 @@ function FilmBody({
         floor: the note where the scrim was is the whole recipe. Do not restore
         one part of it and expect the control to read.
       */}
-      <div className="gutter shrink-0 pt-5">
+      {/*
+        ⚠ **The top padding is the panel's alone.** Beside the wall this is the
+        air between the artwork and the title. On the handset the chevron's band
+        above it is that air, and it has to be the whole of it or the chevron
+        cannot be centred in it — see the note on the handle.
+      */}
+      <div className={`gutter shrink-0 ${pane ? 'pt-5' : ''}`}>
           {/*
             ─────────────────────────────────────────────────────────────────
              The `+` ends the title, on whichever line the title ends
@@ -1631,28 +1683,20 @@ function AddControl({
       )
     }
     /*
-      ⚠ **The ring is the only thing that says this is still a control, and it
-      is there for exactly as long as it is one — directed 18 August.** For
-      `UNDO_WINDOW_MS` after an add this is a button and afterwards it is a
-      marker, and until now the two were the same drawing: on a phone, where
-      there is no cursor to lift the ground under, nothing said the difference.
-
-      `ring-listed/45` rather than a new colour or a second glyph. It is the
-      control's own colour drawn around it rather than in it, so what changes is
-      *presence* rather than meaning — the tick still says the film is on your
-      list while the ring says the last ten seconds can be taken back.
-
-      It disappears by the state ending, not by an animation, so there is no
-      duration written down twice: `UNDO_WINDOW_MS` is the only place the ten
-      seconds exists, and this is drawn from `undoable` rather than from a clock
-      of its own.
+      ⚠ **A ring in the tick's colour was built here and removed the same day.**
+      It marked the `UNDO_WINDOW_MS` in which this is a button rather than a
+      marker, which is a real difference and one a phone cannot otherwise see —
+      there is no cursor to lift the ground under. It was rejected on sight, and
+      the note stays because the want is still open: **the undo window has no
+      indicator on touch.** Whatever answers it next should not be an outline;
+      that has been tried.
     */
     return (
       <button
         type="button"
         onClick={onUndo}
         aria-label="Undo"
-        className={`${CONTROL_PRESSABLE} ring-listed/45 text-listed ring-1`}
+        className={`${CONTROL_PRESSABLE} text-listed`}
       >
         <TickIcon size={14} />
       </button>
