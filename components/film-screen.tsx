@@ -1032,9 +1032,10 @@ function FilmBody({
           had one either.
         */}
         <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
-          <p className="text-sm">
-            {details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
-          </p>
+          <PrintedSynopsis
+            text={details === null ? '' : (details.synopsis ?? 'No synopsis for this one.')}
+            printing={pane}
+          />
 
           {/*
             Full strength, not `text-muted` — a failure set in the colour reserved
@@ -1240,6 +1241,110 @@ function Artwork({
  * settling it a frame later would open every desk poster as a takeover and then
  * snap it into a panel.
  */
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The synopsis prints — 18 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Directed: the synopsis arrives a character at a time, first to last, at the
+ * speed someone reads quickly. Beside the wall only, for now — `printing` is the
+ * whole of that decision and the handset is one word away from joining it.
+ *
+ * ⚠ **Every character is in the layout from the first frame; only its ink
+ * arrives.** The obvious build appends to a string, and it is the wrong one: the
+ * paragraph would grow line by line and a word would jump to the next line as it
+ * was typed, so the block reflows under the reading. Here the text is laid out
+ * once and each character is revealed in place. Nothing moves, and the scroller
+ * below never resizes mid-print.
+ *
+ * ⚠ **A span per character does NOT change where the lines break.** Line
+ * breaking follows the text, not the element boundaries — an inline box is not a
+ * break opportunity — so a word cut into eleven spans still wraps as one word.
+ * This is the fact the whole approach rests on; if it were false the paragraph
+ * would come apart mid-word.
+ *
+ * ⚠ **Time, not frames.** The count is derived from elapsed milliseconds every
+ * frame, never incremented per tick, so it prints at one speed on a 60Hz phone,
+ * a 120Hz tablet and a desk that drops frames. A per-character `setInterval` was
+ * never on the table for the same reason.
+ *
+ * ⚠ **The ink is written with `el.style`, never a rendered `style` attribute.**
+ * The CSP in `proxy.ts` drops style attributes in production while `next dev`
+ * allows them; the fade itself is a class, so nothing per-character is inlined.
+ *
+ * ⚠ **`prefers-reduced-motion` is answered here rather than left to globals.css.**
+ * That block zeroes durations, which would make each character's fade instant
+ * but leave the *sequence* running for ten seconds — a slow reveal with no
+ * animation in it, which is the thing the setting exists to refuse. Asked
+ * directly, the whole paragraph is simply present.
+ *
+ * The screen reader gets the paragraph whole and once, from a copy that is not
+ * animated at all; the printed copy is `aria-hidden`, and `select-none` on the
+ * other keeps a copy-paste from picking up both.
+ */
+const PRINT_WPM = 600
+/** English averages about 5.1 characters a word once the space is counted. */
+const PRINT_CHARS_PER_SECOND = (PRINT_WPM * 5.1) / 60
+
+function PrintedSynopsis({ text, printing }: { text: string; printing: boolean }) {
+  const host = useRef<HTMLSpanElement>(null)
+  const shown = useRef(0)
+
+  useEffect(() => {
+    const node = host.current
+    if (!node) return
+
+    const characters = node.children
+    shown.current = 0
+
+    const revealTo = (n: number) => {
+      for (let i = shown.current; i < n; i += 1) {
+        ;(characters[i] as HTMLElement).style.opacity = '1'
+      }
+      shown.current = n
+    }
+
+    if (!printing || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      revealTo(characters.length)
+      return
+    }
+
+    let frame = 0
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      const due = Math.min(
+        characters.length,
+        Math.floor(((now - start) / 1000) * PRINT_CHARS_PER_SECOND),
+      )
+      revealTo(due)
+      if (due < characters.length) frame = requestAnimationFrame(tick)
+    }
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [text, printing])
+
+  return (
+    <p className="text-sm">
+      <span className="sr-only select-none">{text}</span>
+      <span aria-hidden ref={host}>
+        {[...text].map((character, index) => (
+          /*
+            The fade is a class, so it is one rule for every character rather
+            than one declaration each. About eight are mid-fade at any moment at
+            this speed, which is what gives the edge of the text a soft front
+            instead of a stamping cursor.
+          */
+          <span key={index} className="opacity-0 transition-opacity duration-150">
+            {character}
+          </span>
+        ))}
+      </span>
+    </p>
+  )
+}
+
 function paneQuery(): MediaQueryList {
   const width = getComputedStyle(document.documentElement)
     .getPropertyValue('--breakpoint-pane')
