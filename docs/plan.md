@@ -92,8 +92,15 @@ question rather than a task.
       for the lurch. ⚠ Do not answer it with a spinner over artwork we already
       have; that trades a seam for a wait.
 - [x] ~~**A scrollbar still appears over the artwork, where nothing scrolls.**~~
-      Owner found and the range removed, 18 August. **Awaiting a look on the
-      handset** — it cannot be reproduced on a desk, where the old lock held.
+      Owner found and the range removed, 18 August. **Verified on the handset in
+      both a Safari tab and the installed app** — the bar is gone and closing a
+      poster leaves the masthead as you left it. It cannot be reproduced on a
+      desk, where the old lock held.
+      ⚠ **It read as *not fixed* for an afternoon, and the code was never the
+      reason.** The installed app was still running the bundle it launched with;
+      an iOS home-screen app has no address bar to reload from and keeps its
+      document alive until it is force-quit. See docs/decisions.md, 18 August —
+      that lesson is worth more than this fix.
       **It was the document's.** Every box between the artwork and the viewport
       was walked and none of them can scroll: the artwork block and the dialog are
       `overflow-hidden`, the `max-w-md` column never sets `overflow` and a

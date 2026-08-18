@@ -3775,6 +3775,31 @@ section exists for:
 > passing build says nothing about whether a screen does. Every fault that
 > mattered in this project was found by looking at it.
 
+### Looking at it means looking at the build you actually made — 18 August
+
+**An installed web app on iOS does not reload.** It keeps its document alive
+across switching away, and standalone has no address bar to reload from, so a
+home-screen Again keeps running whatever JavaScript it launched with until it is
+force-quit from the app switcher.
+
+That cost an afternoon. The scrollbar over the artwork was diagnosed, fixed and
+deployed, and came back reported *still there* — from an app that had never
+picked the fix up. A probe was designed, built, shipped and reverted on the
+strength of that report. The same build in a Safari tab, which fetches fresh
+every time, was right on the first look.
+
+> **Force-quit the installed app before trusting a negative result from it**, and
+> when a fix looks dead, open the same URL in a tab before touching the code. If
+> the tab is right and the app is wrong, suspect the bundle. It is the same
+> mistake as a guard beside a cure: something that looks exactly like the code
+> being wrong, and is not.
+
+Two smaller versions of the same trap, both met the same day. Production tracks
+`main`, so a fix pushed to a branch is on a preview URL and not on the bookmark
+anyone actually opens. And a report is worth naming its surface — *installed*,
+*tab*, *Android*, *desk* — because the answer to "which of the four is this on"
+turned out to be the whole of this one.
+
 Re-verify with:
 
 ```
