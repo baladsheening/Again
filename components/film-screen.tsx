@@ -610,19 +610,43 @@ export function FilmScreen({
         Nothing moved on the wall because the lock was working. What moved was the
         screen itself, inside a box slightly too tall for the window.
 
-        `h-dvh` is the *visible* viewport rather than the layout one, so there is
+        A unit narrower than the layout viewport is what fixes that, so there is
         nothing left over to scroll. `overflow-hidden` is the guarantee rather
         than the fix: whatever any engine decides the height should be, this
         element is never a scroll container, so it can never indicate or absorb a
         gesture again.
 
-        ⚠ **`dvh` rather than `svh`.** `svh` is the *smallest* viewport, which
-        would leave a strip of the screen unpainted whenever the address bar is
-        already collapsed. The usual objection to `dvh` — that it changes as the
-        chrome moves, resizing the layout underneath you — does not reach here:
-        Safari collapses its bar in response to the *document* scrolling, and the
-        document is locked for as long as this screen is open. See the effect
-        above.
+        ─────────────────────────────────────────────────────────────────────────
+         Why it is not `dvh` — measured on the handset, 18 August
+        ─────────────────────────────────────────────────────────────────────────
+
+        ⚠ **This was `h-dvh`, and `dvh` is not stable across this screen
+        opening.** Reported: the title, credit line and synopsis jump *upward* as
+        the screen arrives, installed only. Two frames from the instrument that
+        settled it, 45ms apart:
+
+            24ms  dvh844 svh797 lvh844 win844 vv844 dlg844 syn521
+            69ms  dvh797 svh797 lvh844 win797 vv797 dlg797 syn497
+
+        `dvh` falls 844 → 797 — the 47px status-bar band, the same number
+        `shell.tsx` adds back below. `svh` and `lvh` hold still through it, so
+        the dynamic unit is the only one that moves. The artwork is a **fraction**
+        of this box, so the box losing 47 takes 23.5 off the artwork and lifts
+        everything under it by that much: `syn` moved 24. Symptom and measurement
+        are the same number.
+
+        **The old note here argued `dvh` was safe because only Safari's address
+        bar moves it and the document is locked while this is open. That argument
+        is dead** — this was reported *installed*, where there is no address bar,
+        and it moved anyway. Do not restore it on that reasoning.
+
+        ⚠ **`svh` alone would be wrong in the other direction**, and this file
+        would be the third place to learn it: installed, `100svh` is the screen
+        *less* that band, so the box would end 47px short. The inset is added
+        back, which is `shell.tsx`'s existing expression rather than a new one —
+        844 installed, and a no-op in a tab, on Android and at the desk where the
+        inset reads 0. Two constants, so the box cannot change size under a
+        screen that is already open.
       */
       /*
         ─────────────────────────────────────────────────────────────────────────
@@ -662,8 +686,8 @@ export function FilmScreen({
         pane
           ? /* `left-auto` because a `<dialog>`'s UA style pins both edges to zero,
                and a left of zero beats a right of anything. */
-            'fixed top-0 left-auto right-[max(0px,calc(50%_-_36rem))] z-30 m-0 h-dvh max-h-none w-(--pane-column) max-w-none overflow-hidden bg-black p-0 text-text'
-          : 'm-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
+            'fixed top-0 left-auto right-[max(0px,calc(50%_-_36rem))] z-30 m-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-(--pane-column) max-w-none overflow-hidden bg-black p-0 text-text'
+          : 'm-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
       }
     >
       {/*
@@ -1212,11 +1236,18 @@ function AddControl({
  * keeps only the frames where something *changed*. A jump is then a row.
  *
  * The three viewport units are measured rather than assumed, and that is the
- * point of it. `100dvh` is what the dialog is sized in; if `dvh` differs between
- * two rows, the viewport moved under the layout and nothing about the content is
- * to blame. `svh` and `lvh` are there to say which way — and because installed iOS
- * has form here: `100svh` was measured at 797 against an 844 screen on this
- * handset, short by exactly `env(safe-area-inset-top)`.
+ * point of it. If `dvh` differs between two rows, the viewport moved under the
+ * layout and nothing about the content is to blame. `svh` and `lvh` are there to
+ * say which way — and because installed iOS has form here: `100svh` was measured
+ * at 797 against an 844 screen on this handset, short by exactly
+ * `env(safe-area-inset-top)`.
+ *
+ * ⚠ **It answered, and the answer is in the dialog's own note above: `dvh` fell
+ * 844 → 797 at 45ms while `svh` and `lvh` held.** This is kept for one round only
+ * — to confirm on the same instrument that the box now holds still — and then it
+ * and `/probe.webmanifest` come out together. **It no longer measures the unit
+ * the dialog is sized in**, which is the point: `dvh` may keep moving, and the
+ * reading that matters now is that `dlg` does not.
  *
  * ⚠ **Built through the CSSOM, never `innerHTML` with a `style` attribute.** The
  * CSP in `proxy.ts` drops style attributes in production while `next dev` allows
