@@ -544,12 +544,25 @@ export function FilmScreen({
           : 'm-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
       }
     >
-      <FilmBody
-        key={film.externalId}
-        film={film}
-        pane={pane}
-        dialogRef={ref}
-      />
+      {/*
+        `max-w-md` and centred. Above `rail` a takeover the width of a desk would
+        be a poster stretched across a metre of screen; below it the cap is wider
+        than any phone and does nothing. One layout, one class, right at both ends
+        — the same move the acknowledgement band makes at its own breakpoint.
+
+        ⚠ **The column and the picture belong to the screen; only the words are
+        keyed.** See `Artwork` for why the element holding the poster is the one
+        thing here that must survive a change of film.
+      */}
+      <div className="mx-auto flex h-full w-full max-w-md flex-col">
+        <Artwork
+          posterPath={film.posterPath}
+          title={film.title}
+          pane={pane}
+          dialogRef={ref}
+        />
+        <FilmBody key={film.externalId} film={film} pane={pane} />
+      </div>
     </dialog>
   )
 }
@@ -595,11 +608,9 @@ export function FilmScreen({
 function FilmBody({
   film,
   pane,
-  dialogRef,
 }: {
   film: FilmSearchResult
   pane: boolean
-  dialogRef: React.RefObject<HTMLDialogElement | null>
 }) {
   /*
     The first intent and only the first. `intentsFor` still returns both — the
@@ -735,162 +746,11 @@ function FilmBody({
     })
   }
 
-  /*
-    ⚠ **The panel asks for the size it can show; the takeover asks for the size
-    it can show. Same rule, two boxes** — `lib/posters.ts` carries the arithmetic
-    for both, and neither number is a download budget.
-
-    Reported at the desk, and true before the artwork was keyed rather than
-    because of it: the picture paints in **from the top**. That is a large
-    baseline JPEG rendering as its bytes arrive, and the panel is 384 CSS px
-    wide, so `original` was about seven times the pixels that column can use.
-  */
-  const large = posterUrl(film.posterPath, pane ? 'w780' : 'original')
-  const small = posterUrl(film.posterPath, 'w342')
   const listedPrimary = marks?.[primary]
   const undoablePrimary = undoable?.intent === primary ? undoable : null
 
   return (
-    /*
-      `max-w-md` and centred. Above `rail` a takeover the width of a desk would
-      be a poster stretched across a metre of screen; below it the cap is wider
-      than any phone and does nothing. One layout, one class, right at both ends
-      — the same move the acknowledgement band makes at its own breakpoint.
-    */
-    <div className="mx-auto flex h-full w-full max-w-md flex-col">
-      <div
-        className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
-      >
-        {small && (
-          /*
-            ⚠ **Two layers, and the small one is the point.** `w342` is what the
-            wall already fetched, so it is in the browser's cache and paints on
-            the first frame; `original` arrives over it a moment later. Without
-            this the screen opens on an empty rectangle for as long as a 1MB
-            image takes on mobile data — which is the one thing a tap-to-open
-            screen must not do.
-
-            No state and no `onLoad`: the second image simply paints over the
-            first when it has something to paint. A fade would need to know when
-            that happened, and knowing costs a re-render to hide a transition
-            nobody asked for.
-          */
-          <Image
-            src={small}
-            alt=""
-            aria-hidden
-            /*
-              ⚠ **`width`/`height` and classes, never `fill`.** `fill` renders
-              its positioning as a `style` attribute, and the CSP in `proxy.ts`
-              drops every style attribute in production while `next dev` allows
-              them — so it would have laid out perfectly here and collapsed on
-              the deployed site. That divergence has already cost this project a
-              masthead and a wordmark (10 August); see the note on
-              `wordmark-trim` in globals.css. The numbers are the source's own
-              aspect, which is all they are for: the classes do the layout.
-            */
-            width={342}
-            height={513}
-            className="absolute inset-0 h-full w-full object-cover object-top"
-            priority
-          />
-        )}
-        {large && (
-          /*
-            ⚠ **The `key` is the fix for a mismatch only the panel can have —
-            reported 18 August, at the desk: tap a second poster and the new
-            title, credit line and synopsis arrive while the *previous film's*
-            picture is still on screen, sometimes for seconds.**
-
-            Beside the wall this screen is not remounted when another poster is
-            tapped — `capture-provider.tsx` swaps the `film` prop and React
-            reconciles the same elements. The words are state and change on the
-            spot. **An `<img>` is not: a browser keeps painting the image it
-            has until the new `src` has downloaded and decoded.** So the layer
-            carrying `original` — 0.8–1.5MB, see `lib/posters.ts` — held the
-            last film's poster over the new one's words for as long as the
-            download took. Not always, because a film opened before is cached.
-
-            Keying it to the URL means the element's identity *is* the picture
-            it shows, so a change of film destroys it rather than mutating it.
-            A fresh `<img>` has nothing to paint, which is precisely what lets
-            the `w342` layer underneath do the job it was built for.
-
-            ⚠ **The small layer is deliberately NOT keyed.** Its `src` is in
-            the cache — the wall fetched it — so it swaps within a frame or
-            two, and leaving it mounted means that frame shows the previous
-            poster rather than black. Keying both would trade seconds of the
-            wrong film for a flash of no film, which is a worse thing to have
-            built on purpose.
-
-            ⚠ **Not a `key` on the screen itself**, which is the tidier-looking
-            version and does not work: `open` is imperative here (`show()` from
-            an effect, no attribute), so a remounted `<dialog>` paints one
-            frame closed. Every tap would blink.
-          */
-          <Image
-            key={large}
-            src={large}
-            alt={`Poster for ${film.title}`}
-            width={2000}
-            height={3000}
-            className="absolute inset-0 h-full w-full object-cover object-top"
-            priority
-          />
-        )}
-
-        {/*
-          ⚠ **The scrim is deleted, and it took three other things with it — 18
-          August.** It was a gradient over the foot of the artwork, stopped at
-          80% rather than solid black so the `+` would have something to frost
-          against, and it existed for exactly one reason: type was sitting on a
-          picture. **Directed: none of the writing overlaps the poster.** So
-          there is no type on the picture, and the scrim, the frost and the
-          contrast floor that governed both are gone with it.
-
-          What that bought, and it is worth stating because it was the argument
-          for doing it: **legibility no longer depends on which film you tapped.**
-          Over the brightest poster the title read 11:1 and the credit line 5:1,
-          and the green tick — the number this file told you to watch — sat at
-          3.3:1 against a 3:1 floor. On the flat ground below the artwork the
-          tick is `--color-listed` on black at **6.0:1** and the title is full
-          strength, on every poster there has ever been. A design whose contrast
-          is a function of the image is one that is wrong on some image you have
-          not met yet.
-        */}
-
-        {/*
-          ─────────────────────────────────────────────────────────────────────
-           The artwork is the way back — 17 August
-          ─────────────────────────────────────────────────────────────────────
-
-          Directed: tapping the artwork returns you to the wall. Which is the
-          interaction `PosterReveal` in `poster.tsx` has had since 8 August —
-          *tap the title, see the poster; tap anywhere, close it* — and the
-          reason it works there is the reason it works here: a picture that
-          opened on a tap is a picture that should shut on one.
-
-          ⚠ **A `<button>` covering the artwork, not an `onClick` on the div.**
-          The same call the intent sheet's scrim made, in its own words: a click
-          handler on a div is something only a mouse can find, while a button is
-          reachable from a keyboard and announced as a control. It costs one
-          element and it is the difference between an affordance and a secret.
-
-          **Nothing is excluded by name, and since 18 August nothing needs to
-          be.** This button is the only thing in the artwork block now. The title
-          and the credit line used to lie over it, which cost them
-          `pointer-events-none` and cost the `+` a `pointer-events-auto` to climb
-          back out — **three declarations arranging for a stack that no longer
-          exists.** They are below the picture, so they are simply not in the way.
-        */}
-        <button
-          type="button"
-          onClick={() => dialogRef.current?.close()}
-          aria-label="Close"
-          className="absolute inset-0"
-        />
-      </div>
-
+    <>
       {/*
         --- what it is, under the artwork -------------------------------
 
@@ -1103,7 +963,7 @@ function FilmBody({
             Everything else about the two widths is identical: the words sit
             below the artwork at both, and this is the only thing that differs.
           */}
-          {pane && large && (
+          {pane && film.posterPath && (
             <PosterReveal
               posterPath={film.posterPath}
               title={film.title}
@@ -1184,9 +1044,184 @@ function FilmBody({
           {error && <p className="mt-6 text-sm">{error}</p>}
         </div>
       </div>
+    </>
+  )
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  One element, two sources, and never a half-painted one — 18 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Reported at the desk: the new poster arrives and then flashes, and often
+ * paints in from the top.** Measured across a swap, every frame, keeping only
+ * the ones where something changed — `c` is a complete image, `·` one still
+ * arriving, and the number is `naturalWidth`:
+ *
+ *     2ms    w342:c342  w780:c780     ← the film you were on
+ *     224ms  w342:c342  w780:·0       ← an element with no image at all
+ *     321ms  w342:c342  w780:·780     ← header read, pixels still landing
+ *     404ms  w342:c342  w780:c780
+ *
+ * **180ms of a large image drawing itself over a small one that was already
+ * correct.** That is the flash, and the top-down is literally what a baseline
+ * JPEG looks like while it does it.
+ *
+ * ⚠ **The two-layer stack is gone.** It was `w342` under `original`, and it was
+ * right about the problem it solved — a screen must not open on an empty
+ * rectangle — but wrong that the second layer could arrive unnoticed. There is
+ * one element now and two sources, and **the better source is not shown until it
+ * has fully decoded off-screen**. `decode()` rather than `onLoad`, because
+ * loaded is not painted; `complete` and an `onload` are the fallback for
+ * anything that refuses to decode.
+ *
+ * ⚠ **The note this replaces argued for no state and no `onLoad`, on the
+ * grounds that it would be hiding a transition nobody had asked about.** Use
+ * answered that: the transition was the report. Knowing when the picture is
+ * ready costs one re-render per film, which is the price of never showing half
+ * a picture.
+ *
+ * ⚠ **This lives on the SCREEN, not on the film, and that is the other half of
+ * the fix.** `FilmBody` is keyed and rebuilt on every swap; if the picture were
+ * inside it, the element would be destroyed and there would be a gap with
+ * nothing to paint. Here the element survives, and an `<img>` holds its last
+ * frame until the next is ready — so the previous poster covers the moment the
+ * new thumbnail takes to decode out of the cache, on every engine rather than
+ * on the ones that happen to be quick.
+ */
+function Artwork({
+  posterPath,
+  title,
+  pane,
+  dialogRef,
+}: {
+  posterPath: string | null
+  title: string
+  pane: boolean
+  dialogRef: React.RefObject<HTMLDialogElement | null>
+}) {
+  /*
+    ⚠ **The panel asks for the size it can show; the takeover asks for the size
+    it can show. Same rule, two boxes** — `lib/posters.ts` carries the arithmetic
+    for both, and neither number is a download budget. `--pane-column` is 24rem,
+    so beside the wall this is 384 CSS px and `original` was about seven times
+    the pixels it can use.
+  */
+  const small = posterUrl(posterPath, 'w342')
+  const large = posterUrl(posterPath, pane ? 'w780' : 'original')
+
+  /*
+    The URL that has finished decoding, not a boolean. Comparing it to the
+    current `large` is what makes a change of film correct without resetting
+    anything: the moment the film changes, what decoded is no longer what is
+    wanted, and the small one is shown again by arithmetic rather than by
+    remembering to clear a flag.
+  */
+  const [decoded, setDecoded] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!large) return
+    let live = true
+
+    /* `window.Image`: `Image` is next/image in this file. */
+    const image = new window.Image()
+    const ready = () => {
+      if (live) setDecoded(large)
+    }
+    image.src = large
+    image.decode().then(ready, () => {
+      if (image.complete) ready()
+      else image.onload = ready
+    })
+
+    return () => {
+      live = false
+    }
+  }, [large])
+
+  const src = decoded === large ? large : small
+
+  return (
+    <div
+      className={`${pane ? ARTWORK_PANEL : ARTWORK_TAKEOVER} relative shrink-0 overflow-hidden`}
+    >
+      {src && (
+        /*
+          ⚠ **`width`/`height` and classes, never `fill`.** `fill` renders its
+          positioning as a `style` attribute, and the CSP in `proxy.ts` drops
+          every style attribute in production while `next dev` allows them — so
+          it would have laid out perfectly here and collapsed on the deployed
+          site. The numbers are a 2:3 aspect and nothing else; the classes do the
+          layout.
+
+          **No `key`.** This element is meant to survive a change of film — see
+          the note above. Keying it would restore the gap it exists to cover.
+        */
+        <Image
+          src={src}
+          alt={`Poster for ${title}`}
+          width={2000}
+          height={3000}
+          className="absolute inset-0 h-full w-full object-cover object-top"
+          priority
+        />
+      )}
+
+      {/*
+        ⚠ **The scrim is deleted, and it took three other things with it — 18
+        August.** It was a gradient over the foot of the artwork, stopped at
+        80% rather than solid black so the `+` would have something to frost
+        against, and it existed for exactly one reason: type was sitting on a
+        picture. **Directed: none of the writing overlaps the poster.** So
+        there is no type on the picture, and the scrim, the frost and the
+        contrast floor that governed both are gone with it.
+
+        What that bought, and it is worth stating because it was the argument
+        for doing it: **legibility no longer depends on which film you tapped.**
+        Over the brightest poster the title read 11:1 and the credit line 5:1,
+        and the green tick — the number this file told you to watch — sat at
+        3.3:1 against a 3:1 floor. On the flat ground below the artwork the
+        tick is `--color-listed` on black at **6.0:1** and the title is full
+        strength, on every poster there has ever been. A design whose contrast
+        is a function of the image is one that is wrong on some image you have
+        not met yet.
+      */}
+
+      {/*
+        ─────────────────────────────────────────────────────────────────────
+         The artwork is the way back — 17 August
+        ─────────────────────────────────────────────────────────────────────
+
+        Directed: tapping the artwork returns you to the wall. Which is the
+        interaction `PosterReveal` in `poster.tsx` has had since 8 August —
+        *tap the title, see the poster; tap anywhere, close it* — and the
+        reason it works there is the reason it works here: a picture that
+        opened on a tap is a picture that should shut on one.
+
+        ⚠ **A `<button>` covering the artwork, not an `onClick` on the div.**
+        The same call the intent sheet's scrim made, in its own words: a click
+        handler on a div is something only a mouse can find, while a button is
+        reachable from a keyboard and announced as a control. It costs one
+        element and it is the difference between an affordance and a secret.
+
+        **Nothing is excluded by name, and since 18 August nothing needs to
+        be.** This button is the only thing in the artwork block now. The title
+        and the credit line used to lie over it, which cost them
+        `pointer-events-none` and cost the `+` a `pointer-events-auto` to climb
+        back out — **three declarations arranging for a stack that no longer
+        exists.** They are below the picture, so they are simply not in the way.
+      */}
+
+      <button
+        type="button"
+        onClick={() => dialogRef.current?.close()}
+        aria-label="Close"
+        className="absolute inset-0"
+      />
     </div>
   )
 }
+
 
 /**
  * Whether there is room to stand beside the wall rather than cover it.
