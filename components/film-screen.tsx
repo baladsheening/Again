@@ -208,17 +208,28 @@ export function FilmScreen({
   const pane = useMatches(paneQuery)
 
   /*
-    ⚠ **Two questions, and they are about different things.** `pane` is *is there
-    room to stand beside the wall* — a width. `overlay` is *is this being handled
-    with a thumb* — a pointer. The poster-and-glass arrangement answers the
-    second, and putting it behind the first is what let it leak into a narrowed
-    desk window. See `touchQuery`.
+    ⚠ **Two axes, and they answer different questions — settled 18 August after
+    getting it wrong in both directions on the same evening.**
 
-    A width of `pane` wins outright: a 24rem column beside a live wall is not a
-    surface anything recedes into, whatever is pointing at it.
+    **Shape decides the ARRANGEMENT.** `overlay` is *is this a tall narrow screen
+    where a poster nearly fills the width, so the words have nowhere to go but
+    over it.* That is what the glass panel, the chevron and the full-screen
+    picture are a response to, and a maximally narrowed desk window has exactly
+    that shape. So it is `!pane` — a width — and a narrow window is a real preview
+    of the phone's layout again.
+
+    **The pointer decides the TYPOGRAPHY.** `touch` is *is this being handled with
+    a thumb.* The mono synopsis was asked for on the phone and the printing on the
+    desk, and neither is about how tall the window is. See `touchQuery`.
+
+    ⚠ **The wrong version of this put BOTH behind the pointer**, which took the
+    arrangement away from a narrowed window along with the typography — five
+    things moved when two were asked for. The version before that put both behind
+    the width, which put the phone's typography on the desk. Neither axis alone
+    is enough, and the mistake each time was using one signal for two questions.
   */
   const touch = useMatches(touchQuery)
-  const overlay = touch && !pane
+  const overlay = !pane
 
   /*
     Whether the words have been pushed off the bottom to leave the poster whole
@@ -598,20 +609,27 @@ export function FilmScreen({
       */}
       {!overlay ? (
         /*
-          ⚠ **This is now BOTH the panel and a narrowed desk window**, which is
-          the point of `overlay`: the words sit under the artwork on flat black,
-          the picture is a share of the column, and nothing recedes. It is what
-          this screen was before 18 August's evening, and a cursor still gets it.
+          The panel beside the wall: words under the artwork on flat black, the
+          picture a share of the column, nothing receding. Only reached at `pane`
+          widths now — a narrowed window is a tall narrow screen and gets the
+          overlay, whatever is pointing at it.
         */
         <div className="mx-auto flex h-full w-full max-w-md flex-col">
           <Artwork
             posterPath={film.posterPath}
             title={film.title}
             overlay={false}
+            touch={touch}
             receded={false}
             dialogRef={ref}
           />
-          <FilmBody key={film.externalId} film={film} overlay={false} handle={null} />
+          <FilmBody
+            key={film.externalId}
+            film={film}
+            overlay={false}
+            touch={touch}
+            handle={null}
+          />
         </div>
       ) : (
         <div className="@container relative mx-auto h-full w-full max-w-md">
@@ -629,6 +647,7 @@ export function FilmScreen({
             posterPath={film.posterPath}
             title={film.title}
             overlay
+            touch={touch}
             receded={receded}
             dialogRef={ref}
           />
@@ -728,6 +747,7 @@ export function FilmScreen({
                 key={film.externalId}
                 film={film}
                 overlay
+                touch={touch}
                 handle={
                   <button
                     type="button"
@@ -788,14 +808,17 @@ export function FilmScreen({
 function FilmBody({
   film,
   overlay,
+  touch,
   handle,
 }: {
   film: FilmSearchResult
   /*
-    Whether these words are glass over a poster rather than a block under one.
-    A pointer question, not a width one — see `touchQuery`.
+    Whether these words are glass over a poster rather than a block under one —
+    a question about the screen's shape.
   */
   overlay: boolean
+  /* Whether a thumb is doing this, which is what decides the typography. */
+  touch: boolean
   /*
     The screen's own control, dropped into the title's row. It is passed rather
     than built here because what it does — putting these words away — is a fact
@@ -1263,11 +1286,11 @@ function FilmBody({
         <div className="gutter safe-bottom scrollbar-none mt-3 min-h-0 flex-1 overflow-y-auto [--safe-bottom-base:1.5rem]">
           {details?.synopsis && (
             /*
-              ⚠ **The two are complements today and are still passed
-              separately.** The printing was asked for on the desk and the mono
-              was asked for on the phone, so one boolean happens to answer both —
-              but they are different decisions, and folding them into one prop
-              would mean that the day either moves, both do.
+              ⚠ **Both come off the POINTER, not the shape.** The printing was
+              asked for on the desk and the mono on the phone, and a maximally
+              narrowed desk window is still a desk: it takes the overlay's layout
+              and the desk's typography. They stay two props for the day one of
+              them moves without the other.
 
               ⚠ **A JSX comment cannot open a parenthesised expression** — this
               is the third time that has cost a build in two days. Inside `{… && (`
@@ -1275,8 +1298,8 @@ function FilmBody({
             */
             <PrintedSynopsis
               text={details.synopsis}
-              printing={!overlay}
-              mono={overlay}
+              printing={!touch}
+              mono={touch}
             />
           )}
 
@@ -1337,13 +1360,16 @@ function Artwork({
   posterPath,
   title,
   overlay,
+  touch,
   receded,
   dialogRef,
 }: {
   posterPath: string | null
   title: string
-  /* Whether the picture is the screen or a share of a column. See `touchQuery`. */
+  /* Whether the picture is the screen or a share of a column — a shape question. */
   overlay: boolean
+  /* Whether that screen is also a 3x handset, which is what needs the big file. */
+  touch: boolean
   receded: boolean
   dialogRef: React.RefObject<HTMLDialogElement | null>
 }) {
@@ -1355,7 +1381,16 @@ function Artwork({
     the pixels it can use.
   */
   const small = posterUrl(posterPath, 'w342')
-  const large = posterUrl(posterPath, overlay ? 'original' : 'w780')
+  /*
+    ⚠ **`original` needs BOTH axes, which is why it is the one place they meet.**
+    The rule in `lib/posters.ts` is *ask for the size the box can show*, and the
+    box only gets big enough to need it when a full-screen poster lands on a 3x
+    handset: ~390 CSS px at 3x is ~1170 real pixels and `w780` would be an upscale.
+    A narrowed desk window has the same layout at 1x or 2x, where 780 covers it
+    outright, and a large touchscreen at `pane` widths has a 384px column. Either
+    axis alone would fetch megabytes for a box that cannot show them.
+  */
+  const large = posterUrl(posterPath, overlay && touch ? 'original' : 'w780')
 
   /*
     The URL that has finished decoding, not a boolean. Comparing it to the

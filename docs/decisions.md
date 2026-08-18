@@ -3921,15 +3921,45 @@ experience*, and a narrow window was getting all four — because a narrow windo
 and a phone were the same thing to `film-screen.tsx`. It had one signal,
 `--breakpoint-pane`, and used it for two different questions.
 
-They are two questions:
+⚠ **This section was written with the wrong answer and is corrected below. Both
+wrong versions are kept, because the shape of the mistake is the same each time
+and it is the useful part.**
 
-- **`pane` — is there room to stand beside the wall?** A width. Below it the
-  screen is a modal takeover; at or above it, a 24rem panel with the wall live
-  beside it. Unchanged, and still `--breakpoint-pane`.
-- **`overlay` — is this being handled with a thumb?** A pointer. The words as
-  glass over a full-screen poster, a chevron that pushes them away, the poster
-  at `original` rather than `w780`, the synopsis in mono. `(pointer: coarse)`
-  and `!pane`.
+There are two questions, and they are answered by different signals:
+
+- **Shape decides the ARRANGEMENT.** `overlay` is *is this a tall narrow screen
+  where a poster nearly fills the width, so the words have nowhere to go but over
+  it.* The glass panel, the chevron, the full-screen picture and the recede are a
+  response to that, and **a maximally narrowed desk window has exactly that
+  shape** — so it gets them. `overlay` is `!pane`: a width.
+- **The pointer decides the TYPOGRAPHY.** `touch` is *is this being handled with a
+  thumb.* The mono synopsis was asked for on the phone and the printing on the
+  desk, and neither is a fact about how tall a window is. `(pointer: coarse)`.
+- **`pane` — is there room to stand beside the wall?** Unchanged, still
+  `--breakpoint-pane`, and it is what `overlay` is derived from.
+
+**The one place the two axes meet is the poster's size.** `original` is asked for
+only when `overlay && touch` — a full-screen poster on a 3x handset, ~1170 real
+pixels, where `w780` would be an upscale. A narrowed desk window has the same
+layout at 1x or 2x and takes `w780`; a large touchscreen at `pane` widths has a
+384px column and takes `w780`. Either axis alone would fetch megabytes for a box
+that cannot show them.
+
+### Both wrong versions, and why they were wrong the same way
+
+1. **Width decides everything** (before this section existed). The phone's
+   typography landed on any narrow desk window — which is the complaint that
+   started this.
+2. **The pointer decides everything** (the first version of this section). Fixed
+   that, and took the *arrangement* away from a narrowed window along with the
+   typography: **five things moved when two had been asked for.** The report was
+   immediate and exact — a narrowed browser no longer had the presentation it had
+   the day before.
+
+**Both are the same error: one signal answering two questions.** That error is
+what this file already records under *the film screen's height stopped being a
+decision* and under the search dock's three-times-repeated containment bug. When a
+rule has to distinguish two things, check whether it is really distinguishing one.
 
 ⚠ **`(pointer: coarse)` is a capability query, and that is what makes it
 allowed.** *How things get fixed* rules out "branches that sniff for a browser",
@@ -3939,13 +3969,14 @@ A poster you push out of the way with your thumb is a different object from one
 you click past with a cursor. Two other places already ask the same question: the
 sign-in page's optical padding and the entry rows' spacing.
 
-⚠ **It stays testable, which was the one thing that could have killed it.** A
-browser can be told it has a coarse pointer — `hasTouch: true, isMobile: true` in
-Playwright — so the touch layout is still driven and measured in a browser rather
-than only on glass. `recede.mjs` now runs both: a coarse 390×844 context that
-must have the chevron, and a *fine* 390×844 context that must not. What the
-change removes is the layout appearing by accident when a window is dragged
-narrow.
+⚠ **It stays testable, and better than before.** A browser can be told it has a
+coarse pointer — `hasTouch: true, isMobile: true` in Playwright — so the phone's
+typography is driven and measured here rather than only on glass. And because the
+*arrangement* is a width, **narrowing a window is a real preview of the phone's
+layout again**: valid for the chevron and the poster's geometry, not for how the
+synopsis reads. `recede.mjs` asserts both halves — a coarse 390×844 that must have
+the chevron and mono, and a *fine* 390×844 that must have the chevron and **not**
+mono, at `w780`.
 
 ⚠ **The edges are real and are accepted.** An iPad with a trackpad reports fine
 and gets the stacked layout; a touchscreen laptop reports coarse and gets the
@@ -3953,11 +3984,15 @@ overlay. Neither is wrong for the question being asked — both get what suits w
 is in the hand — but it does mean the answer is never "is this a phone", and
 nothing downstream should be written as though it were.
 
-**What a narrow desk window gets instead:** exactly what this screen was before
-18 August's evening — the artwork as a share of the column, the words under it on
-flat black, *See the poster* present, nothing receding. The same JSX branch as
-the panel, which is why the cost of the whole distinction is one boolean rather
-than a third layout to keep in step.
+**What a narrow desk window gets:** the overlay's layout and the desk's
+typography — full-screen poster, glass panel, chevron, the whole poster centred on
+black when the words are away, and a sans synopsis that prints. The stacked
+arrangement (artwork a share of the column, words under it, *See the poster*) is
+the panel's alone again.
+
+⚠ **The stacked branch is still reached by only one condition, and that is worth
+keeping.** It is the same JSX for the panel as it ever was; the two axes cost two
+booleans and no third layout.
 
 ### Mono reaches the synopsis, on one surface
 
