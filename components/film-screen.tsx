@@ -1294,12 +1294,20 @@ function PrintedSynopsis({ text, printing }: { text: string; printing: boolean }
     const node = host.current
     if (!node) return
 
-    const characters = node.children
+    /*
+      ⚠ **Copied out of the live collection, not read from it.** `node.children`
+      updates as React does, so a frame that lands between a swap and this
+      effect being torn down indexes a list that has already changed underneath
+      it — which threw on the first run of this code. Holding the elements this
+      effect was started for means a late frame writes to something detached and
+      harmless instead of reaching past the end of a list.
+    */
+    const characters = [...node.children] as HTMLElement[]
     shown.current = 0
 
     const revealTo = (n: number) => {
       for (let i = shown.current; i < n; i += 1) {
-        ;(characters[i] as HTMLElement).style.opacity = '1'
+        characters[i].style.opacity = '1'
       }
       shown.current = n
     }
@@ -1310,9 +1318,25 @@ function PrintedSynopsis({ text, printing }: { text: string; printing: boolean }
     }
 
     let frame = 0
-    const start = performance.now()
+
+    /*
+      ⚠ **The clock is the first frame's, not `performance.now()`, and mixing
+      them is a real bug rather than a tidiness point.** The timestamp handed to
+      a `requestAnimationFrame` callback is the moment that *frame* began, which
+      can be **earlier** than the effect that scheduled it — so `now - start`
+      came out negative, the count went to −10, and the next pass indexed
+      backwards off the array and threw. The print then stopped before it
+      started, intermittently, depending on where in the frame the screen
+      happened to mount.
+
+      Taking the origin from the first callback puts both ends on one clock, so
+      the elapsed time cannot be negative. Clamping the count at zero would have
+      hidden it just as well and left the two clocks in place.
+    */
+    let start: number | null = null
 
     const tick = (now: number) => {
+      if (start === null) start = now
       const due = Math.min(
         characters.length,
         Math.floor(((now - start) / 1000) * PRINT_CHARS_PER_SECOND),
