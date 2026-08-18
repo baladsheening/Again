@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 
 import type { FilmSearchResult } from '@/lib/domain'
+import { prefetchFilm } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
 import { useCapture } from './capture-provider'
 
@@ -130,6 +131,18 @@ export function PosterWall({
             <button
               type="button"
               onClick={() => choose(film)}
+              /*
+                ⚠ **The round trip starts here, one press before the screen that
+                needs it.** Reported 17 August: the film screen arrives in two
+                stages, because the title and artwork come off this poster and
+                everything else comes from `/api/film/[id]`. `pointerdown` is the
+                first moment the app knows *which* film — anything earlier is
+                guessing, and guessing across a six-column wall spends the
+                upstream quota on the ones nobody opens. See
+                `lib/film-request.ts`; the screen claims it on mount and starts
+                its own if there is nothing to claim.
+              */
+              onPointerDown={() => prefetchFilm(film.externalId)}
               // The button is the only place the title appears. Phrased as the
               // action rather than the name, because that is what activating it
               // does — "Aftersun" alone would announce a link to a page that

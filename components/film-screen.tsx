@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { FilmSearchResult, Intent } from '@/lib/domain'
+import { claimFilmRequest } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
 import { intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
@@ -342,15 +343,24 @@ export function FilmScreen({
     fills in the synopsis and the marks. A spinner over a poster we already have
     would be inventing a wait.
 
-    Aborted on unmount so closing the screen does not leave a request writing into
-    a component that has gone.
+    ⚠ **It is usually already in flight by the time this runs.** The poster starts
+    it on `pointerdown` and this claims it — see `lib/film-request.ts` for why the
+    hand-off is one request rather than a cache. `claimFilmRequest` starts its own
+    if there is nothing to claim, so this path does not depend on having been
+    prefetched and a screen opened some other way behaves identically.
+
+    Cancelled on unmount so closing the screen does not leave a request writing
+    into a component that has gone. The flag rather than the signal, because the
+    request may not be the one this effect created.
   */
   useEffect(() => {
-    const abort = new AbortController()
+    let cancelled = false
+    const request = claimFilmRequest(film.externalId)
 
-    fetch(`/api/film/${encodeURIComponent(film.externalId)}`, { signal: abort.signal })
+    request.response
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((body) => {
+        if (cancelled) return
         setDetails({
           synopsis: body.film?.synopsis ?? null,
           runtime: body.film?.runtime ?? null,
@@ -363,7 +373,7 @@ export function FilmScreen({
         setMarks(found)
       })
       .catch(() => {
-        if (abort.signal.aborted) return
+        if (cancelled) return
         /*
           The synopsis is the part that fails softly — there is a line for that
           below. The marks are not: an unknown list state stays unknown rather
@@ -373,7 +383,10 @@ export function FilmScreen({
         setDetails({ synopsis: null, runtime: null, directors: [] })
       })
 
-    return () => abort.abort()
+    return () => {
+      cancelled = true
+      request.abort()
+    }
   }, [film.externalId])
 
   /* §5.1. The offer expires; the row does not (§5 — nothing is ever deleted). */
@@ -713,7 +726,28 @@ export function FilmScreen({
               </span>
             </h2>
 
-            <p className="text-muted mt-2 text-sm">
+            {/*
+              ⚠ **`min-h-[1lh]` is the other half of the two-stage report** — the
+              lurch, where `lib/film-request.ts` takes the pause. This block is
+              `absolute bottom-0`, so it grows *upward*: a credit line that is
+              empty on the first frame and one line high a moment later drags the
+              title up with it, under your eyes, on the screen you just opened.
+
+              **The line is reserved, not the block.** One line is what this holds
+              on almost every film — the year alone is usually there from the
+              tapped poster — and the case that moves is the one where it is not:
+              a film with no year renders nothing at all until the request lands.
+              Reserving *two* would stop a long director list reflowing as well,
+              and would cost every other film a permanent empty line over its
+              artwork. That trade is not worth it; this one costs nothing.
+
+              `1lh` is the element's own line box, so it follows the type step at
+              64rem without knowing the number — the same reasoning as the `+`
+              wrapper above, including its Safari 16.4 floor. Where it is not
+              understood the declaration drops on its own and the behaviour is
+              what it was before this note.
+            */}
+            <p className="text-muted mt-2 min-h-[1lh] text-sm">
               {/*
                 Director, year, runtime — the three things that decide whether you
                 want a film tonight, in the order you ask them. Joined with a

@@ -73,24 +73,33 @@ question rather than a task.
       by name rather than by memory. **What is left is where it is offered in the
       UI**, which was always the undecided half.
 - [x] ~~**Ship Phase 2 to Vercel.**~~ Deployed, nine commits on 17 August.
-- [ ] **The film screen arrives in two stages, and the second one is visible.**
-      Reported on the handset, 17 August: tap a poster and the screen opens
-      properly, but **the title is there before the director and the synopsis
-      are** — *it's suboptimal*. Nothing is broken; this is the design showing its
-      seam. Title, year and artwork come off the poster that was tapped, so the
-      screen paints on the first frame; director, runtime and synopsis come from
-      `/api/film/[id]`, so they land a round trip later. `film-screen.tsx` calls
-      that *nothing waits for it*, and against a spinner it is right — against a
-      screen that fills in under your eyes it is not.
-      **Candidates, and they are not the same kind of fix.** *Prefetch* removes
-      the wait: fire the request on the poster's `pointerdown`, or for the first
-      rows on render, so the answer is in flight before the dialog mounts — the
-      route is already cached (`private, max-age=15`) and a small client cache
-      keyed by external id would make a re-open instant. *Reservation* removes the
-      movement: the credit line is one line, so holding its height stops the
-      synopsis jumping when it arrives. **Probably both** — one for the pause, one
-      for the lurch. ⚠ Do not answer it with a spinner over artwork we already
-      have; that trades a seam for a wait.
+- [x] ~~**The film screen arrives in two stages, and the second one is visible.**~~
+      Both halves built 18 August. **Not yet looked at on the handset** — and note
+      that a negative result there means nothing until the app is force-quit; see
+      docs/decisions.md, 18 August.
+      Reported 17 August: tap a poster and **the title is there before the
+      director and the synopsis are** — *it's suboptimal*. Title, year and artwork
+      come off the poster that was tapped; everything else comes a round trip
+      later from `/api/film/[id]`.
+      **The pause** — `lib/film-request.ts`. The request starts on the poster's
+      `pointerdown` and the screen claims it on mount, so the round trip overlaps
+      the tap instead of following it. ⚠ **A hand-off, not a cache, and the
+      difference is correctness.** This row used to propose keying answers by
+      external id; that would be wrong, because half of the response is `listed`,
+      which is yours and changes the moment you add something — a cache would draw
+      a `+` over a film you had just added. The route's `private, max-age=15`
+      already makes a re-open fast and already bounds the staleness, at the layer
+      that has the contract written on it. The other rejected option was firing
+      for every poster on screen: on a desk a mouse crossing a six-column wall
+      would spend the upstream quota on a dozen films nobody opened.
+      **The lurch** — `min-h-[1lh]` on the credit line. That block is
+      `absolute bottom-0`, so it grows *upward* and drags the title with it. One
+      line is reserved rather than two: the case that actually moves is a film
+      with **no year**, which renders nothing at all until the request lands, and
+      reserving two would cost every other film a permanent empty line over its
+      artwork to stop a long director list reflowing.
+      ⚠ Not answered with a spinner over artwork we already have; that trades a
+      seam for a wait.
 - [x] ~~**A scrollbar still appears over the artwork, where nothing scrolls.**~~
       Owner found and the range removed, 18 August. **Verified on the handset in
       both a Safari tab and the installed app** — the bar is gone and closing a

@@ -72,9 +72,11 @@ export async function GET(request: Request, ctx: RouteContext<'/api/film/[id]'>)
       { film, listed },
       /*
         Short, because the second half of this goes stale the moment you add
-        something. Sixty seconds is what stops a double-tap costing two round
-        trips; anything longer and reopening a film you just added would show you
-        a `+` for a row that exists.
+        something. Fifteen seconds is what stops a double-tap — or a press that
+        starts the request and a screen that opens a moment later, see
+        `lib/film-request.ts` — costing two round trips; anything longer and
+        reopening a film you just added would show you a `+` for a row that
+        exists.
       */
       { headers: { 'Cache-Control': 'private, max-age=15' } },
     )
