@@ -85,78 +85,42 @@ const UNDO_WINDOW_MS = 10_000
  * scroll rather than a squeeze — and `Want a copy`, which sits under it, can now
  * fall below the fold on a wordy film. That is the trade this fraction makes.
  */
-/*
-  ⚠ **It was `h-2/3` on the artwork itself, and moving to a grid broke that
-  silently — 18 August.** A percentage height on a *flex* item resolves against the
-  flex container, which is `h-full` and definite, so two thirds meant two thirds.
-  A percentage height on a *grid* item resolves against its **grid area**, and the
-  area was an `auto` row sized by its contents — which are `absolute`, so they
-  contribute nothing. The row collapsed to a sliver and took the poster with it.
-
-  So the fraction lives in the row template, where it is measured against the
-  container's own height and cannot be made circular. Same meaning as before: two
-  thirds of the box this sits in, never of the viewport.
-
-  ⚠ **The middle row is what the two layouts disagree about.** In the takeover the
-  words are placed into row 1 with the artwork, so this row is empty and takes no
-  height; in the panel they take it. Either way the artwork is two thirds and the
-  synopsis is whatever is left, which is why the panel keeps the proportions that
-  were looked at and approved.
-*/
-const COLUMN_ROWS = 'grid-rows-[66.666667%_auto_1fr]'
+const ARTWORK = 'h-2/3'
 
 /**
- * The one circle on the artwork.
+ * The one mark beside the title.
  *
  * ⚠ **No ring. It had one for a single commit and it is reverted** — a hairline
  * in `currentColor`, added on 17 August so the outline sat on the `+` rather than
  * on the close, and rejected on sight. The fill alone is the shape.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- *  Glass, 17 August — and the fill had to invert to get there
+ *  It was frosted glass for a day, and the day ended — 17–18 August
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Asked for: make the circle more glass-like, with a blur. Then, once it had one:
- * *it looks a bit grey, I want a frosted glass effect.*
+ * **This note is kept short on purpose, because the thing it described is gone.**
+ * The control used to sit on the artwork over a scrim, and most of a day went into
+ * making it read as frosted glass there: the fix turned out to be in the
+ * *gradient* rather than the disc, since **frost is blurred content and a blurred
+ * flat colour is that colour** — the scrim had to stop short of solid black so
+ * that a fifth of the poster reached the control and the blur had something to
+ * smear. The whole account is in git, at `9c467dd` and `a24fac8`.
  *
- * ⚠ **Both reports are about the same thing, and it is not in this class.** It
- * read grey because it *was* grey — a flat `#171716` with nothing varying inside
- * it. **Frost is blurred content, and there was no content**: this control sits
- * at the foot of the scrim, and the scrim's lower end was solid black, so the
- * backdrop being blurred was a sheet of black. Blur a flat colour and you get the
- * flat colour back.
+ * It ended when the words came off the poster on 18 August. There is no scrim, so
+ * there is nothing behind this to blur, so `backdrop-blur-band` would be inert —
+ * and the contrast floor it forced is gone with it. **The green tick was the number
+ * to watch at 3.3:1 against the 3:1 WCAG 1.4.11 asks of a graphical control; on
+ * flat black it is 6.0:1**, on every poster rather than on the kind ones.
  *
- * **So the fix is in the gradient, not the disc** — see the scrim in the render,
- * which stops at 80% instead of reaching solid. A fifth of the poster now reaches
- * this control, and the blur has something to smear: over a warm poster the disc
- * picks up warmth and loses saturation against its surroundings, which is what
- * frosted glass does and what no tint can imitate on its own.
+ * **What survives is `bg-text/8`, and its job changed.** It was the *floor* — the
+ * least tint that kept the shape findable where the artwork behind it was dark.
+ * With no artwork behind it, it is simply the fill. Warm rather than a cool
+ * `white/8`, or the one filled control in the app would be the one thing in it
+ * that is not warm.
  *
- * The tint stays, thinned to `text/8`, and it is doing a different job from the
- * frost: **it is the floor.** Over a dark passage of artwork there is nothing to
- * blur and nothing to see, and a control that disappears on dark posters would be
- * worse than one that is flat on all of them. Eight percent of the aged paper is
- * the least that keeps the shape findable when the picture behind it is black.
- * **Warm, not white** — `--color-text` rather than a cool `white/8`, or the one
- * glass control in the app would be the one thing in it that is not warm.
- *
- * `backdrop-blur-band` is the app's single glass strength, the 24px the home
- * wall's caption frosts artwork by. There is one number for glass here and this
- * is now its second reader.
- *
- * ⚠ **The contrast floor moved with the scrim, and this is where it now sits.**
- * Worst case is the brightest poster: the scrim lets through about 40/255, the
- * tint lifts it to about `#373737`, and against that the `+` reads 9.3:1 and the
- * green tick 3.3:1 — past the 3:1 WCAG 1.4.11 asks of a graphical control, and
- * not past it by much. **The tick is the number to watch.** Lightening the scrim
- * further, or thickening this tint, spends it.
- *
- * ⚠ **This reverses a caution written here on the same day**, and the caution
- * still holds as a thing to watch rather than as a reason not to: WebKit has a
- * history of misrendering `backdrop-filter` clipped to a rounded border —
- * sometimes painting the backdrop unclipped, sometimes dropping it. If this
- * circle ever shows a square of blur or no blur at all on iOS, that is the known
- * cause and it is not this file's arithmetic that is wrong.
+ * ⚠ **If the `+` is ever put back on the poster** — a parked want, see
+ * `docs/plan.md` — the frost, the scrim and the floor come back together or not at
+ * all. Do not restore one part and expect the control to read.
  */
 /*
   ⚠ **`size-6`, down from 9 then 8 then 7 across 17 August, and `tap-target` is
@@ -178,22 +142,8 @@ const COLUMN_ROWS = 'grid-rows-[66.666667%_auto_1fr]'
   artwork without being any of it, and tying its corner to the poster's would
   invent a relationship that is not there.
 */
-/*
-  ⚠ **One string for both layouts, and `backdrop-blur-band` is live in one of
-  them.** In the takeover this sits on the scrim with a fifth of the poster
-  reaching it, and the blur is what makes it frost rather than a grey chip. In the
-  panel the ground behind it is flat black, and a blurred flat colour is that
-  colour — so the declaration is inert there rather than wrong, which is why this
-  is not two constants. It was deleted for one commit while the words were off the
-  poster everywhere, and it came back with them.
-
-  **`bg-text/8` is the floor under both.** The least tint that keeps the shape
-  findable where the artwork behind it is dark — and on flat black it is simply
-  the fill. Warm rather than a cool `white/8`, or the one filled control in the app
-  would be the one thing in it that is not warm.
-*/
 const CONTROL =
-  'bg-text/8 backdrop-blur-band tap-target flex size-6 shrink-0 items-center justify-center rounded-md'
+  'bg-text/8 tap-target flex size-6 shrink-0 items-center justify-center rounded-md'
 
 type Details = {
   synopsis: string | null
@@ -709,33 +659,8 @@ export function FilmScreen({
         than any phone and does nothing. One layout, one class, right at both ends
         — the same move the acknowledgement band makes at its own breakpoint.
       */}
-      {/*
-        ─────────────────────────────────────────────────────────────────────────
-         A grid, so the words can share the artwork's cell or take their own row
-        ─────────────────────────────────────────────────────────────────────────
-
-        **Directed 18 August, after looking at both: the panel keeps the words
-        below the poster and the handset goes back to them over it.** The two
-        layouts are genuinely different now, which this screen had otherwise
-        avoided — and the reason is that the takeover *is* a poster filling a
-        screen, where a caption over the foot reads as part of the picture, while
-        the panel is a narrow column where the same caption would crowd it.
-
-        ⚠ **Nothing is duplicated to achieve that, and it must stay that way.**
-        Three rows — artwork, words, synopsis — and the words are placed into
-        row 1 or row 2 by one pair of classes. In row 1 they share the artwork's
-        cell and `self-end` sits them on its foot, which is what absolute
-        positioning used to do and what a second copy of the title would otherwise
-        have to. **One DOM order, one set of children, placement as data**, the
-        same shape as `show()` versus `showModal()` above.
-
-        The rows are `COLUMN_ROWS` — see the note there for why the artwork's two
-        thirds had to move out of the artwork and into the template. `min-h-0` on
-        the last row is what lets its scroller be shorter than its contents; the
-        flex column this replaced needed the same thing for the same reason.
-      */}
-      <div className={`mx-auto grid h-full w-full max-w-md ${COLUMN_ROWS}`}>
-        <div className="relative col-start-1 row-start-1 overflow-hidden">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col">
+        <div className={`${ARTWORK} relative shrink-0 overflow-hidden`}>
           {small && (
             /*
               ⚠ **Two layers, and the small one is the point.** `w342` is what the
@@ -782,41 +707,24 @@ export function FilmScreen({
           )}
 
           {/*
-            The scrim, and **only where the words are on the picture** — the
-            takeover. Type over artwork is unreadable without one, and this is the
-            same argument the wall's caption band makes: a gradient rather than a
-            blur, because the artwork below the words is what the screen is for and
-            a blur would take the bottom third of it.
+            ⚠ **The scrim is deleted, and it took three other things with it — 18
+            August.** It was a gradient over the foot of the artwork, stopped at
+            80% rather than solid black so the `+` would have something to frost
+            against, and it existed for exactly one reason: type was sitting on a
+            picture. **Directed: none of the writing overlaps the poster.** So
+            there is no type on the picture, and the scrim, the frost and the
+            contrast floor that governed both are gone with it.
 
-            ⚠ **It stops at 80% rather than reaching solid black, and that is what
-            makes the `+` frosted rather than grey.** Reported 17 August: the glass
-            circle looked grey. It was — a flat tint over a flat ground, because
-            the backdrop it was blurring at this height was *solid black*, and a
-            blurred flat colour is that colour. Letting a fifth of the poster reach
-            the bottom of the gradient gives the blur something to work on, and
-            frost is blurred content or it is nothing.
-
-            ⚠ **The whole of this went away for one commit and came back**, when
-            the words moved off the poster at every width and then the handset was
-            asked back. It is one clause now rather than a deletion, and the three
-            parts still stand or fall together: no scrim, no frost, and no floor
-            under the contrast.
-
-            **The contrast, which is the cost of this arrangement and is why the
-            panel does not use it.** Against the brightest poster the ground here
-            goes from black to about `#282828`, where the title reads 11:1 and the
-            credit line 5:1 — but the green tick lands at **3.3:1 against the 3:1
-            WCAG 1.4.11 asks of a graphical control**, and it is the number that
-            runs out first. In the panel the same tick is 6.0:1 on flat black,
-            because nothing is behind it. ⚠ Taking this below 80% spends what is
-            left. See `CONTROL`.
+            What that bought, and it is worth stating because it was the argument
+            for doing it: **legibility no longer depends on which film you tapped.**
+            Over the brightest poster the title read 11:1 and the credit line 5:1,
+            and the green tick — the number this file told you to watch — sat at
+            3.3:1 against a 3:1 floor. On the flat ground below the artwork the
+            tick is `--color-listed` on black at **6.0:1** and the title is full
+            strength, on every poster there has ever been. A design whose contrast
+            is a function of the image is one that is wrong on some image you have
+            not met yet.
           */}
-          {!pane && (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/80 via-black/60 to-transparent"
-            />
-          )}
 
           {/*
             ─────────────────────────────────────────────────────────────────────
@@ -835,13 +743,12 @@ export function FilmScreen({
             reachable from a keyboard and announced as a control. It costs one
             element and it is the difference between an affordance and a secret.
 
-            **Nothing is excluded by name.** In the takeover the layer above this
-            is the words, and that block is `pointer-events-none` with the `+`
-            alone restoring them — so a tap on the poster, on the title, on the
-            credit line or on the empty half of that row all reach this, and only
-            the one control does not. No `closest()` check and no list of things to
-            ignore. In the panel the words are in their own row and are simply not
-            over this at all, so the same two declarations cost nothing there.
+            **Nothing is excluded by name, and since 18 August nothing needs to
+            be.** This button is the only thing in the artwork block now. The title
+            and the credit line used to lie over it, which cost them
+            `pointer-events-none` and cost the `+` a `pointer-events-auto` to climb
+            back out — **three declarations arranging for a stack that no longer
+            exists.** They are below the picture, so they are simply not in the way.
           */}
           <button
             type="button"
@@ -852,43 +759,27 @@ export function FilmScreen({
         </div>
 
         {/*
-          --- what it is: on the poster, or under it ----------------------
+          --- what it is, under the artwork -------------------------------
 
-          **The one place the two layouts differ, and it is two class strings.**
-          In the takeover this lands in the artwork's own grid cell and `self-end`
-          sits it on the foot of the picture, over the scrim — which is the look
-          that was asked back for on the handset. In the panel it takes row 2 and
-          is an ordinary block below the poster.
+          **Directed 18 August: none of the writing overlaps the poster.** This was
+          `absolute inset-x-0 bottom-0` over the foot of the artwork; it is an
+          ordinary block in the column now, and everything that existed to make
+          type survive a picture went with the move — see the note where the scrim
+          was.
 
-          `pointer-events-none` only where it is over something: in row 1 the
-          artwork's close button is underneath, and the `+` restores events for
-          itself. In row 2 there is nothing beneath it to protect.
+          `shrink-0` because the synopsis below is the `flex-1` that gives, and a
+          title that lost a line to a long write-up would be the wrong thing to
+          compress.
 
-          ⚠ **The `+` follows the words rather than the picture, at both widths.**
-          It is inline in the heading, so it goes where the title goes. It was
-          asked to come down with the title, with a note that it may return to
-          **the poster's top right** later — an open row in `docs/plan.md`, and the
-          scrim note above is the recipe it would need.
+          ⚠ **The `+` came down with the title, and that is a decision rather than
+          a consequence.** It is inline in the heading, so it followed the words by
+          construction — but it was asked for explicitly, with a note that it may
+          go back to **the poster's top right** later. If it does, it needs its
+          frost back, and the frost needs a scrim, and the scrim needs the contrast
+          floor: the note where the scrim was is the whole recipe. Do not restore
+          one part of it and expect the control to read.
         */}
-        <div
-          className={
-            pane
-              ? 'gutter col-start-1 row-start-2 pt-5'
-              : /*
-                   ⚠ **`relative` is load bearing and moves nothing.** Sharing a
-                   grid cell puts this after the artwork in tree order, which is
-                   *not* enough to paint above it: a positioned element paints in
-                   a later phase than a static one, and the artwork block is
-                   `relative` with an `absolute` close button inside it. Static,
-                   this block rendered underneath both — the title and the credit
-                   line simply were not there, while the `+` survived because it
-                   carries its own `relative` for the optical shift. Positioning
-                   it joins the same phase, where tree order decides and this is
-                   last.
-                */
-                'gutter pointer-events-none relative col-start-1 row-start-1 self-end pb-5'
-          }
-        >
+        <div className="gutter shrink-0 pt-5">
             {/*
               ─────────────────────────────────────────────────────────────────
                The `+` ends the title, on whichever line the title ends
@@ -979,7 +870,7 @@ export function FilmScreen({
                 rather than *that worked*. See `--color-listed` in globals.css for
                 what that distinction costs and why it is drawn that way round.
               */}
-              <span className="pointer-events-auto relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
+              <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
                 <AddControl
                   state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
                   label={specFor('film', primary).wantLabel}
@@ -1070,10 +961,14 @@ export function FilmScreen({
             */}
             {/*
               ⚠ **Panel only, and that is a parked question rather than a
-              decision.** On the handset the words are back over the poster, and a
-              third line there would change the look that was asked back for — so
-              *where the full-size control goes on the handset* is deliberately
-              unanswered. It is not that the handset does not want one.
+              decision.** Directed 18 August: the handset goes back to what it was
+              before this control existed. It is not that the handset does not
+              want a way to the full poster — it is that **where** that control
+              goes there has not been settled, and a third line under the credit
+              line was not it. An open row in `docs/plan.md`.
+
+              Everything else about the two widths is identical: the words sit
+              below the artwork at both, and this is the only thing that differs.
             */}
             {pane && large && (
               <PosterReveal
@@ -1133,7 +1028,7 @@ export function FilmScreen({
           scrolls; it simply stops reporting it. See the utility in globals.css for
           what that costs.
         */}
-        <div className="col-start-1 row-start-3 flex min-h-0 flex-col pt-6">
+        <div className="flex min-h-0 flex-1 flex-col pt-6">
           <h3 className="gutter micro text-muted shrink-0">Synopsis</h3>
 
           {/*
