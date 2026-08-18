@@ -1289,7 +1289,13 @@ function Probe({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | n
   }, [dialogRef])
 
   return (
-    <div className="pointer-events-none fixed top-0 left-0 z-50 bg-black/85 p-1.5 font-mono text-[9px] leading-tight text-white">
+    /*
+      ⚠ Installed, the viewport's top edge is under the clock rather than below
+      it — a standalone web app is given the whole screen and the status bar is
+      drawn over it. The same 47px band that made the short-viewport unit come
+      up short on this handset in August.
+    */
+    <div className="pointer-events-none fixed top-[env(safe-area-inset-top)] left-0 z-50 bg-black/85 p-1.5 font-mono text-[9px] leading-tight text-white">
       {rows.map((row) => (
         <div key={row}>{row}</div>
       ))}
