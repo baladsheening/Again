@@ -1689,9 +1689,37 @@ function Artwork({
  * animated at all; the printed copy is `aria-hidden`, and `select-none` on the
  * other keeps a copy-paste from picking up both.
  */
-const PRINT_WPM = 600
+/*
+  ⚠ **600 was a reading speed; 1800 is not, and that is the whole of the change
+  made 20 August.** Directed: print faster. The original rate was anchored to
+  *someone reading quickly*, and past that there is no reading to anchor to — so
+  the unit that decides it is how long a whole paragraph takes. A typical TMDB
+  synopsis is around 500 characters: 600wpm is about ten seconds of it, which is
+  longer than anyone waits before reading past the front; 1800 is about three,
+  which is a sweep you can watch to the end. **The print is now an arrival rather
+  than a pace.** One constant if it moves again — 1200 is ~5s, 2400 is ~2.4s.
+*/
+const PRINT_WPM = 1800
 /** English averages about 5.1 characters a word once the space is counted. */
 const PRINT_CHARS_PER_SECOND = (PRINT_WPM * 5.1) / 60
+
+/*
+  ⚠ **The soft front is a WIDTH IN CHARACTERS, and it is the reason the rate
+  cannot be changed on its own.** Each character fades rather than appearing, so
+  at any moment `rate × duration` of them are part way in — that band is what
+  makes the edge of the text arrive instead of stamp. Tripling the rate against a
+  fixed duration would have tripled the band to 23 characters, which is most of a
+  line half-lit, so the duration is **derived from the rate** and the band holds
+  at the eight it was designed as.
+
+  ⚠ **It reaches CSS as a custom property set with `el.style`, never a rendered
+  `style` attribute** — the CSP in `proxy.ts` drops those in production while
+  `next dev` allows them, so a per-character inline duration would have worked
+  here and vanished on the deployed site. The class naming the property is static
+  and compiles; only the value is written at runtime, once, on the host.
+*/
+const PRINT_FRONT_CHARS = 8
+const PRINT_FADE_MS = Math.round((PRINT_FRONT_CHARS / PRINT_CHARS_PER_SECOND) * 1000)
 
 function PrintedSynopsis({
   text,
@@ -1719,6 +1747,11 @@ function PrintedSynopsis({
     */
     const characters = [...node.children] as HTMLElement[]
     shown.current = 0
+
+    /* Set before anything is revealed, so no character can fade at the wrong
+       speed on the first frame. Inherited, so it costs one write, not one a
+       character. */
+    node.style.setProperty('--print-fade', `${PRINT_FADE_MS}ms`)
 
     const revealTo = (n: number) => {
       for (let i = shown.current; i < n; i += 1) {
@@ -1786,11 +1819,15 @@ function PrintedSynopsis({
         {[...text].map((character, index) => (
           /*
             The fade is a class, so it is one rule for every character rather
-            than one declaration each. About eight are mid-fade at any moment at
-            this speed, which is what gives the edge of the text a soft front
-            instead of a stamping cursor.
+            than one declaration each. `PRINT_FRONT_CHARS` of them are mid-fade at
+            any moment whatever the rate is, which is what gives the edge of the
+            text a soft front instead of a stamping cursor — see the derivation
+            above. The duration was `150` while the rate was fixed at 600wpm.
           */
-          <span key={index} className="opacity-0 transition-opacity duration-150">
+          <span
+            key={index}
+            className="opacity-0 transition-opacity duration-(--print-fade)"
+          >
             {character}
           </span>
         ))}
