@@ -170,18 +170,66 @@ export function PosterWall({
       reading something the grid cannot see. The count follows the room, which is
       the only thing that was ever true here.
 
-      **The remaining threshold is the measured one** — below 26rem of grid, four
-      columns are narrower than the phone already shows, which is the fault the
-      old rule had at `rail` and the reason that step exists at all.
+      ─────────────────────────────────────────────────────────────────────────
+       The count must never rise as the window narrows — 20 August
+      ─────────────────────────────────────────────────────────────────────────
+
+      **Reported: dragging a window from widest to narrowest went 5, 4, 3, and
+      then back up to 4.** The last step is the fault, and it is not the wall's:
+      `rail` is where the left rail stops applying, so at 719px the wall is
+      handed back the rail's 17rem and finds itself *wider* than it was at 720px
+      — 679px of grid against 408. The count followed the room, correctly, and
+      the room went the wrong way.
+
+      ⚠ **So the fourth column is now `42.5rem`, which is `--breakpoint-rail`
+      (45rem) less `gutter`'s two sides.** It is the widest this grid can be
+      *before the rail exists*, so a fourth column can only appear once there is
+      a rail — and the jump has nowhere to land. Narrowing now reads 5, 4, 3, 3,
+      3: monotonic by construction rather than by choosing numbers that happen
+      not to collide.
+
+      ⚠ **The old threshold was `26rem` and its argument is still true, just no
+      longer the binding one.** It said four columns below 26rem of grid are
+      narrower than the same wall on a phone. 42.5rem is stricter and satisfies
+      it: at the crossing, four columns are 162px against the phone's 110px.
+
+      **Neither number is a device and neither is measured on one.** Both are
+      subtractions from breakpoints already declared in globals.css — the rail's
+      width and `main`'s cap — so a change to either moves these without anyone
+      remembering to.
+
+      ⚠ **The four-column band is narrow, and that is geometry rather than an
+      oversight**: `main`'s cap is 48rem and the rail arrives at 45, so only 3rem
+      of grid separates the two steps — windows of about 992 to 1039. Widening it
+      means moving one of those two breakpoints, which belong to the shell.
     */}
     <div className="@container">
-    <ul className="@min-[26rem]:grid-cols-4 @min-[45.5rem]:grid-cols-5 grid grid-cols-3 gap-2.5">
+    <ul className="@min-[42.5rem]:grid-cols-4 @min-[45.5rem]:grid-cols-5 grid grid-cols-3 gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
         if (!src) return null
 
+        /*
+            ⚠ **`content-visibility` is here to make the wall's width animate,
+            and it was measured before and after — 20 August.** Closing the panel
+            returns 27rem to this grid over 300ms, and every frame of that is a
+            relayout of the whole wall. This listing is **322 posters**, of which
+            about fifteen are on screen: at 30fps with a 117ms hitch on the first
+            frame, the cost was the 307 nobody was looking at.
+
+            ⚠ **`aspect-[2/3]` on the item is what makes it safe.** Skipped
+            content is size-contained, so an item whose height came from the
+            image inside it would collapse to nothing and the wall would fold up
+            as you scrolled. With the ratio on the item's own box the height is
+            `width × 1.5` from its own style, with no contents consulted — the
+            same ratio the `<Image>` already carries, now stated where the layout
+            actually needs it.
+
+            It is not a workaround for one device: the work removed is work no
+            screen needed doing, which is the first thing CLAUDE.md asks for.
+        */
         return (
-          <li key={film.externalId}>
+          <li key={film.externalId} className="aspect-[2/3] [content-visibility:auto]">
             <button
               type="button"
               onClick={() => choose(film)}

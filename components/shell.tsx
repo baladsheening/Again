@@ -1468,7 +1468,24 @@ export function Shell({
       never comes. Above `pane` only; the utility carries that variant itself.
     */}
     <div
-      className={`rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col ${
+      /*
+        ⚠ **The room is given back over 300ms, not at once — 20 August.**
+        Reported: closing the panel by tapping the poster should return to five
+        columns smoothly. The padding is the only thing that changes, so it is
+        the only thing that animates, and the wall unfolds as it shrinks: the
+        container query re-answers continuously on the way, so the count steps
+        3 → 4 → 5 as the box passes each threshold rather than jumping.
+
+        **300ms because that is the panel's own travel** — `duration-300` on the
+        film screen's chevron — so the two read as one movement rather than as a
+        panel that leaves and a wall that then notices.
+
+        ⚠ It also animates on a route change to and from `/`, which is the same
+        room arriving and leaving and looks like what it is. There is nothing to
+        animate on first paint: the reserved column is the default, so no value
+        changes when the page arrives.
+      */
+      className={`rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col transition-[padding] duration-300 ${
         pathname === '/' ? 'pane-inset' : ''
       }`}
     >

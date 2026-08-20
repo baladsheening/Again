@@ -39,14 +39,14 @@ export default async function HomePage() {
     It keeps `inCinemas()` a pure function of its arguments, and therefore
     testable without a request.
   */
-  let listing: CinemaListing = { nowShowing: [], comingSoon: [] }
+  let listing: CinemaListing = { nowShowing: [], comingSoon: [], opening: null }
   try {
     listing = await inCinemas(await viewerRegion())
   } catch (cause) {
     console.error('Home: TMDB listings unavailable', cause)
   }
 
-  const { nowShowing, comingSoon } = listing
+  const { nowShowing, comingSoon, opening } = listing
 
   /*
     **The page's heading is `sr-only`, and the visible caption is not it.** The
@@ -78,7 +78,7 @@ export default async function HomePage() {
         /* One empty state rather than a caption over nothing. */
         <PosterWall films={[]} />
       ) : (
-        <CinemaWall nowShowing={nowShowing} comingSoon={comingSoon} />
+        <CinemaWall nowShowing={nowShowing} comingSoon={comingSoon} opening={opening} />
       )}
     </>
   )

@@ -85,6 +85,14 @@ const searchResponse = z.object({
       title: z.string(),
       release_date: z.string().optional(),
       poster_path: z.string().nullable().optional(),
+      /**
+       * ⚠ **Parsed, and deliberately never shipped.** The list endpoints carry a
+       * synopsis for every result; `toResult` drops it, so this costs the client
+       * nothing. It is read once, here, to pick which film the desk's panel
+       * arrives holding — see `openingFilm`. Two hundred of these on the wire
+       * would be about a hundred kilobytes for a paragraph nobody reads.
+       */
+      overview: z.string().nullable().optional(),
     }),
   ),
 })
@@ -265,6 +273,52 @@ export type CinemaListing = {
   nowShowing: FilmSearchResult[]
   /** Not yet released, soonest first. */
   comingSoon: FilmSearchResult[]
+  /**
+   * The film the desk's panel arrives holding — see `openingFilm` for how it is
+   * picked and why the choice is made here rather than on the wall.
+   */
+  opening: FilmSearchResult | null
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Which film the panel opens with — 20 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * It was *the first poster on the wall*, which is the honest reading of "the
+ * first film" but takes whatever synopsis that film happens to have. **Directed:
+ * it should be one with a fairly extensive synopsis**, because the panel's
+ * synopsis prints and a two-line write-up is over before it reads as anything.
+ *
+ * ⚠ **The choice is the SERVER's, and that is not a preference.** The client is
+ * sent `FilmSearchResult`, which has no synopsis and should not gain one — this
+ * is the only place both the wall's order and the write-ups exist at once.
+ *
+ * **The threshold is derived from the print, not picked.** `PRINT_WPM` is 1800,
+ * which is 153 characters a second, so 400 characters is about two and a half
+ * seconds of printing — long enough to be a thing you watch happen rather than a
+ * flicker. Below that the effect is wasted on the one film everybody sees first.
+ *
+ * ⚠ **It never returns nothing when there is something.** First past the post in
+ * wall order, so the panel still holds a film from the top of the listing where
+ * it can; if no synopsis reaches the mark, the longest one wins rather than the
+ * rule failing and leaving the column empty.
+ */
+const SYNOPSIS_ENOUGH = 400
+
+function openingFilm<T extends { overview?: string | null }>(
+  ordered: T[],
+  toResult: (film: T) => FilmSearchResult,
+): FilmSearchResult | null {
+  if (ordered.length === 0) return null
+
+  const enough = ordered.find((film) => (film.overview?.length ?? 0) >= SYNOPSIS_ENOUGH)
+  if (enough) return toResult(enough)
+
+  const longest = ordered.reduce((best, film) =>
+    (film.overview?.length ?? 0) > (best.overview?.length ?? 0) ? film : best,
+  )
+  return toResult(longest)
 }
 
 export async function inCinemas(region: string | null): Promise<CinemaListing> {
@@ -375,13 +429,22 @@ export async function inCinemas(region: string | null): Promise<CinemaListing> {
   */
   const UNDATED = '9999-99-99'
 
+  const showingOrdered = showing.sort((a, b) =>
+    (b.release_date ?? '').localeCompare(a.release_date ?? ''),
+  )
+  const soonOrdered = soon.sort((a, b) =>
+    (a.release_date || UNDATED).localeCompare(b.release_date || UNDATED),
+  )
+
   return {
-    nowShowing: showing
-      .sort((a, b) => (b.release_date ?? '').localeCompare(a.release_date ?? ''))
-      .map(toResult),
-    comingSoon: soon
-      .sort((a, b) => (a.release_date || UNDATED).localeCompare(b.release_date || UNDATED))
-      .map(toResult),
+    nowShowing: showingOrdered.map(toResult),
+    comingSoon: soonOrdered.map(toResult),
+    /*
+      Sorted first, so "first past the post" means first *on the wall* rather
+      than first out of TMDB — the two differ, and the wall's order is the one
+      the panel's choice should agree with.
+    */
+    opening: openingFilm([...showingOrdered, ...soonOrdered], toResult),
   }
 }
 

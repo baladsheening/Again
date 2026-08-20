@@ -115,9 +115,16 @@ const WORD = 'opacity-0 group-data-[masthead=gone]/masthead:opacity-100 rail:opa
 export function CinemaWall({
   nowShowing,
   comingSoon,
+  opening,
 }: {
   nowShowing: FilmSearchResult[]
   comingSoon: FilmSearchResult[]
+  /**
+   * The film the panel arrives holding at desk widths, chosen by `inCinemas`
+   * because the synopsis it is chosen for never leaves the server. Null when
+   * there is nothing on the wall.
+   */
+  opening: FilmSearchResult | null
 }) {
   const caption = useRef<HTMLHeadingElement>(null)
   const showing = useRef<HTMLDivElement>(null)
@@ -134,11 +141,14 @@ export function CinemaWall({
     globals.css), so the layout is already right — this is the other half of it,
     which is that the column has something in it rather than standing empty.
 
-    ⚠ **The wall picks the film, not this effect.** *The first film on the wall*
-    is a statement about what is on screen, so it reads the same order the eye
-    does: the first of the showing half, or the first of what is coming when
-    nothing is showing. No separate notion of a featured film, nothing stored,
-    nothing to keep in step with the listing.
+    ⚠ **The SERVER picks the film, not this effect — 20 August.** It was the
+    first poster on the wall; directed since: one with a fairly extensive
+    synopsis, because the panel's synopsis prints and a two-line write-up is over
+    before it reads as anything. The synopsis is the one thing this component
+    cannot see — `FilmSearchResult` has no overview and should not gain one — so
+    the choice is made in `inCinemas`, where the wall's order and the write-ups
+    exist at once. See `openingFilm` for the threshold and why it is derived from
+    the print rate rather than picked.
 
     ⚠ **Once, on arrival, and never again.** No dependency array entry can make
     this re-fire: a person who closes the panel has said they want it shut, and a
@@ -151,7 +161,7 @@ export function CinemaWall({
     person had not asked to leave.
   */
   const { present } = useCapture()
-  const first = nowShowing[0] ?? comingSoon[0] ?? null
+  const first = opening
 
   useEffect(() => {
     if (!first || !paneQuery().matches) return
