@@ -1165,7 +1165,16 @@ function FilmBody({
         */}
         {!overlay && (
           <span className="pointer-events-none absolute right-0 bottom-full flex translate-x-1/2 translate-y-1/2">
-            <span className="bg-bg pointer-events-auto rounded-full [&>*]:rounded-full">
+            {/*
+              ⚠ **`size-7` here, `size-6` everywhere else — directed 20 August,
+              "a tad bigger".** The same reasoning as the rounding beside it: the
+              size belongs to this placement, not to the control. Inline in a
+              heading the box has to sit in a line of type, and 28px would push
+              that line out; on a picture it has nothing to fit inside and the
+              extra 4px is the difference between a mark and a target. The glyph
+              stays 14px, so what grew is the disc around it.
+            */}
+            <span className="bg-bg pointer-events-auto rounded-full [&>*]:size-7 [&>*]:rounded-full">
               {addControl}
             </span>
           </span>

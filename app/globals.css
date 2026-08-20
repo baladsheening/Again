@@ -514,7 +514,13 @@
   --masthead-gap: 0.5rem;
 
   /**
-   * How tall the masthead is: the notch, the air, the mark's ink, the air.
+   * How tall the masthead is: the notch, the air *and the hem*, the mark's ink,
+   * the air.
+   *
+   * ⚠ **The hem is in the top term since 20 August and this expression has to
+   * carry it** — see `masthead-box`, which is the rule this restates. `main`
+   * pads by this and the caption pulls itself up by it, so a top padding that
+   * grew without this growing would put the wall under the mark by 8px.
    *
    * Two things need this and neither is the masthead. `main` pads its top by
    * this plus `0.5rem`, because the header is `fixed` and holds no space open
@@ -533,7 +539,8 @@
    * expression in a second file and one edit away from disagreeing with this.
    */
   --masthead-height: calc(
-    env(safe-area-inset-top) + var(--masthead-gap) * 2 + var(--wordmark-ink)
+    env(safe-area-inset-top) + var(--masthead-gap) * 2 + var(--masthead-hem) +
+      var(--wordmark-ink)
   );
 
   /**
@@ -942,8 +949,35 @@
  * `0.5rem` — because it is padding on a third element that has to clear all of
  * it, not the box itself. See the note there.
  */
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The air above the row is the air below it — 20 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Reported: at the narrowest browser widths the mark and its icons sit too
+ * close to the top of the window, and the space above and below should match.**
+ * They did not, and the reason is that only one of the two is one term.
+ *
+ * Below the row there are **two** gaps before the wall begins: `--masthead-gap`
+ * inside the banner, and `--masthead-hem` underneath it — the strip the header
+ * paints so posters do not show through, and which `main` clears. Above the row
+ * there was only the gap. So a browser, where the safe-area inset reads 0, had
+ * 8px above and 16px below.
+ *
+ * ⚠ **So the top carries the hem too, and it is written as that sum rather than
+ * as 1rem.** Doubling the gap would have given 16 above and 24 below — the same
+ * asymmetry, moved. The two sides are now the same expression, so the hem can
+ * change for its own reasons and this stays symmetric.
+ *
+ * ⚠ **Installed, the inset is on top of that and the asymmetry comes back on
+ * purpose.** `env(safe-area-inset-top)` is the status bar, which is not air —
+ * it is a strip the system draws in. Matching it below would push the mark down
+ * by the height of the clock for no reason.
+ */
 @utility masthead-box {
-  padding-top: calc(env(safe-area-inset-top) + var(--masthead-gap));
+  padding-top: calc(
+    env(safe-area-inset-top) + var(--masthead-gap) + var(--masthead-hem)
+  );
   padding-bottom: var(--masthead-gap);
 }
 
