@@ -632,7 +632,25 @@ export function FilmScreen({
           />
         </div>
       ) : (
-        <div className="@container relative mx-auto h-full w-full max-w-md">
+        <div
+          /*
+            ⚠ **`overflow-hidden` is the band's edge, and it is the column's own
+            job rather than the band's.** Reported 20 August: the blur bled past
+            the panel either side. The cause is the `scale-110` two blocks down,
+            which is deliberate and must stay — a blur samples past its element's
+            edges, so an unscaled copy fades out at all four sides. The two are
+            not in conflict once this is here: **the scale gives the blur
+            something to sample, the clip decides where it stops.**
+
+            It says the true thing about this box rather than correcting one
+            child — nothing in the takeover paints outside the column, at any
+            width and whatever a future child's filter reaches for. Removing the
+            collision rather than tuning the overhang, which is what a smaller
+            scale would have been: 110% is not a number to trade against a
+            visible edge, it is what stops the vignette.
+          */
+          className="@container relative mx-auto h-full w-full max-w-md overflow-hidden"
+        >
           {/*
             ─────────────────────────────────────────────────────────────────────
              The surround: blurred under a cursor, black under a thumb
@@ -664,7 +682,9 @@ export function FilmScreen({
 
             ⚠ **`scale-110` is not decoration.** A blur samples past the element's
             edges, where there is nothing, so an unscaled copy fades out at all
-            four sides and reads as a vignette nobody asked for.
+            four sides and reads as a vignette nobody asked for. **Its overhang is
+            clipped by the column, not sized to fit** — see the `overflow-hidden`
+            argued on that element. Do not shrink this to keep the blur inside.
 
             It needs no state: at rest the sharp poster covers the screen and this
             is invisible, so what reveals it is the same thing that makes room for
