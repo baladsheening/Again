@@ -1484,8 +1484,16 @@ export function Shell({
         room arriving and leaving and looks like what it is. There is nothing to
         animate on first paint: the reserved column is the default, so no value
         changes when the page arrives.
+
+        ⚠ **`padding-right`, not `padding`, and the difference was a bug I
+        shipped.** `transition-[padding]` also animates `rail:pl-68` — so the
+        rail's 17rem eased in and out as a window crossed that breakpoint, and
+        the wall's width *lagged the pointer* through a drag instead of tracking
+        it. Measured mid-drag at 719px: `padding-left` read 263.098px on its way
+        to 0. **One side of this box is a panel that comes and goes; the other is
+        a rail that either exists or does not.** Only the first is a movement.
       */
-      className={`rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col transition-[padding] duration-300 ${
+      className={`rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col transition-[padding-right] duration-300 ${
         pathname === '/' ? 'pane-inset' : ''
       }`}
     >

@@ -203,7 +203,45 @@ export function PosterWall({
       of grid separates the two steps — windows of about 992 to 1039. Widening it
       means moving one of those two breakpoints, which belong to the shell.
     */}
-    <div className="@container">
+    {/*
+      ─────────────────────────────────────────────────────────────────────────
+       The wall never gets wider as the window gets narrower — 20 August
+      ─────────────────────────────────────────────────────────────────────────
+
+      **Reported: near the narrow end the three columns suddenly get bigger.**
+      They did, and by 70%: crossing `rail` downwards takes the rail off the
+      page and hands its 17rem back to the wall, so at 720px the grid is 408
+      and at 719px it is 679. Posters went 129px to 219px — the wall growing
+      because the window shrank.
+
+      ⚠ **The count was already stopped from rising at that boundary; the SIZE
+      was not, and stopping one without the other is why this came back.** The
+      fix before this narrowed the column ladder so the count held at three
+      across the crossing. It did nothing about the room, so three columns
+      simply shared 271px more of it.
+
+      ⚠ **So the wall is capped below `rail` at exactly the width it has just
+      above it**, and the cap is written as that subtraction rather than as
+      408px: the breakpoint, less the rail's `pl-68`, less `gutter`'s two sides.
+      The two sides of the crossing are now the same number by construction, so
+      the poster size is continuous through it and cannot drift apart if any of
+      the three moves.
+
+      Above `rail` the cap is lifted — the rail exists there and the room it
+      leaves is the room the wall should have.
+
+      ⚠ **Centred, not left-aligned.** Below `rail` and above about 448px this
+      leaves slack, and all of it at one edge reads as a wall that failed to
+      load its last column. A phone never reaches the cap, so nothing about the
+      surface this was designed for changes.
+
+      **What this does NOT fix, and cannot:** the count changing from five to
+      four to three is a jump in poster size of `N/(N-1)` — 25% and 33% — because
+      a grid whose tracks are `1fr` always fills its box. Nothing interpolates
+      four tracks into three. See `docs/decisions.md` if that is ever traded for
+      a fixed poster size, which is the only construction without it.
+    */}
+    <div className="@container mx-auto max-w-[calc(var(--breakpoint-rail)_-_17rem_-_2.5rem)] rail:max-w-none">
     <ul className="@min-[42.5rem]:grid-cols-4 @min-[45.5rem]:grid-cols-5 grid grid-cols-3 gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
