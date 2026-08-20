@@ -1084,24 +1084,37 @@
 }
 
 /**
- * Room for the film panel, taken out of the page while one is open.
+ * Room for the film panel, held open by the route that has one.
  *
- * **Driven by a custom property rather than by React state**, so the panel opens
- * without the shell having to know it exists: `film-screen.tsx` sets
- * `--pane-open` on the root while it is standing beside the page, and clears it
- * on the way out. The same CSSOM route the scroll lock and `--keyboard-overlap`
- * take, and for the same reason — a rendered `style` attribute is dropped by the
- * CSP in production (see `proxy.ts`), while `el.style` from an effect is not.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  It was `calc(var(--pane-open, 0) * var(--pane-inset))` until 20 August
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **The fallback is what makes it safe.** `var(--pane-open, 0)` is zero
- * everywhere the panel is not open, including every route that has never heard of
- * it, so this reserves nothing until something asks. And it is inside the `pane`
- * variant, so below that width — where the screen takes the viewport instead —
- * the property can be set and still move nothing.
+ * `film-screen.tsx` set `--pane-open` on the root while it stood beside the page
+ * and cleared it on the way out, so the room appeared when a film was opened and
+ * went again when it closed. **Directed: the wall should already look the way it
+ * looks with a film open**, so the room is permanent and the reflow is gone —
+ * tapping a poster now changes one column instead of re-laying the whole wall
+ * from six columns to four under the finger that asked.
+ *
+ * ⚠ **What replaced the property is a ROUTE, not a state.** The multiplier could
+ * have been pinned to 1, which would have left a property nothing writes and a
+ * reader that cannot say why. The shell puts this class on the wall's route and
+ * on no other, which is the true statement: **this is the page a panel lives on.**
+ * `/profile` and the collections get nothing, and would otherwise have carried
+ * 27rem of dead space for a panel that never opens there.
+ *
+ * ⚠ **It is decided in the markup, so it is right in the first paint.** The old
+ * property was written from an effect, which is after the first frame — reserving
+ * the column that way would have shown a six-column wall and then reflowed it to
+ * four on arrival, which is the exact jump this removes.
+ *
+ * Still inside the `pane` variant: below that width the screen takes the viewport
+ * instead, so there is no column to hold and this reserves nothing.
  */
 @utility pane-inset {
   @variant pane {
-    padding-right: calc(var(--pane-open, 0) * var(--pane-inset));
+    padding-right: var(--pane-inset);
   }
 }
 

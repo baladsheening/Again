@@ -190,9 +190,16 @@ type Marks = Partial<Record<Intent, { entryId: string | null }>> | null
 export function FilmScreen({
   film,
   onClose,
+  takeFocus,
 }: {
   film: FilmSearchResult
   onClose: () => void
+  /**
+   * Whether a person asked for this screen. False when the page put it there —
+   * see the two verbs in `capture-provider.tsx`. It decides one thing: whether
+   * opening moves the keyboard's focus into it.
+   */
+  takeFocus: boolean
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   /* Which shape it is open in, and whether the next `close` is ours — see below. */
@@ -299,7 +306,26 @@ export function FilmScreen({
     mode.current = wanted
     if (pane) dialog.show()
     else dialog.showModal()
-  }, [pane])
+
+    /*
+      ⚠ **A screen the page opened gives the focus straight back.** Both `show()`
+      and `showModal()` run the dialog focusing steps regardless of what opened
+      them, so the wall's first film — presented on arrival, not chosen — landed
+      the keyboard on this screen's *Close* button. The first Tab or Enter on a
+      fresh page would have shut something nobody opened.
+
+      **Handing it back is the whole correction: blur, and focus returns to the
+      document**, which is where a page that has just loaded should start. There
+      is nothing to restore it *to* — this runs on arrival, when nothing was
+      focused — so remembering a previous element would be remembering `body`.
+
+      Guarded by `contains`, so it can only ever undo a focus this call caused.
+    */
+    const focused = document.activeElement
+    if (!takeFocus && focused instanceof HTMLElement && dialog.contains(focused)) {
+      focused.blur()
+    }
+  }, [pane, takeFocus])
 
   /*
     Escape, which a modal dialog gets from the platform and a panel does not. One
@@ -316,18 +342,16 @@ export function FilmScreen({
   }, [pane, onClose])
 
   /*
-    The room the panel takes out of the page — `pane-inset` in globals.css. Set
-    here rather than passed through the shell, so nothing between this component
-    and the layout has to carry a flag it would only forward.
+    ⚠ **The effect that reserved the panel's room is DELETED — 20 August.** It set
+    `--pane-open` on the root here and cleared it on the way out, which made the
+    wall reflow from six columns to four the moment a poster was tapped and back
+    again on close. The room is permanent now and belongs to the route rather than
+    to this component: `pane-inset` in globals.css, put on by the shell on the
+    wall's route. **This screen no longer has an opinion about the page's width**,
+    which is the right amount for it to have. Do not reinstate the property to
+    make some future surface move — a panel that changes the layout under the
+    thing that opened it is the fault that was removed.
   */
-  useEffect(() => {
-    if (!pane) return
-    const root = document.documentElement
-    root.style.setProperty('--pane-open', '1')
-    return () => {
-      root.style.removeProperty('--pane-open')
-    }
-  }, [pane])
 
   /*
     ───────────────────────────────────────────────────────────────────────────
@@ -1836,7 +1860,16 @@ function PrintedSynopsis({
   )
 }
 
-function paneQuery(): MediaQueryList {
+/**
+ * Whether there is room for the wall and a film at once.
+ *
+ * ⚠ **Exported since 20 August, and the export is the point.** `cinema-wall.tsx`
+ * opens the wall's first film on arrival at these widths, and it must be asking
+ * the *same* question this screen asks — a second `matchMedia` written beside it
+ * would be a copy of `--breakpoint-pane`'s reading that could drift from this one
+ * without either being wrong on its own. The number is still only in globals.css.
+ */
+export function paneQuery(): MediaQueryList {
   const width = getComputedStyle(document.documentElement)
     .getPropertyValue('--breakpoint-pane')
     .trim()

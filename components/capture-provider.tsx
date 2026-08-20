@@ -29,9 +29,27 @@ import { FilmScreen } from './film-screen'
  * grid, a bottom bar and a strip above them.
  */
 
-const CaptureContext = createContext<{ choose: (film: FilmSearchResult) => void } | null>(
-  null,
-)
+/**
+ * ⚠ **Two verbs, and the difference is whose idea it was — 20 August.**
+ *
+ * `choose` is a person picking a film: the screen opens and takes the focus,
+ * which is right, because they asked for it and their next key belongs there.
+ *
+ * `present` is the page putting one there on arrival — the wall's first film,
+ * standing in the column the desk layout reserves. **It must not take the
+ * focus.** `dialog.show()` runs the focusing steps whatever opened it, so
+ * without this the page landed with the keyboard on the panel's *Close* button:
+ * the first Tab or Enter from a fresh page would shut something nobody opened.
+ *
+ * The flag is on the choice rather than on the screen because that is where the
+ * fact lives. A screen cannot tell how it came to be shown, and any test it
+ * could make — the pointer, the width, whether anything is focused — would be
+ * inferring an intention that the caller simply knows.
+ */
+const CaptureContext = createContext<{
+  choose: (film: FilmSearchResult) => void
+  present: (film: FilmSearchResult) => void
+} | null>(null)
 
 export function useCapture() {
   const ctx = use(CaptureContext)
@@ -40,10 +58,19 @@ export function useCapture() {
 }
 
 export function CaptureProvider({ children }: { children: React.ReactNode }) {
-  const [chosen, setChosen] = useState<FilmSearchResult | null>(null)
+  /* The film and how it got here, because the second decides the focus. */
+  const [chosen, setChosen] = useState<{
+    film: FilmSearchResult
+    byHand: boolean
+  } | null>(null)
 
   return (
-    <CaptureContext.Provider value={{ choose: setChosen }}>
+    <CaptureContext.Provider
+      value={{
+        choose: (film) => setChosen({ film, byHand: true }),
+        present: (film) => setChosen({ film, byHand: false }),
+      }}
+    >
       {children}
 
       {/*
@@ -52,7 +79,13 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         `lib/haptics.ts`, and `docs/plan.md` for the want it leaves open.
       */}
 
-      {chosen && <FilmScreen film={chosen} onClose={() => setChosen(null)} />}
+      {chosen && (
+        <FilmScreen
+          film={chosen.film}
+          takeFocus={chosen.byHand}
+          onClose={() => setChosen(null)}
+        />
+      )}
     </CaptureContext.Provider>
   )
 }

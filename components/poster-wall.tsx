@@ -136,15 +136,25 @@ export function PosterWall({
       A container query asks the box. One rule now covers a phone, a rail, a desk
       and a desk with a panel open, with nothing to keep in step.
 
-      **The thresholds are measured, not chosen**, and they hold the wall where it
-      already was: 350px of grid stays 3 columns, 712px stays 5, 728px stays 6.
-      ⚠ **One width deliberately changes, because it was wrong.** Just above
-      `rail` the grid is 448px and the old rule put *five* columns in it — 82px
-      posters, **smaller than the same wall on a phone**, which is the opposite of
-      what more room should buy. It gets four.
+      ─────────────────────────────────────────────────────────────────────────
+       Two steps, not four — directed 20 August
+      ─────────────────────────────────────────────────────────────────────────
+
+      **The 5- and 6-column steps are gone: above the phone the wall is four
+      columns at every width, and what a wider window buys is a bigger poster
+      rather than more of them.** Asked for as *four instead of five*, and the six
+      went with it for a reason worth stating — the panel's column is reserved on
+      the wall's route now, so a desk grid is 448px and lands on four whatever the
+      window does. Leaving six above it would have made the count jump 4 → 6 as a
+      window narrowed past `pane`, which is the reflow this whole change removes.
+
+      So the ladder is: three on a phone, four everywhere else. **The remaining
+      threshold is the measured one** — below 26rem of grid, four columns are
+      narrower than the phone already shows, which is the fault the old rule had
+      at `rail` and the reason that step exists at all.
     */}
     <div className="@container">
-    <ul className="@min-[26rem]:grid-cols-4 @min-[34rem]:grid-cols-5 @min-[45rem]:grid-cols-6 grid grid-cols-3 gap-2.5">
+    <ul className="@min-[26rem]:grid-cols-4 grid grid-cols-3 gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
         if (!src) return null

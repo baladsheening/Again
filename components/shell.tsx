@@ -1452,11 +1452,26 @@ export function Shell({
       every browser on a desk.
     */}
     {/*
-      `pane-inset` is the room the film panel takes while one is open — see the
-      utility in globals.css. It reads a custom property with a zero fallback, so
-      nothing here knows whether a panel exists and nothing moves until one does.
+      `pane-inset` is the room the film panel stands in — see the utility in
+      globals.css.
+
+      ⚠ **It is held open by the route, not by a film — 20 August.** The room used
+      to arrive with the panel and leave with it, which re-laid the wall from six
+      columns to four under the tap that opened it. Now the wall's route reserves
+      it from the first paint and the panel drops into a column that is already
+      there, so tapping a poster moves nothing.
+
+      ⚠ **`pathname === '/'` is the whole condition, and it is the same test two
+      other things in this file already make.** The wall is the only page a film
+      panel opens on — search swaps the wall's contents in place and stays here —
+      so every other route would be paying 27rem of dead space for a panel that
+      never comes. Above `pane` only; the utility carries that variant itself.
     */}
-    <div className="rail:pl-68 pane-inset mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col">
+    <div
+      className={`rail:pl-68 mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-6xl flex-col ${
+        pathname === '/' ? 'pane-inset' : ''
+      }`}
+    >
       {/*
         The references for `useKeyboardPin`. Each carries its dock's positioning
         and nothing else — no transform, no recede, no padding — so it reports

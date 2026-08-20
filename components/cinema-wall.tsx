@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { FilmSearchResult } from '@/lib/domain'
+import { useCapture } from './capture-provider'
+import { paneQuery } from './film-screen'
 import { PosterWall } from './poster-wall'
 
 /**
@@ -121,6 +123,43 @@ export function CinemaWall({
   const showing = useRef<HTMLDivElement>(null)
 
   const [past, setPast] = useState(false)
+
+  /*
+    ───────────────────────────────────────────────────────────────────────────
+     The panel arrives with a film in it — 20 August
+    ───────────────────────────────────────────────────────────────────────────
+
+    **Directed: at desk widths the wall should arrive looking the way it looks
+    with a poster open.** The column is reserved by the route (`pane-inset` in
+    globals.css), so the layout is already right — this is the other half of it,
+    which is that the column has something in it rather than standing empty.
+
+    ⚠ **The wall picks the film, not this effect.** *The first film on the wall*
+    is a statement about what is on screen, so it reads the same order the eye
+    does: the first of the showing half, or the first of what is coming when
+    nothing is showing. No separate notion of a featured film, nothing stored,
+    nothing to keep in step with the listing.
+
+    ⚠ **Once, on arrival, and never again.** No dependency array entry can make
+    this re-fire: a person who closes the panel has said they want it shut, and a
+    resize is not an arrival. The empty deps are the whole rule and the reason
+    `choose` is not among them — it is `setState` and stable, but listing it
+    would invite the next reader to add the film beside it.
+
+    ⚠ **`paneQuery` is imported rather than rewritten.** Below that width the
+    screen is a takeover, so opening a film here would black out the wall a
+    person had not asked to leave.
+  */
+  const { present } = useCapture()
+  const first = nowShowing[0] ?? comingSoon[0] ?? null
+
+  useEffect(() => {
+    if (!first || !paneQuery().matches) return
+    /* `present`, not `choose` — the page is showing it, so it must not take the
+       keyboard's focus. The two verbs are argued in `capture-provider.tsx`. */
+    present(first)
+    /* eslint-disable-next-line react-hooks/exhaustive-deps -- arrival, not sync */
+  }, [])
 
   /*
     There is only a crossing to watch when there are two halves to cross
