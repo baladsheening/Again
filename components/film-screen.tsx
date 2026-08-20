@@ -617,7 +617,20 @@ export function FilmScreen({
         pane
           ? /* `left-auto` because a `<dialog>`'s UA style pins both edges to zero,
                and a left of zero beats a right of anything. */
-            'fixed top-0 left-auto right-[max(0px,calc(50%_-_36rem))] z-30 m-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-(--pane-column) max-w-none overflow-hidden bg-black p-0 text-text'
+            /* ⚠ **No `overflow-hidden` here, unlike the takeover — 20 August.**
+               The `+` is a disc centred on the picture's bottom-right corner, and
+               the picture is flush with this panel's own right edge, so half the
+               disc is outside this box by construction. Clipping it left a
+               half-moon. The takeover keeps its clip: there the reason is `svh`
+               and a box that must never become a scroll container, which is a
+               different argument for the same word — see the note above.
+
+               ⚠ **It costs a 24px band of window widths.** This sits at
+               `max(0px, 50% - 36rem)`, so between 1152 and about 1176 there is
+               less than the disc's radius between the panel and the viewport and
+               the far half is cut by the window instead. Nothing is lost that a
+               tap cannot reach; the control is still 24px of target. */
+            'fixed top-0 left-auto right-[max(0px,calc(50%_-_36rem))] z-30 m-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-(--pane-column) max-w-none bg-black p-0 text-text'
           : 'm-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
       }
     >
@@ -1119,14 +1132,22 @@ function FilmBody({
           what keeps it honest.** `bottom-full` is the row's own top edge, which
           *is* the picture's bottom edge, so there is no share of the column and
           no `h-2/3` restated here — if the artwork ever takes a different
-          fraction this follows it without being told. `mb-5` matches the row's
-          `pt-5`, so the control stands as far above the seam as the title sits
-          below it.
+          fraction this follows it without being told.
 
-          ⚠ **`gutter`, not a right inset.** The same utility the words below
-          wear, so the control lines up with the title's edge at any safe-area
-          inset rather than through a copy of `max(1.25rem, env(...))` that
-          could drift from it.
+          ⚠ **A circle, centred on the corner itself — directed 20 August.** It
+          sat wholly inside the picture, inset by the words' own gutter. Now its
+          centre is the corner point: `right-0` and `bottom-full` put its right
+          edge and its bottom edge on the picture's, and the two half-translates
+          move it out by half its own width and half its own height, which lands
+          the middle of the disc exactly there. **Nothing measures the control** —
+          `1/2` is a proportion of whatever size it is, so changing `size-6`
+          moves the disc and keeps it centred.
+
+          ⚠ **`rounded-full` on the wrapper AND on what it holds.** `CONTROL` is
+          `rounded-md` for the inline placement in the heading, which is still
+          right there; a square tint inside a round chip is what you get if only
+          one of the two is changed. The child variant keeps that a property of
+          this placement rather than of the control everywhere.
 
           ⚠ **`pointer-events-none` on the strip, `auto` on the chip.** The
           artwork's close button is underneath and this row paints above it —
@@ -1143,8 +1164,10 @@ function FilmBody({
           6.0:1 it has below the artwork, on every poster there has ever been.
         */}
         {!overlay && (
-          <span className="gutter pointer-events-none absolute inset-x-0 bottom-full mb-5 flex justify-end">
-            <span className="bg-bg pointer-events-auto rounded-md">{addControl}</span>
+          <span className="pointer-events-none absolute right-0 bottom-full flex translate-x-1/2 translate-y-1/2">
+            <span className="bg-bg pointer-events-auto rounded-full [&>*]:rounded-full">
+              {addControl}
+            </span>
           </span>
         )}
         <div className="min-w-0 flex-1">

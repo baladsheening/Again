@@ -171,37 +171,50 @@ export function PosterWall({
       the only thing that was ever true here.
 
       ─────────────────────────────────────────────────────────────────────────
-       The count must never rise as the window narrows — 20 August
+       The poster size only ever moves one way — 20 August, and it replaces
+       the whole threshold ladder above
       ─────────────────────────────────────────────────────────────────────────
 
-      **Reported: dragging a window from widest to narrowest went 5, 4, 3, and
-      then back up to 4.** The last step is the fault, and it is not the wall's:
-      `rail` is where the left rail stops applying, so at 719px the wall is
-      handed back the rail's 17rem and finds itself *wider* than it was at 720px
-      — 679px of grid against 408. The count followed the room, correctly, and
-      the room went the wrong way.
+      **Reported: the way the posters resize when narrowing the browser is
+      wrong; it should be linear, or at the very least in one direction.** With
+      `1fr` tracks it was neither. Every drop in the count divides the same room
+      among fewer posters, so the size jumped *up* by `N/(N-1)` — measured at 26%
+      crossing five to four and 34% crossing four to three, while shrinking
+      steadily in between. Down, up, down, up, down.
 
-      ⚠ **So the fourth column is now `42.5rem`, which is `--breakpoint-rail`
-      (45rem) less `gutter`'s two sides.** It is the widest this grid can be
-      *before the rail exists*, so a fourth column can only appear once there is
-      a rail — and the jump has nowhere to land. Narrowing now reads 5, 4, 3, 3,
-      3: monotonic by construction rather than by choosing numbers that happen
-      not to collide.
+      ⚠ **The fix is to stop the tracks stretching.** Above the width where three
+      posters reach their full size, the track is a fixed maximum and the wall
+      adds a column when one fits — so **the size is flat and the count does the
+      moving**, which is one direction by construction rather than by arithmetic
+      that happens to work out. Below that width there is no room to be flat in:
+      three columns share what there is and the size falls off linearly with the
+      window, which is the phone and is the one place it should move at all.
 
-      ⚠ **The old threshold was `26rem` and its argument is still true, just no
-      longer the binding one.** It said four columns below 26rem of grid are
-      narrower than the same wall on a phone. 42.5rem is stricter and satisfies
-      it: at the crossing, four columns are 162px against the phone's 110px.
+      **`8.6rem` is the poster.** It is `(45.5rem - 4 × 0.625rem) / 5` — the
+      widest this grid can ever be, less four gaps, over five columns. So five
+      columns fill the wall exactly at its maximum, which is the state a closed
+      panel leaves, and no size anywhere is larger than that.
 
-      **Neither number is a device and neither is measured on one.** Both are
-      subtractions from breakpoints already declared in globals.css — the rail's
-      width and `main`'s cap — so a change to either moves these without anyone
-      remembering to.
+      **`27.05rem` is where flat begins**: `3 × 8.6rem + 2 × 0.625rem`, the width
+      at which three posters at full size and their two gaps exactly fill. Below
+      it the wall fills with three; above it the size is fixed and the leftover
+      is `justify-center`'s, so it sits as margin on both sides instead of being
+      poured into the posters.
 
-      ⚠ **The four-column band is narrow, and that is geometry rather than an
-      oversight**: `main`'s cap is 48rem and the rail arrives at 45, so only 3rem
-      of grid separates the two steps — windows of about 992 to 1039. Widening it
-      means moving one of those two breakpoints, which belong to the shell.
+      ⚠ **It has to be a literal, and that is a limitation of the query, not a
+      choice.** A container query condition cannot read a custom property, so
+      this number cannot be written as the calc it is. Both are stated above; if
+      either moves, both move.
+
+      ⚠ **What this buys beyond the drag:** the panel's 300ms close now adds
+      columns at a constant poster size instead of resizing every poster twice on
+      the way. The one thing that still changes size is the panel opening, 137.6px
+      to 129.3px, because three columns must then share 408px — 6%, downward.
+
+      ⚠ **`auto-fill` is why the cap below `rail` is still load-bearing.** Left
+      to itself it would find four columns in the 679px the wall gets at 719px and
+      the count would rise as the window narrowed — the fault above, by a new
+      route. The cap holds that grid at 408px, where three is all that fits.
     */}
     {/*
       ─────────────────────────────────────────────────────────────────────────
@@ -242,7 +255,7 @@ export function PosterWall({
       a fixed poster size, which is the only construction without it.
     */}
     <div className="@container mx-auto max-w-[calc(var(--breakpoint-rail)_-_17rem_-_2.5rem)] rail:max-w-none">
-    <ul className="@min-[42.5rem]:grid-cols-4 @min-[45.5rem]:grid-cols-5 grid grid-cols-3 gap-2.5">
+    <ul className="@min-[27.05rem]:[grid-template-columns:repeat(auto-fill,minmax(0,8.6rem))] grid grid-cols-3 justify-center gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
         if (!src) return null
