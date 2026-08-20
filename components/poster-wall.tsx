@@ -148,13 +148,34 @@ export function PosterWall({
       window does. Leaving six above it would have made the count jump 4 → 6 as a
       window narrowed past `pane`, which is the reflow this whole change removes.
 
-      So the ladder is: three on a phone, four everywhere else. **The remaining
-      threshold is the measured one** — below 26rem of grid, four columns are
-      narrower than the phone already shows, which is the fault the old rule had
-      at `rail` and the reason that step exists at all.
+      So the ladder is three, four, five, and **five is the widest the wall ever
+      gets rather than a width someone picked.**
+
+      ⚠ **`45.5rem` is a subtraction, not a number: it is the widest this grid
+      can ever be.** `main` is capped at `rail:max-w-3xl` — 48rem — and `gutter`
+      spends 2.5rem of it on two sides, so 45.5rem is the whole of what is left
+      when nothing else is being paid for. **The fifth column appears exactly at
+      that maximum**, which above `pane` means the panel has been closed and its
+      27rem handed back. Asked for on 20 August.
+
+      ⚠ **The band's 72rem is NOT the number here, and assuming it was cost a
+      measurement.** `72 − 17 − 2.5` = 52.5rem of room, but `main` never uses it:
+      above `rail` it caps at 48 and the rest is margin. The grid measured 728px
+      where that arithmetic predicted 840.
+
+      ⚠ **It cannot be told from the panel's state and must not be.** A container
+      query sees a box: 408px with the panel open, 728px with it closed. **A
+      window of about 1040–1152 with no panel at all is also 728px** — the same
+      box, so the same wall, and a rule that made those two differ would be
+      reading something the grid cannot see. The count follows the room, which is
+      the only thing that was ever true here.
+
+      **The remaining threshold is the measured one** — below 26rem of grid, four
+      columns are narrower than the phone already shows, which is the fault the
+      old rule had at `rail` and the reason that step exists at all.
     */}
     <div className="@container">
-    <ul className="@min-[26rem]:grid-cols-4 grid grid-cols-3 gap-2.5">
+    <ul className="@min-[26rem]:grid-cols-4 @min-[45.5rem]:grid-cols-5 grid grid-cols-3 gap-2.5">
       {films.map((film, i) => {
         const src = posterUrl(film.posterPath, 'w342')
         if (!src) return null

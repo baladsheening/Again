@@ -64,11 +64,41 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     byHand: boolean
   } | null>(null)
 
+  /*
+    ⚠ **The wall gets the panel's column back when the panel is closed — and this
+    is written from the handlers, not from an effect.** `pane-inset` in
+    globals.css reserves that column by default, so the page loads with it held
+    and nothing has to run for the first paint to be right. What is left is the
+    one transition a person asks for, and the two places that know about it are
+    right here: closing sets the property, choosing or presenting clears it.
+
+    ⚠ **`el.style` on the root, like every other custom property this app sets
+    from JS.** A rendered `style` attribute is dropped by the CSP in production
+    while `next dev` allows it — see `proxy.ts`, and `--keyboard-overlap` and
+    `--print-fade` for the same route taken for the same reason.
+
+    An effect keyed on `chosen` would have been the obvious build and it is the
+    wrong one: it runs on mount too, with nothing chosen, and would have to be
+    taught that the first `null` is not a close. There is no such state here —
+    only a null that was never opened, and a null that a handler made.
+  */
+  const paneClosed = (closed: boolean) => {
+    const root = document.documentElement
+    if (closed) root.style.setProperty('--pane-closed', '1')
+    else root.style.removeProperty('--pane-closed')
+  }
+
   return (
     <CaptureContext.Provider
       value={{
-        choose: (film) => setChosen({ film, byHand: true }),
-        present: (film) => setChosen({ film, byHand: false }),
+        choose: (film) => {
+          paneClosed(false)
+          setChosen({ film, byHand: true })
+        },
+        present: (film) => {
+          paneClosed(false)
+          setChosen({ film, byHand: false })
+        },
       }}
     >
       {children}
@@ -83,7 +113,10 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         <FilmScreen
           film={chosen.film}
           takeFocus={chosen.byHand}
-          onClose={() => setChosen(null)}
+          onClose={() => {
+            paneClosed(true)
+            setChosen(null)
+          }}
         />
       )}
     </CaptureContext.Provider>

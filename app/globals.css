@@ -1111,10 +1111,28 @@
  *
  * Still inside the `pane` variant: below that width the screen takes the viewport
  * instead, so there is no column to hold and this reserves nothing.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  And the room comes back when the panel is closed — 20 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Directed: closing the panel the page arrived with should give the wall the
+ * column back**, which it spends on a fifth poster per row.
+ *
+ * ⚠ **The property is `--pane-closed`, and the sign is the whole point.** The
+ * one this replaced was `--pane-open`, which meant the default — nothing set —
+ * was *no room*, so the wall painted at its full width and reflowed the moment a
+ * panel arrived. Stated the other way round the default is *reserved*, which is
+ * what the page loads as, so the first paint is right without JavaScript having
+ * run and the only change is the one a person asks for by closing.
+ *
+ * Written by `capture-provider.tsx`, in the two handlers that already know: set
+ * on close, removed when a film is chosen or presented. No effect, no derived
+ * state, nothing on mount.
  */
 @utility pane-inset {
   @variant pane {
-    padding-right: var(--pane-inset);
+    padding-right: calc((1 - var(--pane-closed, 0)) * var(--pane-inset));
   }
 }
 

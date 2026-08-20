@@ -1046,6 +1046,22 @@ function FilmBody({
   const listedPrimary = marks?.[primary]
   const undoablePrimary = undoable?.intent === primary ? undoable : null
 
+  /*
+    ⚠ **One control, two placements — 20 August.** Built here rather than twice
+    below, because the two surfaces disagree about *where* it goes and about
+    nothing else: same states, same labels, same undo window. A second copy of
+    this call is a second place to forget `undoable`.
+  */
+  const addControl = (
+    <AddControl
+      state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
+      label={specFor('film', primary).wantLabel}
+      undoable={Boolean(undoablePrimary)}
+      onAdd={() => add(primary)}
+      onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
+    />
+  )
+
   return (
     <>
       {/*
@@ -1087,7 +1103,50 @@ function FilmBody({
         gutter; the padding is back on this row for both surfaces now that the
         band above it is gone.
       */}
-      <div className="gutter flex shrink-0 items-start gap-3 pt-5">
+      <div className="gutter relative flex shrink-0 items-start gap-3 pt-5">
+        {/*
+          ─────────────────────────────────────────────────────────────────────
+           Beside the wall the `+` is in the poster's bottom right — 20 August
+          ─────────────────────────────────────────────────────────────────────
+
+          **Directed, for the desk only.** The note further down argues why it is
+          inline in the heading, and every word of that still holds *on the
+          takeover*, where the words are glass over a picture and there is no
+          corner that is not somebody's face. Beside the wall the picture stops
+          two thirds of the way down and the corner is a real place.
+
+          ⚠ **It is positioned off THIS row, not off the artwork, and that is
+          what keeps it honest.** `bottom-full` is the row's own top edge, which
+          *is* the picture's bottom edge, so there is no share of the column and
+          no `h-2/3` restated here — if the artwork ever takes a different
+          fraction this follows it without being told. `mb-5` matches the row's
+          `pt-5`, so the control stands as far above the seam as the title sits
+          below it.
+
+          ⚠ **`gutter`, not a right inset.** The same utility the words below
+          wear, so the control lines up with the title's edge at any safe-area
+          inset rather than through a copy of `max(1.25rem, env(...))` that
+          could drift from it.
+
+          ⚠ **`pointer-events-none` on the strip, `auto` on the chip.** The
+          artwork's close button is underneath and this row paints above it —
+          two of the three declarations the scrim's removal deleted, back
+          because the stack they arranged for is back. A full-width transparent
+          bar would otherwise eat every tap aimed at the poster.
+
+          ⚠ **The chip is OPAQUE, and that is the file's own argument being
+          obeyed rather than an aesthetic call.** The scrim note: *a design
+          whose contrast is a function of the image is one that is wrong on some
+          image you have not met yet.* Frosted at `bg-bg/80` the tick measured
+          2.7:1 over a white poster once this control's own `bg-text/8` is
+          composited on top — under the 3:1 floor. On its own ground it is the
+          6.0:1 it has below the artwork, on every poster there has ever been.
+        */}
+        {!overlay && (
+          <span className="gutter pointer-events-none absolute inset-x-0 bottom-full mb-5 flex justify-end">
+            <span className="bg-bg pointer-events-auto rounded-md">{addControl}</span>
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           {/*
             ─────────────────────────────────────────────────────────────────
@@ -1167,7 +1226,21 @@ function FilmBody({
             separate stop for anything navigating by control.
           */}
           <h2 className="title" aria-label={film.title}>
-            {film.title}{' '}
+            {film.title}
+            {/*
+              ⚠ **Inline only on the takeover now — 20 August.** Beside the wall
+              it is in the picture's bottom right, positioned off the top of this
+              row; see that block. Everything below is the argument for this
+              placement and it is unchanged, because the surface it was written
+              for is unchanged.
+
+              ⚠ **`aria-label` stays on the heading in both.** It is redundant
+              where the control has left, and removing it conditionally would
+              make the heading's accessible name depend on the layout — which is
+              the sort of difference that shows up as two screens reading
+              differently to a screen reader and identically to everyone else.
+            */}
+            {overlay && ' '}
             {/*
               ⚠ **The slot is drawn from the first frame and its contents are
               not.** `marks === null` is *not yet known*, and a `+` drawn then
@@ -1179,15 +1252,11 @@ function FilmBody({
               rather than *that worked*. See `--color-listed` in globals.css for
               what that distinction costs and why it is drawn that way round.
             */}
-            <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
-              <AddControl
-                state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
-                label={specFor('film', primary).wantLabel}
-                undoable={Boolean(undoablePrimary)}
-                onAdd={() => add(primary)}
-                onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
-              />
-            </span>
+            {overlay && (
+              <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
+                {addControl}
+              </span>
+            )}
           </h2>
 
           {/*
