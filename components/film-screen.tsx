@@ -650,6 +650,13 @@ export function FilmScreen({
             **the same image, out of focus**, so the screen is full: cover-scaled,
             `blur-2xl`, at 70% so the sharp one in front stays the subject.
 
+            ⚠ **`inset-0` here is the COLUMN, not the screen.** This sits inside
+            the `max-w-md` box two elements up, so the band is already the panel's
+            width running the full height of the screen, with flat black either
+            side of it at every width above 448. Asked for explicitly on 20 August
+            and already the case — the answer was a `relative` somewhere else, not
+            a change here. **Do not "fix" this into a screen-wide surround.**
+
             ⚠ **`w342`, deliberately.** It is the size the wall already fetched, so
             this costs no request at all, and there is no resolution left to see
             after that blur. Asking for the large one would double the bytes of
@@ -1460,16 +1467,35 @@ function Artwork({
         ⚠ **Two boxes, and only the overlay's moves.** Under a cursor the picture
         is a share of a column it sits inside, so it stays a flex child.
 
-        ⚠ **The overlay's box fills the screen and settles to the poster,
-        centred.** It was pinned at the poster's own shape first, which reported as
-        *the poster is only two thirds of the screen* — 585 of 844, two thirds
-        exactly. Then it filled the screen and shrank to the top, which left all
-        259px of the difference at the foot.
+        ⚠ **The overlay's box fills the screen and settles to the poster. WHERE it
+        settles is a pointer question, and it is the surround's own ruling read a
+        second time.** It was pinned at the poster's own shape first, which
+        reported as *the poster is only two thirds of the screen* — 585 of 844,
+        two thirds exactly. Then it filled the screen and shrank to the **top**,
+        which left all 259px of the difference at the foot. Then it was
+        **centred**, so the gaps split evenly and a whole poster read as framed
+        rather than as one that ran out.
 
-        **It is centred now**, so the gaps split evenly and a whole poster reads as
-        framed rather than as one that ran out. `object-cover` does the shaping:
-        taller than 2:3 it crops the sides to fill, and at 2:3 it fits exactly,
-        which is the whole poster uncropped — the thing the chevron is for.
+        ⚠ **Under a cursor it is back at the top — directed 20 August — and what
+        made the top wrong on the handset is what makes it right here.** The fault
+        was never the alignment, it was the 259px: under a thumb that room is
+        **black**, so a poster held at the top reads as one that ran out, and the
+        centring is what frames it. Under a cursor that room is **the same picture
+        out of focus**, so there is nothing to run out of — the foot is full and
+        the top edge is the poster meeting the screen's own. Same pixel, two
+        rulings, and they are the *surround's* two rulings; see that block in
+        `FilmScreen`. **The handset's centring is untouched — do not unify these.**
+
+        ⚠ **The poster keeps the column's full width on both surfaces**, directed
+        after the alternative — shrinking it narrower than the column on recede —
+        was offered and declined. So the band and the picture are the same width by
+        construction, and the blur only ever shows at the **foot**, which is the
+        only place there is room for it. Nothing here is a size to keep in step
+        with the band.
+
+        `object-cover` does the shaping: taller than 2:3 it crops the sides to
+        fill, and at 2:3 it fits exactly, which is the whole poster uncropped —
+        the thing the chevron is for.
 
         ⚠ **`cqw`, not `vw`.** The column is capped at `max-w-md`, so a viewport
         unit would be right on a phone and wrong on the first tablet under the
@@ -1478,14 +1504,20 @@ function Artwork({
         `calc(50% - 75cqw)` puts the box's middle on the screen's middle without
         knowing either height.
 
-        Both properties animate because both are lengths, and they land in step
-        with the panel — one gesture, the words leaving and the picture settling
-        together, rather than two things moving on their own schedules.
+        Both properties are lengths, so both animate, and they land in step with
+        the panel — one gesture, the words leaving and the picture settling
+        together, rather than two things moving on their own schedules. Under a
+        cursor `top` is 0 in both states and the height carries the whole move:
+        the same transition doing less work, not a second one.
       */
       className={
         overlay
           ? `absolute inset-x-0 overflow-hidden transition-[height,top] duration-300 ${
-              receded ? 'top-[calc(50%_-_75cqw)] h-[150cqw]' : 'top-0 h-full'
+              receded
+                ? touch
+                  ? 'top-[calc(50%_-_75cqw)] h-[150cqw]'
+                  : 'top-0 h-[150cqw]'
+                : 'top-0 h-full'
             }`
           : `${ARTWORK_PANEL} relative shrink-0 overflow-hidden`
       }
