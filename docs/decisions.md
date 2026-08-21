@@ -4156,10 +4156,21 @@ obeys that completely — it is a resolution that happens to be the honest one.
 Private like `done`, out of the live pool, out of overlap, out of everyone
 else's view.
 
-The label is **"Not any more"**, and the naming rule is §4's: a label states the
-criterion the entry meets. *Dropped* describes what you did to the row.
-*Not any more* describes what is true about the want, which is the same move that
-keeps "go-back-to" from becoming "liked".
+**The control is an ×, and the row does not leave the list.** It shipped as a
+text control reading *Not any more*, then as *Remove*, then as neither: directed
+the same afternoon, *make it an x in fact, no 'remove'* — and, before that,
+*when removed don't actually delete from the list, dim and put a strikethrough*.
+What survives of the naming argument is that nothing is named at all. A crossed-
+off row says what it is by being crossed off, which is the one label that cannot
+be the wrong word.
+
+⚠ **The strikethrough is not decoration on top of a resolution — it is the
+resolution's whole interface**, and three things follow from it that would each
+have needed inventing otherwise. There is no confirmation, because nothing
+disappears. There is no toast, because the row is the acknowledgement. There is
+no undo window, because the way back is the same × in the same place. That last
+one is the reason this is the only resolution in the product with no ten-second
+clock attached: it does not need one.
 
 **`want` only.** The guard is the same clause `resolveEntry` uses, so the set of
 droppable entries is exactly the set of resolvable ones: a want has three exits
@@ -4172,20 +4183,27 @@ which already means *tried, and not going back* — getting there needs a resolv
 on an already-resolved entry, which is a gap this did not close. **Open**, and
 small; see the register in `docs/plan.md`.
 
-### The undo on it is wanting the thing again
+### Two ways back, and they are deliberately different
 
-`addEntry` revives a `dropped` row instead of colliding with it —
+`restoreEntry` is the ×, tapped again: `dropped` → `want`, **`created_at`
+untouched**, so the strikethrough lifts and the row does not move. Restoring
+something and finding it somewhere else would undo the point of striking it
+through in place.
+
+`addEntry` also revives a `dropped` row rather than colliding with it —
 `onConflictDoUpdate` with `setWhere: state = 'dropped'`, writing exactly what the
-insert would have written, `created_at` included. A revived row is
-indistinguishable from a fresh one, which means it is inside §5.1's undo window
-again and sorts to the top of the live list.
+insert would have written, `created_at` included. That path is a want that
+*started again* — through the `+`, or through a copy off someone's page — so it
+takes a new clock, sorts to the top, and is inside §5.1's undo window. Without it
+the unique index on (user, item, intent) would answer *already yours* for a film
+sitting crossed off in front of you.
 
-That is why the state needs no control of its own to reverse it, and why
-`listMyEntriesForExternalId` now **excludes** `dropped`: a film you let go is not
-on your list, so the film screen draws the `+` again rather than a settled tick.
-The clause above it explains why `done` is included for the opposite reason —
-that one would collide, and this one does not. The film screen needed no branch;
-it never learns about a dropped entry.
+⚠ **`listMyEntriesForExternalId` includes `dropped`, and briefly did not.** While
+a crossed-off entry lived in the archive it was fair to call it *not on your list*
+and let the film screen offer the `+`. It lives in Wants now, in plain sight, so
+the screen saying *not on your list* would contradict the page its own tick points
+at. The tick links to Wants, the row is there, and the way back is the × on that
+row — one control, in one place.
 
 ⚠ **The ten-second undo was left exactly as it was, and an earlier suggestion to
 widen it was wrong.** The idea was to bound it by the film screen being open
@@ -4212,32 +4230,47 @@ mistake now produces a missing row, which someone reports, instead of a leak,
 which nobody sees. §13 gained two cases: the dropped equivalent of the archive
 test, and the copy door.
 
-### Where it lives: two bands, not a fifth collection
+### Where it lives: in Wants, crossed off — and the archive stays one list
 
-`/archive` renders **Tried** and **Not any more** as two bands, each its own
-query so each paginates on its own. One page, one count in the rail, and `done`
-keeps meaning done.
+**A crossed-off want stays on the page it was on, struck through and dimmed, in
+the position it held.** `stateFilter('live')` selects `dropped`; the archive is
+one list again.
 
-⚠ **The second band draws only when it has rows**, so an account that has never
-let anything go sees the page exactly as it was before this existed. The first
-band's heading is therefore conditional too — a heading over the only list on a
-page is the duplication the `sr-only` `h1` exists to avoid.
+⚠ **This was built as a second band in `/archive` first, and that version is
+gone.** It was the right answer to a question nobody had asked: *where do these
+rows go?* The answer is that they do not go anywhere. What the band cost was the
+one thing the strikethrough gives for free — being able to see what you crossed
+off, next to what you did not, without navigating. Both bands, the `band` prop on
+`EntryList`, the fifth `OwnerView` and the `first-of-type` separator that came
+with them were all removed the same day. Nothing of it survives except this
+paragraph, which is here so it is not rebuilt.
 
-The band labels are passed by the page rather than read from `EntryList`'s
-heading map. The first draft read the map and produced *Archive* sitting under a
-page called Archive beside a rail item called Archive. **A band names the part,
-not the page.**
+Three things had to move so the row could sit still:
 
-Two smaller things worth keeping:
+- **`orderFor('live')`'s CASE names `go_back_to`, not `want`.** It was
+  `when state = 'want' then 0 else 1`, which put `dropped` in the sinking half —
+  crossing something off made it jump down the page and putting it back made it
+  jump up. Naming the one state that is *meant* to sink leaves every other row
+  where it is.
+- **`countMyEntries` counts `dropped` nowhere**, so the rail's *Wants* number is
+  deliberately not the number of rows on the Wants page. The rail says how many
+  things you want; a film you crossed off is not one. Counting it would put the
+  strikethrough back into the total it was struck out of.
+- **The row is a flex *row* at every width**, where it used to be a column that
+  became a row at `lg`. The × belongs beside the title on all four surfaces, and
+  in the old shape it would have been a fourth stacked line on a phone. Measured
+  at 390px with a coarse pointer: no two hit areas in a row intersect, and the ×
+  carries a full 44×44.
 
-- The band separator is `first-of-type:`, not `first:`. It was `first:` and the
-  top rule drew anyway, because the page's `sr-only` `<h1>` is the real first
-  child and no `<section>` was ever `:first-child`.
-- The row's action column is `gap-2 pointer-coarse:gap-6`, and the 24px is
-  derived: `tap-target` grows a 44px hit area around ~20px of text, so two
-  stacked controls need 24px between them or the expansions overlap and the
-  lower one silently wins the middle. Measured on a coarse pointer at 390px:
-  0.0px overlap.
+⚠ **The strikethrough and the title's underline are one CSS property.** Passing
+`line-through` alongside `PosterReveal`'s `underline` put two
+`text-decoration-line` utilities on one element and the stylesheet quietly kept
+the underline — a crossed-off title rendered identically to a live one, and the
+build was green. The fix is a `struck` prop on `PosterReveal` so the component
+writes one decoration or the other, never both: the collision is removed rather
+than won. Struck, the underline goes and does not return on hover — between an
+affordance that is deliberately almost invisible at rest and a state that has to
+read across the room, the state wins.
 
 ### What was considered and not built
 
@@ -4258,12 +4291,23 @@ and `dropped` appears in none of them, so the fan-out would run two queries to
 write nothing. `resolveEntry` fires because one of *its* outcomes creates a
 match; this one has a single outcome and creates none.
 
+**A general "removed" section under the live list.** Never seriously, but worth
+naming: it is the band again with a shorter walk. The whole value of the
+strikethrough is that the row keeps its place among the things it was listed
+beside.
+
 ### Verified
 
-Production build, driven in a browser at 1440px and at 390px with a coarse
-pointer: add from the wall → `+` becomes Undo becomes *On your list — open
-Wants*; **Not any more** on the row → gone from Wants, present under *Not any
-more* in the archive; re-open the film → **the `+` is back**; tap → Undo again,
-so the revived row is genuinely inside its own window; Wants holds it and the
-band no longer does. `npm run typecheck`, `npm run lint`, and the §13 suite (8
-tests) pass.
+Production build, driven in a browser at 1440px and at 390px with touch. The ×
+crosses a row off and the list does not reorder; the strikethrough and the
+dimming survive a reload; the same × reads *Put {title} back* and restores the
+row without moving it; the rail's *Wants* count drops while the row stays on the
+page; `text-decoration-line` computes to `line-through` on a crossed-off title
+and the live rows keep their underline. No two hit areas intersect on the
+handset, and the × measures 44×44. Console clean.
+
+`npm run typecheck`, `npm run lint`, and the §13 suite (8 tests) pass. The suite's
+dropped case now asserts the owner sees the row in their **live** view while
+`listEntriesForOtherUser` still returns nothing — which is the case that makes
+the positive filter earn its keep, because the view a stranger asks for now
+selects the private state and the guarantee holds anyway.

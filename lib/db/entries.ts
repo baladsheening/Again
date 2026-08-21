@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { db } from './client'
 import { entries, items, profiles, type Entry, type EntryState, type Item } from './schema'
@@ -11,17 +11,8 @@ import { specFor } from '@/lib/vocabulary'
 import { PUBLIC_STATES } from '@/lib/domain'
 import type { EntryCard, EntrySource, Intent, Kind } from '@/lib/domain'
 
-/**
- * §5 Views. `archive` and `dropped` are deliberately absent from `PublicView` —
- * see `listEntriesForOtherUser` below.
- *
- * `dropped` is a view rather than a route: the archive page renders it as a
- * second band under the tried ones, so nothing in the collection bar points at
- * it. It is a view because the band needs its own query — a page that fetched
- * both states together and split them in the component would paginate the two
- * bands as one list, which is only correct while nobody has fifty of either.
- */
-export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive' | 'dropped'
+/** §5 Views. `archive` is deliberately absent from `PublicView` — see below. */
+export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive'
 export type PublicView = 'live' | 'go_back_tos' | 'fixtures'
 
 export type EntryWithItem = { entry: Entry; item: Item }
@@ -78,20 +69,26 @@ export type Page = { limit?: number; offset?: number }
 
 function stateFilter(view: OwnerView) {
   switch (view) {
-    // A go-back-to is still a want (§5.2) — the live pool is both states, so
-    // overlap can pair someone who's been eleven times with someone curious.
+    /*
+      A go-back-to is still a want (§5.2) — the live pool is both states, so
+      overlap can pair someone who's been eleven times with someone curious.
+
+      ⚠ **`dropped` is here too, and it is not in the live pool.** A crossed-off
+      want stays *on the page* — struck through, in the position it held — which
+      is a fact about the owner's own list and not about the pool §5.2 describes.
+      It is safe to add here only because `listEntriesForOtherUser` filters on
+      `PUBLIC_STATES` as well as on this: a state that is not published cannot
+      reach a stranger through a view that happens to select it. That inversion
+      is what makes widening this view a one-line change instead of a leak.
+    */
     case 'live':
-      return inArray(entries.state, ['want', 'go_back_to'] as const)
+      return inArray(entries.state, ['want', 'go_back_to', 'dropped'] as const)
     case 'go_back_tos':
       return eq(entries.state, 'go_back_to' as const)
     case 'fixtures':
       return eq(entries.state, 'fixture' as const)
     case 'archive':
       return eq(entries.state, 'done' as const)
-    // Tried and would not return to, versus never tried at all. Two bands on one
-    // page, and keeping them apart is the whole reason `dropped` exists (§5.1).
-    case 'dropped':
-      return eq(entries.state, 'dropped' as const)
   }
 }
 
@@ -115,10 +112,18 @@ function orderFor(view: OwnerView) {
     happens to sort before 'want' alphabetically, so `desc(entries.state)` would
     produce the right answer today by accident and the wrong one the moment a
     state is renamed or added.
+
+    ⚠ **The CASE names `go_back_to` rather than `want`, and that is what keeps a
+    crossed-off row still.** It was `when state = 'want' then 0 else 1`, which
+    put `dropped` in the sinking half — so crossing something off made it jump
+    down the page, and putting it back made it jump up. Naming the one state that
+    is *meant* to sink leaves every other row where it was, which is the whole
+    point of striking a row through instead of taking it out: you can see what
+    you crossed off, where it was.
   */
   if (view === 'live') {
     return [
-      asc(sql`case when ${entries.state} = 'want' then 0 else 1 end`),
+      asc(sql`case when ${entries.state} = 'go_back_to' then 1 else 0 end`),
       desc(entries.createdAt),
     ]
   }
@@ -176,22 +181,23 @@ export async function countMyEntries(
   const n = (state: EntryState) => byState.get(state) ?? 0
 
   /*
-    ⚠ **These are page counts, not state counts, and two of them show it.**
-    `live` is `want` + `go_back_to` because a go-back-to is still a want (§5.2),
-    which is also why `go_back_to` is counted twice — the two numbers summing to
-    more than the number of rows is the model showing through, not an error.
+    `go_back_to` is deliberately counted twice — once in `live` and once in
+    `go_back_tos` — because a go-back-to is still a want (§5.2). The two numbers
+    summing to more than the number of rows is the model showing through, not an
+    error.
 
-    `archive` is the same kind of number for the same kind of reason: that page
-    is two bands, so the count beside it in the rail is what the page holds. A
-    number that ignored the second band would read `0` on an account whose
-    archive plainly has rows in it.
+    ⚠ **`dropped` is counted nowhere, and the Wants page renders it.** This is the
+    one place the number is deliberately not the number of rows on the page: the
+    rail says how many things you *want*, and a film you crossed off is not one.
+    It is still on the page because you should be able to see what you crossed
+    off; it is not in the count because counting it would put the strikethrough
+    back into the total it was struck out of.
   */
   return {
     live: n('want') + n('go_back_to'),
     go_back_tos: n('go_back_to'),
     fixtures: n('fixture'),
-    archive: n('done') + n('dropped'),
-    dropped: n('dropped'),
+    archive: n('done'),
   }
 }
 
@@ -314,12 +320,12 @@ export async function addEntry(
  * is still on your list, so it still answers yes — and it has to, or the screen
  * would offer to add something `addEntry` will refuse as a duplicate.
  *
- * ⚠ **`dropped` is excluded for exactly that reason inverted — 21 August.** A
- * film you let go is not on your list; you said so. The screen should offer the
- * `+` again, and `addEntry` revives the row rather than colliding with it (see
- * its note), so the duplicate the clause above guards against cannot happen
- * here. This is why the film screen needs no branch on `dropped`: it never
- * learns about one.
+ * ⚠ **`dropped` is included for the same reason, and briefly was not.** While a
+ * crossed-off entry lived in the archive it was fair to call it *not on your
+ * list* and let the screen offer the `+` again. It lives in Wants now, struck
+ * through and in plain sight, so the screen saying *not on your list* would
+ * contradict the page it points at. The tick links to Wants, the row is there,
+ * and the way back is the × on that row — one control, in one place.
  *
  * The bound is not pagination so much as arithmetic: `entries` is unique on
  * (user, item, intent), so this can return at most one row per intent and there
@@ -341,7 +347,6 @@ export async function listMyEntriesForExternalId(
         eq(entries.userId, sessionUser.id),
         eq(items.kind, input.kind),
         eq(items.externalId, input.externalId),
-        ne(entries.state, 'dropped'),
       ),
     )
     .limit(8)
@@ -447,12 +452,18 @@ export async function resolveEntry(
 }
 
 /**
- * Let a want go — 21 August. *Not any more.*
+ * Cross a want off — 21 August. The × on the row.
  *
  * The third exit from a want, beside the two `resolveEntry` offers. **It is a
  * resolution, not a delete** (§5.1): the row stays, its state changes, and the
  * entry says a true thing instead of the false one the archive was being made to
  * hold. See docs/decisions.md for why the absence of this was corrupting `done`.
+ *
+ * ⚠ **The row does not leave the page.** A crossed-off want stays in the live
+ * view, struck through and dimmed, in the position it held — which is why
+ * `orderFor` names `go_back_to` in its CASE rather than `want`, and why
+ * `restoreEntry` below leaves `created_at` alone. Directed: *don't actually
+ * delete from the list, dim and put a strikethrough.*
  *
  * ⚠ **`want` only, and that is the whole rule.** The guard is the same clause
  * `resolveEntry` uses, which makes the set of droppable entries exactly the set
@@ -508,6 +519,48 @@ export async function dropEntry(
     is not yours* is the same shape of leak `copyEntry` avoids (§5.3).
   */
   if (!updated) return err('not_found', 'That is not a want any more.')
+  return ok(updated)
+}
+
+/**
+ * Put a crossed-off want back. The same ×, tapped again.
+ *
+ * **The exact inverse of `dropEntry`, and the two are a toggle.** Because the row
+ * never left the page, the way back is under the finger that crossed it off —
+ * there is no window to catch and nothing to find again, which is what makes
+ * `dropEntry` safe to offer without a confirmation.
+ *
+ * ⚠ **`created_at` is untouched, and that is the difference from `addEntry`'s
+ * revive.** Reviving through the `+` is a want that started again, so it takes a
+ * new clock and sorts to the top. This is a want that never stopped being where
+ * it was — the strikethrough goes away and the row does not move. Restoring
+ * something and finding it somewhere else would undo the point of striking it
+ * through in place.
+ *
+ * No `fireOverlap`: `dropEntry` wrote no notifications to withdraw, and the state
+ * this returns to is the one the row was in when the fan-out last ran for it.
+ * Overlap is idempotent by §10 in any case — the notification rows are already
+ * there.
+ */
+export async function restoreEntry(
+  sessionUser: SessionUser,
+  entryId: string,
+): Promise<Result<Entry>> {
+  const [updated] = await db
+    .update(entries)
+    .set({ state: 'want', resolvedAt: null })
+    .where(
+      and(
+        eq(entries.id, entryId),
+        eq(entries.userId, sessionUser.id),
+        // Only a crossed-off row. This cannot reopen a `done`, a `go_back_to` or
+        // a `fixture` — those were resolved by an answer, not by a cross.
+        eq(entries.state, 'dropped'),
+      ),
+    )
+    .returning()
+
+  if (!updated) return err('not_found', 'That is not crossed off.')
   return ok(updated)
 }
 

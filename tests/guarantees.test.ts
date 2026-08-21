@@ -153,8 +153,10 @@ describe('another user’s private entries are never visible (§5.3)', () => {
       expect(rows.some((r) => r.entry.state === 'dropped')).toBe(false)
     }
 
-    // The owner does see it, in the archive's second band.
-    const own = await dal.listMyEntries(asViewer(ownerId, `${OWNER}@example.com`), 'dropped')
+    // The owner does see it — struck through in their own live list, which is the
+    // case that makes the positive filter earn its keep: `stateFilter('live')`
+    // selects `dropped`, and this still returns nothing to a stranger.
+    const own = await dal.listMyEntries(asViewer(ownerId, `${OWNER}@example.com`), 'live')
     expect(own.some((r) => r.entry.state === 'dropped')).toBe(true)
   })
 

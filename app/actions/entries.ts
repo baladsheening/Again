@@ -8,6 +8,7 @@ import {
   addEntry,
   copyEntry,
   dropEntry,
+  restoreEntry,
   setEntryNote,
   NOTE_MAX,
   requireSessionUser,
@@ -119,17 +120,27 @@ export async function resolveEntryAction(
 }
 
 /**
- * Let a want go (§5.1 — a resolution, not a delete). No rate limit: it writes to
- * a row you already own and creates nothing, which is what `entryCreate` guards.
+ * The × on a want row, and the same × on a crossed-off one (§5.1 — a resolution,
+ * not a delete). One action for the toggle, because one control drives it: a
+ * pair of actions would let the client decide which direction it is going, and
+ * the row's state already says.
+ *
+ * No rate limit: it writes to a row you already own and creates nothing, which is
+ * what `entryCreate` guards.
  */
-export async function dropEntryAction(entryId: string): Promise<ActionResult> {
+export async function crossOffAction(
+  entryId: string,
+  crossedOff: boolean,
+): Promise<ActionResult> {
   const sessionUser = await requireSessionUser()
 
   if (!entryIdSchema.safeParse(entryId).success) {
     return { ok: false, message: 'Unknown entry.' }
   }
 
-  const result = await dropEntry(sessionUser, entryId)
+  const result = crossedOff
+    ? await dropEntry(sessionUser, entryId)
+    : await restoreEntry(sessionUser, entryId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()

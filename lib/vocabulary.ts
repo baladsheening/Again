@@ -137,17 +137,14 @@ export const COLLECTION_FOR: Record<EntryState, { href: Route; label: string }> 
   fixture: { href: '/fixtures', label: COLLECTIONS.fixtures },
   done: { href: '/archive', label: COLLECTIONS.archive },
   /*
-    A dropped entry is on the archive page, under the second band — the page is
-    the destination, so this points at it like any other.
+    A crossed-off want is still in Wants — struck through, where it was. That is
+    the whole design of it, so this points where every other live row points.
 
-    ⚠ **Nothing reaches this key today.** Its only reader is the film screen's
-    settled tick, and `listMyEntriesForExternalId` excludes `dropped` so that a
-    film you let go offers the `+` again rather than a tick. The row is here
-    because the map is total over `EntryState`, which is what made the compiler
-    ask where a dropped entry lives in the first place. Do not delete it as dead:
-    the totality is the mechanism.
+    It is reached: the film screen's settled tick reads this map, and
+    `listMyEntriesForExternalId` returns `dropped` rows, so a film you crossed
+    off shows the tick and the tick opens the list it is crossed off in.
   */
-  dropped: { href: '/archive', label: COLLECTIONS.archive },
+  dropped: { href: '/wants', label: COLLECTIONS.wants },
 }
 
 /** v1 ships films only. Guards the entry points against the kinds not yet built. */

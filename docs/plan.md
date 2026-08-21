@@ -609,11 +609,14 @@ not an oversight — the reasoning is in `decisions.md`.
       build on `review`, correctly. Where it is offered is not decided and is
       small.
 - [x] ~~**A lapsed want needs an exit that is not a lie.**~~ Built 21 August as
-      `dropped`, the third exit from a want — *Not any more* on the row, filed
-      under a second band in `/archive`. A resolution, not a delete (§5.1);
-      wanting the thing again revives the same row, which is its undo. It also
-      forced the public filter to invert: `PUBLIC_STATES` lists what may be seen,
-      so a state added and not listed there fails closed. See `decisions.md`.
+      `dropped`, the third exit from a want — an **×** on the row, which crosses
+      it off **in place**: struck through, dimmed, in the position it held, and
+      the same × puts it back. A resolution, not a delete (§5.1). It also forced
+      the public filter to invert: `PUBLIC_STATES` lists what may be seen, so a
+      state added and not listed there fails closed — which is what made widening
+      the live view to include a private state a one-line change instead of a
+      leak. See `decisions.md`, including the archive band that was built and
+      removed the same day.
 
 ### Phase 3
 
@@ -679,11 +682,12 @@ Neither is a task today, and both are cheap to state and expensive to discover l
       `resolveEntry` guards on `state = 'want'`, so this is a widened guard and a
       control, not a new state. Left out deliberately, to keep one question being
       answered at a time.
-- [ ] **Nothing re-wants a film from inside the archive's second band.** The way
-      back is to find the film again — on the wall or through search — and tap
-      `+`, which revives the row (`addEntry`). That is a search's worth of
-      friction on a rare action and may well be the right amount; the alternative
-      is a control on a row in a collection whose rows currently have none.
+- [ ] **A crossed-off row has no ceiling.** Every want you ever cross off stays
+      in the live list, so on a long-lived account the page slowly fills with
+      struck-through titles. That is the design — you should be able to see what
+      you crossed off — but it has no answer yet for the account that has done it
+      four hundred times. Whatever the answer is, it should not be a delete: age,
+      a fold, or a count that stops rendering them past some depth.
 - [ ] **Live regions and `aria-busy`.** There are none in the app. Two moments
       are announced to nobody: the capture toast, where *Added {title}. Undo* is
       the only reversible action in the entire product and disappears on a

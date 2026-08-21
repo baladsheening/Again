@@ -77,11 +77,24 @@ export function PosterReveal({
   posterPath,
   title,
   className,
+  struck = false,
   children,
 }: {
   posterPath: string | null
   title: string
   className?: string
+  /**
+   * Crossed off — 21 August. See `entry-row.tsx`.
+   *
+   * ⚠ **A boolean rather than a class from the caller, because a strikethrough
+   * and this button's underline are the same CSS property.** Passing
+   * `line-through` in `className` puts two `text-decoration-line` utilities on
+   * one element and lets the stylesheet's ordering decide which survives — it
+   * was the underline, silently, so a crossed-off row looked exactly like a live
+   * one. Deciding here means only ever one of them is written, which is a
+   * collision removed rather than a collision won.
+   */
+  struck?: boolean
   children: React.ReactNode
 }) {
   const large = posterUrl(posterPath, 'original')
@@ -102,8 +115,18 @@ export function PosterReveal({
           nothing, but it does mean the affordance is invisible until you are
           already on it — this way the geometry is settled and only the ink
           arrives.
+
+          **Struck, the underline goes and does not come back on hover.** The two
+          lines cannot both be drawn — see `struck` above — and between an
+          affordance that is deliberately almost invisible at rest and a state
+          that has to be legible across the room, the state wins. The title is
+          still a button; it just stops advertising it while it is crossed off.
         */
-        className={`decoration-rule hover:decoration-muted text-left underline decoration-1 underline-offset-[6px] transition-colors ${className ?? ''}`}
+        className={`text-left decoration-1 underline-offset-[6px] transition-colors ${
+          struck
+            ? 'decoration-current line-through'
+            : 'decoration-rule hover:decoration-muted underline'
+        } ${className ?? ''}`}
       >
         {children}
       </button>
