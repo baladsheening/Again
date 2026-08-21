@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 
 import { posterUrl } from '@/lib/posters'
+import { CloseIcon } from './icon-close'
 
 /**
  * Straight from TMDB's CDN — §3 forbids proxying images through the app, and
@@ -37,10 +38,10 @@ import { posterUrl } from '@/lib/posters'
  * size; `object-top` because a film poster puts its subject in the upper half
  * and its billing block along the bottom.
  *
- * The thumbnail fetches `w154`. The expanded view names no size at all — it
- * offers the browser every width TMDB publishes and lets it pick, which is the
- * only way one box can be right on a 1x desk display and a 3x phone. Sizes and
- * the arithmetic are in `lib/posters.ts`.
+ * The thumbnail fetches `w154`. The expanded view picks its own, against the
+ * box it is about to render in and the pixel ratio of the screen it will render
+ * on — the only way one box can be right on a 1x desk display and a 3x phone.
+ * `rungFor` below; the rest of the arithmetic is in `lib/posters.ts`.
  */
 export function Poster({ posterPath }: { posterPath: string | null }) {
   const src = posterUrl(posterPath)
@@ -142,10 +143,21 @@ const rungFor = (aspect = 2 / 3): Rung => {
 }
 
 /**
- * Tap the title, see the poster. **Under a finger, tap anywhere and it closes**
- * — which is what this has always done and what it does again. Under a cursor
- * the ground closes and the artwork magnifies to the largest TMDB holds, with a
- * second click to come back.
+ * Tap the title, see the poster. What closes it depends on what the picture
+ * left you, and there are two cases:
+ *
+ *  - **Flush** — the artwork reaches both side edges, which is a phone held
+ *    upright and little else. The bands above and below fill with the same
+ *    picture repeating, so the screen is poster corner to corner, and an × in
+ *    the top right is the way out. Nothing else dismisses, because there is
+ *    nowhere left that is not the picture. See `flush` below.
+ *  - **Not flush** — there is ground either side. A finger tapping anywhere
+ *    closes it, which is what this surface has always done, and a cursor gets
+ *    the ground for closing and the artwork for magnifying to the largest TMDB
+ *    holds, with a second click to come back.
+ *
+ * One rule underneath both: **a tap closes wherever there is no control saying
+ * how to close.** The × appears exactly where the gesture goes.
  *
  * Pinch-zoom, double-tap zoom and rubber banding were all built and all removed
  * on 8 August; see docs/decisions.md. Magnifying is not their return by another
@@ -221,6 +233,8 @@ export function PosterReveal({
   const dialogRef = useRef<HTMLDialogElement>(null)
   const groundRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
+  /** The repeats that fill the bands above and below a flush poster. */
+  const tileRef = useRef<HTMLDivElement>(null)
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -263,6 +277,40 @@ export function PosterReveal({
   /** `original` is on its way for a magnify that has been asked for. */
   const [enlarging, setEnlarging] = useState(false)
 
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  Flush — the artwork already touches both side edges (21 August)
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * Which is the case on a phone held upright and almost nowhere else: a 2:3
+   * poster contained in a 390×844 screen is 390 wide with a band of black above
+   * and below it. **Those bands are what tiles**, filled by the same picture
+   * continuing off the top and bottom edges, so the screen is poster from corner
+   * to corner. Asked for on the handset; expressed as this rather than as a
+   * width, because it is the exact condition under which the technique works.
+   *
+   * `background-size: <rendered width> auto` only repeats seamlessly along the
+   * axis the artwork already spans — tile a *height*-bound poster and you get
+   * columns of it side by side, which is a wallpaper and not a poster. So the
+   * question is not *is this a phone*, it is *does the picture reach both
+   * edges*, and every screen that answers yes gets the same treatment: a phone
+   * upright, a narrow browser window, a foldable nobody has tested.
+   *
+   * ⚠ **The ground goes with it.** Tiling leaves nowhere to tap that is not the
+   * picture, which is why the × exists and why the ground stops closing when
+   * this is true. The two are one decision and must stay one — an × with a
+   * dismissive ground is a control nobody would find, and a tiled screen without
+   * an × is a room with no door.
+   */
+  const [flush, setFlush] = useState(false)
+
+  /*
+    Above the effects because two of them read it, and it is derived from props
+    and state rather than from anything a hook produces.
+  */
+  const full = posterUrl(posterPath, 'original')
+  const fitted = rung ? posterUrl(posterPath, rung) : null
+
   /*
     A cached image can finish loading before React has a handler on it, and then
     `load` never fires for anyone to hear. Asking the element whether it is
@@ -295,14 +343,51 @@ export function PosterReveal({
       const next = rungFor(aspect)
       return current && LADDER.indexOf(next) > LADDER.indexOf(current) ? next : current
     })
+    /* Wider than the screen's own shape means the width binds first. */
+    setFlush((aspect ?? 2 / 3) > window.innerWidth / window.innerHeight)
   }
+
+  /*
+    Lay the tiles, from the picture's own measured box rather than from `100%`.
+
+    ⚠ **The centre tile has to land exactly under the `<img>`,** or the poster is
+    drawn twice a pixel apart and the seam is a bright line across the middle of
+    it. `background-position: center` centres the tile grid and the flex ground
+    centres the image, so they agree — provided the tile is the size the image
+    actually came out at. It usually is the full width, and `100%` would usually
+    be right; *contained, never enlarged* is what makes "usually" not good
+    enough, because a master narrower than the screen renders at its own width
+    and `100%` would be wider than the thing it is supposed to sit under.
+
+    Painted only once `loaded`, for the same reason the image is transparent
+    until then — a background paints in from the top exactly like an `<img>`
+    does, and gating one without the other would put the strips back in the two
+    bands. Both fade together on the layer's own opacity.
+  */
+  const paint = () => {
+    const tiles = tileRef.current
+    const image = imageRef.current
+    if (!tiles) return
+    const width = image?.getBoundingClientRect().width
+    tiles.style.backgroundImage = fitted ? `url("${fitted}")` : ''
+    tiles.style.backgroundRepeat = 'repeat-y'
+    tiles.style.backgroundPosition = 'center'
+    tiles.style.backgroundSize = width ? `${width}px auto` : '100% auto'
+  }
+
+  /* Whenever the layer appears, or the picture under it changes size or source. */
+  useEffect(paint)
 
   /* Listening only while there is something on screen for a resize to be wrong about. */
   useEffect(() => {
     if (!rung) return
-    const onResize = () => reconsider()
+    const onResize = () => {
+      reconsider()
+      paint()
+    }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reconsider and paint read refs; rung is what decides whether to listen at all
   }, [rung])
 
   /*
@@ -318,9 +403,6 @@ export function PosterReveal({
     ground.scrollLeft = (ground.scrollWidth - ground.clientWidth) / 2
     ground.scrollTop = (ground.scrollHeight - ground.clientHeight) / 2
   }, [magnified])
-
-  const full = posterUrl(posterPath, 'original')
-  const fitted = rung ? posterUrl(posterPath, rung) : null
 
   if (!posterPath || !full) return <>{children}</>
 
@@ -347,9 +429,15 @@ export function PosterReveal({
     already landed on `original` for the fitted view — every high-DPR screen.
   */
   const magnify = () => {
-    /* A finger dismisses wherever it lands — see `pointer` above. */
+    /*
+      A finger dismisses wherever it lands — see `pointer` above — **unless the
+      screen is tiled, where the × is the way out and the picture is inert.**
+      Which is the same rule stated once: a tap closes wherever there is no
+      control saying how to close. Nothing was taken away; the affordance is
+      visible exactly where the gesture is not.
+    */
     if (pointer.current !== 'mouse') {
-      dialogRef.current?.close()
+      if (!flush) dialogRef.current?.close()
       return
     }
 
@@ -429,7 +517,10 @@ export function PosterReveal({
       >
         <div
           ref={groundRef}
-          onClick={() => dialogRef.current?.close()}
+          /* Tiled, there is no ground to speak of and the × is the way out. */
+          onClick={() => {
+            if (!flush) dialogRef.current?.close()
+          }}
           /*
             The ground. Its cursor is the ordinary arrow and its click closes,
             which is the pair that makes the poster's own cursor mean something:
@@ -460,12 +551,32 @@ export function PosterReveal({
             states to reason about — it is the one state there has ever been.
             The relaxation exists for a pointer that cannot pinch anyway.
           */
-          className={`flex h-full w-full cursor-default bg-black ${
+          className={`relative flex h-full w-full cursor-default bg-black ${
             magnified
               ? 'touch-pan-x touch-pan-y overflow-auto'
               : 'touch-none items-center justify-center'
           }`}
         >
+          {/*
+            The repeats. Out of flow, so the flex centring of the picture is
+            untouched, and `pointer-events-none` so a tap on a tile is a tap on
+            the ground — which keeps the one decision about what a tap does in
+            the one place that makes it.
+
+            ⚠ **Never while magnified.** A magnified poster is larger than the
+            screen and pans; a fixed backdrop behind it would slide under the
+            picture as it moves, which reads as the artwork coming apart.
+          */}
+          {flush && !magnified && (
+            <div
+              ref={tileRef}
+              aria-hidden
+              className={`pointer-events-none absolute inset-0 transition-opacity duration-200 ${
+                loaded ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          )}
+
           {fitted && (
             /*
               eslint-disable-next-line @next/next/no-img-element --
@@ -528,7 +639,13 @@ export function PosterReveal({
                 all — see (2) above. The fade is short enough to read as the
                 picture appearing rather than as an animation of it.
               */
-              className={`transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'} ${
+              /*
+                `relative` earns its place: the tiles are absolutely positioned
+                and a positioned element paints above a static one whatever the
+                document order says, so without this the repeats would cover the
+                picture they are there to surround.
+              */
+              className={`relative transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'} ${
                 magnified
                   ? 'm-auto h-auto w-auto max-w-none cursor-zoom-out'
                   : `max-h-full max-w-full object-contain ${
@@ -538,6 +655,31 @@ export function PosterReveal({
             />
           )}
         </div>
+
+        {/*
+          The door. It exists exactly when the tiles do, because that is exactly
+          when the picture has covered every other way out — see `flush` above.
+
+          `fixed` rather than `absolute`: the ground becomes a scroll container
+          when magnified, and a control that scrolls off the top of the artwork
+          is a control that is not there. A dialog in the top layer is its own
+          stacking context, so this stays over the picture without a z-index.
+
+          Its own disc, at 44px, because it sits on artwork nobody has seen and
+          a bare glyph is legible or invisible depending on what is behind it —
+          which is to say, depending on the film. The disc is the same matte
+          black as the ground rather than a scrim colour of its own.
+        */}
+        {flush && (
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            aria-label={`Close the poster for ${title}`}
+            className="text-text hover:bg-bg fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 cursor-pointer items-center justify-center rounded-full bg-black/55 transition-colors"
+          >
+            <CloseIcon size={18} />
+          </button>
+        )}
       </dialog>
     </>
   )

@@ -4574,3 +4574,103 @@ spent, and it is what stops `load` and `reconsider` chasing each other.
 1400 and 1000 wide and at 2:3, 1:1 and 1:2, on a 3x phone and a 1x desk. Ten
 cases, every one rendering the width `object-contain` owes it. `reveal.mjs` and
 `reveal-nested.mjs` still all clear; typecheck, lint and the §13 suite pass.
+
+### The poster fills the phone, and grows a door (21 August)
+
+Asked for: on the phone, tile the poster so it fills the screen, and close it
+with an × in the top right instead of by tapping the picture.
+
+The two halves are one decision. Tiling leaves nowhere to tap that is not the
+picture, so the × is not a preference about affordances — it is the door to a
+room that has just been sealed. Building either without the other gives you an
+× nobody would look for, or a screen with no way out.
+
+**The tiles are the same file continuing off the top and bottom edges**, not a
+grid of smaller copies and not the artwork cropped to fill. One copy sits where
+it always did, and the bands above and below carry the tail of the previous copy
+and the head of the next.
+
+#### Flush, not "the handset"
+
+The condition is not a width and not a device. It is **does the artwork already
+reach both side edges** — `aspect(image) > aspect(viewport)` — which is true of
+a 2:3 poster on a phone held upright and of very little else.
+
+That is the exact condition under which the technique works, rather than an
+approximation of the machine it was asked for. `background-size: <width> auto`
+with `repeat-y` only repeats seamlessly along an axis the artwork already spans;
+tile a height-bound poster and you get columns of it side by side, which is a
+wallpaper and not a poster. So a phone upright tiles, a phone on its side does
+not, a 1440x900 desk does not, and a narrow browser window does — because it is
+the same shape as a phone and the same treatment is the right one there.
+
+It also means the rule needs no maintenance when a new screen shape appears.
+Nothing is enumerated.
+
+#### One rule for what a tap does
+
+**A tap closes wherever there is no control saying how to close.** Flush, the
+picture and the tiles are inert and the × is the way out. Not flush, a finger
+tapping anywhere still closes — which is what this surface has always done — and
+a cursor still gets the ground for closing and the artwork for magnifying.
+
+Nothing was taken away. The affordance appears exactly where the gesture stops,
+so a phone rotating between the two states is telling you which one it is in.
+
+#### Details that are load-bearing
+
+- **The tile is sized from the picture's measured box, not `100%`.** The centre
+  tile has to land exactly under the `<img>` or the poster is drawn twice a
+  pixel apart and the seam is a bright line across the middle of it. `100%`
+  would usually be right; *contained, never enlarged* is what makes "usually"
+  not good enough, because a master narrower than the screen renders at its own
+  width and `100%` would be wider than the thing it sits under.
+- **The tiles are painted only once the picture has loaded**, on a layer that
+  fades in with it. A background paints in from the top exactly like an `<img>`
+  does — gating one without the other would put the strips straight back into
+  the two bands, in the one place nobody would think to look for them.
+- **Never tiled while magnified.** A magnified poster is larger than the screen
+  and pans; a fixed backdrop behind it would slide under the picture as it
+  moves, which reads as the artwork coming apart.
+- **The tile layer is `pointer-events-none`** so a tap on a tile is a tap on the
+  ground, which keeps the one decision about what a tap does in the one place
+  that makes it.
+- **The picture needs `relative`.** The tiles are absolutely positioned, and a
+  positioned element paints above a static one whatever the document order says.
+- **The × is `fixed`, not `absolute`.** The ground becomes a scroll container
+  when magnified, and a control that scrolls off the top of the artwork is a
+  control that is not there.
+- **It carries its own disc.** It sits on artwork nobody has seen, and a bare
+  glyph is legible or invisible depending on the film. 44px, matte black at 55%,
+  offset by `env(safe-area-inset-top)` so it clears the status bar on an
+  installed app.
+
+#### What was considered and not built
+
+**A grid of smaller copies**, and **one poster cropped to fill**. Both were put
+to the person who asked; the repeat won. Cropping would have been the smallest
+change and it loses artwork off both sides, which is the one thing this screen
+exists to show.
+
+**Keeping the ground dismissive as well as the ×.** Belt and braces, and it
+would have made the × unfindable: a control nobody needs is a control nobody
+learns. If the × turns out to be missed in the hand, the answer is to make it
+larger, not to make the whole screen dismiss again.
+
+**A width breakpoint.** It would have been shorter to write and wrong on the
+first screen nobody had thought of.
+
+#### Verified
+
+`node_modules/.probe/tiles.mjs`, driven against a production build on four
+shapes — a phone upright at 3x, the same phone on its side, a 1440x900 desk, and
+a 520x1000 window. Each one tiles or does not as its own shape dictates; where it
+tiles, the tile is the picture's measured width, centred, repeating down, from
+the same file, faded in with it, and the repeat meets the picture's top edge at
+130px on the phone, which is exactly the band. The × is 44x44 in the top right,
+tapping the picture and tapping a tile both do nothing, and the × closes.
+Where it does not tile there is no × and a tap still closes.
+
+`reveal.mjs` now reads which rule to expect off the layout rather than off the
+profile's name, and is all clear on all three profiles; `small.mjs` and
+`reveal-nested.mjs` unchanged and clear. Typecheck, lint and the §13 suite pass.

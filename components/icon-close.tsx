@@ -11,12 +11,17 @@
  *
  * 14px against a 16px field: a cross is two strokes and no interior, so at the
  * text's own size it reads smaller than the text does.
+ *
+ * `size` is for the one caller that is not beside type at all — the poster's
+ * own dismiss control, which sits on artwork rather than in a row and has to
+ * read at arm's length. Defaulted, so the two callers that grew up beside text
+ * keep the size the note above argues for.
  */
-export function CloseIcon() {
+export function CloseIcon({ size = 14 }: { size?: number } = {}) {
   return (
     <svg
-      width="14"
-      height="14"
+      width={size}
+      height={size}
       viewBox="0 0 12 12"
       fill="none"
       stroke="currentColor"
