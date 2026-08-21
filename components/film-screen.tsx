@@ -1232,34 +1232,28 @@ function FilmBody({
         {!overlay && (
           <span className="pointer-events-none absolute right-0 bottom-full flex translate-x-1/2 translate-y-1/2">
             {/*
-              ⚠ **64px here, `size-6` everywhere else — "a tad bigger" twice and
-              then "double its size", 20–21 August.** The same reasoning as the
-              rounding beside it: the size belongs to this placement, not to the
-              control. Inline in a heading the box has to sit in a line of type
-              and cannot grow past it; on a picture it has nothing to fit inside.
+              ⚠ **32px here, `size-6` everywhere else — "a tad bigger" twice on 20
+              and 21 August, and back to this after a doubling was reverted.** The
+              same reasoning as the rounding beside it: the size belongs to this
+              placement, not to the control. Inline in a heading the box has to sit
+              in a line of type and cannot grow past it; on a picture it has
+              nothing to fit inside.
 
-              ⚠ **At 4rem it stops being only a size change, and the thing it
-              gained is a collision.** The disc is centred on the corner, so half
-              of it reaches 32px *down* from the picture's edge — past this row's
-              own 20px of `pt-5` — and 32px up into the artwork. **Measured at
-              1440: the disc ends 12px below the top of the title's first line**,
-              where at 2rem it stopped 4px above it.
+              ⚠ **There is a ceiling here and 4rem was over it.** The disc is
+              centred on the corner, so half of it hangs *down* from the picture's
+              edge into this row, against the row's own 20px of `pt-5`. At 2rem
+              that half is 16px and stops 4px clear of the title's first line. **At
+              4rem it was 32px and ended 12px below the top of that line** — no
+              collision on the titles tried, since the disc sits at the column's
+              right edge and *Killers of the Flower Moon* ended 16px clear, but a
+              title filling its first line would have passed under an opaque disc.
+              The strip is `absolute` and the words are not, so the disc wins the
+              stack; it would have covered them.
 
-              It does not collide today because the disc is at the column's right
-              edge and the titles tried do not fill their first line: *Killers of
-              the Flower Moon* ends 16px clear of it. **A title whose first line
-              runs the full width would pass under the disc**, which is opaque and
-              paints above — the strip is `absolute` and the words are not, so the
-              disc wins the stack. The strip is `pointer-events-none` so only the
-              64px chip eats taps, but that chip now covers 12px of the line's
-              right end.
-
-              ⚠ **The honest fix, if it shows up, is this row's top padding rather
-              than the disc.** `pt-5` was enough to clear a 2rem disc's radius and
-              is not enough for a 4rem one; derived from `--pane-corner` it would
-              follow the control instead of being re-guessed. Not done here,
-              because nothing has been seen to break yet and a padding change
-              moves a layout that was approved by eye.
+              **So the row's `pt-5` is the real limit on this control**, and if the
+              disc is ever pushed past 2rem again that padding has to be derived
+              from `--pane-corner` rather than left at a number that happened to
+              be enough.
 
               ⚠ **It is `--pane-corner` rather than `size-7` because the
               breakpoint is written from it — 21 August.** Half this disc hangs

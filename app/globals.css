@@ -250,21 +250,24 @@
     construction — see the class list in `film-screen.tsx`. The band is centred,
     so the margin either side of it is `(viewport − 72rem) / 2`, and for that
     margin to hold the disc's radius the viewport has to be
-    `72rem + 2 × 2rem`. At 72rem exactly that margin was nothing and the window
-    cut the far half of the control off; it stayed cut for the next 64px of
+    `72rem + 2 × 1rem`. At 72rem exactly that margin was nothing and the window
+    cut the far half of the control off; it stayed cut for the next 32px of
     width.
 
-    ⚠ **This number has moved three times in one day, and never by hand.** It was
-    73.75rem for a 1.75rem disc, 74rem when that went to 2rem, and 76rem now the
-    disc is 4rem. Nobody has had to notice: the sum is stated in the note and the
-    two live four lines apart. That is the whole argument for the fence, made
-    three times.
+    ⚠ **This number has moved four times in one day and never once by hand.** It
+    was 73.75rem for a 1.75rem disc, 74rem when that went to 2rem, 76rem when the
+    disc was doubled to 4rem, and 74rem again when that was reverted. Nobody has
+    had to notice, because the sum is stated in the note and the two live four
+    lines apart. **That is the whole argument for the fence, made four times in a
+    day** — every one of those moves would have been a silently wrong breakpoint
+    under the arrangement this replaced.
 
-    ⚠ **At 4rem it costs real width.** The panel now needs 1216px where it needed
-    1152 this morning — 64px of window bought to hold the half of a control that
-    hangs outside the band. Every width between is a takeover, which is a working
-    layout rather than a degraded one, but it is a bigger slice of the desk than
-    it was.
+    ⚠ **The 4rem version is worth knowing about, because it is what this costs at
+    scale.** It put the panel's floor at 1216px — 64px of window bought purely to
+    hold the half of a control that hangs outside the band. Every width below that
+    became a takeover. The disc came back down for its own reasons (see
+    `--pane-corner`), but the width is the thing to weigh if it is ever pushed
+    again.
 
     ⚠ **The fix is this number and not a clip, an inset or a nudge.** Below it
     there is no longer room for the panel *and everything the panel carries* —
@@ -276,7 +279,7 @@
     cannot resolve a `var()`, so the sum has to be spelled out: if
     `--pane-corner` changes, this is `72rem` plus it.
   */
-  --breakpoint-pane: 76rem;
+  --breakpoint-pane: 74rem;
 
   /*
     The panel's own column, and the space it takes out of the page.
@@ -306,22 +309,23 @@
     spelled that way the overhang would move the day that scale moved and the
     breakpoint would not, which is the drift this exists to make impossible.
 
-    ⚠ **4rem since 21 August — directed, "double its size".** Third instruction
-    about this control in two days: 1.75rem, then 2rem, then twice that.
+    ⚠ **2rem, and it has been here twice.** Four instructions about this control
+    in two days: 1.75rem, "a tad bigger" to 2rem, **"double its size" to 4rem —
+    reverted on sight, "way too big"** — and back to 2rem.
 
-    ⚠ **The glyph is still 14px, and at this size that is a decision worth
-    checking rather than a precedent worth keeping.** It stayed at 14 through both
-    earlier increases, which is what "a tad bigger" meant each time — the disc
-    grows, the mark in it does not. **It is now 14 in 64**, so the plus inks about
-    a fifth of its ground, against well over half for the `size-6` placement
-    inline in the heading. That is a different-looking control, not the same one
-    larger. If it reads as a dot in a field, the glyph is the knob — `PlusIcon`
-    and `TickIcon` both take a size, and only this placement would change.
+    ⚠ **Do not double it again without moving the glyph with it.** That is the
+    reading of why 4rem failed, and it is not only that 64px is large. The glyph
+    stayed at 14px, as it had through both earlier increases, so the plus inked
+    about **a fifth of its ground** against well over half for the `size-6`
+    placement in the heading. It stopped being the same control larger and became
+    a mark adrift in a field. `PlusIcon` and `TickIcon` both take a size, and this
+    placement is the only one that would have to change — but nothing has asked
+    for that, and at 2rem the proportion is fine.
 
     It is this placement's size and nothing else's. `CONTROL` is `size-6` inline
     in the heading, which is the takeover's arrangement and hangs off nothing.
   */
-  --pane-corner: 4rem;
+  --pane-corner: 2rem;
 
   /*
     A 1.06s step-end blink, at the interval terminals use.
