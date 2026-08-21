@@ -81,11 +81,17 @@ const CDN = 'https://image.tmdb.org/t/p'
  * phone, and `original` is correct on the phone and around seven times the
  * bytes a desk screen can show.
  *
- * So that caller stops choosing. `PosterReveal` lists every width TMDB
- * publishes as a `srcSet` and states the box in `sizes`; the browser multiplies
- * by a pixel ratio only it knows and fetches one. Nothing here is tuned to a
- * device, which is why `w500` appears in the union with no note of its own —
- * it is a rung on that ladder, not a size anybody names.
+ * So that caller does the same arithmetic, but **at the moment the box exists**
+ * rather than here, where it does not: `rungFor` in `components/poster.tsx`
+ * measures the viewport and multiplies by `devicePixelRatio` when the poster is
+ * asked for. `w500` appears in the union with no note of its own because it is
+ * a rung that function may land on, not a size anybody names.
+ *
+ * ⚠ **It was a `srcSet` for about an hour and must not become one again.** A `w`
+ * descriptor is a promise about the file's width, and the browser spends it on
+ * layout as well as on choosing — so `original`, whose width nothing here knows,
+ * shrank every poster whose master was not 2000 wide by exactly the ratio the
+ * promise was wrong by. The full account is above `rungFor`.
  */
 export function posterUrl(
   posterPath: string | null,

@@ -68,34 +68,78 @@ export function Poster({ posterPath }: { posterPath: string | null }) {
 }
 
 /**
- * Every width TMDB publishes for a poster, as a ladder the browser climbs
- * itself. The `w` descriptors are the files' real widths; `original` is
- * declared at 2000, which is where TMDB's poster masters top out.
- *
- * ⚠ **Nothing here may be re-tuned against a device.** The point of the ladder
- * is that no rung was chosen — see the note in `lib/posters.ts`.
+ * The rungs whose width is stated in their own name, and which TMDB therefore
+ * keeps to exactly. `original` sits above them and has no number — which is the
+ * entire reason this is arithmetic and not a `srcSet`.
  */
-const REVEAL_SRCSET = (posterPath: string) =>
-  [
-    `${posterUrl(posterPath, 'w342')} 342w`,
-    `${posterUrl(posterPath, 'w500')} 500w`,
-    `${posterUrl(posterPath, 'w780')} 780w`,
-    `${posterUrl(posterPath, 'original')} 2000w`,
-  ].join(', ')
+const NUMBERED = ['w342', 'w500', 'w780'] as const
+const LADDER = [...NUMBERED, 'original'] as const
+type Rung = (typeof LADDER)[number]
 
 /**
- * The box the fitted poster renders in, stated in the viewport's own units so
- * the browser can resolve the ladder above without being told anything about
- * the device. The artwork is contained in a full-bleed black ground and posters
- * are 2:3, so its width is the viewport's width or two thirds of its height,
- * whichever binds first.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  ⚠ Why this is not a `srcSet` — 21 August, the same day it was one
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * If a browser cannot parse `min()` here the attribute is invalid and the spec
- * falls back to `100vw` — which is to say, to fetching `original`, which is
- * exactly what this file did before the ladder existed. The failure mode is the
- * old behaviour, not a broken one.
+ * It shipped as a `srcSet` of every rung with `sizes="min(100vw, 67vh)"`, on
+ * the reasoning that the browser is the only party that knows the pixel ratio
+ * and should therefore choose. That reasoning is still right. The mechanism
+ * could not carry it, for a reason that belongs to TMDB rather than to us:
+ *
+ * **A `w` descriptor is a promise about the file, and the browser spends it
+ * twice.** Once to choose a candidate — which is the part everybody means by
+ * responsive images — and once to work out the image's *intrinsic size*, as
+ * `naturalWidth ÷ (descriptor ÷ the width sizes claimed)`. Every rung below
+ * `original` keeps that promise exactly, because TMDB resizes to the number in
+ * the path. `original` is whatever the distributor supplied. Most are
+ * 2000×3000, so `2000w` was right most of the time — and a poster whose master
+ * is 1000 wide laid itself out at **195px on a 390px phone**, and one at 1400
+ * wide at 273px. Reported as *some posters open small*, which is exactly what
+ * it was: some, the ones we had promised wrong about.
+ *
+ * The desk never showed it. A desk screen at 1x picks `w780`, whose descriptor
+ * is exact, so the bug lived entirely on the surface it was hardest to see on.
+ *
+ * ⚠ **Do not put the `srcSet` back**, and in particular do not put it back with
+ * a "safer" descriptor. There is no safe number: under-promise and the browser
+ * reaches past a file that would have done, over-promise and the poster shrinks
+ * by exactly the ratio you were wrong by. The descriptor cannot be right
+ * without knowing each master's width, and nothing on this client knows it —
+ * `items.metadata` holds a path, and TMDB gives dimensions only from a separate
+ * `/images` call this app does not make.
+ *
+ * So the choice is made here, from numbers that are measured rather than
+ * promised: the box this will render in, times the pixel ratio of the screen
+ * it will render on. That is the same arithmetic every other size in
+ * `lib/posters.ts` is picked by — it is simply done at the moment the box
+ * exists, because this box is the viewport and the viewport is not knowable
+ * from the server.
+ *
+ * **What that buys is not the choice. It is that the choice stopped touching
+ * the geometry.** With one `src` and no descriptor, the intrinsic size is the
+ * file's true size, so `object-contain` lays out whatever actually arrived —
+ * 2000 wide, 1000 wide, or not 2:3 at all.
+ *
+ * The aspect below is the one thing still assumed, and only to guess at the box
+ * before there is a file to measure. It is asked again on `load`, from the
+ * artwork itself, and the rung ratchets up if the guess was mean — because
+ * *contained, never enlarged* means a file narrower than its box renders at its
+ * own width, so under-picking a rung would cost the poster size and not merely
+ * sharpness. Measured: a square master on a 1440×900 desk came back at 780px
+ * where the box allowed 900, until it was asked a second time.
  */
-const REVEAL_SIZES = 'min(100vw, 67vh)'
+const rungFor = (aspect = 2 / 3): Rung => {
+  /*
+    The artwork is contained in a full-bleed ground, so its width is the
+    viewport's width or its height times its shape, whichever binds first.
+    `devicePixelRatio` is the number a stylesheet cannot say and the server
+    cannot know.
+  */
+  const box = Math.min(window.innerWidth, window.innerHeight * aspect)
+  const need = box * (window.devicePixelRatio || 1)
+
+  return NUMBERED.find((rung) => Number(rung.slice(1)) >= need) ?? 'original'
+}
 
 /**
  * Tap the title, see the poster. **Under a finger, tap anywhere and it closes**
@@ -117,13 +161,12 @@ const REVEAL_SIZES = 'min(100vw, 67vh)'
  * All three were structural, and none of them was the network:
  *
  *  1. **It fetched `original` on every screen.** A desk display shows this
- *     artwork across ~600 CSS px at 1x, and `original` is a 2000×3000 master —
- *     measured off TMDB: 1.87MB against `w780`'s 358KB for the same film. The
- *     ladder above hands the choice to the browser, which is the only party
- *     that knows the pixel ratio: a 3x phone still gets `original`, and the
- *     desk stops paying five times over for pixels it cannot render. This is
- *     the whole of why the browser was worse than the handset — the handset was
- *     fetching the size it needed.
+ *     artwork across ~600 CSS px at 1x, and `original` is usually a 2000×3000
+ *     master — measured off TMDB: 1.87MB against `w780`'s 358KB for the same
+ *     film. `rungFor` above picks against the box and the pixel ratio instead,
+ *     so a 3x phone still gets `original` and the desk stops paying five times
+ *     over for pixels it cannot render. This is the whole of why the browser
+ *     was worse than the handset — the handset was fetching the size it needed.
  *
  *  2. **A baseline JPEG paints as it arrives.** That is not a bug to time out or
  *     a spinner to cover; it is what an `<img>` does whenever it is displayed
@@ -138,14 +181,15 @@ const REVEAL_SIZES = 'min(100vw, 67vh)'
  *     forty rows fetching forty full-size posters on arrival. It also meant the
  *     request could not start until the dialog was *shown* and an
  *     IntersectionObserver had noticed — a frame or more of latency bought with
- *     nothing. Mounting the image on first open buys the same protection
- *     outright and starts the fetch eagerly, in the same tick as the tap.
+ *     nothing. There is no element at all until a rung is named, which buys the
+ *     same protection outright, and it loads eagerly, so naming one starts the
+ *     fetch in that tick.
  *
- * And the tap itself starts the fetch a beat earlier: `pointerdown` warms the
- * exact URL the ladder will pick, so the bytes are moving before the click that
- * opens the dialog exists. Deliberately not on hover — `lib/posters.ts` records
- * that these bytes are spent on a deliberate tap, and a cursor crossing a title
- * on the way somewhere else is not one.
+ * Which is what lets the *press* start it rather than the click: `onPointerDown`
+ * names the rung, and the bytes are moving before the click that opens the
+ * dialog exists. Deliberately not on hover — `lib/posters.ts` records that these
+ * bytes are spent on a deliberate tap, and a cursor crossing a title on the way
+ * somewhere else is not one.
  *
  * Renders its children unwrapped when there is no artwork, so a film TMDB has
  * no poster for is a plain title rather than a button that opens nothing.
@@ -205,8 +249,13 @@ export function PosterReveal({
    */
   const pointer = useRef('')
 
-  /** Has it ever been opened? Until it has, there is no `<img>` — see (3). */
-  const [mounted, setMounted] = useState(false)
+  /**
+   * The rung this poster is being shown at, and — because it is `null` until
+   * something asks for one — whether there is an `<img>` at all. One state
+   * carries both, which is not a saving so much as the truth: the element and
+   * the size it wants come into existence at the same moment, on the press.
+   */
+  const [rung, setRung] = useState<Rung | null>(null)
   /** Has the artwork fully arrived? Until it has, it is transparent — see (2). */
   const [loaded, setLoaded] = useState(false)
   /** Shown at its own size rather than fitted to the screen. */
@@ -222,7 +271,39 @@ export function PosterReveal({
   */
   useEffect(() => {
     if (imageRef.current?.complete) setLoaded(true)
-  }, [mounted])
+  }, [rung])
+
+  /*
+    Ask again, with whatever is known now, and move up if the answer grew. Two
+    things make the first answer stale: the artwork arriving, which replaces the
+    assumed 2:3 with its own shape, and the window changing — a phone rotating
+    from landscape to portrait grows the box from two thirds of the short side
+    to the whole of it.
+
+    ⚠ **Only ever upward.** Coming back down would swap a sharp file for a soft
+    one to save bytes already spent, and the ratchet is also what stops `load`
+    and this function chasing each other: the second answer equals the first, so
+    nothing changes and nothing reloads.
+  */
+  const reconsider = () => {
+    const image = imageRef.current
+    const aspect =
+      image?.naturalWidth && image.naturalHeight
+        ? image.naturalWidth / image.naturalHeight
+        : undefined
+    setRung((current) => {
+      const next = rungFor(aspect)
+      return current && LADDER.indexOf(next) > LADDER.indexOf(current) ? next : current
+    })
+  }
+
+  /* Listening only while there is something on screen for a resize to be wrong about. */
+  useEffect(() => {
+    if (!rung) return
+    const onResize = () => reconsider()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [rung])
 
   /*
     An overflowing flex child's `auto` margins resolve to zero, so a magnified
@@ -238,33 +319,32 @@ export function PosterReveal({
     ground.scrollTop = (ground.scrollHeight - ground.clientHeight) / 2
   }, [magnified])
 
-  const fitted = posterUrl(posterPath, 'w780')
   const full = posterUrl(posterPath, 'original')
+  const fitted = rung ? posterUrl(posterPath, rung) : null
 
-  if (!posterPath || !fitted || !full) return <>{children}</>
+  if (!posterPath || !full) return <>{children}</>
 
   /*
-    Warm the ladder's own choice, not a size of our guessing: setting `srcset`
-    and `sizes` on a detached image runs the same selection the dialog will run,
-    against the same viewport, so the URL that lands in the cache is the URL the
-    dialog asks for. Setting `src` alone would warm `w780` and leave a 3x phone
-    to fetch `original` from cold anyway.
+    Choosing the rung *is* the warm, which is why there is no longer a detached
+    `Image` here to prime the cache with. Naming a rung mounts the `<img>` — in
+    a dialog that is still closed, and therefore still `display: none`, where an
+    eagerly-loaded image fetches anyway. The bytes start moving on the press,
+    from the same element that will show them, so there is no second URL to keep
+    in step with the first.
+
+    Called from the press and from the click both: a press is where the time is
+    won, and a click can arrive without one — from a keyboard, which has no
+    pointer to press with.
   */
-  const warm = () => {
-    if (mounted || !posterPath) return
-    const probe = new window.Image()
-    probe.sizes = REVEAL_SIZES
-    probe.srcset = REVEAL_SRCSET(posterPath)
-    probe.src = fitted
-  }
+  const choose = () => setRung((current) => current ?? rungFor())
 
   /*
     Magnifying swaps the fitted artwork for `original`, and does it only once
     `original` is in the cache. Swapping first and waiting after would blank the
     element for as long as the download took — the poster would vanish at the
     exact moment the person asked to see more of it. So the click fetches, and
-    the swap happens on arrival, which is instantaneous whenever the ladder had
-    already chosen `original` for the fitted view.
+    the swap happens on arrival, which is instantaneous whenever `rungFor` had
+    already landed on `original` for the fitted view — every high-DPR screen.
   */
   const magnify = () => {
     /* A finger dismisses wherever it lands — see `pointer` above. */
@@ -294,9 +374,9 @@ export function PosterReveal({
     <>
       <button
         type="button"
-        onPointerDown={warm}
+        onPointerDown={choose}
         onClick={() => {
-          setMounted(true)
+          choose()
           dialogRef.current?.showModal()
         }}
         aria-label={`${title} — see the poster`}
@@ -386,45 +466,43 @@ export function PosterReveal({
               : 'touch-none items-center justify-center'
           }`}
         >
-          {mounted && (
+          {fitted && (
             /*
               eslint-disable-next-line @next/next/no-img-element --
-              `next/image` cannot express this one. `images.unoptimized` is set
-              (§3 — never proxy posters), and an unoptimized `next/image`
-              overwrites `srcSet` and `sizes` with `undefined` on its way out of
-              `getImgProps`, which is the entire mechanism this view now runs
-              on. What it would still add — a lazy loader we specifically do not
-              want here, and `width`/`height` that CSS overrides in both states —
-              is the part being removed. The thumbnail above keeps it.
+              `next/image` cannot express this one. It lazy-loads, and a lazy
+              image in a closed `<dialog>` cannot start fetching until the dialog
+              is shown and an observer has noticed — which is the latency this
+              screen is built to avoid, and the reason the press can warm
+              anything at all. The thumbnail above keeps it.
             */
             <img
               /*
-                ⚠ **A fresh element for each mode, because a `srcSet` leaves
-                something behind that removing it does not take away.** Choosing
-                from a `srcSet` stamps the element with a *pixel density* — the
-                ratio between the file's real width and the width `sizes` said
-                the box would be — and from then on the element reports and lays
-                itself out at the corrected size. Swapping in `original` and
-                deleting both attributes measured 603px for a 2000px file:
-                2000 ÷ 3.32, the density from a ladder that was no longer there.
+                One element for both modes, and it may stay that way for exactly
+                as long as there is no `srcSet` on it.
 
-                Magnified means *this artwork at its own pixel size*, so the
-                element it is measured on must never have been told a box. The
-                key builds one that never was, which is a state removed rather
-                than a state cleared.
+                ⚠ **A `srcSet` leaves a pixel density behind that removing the
+                attribute does not take away.** While this view had one, swapping
+                in `original` and deleting both attributes measured 603px for a
+                2000px file — 2000 ÷ 3.32, the density from a ladder that was no
+                longer there — and the fix was a `key` that built an element
+                which had never been told a box. With a single `src` there is no
+                density to inherit, so the key went with the attribute that made
+                it necessary. Keeping one element is also the better swap: the
+                browser holds the old frame until the new one decodes instead of
+                blanking between them.
               */
-              key={magnified ? 'magnified' : 'fitted'}
               ref={imageRef}
               src={magnified ? full : fitted}
-              /* Magnified is `original` and nothing else: there is no larger rung. */
-              srcSet={magnified ? undefined : REVEAL_SRCSET(posterPath)}
-              sizes={magnified ? undefined : REVEAL_SIZES}
               alt={`Poster for ${title}`}
               draggable={false}
               decoding="async"
               /* The only thing on the screen, and the reason the screen opened. */
               fetchPriority="high"
-              onLoad={() => setLoaded(true)}
+              onLoad={() => {
+                setLoaded(true)
+                /* Its real shape is knowable now; the box may have been guessed short. */
+                reconsider()
+              }}
               /* Which input this is, asked of the input rather than the device. */
               onPointerDown={(event) => {
                 pointer.current = event.pointerType

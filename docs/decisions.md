@@ -4357,6 +4357,12 @@ parse `min()` there the attribute is invalid and the spec falls back to `100vw`,
 which is to say it fetches `original` — the behaviour this replaced. The failure
 mode is the old code, not a broken screen.
 
+> ⚠ **Superseded within the hour — the `srcSet` is gone.** The reasoning above
+> about *which file* is still the reasoning the code follows; the mechanism it
+> chose could not carry it, because a `w` descriptor is also a promise about
+> layout and `original`'s width is not knowable here. See *And the `srcSet`
+> lasted about an hour* at the end of this file before touching any of it.
+
 ### 2. An `<img>` paints as it arrives, so it is not shown until it has
 
 A baseline JPEG decodes progressively; displaying one before it is complete is
@@ -4493,3 +4499,78 @@ dismissed, with the film screen still standing afterwards. The takeover has no
 artwork instead.
 
 `npm run typecheck`, `npm run lint` and the §13 suite (8 tests) pass.
+
+### And the `srcSet` lasted about an hour (21 August)
+
+Reported from the phone: *some posters open small*. They did, and the cause was
+the mechanism this entry opened by recommending.
+
+**A `w` descriptor is a promise about the file, and the browser spends it
+twice.** Once to choose a candidate — the part everybody means by responsive
+images — and once to compute the image's *intrinsic size*, as `naturalWidth /
+(descriptor / the width sizes claimed)`. Every rung below `original` keeps that
+promise exactly, because TMDB resizes to the number in the path. `original` is
+whatever the distributor supplied, and `2000w` was a guess. Measured against a
+stub serving each real master width, on a 390px phone at 3x:
+
+| master | fetched | rendered | should be |
+| --- | --- | --- | --- |
+| 2000px | `original` | 390px | 390px |
+| 1400px | `original` | **273px** | 390px |
+| 1000px | `original` | **195px** | 390px |
+
+Shrunk by exactly the ratio the promise was wrong by. Most TMDB masters are
+2000 wide, which is why it was *some* posters and not all of them — and the desk
+never showed it at all, because a 1x desk screen picks `w780`, whose descriptor
+is exact. The bug lived entirely on the surface it was hardest to see on, in the
+half of the mechanism nobody thinks about.
+
+⚠ **Do not put the `srcSet` back, and in particular not with a "safer"
+descriptor.** There is no safe number. Under-promise and the browser reaches
+past a file that would have done; over-promise and the poster shrinks. The
+descriptor cannot be right without knowing each master's width, and nothing on
+the client knows it — `items.metadata` holds a path, and TMDB gives dimensions
+only from a separate `/images` call this app does not make.
+
+So the arithmetic moved back into the app, but to **the moment the box exists**
+rather than to `lib/posters.ts`, where it does not: `rungFor` measures the
+viewport and multiplies by `devicePixelRatio` when the poster is asked for. The
+rungs it lands on are the same ones the browser was landing on — `w780` on a 1x
+desk, `original` at 2x and on a 3x phone — so nothing about the first entry's
+bandwidth argument changes.
+
+**What changed is that the choice stopped touching the geometry.** With one
+`src` and no descriptor, the intrinsic size is the file's true size, and
+`object-contain` lays out whatever actually arrived. That is the difference
+between the two designs and the whole of the lesson: the old one made a
+guessable number load-bearing for layout, so being wrong about it was silent and
+visible at the same time.
+
+Three things fell out of it, all subtractions:
+
+- **The `key` went.** It existed to escape the pixel density a `srcSet` leaves
+  behind; with no `srcSet` there is no density to inherit. One element for both
+  modes is also the better swap — the browser holds the old frame until the new
+  one decodes instead of blanking between them.
+- **The detached `Image` used to warm the cache went.** Naming a rung mounts the
+  `<img>`, in a dialog that is still `display: none`, where an eagerly-loaded
+  image fetches anyway. The press starts the bytes from the same element that
+  will show them, so there is no second URL to keep in step with the first.
+- **`mounted` went.** The rung being non-null *is* "has been opened" — the
+  element and the size it wants come into existence at the same moment.
+
+**The aspect ratio is the one thing still assumed**, and only to guess at the box
+before there is a file to measure it from. It is asked again on `load`, from the
+artwork itself, and the rung ratchets up if the guess was mean. That is not
+belt-and-braces: *contained, never enlarged* means a file narrower than its box
+renders at its own width, so under-picking a rung costs the poster **size**, not
+just sharpness. Measured — a square master on a 1440x900 desk came back at 780px
+where the box allowed 900, until it was asked a second time. The same ratchet
+handles a phone rotating from landscape to portrait, and only ever moves up:
+coming back down would swap a sharp file for a soft one to save bytes already
+spent, and it is what stops `load` and `reconsider` chasing each other.
+
+**Verified** with `node_modules/.probe/small.mjs`, which serves masters at 2000,
+1400 and 1000 wide and at 2:3, 1:1 and 1:2, on a 3x phone and a 1x desk. Ten
+cases, every one rendering the width `object-contain` owes it. `reveal.mjs` and
+`reveal-nested.mjs` still all clear; typecheck, lint and the §13 suite pass.
