@@ -1,14 +1,17 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
 
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
-import type { FilmSearchResult, Intent } from '@/lib/domain'
+import type { Route } from 'next'
+
+import type { EntryState, FilmSearchResult, Intent } from '@/lib/domain'
 import { claimFilmRequest } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
 import { PosterReveal } from './poster'
-import { intentsFor, specFor } from '@/lib/vocabulary'
+import { COLLECTION_FOR, intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
 import { ChevronIcon } from './icon-chevron'
 import { TickIcon } from './icon-tick'
@@ -185,7 +188,7 @@ type Details = {
  * `+` drawn before the answer arrives is a control that says *not on your list*
  * without having asked.
  */
-type Marks = Partial<Record<Intent, { entryId: string | null }>> | null
+type Marks = Partial<Record<Intent, { entryId: string | null; state: EntryState }>> | null
 
 export function FilmScreen({
   film,
@@ -678,6 +681,7 @@ export function FilmScreen({
             overlay={false}
             touch={touch}
             handle={null}
+            dialogRef={ref}
           />
         </div>
       ) : (
@@ -855,6 +859,7 @@ export function FilmScreen({
                 film={film}
                 overlay
                 touch={touch}
+                dialogRef={ref}
                 handle={
                   <button
                     type="button"
@@ -917,6 +922,7 @@ function FilmBody({
   overlay,
   touch,
   handle,
+  dialogRef,
 }: {
   film: FilmSearchResult
   /*
@@ -933,6 +939,18 @@ function FilmBody({
     time the film changes. `null` beside the wall, where nothing recedes.
   */
   handle: React.ReactNode
+  /*
+    ⚠ **The screen has to be closed before this navigates, and only this element
+    can do it — 21 August.** `CaptureProvider` is in `app/(app)/layout.tsx`, above
+    every route, so the screen **survives a client navigation**: the settled
+    tick's link went to `/wants` and left the film open on top of it, still
+    holding the document's scroll lock. The collection arrived frozen under a
+    poster.
+
+    The same ref `Artwork` already takes, for the same reason: a `<dialog>` is
+    dismissed by closing it, not by hoping whatever rendered it notices.
+  */
+  dialogRef: React.RefObject<HTMLDialogElement | null>
 }) {
   /*
     The first intent and only the first. `intentsFor` still returns both — the
@@ -982,7 +1000,18 @@ function FilmBody({
         })
         const found: Marks = {}
         for (const entry of body.listed ?? []) {
-          found[entry.intent as Intent] = { entryId: entry.entryId }
+          /*
+            ⚠ **The state was always on the wire and was thrown away here until
+            21 August.** `listMyEntriesForExternalId` returns it and
+            `/api/film/[id]` passes it through; this loop kept the id and the
+            intent and dropped the one field that says *which collection this is
+            in*. Keeping it is what lets the settled tick answer a tap without a
+            second request.
+          */
+          found[entry.intent as Intent] = {
+            entryId: entry.entryId,
+            state: entry.state as EntryState,
+          }
         }
         setMarks(found)
       })
@@ -1016,9 +1045,19 @@ function FilmBody({
     // currently does nothing, and that is not for want of trying.
     haptic()
     setError(null)
-    // Optimistic, like every add in this app has been: the mark is the answer to
-    // the tap, and the network is not part of the answer.
-    setMarks((current) => ({ ...(current ?? {}), [intent]: { entryId: null } }))
+    /*
+      Optimistic, like every add in this app has been: the mark is the answer to
+      the tap, and the network is not part of the answer.
+
+      `'want'` because that is where a creation lands — `addEntry` writes it for
+      everyone — and this branch is only reached from a `+`, which is only drawn
+      when the marks say the film is not listed. The server's own answer replaces
+      it a moment later either way.
+    */
+    setMarks((current) => ({
+      ...(current ?? {}),
+      [intent]: { entryId: null, state: 'want' },
+    }))
 
     startTransition(async () => {
       const result = await addFilmAction({ externalId: film.externalId, intent })
@@ -1035,7 +1074,7 @@ function FilmBody({
 
       setMarks((current) => ({
         ...(current ?? {}),
-        [intent]: { entryId: result.value.entryId },
+        [intent]: { entryId: result.value.entryId, state: result.value.state },
       }))
 
       /*
@@ -1063,7 +1102,15 @@ function FilmBody({
       const result = await undoEntryAction(entryId)
       if (!result.ok) {
         setError(result.message)
-        setMarks((current) => ({ ...(current ?? {}), [intent]: { entryId } }))
+        /*
+          Putting back what was taken away. Only a fresh creation is undoable, so
+          the row this failed to remove is the one that was just made, and a
+          creation is a `want`.
+        */
+        setMarks((current) => ({
+          ...(current ?? {}),
+          [intent]: { entryId, state: 'want' },
+        }))
       }
     })
   }
@@ -1081,6 +1128,13 @@ function FilmBody({
     <AddControl
       state={marks === null ? 'unknown' : listedPrimary ? 'listed' : 'absent'}
       label={specFor('film', primary).wantLabel}
+      /*
+        Where it went. A fresh add is always a `want`, but a film that was
+        already listed when the screen opened can be in any of the four — so this
+        is read off the entry rather than assumed from the action.
+      */
+      listedIn={listedPrimary ? COLLECTION_FOR[listedPrimary.state] : null}
+      onLeave={() => dialogRef.current?.close()}
       undoable={Boolean(undoablePrimary)}
       onAdd={() => add(primary)}
       onUndo={() => undoablePrimary && undo(primary, undoablePrimary.entryId)}
@@ -1178,13 +1232,34 @@ function FilmBody({
         {!overlay && (
           <span className="pointer-events-none absolute right-0 bottom-full flex translate-x-1/2 translate-y-1/2">
             {/*
-              ⚠ **32px here, `size-6` everywhere else — "a tad bigger" twice, on
-              20 and 21 August.** The same reasoning as the rounding beside it:
-              the size belongs to this placement, not to the control. Inline in a
-              heading the box has to sit in a line of type and cannot grow past
-              it; on a picture it has nothing to fit inside, and the extra 8px is
-              the difference between a mark and a target. The glyph stays 14px
-              both times, so what grew is the disc around it.
+              ⚠ **64px here, `size-6` everywhere else — "a tad bigger" twice and
+              then "double its size", 20–21 August.** The same reasoning as the
+              rounding beside it: the size belongs to this placement, not to the
+              control. Inline in a heading the box has to sit in a line of type
+              and cannot grow past it; on a picture it has nothing to fit inside.
+
+              ⚠ **At 4rem it stops being only a size change, and the thing it
+              gained is a collision.** The disc is centred on the corner, so half
+              of it reaches 32px *down* from the picture's edge — past this row's
+              own 20px of `pt-5` — and 32px up into the artwork. **Measured at
+              1440: the disc ends 12px below the top of the title's first line**,
+              where at 2rem it stopped 4px above it.
+
+              It does not collide today because the disc is at the column's right
+              edge and the titles tried do not fill their first line: *Killers of
+              the Flower Moon* ends 16px clear of it. **A title whose first line
+              runs the full width would pass under the disc**, which is opaque and
+              paints above — the strip is `absolute` and the words are not, so the
+              disc wins the stack. The strip is `pointer-events-none` so only the
+              64px chip eats taps, but that chip now covers 12px of the line's
+              right end.
+
+              ⚠ **The honest fix, if it shows up, is this row's top padding rather
+              than the disc.** `pt-5` was enough to clear a 2rem disc's radius and
+              is not enough for a 4rem one; derived from `--pane-corner` it would
+              follow the control instead of being re-guessed. Not done here,
+              because nothing has been seen to break yet and a padding change
+              moves a layout that was approved by eye.
 
               ⚠ **It is `--pane-corner` rather than `size-7` because the
               breakpoint is written from it — 21 August.** Half this disc hangs
@@ -2070,16 +2145,60 @@ function useMatches(build: () => MediaQueryList): boolean {
  * flight, `absent` offers the add, `listed` marks it — and while §5.1's window is
  * open the mark is also the way back out, which is what let the acknowledgement
  * band go: the undo is under the finger that just added.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  It always answers a tap now — 21 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **The question was how to show, without the word *undo*, that the tick is
+ * still a button for ten seconds. The answer is that it stops mattering.**
+ *
+ * ⚠ **The fault worth designing against was never the unmarked window.** It was
+ * the eleventh second: the settled tick was a `<span role="img">`, so a tap on it
+ * did *nothing at all* — no movement, no message. Someone who taps a thing they
+ * just tapped and gets silence does not conclude *the window closed*, they
+ * conclude the app is broken. An indicator during the window would have made that
+ * worse, not better: it would promise, and then withdraw.
+ *
+ * So the control never expires. **What expires is what it does.** Inside §5.1's
+ * window a tap removes the entry; after it, a tap goes to the collection the
+ * entry is in. Nothing is offered and then taken away, so there is nothing to
+ * count down and nothing to mark.
+ *
+ * ⚠ **A ring in the tick's colour was built and removed on 17 August, and a pulse
+ * was considered and rejected on 21st.** The ring was rejected on sight. The pulse
+ * fails on its own terms: **a pulse is periodic and a window is monotonic**, so
+ * second nine looks exactly like second one — it says *this is live*, never *this
+ * is nearly gone*, and someone who glances at it late reaches for a control that
+ * is already dead. Whatever anyone tries next, it should not be an outline and it
+ * should not be a loop.
+ *
+ * ⚠ **The near miss is a hand-off rather than a punishment.** Tap at second
+ * eleven meaning to undo and you land in the collection holding the film — which
+ * is where the resolve flow lives, and so the nearest thing to what you wanted.
+ * §5 has no delete; this is the most an honest control can offer.
+ *
+ * ⚠ **The desk loses its window indicator too, and that is the same decision.**
+ * `CONTROL_PRESSABLE`'s hover lift used to appear for ten seconds and then stop,
+ * which was the one surface that could see the window at all. Both states are
+ * pressable now, so the lift means *this does something* rather than *this still
+ * does something* — which is the true statement about it.
  */
 function AddControl({
   state,
   label,
+  listedIn,
+  onLeave,
   undoable,
   onAdd,
   onUndo,
 }: {
   state: 'unknown' | 'absent' | 'listed'
   label: string
+  /** Where the entry is, once there is one. `null` until the marks land. */
+  listedIn: { href: Route; label: string } | null
+  /** Shut the screen, because it outlives the navigation. See `FilmBody`. */
+  onLeave: () => void
   undoable: boolean
   onAdd: () => void
   onUndo: () => void
@@ -2097,29 +2216,56 @@ function AddControl({
 
   if (state === 'listed') {
     /*
-      A button only while it can do something. §5 has no delete: after ten seconds
-      this is a state marker, and a control that silently stops working would be
-      worse than one that was never a control.
+      **Past §5.1's window: still a control, pointing at where the thing went.**
+      The note at the top of this component is the argument; this is the shape of
+      it. It was a `<span role="img">` until 21 August — a marker that looked
+      identical to the button it had been a second earlier and did nothing when
+      pressed.
+
+      ⚠ **A `<Link>` rather than a `<button>` that pushes**, so it is a real
+      destination: the accessible name says where it goes, it opens in a new tab
+      on a middle click, and the browser shows the target on hover. A control that
+      navigates and does not announce it is the other half of the same fault this
+      is fixing.
+
+      ⚠ **`listedIn` can be null for a frame.** `marks` arrives from a request, and
+      between `listed` becoming true and that state landing there is nothing to
+      point at. The marker holds the space in exactly the box a link would take,
+      the way `unknown` does above — never a link to nowhere.
     */
     if (!undoable) {
+      if (!listedIn) {
+        return (
+          <span
+            className={`${CONTROL} text-listed`}
+            role="img"
+            aria-label={`${label} — on your list`}
+          >
+            <TickIcon size={14} />
+          </span>
+        )
+      }
       return (
-        <span
-          className={`${CONTROL} text-listed`}
-          role="img"
-          aria-label={`${label} — on your list`}
+        <Link
+          href={listedIn.href}
+          onClick={onLeave}
+          aria-label={`On your list — open ${listedIn.label}`}
+          className={`${CONTROL_PRESSABLE} text-listed`}
         >
           <TickIcon size={14} />
-        </span>
+        </Link>
       )
     }
     /*
-      ⚠ **A ring in the tick's colour was built here and removed the same day.**
-      It marked the `UNDO_WINDOW_MS` in which this is a button rather than a
-      marker, which is a real difference and one a phone cannot otherwise see —
-      there is no cursor to lift the ground under. It was rejected on sight, and
-      the note stays because the want is still open: **the undo window has no
-      indicator on touch.** Whatever answers it next should not be an outline;
-      that has been tried.
+      **The window, and it is deliberately unmarked.** The full argument is at the
+      top of this component: the difference between this and the state below is
+      what a tap *does*, not whether one is worth making, so there is nothing here
+      that has to be advertised before it expires.
+
+      ⚠ **`aria-label` is the one place the difference is stated**, because a
+      screen reader announces the control rather than watching it: "Undo" for ten
+      seconds, then "On your list — open Wants". The label is not decoration on a
+      visual signal, it *is* the signal on that surface.
     */
     return (
       <button

@@ -250,15 +250,21 @@
     construction — see the class list in `film-screen.tsx`. The band is centred,
     so the margin either side of it is `(viewport − 72rem) / 2`, and for that
     margin to hold the disc's radius the viewport has to be
-    `72rem + 2 × 1rem`. At 72rem exactly that margin was nothing and the window
-    cut the far half of the control off; it stayed cut for the next 32px of
+    `72rem + 2 × 2rem`. At 72rem exactly that margin was nothing and the window
+    cut the far half of the control off; it stayed cut for the next 64px of
     width.
 
-    ⚠ **This number moved once already, on the day it was written.** It was
-    73.75rem for a 1.75rem disc; the disc went to 2rem the same afternoon and
-    this followed it to 74rem without anyone having to notice, because the sum is
-    stated in the note and the two live four lines apart. That is the whole
-    argument for the fence.
+    ⚠ **This number has moved three times in one day, and never by hand.** It was
+    73.75rem for a 1.75rem disc, 74rem when that went to 2rem, and 76rem now the
+    disc is 4rem. Nobody has had to notice: the sum is stated in the note and the
+    two live four lines apart. That is the whole argument for the fence, made
+    three times.
+
+    ⚠ **At 4rem it costs real width.** The panel now needs 1216px where it needed
+    1152 this morning — 64px of window bought to hold the half of a control that
+    hangs outside the band. Every width between is a takeover, which is a working
+    layout rather than a degraded one, but it is a bigger slice of the desk than
+    it was.
 
     ⚠ **The fix is this number and not a clip, an inset or a nudge.** Below it
     there is no longer room for the panel *and everything the panel carries* —
@@ -270,7 +276,7 @@
     cannot resolve a `var()`, so the sum has to be spelled out: if
     `--pane-corner` changes, this is `72rem` plus it.
   */
-  --breakpoint-pane: 74rem;
+  --breakpoint-pane: 76rem;
 
   /*
     The panel's own column, and the space it takes out of the page.
@@ -300,17 +306,22 @@
     spelled that way the overhang would move the day that scale moved and the
     breakpoint would not, which is the drift this exists to make impossible.
 
-    ⚠ **2rem since 21 August, up from 1.75rem** — directed, "a tad bigger", the
-    second time that instruction has been given about this control. The glyph
-    inside is still 14px, which is what the same instruction meant last time: the
-    disc grows, the mark in it does not. **It is now 14 in 32**, against 14 in 24
-    for the inline placement in the heading, so the plus reads lighter here than
-    it does there. If that ever looks thin, the glyph is the knob — not this.
+    ⚠ **4rem since 21 August — directed, "double its size".** Third instruction
+    about this control in two days: 1.75rem, then 2rem, then twice that.
+
+    ⚠ **The glyph is still 14px, and at this size that is a decision worth
+    checking rather than a precedent worth keeping.** It stayed at 14 through both
+    earlier increases, which is what "a tad bigger" meant each time — the disc
+    grows, the mark in it does not. **It is now 14 in 64**, so the plus inks about
+    a fifth of its ground, against well over half for the `size-6` placement
+    inline in the heading. That is a different-looking control, not the same one
+    larger. If it reads as a dot in a field, the glyph is the knob — `PlusIcon`
+    and `TickIcon` both take a size, and only this placement would change.
 
     It is this placement's size and nothing else's. `CONTROL` is `size-6` inline
     in the heading, which is the takeover's arrangement and hangs off nothing.
   */
-  --pane-corner: 2rem;
+  --pane-corner: 4rem;
 
   /*
     A 1.06s step-end blink, at the interval terminals use.

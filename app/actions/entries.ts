@@ -17,7 +17,7 @@ import {
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { getFilm } from '@/lib/tmdb'
 import { intentsFor } from '@/lib/vocabulary'
-import type { Intent } from '@/lib/domain'
+import type { EntryState, Intent } from '@/lib/domain'
 
 /**
  * Thin actions delegating to `lib/db/` (§3). Auth is re-verified inside each
@@ -46,9 +46,18 @@ export type AddFilmInput = { externalId: string; intent: Intent }
  * that never resolves to a canonical entity silently kills overlap, and the
  * failure is invisible for months (§8).
  */
+/**
+ * ⚠ **`state` is returned since 21 August, and it is the idempotent case that
+ * needs it.** A creation always lands as `want`, so the client could have assumed
+ * that — but this is idempotent by §10, and a second tap on something already
+ * listed returns the row that was there, which may be a go-back-to, a fixture or
+ * archived. The film screen's tick points at the collection the entry is in, and
+ * a guess would point at the wrong one exactly when the client's picture was
+ * stale, which is the only time it is asking.
+ */
 export async function addFilmAction(
   input: AddFilmInput,
-): Promise<ActionResult<{ entryId: string; created: boolean }>> {
+): Promise<ActionResult<{ entryId: string; created: boolean; state: EntryState }>> {
   const sessionUser = await requireSessionUser()
 
   const parsed = addSchema.safeParse(input)
@@ -81,7 +90,11 @@ export async function addFilmAction(
   refresh()
   return {
     ok: true,
-    value: { entryId: result.value.entry.id, created: result.value.created },
+    value: {
+      entryId: result.value.entry.id,
+      created: result.value.created,
+      state: result.value.entry.state,
+    },
   }
 }
 

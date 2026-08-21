@@ -1,3 +1,5 @@
+import type { Route } from 'next'
+
 import type { EntryState, Intent, Kind } from '@/lib/domain'
 
 /**
@@ -113,6 +115,27 @@ export function specFor(kind: Kind, intent: Intent): IntentSpec {
   const spec = VOCABULARY[kind][intent]
   if (!spec) throw new Error(`No spec for ${kind}/${intent}`)
   return spec
+}
+
+/**
+ * Which collection an entry is in, from its state — 21 August.
+ *
+ * **The one place that answers "where did it go".** `shell.tsx` has a list keyed
+ * by `OwnerView` for the navigation and `/me` has one keyed by the query
+ * parameter it used to take; neither is keyed by the thing an entry actually
+ * carries, which is its state. This is, and it reads `COLLECTIONS` for the words
+ * so §4's naming stays spelled once.
+ *
+ * ⚠ **`done` lands in the archive, and that is the owner's own view.** §5.3 makes
+ * `state = 'done'` private — never in anyone else's view, never in an aggregate —
+ * so anything using this must already be looking at its own entries.
+ * `listMyEntriesForExternalId` is the only source of the state that reaches it.
+ */
+export const COLLECTION_FOR: Record<EntryState, { href: Route; label: string }> = {
+  want: { href: '/wants', label: COLLECTIONS.wants },
+  go_back_to: { href: '/go-back-tos', label: COLLECTIONS.goBackTos },
+  fixture: { href: '/fixtures', label: COLLECTIONS.fixtures },
+  done: { href: '/archive', label: COLLECTIONS.archive },
 }
 
 /** v1 ships films only. Guards the entry points against the kinds not yet built. */
