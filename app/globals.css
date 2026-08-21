@@ -250,17 +250,17 @@
     construction — see the class list in `film-screen.tsx`. The band is centred,
     so the margin either side of it is `(viewport − 72rem) / 2`, and for that
     margin to hold the disc's radius the viewport has to be
-    `72rem + 2 × 1rem`. At 72rem exactly that margin was nothing and the window
-    cut the far half of the control off; it stayed cut for the next 32px of
-    width.
+    `72rem + 2 × 1.3333rem`. At 72rem exactly that margin was nothing and the
+    window cut the far half of the control off; it stayed cut for the next 43px
+    of width.
 
-    ⚠ **This number has moved four times in one day and never once by hand.** It
+    ⚠ **This number has moved five times in one day and never once by hand.** It
     was 73.75rem for a 1.75rem disc, 74rem when that went to 2rem, 76rem when the
-    disc was doubled to 4rem, and 74rem again when that was reverted. Nobody has
-    had to notice, because the sum is stated in the note and the two live four
-    lines apart. **That is the whole argument for the fence, made four times in a
-    day** — every one of those moves would have been a silently wrong breakpoint
-    under the arrangement this replaced.
+    disc was doubled to 4rem, 74rem again when that was reverted, and 74.6667rem
+    now. Nobody has had to notice, because the sum is stated in the note and the
+    two live four lines apart. **That is the whole argument for the fence, made
+    five times in a day** — every one of those moves would have been a silently
+    wrong breakpoint under the arrangement this replaced.
 
     ⚠ **The 4rem version is worth knowing about, because it is what this costs at
     scale.** It put the panel's floor at 1216px — 64px of window bought purely to
@@ -279,7 +279,7 @@
     cannot resolve a `var()`, so the sum has to be spelled out: if
     `--pane-corner` changes, this is `72rem` plus it.
   */
-  --breakpoint-pane: 74rem;
+  --breakpoint-pane: 74.6667rem;
 
   /*
     The panel's own column, and the space it takes out of the page.
@@ -309,23 +309,45 @@
     spelled that way the overhang would move the day that scale moved and the
     breakpoint would not, which is the drift this exists to make impossible.
 
-    ⚠ **2rem, and it has been here twice.** Four instructions about this control
-    in two days: 1.75rem, "a tad bigger" to 2rem, **"double its size" to 4rem —
-    reverted on sight, "way too big"** — and back to 2rem.
+    ⚠ **2.6667rem — 2rem × 4/3, directed 21 August as "1.333 bigger".** Five
+    instructions about this control in two days: 1.75rem, "a tad bigger" to 2rem,
+    **"double its size" to 4rem — reverted on sight, "way too big"** — back to
+    2rem, and this.
 
-    ⚠ **Do not double it again without moving the glyph with it.** That is the
-    reading of why 4rem failed, and it is not only that 64px is large. The glyph
-    stayed at 14px, as it had through both earlier increases, so the plus inked
-    about **a fifth of its ground** against well over half for the `size-6`
-    placement in the heading. It stopped being the same control larger and became
-    a mark adrift in a field. `PlusIcon` and `TickIcon` both take a size, and this
-    placement is the only one that would have to change — but nothing has asked
-    for that, and at 2rem the proportion is fine.
+    ⚠ **The glyph scales with it now, and that is the lesson from 4rem rather than
+    a preference.** It sat at 14px through three sizes, so the plus inked half its
+    ground at 1.75rem, 0.4375 of it at 2rem and about a fifth at 4rem — it stopped
+    being the same control larger and became a mark adrift in a field. **The
+    instruction this time said "including the plus sign itself", which is the same
+    correction stated from the other side.** So the glyph is `--pane-glyph` below,
+    a fixed proportion of this, and the two can no longer part company.
 
     It is this placement's size and nothing else's. `CONTROL` is `size-6` inline
     in the heading, which is the takeover's arrangement and hangs off nothing.
   */
-  --pane-corner: 2rem;
+  --pane-corner: 2.6667rem;
+
+  /*
+    The mark inside the disc, as a share of it.
+
+    **0.4375 is 14 in 32** — the proportion the control was looked at and kept at
+    when the disc was 2rem, carried forward rather than re-chosen. Scaling the
+    disc scales this, which is the whole point: the glyph sat at a flat 14px
+    through three different discs and the proportion drifted from a half to a
+    fifth without anyone deciding it should.
+
+    ⚠ **It is applied as CSS, not as the icons' `size` prop.** `PlusIcon` and
+    `TickIcon` set `width`/`height` as SVG *presentation attributes*, which CSS
+    outranks, so `[&_svg]:size-(--pane-glyph)` on the corner's wrapper in
+    `film-screen.tsx` overrides them without either icon learning that this
+    placement exists. Both draw from a 12-unit `viewBox` with a 1.25 stroke, so
+    the strokes scale with the box and the mark stays the same weight.
+
+    ⚠ **Only the corner reads this.** The inline placement in the heading keeps a
+    flat 14px in its `size-6` box, because that one has to sit in a line of type
+    and is bounded by the type rather than by a disc.
+  */
+  --pane-glyph: calc(var(--pane-corner) * 0.4375);
 
   /*
     A 1.06s step-end blink, at the interval terminals use.

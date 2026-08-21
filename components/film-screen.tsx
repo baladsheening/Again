@@ -1239,21 +1239,25 @@ function FilmBody({
               in a line of type and cannot grow past it; on a picture it has
               nothing to fit inside.
 
-              ⚠ **There is a ceiling here and 4rem was over it.** The disc is
-              centred on the corner, so half of it hangs *down* from the picture's
-              edge into this row, against the row's own 20px of `pt-5`. At 2rem
-              that half is 16px and stops 4px clear of the title's first line. **At
-              4rem it was 32px and ended 12px below the top of that line** — no
-              collision on the titles tried, since the disc sits at the column's
-              right edge and *Killers of the Flower Moon* ended 16px clear, but a
-              title filling its first line would have passed under an opaque disc.
-              The strip is `absolute` and the words are not, so the disc wins the
-              stack; it would have covered them.
+              ⚠ **There is a ceiling here, 4rem was well over it, and 2.6667rem
+              is just past it.** The disc is centred on the corner, so half of it
+              hangs *down* from the picture's edge into this row, against the
+              row's own 20px of `pt-5`. At 2rem that half was 16px and stopped 4px
+              clear of the title's first **line box**; at 2.6667rem it is 21.33px
+              and reaches 1.33px into it; at 4rem it was 32px and reached 12px in.
 
-              **So the row's `pt-5` is the real limit on this control**, and if the
-              disc is ever pushed past 2rem again that padding has to be derived
-              from `--pane-corner` rather than left at a number that happened to
-              be enough.
+              **The line box is not the letters, and that is the whole of the
+              margin left.** A 22px title on a 1.15 line has about 5px of leading
+              above its capitals, so a disc 1.33px into the box is still clear of
+              the ink — measured, not reasoned, and the number is in the commit.
+              What has gone is the slack: the next increase eats letters.
+
+              ⚠ **So `pt-5` is the real limit on this control**, and the next size
+              change has to derive it from `--pane-corner` rather than leave it at
+              a number that happened to be enough. It is not derived today because
+              the padding is also the gap between the picture and the title, which
+              was set by eye — moving it to buy 1.33px would trade a looked-at
+              spacing for a measurement nobody has asked for.
 
               ⚠ **It is `--pane-corner` rather than `size-7` because the
               breakpoint is written from it — 21 August.** Half this disc hangs
@@ -1262,7 +1266,7 @@ function FilmBody({
               could part company in silence — the control grows, the window starts
               cutting it again, and nothing says why.
             */}
-            <span className="bg-bg pointer-events-auto rounded-full [&>*]:size-(--pane-corner) [&>*]:rounded-full">
+            <span className="bg-bg pointer-events-auto rounded-full [&>*]:size-(--pane-corner) [&>*]:rounded-full [&_svg]:size-(--pane-glyph)">
               {addControl}
             </span>
           </span>
