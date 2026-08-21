@@ -4991,3 +4991,36 @@ Nothing is taken from a keyboard. Measured on both surfaces, opened by tap, by
 keyboard and by mouse: focus lands on the dialog every time with no ring, and one
 Tab reaches the × with `solid 2px` — which is correct, because that is what a
 ring is for.
+
+### Crossed off is inert, and the ring hugs the mark (21 August)
+
+**A struck title no longer answers a tap.** It was a button that merely stopped
+advertising itself, on the reasoning that a crossed-off film is `dropped` rather
+than deleted (§5) and its artwork is still its artwork. Directed otherwise.
+
+⚠ **A `span`, not a disabled button, and not the children handed back bare.**
+The strikethrough is drawn by `PosterReveal` — that is the whole reason `struck`
+is a prop rather than a class from the caller — so returning `<>{children}</>`
+would take the crossing-off with it and a dropped row would read as live. A
+disabled button would keep the decoration and still be a control: announced,
+tab-reachable, and doing nothing. There is no control there any more, so there
+should be no element claiming to be one. `struck.mjs` checks both halves, and
+that restoring the row makes it a button again.
+
+**The focus ring around the × is smaller, and it is smaller by construction.**
+The button was `size-11` — 44px of box around a 20px glyph — and a ring traces
+the box, so a keyboard drew a rounded square twice the size of the thing it
+pointed at. The alternative was a negative outline offset: a number tuned against
+one glyph at one size, wrong the moment either changed.
+
+Instead the element is the size of the mark and `tap-target` gives the hit area
+back — the app's own utility for exactly this, used the same way by the resolve
+flow: a transparent 44px pseudo-element under a coarse pointer. The ring hugs the
+mark, and the target is still 44px where a target matters. The position moved
+from `right-3`/`top-…+0.75rem` to `right-6`/`+1.5rem` so the *mark* stays where
+it was rather than the box.
+
+⚠ **The probe had to stop measuring the box.** `boundingBox()` reports the
+element, which is now 20px, and would call a perfectly good target a failure.
+`tiles.mjs` hit-tests four corners at ±21px through `elementFromPoint` instead,
+which is the question that was always meant.

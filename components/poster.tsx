@@ -371,6 +371,34 @@ export function PosterReveal({
   if (!posterPath || !full) return <>{children}</>
 
   /*
+    ─────────────────────────────────────────────────────────────────────────────
+     Crossed off is inert — 21 August
+    ─────────────────────────────────────────────────────────────────────────────
+
+    It was a button that merely stopped advertising itself, on the reasoning that
+    a crossed-off film is `dropped` rather than deleted (§5) and its artwork is
+    still its artwork. Directed otherwise: a struck row should not answer a tap.
+
+    ⚠ **A `span`, not a disabled button, and not `<>{children}</>`.** The
+    strikethrough is drawn *here* — that is the whole reason `struck` is a prop
+    and not a class from the caller, see above — so handing the children back
+    bare would take the crossing-off with it and a dropped row would read as
+    live. A disabled button would keep the decoration and still be a control:
+    announced, tab-reachable, and doing nothing. There is no control here any
+    more, so there should be no element that claims to be one.
+
+    The classes are the button's minus the ones that only make sense on a
+    control. `title` and the rest still arrive from the caller.
+  */
+  if (struck) {
+    return (
+      <span className={`decoration-current text-left decoration-1 line-through ${className ?? ''}`}>
+        {children}
+      </span>
+    )
+  }
+
+  /*
     Choosing the rung *is* the warm, which is why there is no longer a detached
     `Image` here to prime the cache with. Naming a rung mounts the `<img>` — in
     a dialog that is still closed, and therefore still `display: none`, where an
@@ -671,7 +699,22 @@ export function PosterReveal({
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label={`Close the poster for ${title}`}
-            className="text-text fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 cursor-pointer items-center justify-center drop-shadow-[0_0_0.5px_rgba(0,0,0,0.8)]"
+            /*
+              ⚠ **The box is the mark's size and the hit area is given back by
+              `tap-target`.** It was `size-11` — 44px of button around a 20px
+              glyph — and a focus ring traces the *box*, so a keyboard drew a
+              rounded square twice the size of the thing it was pointing at.
+              Shrinking the ring by hand would have meant a negative outline
+              offset: a number tuned against one glyph at one size, wrong the
+              moment either changes.
+
+              `tap-target` is the app's own answer to exactly this and is used
+              the same way by the resolve flow: the element stays the size of
+              what you can see, and a transparent 44px pseudo-element under a
+              coarse pointer carries the thumb. The ring hugs the mark by
+              construction, and the target is still 44px where a target matters.
+            */
+            className="text-text tap-target fixed top-[calc(env(safe-area-inset-top)+1.5rem)] right-6 flex size-5 cursor-pointer items-center justify-center drop-shadow-[0_0_0.5px_rgba(0,0,0,0.8)]"
           >
             <CloseIcon size={20} />
           </button>
