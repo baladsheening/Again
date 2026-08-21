@@ -4311,3 +4311,156 @@ dropped case now asserts the owner sees the row in their **live** view while
 `listEntriesForOtherUser` still returns nothing — which is the case that makes
 the positive filter earn its keep, because the view a stranger asks for now
 selects the private state and the guarantee holds anyway.
+
+---
+
+## The poster paints in from the top (21 August)
+
+Reported at the desk: tapping a title in Wants opens the artwork and you watch
+it arrive in strips, top to bottom. Reported on the handset: not that, but still
+noticeably slow sometimes.
+
+Three separate causes, and the difference between the two devices was the first
+one — the handset was already fetching roughly the size it needed and the desk
+was not.
+
+### 1. One size cannot be right on two screens, so we stopped choosing one
+
+`lib/posters.ts` picks every other poster size by arithmetic: rendered CSS px x
+the pixel ratio of the screen it renders on. That works for a 32px square and a
+24rem column, and it cannot work here, because the revealed poster's box is *the
+viewport* on a device whose pixel ratio is not knowable from the server. The two
+defensible answers contradicted each other and the file records both: `w780` is
+a downscale on a 1x desk display and an upscale on a 3x phone, and the note
+rejecting `w780` twice is right about the phone and wrong about the desk.
+
+So this one caller names no size. It offers a `srcSet` of every width TMDB
+publishes with the box stated in `sizes`, and the browser — the only party that
+knows the pixel ratio — resolves it. Measured: a 1440x900 desk screen at 1x
+fetches `w780`, the same screen at 2x fetches `original`, a 390px handset at 3x
+fetches `original`. Nothing in the markup differs between them.
+
+Measured off TMDB for one film, so the sizes are not guesses: `w342` 62KB,
+`w500` 121KB, `w780` 358KB, `original` 1.87MB at 2000x3000. Most originals are
+2000 wide; some are 1000, which is why `original` is declared `2000w` — over-
+declaring only ever means the browser reaches for it slightly later, and there
+is nothing above it to reach for instead.
+
+That is not a bandwidth optimisation dressed up. It is the rule in CLAUDE.md
+applied literally: **remove the condition** — here, the condition that one
+number has to be right everywhere — rather than tune the number until one device
+looks acceptable.
+
+`sizes` is `min(100vw, 67vh)`, which is the arithmetic of a 2:3 poster contained
+in a full-bleed ground and not a constant anybody chose. If a browser cannot
+parse `min()` there the attribute is invalid and the spec falls back to `100vw`,
+which is to say it fetches `original` — the behaviour this replaced. The failure
+mode is the old code, not a broken screen.
+
+### 2. An `<img>` paints as it arrives, so it is not shown until it has
+
+A baseline JPEG decodes progressively; displaying one before it is complete is
+what draws it in strips. There is nothing to time out and nothing to cover with
+a spinner — the element is transparent until `load` and fades in over 200ms. No
+engine can paint bands of something it is not showing, which is why this is
+stated at the display and not at the encoding, where it would be TMDB's to fix
+and ours to guess at.
+
+### 3. The lazy loader was load-bearing by accident
+
+`next/image` lazy-loads by default, and this image lives inside a closed
+`<dialog>`. `display: none` never intersects the viewport, so the lazy loader
+was the only thing standing between a forty-row Wants list and forty full-size
+posters fetched on arrival — which nobody had written down. It also meant the
+request could not start until the dialog was *shown* and an IntersectionObserver
+had noticed it, which is latency bought with nothing.
+
+The image is now mounted on first open instead. That buys the same protection
+outright — there is no element, so there is no request — and the fetch starts
+eagerly in the same tick as the tap. Verified: zero requests to `image.tmdb.org`
+while the list sits there, one request on the press, none on a reopen.
+
+The press, not the click: `pointerdown` warms the exact URL the ladder will pick
+by running the same selection on a detached image. Deliberately **not** on
+hover. `lib/posters.ts` records that these bytes are spent on a deliberate tap,
+and a cursor crossing a title on its way somewhere else is not one.
+
+### The cursor says which of two clicks you are about to spend
+
+Asked for at the desk, and it is the thing that makes the rest legible: a
+magnifying glass over the artwork, an ordinary arrow over the ground. Clicking
+the ground closes. Clicking the artwork magnifies it to `original` at its own
+pixel size, with the ground becoming the scroll container; the cursor turns to
+`zoom-out` and a second click comes back.
+
+- **The magnified size is `original`, fetched on the click and swapped in on
+  arrival.** Swapping first and waiting after would blank the poster at the
+  exact moment somebody asked to see more of it. Whenever the ladder had already
+  chosen `original` for the fitted view — every high-DPR screen — it is already
+  in the cache and the swap is instant.
+- ⚠ **A `srcSet` leaves a pixel density behind that removing the attribute does
+  not take away.** Choosing from a `srcSet` stamps the element with the ratio
+  between the file's real width and the width `sizes` claimed for the box, and
+  from then on the element lays itself out — and reports `naturalWidth` — at the
+  corrected size. Swapping in `original` and deleting both attributes measured
+  **603px for a 2000px file**: 2000 / 3.32, the density from a ladder that was
+  no longer there. Each mode now gets its own element via a `key`, so the one
+  that means *at its own pixel size* was never told a box. A state removed
+  rather than a state cleared.
+- **`touch-none` becomes `pan-x pan-y` when magnified**, which is the exact
+  subtraction: dragging comes back, `pinch-zoom` stays withheld. The reason
+  `touch-none` is there at all is that an unhandled pinch zooms the *page* and
+  iOS offers no way to put page zoom back, so a pinch on a poster used to strand
+  the list behind it magnified. Panning must not reopen that.
+- **The artwork centres with `m-auto`, not `justify-center`.** A centred flex
+  child that overflows its scroll container is clipped at the start edge, which
+  would make the top-left corner of a magnified poster unreachable. The scroll
+  position is centred on the swap for the same reason — auto margins resolve to
+  zero when the child overflows, so it would otherwise land on the one part of a
+  poster nobody magnified to read.
+
+⚠ **On a handset the ground is only the bands above and below.** The fitted
+artwork takes the full width, so "tap outside to close" is two ~130px bands at
+390x844 rather than a margin all round. Tapping the artwork now magnifies where
+it used to dismiss. Escape still closes, and a second tap still comes back from
+magnified, so nothing is a trap — but if the bands turn out to be too fine a
+target in the hand, the answer is a close affordance on this screen, not a
+smaller poster.
+
+### What was considered and not built
+
+**A low-resolution first paint.** Show `w342` immediately, swap in the real one
+behind it. It removes the blank rather than the strips, at the cost of two
+fetches on every open and a visible sharpening. With the press warming the fetch
+and the desk now pulling a fifth of the bytes it used to, there is not much
+blank left to fill.
+
+**Hover prefetch.** A real win at the desk and a real cost on mobile data, and
+it contradicts a rule already written down. Pointerdown gets most of the
+distance for none of the argument.
+
+**Zooming toward the click point.** The classic magnifier behaviour, and it
+would mean a focal-point calculation on every screen shape. Centred is
+predictable and was not what anybody asked for.
+
+**The film screen's own artwork.** The same progressive paint is possible there,
+and it has its own sizing note and its own reveal. Out of scope for a report
+about the list, and it should be looked at with that screen's animation in hand.
+
+### Verified
+
+Driven against a production build in a browser at 1440x900 at 1x and 2x and at
+390x844 at 3x, with `image.tmdb.org` answered by real rasters at each rung's
+true pixel size — `node_modules/.probe/reveal.mjs`, 22 checks per profile, all
+clear. ⚠ The first version of that probe served SVGs and was theatre: an SVG has
+no fixed pixel size, Chromium reported `naturalWidth` 603 for a stub declaring
+2000, and `width === naturalWidth` passed while measuring nothing. A poster is a
+JPEG; the stub had to be a raster before the magnify claim meant anything.
+
+`reveal-nested.mjs` covers the hazard `film-screen.tsx` records — the poster
+opened from inside the film screen at pane width, magnified, returned and
+dismissed, with the film screen still standing afterwards. The takeover has no
+`PosterReveal` in it; below `--breakpoint-pane` the film screen recedes its own
+artwork instead.
+
+`npm run typecheck`, `npm run lint` and the §13 suite (8 tests) pass.

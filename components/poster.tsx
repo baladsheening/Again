@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { posterUrl } from '@/lib/posters'
 
@@ -37,8 +37,10 @@ import { posterUrl } from '@/lib/posters'
  * size; `object-top` because a film poster puts its subject in the upper half
  * and its billing block along the bottom.
  *
- * The thumbnail fetches `w154` and the expanded view `original`, which is the
- * largest TMDB has. Sizes and the arithmetic are in `lib/posters.ts`.
+ * The thumbnail fetches `w154`. The expanded view names no size at all — it
+ * offers the browser every width TMDB publishes and lets it pick, which is the
+ * only way one box can be right on a 1x desk display and a 3x phone. Sizes and
+ * the arithmetic are in `lib/posters.ts`.
  */
 export function Poster({ posterPath }: { posterPath: string | null }) {
   const src = posterUrl(posterPath)
@@ -66,9 +68,79 @@ export function Poster({ posterPath }: { posterPath: string | null }) {
 }
 
 /**
- * Tap the title, see the poster. Tap anywhere, close it — that is the whole
- * interaction. Pinch-zoom, double-tap zoom, panning and rubber banding were all
- * built and all removed on 8 August; see docs/decisions.md.
+ * Every width TMDB publishes for a poster, as a ladder the browser climbs
+ * itself. The `w` descriptors are the files' real widths; `original` is
+ * declared at 2000, which is where TMDB's poster masters top out.
+ *
+ * ⚠ **Nothing here may be re-tuned against a device.** The point of the ladder
+ * is that no rung was chosen — see the note in `lib/posters.ts`.
+ */
+const REVEAL_SRCSET = (posterPath: string) =>
+  [
+    `${posterUrl(posterPath, 'w342')} 342w`,
+    `${posterUrl(posterPath, 'w500')} 500w`,
+    `${posterUrl(posterPath, 'w780')} 780w`,
+    `${posterUrl(posterPath, 'original')} 2000w`,
+  ].join(', ')
+
+/**
+ * The box the fitted poster renders in, stated in the viewport's own units so
+ * the browser can resolve the ladder above without being told anything about
+ * the device. The artwork is contained in a full-bleed black ground and posters
+ * are 2:3, so its width is the viewport's width or two thirds of its height,
+ * whichever binds first.
+ *
+ * If a browser cannot parse `min()` here the attribute is invalid and the spec
+ * falls back to `100vw` — which is to say, to fetching `original`, which is
+ * exactly what this file did before the ladder existed. The failure mode is the
+ * old behaviour, not a broken one.
+ */
+const REVEAL_SIZES = 'min(100vw, 67vh)'
+
+/**
+ * Tap the title, see the poster. Tap the ground, close it; tap the poster,
+ * magnify it to the largest artwork TMDB holds and tap again to come back.
+ * Pinch-zoom, double-tap zoom and rubber banding were all built and all removed
+ * on 8 August; see docs/decisions.md. What returned on 21 August is a *click*,
+ * which is the one gesture that can be told apart from a dismissal by where it
+ * landed rather than by how long it lasted.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Three reasons the poster painted in from the top — 21 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * All three were structural, and none of them was the network:
+ *
+ *  1. **It fetched `original` on every screen.** A desk display shows this
+ *     artwork across ~600 CSS px at 1x, and `original` is a 2000×3000 master —
+ *     measured off TMDB: 1.87MB against `w780`'s 358KB for the same film. The
+ *     ladder above hands the choice to the browser, which is the only party
+ *     that knows the pixel ratio: a 3x phone still gets `original`, and the
+ *     desk stops paying five times over for pixels it cannot render. This is
+ *     the whole of why the browser was worse than the handset — the handset was
+ *     fetching the size it needed.
+ *
+ *  2. **A baseline JPEG paints as it arrives.** That is not a bug to time out or
+ *     a spinner to cover; it is what an `<img>` does whenever it is displayed
+ *     before it is complete. So it is not displayed before it is complete — the
+ *     element is transparent until `load`, and no engine can paint strips of
+ *     something it is not showing. A fix at the display, which holds on every
+ *     browser, rather than at the encoding, which is TMDB's.
+ *
+ *  3. **`next/image` lazy-loads, and this image lives in a closed `<dialog>`.**
+ *     That was load-bearing by accident: `display: none` never intersects the
+ *     viewport, so the lazy image was the only thing stopping a Wants list of
+ *     forty rows fetching forty full-size posters on arrival. It also meant the
+ *     request could not start until the dialog was *shown* and an
+ *     IntersectionObserver had noticed — a frame or more of latency bought with
+ *     nothing. Mounting the image on first open buys the same protection
+ *     outright and starts the fetch eagerly, in the same tick as the tap.
+ *
+ * And the tap itself starts the fetch a beat earlier: `pointerdown` warms the
+ * exact URL the ladder will pick, so the bytes are moving before the click that
+ * opens the dialog exists. Deliberately not on hover — `lib/posters.ts` records
+ * that these bytes are spent on a deliberate tap, and a cursor crossing a title
+ * on the way somewhere else is not one.
  *
  * Renders its children unwrapped when there is no artwork, so a film TMDB has
  * no poster for is a plain title rather than a button that opens nothing.
@@ -97,16 +169,98 @@ export function PosterReveal({
   struck?: boolean
   children: React.ReactNode
 }) {
-  const large = posterUrl(posterPath, 'original')
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const groundRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
 
-  if (!large) return <>{children}</>
+  /** Has it ever been opened? Until it has, there is no `<img>` — see (3). */
+  const [mounted, setMounted] = useState(false)
+  /** Has the artwork fully arrived? Until it has, it is transparent — see (2). */
+  const [loaded, setLoaded] = useState(false)
+  /** Shown at its own size rather than fitted to the screen. */
+  const [magnified, setMagnified] = useState(false)
+  /** `original` is on its way for a magnify that has been asked for. */
+  const [enlarging, setEnlarging] = useState(false)
+
+  /*
+    A cached image can finish loading before React has a handler on it, and then
+    `load` never fires for anyone to hear. Asking the element whether it is
+    already complete covers that; the dependency is the mount, because that is
+    the only moment an `<img>` appears where there was none.
+  */
+  useEffect(() => {
+    if (imageRef.current?.complete) setLoaded(true)
+  }, [mounted])
+
+  /*
+    An overflowing flex child's `auto` margins resolve to zero, so a magnified
+    poster lands with its top-left corner in the top-left corner of the screen —
+    the one part of a poster nobody magnified it to read. Centring the *scroll*
+    rather than the artwork means the middle is where it was before the click and
+    every edge is a drag away.
+  */
+  useEffect(() => {
+    const ground = groundRef.current
+    if (!ground || !magnified) return
+    ground.scrollLeft = (ground.scrollWidth - ground.clientWidth) / 2
+    ground.scrollTop = (ground.scrollHeight - ground.clientHeight) / 2
+  }, [magnified])
+
+  const fitted = posterUrl(posterPath, 'w780')
+  const full = posterUrl(posterPath, 'original')
+
+  if (!posterPath || !fitted || !full) return <>{children}</>
+
+  /*
+    Warm the ladder's own choice, not a size of our guessing: setting `srcset`
+    and `sizes` on a detached image runs the same selection the dialog will run,
+    against the same viewport, so the URL that lands in the cache is the URL the
+    dialog asks for. Setting `src` alone would warm `w780` and leave a 3x phone
+    to fetch `original` from cold anyway.
+  */
+  const warm = () => {
+    if (mounted || !posterPath) return
+    const probe = new window.Image()
+    probe.sizes = REVEAL_SIZES
+    probe.srcset = REVEAL_SRCSET(posterPath)
+    probe.src = fitted
+  }
+
+  /*
+    Magnifying swaps the fitted artwork for `original`, and does it only once
+    `original` is in the cache. Swapping first and waiting after would blank the
+    element for as long as the download took — the poster would vanish at the
+    exact moment the person asked to see more of it. So the click fetches, and
+    the swap happens on arrival, which is instantaneous whenever the ladder had
+    already chosen `original` for the fitted view.
+  */
+  const magnify = () => {
+    if (magnified) {
+      setMagnified(false)
+      return
+    }
+    if (enlarging) return
+
+    setEnlarging(true)
+    const probe = new window.Image()
+    probe.decoding = 'async'
+    probe.onload = () => {
+      setEnlarging(false)
+      setMagnified(true)
+    }
+    probe.onerror = () => setEnlarging(false)
+    probe.src = full
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => dialogRef.current?.showModal()}
+        onPointerDown={warm}
+        onClick={() => {
+          setMounted(true)
+          dialogRef.current?.showModal()
+        }}
         aria-label={`${title} — see the poster`}
         /*
           `text-left` because this is a paragraph of text inside a button, and
@@ -134,6 +288,16 @@ export function PosterReveal({
       <dialog
         ref={dialogRef}
         /*
+          Magnification is a property of this viewing, not of the film. Closing
+          on a magnified poster and opening it again should start where every
+          other opening starts, fitted to the screen.
+
+          Safe to answer every `close` this hears, unlike the film screen's
+          handler: React dispatches `close` along its own tree rather than the
+          DOM's, and this dialog is the innermost one there is.
+        */
+        onClose={() => setMagnified(false)}
+        /*
           `backdrop:bg-black` is now the same value as `--color-bg`, and stays
           spelled out rather than switched to the token: this surface is black
           because a poster wants nothing behind it, not because it inherits the
@@ -146,8 +310,14 @@ export function PosterReveal({
         className="bg-transparent backdrop:bg-black m-0 h-full max-h-none w-full max-w-none p-0"
       >
         <div
+          ref={groundRef}
           onClick={() => dialogRef.current?.close()}
           /*
+            The ground. Its cursor is the ordinary arrow and its click closes,
+            which is the pair that makes the poster's own cursor mean something:
+            a magnifying glass inside the artwork and an arrow outside it states
+            where the two different clicks are, before either is spent.
+
             `touch-none` is the one piece of the zoom work worth keeping, and it
             is a class rather than code. It stops the browser doing its own
             pinch and double-tap zoom on this element — which matters because an
@@ -157,19 +327,86 @@ export function PosterReveal({
 
             Without it, pinching the poster and closing left the list behind
             magnified with no way back short of reloading.
+
+            ⚠ **Magnified, it becomes the scroll container and `touch-none` has
+            to go** — a poster at its own size is larger than the screen and
+            unpannable is unusable. `pan-x pan-y` is the exact subtraction: it
+            restores dragging and still withholds `pinch-zoom`, so the page
+            behind cannot be zoomed and stranded. And the artwork centres with
+            `m-auto` rather than `justify-center`, because a centred flex child
+            that overflows its scroll container is clipped at the start edge and
+            the top-left corner of the poster becomes unreachable.
           */
-          className="flex h-full w-full touch-none items-center justify-center bg-black"
+          className={`flex h-full w-full cursor-default bg-black ${
+            magnified
+              ? 'touch-pan-x touch-pan-y overflow-auto'
+              : 'touch-none items-center justify-center'
+          }`}
         >
-          <Image
-            src={large}
-            alt={`Poster for ${title}`}
-            width={2000}
-            height={3000}
-            draggable={false}
-            // Contained, never enlarged: a 2000px source shown across ~390 CSS
-            // px is a downscale, which is the sharpest a screen can render it.
-            className="max-h-full max-w-full object-contain"
-          />
+          {mounted && (
+            /*
+              eslint-disable-next-line @next/next/no-img-element --
+              `next/image` cannot express this one. `images.unoptimized` is set
+              (§3 — never proxy posters), and an unoptimized `next/image`
+              overwrites `srcSet` and `sizes` with `undefined` on its way out of
+              `getImgProps`, which is the entire mechanism this view now runs
+              on. What it would still add — a lazy loader we specifically do not
+              want here, and `width`/`height` that CSS overrides in both states —
+              is the part being removed. The thumbnail above keeps it.
+            */
+            <img
+              /*
+                ⚠ **A fresh element for each mode, because a `srcSet` leaves
+                something behind that removing it does not take away.** Choosing
+                from a `srcSet` stamps the element with a *pixel density* — the
+                ratio between the file's real width and the width `sizes` said
+                the box would be — and from then on the element reports and lays
+                itself out at the corrected size. Swapping in `original` and
+                deleting both attributes measured 603px for a 2000px file:
+                2000 ÷ 3.32, the density from a ladder that was no longer there.
+
+                Magnified means *this artwork at its own pixel size*, so the
+                element it is measured on must never have been told a box. The
+                key builds one that never was, which is a state removed rather
+                than a state cleared.
+              */
+              key={magnified ? 'magnified' : 'fitted'}
+              ref={imageRef}
+              src={magnified ? full : fitted}
+              /* Magnified is `original` and nothing else: there is no larger rung. */
+              srcSet={magnified ? undefined : REVEAL_SRCSET(posterPath)}
+              sizes={magnified ? undefined : REVEAL_SIZES}
+              alt={`Poster for ${title}`}
+              draggable={false}
+              decoding="async"
+              /* The only thing on the screen, and the reason the screen opened. */
+              fetchPriority="high"
+              onLoad={() => setLoaded(true)}
+              onClick={(event) => {
+                /* The ground's click closes; this one must not reach it. */
+                event.stopPropagation()
+                magnify()
+              }}
+              /*
+                Fitted: contained, never enlarged — a 2000px source shown across
+                ~390 CSS px is a downscale, which is the sharpest a screen can
+                render it. Magnified: its own pixel size, `max-none` so nothing
+                holds it in and `m-auto` so it centres until it is too big to,
+                and then scrolls.
+
+                Transparent until `load`, so the artwork arrives whole or not at
+                all — see (2) above. The fade is short enough to read as the
+                picture appearing rather than as an animation of it.
+              */
+              className={`transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'} ${
+                magnified
+                  ? 'm-auto h-auto w-auto max-w-none cursor-zoom-out'
+                  : `max-h-full max-w-full object-contain ${
+                      enlarging ? 'cursor-progress' : 'cursor-zoom-in'
+                    }`
+              }`}
+            />
+          )}
         </div>
       </dialog>
     </>

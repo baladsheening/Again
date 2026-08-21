@@ -67,9 +67,29 @@ const CDN = 'https://image.tmdb.org/t/p'
  * `original` is ~7x the bytes that column can show — which is what you were
  * watching when the picture painted in from the top.
  */
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The one caller that names no size at all — 21 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Everything above picks a width by arithmetic: rendered CSS px × the pixel
+ * ratio of the screen it renders on. That works wherever the box is a known
+ * size — a 32px square, a 24rem column — and it cannot work for the revealed
+ * poster, whose box is *the viewport*, on a device whose pixel ratio is not
+ * knowable from here. The two answers were both right and contradicted each
+ * other: `w780` is a downscale on a 1x desk screen and an upscale on a 3x
+ * phone, and `original` is correct on the phone and around seven times the
+ * bytes a desk screen can show.
+ *
+ * So that caller stops choosing. `PosterReveal` lists every width TMDB
+ * publishes as a `srcSet` and states the box in `sizes`; the browser multiplies
+ * by a pixel ratio only it knows and fetches one. Nothing here is tuned to a
+ * device, which is why `w500` appears in the union with no note of its own —
+ * it is a rung on that ladder, not a size anybody names.
+ */
 export function posterUrl(
   posterPath: string | null,
-  size: 'w92' | 'w154' | 'w342' | 'w780' | 'original' = 'w154',
+  size: 'w92' | 'w154' | 'w342' | 'w500' | 'w780' | 'original' = 'w154',
 ) {
   if (!posterPath) return null
   return `${CDN}/${size}${posterPath}`
