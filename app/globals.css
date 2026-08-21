@@ -250,9 +250,15 @@
     construction — see the class list in `film-screen.tsx`. The band is centred,
     so the margin either side of it is `(viewport − 72rem) / 2`, and for that
     margin to hold the disc's radius the viewport has to be
-    `72rem + 2 × 0.875rem`. At 72rem exactly that margin was nothing and the
-    window cut the far half of the control off; it stayed cut for the next 28px
-    of width.
+    `72rem + 2 × 1rem`. At 72rem exactly that margin was nothing and the window
+    cut the far half of the control off; it stayed cut for the next 32px of
+    width.
+
+    ⚠ **This number moved once already, on the day it was written.** It was
+    73.75rem for a 1.75rem disc; the disc went to 2rem the same afternoon and
+    this followed it to 74rem without anyone having to notice, because the sum is
+    stated in the note and the two live four lines apart. That is the whole
+    argument for the fence.
 
     ⚠ **The fix is this number and not a clip, an inset or a nudge.** Below it
     there is no longer room for the panel *and everything the panel carries* —
@@ -264,7 +270,7 @@
     cannot resolve a `var()`, so the sum has to be spelled out: if
     `--pane-corner` changes, this is `72rem` plus it.
   */
-  --breakpoint-pane: 73.75rem;
+  --breakpoint-pane: 74rem;
 
   /*
     The panel's own column, and the space it takes out of the page.
@@ -290,14 +296,21 @@
     window to hang into, and it can only do that if it is reading the number the
     control is wearing.
 
-    ⚠ **Deliberately off the spacing scale.** `size-7` is `--spacing × 7`; spelled
-    that way the overhang would move the day that scale moved and the breakpoint
-    would not, which is the drift this exists to make impossible.
+    ⚠ **Deliberately off the spacing scale.** A spacing step is `--spacing × n`;
+    spelled that way the overhang would move the day that scale moved and the
+    breakpoint would not, which is the drift this exists to make impossible.
+
+    ⚠ **2rem since 21 August, up from 1.75rem** — directed, "a tad bigger", the
+    second time that instruction has been given about this control. The glyph
+    inside is still 14px, which is what the same instruction meant last time: the
+    disc grows, the mark in it does not. **It is now 14 in 32**, against 14 in 24
+    for the inline placement in the heading, so the plus reads lighter here than
+    it does there. If that ever looks thin, the glyph is the knob — not this.
 
     It is this placement's size and nothing else's. `CONTROL` is `size-6` inline
     in the heading, which is the takeover's arrangement and hangs off nothing.
   */
-  --pane-corner: 1.75rem;
+  --pane-corner: 2rem;
 
   /*
     A 1.06s step-end blink, at the interval terminals use.

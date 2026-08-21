@@ -625,11 +625,15 @@ export function FilmScreen({
                and a box that must never become a scroll container, which is a
                different argument for the same word — see the note above.
 
-               ⚠ **It used to cost a 28px band of window widths, and that band
-               no longer exists — 21 August.** This sits at
-               `max(0px, 50% - 36rem)`, so between 1152 and 1180 there was less
-               than the disc's radius between the panel and the viewport and the
-               window cut the far half off instead.
+               ⚠ **It used to cost a band of window widths, and that band no
+               longer exists — 21 August.** This sits at
+               `max(0px, 50% - 36rem)`, so between 1152 and the breakpoint there
+               was less than the disc's radius between the panel and the viewport
+               and the window cut the far half off instead. The band was 28px wide
+               when the disc was 1.75rem and would be 32px now that it is 2rem —
+               **a number that grows with the control is a number nobody should
+               be maintaining**, which is why neither the band nor the boundary is
+               written here.
 
                **The answer is that those are not panel widths any more.**
                `--breakpoint-pane` is the band's cap plus `--pane-corner` — the
@@ -1174,13 +1178,13 @@ function FilmBody({
         {!overlay && (
           <span className="pointer-events-none absolute right-0 bottom-full flex translate-x-1/2 translate-y-1/2">
             {/*
-              ⚠ **28px here, `size-6` everywhere else — directed 20 August, "a
-              tad bigger".** The same reasoning as the rounding beside it: the
-              size belongs to this placement, not to the control. Inline in a
-              heading the box has to sit in a line of type, and 28px would push
-              that line out; on a picture it has nothing to fit inside and the
-              extra 4px is the difference between a mark and a target. The glyph
-              stays 14px, so what grew is the disc around it.
+              ⚠ **32px here, `size-6` everywhere else — "a tad bigger" twice, on
+              20 and 21 August.** The same reasoning as the rounding beside it:
+              the size belongs to this placement, not to the control. Inline in a
+              heading the box has to sit in a line of type and cannot grow past
+              it; on a picture it has nothing to fit inside, and the extra 8px is
+              the difference between a mark and a target. The glyph stays 14px
+              both times, so what grew is the disc around it.
 
               ⚠ **It is `--pane-corner` rather than `size-7` because the
               breakpoint is written from it — 21 August.** Half this disc hangs
@@ -1300,7 +1304,25 @@ function FilmBody({
               what that distinction costs and why it is drawn that way round.
             */}
             {overlay && (
-              <span className="relative bottom-[calc((1cap_-_1ex)/2)] inline-flex h-[1lh] items-center align-middle">
+              /*
+                ⚠ **The gap before this is a space AND a margin, and they are not
+                the same job — 21 August.** Directed: a tad more air between the
+                title's last character and the `+`.
+
+                The space above is a **break opportunity**. It is what lets the
+                control fall to the end of whatever turns out to be the last line
+                instead of being welded to the final word, which is the whole
+                argument for setting this inline rather than as a flex sibling.
+                Widening the gap by deleting it and using margin alone would have
+                bought the air by taking that away.
+
+                So the margin is the **optical separation**, and it is the only
+                thing here that is a look rather than a behaviour. `em`, because
+                it is the distance between two pieces of type and the title takes
+                two sizes — 1.375rem, and 1.75rem above 64rem. A rem would be
+                right at one of them.
+              */
+              <span className="relative bottom-[calc((1cap_-_1ex)/2)] ms-[0.15em] inline-flex h-[1lh] items-center align-middle">
                 {addControl}
               </span>
             )}
