@@ -237,8 +237,34 @@
     below it and gets the takeover; landscape is above it and gets the panel. No
     rule anywhere names a device — a tablet is a touch device with a desk's amount
     of room, so room decides the layout and the pointer decides the controls.
+
+    ─────────────────────────────────────────────────────────────────────────
+     It is the band's cap PLUS `--pane-corner` — 21 August
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Directed: no part of the `+` may ever be obscured. Narrow the window past
+    the point where it would be, and the film takes the screen instead.**
+
+    The panel is pinned to the band's right edge and the `+` is a disc centred on
+    the picture's corner *there*, so half of it lies outside the band by
+    construction — see the class list in `film-screen.tsx`. The band is centred,
+    so the margin either side of it is `(viewport − 72rem) / 2`, and for that
+    margin to hold the disc's radius the viewport has to be
+    `72rem + 2 × 0.875rem`. At 72rem exactly that margin was nothing and the
+    window cut the far half of the control off; it stayed cut for the next 28px
+    of width.
+
+    ⚠ **The fix is this number and not a clip, an inset or a nudge.** Below it
+    there is no longer room for the panel *and everything the panel carries* —
+    which is the sentence this breakpoint always claimed to be making, now told
+    accurately. The takeover a narrower window gets does not draw this control at
+    all, so there is nothing left to obscure on either side of the line.
+
+    ⚠ **The two move together and only this note holds them.** A media query
+    cannot resolve a `var()`, so the sum has to be spelled out: if
+    `--pane-corner` changes, this is `72rem` plus it.
   */
-  --breakpoint-pane: 72rem;
+  --breakpoint-pane: 73.75rem;
 
   /*
     The panel's own column, and the space it takes out of the page.
@@ -253,6 +279,25 @@
   */
   --pane-column: 24rem;
   --pane-inset: 27rem;
+
+  /*
+    The disc the `+` sits in when it takes the picture's corner, beside the wall.
+
+    **A token rather than a `size-7` because two things are written from it**: the
+    control wears it (`film-screen.tsx`) and `--breakpoint-pane` is the band's cap
+    plus it. The chip is centred on the corner, so exactly half of it hangs
+    outside the panel — the breakpoint's whole job is to guarantee that half a
+    window to hang into, and it can only do that if it is reading the number the
+    control is wearing.
+
+    ⚠ **Deliberately off the spacing scale.** `size-7` is `--spacing × 7`; spelled
+    that way the overhang would move the day that scale moved and the breakpoint
+    would not, which is the drift this exists to make impossible.
+
+    It is this placement's size and nothing else's. `CONTROL` is `size-6` inline
+    in the heading, which is the takeover's arrangement and hangs off nothing.
+  */
+  --pane-corner: 1.75rem;
 
   /*
     A 1.06s step-end blink, at the interval terminals use.

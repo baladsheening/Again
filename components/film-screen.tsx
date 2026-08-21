@@ -625,11 +625,19 @@ export function FilmScreen({
                and a box that must never become a scroll container, which is a
                different argument for the same word — see the note above.
 
-               ⚠ **It costs a 24px band of window widths.** This sits at
-               `max(0px, 50% - 36rem)`, so between 1152 and about 1176 there is
-               less than the disc's radius between the panel and the viewport and
-               the far half is cut by the window instead. Nothing is lost that a
-               tap cannot reach; the control is still 24px of target. */
+               ⚠ **It used to cost a 28px band of window widths, and that band
+               no longer exists — 21 August.** This sits at
+               `max(0px, 50% - 36rem)`, so between 1152 and 1180 there was less
+               than the disc's radius between the panel and the viewport and the
+               window cut the far half off instead.
+
+               **The answer is that those are not panel widths any more.**
+               `--breakpoint-pane` is the band's cap plus `--pane-corner` — the
+               disc's whole diameter — so by the time this element exists, the
+               margin its overhang needs exists too. Nothing here clips, insets
+               or nudges to make that true: a window too narrow to hold the
+               control gets the takeover, which does not draw it. See the
+               breakpoint's own note in globals.css. */
             'fixed top-0 left-auto right-[max(0px,calc(50%_-_36rem))] z-30 m-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-(--pane-column) max-w-none bg-black p-0 text-text'
           : 'm-0 h-[calc(100svh_+_env(safe-area-inset-top))] max-h-none w-full max-w-none overflow-hidden bg-black p-0 text-text backdrop:bg-black'
       }
@@ -1166,15 +1174,22 @@ function FilmBody({
         {!overlay && (
           <span className="pointer-events-none absolute right-0 bottom-full flex translate-x-1/2 translate-y-1/2">
             {/*
-              ⚠ **`size-7` here, `size-6` everywhere else — directed 20 August,
-              "a tad bigger".** The same reasoning as the rounding beside it: the
+              ⚠ **28px here, `size-6` everywhere else — directed 20 August, "a
+              tad bigger".** The same reasoning as the rounding beside it: the
               size belongs to this placement, not to the control. Inline in a
               heading the box has to sit in a line of type, and 28px would push
               that line out; on a picture it has nothing to fit inside and the
               extra 4px is the difference between a mark and a target. The glyph
               stays 14px, so what grew is the disc around it.
+
+              ⚠ **It is `--pane-corner` rather than `size-7` because the
+              breakpoint is written from it — 21 August.** Half this disc hangs
+              outside the panel, and the width at which the panel is allowed to
+              exist at all is the band's cap plus this. As a spacing step the two
+              could part company in silence — the control grows, the window starts
+              cutting it again, and nothing says why.
             */}
-            <span className="bg-bg pointer-events-auto rounded-full [&>*]:size-7 [&>*]:rounded-full">
+            <span className="bg-bg pointer-events-auto rounded-full [&>*]:size-(--pane-corner) [&>*]:rounded-full">
               {addControl}
             </span>
           </span>
@@ -1763,8 +1778,9 @@ function Artwork({
  * breakpoint that will disagree with itself the first time either moves — and the
  * disagreement would be invisible, since each half would look right on its own.
  *
- * `matchMedia` takes the value as written, `72rem` and all, so nothing here has to
- * know what a rem is worth.
+ * `matchMedia` takes the value as written, units and all, so nothing here has to
+ * know what a rem is worth — and the number stays unquoted here, so this note
+ * cannot go stale the next time the breakpoint moves.
  *
  * Read synchronously on the first render rather than in an effect: this screen
  * only ever mounts from a tap, so there is no server render to disagree with, and
