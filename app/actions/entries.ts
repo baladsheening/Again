@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import {
   addEntry,
   copyEntry,
+  dropEntry,
   setEntryNote,
   NOTE_MAX,
   requireSessionUser,
@@ -111,6 +112,24 @@ export async function resolveEntryAction(
   }
 
   const result = await resolveEntry(sessionUser, entryId, keep)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  refresh()
+  return { ok: true, value: null }
+}
+
+/**
+ * Let a want go (§5.1 — a resolution, not a delete). No rate limit: it writes to
+ * a row you already own and creates nothing, which is what `entryCreate` guards.
+ */
+export async function dropEntryAction(entryId: string): Promise<ActionResult> {
+  const sessionUser = await requireSessionUser()
+
+  if (!entryIdSchema.safeParse(entryId).success) {
+    return { ok: false, message: 'Unknown entry.' }
+  }
+
+  const result = await dropEntry(sessionUser, entryId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()

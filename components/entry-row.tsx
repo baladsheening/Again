@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
-import { resolveEntryAction } from '@/app/actions/entries'
+import { dropEntryAction, resolveEntryAction } from '@/app/actions/entries'
 // Type-only, so it is erased at compile time and `server-only` never reaches
 // the client bundle. @/lib/db is the sanctioned entry point (eslint bans the
 // client and schema modules, not this).
@@ -60,6 +60,23 @@ export function EntryRow({
     setError(null)
     startTransition(async () => {
       const result = await resolveEntryAction(card.id, keep)
+      if (!result.ok) setError(result.message)
+    })
+  }
+
+  /*
+    No confirmation, and no question after it. *Seen it* asks one because it has
+    two answers; this has one, and a *sure?* on a single-answer control is a
+    dialog that exists to be dismissed.
+
+    It is also the one resolution you can take back without the ten-second
+    window: wanting the film again revives this row rather than making a new one
+    (`addEntry`), so a mistap costs a search rather than a record.
+  */
+  function drop() {
+    setError(null)
+    startTransition(async () => {
+      const result = await dropEntryAction(card.id)
       if (!result.ok) setError(result.message)
     })
   }
@@ -133,18 +150,60 @@ export function EntryRow({
 
         Nothing renders here outside the live list — a resolved entry has no
         action left, so those rows are a title and a year.
+
+        ⚠ **`gap-6` on touch, and the number comes from `tap-target`.** That
+        utility grows a 44px hit area around each control on a coarse pointer,
+        centred on text about 20px tall — so each one reaches roughly 12px past
+        its own line, and the two stacked controls below need 24px between them
+        or their expansions overlap and the lower one silently wins the middle.
+        This is the same fault the Yes/No pair is spaced for, in the axis the
+        column stacks on. It is derived rather than tuned: change the 44 and this
+        should change with it.
       */}
       {(card.state === 'want' || error) && (
-        <div className="flex flex-col items-start gap-2 lg:shrink-0 lg:items-end">
+        <div className="flex flex-col items-start gap-2 pointer-coarse:gap-6 lg:shrink-0 lg:items-end">
+          {/*
+            **Two exits, and they are deliberately the same size — 21 August.**
+
+            A want can end two ways and until now the row only admitted one of
+            them. *Seen it* asks the §8 question; *Not any more* says the
+            intention lapsed and files the row under `dropped` (§5.1 — a
+            resolution, not a delete). Before this, the only way out of a want
+            you had gone off was to claim you had watched it, which put a false
+            row in the archive; docs/decisions.md carries the argument.
+
+            ⚠ **The second one is not set smaller, and that is a decision.**
+            `text-xs`/`micro` is the quietest value in the system and this file
+            already reserves it for de-emphasised metadata — see the note on the
+            error message below, which was moved *up* out of it for that reason.
+            A control set in the metadata size reads as a caption. So both are
+            `text-sm text-muted` and the ordering carries the hierarchy: the
+            usual answer first, the unusual one under it.
+
+            Neither is destructive on the first tap — this one changes a state
+            that wanting the film again reverses (see `addEntry`), and that one
+            only opens the question — so nothing here needs the spacing the
+            Yes/No pair below is given.
+          */}
           {card.state === 'want' && !asking && (
-            <button
-              type="button"
-              onClick={() => setAsking(true)}
-              disabled={busy}
-              className="text-muted hover:text-text tap-target text-sm underline underline-offset-4 transition-colors"
-            >
-              {spec.resolveAction}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setAsking(true)}
+                disabled={busy}
+                className="text-muted hover:text-text tap-target text-sm underline underline-offset-4 transition-colors"
+              >
+                {spec.resolveAction}
+              </button>
+              <button
+                type="button"
+                onClick={drop}
+                disabled={busy}
+                className="text-muted hover:text-text tap-target text-sm underline underline-offset-4 transition-colors"
+              >
+                Not any more
+              </button>
+            </>
           )}
 
           {/*

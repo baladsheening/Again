@@ -58,6 +58,7 @@ export {
   setEntryNote,
   NOTE_MAX,
   resolveEntry,
+  dropEntry,
   undoEntry,
   UNDO_WINDOW_MS,
   toEntryCard,

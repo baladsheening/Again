@@ -17,7 +17,42 @@ export type Kind = 'film' | 'book' | 'place' | 'object'
  */
 export type Intent = 'see' | 'own' | 'try' | 'read'
 
-export type EntryState = 'want' | 'done' | 'go_back_to' | 'fixture'
+/**
+ * §5, plus `dropped` — 21 August.
+ *
+ * `dropped` is the exit a lapsed want had nowhere else to go. Without it the
+ * only way out of *I wanted this in March and I don't now* was **Seen it → Go
+ * back? → no**, which files the row in the archive: you had to claim you watched
+ * something you didn't. The archive is meant to be the record of what you
+ * actually tried, so mistakes and lapsed intentions landing there stop `done`
+ * meaning done. See docs/decisions.md.
+ *
+ * It is a **resolution, not a delete** (§5.1 — nothing is ever deleted). Private
+ * like `done`, out of the live pool, out of overlap, out of everyone else's view.
+ */
+export type EntryState = 'want' | 'done' | 'go_back_to' | 'fixture' | 'dropped'
+
+/**
+ * The states another person may be shown. **The list is positive on purpose.**
+ *
+ * `listEntriesForOtherUser` and `copyEntry` used to exclude one state by name —
+ * `ne(state, 'done')` — which is correct only for as long as `done` is the only
+ * private state. Adding `dropped` made that line wrong in the way §13 warns
+ * about: nothing fails, nothing looks wrong, and somebody's abandoned wants are
+ * on their page.
+ *
+ * Filtering on this instead inverts the failure. A state that is added and not
+ * listed here is invisible to strangers — the mistake produces a missing row
+ * rather than a leak, which is the direction it has to fail in.
+ *
+ * ⚠ **Adding a state to this array is a decision to publish it.** There is no
+ * other way a state becomes visible to someone else, and there should not be.
+ */
+export const PUBLIC_STATES = [
+  'want',
+  'go_back_to',
+  'fixture',
+] as const satisfies readonly EntryState[]
 
 /** How an entry got here. Drives the §6 suppression rule. */
 export type EntrySource = 'self' | 'copy' | 'swap'

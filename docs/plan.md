@@ -608,6 +608,12 @@ not an oversight — the reasoning is in `decisions.md`.
       `SessionUser`. The identifier is `note` — `no-restricted-syntax` fails the
       build on `review`, correctly. Where it is offered is not decided and is
       small.
+- [x] ~~**A lapsed want needs an exit that is not a lie.**~~ Built 21 August as
+      `dropped`, the third exit from a want — *Not any more* on the row, filed
+      under a second band in `/archive`. A resolution, not a delete (§5.1);
+      wanting the thing again revives the same row, which is its undo. It also
+      forced the public filter to invert: `PUBLIC_STATES` lists what may be seen,
+      so a state added and not listed there fails closed. See `decisions.md`.
 
 ### Phase 3
 
@@ -665,6 +671,19 @@ Neither is a task today, and both are cheap to state and expensive to discover l
 
 ## Unscheduled
 
+- [ ] **A go-back-to has no exit, and its honest destination is `done`.** The
+      21 August change gave a lapsed *want* a way out; a lapsed *go-back-to* has
+      none. Dropping one is the wrong answer — you did see it, and `dropped`
+      would take that out of the record — so what is missing is a resolve on an
+      already-resolved entry: *would you still go back?* → no → `done`.
+      `resolveEntry` guards on `state = 'want'`, so this is a widened guard and a
+      control, not a new state. Left out deliberately, to keep one question being
+      answered at a time.
+- [ ] **Nothing re-wants a film from inside the archive's second band.** The way
+      back is to find the film again — on the wall or through search — and tap
+      `+`, which revives the row (`addEntry`). That is a search's worth of
+      friction on a rare action and may well be the right amount; the alternative
+      is a control on a row in a collection whose rows currently have none.
 - [ ] **Live regions and `aria-busy`.** There are none in the app. Two moments
       are announced to nobody: the capture toast, where *Added {title}. Undo* is
       the only reversible action in the entire product and disappears on a

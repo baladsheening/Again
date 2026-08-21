@@ -4125,3 +4125,145 @@ box is 24px against a row that is now 21.69px, so it overhangs 1.15px at each
 end into 8px of `--masthead-gap`. Nothing clips, and — the thing that actually
 matters — **the header measures 45.69px resting and 45.69px with the field
 open**, so tapping the field still cannot resize the masthead.
+
+## A want has a third exit — 21 August
+
+**A lapsed want had nowhere to go, and the only door out of one was a lie.**
+Asked whether entries should be removable. The answer is no, and the question
+turned out to be two questions.
+
+*That's wrong* — the wrong film, a mistapped poster, a row that should never have
+existed — is what §5.1's ten-second undo is for, and ten seconds is the whole of
+it.
+
+*I've gone off it* — the row was right and the intention has lapsed — had no
+exit at all. The only way out was the resolve flow: **Seen it → Go back? → no**,
+which files the entry in the archive. Correcting a true change of mind therefore
+required making a false statement: you had to claim you watched something you
+did not.
+
+⚠ **The argument for changing anything here is not that people want to delete
+things.** It is that the absence of an exit was quietly corrupting a state the
+app treats as meaningful. The archive is the record of what you actually tried;
+if mistakes and lapsed intentions land there too, `done` stops meaning done and
+the archive becomes a bin. That is a loss that compounds silently, which is the
+kind this project takes seriously.
+
+### What was built: a fourth state, not a delete
+
+`dropped`. §5.1 says resolving changes state and never removes the row, and this
+obeys that completely — it is a resolution that happens to be the honest one.
+Private like `done`, out of the live pool, out of overlap, out of everyone
+else's view.
+
+The label is **"Not any more"**, and the naming rule is §4's: a label states the
+criterion the entry meets. *Dropped* describes what you did to the row.
+*Not any more* describes what is true about the want, which is the same move that
+keeps "go-back-to" from becoming "liked".
+
+**`want` only.** The guard is the same clause `resolveEntry` uses, so the set of
+droppable entries is exactly the set of resolvable ones: a want has three exits
+and nothing else has any.
+
+⚠ **A go-back-to is deliberately not droppable, and the temptation is real.** You
+saw it, you said you would return, you would not now. But you *did* see it, and
+dropping it would take that out of the record. The honest destination is `done`,
+which already means *tried, and not going back* — getting there needs a resolve
+on an already-resolved entry, which is a gap this did not close. **Open**, and
+small; see the register in `docs/plan.md`.
+
+### The undo on it is wanting the thing again
+
+`addEntry` revives a `dropped` row instead of colliding with it —
+`onConflictDoUpdate` with `setWhere: state = 'dropped'`, writing exactly what the
+insert would have written, `created_at` included. A revived row is
+indistinguishable from a fresh one, which means it is inside §5.1's undo window
+again and sorts to the top of the live list.
+
+That is why the state needs no control of its own to reverse it, and why
+`listMyEntriesForExternalId` now **excludes** `dropped`: a film you let go is not
+on your list, so the film screen draws the `+` again rather than a settled tick.
+The clause above it explains why `done` is included for the opposite reason —
+that one would collide, and this one does not. The film screen needed no branch;
+it never learns about a dropped entry.
+
+⚠ **The ten-second undo was left exactly as it was, and an earlier suggestion to
+widen it was wrong.** The idea was to bound it by the film screen being open
+rather than by a clock. It cannot be: the window is `created_at > now() -
+interval` **in SQL**, specifically so the client cannot lie about it, and *the
+screen is still open* is a client claim the server cannot check. It also stops
+mattering — past ten seconds, overlap has already written notification rows to
+other people, and a row that has caused effects elsewhere should change state
+rather than vanish. The mistap and the lapsed intention converge on the same
+honest exit once the window closes.
+
+### The guarantee this touched, and the shape of the fix
+
+`listEntriesForOtherUser` excluded one state **by name**: `ne(state, 'done')`.
+That is correct exactly as long as `done` is the only private state, and adding a
+second one made it wrong in the way §13 exists to warn about — nothing throws,
+nothing looks broken, and somebody's abandoned wants are on their page.
+
+⚠ **The fix inverts the filter rather than extending it.** `PUBLIC_STATES` in
+`lib/domain.ts` lists what may be seen, and both public doors — that function and
+`copyEntry`, which carried its own copy of the same clause — filter on it. A
+state that is added and not listed there disappears from public views. The
+mistake now produces a missing row, which someone reports, instead of a leak,
+which nobody sees. §13 gained two cases: the dropped equivalent of the archive
+test, and the copy door.
+
+### Where it lives: two bands, not a fifth collection
+
+`/archive` renders **Tried** and **Not any more** as two bands, each its own
+query so each paginates on its own. One page, one count in the rail, and `done`
+keeps meaning done.
+
+⚠ **The second band draws only when it has rows**, so an account that has never
+let anything go sees the page exactly as it was before this existed. The first
+band's heading is therefore conditional too — a heading over the only list on a
+page is the duplication the `sr-only` `h1` exists to avoid.
+
+The band labels are passed by the page rather than read from `EntryList`'s
+heading map. The first draft read the map and produced *Archive* sitting under a
+page called Archive beside a rail item called Archive. **A band names the part,
+not the page.**
+
+Two smaller things worth keeping:
+
+- The band separator is `first-of-type:`, not `first:`. It was `first:` and the
+  top rule drew anyway, because the page's `sr-only` `<h1>` is the real first
+  child and no `<section>` was ever `:first-child`.
+- The row's action column is `gap-2 pointer-coarse:gap-6`, and the 24px is
+  derived: `tap-target` grows a 44px hit area around ~20px of text, so two
+  stacked controls need 24px between them or the expansions overlap and the
+  lower one silently wins the middle. Measured on a coarse pointer at 390px:
+  0.0px overlap.
+
+### What was considered and not built
+
+**A general delete.** Not much technically; what it costs is the claim. *Nothing
+is ever deleted* is why the list is a record rather than a feed, and why the
+archive is worth reading back. Once entries can vanish the archive becomes
+curated, and a curated archive is a list of things you are happy to admit to.
+Scoping a delete to `want` only — an intention never acted on is the one row
+whose disappearance rewrites nothing — would have worked and buys nothing the
+fourth state does not.
+
+**Retracting notifications on a drop.** A convergence that fired was true when it
+fired. §5.1 is about entries rather than notification rows, but withdrawing one
+later would make the six kinds in §6 less trustworthy, not more.
+
+**Firing overlap from `dropEntry`.** Every predicate in `classify` is positive
+and `dropped` appears in none of them, so the fan-out would run two queries to
+write nothing. `resolveEntry` fires because one of *its* outcomes creates a
+match; this one has a single outcome and creates none.
+
+### Verified
+
+Production build, driven in a browser at 1440px and at 390px with a coarse
+pointer: add from the wall → `+` becomes Undo becomes *On your list — open
+Wants*; **Not any more** on the row → gone from Wants, present under *Not any
+more* in the archive; re-open the film → **the `+` is back**; tap → Undo again,
+so the revived row is genuinely inside its own window; Wants holds it and the
+band no longer does. `npm run typecheck`, `npm run lint`, and the §13 suite (8
+tests) pass.

@@ -8,10 +8,20 @@ import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { runOverlap } from '@/lib/overlap'
 import { specFor } from '@/lib/vocabulary'
+import { PUBLIC_STATES } from '@/lib/domain'
 import type { EntryCard, EntrySource, Intent, Kind } from '@/lib/domain'
 
-/** §5 Views. `archive` is deliberately absent from `PublicView` — see below. */
-export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive'
+/**
+ * §5 Views. `archive` and `dropped` are deliberately absent from `PublicView` —
+ * see `listEntriesForOtherUser` below.
+ *
+ * `dropped` is a view rather than a route: the archive page renders it as a
+ * second band under the tried ones, so nothing in the collection bar points at
+ * it. It is a view because the band needs its own query — a page that fetched
+ * both states together and split them in the component would paginate the two
+ * bands as one list, which is only correct while nobody has fifty of either.
+ */
+export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive' | 'dropped'
 export type PublicView = 'live' | 'go_back_tos' | 'fixtures'
 
 export type EntryWithItem = { entry: Entry; item: Item }
@@ -78,6 +88,10 @@ function stateFilter(view: OwnerView) {
       return eq(entries.state, 'fixture' as const)
     case 'archive':
       return eq(entries.state, 'done' as const)
+    // Tried and would not return to, versus never tried at all. Two bands on one
+    // page, and keeping them apart is the whole reason `dropped` exists (§5.1).
+    case 'dropped':
+      return eq(entries.state, 'dropped' as const)
   }
 }
 
@@ -113,8 +127,8 @@ function orderFor(view: OwnerView) {
 }
 
 /**
- * The caller's own entries. All four views, including `archive`, because
- * `state = 'done'` is visible to its owner (§5.3).
+ * The caller's own entries. Every view, including the two private ones —
+ * `done` and `dropped` are both visible to their owner (§5.3).
  */
 export async function listMyEntries(
   sessionUser: SessionUser,
@@ -146,8 +160,8 @@ export async function listMyEntries(
  * error.
  *
  * Unpaginated by design, and it is the one read in the layer that is allowed to
- * be: it returns four integers whatever the size of the table, so §10's rule
- * against unbounded selects has nothing to bite on.
+ * be: it returns a fixed handful of integers whatever the size of the table, so
+ * §10's rule against unbounded selects has nothing to bite on.
  */
 export async function countMyEntries(
   sessionUser: SessionUser,
@@ -161,11 +175,23 @@ export async function countMyEntries(
   const byState = new Map(rows.map((r) => [r.state, r.count]))
   const n = (state: EntryState) => byState.get(state) ?? 0
 
+  /*
+    ⚠ **These are page counts, not state counts, and two of them show it.**
+    `live` is `want` + `go_back_to` because a go-back-to is still a want (§5.2),
+    which is also why `go_back_to` is counted twice — the two numbers summing to
+    more than the number of rows is the model showing through, not an error.
+
+    `archive` is the same kind of number for the same kind of reason: that page
+    is two bands, so the count beside it in the rail is what the page holds. A
+    number that ignored the second band would read `0` on an account whose
+    archive plainly has rows in it.
+  */
   return {
     live: n('want') + n('go_back_to'),
     go_back_tos: n('go_back_to'),
     fixtures: n('fixture'),
-    archive: n('done'),
+    archive: n('done') + n('dropped'),
+    dropped: n('dropped'),
   }
 }
 
@@ -185,6 +211,35 @@ export const UNDO_WINDOW_MS = 10_000
  *
  * Entry write and notification rows share one transaction, so they never
  * partially apply (§10).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Adding something you dropped revives the row — 21 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **This is the undo on `dropped`, and it is why that state needs no control of
+ * its own.** The row is unique on (user, item, intent), so wanting something
+ * again cannot insert a second one; without the `do update` below it would hit
+ * the conflict and come back as *already yours* — a film sitting in a band you
+ * cannot act on, which the person would reasonably call a bug.
+ *
+ * The `set` writes exactly what the insert would have written, so a revived row
+ * is indistinguishable from a fresh one and `created` is true for both. That
+ * includes `source` and `source_user_id`, which are read from **this** add
+ * rather than left over from the one that lapsed: they are the input to §6's
+ * suppression rule, and a stale `sourceUserId` would silently withhold a
+ * notification that should now fire.
+ *
+ * `created_at` is reset because it is the clock §5.1's undo window runs on and
+ * the sort key the live list ranks by — a want that restarted today belongs at
+ * the top of the list and inside its own undo window. It is `now()` in SQL,
+ * like the window's own comparison, so the two cannot disagree about the time.
+ * The original add date is not kept anywhere: the row means *my relationship to
+ * this thing*, and that relationship started again.
+ *
+ * ⚠ **`setWhere` is what keeps this from being a general upsert.** Only a
+ * `dropped` row is revived. Everything else — a want, a go-back-to, a fixture,
+ * an archived entry — still takes the no-op path below, so the idempotency §10
+ * asks for is unchanged and a second tap can never overwrite a resolution.
  */
 export async function addEntry(
   sessionUser: SessionUser,
@@ -196,7 +251,7 @@ export async function addEntry(
   },
 ): Promise<Result<{ entry: Entry; created: boolean }>> {
   return db.transaction(async (tx) => {
-    const [inserted] = await tx
+    const [written] = await tx
       .insert(entries)
       .values({
         userId: sessionUser.id,
@@ -206,12 +261,22 @@ export async function addEntry(
         source: input.source ?? 'self',
         sourceUserId: input.sourceUserId ?? null,
       })
-      .onConflictDoNothing({
+      .onConflictDoUpdate({
         target: [entries.userId, entries.itemId, entries.intent],
+        // The existing row, not `excluded` — Postgres resolves an unqualified
+        // column in this clause to the row already in the table.
+        setWhere: eq(entries.state, 'dropped'),
+        set: {
+          state: 'want',
+          resolvedAt: null,
+          createdAt: sql`now()`,
+          source: input.source ?? 'self',
+          sourceUserId: input.sourceUserId ?? null,
+        },
       })
       .returning()
 
-    if (!inserted) {
+    if (!written) {
       const [existing] = await tx
         .select()
         .from(entries)
@@ -228,8 +293,8 @@ export async function addEntry(
       return ok({ entry: existing, created: false })
     }
 
-    await fireOverlap(tx, sessionUser, inserted)
-    return ok({ entry: inserted, created: true })
+    await fireOverlap(tx, sessionUser, written)
+    return ok({ entry: written, created: true })
   })
 }
 
@@ -248,6 +313,13 @@ export async function addEntry(
  * on `sessionUser.id` like everything else in this layer. A film you have watched
  * is still on your list, so it still answers yes — and it has to, or the screen
  * would offer to add something `addEntry` will refuse as a duplicate.
+ *
+ * ⚠ **`dropped` is excluded for exactly that reason inverted — 21 August.** A
+ * film you let go is not on your list; you said so. The screen should offer the
+ * `+` again, and `addEntry` revives the row rather than colliding with it (see
+ * its note), so the duplicate the clause above guards against cannot happen
+ * here. This is why the film screen needs no branch on `dropped`: it never
+ * learns about one.
  *
  * The bound is not pagination so much as arithmetic: `entries` is unique on
  * (user, item, intent), so this can return at most one row per intent and there
@@ -269,6 +341,7 @@ export async function listMyEntriesForExternalId(
         eq(entries.userId, sessionUser.id),
         eq(items.kind, input.kind),
         eq(items.externalId, input.externalId),
+        ne(entries.state, 'dropped'),
       ),
     )
     .limit(8)
@@ -284,10 +357,12 @@ export async function listMyEntriesForExternalId(
  *
  * Three things this gets right by construction rather than by instruction:
  *
- *   - **A `done` entry cannot be copied.** The same unconditional exclusion as
+ *   - **Only a public state can be copied.** The same positive filter as
  *     `listEntriesForOtherUser`, spelled again here because this is a second
- *     door onto the same rows. It returns `not_found` rather than `forbidden`,
- *     deliberately: *that exists but is private* is itself the leak (§5.3).
+ *     door onto the same rows — and it was `ne(state, 'done')` in both places
+ *     until `dropped` arrived and made naming one state by hand wrong in both.
+ *     It returns `not_found` rather than `forbidden`, deliberately: *that exists
+ *     but is private* is itself the leak (§5.3).
  *   - **It always lands as a `want`.** Copying someone's fixture must not assert
  *     that you own the thing too, and copying a go-back-to must not claim you
  *     have been. `addEntry` writes `state: 'want'` for everyone, so the intent
@@ -309,7 +384,7 @@ export async function copyEntry(
       state: entries.state,
     })
     .from(entries)
-    .where(and(eq(entries.id, sourceEntryId), ne(entries.state, 'done')))
+    .where(and(eq(entries.id, sourceEntryId), inArray(entries.state, PUBLIC_STATES)))
     .limit(1)
 
   if (!source) return err('not_found', 'That is no longer there.')
@@ -369,6 +444,71 @@ export async function resolveEntry(
 
     return ok(updated)
   })
+}
+
+/**
+ * Let a want go — 21 August. *Not any more.*
+ *
+ * The third exit from a want, beside the two `resolveEntry` offers. **It is a
+ * resolution, not a delete** (§5.1): the row stays, its state changes, and the
+ * entry says a true thing instead of the false one the archive was being made to
+ * hold. See docs/decisions.md for why the absence of this was corrupting `done`.
+ *
+ * ⚠ **`want` only, and that is the whole rule.** The guard is the same clause
+ * `resolveEntry` uses, which makes the set of droppable entries exactly the set
+ * of resolvable ones — a want has three exits and nothing else has any.
+ *
+ *   - A **go-back-to** is not droppable, and the temptation is real: you saw it,
+ *     you said you would return, you would not now. But you *did* see it, and
+ *     dropping it would take that out of the record — the honest destination is
+ *     `done`, which already means *tried, and not going back*. Getting there
+ *     needs a resolve on an already-resolved entry, which is a separate gap;
+ *     docs/decisions.md carries it as open.
+ *   - A **fixture** is a thing you own, and letting go of one is a fact about
+ *     the object rather than about the intention.
+ *   - An **archived** entry is already at rest.
+ *
+ * ⚠ **No `fireOverlap`, and this is not an omission.** Overlap only ever adds
+ * matches, and every predicate in `classify` is positive — `dropped` appears in
+ * none of them, so a fan-out here would run two queries to write nothing.
+ * `resolveEntry` fires because one of its outcomes (`want·own` → `fixture`) does
+ * create a match; this one has a single outcome and it creates none.
+ *
+ * Notifications already sent are left alone. §5.1 is about entries rather than
+ * notification rows, but the reasoning carries: someone was told about a
+ * convergence that was true when it fired, and quietly withdrawing it later would
+ * make the six kinds in §6 less trustworthy, not more.
+ *
+ * One statement, so no transaction: there is a single write and nothing to keep
+ * consistent with it.
+ */
+export async function dropEntry(
+  sessionUser: SessionUser,
+  entryId: string,
+): Promise<Result<Entry>> {
+  const [updated] = await db
+    .update(entries)
+    // `resolved_at` because this *is* a resolution — it is what the archive's
+    // second band sorts and dates by, the same as the first.
+    .set({ state: 'dropped', resolvedAt: new Date() })
+    .where(
+      and(
+        eq(entries.id, entryId),
+        // Filtered on the owner as well as the id, like every other mutation
+        // here: the only entry you can let go of is one of yours.
+        eq(entries.userId, sessionUser.id),
+        eq(entries.state, 'want'),
+      ),
+    )
+    .returning()
+
+  /*
+    One message for both misses. A row that is not yours and a row that is no
+    longer a want are indistinguishable from here on purpose — *that exists but
+    is not yours* is the same shape of leak `copyEntry` avoids (§5.3).
+  */
+  if (!updated) return err('not_found', 'That is not a want any more.')
+  return ok(updated)
 }
 
 /*
@@ -480,10 +620,20 @@ async function fireOverlap(
 /**
  * Another user's entries.
  *
- * `state = 'done'` — tried and not pushed to go-back-tos — is private (§5.3).
- * The exclusion below is unconditional and there is deliberately no parameter
- * that can turn it off: `PublicView` cannot express `archive`, and the
- * `ne(state, 'done')` clause holds regardless of which view is asked for.
+ * `state = 'done'` — tried and not pushed to go-back-tos — is private (§5.3), and
+ * so is `state = 'dropped'`. The filter below is unconditional and there is
+ * deliberately no parameter that can turn it off: `PublicView` cannot express
+ * either of them, and the `PUBLIC_STATES` clause holds regardless of which view
+ * is asked for.
+ *
+ * ⚠ **It lists what may be seen rather than excluding what may not — 21 August.**
+ * This was `ne(state, 'done')`, which is correct exactly as long as `done` is the
+ * only private state. Adding `dropped` made it wrong in the way this whole
+ * function exists to guard against: nothing throws, nothing looks broken, and
+ * somebody's abandoned wants are on their page for anyone to read. The positive
+ * filter inverts which way the mistake falls — a state that is added and not put
+ * in `PUBLIC_STATES` disappears from public views, and a missing row is a fault
+ * someone reports rather than one nobody sees.
  *
  * Do not add an `includeArchive` flag to this function. Do not rely on callers
  * passing the right filter. This is one of the two places in the product where
@@ -503,7 +653,7 @@ export async function listEntriesForOtherUser(
       and(
         eq(entries.userId, targetUserId),
         // Unconditional. Not derived from `view`, not overridable by a caller.
-        ne(entries.state, 'done'),
+        inArray(entries.state, PUBLIC_STATES),
         stateFilter(view),
       ),
     )

@@ -136,6 +136,18 @@ export const COLLECTION_FOR: Record<EntryState, { href: Route; label: string }> 
   go_back_to: { href: '/go-back-tos', label: COLLECTIONS.goBackTos },
   fixture: { href: '/fixtures', label: COLLECTIONS.fixtures },
   done: { href: '/archive', label: COLLECTIONS.archive },
+  /*
+    A dropped entry is on the archive page, under the second band — the page is
+    the destination, so this points at it like any other.
+
+    ⚠ **Nothing reaches this key today.** Its only reader is the film screen's
+    settled tick, and `listMyEntriesForExternalId` excludes `dropped` so that a
+    film you let go offers the `+` again rather than a tick. The row is here
+    because the map is total over `EntryState`, which is what made the compiler
+    ask where a dropped entry lives in the first place. Do not delete it as dead:
+    the totality is the mechanism.
+  */
+  dropped: { href: '/archive', label: COLLECTIONS.archive },
 }
 
 /** v1 ships films only. Guards the entry points against the kinds not yet built. */

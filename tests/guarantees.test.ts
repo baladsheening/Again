@@ -3,7 +3,8 @@
  *
  * Three of them, and they are the only things tested in this repository:
  *
- *   1. Another person's `done` entries are never returned.
+ *   1. Another person's private entries — `done` and `dropped` — are never
+ *      returned.
  *   2. The private `note` never reaches a public projection.
  *   3. `getSwap` withholds each side's picks until both have committed.
  *
@@ -43,6 +44,9 @@ const VIEWER = 'guarantee-viewer'
 let ownerId = ''
 let viewerId = ''
 let itemId = ''
+/* `entries` is unique on (user, item, intent) and this file uses both of the
+   film intents on `itemId`, so the dropped case needs a film of its own. */
+let droppedItemId = ''
 
 /** Whatever the data layer exports, imported the way the app imports it. */
 type Dal = typeof import('@/lib/db')
@@ -85,6 +89,14 @@ beforeAll(async () => {
   )
   itemId = rows[0].id
 
+  const dropped = await pool.query(
+    `insert into items (kind, external_source, external_id, title, year)
+     values ('film', 'tmdb', 'guarantee-dropped', 'A Lapsed Want', 2001)
+     on conflict (kind, external_id) do update set title = excluded.title
+     returning id`,
+  )
+  droppedItemId = dropped.rows[0].id
+
   await pool.query('delete from entries where user_id = any($1::uuid[])', [[ownerId, viewerId]])
 })
 
@@ -95,7 +107,7 @@ afterAll(async () => {
   await pool.end()
 })
 
-describe('another user’s archive is never visible (§5.3)', () => {
+describe('another user’s private entries are never visible (§5.3)', () => {
   it('excludes state = done from every public view', async () => {
     await pool.query(
       `insert into entries (user_id, item_id, intent, state) values ($1, $2, 'see', 'done')`,
@@ -113,6 +125,53 @@ describe('another user’s archive is never visible (§5.3)', () => {
     // than the row having failed to be written.
     const own = await dal.listMyEntries(asViewer(ownerId, `${OWNER}@example.com`), 'archive')
     expect(own.some((r) => r.entry.state === 'done')).toBe(true)
+  })
+
+  /*
+    The same guarantee for the state added on 21 August, and the reason this test
+    exists at all: `listEntriesForOtherUser` excluded `done` **by name** until
+    then, so a new private state was public the moment it was added — no error,
+    no failing build, nothing on screen to notice. The filter is positive now
+    (`PUBLIC_STATES`), and this is what says so.
+
+    `live` matters most of the three: a dropped entry is neither `want` nor
+    `go_back_to`, so `stateFilter` would drop it anyway — which is exactly the
+    kind of accident that stops holding the day someone widens a view. The
+    assertion is on the guarantee, not on today's implementation of it.
+  */
+  it('excludes state = dropped from every public view', async () => {
+    await pool.query(
+      `insert into entries (user_id, item_id, intent, state, resolved_at)
+       values ($1, $2, 'see', 'dropped', now())`,
+      [ownerId, droppedItemId],
+    )
+
+    const viewer = asViewer(viewerId, `${VIEWER}@example.com`)
+
+    for (const view of ['live', 'go_back_tos', 'fixtures'] as const) {
+      const rows = await dal.listEntriesForOtherUser(viewer, ownerId, view)
+      expect(rows.some((r) => r.entry.state === 'dropped')).toBe(false)
+    }
+
+    // The owner does see it, in the archive's second band.
+    const own = await dal.listMyEntries(asViewer(ownerId, `${OWNER}@example.com`), 'dropped')
+    expect(own.some((r) => r.entry.state === 'dropped')).toBe(true)
+  })
+
+  /*
+    The second door onto the same rows. A dropped entry that cannot be listed but
+    can still be copied by id is the same leak wearing a different verb — and
+    `copyEntry` carried its own hand-written `ne(state, 'done')`, so it had to be
+    changed in the same breath.
+  */
+  it('refuses to copy a dropped entry', async () => {
+    const { rows } = await pool.query(
+      `select id from entries where user_id = $1 and item_id = $2 and intent = 'see'`,
+      [ownerId, droppedItemId],
+    )
+
+    const result = await dal.copyEntry(asViewer(viewerId, `${VIEWER}@example.com`), rows[0].id)
+    expect(result.ok).toBe(false)
   })
 })
 
