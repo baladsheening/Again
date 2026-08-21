@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { posterUrl } from '@/lib/posters'
 import { CloseIcon } from './icon-close'
+import { PosterTiles } from './poster-tiles'
 
 /**
  * Straight from TMDB's CDN — §3 forbids proxying images through the app, and
@@ -233,8 +234,6 @@ export function PosterReveal({
   const dialogRef = useRef<HTMLDialogElement>(null)
   const groundRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
-  /** The repeats that fill the bands above and below a flush poster. */
-  const tileRef = useRef<HTMLDivElement>(null)
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -347,47 +346,12 @@ export function PosterReveal({
     setFlush((aspect ?? 2 / 3) > window.innerWidth / window.innerHeight)
   }
 
-  /*
-    Lay the tiles, from the picture's own measured box rather than from `100%`.
-
-    ⚠ **The centre tile has to land exactly under the `<img>`,** or the poster is
-    drawn twice a pixel apart and the seam is a bright line across the middle of
-    it. `background-position: center` centres the tile grid and the flex ground
-    centres the image, so they agree — provided the tile is the size the image
-    actually came out at. It usually is the full width, and `100%` would usually
-    be right; *contained, never enlarged* is what makes "usually" not good
-    enough, because a master narrower than the screen renders at its own width
-    and `100%` would be wider than the thing it is supposed to sit under.
-
-    Painted only once `loaded`, for the same reason the image is transparent
-    until then — a background paints in from the top exactly like an `<img>`
-    does, and gating one without the other would put the strips back in the two
-    bands. Both fade together on the layer's own opacity.
-  */
-  const paint = () => {
-    const tiles = tileRef.current
-    const image = imageRef.current
-    if (!tiles) return
-    const width = image?.getBoundingClientRect().width
-    tiles.style.backgroundImage = fitted ? `url("${fitted}")` : ''
-    tiles.style.backgroundRepeat = 'repeat-y'
-    tiles.style.backgroundPosition = 'center'
-    tiles.style.backgroundSize = width ? `${width}px auto` : '100% auto'
-  }
-
-  /* Whenever the layer appears, or the picture under it changes size or source. */
-  useEffect(paint)
-
   /* Listening only while there is something on screen for a resize to be wrong about. */
   useEffect(() => {
     if (!rung) return
-    const onResize = () => {
-      reconsider()
-      paint()
-    }
+    const onResize = () => reconsider()
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reconsider and paint read refs; rung is what decides whether to listen at all
   }, [rung])
 
   /*
@@ -558,24 +522,17 @@ export function PosterReveal({
           }`}
         >
           {/*
-            The repeats. Out of flow, so the flex centring of the picture is
-            untouched, and `pointer-events-none` so a tap on a tile is a tap on
-            the ground — which keeps the one decision about what a tap does in
-            the one place that makes it.
+            The repeats, out of focus — `poster-tiles.tsx`, shared with the
+            receded film screen. Out of flow, so the flex centring of the picture
+            is untouched, and it takes no pointer events, so a tap on a tile is a
+            tap on the ground — which keeps the one decision about what a tap
+            does in the one place that makes it.
 
             ⚠ **Never while magnified.** A magnified poster is larger than the
             screen and pans; a fixed backdrop behind it would slide under the
             picture as it moves, which reads as the artwork coming apart.
           */}
-          {flush && !magnified && (
-            <div
-              ref={tileRef}
-              aria-hidden
-              className={`pointer-events-none absolute inset-0 transition-opacity duration-200 ${
-                loaded ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          )}
+          {flush && !magnified && <PosterTiles src={fitted} align={imageRef} shown={loaded} />}
 
           {fitted && (
             /*
@@ -665,19 +622,26 @@ export function PosterReveal({
           is a control that is not there. A dialog in the top layer is its own
           stacking context, so this stays over the picture without a z-index.
 
-          Its own disc, at 44px, because it sits on artwork nobody has seen and
-          a bare glyph is legible or invisible depending on what is behind it —
-          which is to say, depending on the film. The disc is the same matte
-          black as the ground rather than a scrim colour of its own.
+          ⚠ **The glyph alone — it had a disc for an hour and the disc read as an
+          outline around the ×, which is what it was.** What the disc was for is
+          still real: this sits on artwork nobody has seen, and a bare mark is
+          legible or invisible depending on the film. The drop shadow does that
+          job without drawing anything of its own — it is the mark's own edge
+          darkened, so there is no second shape on the screen to notice. Two
+          layers, tight and wide, so it holds on a pale poster without becoming
+          a smudge on a dark one.
+
+          The 44px is the hit area and is now invisible, which is the point: a
+          target the thumb can find and the eye cannot.
         */}
         {flush && (
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label={`Close the poster for ${title}`}
-            className="text-text hover:bg-bg fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 cursor-pointer items-center justify-center rounded-full bg-black/55 transition-colors"
+            className="text-text fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 cursor-pointer items-center justify-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
           >
-            <CloseIcon size={18} />
+            <CloseIcon size={20} />
           </button>
         )}
       </dialog>

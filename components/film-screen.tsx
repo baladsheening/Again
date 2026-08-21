@@ -11,6 +11,7 @@ import type { EntryState, FilmSearchResult, Intent } from '@/lib/domain'
 import { claimFilmRequest } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
 import { PosterReveal } from './poster'
+import { PosterTiles } from './poster-tiles'
 import { COLLECTION_FOR, intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
 import { ChevronIcon } from './icon-chevron'
@@ -716,10 +717,24 @@ export function FilmScreen({
             be in it.
 
             ⚠ **Two rulings, one for each surface, and this is the only place they
-            disagree about the same pixel.** On the handset it is **black** — the
-            poster centred and deliberately framed. On a narrowed desk window it is
-            **the same image, out of focus**, so the screen is full: cover-scaled,
+            disagree about the same pixel.** On a narrowed desk window it is **the
+            same image, out of focus**, so the screen is full: cover-scaled,
             `blur-2xl`, at 70% so the sharp one in front stays the subject.
+
+            ⚠ **On the handset it was black until 21 August, and is now the same
+            image *tiled*, out of focus** — directed, and the reason the two
+            differ is the shape of the room rather than the machine. A narrowed
+            desk window leaves the poster short of the screen's height with room
+            to crop *to*, so one cover-scaled copy fills it. On the handset the
+            picture already spans the width, so there is nothing to crop to and
+            only bands to continue into: the fill has to be the same picture
+            repeating, or it is a second image nobody asked for. Same blur, same
+            70%, and `poster-tiles.tsx` carries both numbers across so the two
+            surfaces are out of focus by the same amount.
+
+            **Neither needs state**, for the same reason: at rest the sharp
+            poster covers the screen and the surround is invisible, so what
+            reveals it is the same chevron that makes room for it.
 
             ⚠ **`inset-0` here is the COLUMN, not the screen.** This sits inside
             the `max-w-md` box two elements up, so the band is already the panel's
@@ -754,6 +769,13 @@ export function FilmScreen({
               className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-2xl"
             />
           )}
+          {/*
+            No `align`, because here the picture spans the column by
+            construction — `Artwork` is `inset-x-0` and receded is `150cqw`, so
+            the tile is the column's width and its height is that times 1.5,
+            which is the receded box exactly. Nothing to measure against.
+          */}
+          {touch && <PosterTiles src={posterUrl(film.posterPath, 'w342')} shown />}
           <Artwork
             posterPath={film.posterPath}
             title={film.title}

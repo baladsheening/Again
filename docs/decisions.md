@@ -4674,3 +4674,99 @@ Where it does not tile there is no × and a tap still closes.
 `reveal.mjs` now reads which rule to expect off the layout rather than off the
 profile's name, and is all clear on all three profiles; `small.mjs` and
 `reveal-nested.mjs` unchanged and clear. Typecheck, lint and the §13 suite pass.
+
+### The surround becomes one thing, in two places (21 August)
+
+Three asks, and they turned out to be one: take the outline off the ×, blur the
+tiles the way the panel's backdrop is blurred, and put the same treatment behind
+the receded film screen.
+
+#### The disc was the outline
+
+There was no focus ring — checked, because that was the obvious suspect and it
+was wrong: `showModal()` leaves focus on the `<dialog>` itself, whose outline
+computes to `none`. What read as an outline around the × **was** the ×'s disc,
+`bg-black/55` and `rounded-full`, which is a second shape drawn around a mark
+that is already a shape.
+
+What the disc was for is still real: this control sits on artwork nobody has
+seen, and a bare mark is legible or invisible depending on the film. **A drop
+shadow does that job without drawing anything of its own** — it is the mark's
+own edge darkened rather than a plate behind it. The 44px hit area stays and is
+now invisible, which is the point: a target the thumb finds and the eye does
+not.
+
+⚠ The shadow was not asked for. It is there because this project has a standing
+rule that legibility must not be a function of which film you tapped — the same
+argument that derives the panel's 80% glass. If it reads as too much, the
+subtraction is one class.
+
+#### One surround, two rooms
+
+`film-screen.tsx` has filled the room left by the receded poster since 20 August
+— on a narrowed desk window — with one cover-scaled copy of the artwork at
+`blur-2xl` and 70%. That is the reference. The poster reveal's tiles now carry
+**the same two numbers**, and `components/poster-tiles.tsx` holds them once so
+the two surfaces are out of focus by the same amount and neither can drift.
+
+And the film screen's own handset surround, which that file's comment described
+as *black — the poster centred and deliberately framed*, is now tiled too. That
+ruling is reversed here deliberately; the comment has been rewritten rather than
+left to contradict the code.
+
+**Why the two surrounds still differ in fill.** It is the shape of the room, not
+the machine. A narrowed desk window leaves the poster short of the screen's
+height, so there is room to crop *to* and one cover-scaled copy fills it. On a
+handset the picture already spans the width: there is nothing to crop to, only
+bands to continue into, so the fill has to be the same picture repeating or it
+is a second image nobody asked for.
+
+#### What is load-bearing in `PosterTiles`
+
+- **Two elements.** The outer clips; the inner overhangs by `8rem` on every side
+  and carries the paint. A blur samples past its element's edges, where there is
+  nothing, so an exactly-sized copy fades out at all four sides and reads as a
+  vignette — the same reason `film-screen.tsx` gives its `scale-110`. 8rem is
+  `blur-2xl`'s own radius three times over, which is where a Gaussian has
+  nothing left to give.
+- ⚠ **The overhang is symmetric and must stay symmetric.** It is what keeps the
+  layer's centre on the clip's centre, which is what keeps the centre tile under
+  the sharp poster. `scale-110` would vignette-proof it just as well and is the
+  wrong tool: scaling resizes the tiles with it, and the tile size is the one
+  thing that has to agree with something else.
+- **The overhang is why the clip exists.** Without `overflow-hidden` around it, a
+  layer larger than the dialog grows a scrollbar on it.
+- **`background-repeat: repeat`, not `repeat-y`.** The tile is the poster's
+  width, which is narrower than the overhanging layer, so a vertical-only repeat
+  would leave transparent columns for the blur to sample at the left and right
+  edges — dimming the bands exactly where they meet the screen.
+- **`align` is measured, not assumed.** The poster reveal passes its `<img>`,
+  because *contained, never enlarged* means the picture can be narrower than the
+  box it is centred in. The film screen passes nothing, because there the
+  artwork spans the column by construction.
+
+#### Verified
+
+`tiles.mjs` extended: the layer is out of focus at `blur(40px)` and 70%, the
+tile is the picture's measured width, centred, repeating, from the same file —
+on a phone upright and a 520x1000 window, and absent on a phone on its side and
+at the desk. The × is asserted to have no background, no border, no outline and
+no box-shadow, and to keep a drop shadow.
+
+`recede.mjs` is new: it opens a film from the wall and presses the down chevron.
+Under a thumb the surround tiles at the column's width, centred, at the same
+blur and the same 70%, with the poster whole and centred (measured 390x585 at
+top 130 on a 390x844 screen); under a cursor it is still the single cover copy
+and no tiles. At rest, before the chevron, the sharp poster covers the column
+and the surround is invisible — which is why neither surround needs any state.
+
+`reveal.mjs`, `reveal-nested.mjs`, `small.mjs` and `arrive.mjs` all clear;
+typecheck, lint and the §13 suite pass.
+
+⚠ **One unexplained event, recorded rather than dismissed.** A single run of
+`reveal-nested.mjs` reported `Minified React error #441` as a page error. Five
+subsequent runs of that probe and four of `tiles.mjs` and `recede.mjs` did not
+reproduce it, and neither new component is even mounted in that scenario — the
+nested case is a 1440x900 pane, where nothing is flush and `touch` is false. It
+is noted here so that the next person to see it knows it is the second sighting
+and not the first.
