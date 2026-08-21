@@ -426,19 +426,28 @@ export function CinemaWall({
         None of the three is a number written here, so a change of type size,
         face or gap moves both surfaces together or neither.
 
-        **Measured rather than reasoned**, at 390px with both real faces: the two
-        bands are 45.75px, the row is 25.75, and the caption's capitals centre
-        0.33px above the mark's ink — which is also, at this size, the centre of
-        its lowercase mass. Its baseline sits 2.83px higher than the mark's,
-        because the rule here is *centred in the row*, which is the rule the
-        header already applies to everything in that row except the mark itself.
+        **Measured rather than reasoned**, at 390px: the two bands are 45.69px
+        and the row is 21.69, both of them following `--wordmark-ink` down when
+        the mark went to capitals on 21 August. Neither number is written here,
+        which is the point — this file asked for *the masthead's own height* and
+        got the new one for free.
 
-        ⚠ **The letters start 1px apart and that is left alone.** Both text
-        origins land at 26px; Ojuju's `A` carries a side bearing at 28px that
-        13px capitals do not, so the mark's ink begins at 27 and the caption's at
-        26. Correcting it would mean a per-face, per-*glyph* nudge — and the
-        caption has two words, so there is no one glyph to correct against. The
-        stable thing to align is where the text is set from, which is what
+        ⚠ **The subtraction below is a no-op in capitals, and it is kept anyway.**
+        `--wordmark-drop` is the descender's depth, taken off the row so that a
+        thing centred in what remains sits optically level with a mark whose tail
+        the eye discounts. AGAIN has no tail, so the token is 0 and this centres
+        in the full band — correctly, because there is nothing to discount. **It
+        stops being zero the moment the mark goes back to a word with a
+        descender**, which is exactly when this would be needed and exactly when
+        nobody would think to add it back.
+
+        ⚠ **The old alignment figures were Ojuju's and are gone rather than
+        updated.** They read the caption's capitals as centring 0.33px above the
+        mark's ink and its baseline 2.83px higher, and every one of those is a
+        property of a face this no longer uses. **The caption is switched off
+        behind a constant, so there is nothing to measure them against today** —
+        re-measure when it is switched on, and do not scale the old set forward.
+        The stable thing to align is where the text is set from, which is what
         `--type-indent` does.
 
         **The indent is padding rather than a margin, and the row is inside the

@@ -1,50 +1,85 @@
 import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Mono, IBM_Plex_Sans, Ojuju, Space_Grotesk } from 'next/font/google'
+import { Bebas_Neue, Fira_Sans, IBM_Plex_Mono, Jost } from 'next/font/google'
 
 import './globals.css'
 
 /**
- * The previous wordmark face, kept on purpose rather than deleted — switching
- * between the two is one line in `globals.css`, where `--font-display` chooses.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The wordmark is Jost, in capitals — 21 August
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * **`preload: false` is what stops the unused one costing anything.**
- * `@font-face` is lazy: a browser fetches a font only when text actually uses
- * the family, and nothing uses this one now. What would fetch it regardless is
- * next/font's default preload hint, so that is the thing turned off. The
- * declaration stays, the variable stays, the download does not happen.
+ * Directed, after looking at eleven faces set as AGAIN. Futura's geometry
+ * redrawn: a circular G, a sharp-apex A and one stem width, which is the oldest
+ * reliable wordmark there is once the caps are tracked apart.
  *
- * ⚠ **This flag and `--font-display` are one decision written in two files.**
- * It has been on both faces now — Space Grotesk carried it until 9 August, Ojuju
- * from then until 15 August, and Space Grotesk again since. Leaving it on the
- * face in use costs a render-blocking fetch nobody asked for; leaving it off
- * both costs the mark a flash of fallback on first paint.
+ * **Only the mark uses this.** Static 500, because the variable range is payload
+ * spent on weights nothing asks for.
+ *
+ * ⚠ **Ojuju and Space Grotesk are DELETED rather than left declared.** They set
+ * the mark before this — Space Grotesk to 9 August, Ojuju from 15 — and both are
+ * in git with their measurements. The reserve below is one slot, deliberately: a
+ * font declared and pointed at by nothing is a font the next person reapplies
+ * without knowing why it was there.
  */
-const spaceGrotesk = Space_Grotesk({
-  variable: '--font-space-grotesk',
+const jost = Jost({
+  variable: '--font-jost',
   subsets: ['latin'],
   weight: '500',
+  display: 'swap',
+})
+
+/**
+ * The reserve. **Held on purpose, for a refresh later — directed 21 August.**
+ *
+ * Bebas Neue has no lowercase at all: the family is capitals, which makes it the
+ * one face here that cannot be set in the wrong case. Condensed marquee caps,
+ * and the `I` in AGAIN carries the same weight as the `N` beside it.
+ *
+ * **`preload: false` is what stops it costing anything.** `@font-face` is lazy —
+ * a browser fetches a font only when text actually uses the family, and nothing
+ * uses this one. What would fetch it regardless is next/font's default preload
+ * hint, so that is the thing turned off. The declaration stays, the variable
+ * stays, the download does not happen.
+ *
+ * ⚠ **This flag and `--font-display` are one decision written in two files**, and
+ * switching is more than those two lines: `wordmark-trim` and the three
+ * `--wordmark-*` tokens in globals.css are measurements of a *specific face in a
+ * specific case*, and Bebas Neue's complete set is written down beside Jost's
+ * there, already measured, ready to swap. Read that note before switching; do
+ * not switch this flag alone.
+ */
+const bebasNeue = Bebas_Neue({
+  variable: '--font-bebas-neue',
+  subsets: ['latin'],
+  weight: '400',
   display: 'swap',
   preload: false,
 })
 
 /**
- * The wordmark, and only the wordmark (§11 is silent on the name itself).
- * Static single weight — only the mark uses this, so the variable range is
- * payload nobody spends. See docs/decisions.md.
+ * The interface and body face — **Fira Sans since 21 August, and a deviation
+ * from §11, which names IBM Plex Sans.**
  *
- * **Back in use since 15 August**, on the instruction that Space Grotesk did not
- * work for the mark. It set the mark from 9 August until then.
+ * Directed: the menus and the collection rows should go with Jost, and be
+ * readable without getting boring or overwhelming. Plex Sans is neither of the
+ * last two, but it is *engineered* in the same rational way Jost is, and two
+ * rational faces beside each other read as one slightly inconsistent voice
+ * rather than as a pairing.
+ *
+ * Fira Sans is humanist where Jost is geometric, which is the contrast the
+ * pairing was missing, and it was drawn for small text on screens — the one
+ * thing this app asks of it, in the rail's 12px uppercase labels and in a list
+ * of film titles. See docs/decisions.md.
+ *
+ * ⚠ **It breaks the Plex superfamily, and the cost lands on the mono.** Plex Sans
+ * and Plex Mono share skeletons, so a return count sat inside a sentence
+ * invisibly. Plex Mono stays — §11 names it and nothing asked for it to move —
+ * but it is now a *contrast* against the text rather than a sibling of it. If
+ * that ever reads as a mismatch the answer is Fira Mono, which is Fira Sans's
+ * actual sibling, and it is one line here plus `--font-mono`.
  */
-const ojuju = Ojuju({
-  variable: '--font-ojuju',
-  subsets: ['latin'],
-  weight: '500',
-  display: 'swap',
-})
-
-/** §11: IBM Plex Sans for interface and body. Avoid Inter. */
-const plexSans = IBM_Plex_Sans({
-  variable: '--font-plex-sans',
+const firaSans = Fira_Sans({
+  variable: '--font-fira-sans',
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
@@ -137,7 +172,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${plexSans.variable} ${plexMono.variable} ${spaceGrotesk.variable} ${ojuju.variable} h-full`}
+      className={`${firaSans.variable} ${plexMono.variable} ${jost.variable} ${bebasNeue.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>

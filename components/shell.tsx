@@ -1885,15 +1885,20 @@ export function Shell({
           whatever is currently inside it.**
 
           The margin it has is a property of the face, so it is not to be relied
-          on. Ojuju's `Again` inks 0.92 of the type size — 25.75px at 1.75rem —
-          so the field's 24px line box and the two 20px glyphs both sit inside
-          the row with room. Space Grotesk's `need` inked 0.75, and at the same
-          size the field overhung by 1.5px at each end. **Either way nothing
-          clips**: there is no `overflow` here and an overhang is spent into the
-          header's own 10px of `--masthead-gap`. But a face or a size that takes
-          the ink below 24px puts the field back outside the row, so **this is the
-          thing to re-measure whenever the mark changes**, and the reason the row
-          is `h` rather than `min-h` in the first place.
+          on, and **since 21 August there is no margin — the mark is in capitals
+          and the row is smaller than the field again.** Jost sets AGAIN at an ink
+          of 0.775, which is 21.69px at 1.75rem against the field's 24px line box,
+          so the field overhangs by 1.15px at each end. Ojuju's `Again` inked 0.92
+          — 25.75px — and had room; Space Grotesk's `need` inked 0.75 and
+          overhung by 1.5px. **Either way nothing clips**: there is no `overflow`
+          here and an overhang is spent into the header's own `--masthead-gap`,
+          which is 8px a side.
+
+          ⚠ **Measured after the change, because this is the thing this note
+          exists to make somebody check:** the header is 45.69px resting and
+          45.69px with the field open — **the same height, which is the claim
+          below and the reason the row is `h` rather than `min-h`.** A row sized
+          from its tallest child would have grown to 24 under the tap.
 
           Everything else follows from putting the number here:
 
@@ -1910,8 +1915,11 @@ export function Shell({
           - **The visible air is `--masthead-gap` at both ends.** The trimmed mark
             is exactly its own ink, so it fills the row and the paddings mean what
             they say — which is what that token's own note claims and, until this,
-            was not true. Measured at 1.75rem in Ojuju: a 45.75px header, 9.97px
-            of air above the letters and 9.78 below.
+            was not true. Re-measured at 1.75rem in Jost capitals: a 45.69px
+            header against `gap + hem + ink + gap` of 45.69, the row exactly the
+            21.69px of `--wordmark-ink`, and the letters landing inside it at
+            both ends. It was 45.75 in Ojuju, where the mark inked 4px more; the
+            header follows the ink because it is written from it.
 
           ⚠ **The bottom `--masthead-gap` moved from this row up to the `header`,
           and it had to.** `min-height` on a border box is satisfied by padding,

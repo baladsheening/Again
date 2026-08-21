@@ -29,8 +29,8 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
       {/* my-auto rather than justify-center — see app/sign-in/page.tsx. */}
       <div className="my-auto flex w-full flex-col gap-7">
         {/* 14px of visible air, adjusted by wherever this face stops the mark's
-            ink relative to its box — negative for Ojuju, which hangs the `g`
-            below it. Full argument in app/sign-in/page.tsx — and the two must
+            ink relative to its box — positive for Jost's capitals, which stop
+            short of it. Full argument in app/sign-in/page.tsx — and the two must
             stay equal, since this block reads the same on both pages. */}
         <div className="flex flex-col gap-[calc(14px_-_var(--wordmark-slack))] text-start">
           <h1 className="wordmark text-wordmark">Again</h1>

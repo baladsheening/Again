@@ -4041,3 +4041,87 @@ argument is the stamp's: impression rather than data, against a fourth typeface.
 they are complements today.** The printing was asked for on the desk and the mono
 on the phone; folding them into one prop would mean that the day either moves,
 both move.
+
+## The type changes: Jost in capitals, Fira Sans under it — 21 August
+
+Two decisions on one day, and only the second one deviates from the brief.
+
+### The mark is Jost, set in AGAIN
+
+Directed after looking at eleven faces set in capitals. Futura's geometry
+redrawn: a circular G, a sharp-apex A and one stem width. §11 is silent on the
+mark's own face — it governs interface, mono and the accent — so this replaces
+Ojuju without extending anything.
+
+**Capitals are the substantive half of it.** The word gains a tracking
+requirement it did not have (a lone `I` between an `A` and an `N` disappears set
+solid) and loses a descender, and losing the descender is what moved every
+number the mark drives: the ink ratio falls 0.92 → 0.775, `--wordmark-drop` goes
+to zero because there is no tail for a row to take back, and `--wordmark-slack`
+**changes sign** — Ojuju hung the `g` below its own box, capitals stop short of
+it.
+
+That sign change is the best evidence the machinery was built right. Three
+places consume the slack — the masthead, `/sign-in` and `/reset-password` —
+each as `14px − slack`, and none of them branches on the case. The gap under the
+mark on the auth pages went from about 17.8px of box to 10.7px, in both
+directions, for the same 14px of visible air, with nothing edited at any call
+site.
+
+⚠ **The numbers are now fenced with the face they describe.** They were in three
+separate places, so "switching the face is one line plus a flag" was true of the
+line and false of everything else: a switch moved the family and left seven
+measurements describing the previous typeface. There is one block in
+`globals.css` now — face, tracking, the three trim numbers and the three ratios —
+and the reserve's complete set sits beside it, already measured.
+
+⚠ **Bebas Neue is the reserve, held deliberately** at the user's request, for a
+refresh later. `preload: false` keeps it declared and not downloaded. Seven of
+its eight numbers are measured; its tracking is a starting point rather than a
+reading, and the note says so.
+
+### The interface is Fira Sans, and this one deviates from §11
+
+**§11 names IBM Plex Sans, and this replaces it.** Recorded here because it is a
+change to the brief rather than a choice inside it.
+
+Directed: the menus and the collection rows should go with Jost, be readable, and
+not get boring or overwhelming. The argument for moving is that **Plex Sans is
+engineered in the same rational way Jost is** — two constructed faces next to
+each other read as one slightly inconsistent voice rather than as a pairing.
+Fira Sans is humanist where Jost is geometric, which is the contrast that was
+missing, and it was drawn for small text on screens, which is the only thing this
+app asks of it: 11px uppercase labels in the rail, and lists of film titles.
+
+Longevity was the stated criterion and it is why the shortlist ended where it
+did. Libre Franklin and Work Sans were the other two considered; Inter is ruled
+out by §11 and stays ruled out.
+
+⚠ **The cost lands on the mono, and it is real.** Plex Sans and Plex Mono are one
+superfamily — shared skeletons, so a return count sat inside a sentence
+invisibly. Plex Mono stays, because §11 names it for counts and timestamps and
+nothing asked for it to move, but it is now a *contrast* against the text rather
+than a sibling of it. **If that ever reads as a mismatch the answer is Fira
+Mono**, which is Fira Sans's actual sibling, and it is one line in
+`app/layout.tsx` plus `--font-mono`.
+
+⚠ **Three families is the same count as before**, not one more: Ojuju, Plex Sans
+and Plex Mono became Jost, Fira Sans and Plex Mono. Ojuju and Space Grotesk are
+deleted rather than left declared — a font nothing points at is a font the next
+person reapplies without knowing why it was there.
+
+### What was measured, and how
+
+`node_modules/.probe/metrics.mjs` loads the real self-hosted faces and reads
+`TextMetrics`; `mark.mjs` then checks the result on all three surfaces the mark
+appears on. Fifteen assertions, production build: the ink is as tall as
+`--wordmark-ink` claims, the masthead row is exactly that ink, the letters land
+inside it at both ends, the header is `gap + hem + ink + gap` to within a
+rounding, and the auth pages' gap resolves to 10.71px.
+
+⚠ **The search field is outside the row again, and it is expected.**
+`shell.tsx` says to re-measure this whenever the mark changes: the field's line
+box is 24px against a row that is now 21.69px, so it overhangs 1.15px at each
+end into 8px of `--masthead-gap`. Nothing clips, and — the thing that actually
+matters — **the header measures 45.69px resting and 45.69px with the field
+open**, so tapping the field still cannot resize the masthead.

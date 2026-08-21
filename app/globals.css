@@ -384,24 +384,102 @@
    */
   --animate-band: band-swap 330ms ease-out;
 
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  /*
+    The interface and body face. **Fira Sans since 21 August**, replacing IBM
+    Plex Sans — a deviation from §11, taken deliberately and written up in
+    app/layout.tsx and docs/decisions.md. Humanist where the mark is geometric,
+    which is the contrast the pairing was missing.
+  */
+  --font-sans: var(--font-fira-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   /*
-    The wordmark and nothing else — see the `wordmark` utility below.
+    ═══════════════════════════════════════════════════════════════════════════
+     THE WORDMARK'S FACE, AND EVERY NUMBER THAT DEPENDS ON IT — 21 August
+    ═══════════════════════════════════════════════════════════════════════════
 
-    **Ojuju again since 15 August**, on the instruction that Space Grotesk did
-    not work for the mark. It set it from 9 August until then, and is still
-    defined and now loaded lazily instead (see app/layout.tsx), so switching is
-    this line plus the `preload` flag there.
+    **Jost 500, set in capitals**, directed 21 August after looking at eleven
+    faces set as AGAIN. Futura's geometry redrawn: a circular G, a sharp-apex A
+    and one stem width.
 
-    ⚠ **This line is never only a line.** The `wordmark-trim` numbers below and
-    the two ratios at the foot of this block are all measurements of a *specific
-    face at a specific word* — declared ascent and descent differ between faces,
-    so a change of font moves every one of them. They were re-measured for Ojuju
-    on 15 August; the note on `wordmark-trim` says which are which.
+    ─────────────────────────────────────────────────────────────────────────
+     Why the eight lines are fenced together
+    ─────────────────────────────────────────────────────────────────────────
+
+    ⚠ **A change of face used to be "this line plus a flag", and that was never
+    true.** Seven other numbers describe the face: how much of the em it inks,
+    where its ink stops inside an untrimmed box, and the dead space at each end
+    that `wordmark-trim` removes. They lived in three places, so switching moved
+    one of them and left six describing a typeface that was no longer there.
+
+    They are all here now, and the reserve's complete set is written out below,
+    already measured. **Switching the mark is: replace these eight lines with
+    those eight, and move `preload` in app/layout.tsx.** Nothing else.
+
+    ⚠ **Every number is measured, never scaled.** `node_modules/.probe/metrics.mjs`
+    loads the real self-hosted face and reads `TextMetrics` — declared ascent and
+    descent, and the inked bounds of the actual word. Jost and Ojuju disagree on
+    all seven; do not reason one set into another.
+
+    ⚠ **Capitals are why `drop` is zero, and it is a fact about the case rather
+    than a rounding.** `--wordmark-drop` exists to take a descender's tail back
+    off a row, because the eye reads a word between its cap line and its baseline
+    and discounts the tail. AGAIN has no tail. The probe reads 0.035 below the
+    baseline in Jost and 0.01 in Bebas Neue, and both are the round G's
+    overshoot — half a pixel at 28px, which the eye reads as sitting *on* the
+    baseline, not below it. So there is nothing to take back. **If the mark ever
+    returns to a lowercase word this stops being zero**, which is why the token
+    and its subtraction in cinema-wall.tsx stay rather than being deleted.
+
+    ⚠ **The slack is POSITIVE now, where Ojuju's was −0.135, and the sign is the
+    whole meaning of it.** Ojuju hung `Again`'s g below its own box; capitals stop
+    short of it. Everything that reads this adds it, so the sign carries the case
+    without anyone branching on it — see the token's own note at the foot of this
+    block.
   */
-  --font-display: var(--font-ojuju), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --wordmark-track: 0.08em;
+  --wordmark-line: 1.445;
+  --wordmark-lead: -0.33em;
+  --wordmark-tail: -0.34em;
+  --wordmark-ink-ratio: 0.775;
+  --wordmark-drop-ratio: 0;
+  --wordmark-slack-ratio: 0.1175;
+
+  /*
+    ─────────────────────────────────────────────────────────────────────────
+     THE RESERVE — Bebas Neue 400, measured and ready
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Held on purpose for a refresh later, directed 21 August.** Bebas Neue has
+    no lowercase at all: the family is capitals, so it is the one face that
+    cannot be set in the wrong case, and the `I` in AGAIN carries the same weight
+    as the `N` beside it. Declared with `preload: false` in app/layout.tsx, so it
+    is declared and not downloaded.
+
+    Swap these eight in for the eight above, and flip `preload` there:
+
+        --font-display: var(--font-bebas-neue), ui-sans-serif, system-ui, sans-serif;
+        --wordmark-track: 0.1em;
+        --wordmark-line: 1.3;
+        --wordmark-lead: -0.24em;
+        --wordmark-tail: -0.34em;
+        --wordmark-ink-ratio: 0.72;
+        --wordmark-drop-ratio: 0;
+        --wordmark-slack-ratio: 0.19;
+
+    ⚠ **Seven of those eight are measured; the tracking is not.** 0.1em is a
+    starting point rather than a reading — Bebas is condensed, so its caps want
+    more air between them than Jost's do, but how much is a thing to look at
+    rather than to compute. Everything else came off the probe.
+
+    ⚠ **The ink ratio falls to 0.72, and one thing downstream cares.** The
+    masthead row is `h-[var(--wordmark-ink)]` and the search field's line box is
+    24px — see components/shell.tsx, which says to re-measure this whenever the
+    mark changes. At 1.75rem Bebas inks 20.2px against Jost's 21.7, so the field
+    overhangs the row by a little more and spends a little more of the header's
+    own gap. Nothing clips either way; look at it when you switch.
+  */
 
   /*
     The named sizes. Everything else is `text-sm` or `text-xs`, which needs no
@@ -712,25 +790,27 @@
    * 36px — so every change of size silently needed three hand edits, and the one
    * that mattered would have been the one nobody made. They read these instead.
    *
-   * ⚠ **All three are properties of the face *and* the word — Ojuju setting
-   * `Again`.** Re-measured 15 August when the face changed back; see the table
-   * on `wordmark-trim` for the full set and for the warning against scaling one
-   * face's numbers into another's.
+   * ⚠ **All three are properties of the face, the word *and* the case — Jost
+   * setting `AGAIN`.** The numbers themselves live in the fenced block at the top
+   * of this file, beside the face they describe, so that switching the mark
+   * cannot leave them behind; these three lines only give them the size. See the
+   * table on `wordmark-trim` for the full set and for the warning against
+   * scaling one face's numbers into another's.
    *
-   *   ink     0.92     0.71 above the baseline, 0.21 below (the `g`)
-   *   drop     0.21    that 0.21 on its own — the `g`'s tail
-   *   slack  −0.135    where the ink stops relative to an untrimmed box's bottom
+   *   ink     0.775    0.74 above the baseline, 0.035 below (the G's overshoot)
+   *   drop     0        capitals have no tail to take back — see the fence above
+   *   slack  +0.1175    where the ink stops relative to an untrimmed box's bottom
    *
-   * ⚠ **The slack is negative, and the sign is the whole meaning of it.** At
-   * `line-height: 1` Ojuju's content area is 1.41em, so the baseline sits at
-   * 0.925em and the `g` reaches 1.135 — the ink hangs *below* its own box rather
-   * than stopping short of it. Space Grotesk setting `need` was +0.1389, the
-   * other way round. Everything reading this adds it, so the sign carries the
-   * case without anyone branching on it: a gap under the mark is
+   * ⚠ **The slack is positive in capitals, and the sign is the whole meaning of
+   * it.** At `line-height: 1` Jost's content area is 1.445em, so the baseline
+   * sits at 0.8525em and the G's overshoot reaches 0.8875 — the ink stops
+   * *short* of its own box. Ojuju setting `Again` was −0.135, the other way
+   * round, because it hung the `g` below. Everything reading this adds it, so the
+   * sign carries the case without anyone branching on it: a gap under the mark is
    * `14px − slack`, which shrinks when the ink stops short and grows when it
    * hangs over.
    */
-  --wordmark-ink: calc(var(--text-wordmark) * 0.92);
+  --wordmark-ink: calc(var(--text-wordmark) * var(--wordmark-ink-ratio));
   /**
    * The descender's depth, and it exists to be **taken back off** the row.
    *
@@ -746,8 +826,8 @@
    * mark rather than merely level with it. See `components/cinema-wall.tsx`,
    * which is the one thing that does this.
    */
-  --wordmark-drop: calc(var(--text-wordmark) * 0.21);
-  --wordmark-slack: calc(var(--text-wordmark) * -0.135);
+  --wordmark-drop: calc(var(--text-wordmark) * var(--wordmark-drop-ratio));
+  --wordmark-slack: calc(var(--text-wordmark) * var(--wordmark-slack-ratio));
 }
 
 @layer base {
@@ -1401,10 +1481,14 @@
 */
 
 /**
- * The wordmark. Newsreader, and the same scarcity rule that governs the accent
- * and the mono: it appears on the name of the app and nowhere else. Not on page
- * headings, not on section titles. A display face used twice is a signature;
- * used everywhere it is a theme.
+ * The wordmark. Jost in capitals, and the same scarcity rule that governs the
+ * accent and the mono: it appears on the name of the app and nowhere else. Not
+ * on page headings, not on section titles. A display face used twice is a
+ * signature; used everywhere it is a theme.
+ *
+ * ⚠ **The face is named in the fence at the top of this file, not here.** This
+ * utility says what the mark *is* — a display face, in caps, tracked, on one
+ * line — and reads which face and how much tracking from there.
  *
  * Only the 500 cut is loaded, so a stray `font-bold` here would synthesise a
  * fake bold rather than fail visibly. Keep the weight in this utility.
@@ -1413,21 +1497,17 @@
   font-family: var(--font-display);
   font-weight: 500;
   /*
-    **Capitalised, 15 August.** Directed, with the size — the mark reads *Again*,
-    set in Ojuju. It read *Need* in Space Grotesk for a few hours the same day;
-    both were reverted, the capitalisation and the size were not.
+    **Full capitals, 21 August**, directed with the change of face: the mark
+    reads AGAIN, set in Jost. It was capitalised lower case in Ojuju from
+    15 August, and it read *Need* in Space Grotesk for a few hours on the 15th;
+    that word was reverted, the size was not.
 
-    The case has now been all three twice over: `lowercase` until 9 August,
-    capitalised that day, caps on the morning of the 10th, back to lower case the
-    same afternoon, and capitalised again here. It is settled by eye rather than
-    by argument, so the thing to preserve is not the value but the property that
-    makes changing it cheap — **one declaration, not four JSX strings.**
-
-    ⚠ **Case moves no other number, and that is checked rather than assumed each
-    time.** `Again` and `again` measure identically in Ojuju, as `Need` and `need`
-    did in Space Grotesk: capitalising an initial that already reaches the line
-    the ascenders set changes nothing about the inked box. **A change of face or
-    of word is the opposite** — see the table on `wordmark-trim`.
+    The case has now been all three, twice over and then some: `lowercase` until
+    9 August, capitalised that day, caps on the morning of the 10th, back to lower
+    case the same afternoon, capitalised again on the 15th, and full caps here.
+    It is settled by eye rather than by argument, so the thing to preserve is not
+    the value but the property that makes changing it cheap — **one declaration,
+    not four JSX strings.**
 
     The mark appears in four places: the phone header, the rail, `/sign-in` and
     `/reset-password`. Four literals are four things that can drift, and a
@@ -1435,26 +1515,39 @@
     everywhere — `<title>`, prose and the accessible name all get the app's name
     spelled as a word, whatever this line is currently doing to it.
 
-    ⚠ **This used to be more than a CSS change, and between these two values it
-    is not any more.** The header's mark is trimmed to its own ink, so the case
-    decides how tall that box is, and the masthead row and `main`'s top padding
-    were hand-derived numbers in `components/shell.tsx` that had to be moved with
-    it. They read `--wordmark-ink` and `--wordmark-slack` now.
+    ⚠ **Case moved every number this time, and the note that said it would not is
+    the one being corrected.** It read *case is free; the word is not*, and that
+    was true of the two cases it had been measured across: `Again` and `again`
+    inked identically in Ojuju, because the `g` set the bottom either way. **Full
+    caps is the case where it stops being true** — the descender goes, so the
+    inked box loses its whole bottom third and the ink ratio falls from 0.92 to
+    0.775 while the slack changes sign. The lesson generalises, and it is the
+    fence's lesson: re-measure; do not reason.
 
-    ⚠ **Full caps is still a re-measurement, and so is a new word or face.** The
-    two ratios are measured from Ojuju setting `Again`; lower case and capitalised
-    share them because the `g` sets the bottom either way, and caps has no
-    descender at all — it ran 27px against 34px at 36px in the previous face.
-    Re-measure; do not reason.
+    ⚠ **This used to be more than a CSS change, and it is not any more.** The
+    header's mark is trimmed to its own ink, so the case decides how tall that box
+    is, and the masthead row and `main`'s top padding were hand-derived numbers in
+    `components/shell.tsx` that had to be moved with it. They read
+    `--wordmark-ink` and `--wordmark-slack`, so full caps moved them on its own.
   */
-  text-transform: capitalize;
+  text-transform: uppercase;
   /*
-    −0.005em, unchanged by the capitalisation. The +0.03em this briefly held was
-    for full caps, which are drawn expecting to be tracked; one capital initial
-    on an otherwise lowercase word is not that, and the value that suits lower
-    case suits this.
+    **Tracking, and in capitals it is not optional.** Caps are drawn expecting to
+    be spaced apart — set solid they read as a wall, and AGAIN has the worst case
+    of it: a lone `I` between an `A` and an `N` disappears into its neighbours
+    unless there is air on both sides of it. This held −0.005em for the
+    capitalised lower-case setting, where the opposite was true.
+
+    ⚠ **The value is in the fenced block at the top of this file**, with the face,
+    because it belongs to the face: Jost's geometric caps and Bebas Neue's
+    condensed ones want different amounts and the reserve carries its own.
+
+    ⚠ **CSS puts the space after the LAST letter too**, so the mark's box is
+    `--wordmark-track` wider than its ink on the right. Every placement of it is
+    start-aligned, so that lands as trailing air nobody sees. If the mark is ever
+    centred, that is the thing that will look half a space off.
   */
-  letter-spacing: -0.005em;
+  letter-spacing: var(--wordmark-track);
   line-height: 1;
 }
 
@@ -1543,18 +1636,28 @@
  */
 @utility wordmark-trim {
   /*
-    **All three are Ojuju's, re-measured 15 August.** They were Space Grotesk's
-    — 1.2778 / −0.25 / −0.0833 — and not one of them survived the change of face,
-    because every one is a difference between a *declared* metric and an inked
-    one and both differ per typeface. Ojuju declares a 1.13 ascent and a 0.28
-    descent against Space Grotesk's 0.9722 and 0.3056, and sets `Again` with
-    0.71 above the baseline and 0.21 below against 0.7222 and 0.2222.
+    **The three numbers are not here any more — 21 August.** They are
+    `--wordmark-line`, `--wordmark-lead` and `--wordmark-tail`, in the fenced
+    block at the top of this file, beside the face they were measured from and
+    beside the reserve's own set.
+
+    ⚠ **That move is the point, not tidiness.** Written here they were three
+    numbers describing a typeface named in a different declaration, and the two
+    changed independently: switching the face was one line, and it left these
+    describing the face before it. There is one fence now and everything in it
+    moves together.
 
     Derived, not typed: `line-height` is the declared content area, and each
     margin is the dead space at that end — `-(ascent − inkAbove)` and
     `-(descent − inkBelow)`.
+
+    Jost 500 setting `AGAIN` reads 1.445 / −0.33 / −0.34, against Ojuju setting
+    `Again` at 1.41 / −0.42 / −0.07 and Space Grotesk setting `need` at
+    1.2778 / −0.25 / −0.0833. **Not one number has ever survived a change of
+    face**, which is three faces' worth of evidence for never scaling one set
+    into another.
   */
-  line-height: 1.41;
-  margin-top: -0.42em;
-  margin-bottom: -0.07em;
+  line-height: var(--wordmark-line);
+  margin-top: var(--wordmark-lead);
+  margin-bottom: var(--wordmark-tail);
 }

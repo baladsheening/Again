@@ -86,11 +86,15 @@ export default async function SignInPage() {
           `--wordmark-slack`. The box gap is the difference, and 14 is the design
           constant.
 
-          ⚠ **The slack is negative for this mark**, because Ojuju hangs `Again`'s
-          `g` below the box rather than stopping short of it — so this subtraction
-          makes the gap *bigger*, not smaller, and lands at about 17.8px of box
-          for 14px of visible air. Do not "simplify" the minus sign away; it is
-          what lets one expression serve both kinds of face without a branch.
+          ⚠ **The slack is positive for this mark, and was negative until
+          21 August** — which is the whole reason this is an expression rather
+          than a number. Ojuju hung `Again`'s `g` below the box, so the
+          subtraction made the gap *bigger* and landed at about 17.8px of box for
+          14px of visible air. Jost sets AGAIN in capitals, which stop short of
+          the box, so the same expression now makes it *smaller* — about 10.7px
+          of box for the same 14px of air. **One expression served both kinds of
+          face without a branch, and the change of face is what proved it.** Do
+          not "simplify" the minus sign away.
 
           It has been three literals — `gap-4`, then 9px when the mark had no
           descender, then wrong again when the type size changed hours later.
