@@ -130,6 +130,15 @@ type Rung = (typeof LADDER)[number]
  * sharpness. Measured: a square master on a 1440×900 desk came back at 780px
  * where the box allowed 900, until it was asked a second time.
  */
+/**
+ * Whether the artwork reaches both side edges — see `flush` below for what that
+ * buys. Wider than the screen's own shape means the width binds first.
+ *
+ * The aspect defaults to 2:3 for the same reason `rungFor`'s does: it is asked
+ * before there is a file to measure, and asked again once there is.
+ */
+const flushFor = (aspect = 2 / 3) => aspect > window.innerWidth / window.innerHeight
+
 const rungFor = (aspect = 2 / 3): Rung => {
   /*
     The artwork is contained in a full-bleed ground, so its width is the
@@ -342,8 +351,7 @@ export function PosterReveal({
       const next = rungFor(aspect)
       return current && LADDER.indexOf(next) > LADDER.indexOf(current) ? next : current
     })
-    /* Wider than the screen's own shape means the width binds first. */
-    setFlush((aspect ?? 2 / 3) > window.innerWidth / window.innerHeight)
+    setFlush(flushFor(aspect))
   }
 
   /* Listening only while there is something on screen for a resize to be wrong about. */
@@ -410,7 +418,29 @@ export function PosterReveal({
     won, and a click can arrive without one — from a keyboard, which has no
     pointer to press with.
   */
-  const choose = () => setRung((current) => current ?? rungFor())
+  const choose = () => {
+    setRung((current) => current ?? rungFor())
+
+    /*
+      ⚠ **`flush` is decided here too, and leaving it to `load` was a bug.**
+      Reported as *the blurred bands appear seemingly randomly*, and that is
+      exactly what it was: `reconsider` is the only other place that sets it, and
+      it runs from `load` and from a resize. **A cached poster fires no `load`**
+      — the element is already `complete` before React attaches a handler — so a
+      film opened for the second time got no tiles, and one opened for the first
+      time did. The same code, twice, decided by what was in the cache.
+
+      The same shape of fault as the ring around the ×, in the same file, on the
+      same day. Both came from state that only a late event could set, when the
+      thing it describes is knowable at the tap: this screen's shape is the
+      viewport's shape, and the viewport is right there.
+
+      `load` still refines it through `reconsider`, with the artwork's true
+      aspect rather than the 2:3 assumed here — but it refines an answer that
+      already exists rather than being the only source of one.
+    */
+    setFlush(flushFor())
+  }
 
   /*
     Magnifying swaps the fitted artwork for `original`, and does it only once

@@ -5044,3 +5044,25 @@ what it actually draws.
 
 And `focus-visible:outline-solid` rather than `focus-visible:outline`, because
 the latter sets a width of its own and quietly won.
+
+#### The tiles appeared seemingly at random (21 August)
+
+Reported: the blurred bands are missing on the handset, and when they do appear
+they appear at random. They were not random. `flush` was set in one place —
+`reconsider`, which runs from the image’s `load` event and from a resize — and
+**a cached image fires no `load`**: the element is already `complete` before
+React attaches a handler. So a film opened for the first time tiled and the same
+film opened again did not.
+
+⚠ **The same shape of fault as the ring around the ×, in the same file, on the
+same day.** Both were state that only a late event could set, describing
+something knowable at the tap: this screen’s shape is the viewport’s shape, and
+the viewport is right there. It is now decided in `choose`, beside the rung,
+and `load` still refines it with the artwork’s true aspect rather than being
+the only source of an answer.
+
+⚠ **The probe could not have caught it**, and that is the more useful lesson.
+`tiles.mjs` opened each poster once, from cold, in a fresh context — a cache
+state the app almost never meets in use. It now opens the same poster twice and
+asserts the two agree, which is the assertion that would have failed on the
+shipped build.
