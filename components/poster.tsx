@@ -639,7 +639,7 @@ export function PosterReveal({
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label={`Close the poster for ${title}`}
-            className="text-text fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 cursor-pointer items-center justify-center drop-shadow-[0_0.5px_1px_rgba(0,0,0,0.85)]"
+            className="text-text fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 cursor-pointer items-center justify-center drop-shadow-[0_0_0.5px_rgba(0,0,0,0.8)]"
           >
             <CloseIcon size={20} />
           </button>
