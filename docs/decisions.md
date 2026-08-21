@@ -4419,13 +4419,41 @@ pixel size, with the ground becoming the scroll container; the cursor turns to
   zero when the child overflows, so it would otherwise land on the one part of a
   poster nobody magnified to read.
 
-⚠ **On a handset the ground is only the bands above and below.** The fitted
-artwork takes the full width, so "tap outside to close" is two ~130px bands at
-390x844 rather than a margin all round. Tapping the artwork now magnifies where
-it used to dismiss. Escape still closes, and a second tap still comes back from
-magnified, so nothing is a trap — but if the bands turn out to be too fine a
-target in the hand, the answer is a close affordance on this screen, not a
-smaller poster.
+### Then undone in the hand, the same day
+
+Shipped, looked at, and pulled back on the handset within the hour. The reason
+was visible before it went out and is worth stating plainly rather than as a
+caveat: **on a phone the fitted artwork takes the full width**, so the ground it
+is dismissed from is two ~130px bands at 390x844 rather than a margin all round
+— and the tap that used to close it started zooming instead. A gesture arrived
+where a dismissal used to be, and the dismissal retreated to the thinnest part
+of the screen. Under a finger the whole surface is a dismissal again, which is
+what this screen did for its first two weeks.
+
+⚠ **This is not the device branch CLAUDE.md rules out, and the difference is the
+whole of why it is allowed to exist.** A banned branch asks *what browser is
+this* and then corrects for it: a guess about a class of machine, made once, and
+wrong on the next machine in that class. This asks the event that actually
+arrived — `pointerType` off the `pointerdown` — what kind of input made it. That
+is neither a guess nor a class. A touchscreen laptop magnifies under its mouse
+and dismisses under a finger, in the same session, on the same element, and
+nothing had to know which laptop it was. **A media query cannot do that**,
+because `(pointer: coarse)` describes the device and the question here is about
+the gesture. The probe checks the touch path on all three profiles for exactly
+this reason — a desk screen touched on its glass must dismiss too.
+
+Anything that is not a mouse dismisses, including a click with no pointer behind
+it. The fallback is the older behaviour, which is the safe direction to fail in.
+
+It also puts a guarantee back rather than complicating one. `touch-none` gives
+way to `pan-x pan-y` only when magnified, and magnifying is now a cursor's
+gesture — so under a finger this element is `touch-none` for the whole of its
+life and the iOS page-zoom trap has one state, not two.
+
+**What this leaves as a real question:** whether magnifying is worth having at
+all on a surface whose primary device cannot reach it. It stays because the desk
+asked for it and the desk is where a 2000px master is legible. If it turns out
+nobody uses it, the subtraction is one `pointer` ref and two class strings.
 
 ### What was considered and not built
 
@@ -4451,8 +4479,9 @@ about the list, and it should be looked at with that screen's animation in hand.
 
 Driven against a production build in a browser at 1440x900 at 1x and 2x and at
 390x844 at 3x, with `image.tmdb.org` answered by real rasters at each rung's
-true pixel size — `node_modules/.probe/reveal.mjs`, 22 checks per profile, all
-clear. ⚠ The first version of that probe served SVGs and was theatre: an SVG has
+true pixel size — `node_modules/.probe/reveal.mjs`, 23 checks per profile, all
+clear. Every profile is given a touchscreen as well as a mouse, and both paths
+are driven on each: a tap on the artwork dismisses, a click on it magnifies. ⚠ The first version of that probe served SVGs and was theatre: an SVG has
 no fixed pixel size, Chromium reported `naturalWidth` 603 for a stub declaring
 2000, and `width === naturalWidth` passed while measuring nothing. A poster is a
 JPEG; the stub had to be a raster before the magnify claim meant anything.

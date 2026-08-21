@@ -98,12 +98,17 @@ const REVEAL_SRCSET = (posterPath: string) =>
 const REVEAL_SIZES = 'min(100vw, 67vh)'
 
 /**
- * Tap the title, see the poster. Tap the ground, close it; tap the poster,
- * magnify it to the largest artwork TMDB holds and tap again to come back.
+ * Tap the title, see the poster. **Under a finger, tap anywhere and it closes**
+ * — which is what this has always done and what it does again. Under a cursor
+ * the ground closes and the artwork magnifies to the largest TMDB holds, with a
+ * second click to come back.
+ *
  * Pinch-zoom, double-tap zoom and rubber banding were all built and all removed
- * on 8 August; see docs/decisions.md. What returned on 21 August is a *click*,
- * which is the one gesture that can be told apart from a dismissal by where it
- * landed rather than by how long it lasted.
+ * on 8 August; see docs/decisions.md. Magnifying is not their return by another
+ * name. It is a *click*, which a cursor has and a finger does not: the one
+ * input that can say *this part of the screen* without also being the way you
+ * dismiss things. Where that distinction does not exist, neither does the
+ * gesture — see `pointer` below.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  Three reasons the poster painted in from the top — 21 August
@@ -173,6 +178,33 @@ export function PosterReveal({
   const groundRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
 
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  What kind of pointer this click came from — 21 August
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **Under a finger, the poster goes back to *tap anywhere, close it*.**
+   * Magnifying is a cursor's gesture and it was wrong in the hand: the fitted
+   * artwork takes the full width of a handset, so the ground it is dismissed
+   * from is two thin bands, and the tap that used to close it started zooming
+   * instead. The whole of the surface is a dismissal again.
+   *
+   * ⚠ **This is not the device branch CLAUDE.md rules out, and the difference
+   * matters enough to state.** A banned branch asks *what browser is this* and
+   * then corrects for it — a guess about a class of machine, made once, wrong
+   * on the next one. This asks the event that actually arrived what kind of
+   * input made it, which is neither a guess nor a class: a touchscreen laptop
+   * magnifies under its mouse and dismisses under a finger, in the same
+   * session, on the same element, and nothing had to know which laptop it was.
+   * A media query cannot do that, because it describes the device rather than
+   * the gesture.
+   *
+   * Anything that is not a mouse dismisses, and that includes a click with no
+   * pointer behind it at all — the fallback is the behaviour this surface had
+   * for its first two weeks, which is the safe direction to fail in.
+   */
+  const pointer = useRef('')
+
   /** Has it ever been opened? Until it has, there is no `<img>` — see (3). */
   const [mounted, setMounted] = useState(false)
   /** Has the artwork fully arrived? Until it has, it is transparent — see (2). */
@@ -235,6 +267,12 @@ export function PosterReveal({
     already chosen `original` for the fitted view.
   */
   const magnify = () => {
+    /* A finger dismisses wherever it lands — see `pointer` above. */
+    if (pointer.current !== 'mouse') {
+      dialogRef.current?.close()
+      return
+    }
+
     if (magnified) {
       setMagnified(false)
       return
@@ -328,14 +366,19 @@ export function PosterReveal({
             Without it, pinching the poster and closing left the list behind
             magnified with no way back short of reloading.
 
-            ⚠ **Magnified, it becomes the scroll container and `touch-none` has
-            to go** — a poster at its own size is larger than the screen and
-            unpannable is unusable. `pan-x pan-y` is the exact subtraction: it
-            restores dragging and still withholds `pinch-zoom`, so the page
-            behind cannot be zoomed and stranded. And the artwork centres with
-            `m-auto` rather than `justify-center`, because a centred flex child
-            that overflows its scroll container is clipped at the start edge and
-            the top-left corner of the poster becomes unreachable.
+            Magnified, it becomes the scroll container and gives dragging back
+            as `pan-x pan-y` — the exact subtraction, since that still withholds
+            `pinch-zoom` and the page behind still cannot be zoomed and
+            stranded. And the artwork centres with `m-auto` rather than
+            `justify-center`, because a centred flex child that overflows its
+            scroll container is clipped at the start edge and the top-left
+            corner of the poster becomes unreachable.
+
+            ⚠ **In the hand that branch is dead, and deliberately so.** Only a
+            mouse can magnify, so under a finger this element is `touch-none`
+            for the whole of its life and the guarantee above is not a pair of
+            states to reason about — it is the one state there has ever been.
+            The relaxation exists for a pointer that cannot pinch anyway.
           */
           className={`flex h-full w-full cursor-default bg-black ${
             magnified
@@ -382,8 +425,17 @@ export function PosterReveal({
               /* The only thing on the screen, and the reason the screen opened. */
               fetchPriority="high"
               onLoad={() => setLoaded(true)}
+              /* Which input this is, asked of the input rather than the device. */
+              onPointerDown={(event) => {
+                pointer.current = event.pointerType
+              }}
               onClick={(event) => {
-                /* The ground's click closes; this one must not reach it. */
+                /*
+                  The ground's click closes; this one must not reach it — even
+                  when it is going to close too, because `magnify` closes the
+                  dialog itself under a finger and letting both fire would run
+                  `close()` twice on a dialog that had already gone.
+                */
                 event.stopPropagation()
                 magnify()
               }}
