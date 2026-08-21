@@ -700,21 +700,39 @@ export function PosterReveal({
             onClick={() => dialogRef.current?.close()}
             aria-label={`Close the poster for ${title}`}
             /*
-              ⚠ **The box is the mark's size and the hit area is given back by
-              `tap-target`.** It was `size-11` — 44px of button around a 20px
-              glyph — and a focus ring traces the *box*, so a keyboard drew a
-              rounded square twice the size of the thing it was pointing at.
-              Shrinking the ring by hand would have meant a negative outline
-              offset: a number tuned against one glyph at one size, wrong the
-              moment either changes.
+              ⚠ **The box is what the focus ring traces, so the box is the size
+              the ring should be.** It was `size-11` — 44px around a 20px glyph —
+              and a keyboard drew a rounded square twice the size of the thing it
+              pointed at. Directed to 32px, which sits the ring 6px clear of the
+              mark on every side.
 
-              `tap-target` is the app's own answer to exactly this and is used
-              the same way by the resolve flow: the element stays the size of
-              what you can see, and a transparent 44px pseudo-element under a
-              coarse pointer carries the thumb. The ring hugs the mark by
-              construction, and the target is still 44px where a target matters.
+              Shrinking a 44px ring by hand would have meant a negative outline
+              offset instead: a number tuned against one glyph at one size, wrong
+              the moment either changed. Sizing the box says the same thing once.
+
+              ⚠ **32 is under 44, so `tap-target` carries the thumb.** It is the
+              app's own answer to exactly this and is used the same way by the
+              resolve flow — a transparent 44px pseudo-element under a coarse
+              pointer, no layout changed. The ring is 32px and the target is 44.
+
+              ⚠ **The insets are derived from the box, not chosen.** The mark's
+              centre has sat 34px in from the top-safe and right edges since it
+              was a 44px box at 12px; `34 − 16` is what keeps it there now that
+              the box is 32. Change the size and this number changes with it —
+              it is arithmetic, not a position.
+
+              The ring is `1px` rather than the app's standard 2, spelled out in
+              full because a width alone does not apply to an `auto`-style ring,
+              and `focus-visible` so it answers a keyboard and not a thumb.
+
+              ⚠ **It was written as 1.5px first and Chromium reported 1.** It
+              floors sub-pixel outline widths — at 3x as well as at 1x, so this
+              is not device-pixel rounding — which would have left a hairline
+              that renders as 1 in one engine and 1.5 in another. A hairline is
+              the one thing that cannot afford to differ by engine, so it is
+              written as what it actually draws.
             */
-            className="text-text tap-target fixed top-[calc(env(safe-area-inset-top)+1.5rem)] right-6 flex size-5 cursor-pointer items-center justify-center drop-shadow-[0_0_0.5px_rgba(0,0,0,0.8)]"
+            className="text-text tap-target focus-visible:outline-text fixed top-[calc(env(safe-area-inset-top)+1.125rem)] right-[1.125rem] flex size-8 cursor-pointer items-center justify-center drop-shadow-[0_0_0.5px_rgba(0,0,0,0.8)] focus-visible:outline-solid focus-visible:outline-1"
           >
             <CloseIcon size={20} />
           </button>

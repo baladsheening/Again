@@ -5024,3 +5024,23 @@ it was rather than the box.
 element, which is now 20px, and would call a perfectly good target a failure.
 `tiles.mjs` hit-tests four corners at ±21px through `elementFromPoint` instead,
 which is the question that was always meant.
+
+#### The ring at 32px, one pixel thick (21 August)
+
+Directed. The box is what a focus ring traces, so the box is the size the ring
+should be: 32px, which sits it 6px clear of a 20px mark on every side. 32 is
+under 44, so `tap-target` still carries the thumb.
+
+⚠ **The insets are derived from the box rather than chosen.** The mark has sat
+34px in from the top-safe and right edges since it was a 44px box at 12px, and
+`34 − 16` is what keeps it there at 32. Change the size and that number changes
+with it — it is arithmetic, not a position.
+
+⚠ **The width was written as 1.5px and Chromium reported 1.** It floors
+sub-pixel outline widths, at 3x as well as at 1x, so this is not device-pixel
+rounding — 1.5 would have drawn as 1 there and as 1.5 in Safari. A hairline is
+the one thing that cannot afford to differ by engine, so it is written as 1px:
+what it actually draws.
+
+And `focus-visible:outline-solid` rather than `focus-visible:outline`, because
+the latter sets a width of its own and quietly won.
