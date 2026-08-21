@@ -4770,3 +4770,88 @@ reproduce it, and neither new component is even mounted in that scenario — the
 nested case is a 1440x900 pane, where nothing is flush and `touch` is false. It
 is noted here so that the next person to see it knows it is the second sighting
 and not the first.
+
+### The recede was animating the wrong properties (21 August)
+
+Reported from the handset: press the chevron and the panel drops away, then the
+poster follows late and resizes in two stuttering steps; tap the poster and the
+panel pops back before the picture has finished. It has to be smooth.
+
+**It was not a tuning problem. The two halves of one gesture were animating
+different kinds of property.** The panel moves with a transform, which the
+compositor runs on its own thread. The artwork animated `height` and `top`,
+which are layout: every frame relaid the box and re-`object-cover`-ed a 2000x3000
+master into a different-sized hole. Perceived as lag because half the gesture was
+smooth and the other half was not.
+
+#### Measured, twice, because the first measurement was of the wrong thing
+
+`node_modules/.probe/jolt.mjs` samples the box every frame with the CPU
+throttled 6x: the poster got **13 frames of a 300ms move with a 57ms gap** in the
+middle. Useful, but it cannot prove the diagnosis — its own
+`getBoundingClientRect()` every frame is main-thread work, so it competes with
+what it measures and partly reports on itself.
+
+`composited.mjs` asks the only question that separates the two mechanisms:
+**does the picture keep moving while the main thread is busy?** It presses the
+control, waits two frames for React to commit, jams the main thread with a
+synchronous loop for 250ms, and counts distinct frames arriving over CDP's
+screencast — which is what the compositor put on the glass, not what the page
+believes it drew.
+
+| | frames while the main thread was jammed | distinct frames over the whole move |
+| --- | --- | --- |
+| `height` + `top` | **1** — frozen solid | 4–5 |
+| `transform` | 9–16 | 14–20 |
+
+⚠ **That probe was wrong twice before it was right, and both mistakes flattered
+the code.** First it blocked in the same task as the click and reported FROZEN
+for everything including the panel — React's `setState` is asynchronous, so the
+loop ran before the transform was ever written and measured a transition that had
+not started. Then it hashed the whole frame and reported *composited* for the old
+animation too — the panel is composited beyond suspicion and covers half the
+screen, so something moved whatever the picture did. It only discriminates with
+the panel made invisible, which is what isolation means here. **A probe that
+agrees with you is not evidence until it can also disagree**: the control run
+against the old code is what makes the table above worth reading.
+
+#### The shape of the fix
+
+The box no longer changes size. It is laid out once at the **resting** geometry
+and scaled *down* to recede.
+
+That direction is deliberate. The other way round was available — lay out at the
+receded size and scale up — and it would leave the state you are looking at
+almost all of the time rasterised for a smaller box. At rest the transform is now
+`none`, so the picture is drawn at its own layout scale and nothing is resampled
+at all.
+
+⚠ **It is JavaScript rather than `cqw` because the geometry is a ratio of two
+measured lengths, and CSS cannot express one.** A scale is a number, and `calc()`
+cannot divide a length by a length to produce a number. Everything else is still
+arithmetic and none of it is a chosen number: the resting box is the poster at
+cover size — `max` of the two axes, so it is right upright and on its side — and
+receding scales it to the column's width, which is what *whole* means here. The
+transform is written through the CSSOM, which the CSP permits; the ban is on the
+`style` attribute.
+
+⚠ **A `ResizeObserver`, and a `window` resize listener will not do.** The first
+version measured on mount and listened for resizes, and measured **zero** — this
+screen is a `<dialog>` its own effect opens a tick later, and until it does the
+column is `display: none` with no size at all. Nothing resizes the window when a
+dialog opens, so nothing would have corrected it; it happened to be re-measured
+by an unrelated re-render, which is luck and not a mechanism. The observer asks
+the question the code actually has — *what size is this box now* — and answers it
+on the first layout, on the dialog opening and on a rotation, without naming any
+of the three.
+
+#### Verified
+
+The geometry is unchanged, which is the claim that matters most: `recede.mjs`
+measures the receded poster at **390x585 at top 130** on a 390x844 screen, the
+same numbers the old `calc(50% - 75cqw)` and `150cqw` produced, and the resting
+screenshot is unchanged. Both orientations were checked against the old
+expressions before they were deleted.
+
+`tiles.mjs`, `reveal.mjs`, `reveal-nested.mjs`, `small.mjs` and `arrive.mjs` all
+clear; typecheck, lint and the §13 suite pass.

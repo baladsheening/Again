@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
 
 import { addFilmAction, undoEntryAction } from '@/app/actions/entries'
 import type { Route } from 'next'
@@ -1738,6 +1738,69 @@ function Artwork({
 
   const src = decoded === large ? large : small
 
+  /*
+    The two states, as one transform. See the note on the box below for why this
+    is here rather than in a class.
+
+    `boxW` is the poster at cover size: as wide as the column, or as wide as a
+    2:3 poster needs to be to reach the column's full height, whichever is
+    greater. That `max` is what makes it right in both orientations — upright the
+    height binds and the box overhangs the sides; on its side the width binds and
+    it overhangs the foot. Either way the column clips it, which is what
+    `object-cover` was doing before by other means.
+
+    Receded, it scales to the column's width — *whole* — and drops to the middle
+    under a thumb or stays at the top under a cursor. That last line is the
+    surround's ruling read a second time; see the box's note.
+
+    ⚠ **`transformOrigin` is the top edge, not the centre.** The scale has to
+    leave the top where it is and take the difference off the bottom, because
+    `translateY` is then a single number measured from a known edge. Origin
+    `50% 0` keeps the horizontal centring the overhang depends on.
+  */
+  const boxRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const box = boxRef.current
+    const column = box?.parentElement
+    if (!overlay || !box || !column) return
+
+    const fit = () => {
+      const width = column.clientWidth
+      const height = column.clientHeight
+      const boxWidth = Math.max(width, (height * 2) / 3)
+
+      box.style.width = `${boxWidth}px`
+      box.style.height = `${boxWidth * 1.5}px`
+      box.style.left = `${(width - boxWidth) / 2}px`
+      box.style.top = '0px'
+      box.style.transformOrigin = '50% 0'
+      box.style.transform = receded
+        ? `translateY(${touch ? (height - width * 1.5) / 2 : 0}px) scale(${width / boxWidth})`
+        : 'none'
+    }
+
+    /*
+      ⚠ **A `ResizeObserver`, and a `window` resize listener will not do.** The
+      first version measured on mount and listened for resizes, and measured
+      **zero** — this screen is a `<dialog>` that its own effect opens a tick
+      later, and until it does the column is `display: none` and has no size at
+      all. Nothing resizes the window when a dialog opens, so nothing would have
+      corrected it; the box happened to be re-measured by an unrelated re-render,
+      which is luck and not a mechanism.
+
+      The observer asks the question the code actually has — *what size is this
+      box now* — and answers it on the first layout, on the dialog opening, and
+      on a rotation, without any of the three being named.
+    */
+    /* Synchronously as well, so a state change moves the picture this frame. */
+    fit()
+
+    const watch = new ResizeObserver(fit)
+    watch.observe(column)
+    return () => watch.disconnect()
+  }, [overlay, receded, touch])
+
   return (
     <div
       /*
@@ -1774,28 +1837,52 @@ function Artwork({
         fill, and at 2:3 it fits exactly, which is the whole poster uncropped —
         the thing the chevron is for.
 
-        ⚠ **`cqw`, not `vw`.** The column is capped at `max-w-md`, so a viewport
-        unit would be right on a phone and wrong on the first tablet under the
-        breakpoint. **None of these are chosen numbers:** `150` is 1.5, which is
-        what 2:3 means, and `75` is half of it, which is what centring means.
-        `calc(50% - 75cqw)` puts the box's middle on the screen's middle without
-        knowing either height.
+        ─────────────────────────────────────────────────────────────────────
+         ⚠ It animated `height` and `top` until 21 August, and it stuttered
+        ─────────────────────────────────────────────────────────────────────
 
-        Both properties are lengths, so both animate, and they land in step with
-        the panel — one gesture, the words leaving and the picture settling
-        together, rather than two things moving on their own schedules. Under a
-        cursor `top` is 0 in both states and the height carries the whole move:
-        the same transition doing less work, not a second one.
+        Reported from the handset: the panel drops away and the picture follows
+        late, in two steps, both ways. Measured rather than guessed —
+        `node_modules/.probe/jolt.mjs` samples the box every frame with the CPU
+        throttled: **the poster got 13 frames of a 300ms move, with a 57ms gap
+        in the middle.** The panel got a smooth one over the same window.
+
+        The asymmetry is the whole explanation, and it is a property of *which
+        properties* the two animate. The panel moves with a transform, which the
+        compositor runs on its own thread. `height` and `top` are layout: every
+        frame relaid the box, and re-`object-cover`-ed a 2000×3000 master into a
+        different-sized hole. One gesture, one of whose halves needed the main
+        thread eighteen times a second and did not get it.
+
+        **So the box no longer changes size — it is scaled.** `transform` is the
+        one property this move can be expressed in that the compositor can carry
+        alone, which is not a tuning of the old animation but a different animal:
+        no layout, no re-cover, no main thread.
+
+        ⚠ **The box is laid out at the RESTING size, and receding scales it
+        *down*.** The other way round was available and is wrong: an upscale at
+        rest would leave the state you are looking at almost all of the time
+        rasterised for a smaller box. At rest the transform is `none`, so the
+        picture is drawn at its own layout scale and nothing is resampled at all.
+
+        ⚠ **The geometry is a ratio of two measured lengths, which CSS cannot
+        express**, and that is why this is JavaScript and not `cqw`. A scale is a
+        number; `calc()` cannot divide one length by another to produce one.
+        Everything else is still arithmetic and none of it is a chosen number —
+        the resting box is the poster at cover size (`max` of the two axes, so it
+        is right in both orientations), and receding scales it to the column's
+        width, which is what *whole* means here. `fit()` reproduces the old
+        `calc(50% - 75cqw)` and `150cqw` exactly, in both orientations; it was
+        checked against them before they were deleted.
+
+        ⚠ **Written through the CSSOM, never a `style` attribute** — the CSP in
+        `proxy.ts` drops those in production and nowhere else. See
+        eslint.config.mjs, which bans the attribute and not this.
       */
+      ref={boxRef}
       className={
         overlay
-          ? `absolute inset-x-0 overflow-hidden transition-[height,top] duration-300 ${
-              receded
-                ? touch
-                  ? 'top-[calc(50%_-_75cqw)] h-[150cqw]'
-                  : 'top-0 h-[150cqw]'
-                : 'top-0 h-full'
-            }`
+          ? 'absolute overflow-hidden transition-transform duration-300'
           : `${ARTWORK_PANEL} relative shrink-0 overflow-hidden`
       }
     >
