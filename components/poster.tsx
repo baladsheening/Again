@@ -430,6 +430,30 @@ export function PosterReveal({
         onClick={() => {
           choose()
           dialogRef.current?.showModal()
+
+          /*
+            ─────────────────────────────────────────────────────────────────
+             ⚠ The white ring around the × — 21 August
+            ─────────────────────────────────────────────────────────────────
+
+            Reported as a shadow around the ×; it was a **focus ring** —
+            `outline: solid 2px` in `--color-text`, drawn by the browser on the
+            × because `showModal()` had focused it.
+
+            **And it appeared only sometimes, which is the part worth keeping.**
+            A `<dialog>` focuses its first focusable descendant, or itself if it
+            has none. The × exists only when `flush` is true, and `flush` is not
+            known until the artwork's shape is — so opening a poster for the
+            first time landed focus on the dialog, and opening one already in
+            the cache landed it on the ×. Same code, two behaviours, decided by
+            whether a file had been fetched before.
+
+            Focusing the dialog outright is what removes that: the focus target
+            stops depending on what had mounted by the time the screen opened.
+            Nothing is taken from a keyboard — Tab still reaches the ×, and the
+            ring is then correct, because that is what a ring is for.
+          */
+          dialogRef.current?.focus()
         }}
         aria-label={`${title} — see the poster`}
         /*
@@ -477,7 +501,15 @@ export function PosterReveal({
           Full bleed, so black reaches every edge and there is nowhere to tap
           that is not the poster or its ground.
         */
-        className="bg-transparent backdrop:bg-black m-0 h-full max-h-none w-full max-w-none p-0"
+        /*
+          ⚠ **`outline-none` is the other half of focusing this**, and without it
+          the fix is worse than the fault: taking the ring off the × by focusing
+          the dialog just draws it around the dialog, which is the whole screen.
+          A ring belongs on something you can Tab to; this is focused
+          programmatically and is not in the tab order, so it has nothing to say.
+          The × keeps its own, and Tab still reaches it.
+        */
+        className="bg-transparent backdrop:bg-black m-0 h-full max-h-none w-full max-w-none p-0 outline-none"
       >
         <div
           ref={groundRef}

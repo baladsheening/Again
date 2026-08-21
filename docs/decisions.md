@@ -4963,3 +4963,31 @@ nothing, it reopens, and it reopens with the words up. It caught the panel bug.
 
 `recede.mjs`, `tiles.mjs`, `reveal.mjs`, `reveal-nested.mjs`, `small.mjs` and
 `arrive.mjs` all clear; typecheck, lint and the §13 suite pass.
+
+### The white ring around the × (21 August)
+
+Reported as a shadow around the ×. It was not: the drop shadow is half a pixel
+of black. It was a **focus ring** — `outline: solid 2px` in `--color-text`, drawn
+by the browser because `showModal()` had focused the ×.
+
+⚠ **It appeared only sometimes, and the "sometimes" is the interesting part.** A
+`<dialog>` focuses its first focusable descendant, or itself if it has none. The
+× exists only when `flush` is true, and `flush` is not known until the artwork's
+shape is — so opening a poster for the first time landed focus on the dialog, and
+opening one already in the cache landed it on the ×. **The same code produced two
+behaviours, decided by whether a file had been fetched before.** That is the kind
+of difference that reads as random and gets chased as a rendering fault.
+
+Focusing the dialog outright removes it: the focus target stops depending on what
+had mounted by the time the screen opened.
+
+⚠ **`outline-none` on the dialog is the other half, and without it the fix is
+worse than the fault** — taking the ring off the × by focusing the dialog just
+draws it around the dialog, which is the whole screen. A ring belongs on
+something you can Tab to; this is focused programmatically and is not in the tab
+order.
+
+Nothing is taken from a keyboard. Measured on both surfaces, opened by tap, by
+keyboard and by mouse: focus lands on the dialog every time with no ring, and one
+Tab reaches the × with `solid 2px` — which is correct, because that is what a
+ring is for.
