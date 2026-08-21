@@ -193,10 +193,31 @@ type Marks = Partial<Record<Intent, { entryId: string | null; state: EntryState 
 
 export function FilmScreen({
   film,
+  open,
   onClose,
   takeFocus,
 }: {
   film: FilmSearchResult
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   *  ⚠ Mounted is no longer the same as open — 21 August
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * `capture-provider.tsx` used to unmount this screen on close, so every open
+   * rebuilt the whole tree, re-rastered two blurs and re-decoded a poster.
+   * Measured on a throttled phone profile: **237ms for the first open, 140 for
+   * the second, 92 for the third** — the difference is warmth, and unmounting
+   * threw it away every time. It stays mounted now and this prop says whether
+   * it is showing.
+   *
+   * ⚠ **Three effects here read *mounted* and meant *open*, and all three are
+   * now guarded.** The one that opens the dialog, the one that locks the
+   * document behind the takeover — which would have left the wall unscrollable
+   * after every close — and the Escape listener, which would have answered a
+   * key pressed anywhere in the app. Anything added here must ask the same
+   * question: does this belong to the screen existing, or to it being looked at?
+   */
+  open: boolean
   onClose: () => void
   /**
    * Whether a person asked for this screen. False when the page put it there —
@@ -249,6 +270,7 @@ export function FilmScreen({
   */
   const [receded, setReceded] = useState(false)
 
+
   /*
     `showModal()` rather than an `open` attribute, and a `<dialog>` rather than the
     hand-built overlay the intent sheet was. It brings focus containment, the
@@ -299,6 +321,26 @@ export function FilmScreen({
     const dialog = ref.current
     if (!dialog) return
 
+    /*
+      ⚠ **Closed means closed, and this line is what makes that true for the
+      panel.** The takeover is modal and the platform dismisses it — Escape or
+      the button call `close()`, the event lands, and `open` goes false as a
+      consequence. The panel is `show()`, which the platform never dismisses:
+      `onClose` used to close it by *unmounting* it, and nothing unmounts any
+      more. Without this the desk panel stayed on screen with `open` false,
+      which is the whole feature failing in the one mode it is not obvious in.
+
+      Flagged as ours so the `close` event it fires is not read as a person
+      closing something that is already closed.
+    */
+    if (!open) {
+      if (dialog.open) {
+        reopening.current = true
+        dialog.close()
+      }
+      return
+    }
+
     const wanted = pane ? 'panel' : 'takeover'
     if (mode.current === wanted && dialog.open) return
 
@@ -329,7 +371,7 @@ export function FilmScreen({
     if (!takeFocus && focused instanceof HTMLElement && dialog.contains(focused)) {
       focused.blur()
     }
-  }, [pane, takeFocus])
+  }, [open, pane, takeFocus])
 
   /*
     Escape, which a modal dialog gets from the platform and a panel does not. One
@@ -337,13 +379,13 @@ export function FilmScreen({
     closing twice.
   */
   useEffect(() => {
-    if (!pane) return
+    if (!pane || !open) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [pane, onClose])
+  }, [open, pane, onClose])
 
   /*
     ⚠ **The effect that reserved the panel's room is DELETED — 20 August.** It set
@@ -457,7 +499,7 @@ export function FilmScreen({
       *you should not find yourself somewhere else when you close it* — is not at
       risk when you can see where you are the entire time.
     */
-    if (pane) return
+    if (pane || !open) return
 
     const root = document.documentElement
     const body = document.body
@@ -485,7 +527,7 @@ export function FilmScreen({
       body.style.right = previous.right
       window.scrollTo({ top: y, behavior: 'instant' })
     }
-  }, [pane])
+  }, [open, pane])
 
   return (
     <dialog
@@ -517,6 +559,17 @@ export function FilmScreen({
           reopening.current = false
           return
         }
+        /*
+          Closing forgets that the words were pushed away. Unmounting used to do
+          this for free; now that the screen survives a close, the next opening
+          has to start where every opening starts — with the words up.
+
+          Here rather than in an effect on `open`, and not only because
+          `react-hooks/set-state-in-effect` says so: this is the event that
+          means it. The reopening case above returns before this line, which is
+          right — a mode switch is not a close and must not reset anything.
+        */
+        setReceded(false)
         onClose()
       }}
       aria-label={film.title}
@@ -1705,7 +1758,7 @@ function Artwork({
     outright, and a large touchscreen at `pane` widths has a 384px column. Either
     axis alone would fetch megabytes for a box that cannot show them.
   */
-  const large = posterUrl(posterPath, overlay && touch ? 'original' : 'w780')
+  const large = filmPoster(posterPath, overlay, touch)
 
   /*
     The URL that has finished decoding, not a boolean. Comparing it to the
@@ -2190,6 +2243,23 @@ function PrintedSynopsis({
  * would be a copy of `--breakpoint-pane`'s reading that could drift from this one
  * without either being wrong on its own. The number is still only in globals.css.
  */
+/**
+ * The rung this screen's artwork will ask for, on the surface it lands on.
+ *
+ * ⚠ **Exported for one caller and for one reason: so the fetch can start on the
+ * tap instead of on the mount.** `capture-provider.tsx` knows which film was
+ * chosen a whole render and commit before `Artwork` exists to ask for it, and on
+ * a phone that file is 0.8–1.9MB. What it must not do is *guess* the rung — a
+ * second copy of this rule would be free to drift, and the drift would show as a
+ * wasted megabyte or a soft poster, neither of which announces itself.
+ *
+ * The rule itself is unchanged and its argument is below: `original` needs both
+ * axes, so it is the one place the pointer and the layout meet.
+ */
+export function filmPoster(posterPath: string | null, overlay: boolean, touch: boolean) {
+  return posterUrl(posterPath, overlay && touch ? 'original' : 'w780')
+}
+
 export function paneQuery(): MediaQueryList {
   const width = getComputedStyle(document.documentElement)
     .getPropertyValue('--breakpoint-pane')
@@ -2220,7 +2290,7 @@ export function paneQuery(): MediaQueryList {
  * coarse.** Neither is wrong for this question — both get the layout that suits
  * what is in their hand — but it does mean the answer is not "phone".
  */
-function touchQuery(): MediaQueryList {
+export function touchQuery(): MediaQueryList {
   return window.matchMedia('(pointer: coarse)')
 }
 

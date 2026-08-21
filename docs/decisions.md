@@ -4855,3 +4855,111 @@ expressions before they were deleted.
 
 `tiles.mjs`, `reveal.mjs`, `reveal-nested.mjs`, `small.mjs` and `arrive.mjs` all
 clear; typecheck, lint and the §13 suite pass.
+
+### The film screen stops being rebuilt every time (21 August)
+
+Two changes, both aimed at the part of the pathway that is not an animation: the
+time between tapping a poster on the wall and the screen being there. The
+backdrop blur stays — its cost while sliding is real (~50ms of worst-case gap,
+measured) but it is not what this is about, and its recipe is derived.
+
+#### The poster starts on the tap, not on the mount
+
+`Artwork` asks for its file in a `useEffect`, so the fetch waits for React to
+mount the whole film screen first. `capture-provider.tsx` knows which film was
+chosen a render and a commit earlier, and on a handset that file is `original` —
+0.8–1.9MB. `choose` and `present` now start it.
+
+⚠ **On the click, not on `pointerdown`.** `lib/posters.ts` records that these
+bytes are spent on a deliberate tap, and on the wall a press is how *scrolling*
+starts — warming there would spend a megabyte on every flick past a poster. This
+is the same rule `PosterReveal` follows and the opposite conclusion, because the
+surfaces differ: a title in a list is not scrolled by pressing it.
+
+⚠ **The rung comes from `filmPoster`, exported from `film-screen.tsx` and called
+by both.** A copy of `overlay && touch ? 'original' : 'w780'` in the provider
+would be free to drift, and the drift shows as either a wasted megabyte or a soft
+poster — neither of which announces itself. The media queries are read
+imperatively rather than through their hooks: subscribing in the provider would
+re-render every route in the app on a breakpoint change.
+
+#### Mounted is no longer the same as open
+
+`chosen` used to be cleared on close, which unmounted the screen: every open then
+rebuilt the tree, re-rastered two blurs and re-decoded a poster. Measured on a
+throttled phone profile, tap → a picture on screen: **237ms, then 140ms, then
+92ms.** The screen was throwing that warmth away on every close.
+
+It stays mounted now, with an `open` prop saying whether it is showing.
+
+⚠ **Four things read *mounted* and meant *open*, and every one of them is a bug
+that would not have looked like this change:**
+
+- **The scroll lock**, which pins `body` behind the takeover. Left on after a
+  close, the wall is dead and the bug looks like the wall's.
+- **The Escape listener**, which the panel adds because `show()` gets no
+  dismissal from the platform. Left attached, a key pressed anywhere in the app
+  closes a screen that is not there.
+- **The recede.** Unmounting used to forget it; without a reset the next film
+  opens with its words already pushed off the bottom. It resets in the `close`
+  handler rather than an effect on `open` — that is the event that *means* it,
+  and the reopening case returns before it, which is right, because a mode
+  switch is not a close.
+- ⚠ **The close itself, which is the one the probe caught.** The takeover is
+  modal and the platform dismisses it, so `open` goes false as a *consequence*
+  of the dialog closing. The panel is `show()`, which the platform never
+  dismisses — `onClose` closed it by unmounting it. With nothing unmounting, the
+  desk panel stayed on screen with `open` false: the whole feature failing, in
+  the one mode where it is least visible. The effect closes it now, flagged as
+  ours so the `close` it fires is not read as a person's.
+
+#### What it bought, honestly
+
+Measured at 4x CPU throttle, and **the single-run variance on these is ±60ms**,
+which is larger than most of the differences:
+
+| step | before | after |
+| --- | --- | --- |
+| tap a poster on the wall | 402ms worst gap, 666ms settled | 350ms, 662ms |
+| tap the chevron | 119ms, 382ms | 175ms, 422ms |
+| tap the poster (words back) | 62ms, 388ms | 53ms, 372ms |
+| tap the poster (the wall) | 113ms, 126ms | **77ms, 90ms** |
+
+The close is the one clear win — there is no teardown any more. Reopening moved
+from 140/92ms to 128/79ms for the second and third opens. The chevron's apparent
+regression is inside the noise; its median across seven runs is ~42ms.
+
+**So this is a modest change and it should be recorded as one.** The decay from
+237 to 92ms turned out to be mostly JIT and raster warmth rather than the mount,
+which is not what the mount hypothesis predicted, and the honest reading is that
+the second point in that series was never worth much.
+
+#### What was measured and not built
+
+**`will-change: transform` on the artwork**, and **`translateZ(0)` on the tiles.**
+Both were tried and both measured, median of seven, at 4x throttle:
+
+| | recede worst gap | back |
+| --- | --- | --- |
+| as shipped | 42ms | 30ms |
+| tiles cached | 37ms | 31ms |
+| artwork promoted | 45ms | **47ms** |
+| both | 46ms | 37ms |
+
+`will-change` makes it *worse*; the tiles cache is inside the noise. Neither was
+applied — a class that does not help is just a class.
+
+**Turning the backdrop filter off while the panel is in motion.** Held at the
+author's request, not rejected. It is the largest remaining lever (109ms → 60ms
+on the recede, 51 → 35 on the way back) and the open question is whether the flip
+is visible: `bg-bg/80` means only 20% of the blurred image shows through, so it
+may not be, but that has to be seen before it is relied on.
+
+#### Verified
+
+`mounted.mjs` is new and covers the four hazards above on both surfaces: closing
+closes, the screen stays mounted, the document is unlocked, Escape reaches
+nothing, it reopens, and it reopens with the words up. It caught the panel bug.
+
+`recede.mjs`, `tiles.mjs`, `reveal.mjs`, `reveal-nested.mjs`, `small.mjs` and
+`arrive.mjs` all clear; typecheck, lint and the §13 suite pass.
