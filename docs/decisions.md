@@ -1,5 +1,12 @@
 # Decisions
 
+> **Mixed status.** *The re-direction* section below is current and applies to
+> new work. Everything after it records decisions for the film-first product and
+> its deployed implementation. When one of those conflicts with
+> docs/re-direction/implementation-spec.md, the re-direction specification
+> governs future work. Reuse the technical reasoning there only where it remains
+> compatible with the new model.
+
 Why things are the way they are, and what is still open.
 
 `CLAUDE.md` holds the rules for building. This holds the reasoning behind them,
@@ -7,6 +14,117 @@ the choices that deviate from or extend the brief, and the questions nobody has
 answered yet. If a decision here looks wrong later, the "what would change this"
 line is the thing to check first — most of them are waiting on a trigger, not on
 someone's opinion.
+
+---
+
+## The re-direction — 22 August
+
+The product moved from a film-first diary to intent capture and convergence.
+`docs/re-direction/implementation-spec.md` is normative: it owns the model, the
+vocabulary and the phase sequence, and none of that is restated here. These are
+the calls the specification left open, taken on 22 August. Everything below this
+section is the film-first record.
+
+### Visibility becomes a column, and the state allowlist stays
+
+Visibility is currently derived from state alone. `PUBLIC_STATES` in
+`lib/domain.ts` publishes `want`, `go_back_to` and `fixture`, and any signed-in
+account holding a handle reads them. The specification requires captures private
+by default, with one social scope: shared with mutual tracks.
+
+The tempting reading is that a visibility column *replaces* the state filter. It
+does not. §14 still requires that done, dropped, disputed and stale states are
+never exposed, so a capture scoped to mutuals and then dropped has to disappear
+anyway.
+
+**Visibility is a fourth positive term, not a replacement.** A capture reaches
+someone else only when its scope is `mutuals`, the relationship is mutual, and
+its state is in `PUBLIC_STATES` — three conditions, all stated positively, all
+failing closed.
+
+The allowlist is positive for the reason already recorded against it:
+`ne(state, 'done')` was correct exactly until `dropped` existed, and then it was
+wrong with no symptom. Retiring the allowlist in favour of a visibility column
+recreates that bug in a new place, where it would again fail by publishing
+rather than by hiding.
+
+### The migration lands every existing entry private
+
+Phase 0 migrates entries into captures, and has to choose a scope for rows
+created under a regime where the owner understood them to be handle-visible.
+
+Private is the direction that cannot leak. It is not free: every migrated row
+leaves the convergence pool until its owner re-shares it, so friend convergence
+effectively starts empty.
+
+**Took private.** The cost is acceptable only because the population is the
+author plus test accounts — the databases were separated and the test accounts
+cleared on 17 August. **This reasoning is contingent, not principled.** The same
+choice against a real userbase is a silent feature outage, and a later migration
+reaching for this precedent should read this paragraph rather than the verdict.
+
+### `/u/[handle]` stops being a browse surface
+
+Once non-mutuals see nothing, the page cannot show them an empty list. Empty is
+ambiguous between *this person has nothing* and *this person has nothing for
+you*, and the first is a claim about someone else's list that the app has no
+business making.
+
+**Non-mutuals get one unconditional state: the list is not shared with you.**
+Unconditional is what makes it leak-free — the same response whether the owner
+holds a thousand captures or none, so it carries no information about them.
+
+The consequence is larger than the page. The old flow was *find handle → read
+the list → decide to track*. That is gone, and nothing on the page replaces it.
+
+### Mutual-only sharing does not ship without the handshake
+
+Which makes the QR/code contact handshake load-bearing earlier than its position
+in Phase 2 suggests. It is not a convenience for two people who happen to be in
+the same room; after the inversion it is close to the only way anyone becomes
+connected at all.
+
+**The handshake is a required companion to mutual-only sharing in any usable
+release**, even though the migration lands first and could technically ship
+without it. A release that inverts visibility and offers no working way to
+create a mutual track is an app in which nobody can see anybody.
+
+### The copy rule survives; only its justification is retired
+
+`app/(app)/u/[handle]/page.tsx` argues that public browsing must stay open
+*because* §6's suppression rule exists to suppress copying off someone's page —
+if the page needed permission, the rule would have nothing to suppress.
+
+**That justification is retired. The rule is not.** The specification keeps both
+conditions by name: a match is suppressed by the existing copy/source rule, and
+when either capture was transferred from the other participant. Copying does not
+disappear under mutual-only visibility, it narrows. A mutual can still copy off
+a mutual, and receipt is still not independent discovery.
+
+The mechanism already has the right shape. `isSuppressed` in `lib/overlap.ts`
+tests `source` against `sourceUserId` directionally, which is what the
+specification means by server-owned provenance. Transfer is a third value in
+that union, plus a mutation that clears the pair when a receiver makes a
+transferred capture their own. `'swap'` already occupies the bulk-copy slot and
+swaps were never built, so the value is available.
+
+**Do not delete the copy rule while deleting the paragraph that defended it.**
+
+### The film screen stays; the wall goes with the Home it belonged to
+
+The specification demotes the film screen to one type of resolved detail, and
+removes the cinema wall from Home.
+
+**Keep `film-screen.tsx` as the detail surface for a capture resolved to a media
+possibility.** That is what the specification asks for, and the geometry that
+settled into it — the receded poster, the cross-off, the corner disc — would
+otherwise be rebuilt worse.
+
+**Remove `cinema-wall.tsx`, `poster-wall.tsx` and `poster-tiles.tsx` when the
+capture-first Home replaces them, rather than switching them off.** No flag and
+no dormant surface: *remove the mechanism* is the first reach in `CLAUDE.md`,
+and the app already carries one thing living behind a constant — the wall
+caption, after D1. A second one is a pattern.
 
 ---
 

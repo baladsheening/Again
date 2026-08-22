@@ -2,20 +2,39 @@
 
 # Again
 
-Section references (§n) point at the build spec, which is the complete brief.
-Where it is silent, prefer the simplest thing that works and flag the decision
-rather than inventing scope.
+## Product-direction precedence
 
-This file holds the rules for building. Two companions:
+The product is being redirected from a film-first diary to a private-first
+intent-capture and convergence app. The normative product and build
+specification is docs/re-direction/implementation-spec.md.
+
+This file continues to own engineering invariants: the database boundary,
+session handling, privacy enforcement, validation, transactionality,
+responsive quality, and testing. The film-specific vocabulary, state, visual,
+and scope sections below describe the legacy implementation until Phase 0 of
+the re-direction migration updates them. Do not use a legacy product rule to
+block a feature required by the implementation specification.
+
+Unless marked legacy, section references (§n) point at the film-first build
+specification. The re-direction specification is the complete brief for future
+product work. Where both are silent, prefer the simplest thing that works and
+flag the decision rather than inventing scope.
+
+This file holds the engineering rules for building. Three companions:
+
+- **docs/re-direction/implementation-spec.md** — the normative product and
+  delivery specification for all new work. Read it before designing a feature
+  or migration.
 
 - **`docs/decisions.md`** — the reasoning behind these rules, the choices that
   deviate from or extend the brief, and the questions nobody has answered yet.
   Read it before changing anything that looks arbitrary; most of it is waiting
   on a trigger rather than on someone's opinion. Add to it when you make a call
   the brief did not make.
-- **`docs/plan.md`** — the §12 build order, current state, and the
-  carry-forward register: things decided in one phase that must land in a
-  specific later one. Update it as phases move.
+- **`docs/plan.md`** — the historical film-first build register and
+  carry-forward constraints. Read it for migration context, but do not schedule
+  or track re-direction phases there; the implementation specification owns
+  that sequence.
 
 ## How things get fixed
 
@@ -66,8 +85,20 @@ bug damages trust rather than function.
 
 ## Overlap (§6)
 
-All of it lives in `lib/overlap.ts`, called from the entry mutation. It is the
-thing most likely to drift if it gets scattered — do not duplicate any of it.
+### Re-direction migration
+
+The current references to entries in this section describe the legacy
+film-first implementation. In the new model, one matching module remains the
+single owner of convergence, classification, suppression, and notification
+writing, but it is called when a capture becomes active or resolves to a
+possibility, and when a track becomes mutual. Do not create a second matching
+implementation for captures. Capture provenance copied or transferred from the
+counterpart suppresses convergence: a received list is not an independent
+common intention.
+
+In the deployed legacy model, all of it lives in `lib/overlap.ts`, called from
+the entry mutation. Phase 0 moves that caller to capture mutations while keeping
+the one matching owner; do not duplicate any of it.
 
 - The fan-out is **one set-based SQL statement**, joining `tracks` to itself for
   mutuality and then to `entries`. Never loop over a user's mutual tracks
@@ -80,7 +111,22 @@ thing most likely to drift if it gets scattered — do not duplicate any of it.
 - Six notification kinds, and that is the complete set. No digests, no streaks,
   no re-engagement.
 
-## Vocabulary (§4)
+## Re-direction vocabulary
+
+New product code and user-facing copy use: capture, possibility, claim, offer,
+occurrence, intention, track, transfer, and convergence. A capture is the
+user-owned record; a possibility is the shared world record it may resolve to.
+
+Do not use review, rating, favourite, public score, or feed for either the new
+or legacy product. Use of recommendation is limited to an explained,
+user-controlled local relevance result; there is no recommendation feed.
+
+The current restricted-vocabulary ESLint rule reflects the legacy application.
+Phase 0 must update it alongside the schema migration so it permits the new
+terms and never blocks an implementation required by
+docs/re-direction/implementation-spec.md.
+
+## Legacy vocabulary (§4)
 
 Use these exact words in the UI **and** in code identifiers: want, intent,
 go-back-to, fixture, track, swap, convergence. The naming is load bearing —
@@ -93,7 +139,13 @@ Intent is a property of the **entry**, never of the item. Never infer it from
 `items.kind`. Never ask the user to categorise anything — derive the label from
 `kind + intent` via `lib/vocabulary.ts`.
 
-## State (§5)
+## Legacy entry state (§5)
+
+This state machine describes existing film entries. It remains in force for
+legacy rows until they are migrated. In the new model, captures are the
+user-owned record and use the lifecycle and visibility rules in the
+implementation specification. Nothing in this section authorises deleting a
+user's historical data during migration.
 
 - **Nothing is ever deleted.** There is no delete action anywhere in the
   product. Resolving changes state, never removes the row. The only exception is
@@ -105,19 +157,33 @@ Intent is a property of the **entry**, never of the item. Never infer it from
 - Fixtures are deliberately *not* in the live pool. They still participate in
   overlap — that is the `lend` match.
 
-## Out of scope (§2) — do not build these even if they seem natural
+## Release 1 exclusions
 
-Kinds beyond `film`. **Availability, acquisition or "where to get it"** — no
-streaming lookup, no library availability, no retailer links, no price tracking,
-no ownership inventory; this is the most tempting wrong feature in the whole
-design because it looks helpful. Provider dashboards. Maps, images beyond poster
-thumbnails, feeds, likes, comments, scores, stars. Scheduling, calendars, RSVPs,
-group chat. Public discovery, search for strangers, algorithmic recommendation.
+The re-direction deliberately permits kinds beyond film, user-contributed
+possibilities, sourced local offers, and later opt-in stranger matching. The
+following are still out of scope for Release 1:
 
-If a feature request makes the app more useful to a stranger, it is probably
-wrong.
+- payments, checkout, price comparison, affiliate optimisation, and retailer
+  ranking
+- a claim to complete local or worldwide coverage
+- likes, comments, public activity feeds, streaks, or engagement metrics
+- a forced search or catalogue match before a person can save a capture
+- continuous background location tracking
+- public stranger discovery or distal matching before Phase 6's adult,
+  consent, blocking, reporting, and moderation requirements exist
+- group chat, scheduling, calendars, and RSVPs
 
-## Visual (§11)
+Local offers and occurrences are a later sourced layer. They require
+provenance, freshness, and an approved location launch contract before they can
+be shown. A source link is evidence and attribution, not a purchase prompt.
+
+## Legacy visual (§11)
+
+These tokens and components describe the deployed film-first interface. Preserve
+its accessibility and responsive guarantees while the re-direction is built,
+but do not treat its poster wall, return count, or cinema imagery as required
+for the new Home surface. The new interface follows the text-first,
+Notes-like requirements in implementation-spec.md.
 
 Matte black, legible text, known icons. Text-first. Type is the entire design.
 Tokens are in `app/globals.css`.
@@ -132,12 +198,15 @@ mono numeral, quiet weight, large enough to read as the point.
 
 ## Non-negotiables (§10)
 
-Zod at every boundary. Mutations idempotent — adding the same item twice is a
-no-op, not a duplicate row and not a second notification. Every multi-write
-operation in one transaction. Paginate every list; no unbounded selects. TMDB
-key server-side only, proxied and cached. Poster images come from TMDB's CDN —
-**never proxy images through the app.** Typed `Result` returns from `lib/db/`
-rather than thrown exceptions for expected failures.
+Zod at every boundary. Mutations are idempotent: retrying the same client
+capture submission cannot create a duplicate row or notification. Every
+multi-write operation is one transaction. Paginate every list; no unbounded
+selects. Provider credentials remain server-side only, proxied and cached.
+TMDB images continue to come from TMDB's CDN; user-contributed images follow
+the media-storage and provenance rules in implementation-spec.md. Typed
+`Result` returns from `lib/db/` rather than thrown exceptions for expected
+failures. Transfer-session claim, acceptance, cancellation, and replay handling
+follow the same transaction and idempotency rules.
 
 ## Scale (§10)
 

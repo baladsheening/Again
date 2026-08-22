@@ -1,29 +1,27 @@
 # Again
 
-A web app for keeping a personal record of things you've tried and would return
-to, and a list of things you want to try — where the interesting event is when
-your list and a friend's list touch.
+Again is being redirected into a private-first social app for capturing things
+people want to do, try, experience, learn, visit, or buy. People save natural
+language intentions first; catalogue suggestions optionally resolve them to
+shared possibilities. People who meet can deliberately pair as contacts or
+transfer a selected list. Meaningful overlap between mutual tracks comes first,
+with sourced local discovery and opt-in distal matching following later.
 
-Each person keeps two things: **wants** (not yet done) and **go-back-tos** (done,
-and they'd do it again). Nobody writes reviews — the go-back-tos list *is* the
-recommendation, the way a bookshelf tells you more than a list someone writes for
-you. People **track** each other. When two people who track each other
-independently want the same thing, both are told, because that's a plan waiting
-to happen.
-
-The entry test for a go-back-to is not a rating. It is: *would I go back?*
-Ranking is by how many times you actually have.
-
-v1 is films only.
+The checked-in application is still the earlier film-first implementation while
+the re-direction migration is planned. The target product, release sequence,
+and acceptance criteria live in docs/re-direction/implementation-spec.md.
 
 ## Documentation
 
 | | |
 |---|---|
-| [`docs/plan.md`](docs/plan.md) | Build order, current state, and what must not be forgotten |
+| [docs/re-direction/implementation-spec.md](docs/re-direction/implementation-spec.md) | **Normative product and build specification for the re-direction** |
+| [docs/re-direction/product-direction.md](docs/re-direction/product-direction.md) | Original product-direction discussion and rationale |
+| [docs/re-direction/implementation-of-product-implementation.md](docs/re-direction/implementation-of-product-implementation.md) | Supporting product rationale and sequencing |
+| [`docs/plan.md`](docs/plan.md) | Historical film-first build record and migration context |
 | [`docs/decisions.md`](docs/decisions.md) | Why things are the way they are, and what is still open |
-| [`docs/spec-sheet.md`](docs/spec-sheet.md) | What must be true on every screen, and the checks that prove it |
-| [`CLAUDE.md`](CLAUDE.md) | The rules for building — read before changing anything structural |
+| [`docs/spec-sheet.md`](docs/spec-sheet.md) | Legacy film-first screen specification |
+| [`CLAUDE.md`](CLAUDE.md) | Engineering invariants and migration guidance — read before changing anything structural |
 
 ## Stack
 

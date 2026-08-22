@@ -1,5 +1,10 @@
 # Screen spec
 
+> **Legacy screen specification.** This document verifies the current
+> film-first interface. Preserve its accessibility and responsive lessons during
+> the migration, but use docs/re-direction/implementation-spec.md for the new
+> Notes-like capture interface and all future product screens.
+
 What must be true on every surface. Rules, not reasoning — `docs/decisions.md`
 holds why, and where a rule here has a story behind it, that is where it is.
 

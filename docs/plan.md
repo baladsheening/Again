@@ -1,5 +1,11 @@
 # Plan
 
+> **Historical status.** This is the build register for the film-first
+> implementation through 17 August 2026. New product work follows
+> docs/re-direction/implementation-spec.md. Keep this file as a record of
+> completed foundations and legacy migration constraints; do not schedule new
+> re-direction features from its phase table.
+
 The build order from §12, with state. Update this as phases move — it is the
 only place the sequence lives outside the brief itself.
 
