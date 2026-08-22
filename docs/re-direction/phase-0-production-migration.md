@@ -44,7 +44,7 @@ authenticated route is behind that layout.
 ### 1.1 The tree that is about to ship
 
 ```bash
-git log origin/main..HEAD --oneline   # the six Phase 0 commits, and nothing else
+git log origin/main..HEAD --oneline   # Phase 0 only, and nothing else
 npm run lint
 npm run typecheck
 npm run build
