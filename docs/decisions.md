@@ -705,6 +705,19 @@ The data layer already supports it: `crossOffAction(id, false)` runs
 `restoreCapture`, one action for both directions, so the work is entirely in
 the component.
 
+⚠ **The strongest argument for it, found while smoke-testing the deploy: from
+the film screen there is currently no way back at all.** The mark reads
+`listed` whenever a capture exists for that film and intent, and a crossed-off
+capture still exists — so the `+` never returns and the tick only navigates.
+Un-crossing-off means going to Wants and finding the row.
+
+⚠ It also leaves `writeCapture`'s revive path unreachable through the
+interface. It is correct and covered by `tests/acceptance.test.ts`, and no
+gesture reaches it: the only route is a stale `/api/film/[id]` response inside
+its fifteen-second cache showing a `+` for a film that has just been crossed
+off. **A path that only a race can reach is a path nobody is testing by using
+the app**, which is worth knowing before that behaviour is relied on.
+
 ### Five notification kinds or six?
 
 §6 says "those five kinds in the schema are the complete set." The schema lists
