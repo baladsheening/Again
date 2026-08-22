@@ -1053,6 +1053,11 @@ Exit criteria:
 - a user can save any text without a provider result
 - a user can save and resolve a known film or other supported possibility
 - reload, sign-out, and provider failure do not lose saved captures
+- every capture submission from the interface carries a client mutation id that
+  is stable across a retry, and a retried submission returns the original
+  record rather than a second one. ⚠ Phase 0 does not meet this: its only write
+  path resolves a possibility first, so the unique key on (user, possibility,
+  intent) carries the idempotency instead. A raw capture has no such key
 - no film wall or intent modal is required
 - an unresolved capture can be offered a possible resolution without being
   silently converted or matched

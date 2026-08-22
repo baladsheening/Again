@@ -95,6 +95,24 @@ export async function addFilmAction(
     they picked is the honest reconstruction, and it is the same one the
     backfill made for every migrated row.
   */
+  /*
+    ⚠ **No `clientMutationId`, and that is a stated gap rather than an
+    oversight.** §6 says every capture submission carries one; this submission
+    does not, because the film flow has no client-side hold on a pending save
+    to keep an id stable across a retry, and generating a fresh one per call
+    would satisfy the letter of it while carrying nothing.
+
+    What carries §10's idempotency here is the unique key on (user,
+    possibility, intent): a film add always resolves a possibility first, so a
+    retry collides and returns the existing row with `created: false`, and
+    `fireOverlap` runs only on the insert path, so there is no second
+    notification either. `tests/acceptance.test.ts` asserts both halves.
+
+    ⚠ **This stops being true in Phase 1.** A raw capture has no possibility,
+    so it has no key to collide with, and the mutation id becomes the only
+    thing standing between a double-tap and two rows. Phase 1's exit criteria
+    require it.
+  */
   const result = await addCapture(sessionUser, {
     text: film.title,
     possibilityId: item.id,

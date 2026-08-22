@@ -5,8 +5,17 @@ Status: **plan only. Nothing here has been run against production.**
 Migrations `0004`–`0008` have been applied to the Neon `development` branch and
 verified there. Production has none of them.
 
-Everything below is written to be run from the repository root on the machine
-that holds `.env.local`.
+Everything below is run from the repository root on the machine that holds
+`.env.local`.
+
+⚠ **The operator shell is PowerShell**, which is what this checkout has. Every
+command is written for it literally — no `VAR=value cmd` prefixes, no `$VAR`
+expansion, no here-strings from another shell. Where a POSIX equivalent is
+useful it is given underneath, marked as such, and is not the version to run.
+
+PowerShell has no inline environment prefix, so `DATABASE_URL` is set as a
+session variable and removed again at the end of §3. It is set **once**, and
+every command that needs it is between those two lines.
 
 ---
 
@@ -43,7 +52,7 @@ authenticated route is behind that layout.
 
 ### 1.1 The tree that is about to ship
 
-```bash
+```powershell
 git log origin/main..HEAD --oneline   # Phase 0 only, and nothing else
 npm run lint
 npm run typecheck
@@ -53,57 +62,50 @@ npm run build
 `npm run test` runs against `development` and refuses to run against production
 by hostname. Leave it pointed at `development`.
 
-### 1.2 Confirm which database you are about to touch
+### 1.2 Point at production, and confirm it
 
-`drizzle.config.ts` reads `.env.local` through `dotenv`, which does **not**
-override a variable already present in the environment. That is the mechanism
-this plan relies on: production is named once, on the command line, and
-`.env.local` is never edited.
-
-⚠ **Verify it rather than trusting it.** Before anything else, run the check
-below with the production URL in the environment and read the host back:
-
-```bash
-DATABASE_URL="$PROD_URL" node -e "
-  const { config } = require('dotenv');
-  config({ path: '.env.local' });
-  console.log(new URL(process.env.DATABASE_URL).hostname);
-"
+```powershell
+$env:DATABASE_URL = '<the production connection string>'
+npm run migration:preflight
 ```
 
-It must print the production host. If it prints the development host, `dotenv`
-is overriding and this whole procedure would silently run against the wrong
-branch — stop, and pass the URL through `drizzle.config.ts` explicitly instead.
+POSIX equivalent, not the version to run:
+`export DATABASE_URL='…' && npm run migration:preflight`
+
+`drizzle.config.ts` and both scripts read `.env.local` through `dotenv`, which
+does **not** override a variable already present in the environment. That is
+the mechanism this procedure relies on: production is named once, in the
+session, and `.env.local` is never edited.
+
+⚠ **The first two lines of the output are the host and the database name, and
+they are printed before any check runs.** A runbook step that says *confirm the
+host* is a step that gets skipped; this one cannot be. If it prints the
+development host, `dotenv` is overriding and the whole procedure would have run
+against the wrong branch — stop.
 
 ### 1.3 The state production is actually in
 
-```sql
-select count(*) as entries from entries;
-select count(*) as items from items;
-select count(*) as profiles from profiles;
+The same command. `npm run migration:preflight` reads and writes nothing, and
+it reports two things beyond the host:
 
--- Must be 0. `0004` adds a check requiring both external columns or neither,
--- and it validates existing rows on the way in.
-select count(*) from items
- where (external_source is null) <> (external_id is null);
+**Counts** — entries, items, profiles. Write them down; §4 compares against
+them.
 
--- Must be 0. `0005` inner-joins entries to items, so an orphan would be
--- skipped in silence rather than failing loudly.
-select count(*) from entries e
- where not exists (select 1 from items i where i.id = e.item_id);
+**Three preconditions, each of which must be zero**, and each of which would
+otherwise fail part-way through a migration rather than before one:
 
--- Must be 0. `captures_source_is_not_owner` refuses these.
-select count(*) from entries where source_user_id = user_id;
+- `items` rows with half an external pair — `0004` adds a check requiring both
+  external columns or neither, and validates every existing row on the way in.
+- `entries` orphaned from `items` — `0005` inner-joins them, so an orphan is
+  skipped **in silence** rather than failing loudly.
+- `entries` sourced from their own owner — `captures_source_is_not_owner`
+  refuses these, and the backfill would abort.
 
--- Expect none; `swap` was designed and never built. Any row here is mapped to
--- `transfer` by the backfill, which is correct — but know it is happening.
-select source, count(*) from entries group by 1;
+It also prints the spread of legacy `source` values. `swap` was designed and
+never built; any row holding it is mapped to `transfer` by the backfill, which
+is correct, but it is worth knowing that it happened.
 
--- Already applied, if anything. Should list 0000-0003 only.
-select hash, created_at from drizzle.__drizzle_migrations order by created_at;
-```
-
-Write the three counts down. Steps 4.1 and 4.2 compare against them.
+**`PREFLIGHT OK` on the last line, or stop.**
 
 ---
 
@@ -142,9 +144,12 @@ none by design.
 
 ## 3. Apply
 
-```bash
-DATABASE_URL="$PROD_URL" npm run db:migrate
+```powershell
+npm run db:migrate
 ```
+
+`DATABASE_URL` is still set from §1.2. Do not set it again here — one place to
+get it wrong is enough.
 
 Five files, in order. What each does, and what to expect:
 
@@ -164,87 +169,53 @@ restore rather than a hand-written down migration.
 
 ## 4. Post-migration checks
 
-Run all of these before deploying. Every one of them passed on `development`.
-
-### 4.1 The backfill is complete and faithful
-
-```sql
--- Must equal the entries count from 1.3.
-select count(*) from captures where legacy_entry_id is not null;
-
--- Must be 0.
-select count(*) from entries e
- where not exists (select 1 from captures c where c.legacy_entry_id = e.id);
-
--- Must be 0. Eight columns, compared against the rows they came from.
-select count(*)
-  from captures c
-  join entries e on e.id = c.legacy_entry_id
-  join items i on i.id = e.item_id
- where c.text is distinct from i.title
-    or c.possibility_id is distinct from e.item_id
-    or c.intent is distinct from e.intent
-    or c.state is distinct from e.state
-    or c.return_count is distinct from e.return_count
-    or c.note is distinct from e.note
-    or c.created_at is distinct from e.created_at
-    or c.resolved_at is distinct from e.resolved_at;
+```powershell
+npm run migration:verify
 ```
 
-### 4.2 Privacy and provenance
+Reads, writes nothing. Every check in it passed on `development` before this
+runbook was written, and the SQL lives in `scripts/migration-verify.mjs` rather
+than in this document — a procedure that asks an operator to paste fifteen
+statements into a console has fifteen chances to paste one wrong, and the prose
+copy drifts from the real one the first time either is edited.
 
-```sql
--- Must be 0. Every migrated row lands private.
-select count(*) from captures where visibility <> 'private';
+What it asserts, in the order it prints:
 
--- Every row must satisfy the shape: self means both origin columns empty,
--- anything else must name a person. Must return no rows.
-select id, source, source_user_id, source_capture_id from captures
- where (source = 'self' and (source_user_id is not null or source_capture_id is not null))
-    or (source <> 'self' and source_user_id is null);
+**4.1 — the backfill is complete and faithful.** Every entry has a capture; no
+entry is without one; and no migrated capture differs from the row it came from
+across eight columns — text, possibility, intent, state, return count, note,
+created and resolved timestamps.
 
--- Sanity, not a guarantee: how the legacy sources mapped.
-select source, count(*), count(source_user_id), count(source_capture_id)
-  from captures group by 1 order by 1;
+**4.2 — privacy and provenance.** No capture is anything but private. No
+capture holds a provenance that cannot be true: `self` with an origin, or a
+non-self source with nobody to name.
+
+**4.3 — timestamps and normalisation.** `updated_at` on every migrated row is
+the moment it last moved rather than the moment of the migration, and
+`normalised_text` is populated for every capture. It prints a sample so the
+normalisation can be eyeballed — lowercased, punctuation collapsed, non-Latin
+scripts intact.
+
+**4.4 — the constraints exist and are what they claim.** `source_user_id` is
+`restrict`; the three check constraints are present; the retirement trigger
+exists and is enabled; nine migrations are applied.
+
+It also prints the provenance spread, which is context rather than a check.
+
+⚠ **`VERIFY OK — safe to deploy` on the last line, or do not deploy.** If
+anything failed, the old code is still running and still correct: there is no
+time pressure, and §6.1 is still clean because nothing has been deployed.
+
+### 4.5 Put the variable away
+
+```powershell
+Remove-Item Env:DATABASE_URL
 ```
 
-### 4.3 Timestamps and normalisation
-
-```sql
--- Both must be 0.
-select count(*) from captures
- where legacy_entry_id is not null
-   and updated_at is distinct from coalesce(resolved_at, created_at);
-
-select count(*) from captures where normalised_text is null or normalised_text = '';
-
--- Eyeball a few. Lowercased, punctuation collapsed, non-Latin scripts intact.
-select text, normalised_text from captures order by created_at limit 5;
-```
-
-### 4.4 The constraints exist and are what they claim
-
-```sql
--- Must be 'r' (restrict).
-select confdeltype from pg_constraint
- where conname = 'captures_source_user_id_profiles_id_fk';
-
--- Must return all three.
-select conname from pg_constraint
- where conname in ('captures_provenance_shape',
-                   'captures_source_is_not_owner',
-                   'items_external_pair');
-
--- Must return one row with tgenabled = 'O'.
-select tgname, tgenabled from pg_trigger
- where tgname = 'profiles_retire_capture_source';
-
--- Must list 0004-0008 as applied.
-select hash, created_at from drizzle.__drizzle_migrations order by created_at;
-```
-
-If any check in §4 fails, **stop and do not deploy.** The old code is still
-running and still correct; there is no time pressure.
+PowerShell has no inline environment prefix, so the variable set in §1.2 lives
+for the whole session — including any `npm run test` or `npm run dev` typed
+into the same window afterwards. Both test files refuse to run against the
+production host by name, which is a backstop and not a reason to leave it set.
 
 ---
 
@@ -253,7 +224,7 @@ running and still correct; there is no time pressure.
 Merge PR #1, or push the branch to `main` — either is the deploy, and §1–§4
 must all have passed before this point.
 
-```bash
+```powershell
 git push --ipv4 origin HEAD:main
 vercel ls    # watch it land, ~25s
 ```

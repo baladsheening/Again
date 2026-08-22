@@ -507,6 +507,69 @@ What Phase 0 is, stated plainly, so the exit criteria can be honest about it:
 **a compatibility and data-safety step. It changes what the records are, not
 what they say.**
 
+### The runbook runs in the shell it will actually be typed into (22 August)
+
+Review found it written in POSIX — `DATABASE_URL="$PROD_URL" npm run db:migrate`
+— against a checkout where PowerShell is the shell. PowerShell has no inline
+environment prefix at all, so that line is not merely awkward there; it is a
+parse error.
+
+⚠ **A production runbook is executable or it is decorative.** Every other kind
+of document survives being approximately right, because a reader adapts. This
+one gets followed literally, under time pressure, by someone who has just taken
+a backup and is watching a migration they cannot undo.
+
+So the operator shell is stated once at the top, every command is written for
+it, and the two POSIX equivalents that are genuinely useful are marked as *not
+the version to run*. `DATABASE_URL` is set as a session variable in §1.2 and
+removed in §4.5 — PowerShell keeps it for the whole session otherwise, which
+would leave a later `npm run dev` in the same window pointed at production.
+
+#### The checks became scripts, which is the larger half of the fix
+
+`npm run migration:preflight` and `npm run migration:verify`. Both read and
+write nothing, both print the host and database name **before any check runs**,
+and both end in a single line that says whether to continue.
+
+⚠ **The SQL left the document.** Fifteen statements pasted into a console by
+hand is fifteen chances to paste one wrong, and a prose copy drifts from the
+real one the moment either is edited. The runbook now says what each check
+means; the script says it in SQL, once. It also makes the checks testable — all
+of them were run against `development` before this was written, which a
+document full of SQL blocks cannot claim.
+
+⚠ *Confirm the host* was a step, and steps get skipped. It is now the first two
+lines of output from a command the operator has to run anyway.
+
+### The film add carries no client mutation id (22 August)
+
+§6 says every capture submission carries one. `addFilmAction` does not send one,
+so every Phase 0 film addition stores `null`, and the acceptance test that
+covers mutation ids calls the data layer directly — proving the layer and not
+the shipped path. Review caught the gap.
+
+**Recorded rather than closed, and the reason is that closing it properly is
+Phase 1 work.** An id only does anything if it is *stable across a retry*,
+which needs the client to hold one per intent-to-save rather than per call.
+Generating a fresh id inside the action would satisfy the sentence and carry
+nothing — the failure mode this project keeps refusing.
+
+**What carries §10's idempotency on the only write path Phase 0 has:** a film
+add resolves a possibility first, so the unique key on (user, possibility,
+intent) catches a retry and returns the existing row with `created: false`, and
+`fireOverlap` runs only on the insert path, so no second notification is
+written either. Both halves are now asserted in `tests/acceptance.test.ts`
+rather than argued for here.
+
+⚠ **It stops being true in Phase 1.** A raw capture has no possibility, so it
+has no key to collide with, and the mutation id becomes the only thing between
+a double-tap and two rows. Phase 1's exit criteria now require it, and the
+action carries a comment saying what it relies on until then.
+
+This is not an amendment. §13 never asked Phase 0 for §6's capture flow — the
+action is a compatibility seam, the flow arrives in Phase 1 — so the
+requirement is being scheduled, not weakened.
+
 ---
 
 ## Still open

@@ -253,6 +253,51 @@ describe('a retried submission is one capture', () => {
     expect(rows[0].n).toBe(2)
   })
 
+  /*
+    ⚠ **The shipped Phase 0 action does not send a client mutation id**, so this
+    is the mechanism that actually carries §10's idempotency on the only write
+    path that exists today: the unique key on (user, possibility, intent). The
+    id becomes load-bearing in Phase 1, when a raw capture has no possibility
+    and therefore no key to collide with.
+
+    Both halves of §10 are checked — not a duplicate row, and not a duplicate
+    notification — because the second is the one that would reach somebody.
+  */
+  it('is idempotent for a resolved capture with no mutation id at all', async () => {
+    await capture(twoId, { visibility: 'mutuals' })
+    for (const pair of [
+      [oneId, twoId],
+      [twoId, oneId],
+    ]) {
+      await pool.query('insert into tracks (follower_id, followed_id) values ($1, $2)', pair)
+    }
+
+    const first = await dal.addCapture(one(), {
+      text: 'An Acceptance',
+      possibilityId: filmId,
+      intent: 'see',
+    })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    await dal.setCaptureVisibility(one(), first.value.capture.id, 'mutuals')
+    expect(await convergences(twoId)).toHaveLength(1)
+
+    const again = await dal.addCapture(one(), {
+      text: 'An Acceptance',
+      possibilityId: filmId,
+      intent: 'see',
+    })
+
+    expect(again.ok && again.value.created).toBe(false)
+
+    const rows = await pool.query('select count(*)::int as n from captures where user_id = $1', [
+      oneId,
+    ])
+    expect(rows.rows[0].n).toBe(1)
+    expect(await convergences(twoId)).toHaveLength(1)
+  })
+
   it('returns the existing row rather than a second one for the same possibility', async () => {
     const first = await dal.addCapture(one(), {
       text: 'An Acceptance',

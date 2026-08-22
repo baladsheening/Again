@@ -96,11 +96,19 @@ const eslintConfig = defineConfig([
       against. A test that inserted a private note *through* the layer would be
       asking the layer whether it agrees with itself.
     */
+    /*
+      `scripts/**` is exempt for the same reason `tests/**` is, and it is the
+      migration scripts that need it: verifying a backfill *through* the data
+      layer would be asking the layer whether it agrees with itself. They run
+      under node, outside Next, never in a request and never in a bundle —
+      which is the thing this rule exists to prevent.
+    */
     ignores: [
       'lib/db/**',
       'lib/auth.ts',
       'lib/overlap.ts',
       'drizzle.config.ts',
+      'scripts/**',
       'tests/**',
       'vitest.config.ts',
     ],
