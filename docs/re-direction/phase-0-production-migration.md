@@ -122,6 +122,18 @@ Neon console → project → Branches → New branch
 Record the branch name and its creation timestamp. The timestamp is what a
 point-in-time restore needs if the branch itself is lost.
 
+⚠ **This step is the only one in the document done by hand, and it belongs to
+whoever owns the Neon account rather than to whoever is running the commands.**
+Nothing in this repository can take it: `DATABASE_URL` is a Postgres
+connection and cannot create a branch, and no Neon CLI is authenticated here.
+
+It can be handed over — `neonctl auth`, then
+`neonctl branches create --name pre-phase-0-YYYY-MM-DD` — but that is a
+decision rather than a convenience. A Neon session or API key can create *and
+delete* branches across the whole project, production included, which is
+considerably more authority than the database URL it would sit beside. For a
+step that happens once, the console is also faster.
+
 Do not skip this because the migrations are additive. `0005` writes rows and
 `0007` writes a trigger; neither has a down migration, and this project has
 none by design.
