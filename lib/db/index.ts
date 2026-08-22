@@ -31,8 +31,10 @@ import 'server-only'
  *  3. `no-restricted-imports` in eslint.config.mjs bans `drizzle-orm` and
  *     `./client` outside `lib/db/`. Reaching around this layer fails lint.
  *
- *  Two functions carry guarantees that are invisible when broken, and both are
- *  covered by tests (§13):
+ *  Three functions carry guarantees that are invisible when broken, and all
+ *  three are covered by tests (§13):
+ *    - `listCapturesForOtherUser` returns a capture only when its scope is
+ *      shared, the track is mutual both ways, and its state is published
  *    - `listEntriesForOtherUser` never returns `state = 'done'` (§5.3)
  *    - `getSwap` withholds the counterparty's picks until both commit (§7.3)
  */
@@ -74,6 +76,38 @@ export type {
   Page,
 } from './entries'
 
+/*
+  The capture layer. It replaces the entry mutations above rather than sitting
+  beside them: `entries` is read-only from Phase 0 on, and the two functions
+  that carry silent guarantees have capture counterparts that carry the same
+  ones — `listCapturesForOtherUser` never returns an unpublished state, and it
+  additionally requires a shared scope and a mutual track in both directions.
+*/
+export {
+  listMyCaptures,
+  countMyCaptures,
+  listMyCapturesForExternalId,
+  listCapturesForOtherUser,
+  addCapture,
+  copyCapture,
+  resolveCapture,
+  dropCapture,
+  restoreCapture,
+  setCaptureNote,
+  setCaptureVisibility,
+  undoCapture,
+  toCaptureCard,
+} from './captures'
+export type {
+  SharedView,
+  CaptureWithPossibility,
+  SharedCapture,
+  SharedCaptureWithPossibility,
+  CaptureCard,
+  ListedCapture,
+  AddCaptureInput,
+} from './captures'
+
 export { upsertItem } from './items'
 export type { ItemInput } from './items'
 
@@ -81,15 +115,20 @@ export { getSwap } from './swaps'
 export type { SwapView } from './swaps'
 
 export type {
+  Capture,
+  CaptureSource,
+  CaptureState,
   Entry,
   EntrySource,
   EntryState,
   Intent,
   Item,
   Kind,
+  Possibility,
   Notification,
   NotificationKind,
   Profile,
   Swap,
   SwapStatus,
+  Visibility,
 } from './schema'

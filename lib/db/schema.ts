@@ -274,6 +274,34 @@ export const captures = pgTable(
       .references(() => profiles.id, { onDelete: 'cascade' }),
     /** The words, as typed. Never replaced by a suggestion's title (§6). */
     text: text('text').notNull(),
+    /**
+     * The words reduced to what matching can compare: lowercased, every run of
+     * non-alphanumerics collapsed to one space, trimmed.
+     *
+     * §7 asks for it, and Phase 2 needs it for the case a possibility cannot
+     * serve — two people who both typed *try pottery* and neither of whom
+     * resolved it to anything canonical. Exact convergence runs on
+     * `possibility_id`; this is the only handle the possible-match path has
+     * when that column is null on both sides.
+     *
+     * ⚠ **Generated, and deliberately not computed in TypeScript.** There is
+     * one implementation of the rule and it lives where the rows live, so a
+     * writer cannot forget it and two writers cannot disagree about it. The
+     * decisive case is the day the rule changes: a generated column makes that
+     * a migration which re-derives every row, where a TypeScript function
+     * would leave every existing row normalised by the old rule and quietly
+     * stop matching them. That failure has no symptom.
+     *
+     * ⚠ **`[[:alnum:]]` rather than `[a-z0-9]`.** The product is not
+     * English-only and a capture is any intention in any script; an ASCII
+     * class would normalise a Japanese or Arabic capture to the empty string
+     * and silently exclude it from matching altogether.
+     */
+    normalisedText: text('normalised_text')
+      .notNull()
+      .generatedAlwaysAs(
+        sql`btrim(regexp_replace(lower("text"), '[^[:alnum:]]+', ' ', 'g'))`,
+      ),
     /** Null until this resolves to something canonical. Most captures start here. */
     possibilityId: uuid('possibility_id').references(() => possibilities.id),
     /** Optional at capture, refined later. Never asked for before saving (§3). */
@@ -399,6 +427,11 @@ export const captures = pgTable(
     index('captures_user_state_idx').on(t.userId, t.state),
     /* Home is reverse-chronological and paginated (§10), not a poster wall. */
     index('captures_user_created_idx').on(t.userId, t.createdAt),
+    /*
+      The possible-match path (Phase 2) joins on this, for the captures that
+      resolved to nothing and have only their words in common.
+    */
+    index('captures_normalised_text_idx').on(t.normalisedText),
     /*
       Provenance has a shape, and half of one is worse than none: a capture
       that says it came from somewhere but cannot say from whom is a capture

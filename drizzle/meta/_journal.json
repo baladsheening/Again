@@ -57,6 +57,13 @@
       "when": 1787423875054,
       "tag": "0007_capture_source_retirement",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787424602573,
+      "tag": "0008_perfect_selene",
+      "breakpoints": true
     }
   ]
 }

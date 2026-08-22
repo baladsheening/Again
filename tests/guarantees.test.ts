@@ -16,7 +16,7 @@
  *
  * ⚠ **Writes. Development branch only.** The guard below is not a courtesy.
  */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Pool, neonConfig } from '@neondatabase/serverless'
 
 const PRODUCTION_DB_HOST = 'ep-royal-math-zalwuq2s-pooler.c-2.eu-west-2.aws.neon.tech'
@@ -97,6 +97,7 @@ beforeAll(async () => {
   )
   droppedItemId = dropped.rows[0].id
 
+  await pool.query('delete from captures where user_id = any($1::uuid[])', [[ownerId, viewerId]])
   await pool.query('delete from entries where user_id = any($1::uuid[])', [[ownerId, viewerId]])
 })
 
@@ -235,6 +236,225 @@ describe('the private note never leaves its owner', () => {
 
     const result = await dal.setEntryNote(owner, mine.entry.id, 'x'.repeat(dal.NOTE_MAX + 1))
     expect(result.ok).toBe(false)
+  })
+})
+
+/*
+  The capture gate. Four terms, and the test removes them one at a time —
+  a guarantee that only ever gets tested in its passing configuration is a
+  guarantee nobody has checked.
+*/
+describe('another user’s captures need all four positive terms', () => {
+  const viewer = () => asViewer(viewerId, `${VIEWER}@example.com`)
+
+  const clear = async () => {
+    await pool.query('delete from captures where user_id = any($1::uuid[])', [
+      [ownerId, viewerId],
+    ])
+    await pool.query(
+      'delete from tracks where follower_id = any($1::uuid[]) and followed_id = any($1::uuid[])',
+      [[ownerId, viewerId]],
+    )
+  }
+
+  const track = async (from: string, to: string) =>
+    pool.query(
+      'insert into tracks (follower_id, followed_id) values ($1, $2) on conflict do nothing',
+      [from, to],
+    )
+
+  const mutual = async () => {
+    await track(ownerId, viewerId)
+    await track(viewerId, ownerId)
+  }
+
+  const captureFor = async (
+    fields: { state?: string; visibility?: string; note?: string | null } = {},
+  ) => {
+    const { rows } = await pool.query(
+      `insert into captures (user_id, text, state, visibility, note)
+       values ($1, 'try pottery', $2, $3, $4) returning id`,
+      [ownerId, fields.state ?? 'want', fields.visibility ?? 'mutuals', fields.note ?? null],
+    )
+    return rows[0].id as string
+  }
+
+  beforeEach(clear)
+  afterAll(clear)
+
+  it('returns the capture when all four hold', async () => {
+    await mutual()
+    await captureFor()
+
+    const rows = await dal.listCapturesForOtherUser(viewer(), ownerId, 'live')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].capture.text).toBe('try pottery')
+  })
+
+  it('returns nothing when the scope is private', async () => {
+    await mutual()
+    await captureFor({ visibility: 'private' })
+
+    expect(await dal.listCapturesForOtherUser(viewer(), ownerId, 'live')).toHaveLength(0)
+  })
+
+  it('returns nothing when the state is not published, however it is shared', async () => {
+    await mutual()
+    for (const state of ['done', 'dropped']) {
+      await pool.query('delete from captures where user_id = $1', [ownerId])
+      await captureFor({ state, visibility: 'mutuals' })
+
+      for (const view of ['live', 'go_back_tos', 'fixtures'] as const) {
+        expect(await dal.listCapturesForOtherUser(viewer(), ownerId, view)).toHaveLength(0)
+      }
+    }
+  })
+
+  it('returns nothing when the track runs only one way', async () => {
+    await track(viewerId, ownerId)
+    await captureFor()
+
+    expect(await dal.listCapturesForOtherUser(viewer(), ownerId, 'live')).toHaveLength(0)
+
+    await pool.query('delete from tracks where follower_id = $1 and followed_id = $2', [
+      viewerId,
+      ownerId,
+    ])
+    await track(ownerId, viewerId)
+
+    expect(await dal.listCapturesForOtherUser(viewer(), ownerId, 'live')).toHaveLength(0)
+  })
+
+  it('returns nothing when there is no track at all', async () => {
+    await captureFor()
+
+    expect(await dal.listCapturesForOtherUser(viewer(), ownerId, 'live')).toHaveLength(0)
+  })
+
+  it('never carries the private note into the projection', async () => {
+    await mutual()
+    await captureFor({ note: 'why I put this here' })
+
+    const rows = await dal.listCapturesForOtherUser(viewer(), ownerId, 'live')
+    expect(rows).toHaveLength(1)
+    expect(JSON.stringify(rows[0])).not.toContain('why I put this here')
+    expect('note' in rows[0].capture).toBe(false)
+  })
+
+  it('refuses to copy a capture that is not shared', async () => {
+    await mutual()
+    const id = await captureFor({ visibility: 'private' })
+
+    const result = await dal.copyCapture(viewer(), id)
+    expect(result.ok).toBe(false)
+  })
+
+  it('refuses to copy a shared capture from a non-mutual', async () => {
+    await track(viewerId, ownerId)
+    const id = await captureFor()
+
+    const result = await dal.copyCapture(viewer(), id)
+    expect(result.ok).toBe(false)
+  })
+
+  it('returns nothing when the viewer is the owner, self-tracks and all', async () => {
+    /*
+      Seeded deliberately: a `tracks` row may name the same person twice, so
+      both mutual joins succeed here and every other term holds. The only
+      thing that can refuse this read is the term that says the reader is not
+      the owner — which is why it is in the predicate and not in an early
+      return above it.
+    */
+    await pool.query(
+      'insert into tracks (follower_id, followed_id) values ($1, $1) on conflict do nothing',
+      [ownerId],
+    )
+    await captureFor()
+
+    const owner = asViewer(ownerId, `${OWNER}@example.com`)
+    expect(await dal.listCapturesForOtherUser(owner, ownerId, 'live')).toHaveLength(0)
+
+    await pool.query('delete from tracks where follower_id = $1 and followed_id = $1', [ownerId])
+  })
+
+  it('does not rewrite provenance when a dropped copy is added again', async () => {
+    const { rows } = await pool.query(
+      `insert into captures (user_id, text, possibility_id, intent, state, source, source_user_id)
+       values ($1, 'a lapsed copy', $2, 'see', 'dropped', 'copy', $3) returning id`,
+      [viewerId, itemId, ownerId],
+    )
+
+    const result = await dal.addCapture(asViewer(viewerId, `${VIEWER}@example.com`), {
+      text: 'a lapsed copy',
+      possibilityId: itemId,
+      intent: 'see',
+    })
+    expect(result.ok).toBe(true)
+
+    const after = await pool.query(
+      'select state, source, source_user_id from captures where id = $1',
+      [rows[0].id],
+    )
+    expect(after.rows[0]).toMatchObject({
+      state: 'want',
+      source: 'copy',
+      source_user_id: ownerId,
+    })
+  })
+
+  it('lets a dropped capture of your own acquire provenance when copied', async () => {
+    await mutual()
+
+    await pool.query(
+      `insert into captures (user_id, text, possibility_id, intent, state, source)
+       values ($1, 'mine first', $2, 'see', 'dropped', 'self')`,
+      [viewerId, itemId],
+    )
+
+    const { rows } = await pool.query(
+      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
+       values ($1, 'mine first', $2, 'see', 'want', 'mutuals') returning id`,
+      [ownerId, itemId],
+    )
+
+    const result = await dal.copyCapture(asViewer(viewerId, `${VIEWER}@example.com`), rows[0].id)
+    expect(result.ok).toBe(true)
+
+    const after = await pool.query(
+      'select state, source, source_user_id from captures where user_id = $1',
+      [viewerId],
+    )
+    expect(after.rows).toHaveLength(1)
+    /*
+      Suppression may only ever increase: a row that was independently yours
+      can become a copy, so the person it was taken from is not notified that
+      you match them. It can never go the other way.
+    */
+    expect(after.rows[0]).toMatchObject({
+      state: 'want',
+      source: 'copy',
+      source_user_id: ownerId,
+    })
+  })
+
+  it('carries provenance when the copy is allowed, and lands it private', async () => {
+    await mutual()
+    const id = await captureFor()
+
+    const result = await dal.copyCapture(viewer(), id)
+    expect(result.ok).toBe(true)
+
+    const { rows } = await pool.query(
+      'select source, source_user_id, source_capture_id, visibility from captures where user_id = $1',
+      [viewerId],
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
+      source: 'copy',
+      source_user_id: ownerId,
+      source_capture_id: id,
+      visibility: 'private',
+    })
   })
 })
 

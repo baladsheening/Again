@@ -269,6 +269,95 @@ that fills it — normalisation with the capture mutation, the asset with the
 media-storage decision in §6 — and a column nobody writes is a column that
 lies about what the row contains.
 
+### The normalisation lives in the column (22 August)
+
+§7's minimum fields ask a capture to carry normalised text as well as the words
+someone typed. Phase 2 needs it for the case a possibility cannot serve: two
+people who both typed *try pottery* and neither of whom resolved it to anything
+canonical. Exact convergence runs on `possibility_id`; this is the only handle
+the possible-match path has when that column is null on both sides.
+
+**It is a generated column, not a TypeScript function.** One implementation of
+the rule, living where the rows live, so a writer cannot forget it and two
+writers cannot disagree about it.
+
+⚠ **The decisive case is the day the rule changes.** A generated column makes
+that a migration that re-derives every row. A TypeScript function would leave
+every existing row normalised by the old rule while new rows used the new one,
+and the two would quietly stop matching each other — a failure with no symptom,
+in the one part of the product whose whole job is finding that two things are
+the same. It also backfilled all thirty-three migrated rows for free, because
+that is what `ADD COLUMN ... GENERATED` does.
+
+The rule is: lowercase, every run of non-alphanumerics collapsed to a single
+space, trimmed. ⚠ **`[[:alnum:]]` rather than `[a-z0-9]`** — an ASCII class
+would reduce a Japanese or Arabic capture to the empty string and drop it out
+of matching entirely, which is not a defect anyone would see until someone
+captured something in their own language.
+
+⚠ **Accents are not folded.** `café` and `cafe` will not match. `unaccent()` is
+not immutable, so it cannot appear in a generated column without wrapping it,
+and folding is a lossy choice that deserves its own decision rather than
+arriving as a side effect of this one.
+
+#### The gate, and testing it in its failing configurations
+
+`listCapturesForOtherUser` requires four positive terms: the scope is shared,
+the track is mutual in *both* directions, the state is published, and the
+reader is not the owner. Mutuality is two INNER JOINs rather than a flag, so a
+missing track row removes every candidate rather than widening the result.
+
+⚠ **All four are in the predicate, and the fourth one started out as an early
+return.** `if (targetUserId === viewer.id) return []` is control flow, and
+control flow is what gets refactored away — a test written against it passes
+whether or not the query is correct, because the query never runs. It is now
+`ne(captures.userId, viewer.id)` and the early return is gone: one mechanism,
+and the one that can be tested.
+
+⚠ **The joins do not stand in for that term.** Nothing stops a `tracks` row
+from naming the same person twice, and a self-track satisfies both of them —
+so the owner-target test seeds exactly that row, leaving the reader-is-not-the-
+owner term as the only thing that can refuse the read.
+
+The tests take the terms away one at a time. A guarantee only ever exercised in
+its passing configuration is a guarantee nobody has checked — so the visibility
+filter, the state filter, the second track join and the owner term were each
+removed in turn and the suite confirmed to fail on exactly the assertion that
+names them, and to pass again when restored.
+
+#### Provenance is not something a caller can say
+
+The three source columns were reachable twice over, and a comment saying
+"server-supplied only" was the whole of the enforcement.
+
+**They were optional fields on the public input type**, which is one spread of
+a parsed request body away from being client-controlled — and a caller that can
+name its own provenance can switch suppression off, which turns copying
+somebody's list into a way of notifying them. The public input no longer has
+them. The writer that does is private to the module, so the only two callers
+that can supply a provenance are `addCapture`, which always supplies *self*,
+and `copyCapture`, which reads it off the row being copied.
+
+**And reviving a dropped capture rewrote it.** The legacy `addEntry`
+deliberately refreshed `source` on every revive, reasoning that a stale source
+would withhold a notification that should now fire. Captures invert that: a row
+that came off somebody's page came off it, and if re-adding the thing erases
+that, the suppression rule can be switched off from the client by anyone
+willing to cross something out first.
+
+⚠ **The one movement still allowed is `self` → sourced, and it is allowed
+because it can only ever suppress more.** Add something yourself, cross it off,
+then copy it from the person who had it: without this the revived row claims to
+be independently yours and notifies the very person you took it from. Clearing
+provenance is impossible in either direction; that belongs to a deliberate
+*make this one mine* mutation, which does not exist yet.
+
+⚠ **`/u/[handle]` must not render an empty list for a non-mutual.** *This
+person has nothing* and *this person has nothing for you* are different claims,
+and the first is one the app has no business making about somebody else. The
+function returns nothing in both cases by design; the page has to say the list
+is not shared, unconditionally.
+
 ---
 
 ## Still open
