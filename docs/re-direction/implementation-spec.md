@@ -1056,8 +1056,13 @@ Exit criteria:
 - no film wall or intent modal is required
 - an unresolved capture can be offered a possible resolution without being
   silently converted or matched
-- no screen, label, or stored record still describes the product as film-first,
-  and every migrated record reads in the vocabulary of §3
+- no user-visible screen, label, or new write uses film-first vocabulary, and
+  every active capture and possibility is represented in the vocabulary of §3
+- ⚠ the read-only legacy comparison surface is exempt: `entries` and
+  `captures.legacy_entry_id` are retained historical records kept to verify the
+  Phase 0 migration against its own source, and they are retired by their own
+  separate migration rather than by this criterion. A criterion that included
+  them could not be met while they exist, which is deliberate
 
 ### Phase 2 — friend convergence
 

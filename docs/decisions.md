@@ -481,6 +481,15 @@ So the whole deliverable moves to Phase 1, where conversion, copy and the
 screens that display them arrive together and can be checked against each
 other. Phase 1 gains an exit criterion saying so.
 
+⚠ **That criterion first said "no stored record", which Phase 1 could never
+have met.** `entries` and `captures.legacy_entry_id` are retained on purpose —
+they are how the migration is verified against its own source — and every one
+of those rows is film-first by definition. An exit criterion that counted them
+would have been unsatisfiable for as long as the thing it depends on exists,
+which is the same defect as the fixtures clause it sits three paragraphs below.
+It now names active product data and the interface, and exempts the read-only
+comparison surface explicitly, until its own separate retirement.
+
 **The fixtures clause was unsatisfiable rather than deferred.** §13 asked Phase
 0 for fixtures covering *disputed* and *stale* — states Phase 4 and Phase 5
 introduce, which this schema cannot represent. A phase cannot produce a fixture
