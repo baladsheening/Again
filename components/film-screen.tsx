@@ -1077,7 +1077,7 @@ function FilmBody({
         for (const entry of body.listed ?? []) {
           /*
             ⚠ **The state was always on the wire and was thrown away here until
-            21 August.** `listMyEntriesForExternalId` returns it and
+            21 August.** `listMyCapturesForExternalId` returns it and
             `/api/film/[id]` passes it through; this loop kept the id and the
             intent and dropped the one field that says *which collection this is
             in*. Keeping it is what lets the settled tick answer a tap without a
@@ -1124,7 +1124,7 @@ function FilmBody({
       Optimistic, like every add in this app has been: the mark is the answer to
       the tap, and the network is not part of the answer.
 
-      `'want'` because that is where a creation lands — `addEntry` writes it for
+      `'want'` because that is where a creation lands — `addCapture` writes it for
       everyone — and this branch is only reached from a `+`, which is only drawn
       when the marks say the film is not listed. The server's own answer replaces
       it a moment later either way.

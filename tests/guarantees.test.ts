@@ -167,14 +167,30 @@ describe('another user’s private entries are never visible (§5.3)', () => {
     `copyEntry` carried its own hand-written `ne(state, 'done')`, so it had to be
     changed in the same breath.
   */
-  it('refuses to copy a dropped entry', async () => {
+  it('refuses to copy a dropped capture', async () => {
     const { rows } = await pool.query(
-      `select id from entries where user_id = $1 and item_id = $2 and intent = 'see'`,
+      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
+       values ($1, 'a lapsed want', $2, 'see', 'dropped', 'mutuals') returning id`,
       [ownerId, droppedItemId],
     )
+    for (const pair of [
+      [ownerId, viewerId],
+      [viewerId, ownerId],
+    ]) {
+      await pool.query(
+        'insert into tracks (follower_id, followed_id) values ($1, $2) on conflict do nothing',
+        pair,
+      )
+    }
 
-    const result = await dal.copyEntry(asViewer(viewerId, `${VIEWER}@example.com`), rows[0].id)
+    const result = await dal.copyCapture(asViewer(viewerId, `${VIEWER}@example.com`), rows[0].id)
     expect(result.ok).toBe(false)
+
+    await pool.query('delete from captures where id = $1', [rows[0].id])
+    await pool.query(
+      'delete from tracks where follower_id = any($1::uuid[]) and followed_id = any($1::uuid[])',
+      [[ownerId, viewerId]],
+    )
   })
 })
 
@@ -199,30 +215,49 @@ describe('the private note never leaves its owner', () => {
     expect(JSON.stringify(seen)).not.toContain('the private part')
   })
 
+  /*
+    The owner side moved to captures with the mutations. The projection test
+    above still reads `entries`, because that read still exists and its
+    fixture is written with the raw driver — nothing in the product writes an
+    entry any more.
+  */
+  const ownedCapture = async () => {
+    const { rows } = await pool.query(
+      `insert into captures (user_id, text, state, note)
+       values ($1, 'noted', 'want', 'the private part')
+       on conflict do nothing returning id`,
+      [ownerId],
+    )
+    if (rows[0]) return rows[0].id as string
+    const existing = await pool.query(
+      `select id from captures where user_id = $1 and text = 'noted'`,
+      [ownerId],
+    )
+    return existing.rows[0].id as string
+  }
+
   it('is readable and writable by its owner', async () => {
     const owner = asViewer(ownerId, `${OWNER}@example.com`)
-    const [mine] = (await dal.listMyEntries(owner, 'live')).filter(
-      (r) => r.entry.intent === 'own',
+    const id = await ownedCapture()
+
+    const [mine] = (await dal.listMyCaptures(owner, 'live')).filter(
+      (r) => r.capture.id === id,
     )
+    expect(mine.capture.note).toBe('the private part')
 
-    expect(mine.entry.note).toBe('the private part')
-
-    const written = await dal.setEntryNote(owner, mine.entry.id, '  trimmed  ')
+    const written = await dal.setCaptureNote(owner, id, '  trimmed  ')
     expect(written.ok).toBe(true)
 
-    const cleared = await dal.setEntryNote(owner, mine.entry.id, '')
+    const cleared = await dal.setCaptureNote(owner, id, '')
     expect(cleared.ok && cleared.value.note).toBe(null)
   })
 
-  it('cannot be written on someone else’s entry', async () => {
-    const owner = asViewer(ownerId, `${OWNER}@example.com`)
-    const [mine] = (await dal.listMyEntries(owner, 'live')).filter(
-      (r) => r.entry.intent === 'own',
-    )
+  it('cannot be written on someone else’s capture', async () => {
+    const id = await ownedCapture()
 
-    const result = await dal.setEntryNote(
+    const result = await dal.setCaptureNote(
       asViewer(viewerId, `${VIEWER}@example.com`),
-      mine.entry.id,
+      id,
       'not yours',
     )
     expect(result.ok).toBe(false)
@@ -230,11 +265,9 @@ describe('the private note never leaves its owner', () => {
 
   it('refuses a note longer than the bound', async () => {
     const owner = asViewer(ownerId, `${OWNER}@example.com`)
-    const [mine] = (await dal.listMyEntries(owner, 'live')).filter(
-      (r) => r.entry.intent === 'own',
-    )
+    const id = await ownedCapture()
 
-    const result = await dal.setEntryNote(owner, mine.entry.id, 'x'.repeat(dal.NOTE_MAX + 1))
+    const result = await dal.setCaptureNote(owner, id, 'x'.repeat(dal.NOTE_MAX + 1))
     expect(result.ok).toBe(false)
   })
 })
@@ -455,6 +488,90 @@ describe('another user’s captures need all four positive terms', () => {
       source_capture_id: id,
       visibility: 'private',
     })
+  })
+})
+
+/*
+  The fan-out reads the same scope the projection does. A convergence that
+  fired on a private capture would tell somebody about a list its owner never
+  opened — a notification is the one leak that arrives on its own.
+*/
+describe('convergence needs both sides to have shared', () => {
+  const notificationsFor = async (userId: string) => {
+    const { rows } = await pool.query(
+      "select kind, payload from notifications where user_id = $1 and kind = 'convergence'",
+      [userId],
+    )
+    return rows
+  }
+
+  const setUp = async (counterpartVisibility: string) => {
+    await pool.query('delete from captures where user_id = any($1::uuid[])', [
+      [ownerId, viewerId],
+    ])
+    await pool.query('delete from notifications where user_id = any($1::uuid[])', [
+      [ownerId, viewerId],
+    ])
+    for (const pair of [
+      [ownerId, viewerId],
+      [viewerId, ownerId],
+    ]) {
+      await pool.query(
+        'insert into tracks (follower_id, followed_id) values ($1, $2) on conflict do nothing',
+        pair,
+      )
+    }
+
+    await pool.query(
+      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
+       values ($1, 'A Fixture', $2, 'see', 'want', $3)`,
+      [ownerId, itemId, counterpartVisibility],
+    )
+
+    const { rows } = await pool.query(
+      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
+       values ($1, 'A Fixture', $2, 'see', 'want', 'private') returning id`,
+      [viewerId, itemId],
+    )
+    return rows[0].id as string
+  }
+
+  afterAll(async () => {
+    await pool.query('delete from notifications where user_id = any($1::uuid[])', [
+      [ownerId, viewerId],
+    ])
+    await pool.query(
+      'delete from tracks where follower_id = any($1::uuid[]) and followed_id = any($1::uuid[])',
+      [[ownerId, viewerId]],
+    )
+  })
+
+  it('writes a convergence when the second side shares', async () => {
+    const mine = await setUp('mutuals')
+
+    const shared = await dal.setCaptureVisibility(
+      asViewer(viewerId, `${VIEWER}@example.com`),
+      mine,
+      'mutuals',
+    )
+    expect(shared.ok).toBe(true)
+
+    expect(await notificationsFor(ownerId)).toHaveLength(1)
+    expect(await notificationsFor(viewerId)).toHaveLength(1)
+  })
+
+  it('writes nothing when the counterpart has not shared', async () => {
+    const mine = await setUp('private')
+
+    const shared = await dal.setCaptureVisibility(
+      asViewer(viewerId, `${VIEWER}@example.com`),
+      mine,
+      'mutuals',
+    )
+    expect(shared.ok).toBe(true)
+
+    expect(await notificationsFor(ownerId)).toHaveLength(0)
+    expect(await notificationsFor(viewerId)).toHaveLength(0)
   })
 })
 

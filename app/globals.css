@@ -160,7 +160,7 @@
    * had two — so the terms it arrives on matter more than the value:
    *
    * ⚠ **It marks a state, not an event.** The green is on the tick that says a
-   * film is on your list — which is why `listMyEntriesForExternalId` exists and
+   * film is on your list — which is why `listMyCapturesForExternalId` exists and
    * why the screen asks it *before* you touch anything. A colour that only ever
    * appeared for a second after a tap would be a flourish on a confirmation, and
    * §11 does not spend colours on flourishes. It is the same mark whether you

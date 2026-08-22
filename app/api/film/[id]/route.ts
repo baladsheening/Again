@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getSessionUser, listMyEntriesForExternalId } from '@/lib/db'
+import { getSessionUser, listMyCapturesForExternalId } from '@/lib/db'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { getFilm, TmdbError } from '@/lib/tmdb'
 
@@ -63,10 +63,21 @@ export async function GET(request: Request, ctx: RouteContext<'/api/film/[id]'>)
     const film = await getFilm(parsed.data.id)
     if (!film) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
-    const listed = await listMyEntriesForExternalId(sessionUser, {
+    const held = await listMyCapturesForExternalId(sessionUser, {
       kind: 'film',
       externalId: parsed.data.id,
     })
+
+    /*
+      The film screen still speaks `entryId`, and renaming its wire format is
+      Phase 1's job rather than this migration's. A capture reached through a
+      TMDB id always has an intention — the film flow supplies one — so the
+      filter below removes nothing today and refuses to invent one if that ever
+      stops being true.
+    */
+    const listed = held.flatMap((row) =>
+      row.intent ? [{ entryId: row.captureId, intent: row.intent, state: row.state }] : [],
+    )
 
     return NextResponse.json(
       { film, listed },

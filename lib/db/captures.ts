@@ -7,6 +7,7 @@ import { db } from './client'
 import {
   captures,
   possibilities,
+  profiles,
   tracks,
   type Capture,
   type CaptureState,
@@ -14,9 +15,10 @@ import {
 } from './schema'
 import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
+import { runOverlap } from '@/lib/overlap'
 import { specFor } from '@/lib/vocabulary'
 import { PUBLIC_STATES, SHARED_SCOPES } from '@/lib/domain'
-import type { CaptureSource, Intent, Kind, Visibility } from '@/lib/domain'
+import type { CaptureSource, EntryCard, Intent, Kind, Visibility } from '@/lib/domain'
 
 /**
  * The capture layer. **From Phase 0 on this is the only thing that writes a
@@ -107,6 +109,49 @@ export function toCaptureCard({
     year: possibility?.year ?? null,
     posterPath: metadata.posterPath ?? null,
   }
+}
+
+/**
+ * The compatibility projection, and the only reason it exists is that the
+ * film-first screens still render `EntryCard` (§12 — a read-only compatibility
+ * projection may keep legacy screens working while the migration is verified).
+ *
+ * ⚠ **It drops captures that resolved to nothing**, because an `EntryCard`
+ * cannot express one: it has a `kind` and a `title` and no way to say *the
+ * words somebody typed*. Today nothing creates such a capture — every write
+ * still comes through the film flow, which resolves a TMDB row first — so the
+ * filter removes nothing. It stops being harmless the moment raw capture ships,
+ * which is Phase 1, and that is the phase that replaces these screens.
+ *
+ * This function is temporary by construction. When the Home surface reads
+ * `CaptureCard`, it goes.
+ *
+ * ⚠ **It takes the three columns it needs rather than a whole capture**, so it
+ * accepts an owner's row and a shared one alike — and cannot read `note` from
+ * either, whatever it is handed.
+ */
+export function toLegacyEntryCards(
+  rows: readonly {
+    capture: Pick<Capture, 'id' | 'intent' | 'state'>
+    possibility: Possibility | null
+  }[],
+): EntryCard[] {
+  return rows.flatMap(({ capture, possibility }) => {
+    if (!possibility || !capture.intent) return []
+
+    const metadata = (possibility.metadata ?? {}) as { posterPath?: string | null }
+    return [
+      {
+        id: capture.id,
+        kind: possibility.kind,
+        intent: capture.intent,
+        state: capture.state,
+        title: possibility.title,
+        year: possibility.year,
+        posterPath: metadata.posterPath ?? null,
+      },
+    ]
+  })
 }
 
 const PAGE_SIZE = 50
@@ -289,6 +334,61 @@ export async function listMyCapturesForExternalId(
   return rows.map((r) => ({ captureId: r.id, intent: r.intent, state: r.state }))
 }
 
+/**
+ * §6's fan-out, from the three moments a capture can start being a signal.
+ *
+ * ⚠ **Three guards, and each of them is a reason there is nothing to fan out
+ * rather than an optimisation.** A capture that resolved to nothing has no
+ * canonical thing to converge on — that is the Phase 2 possible-match path,
+ * which reads `normalised_text` and is not this. A capture with no intention
+ * cannot be classified, because `classify` decides on the pair of intents. And
+ * **a private capture is not a signal to anybody**: convergence is two people
+ * who have each shared an intention, so fanning out from an unshared one would
+ * notify someone about a list its owner never opened.
+ *
+ * ⚠ The counterpart side carries the same three conditions in SQL. Both halves
+ * are needed: this one stops the query, that one filters its result.
+ */
+async function fireOverlap(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  sessionUser: SessionUser,
+  capture: Capture,
+) {
+  if (!capture.possibilityId) return
+  if (!capture.intent) return
+  if (!(SHARED_SCOPES as readonly string[]).includes(capture.visibility)) return
+
+  // `displayName` as well as the handle: notifications only cross mutual
+  // tracks, which is the condition §5 attaches names to — see `nameFor`.
+  const [me] = await tx
+    .select({ handle: profiles.handle, displayName: profiles.displayName })
+    .from(profiles)
+    .where(eq(profiles.id, sessionUser.id))
+    .limit(1)
+
+  const [possibility] = await tx
+    .select({ id: possibilities.id, title: possibilities.title })
+    .from(possibilities)
+    .where(eq(possibilities.id, capture.possibilityId))
+    .limit(1)
+
+  if (!me || !possibility) return
+
+  await runOverlap(
+    tx,
+    {
+      userId: capture.userId,
+      handle: me.handle,
+      displayName: me.displayName,
+      intent: capture.intent,
+      state: capture.state,
+      source: capture.source,
+      sourceUserId: capture.sourceUserId,
+    },
+    possibility,
+  )
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Mutations                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -467,6 +567,7 @@ async function writeCapture(
       return ok({ capture: existing, created: false })
     }
 
+    await fireOverlap(tx, sessionUser, written)
     return ok({ capture: written, created: true })
   })
 }
@@ -576,6 +677,10 @@ export async function resolveCapture(
       .where(eq(captures.id, captureId))
       .returning()
 
+    // §6 runs on any state change: a want·own becoming a fixture is what makes
+    // the lend match fire for someone who wants to see it.
+    await fireOverlap(tx, sessionUser, updated)
+
     return ok(updated)
   })
 }
@@ -678,14 +783,29 @@ export async function setCaptureVisibility(
   captureId: string,
   visibility: Visibility,
 ): Promise<Result<Capture>> {
-  const [updated] = await db
-    .update(captures)
-    .set({ visibility })
-    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
-    .returning()
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(captures)
+      .set({ visibility })
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .returning()
 
-  if (!updated) return err('not_found', 'No such capture.')
-  return ok(updated)
+    if (!updated) return err('not_found', 'No such capture.')
+
+    /*
+      ⚠ **Sharing is a fan-out trigger, and it is the one the migration made
+      load-bearing.** Every migrated capture landed private, so nothing
+      converges until its owner shares it — and if this did not fire, a capture
+      that was created private and shared afterwards would never converge at
+      all, because the moment it became a signal would have passed unobserved.
+
+      The write and its notifications share a transaction, so they cannot
+      partially apply (§10).
+    */
+    await fireOverlap(tx, sessionUser, updated)
+
+    return ok(updated)
+  })
 }
 
 /**

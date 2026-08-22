@@ -6,8 +6,8 @@ import {
   getProfileByHandle,
   getSessionUser,
   getTrackState,
-  listEntriesForOtherUser,
-  toEntryCard,
+  listCapturesForOtherUser,
+  toLegacyEntryCards,
 } from '@/lib/db'
 import { nameFor } from '@/lib/domain'
 import { COLLECTIONS } from '@/lib/vocabulary'
@@ -21,17 +21,24 @@ import { COLLECTIONS } from '@/lib/vocabulary'
  * handle. That is why the route is `/u/[handle]` and not `/u/[id]`, and why
  * `getProfileByHandle` is the only way in.
  *
- * ⚠ **Visible without tracking, on purpose.** A stranger who knows the handle
- * sees the same two lists a mutual does. §5 makes `done` the private state and
- * nothing else, and §6's suppression rule exists precisely *because* browsing
- * somebody's page and copying off it is expected behaviour — if this needed
- * permission, that rule would have nothing to suppress. What a track changes is
- * overlap and naming, not access.
+ * ⚠ **No longer visible without a mutual track.** This page used to show a
+ * stranger who knew the handle the same two lists a mutual saw, and the
+ * argument for it was that §6's suppression rule needs browsing to exist in
+ * order to have something to suppress. That argument is retired; the rule is
+ * not. Captures are private by default and reach a mutual only when their
+ * owner shares them, so what a track changes now is access as well as naming.
  *
- * ⚠ **`state = 'done'` never appears here**, and this page does not filter for it
- * — `listEntriesForOtherUser` does, unconditionally, and `PublicView` cannot even
- * express the archive. If that ever regresses it will not be visible on this
- * page, which is why the guarantee lives in the data layer (§13).
+ * ⚠ **This page filters for none of that.** `listCapturesForOtherUser` applies
+ * all four terms unconditionally — shared scope, mutual track both ways,
+ * published state, and a reader who is not the owner — and `SharedView` cannot
+ * even express the archive. If any of it regresses it will not be visible from
+ * here, which is why the guarantee lives in the data layer (§13).
+ *
+ * ⚠ **The empty copy is conditional on the track and nothing else.** A
+ * non-mutual gets the same sentence whether the owner holds a thousand
+ * captures or none, because *this person has nothing* and *this person has
+ * nothing for you* are different claims and the first is not the app's to
+ * make.
  *
  * The private note, when it exists, must not reach this route either — see the
  * carry-forward register in `docs/plan.md`. It stays out of the projection rather
@@ -53,8 +60,8 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
   const track = await getTrackState(viewer, person.id)
 
   const [live, fixtures] = await Promise.all([
-    listEntriesForOtherUser(viewer, person.id, 'live'),
-    listEntriesForOtherUser(viewer, person.id, 'fixtures'),
+    listCapturesForOtherUser(viewer, person.id, 'live'),
+    listCapturesForOtherUser(viewer, person.id, 'fixtures'),
   ])
 
   /*
@@ -93,11 +100,11 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
       */}
       <PersonList
         heading={COLLECTIONS.wants}
-        entries={live.map(toEntryCard)}
-        empty="Nothing here yet."
+        entries={toLegacyEntryCards(live)}
+        empty={track.mutual ? 'Nothing here yet.' : 'This list is not shared with you.'}
       />
 
-      <PersonList heading={COLLECTIONS.fixtures} entries={fixtures.map(toEntryCard)} />
+      <PersonList heading={COLLECTIONS.fixtures} entries={toLegacyEntryCards(fixtures)} />
     </div>
   )
 }

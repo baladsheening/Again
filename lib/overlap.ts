@@ -3,63 +3,96 @@ import 'server-only'
 import { sql } from 'drizzle-orm'
 
 import type { Executor } from '@/lib/db/client'
-import { nameFor, type EntryState, type Intent, type NotificationKind } from '@/lib/domain'
+import {
+  nameFor,
+  SHARED_SCOPES,
+  type CaptureState,
+  type Intent,
+  type NotificationKind,
+} from '@/lib/domain'
 import { notifications } from '@/lib/db/schema'
 
 /**
- * §6. All of it, in one module, called from the entry mutation. It is the thing
- * most likely to drift if it gets scattered — so nothing here is duplicated
- * anywhere else in the codebase.
+ * §6. All of it, in one module, called from the capture mutations. It is the
+ * thing most likely to drift if it gets scattered — so nothing here is
+ * duplicated anywhere else in the codebase.
+ *
+ * ⚠ **Both fan-outs carry the visibility term, and it is not optional.**
+ * Convergence is two people independently holding an intention *they have each
+ * shared*. A private capture is not a signal to anybody, so a fan-out that
+ * ignored the scope would notify someone about a list its owner never opened —
+ * which is the failure this whole model exists to prevent.
+ *
+ * ⚠ **Both also require a non-null intention.** `classify` decides on the pair
+ * of intents, and a capture that has not been given one cannot be classified.
+ * It is excluded in SQL rather than filtered afterwards, so the statement stays
+ * one statement.
  */
 
 /* -------------------------------------------------------------------------- */
 /*  The fan-out query                                                          */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The shared scopes as a parameterised list.
+ *
+ * ⚠ **Not `= any(${array})`.** Drizzle sends a JS array as one parameter and
+ * Postgres reads it as an array *literal*, which `'mutuals'` is not — the
+ * statement fails at runtime with a parse error and nothing in a type check
+ * sees it coming. `sql.join` expands to one placeholder per value, which is
+ * what an `in` list wants.
+ */
+const sharedScopes = sql.join(
+  SHARED_SCOPES.map((scope) => sql`${scope}`),
+  sql`, `,
+)
+
 type Counterpart = {
   userId: string
   handle: string
   displayName: string | null
   intent: Intent
-  state: EntryState
+  state: CaptureState
   source: string
   sourceUserId: string | null
 }
 
 /**
  * One set-based statement (§6, Performance). Joins `tracks` to itself for
- * mutuality, then to `entries`.
+ * mutuality, then to `captures`.
  *
  * Never loop over a user's mutual tracks issuing a query each. Retrofitting
  * this is a rewrite rather than an optimisation, which is why it is written
  * this way while the table is empty.
  *
  * Uses `tracks (followed_id, follower_id)` for the reverse leg and
- * `entries (item_id, intent, state)` for the entry lookup — both indexed.
+ * `captures (possibility_id, intent, state)` for the lookup — both indexed.
  */
 async function findMutualCounterparts(
   tx: Executor,
   userId: string,
-  itemId: string,
+  possibilityId: string,
 ): Promise<Counterpart[]> {
   const rows = await tx.execute(sql`
     select
-      e.user_id        as "userId",
+      c.user_id        as "userId",
       p.handle         as "handle",
       p.display_name   as "displayName",
-      e.intent         as "intent",
-      e.state          as "state",
-      e.source         as "source",
-      e.source_user_id as "sourceUserId"
+      c.intent         as "intent",
+      c.state          as "state",
+      c.source         as "source",
+      c.source_user_id as "sourceUserId"
     from tracks outbound
     join tracks inbound
       on inbound.follower_id = outbound.followed_id
      and inbound.followed_id = outbound.follower_id
-    join entries e
-      on e.user_id = outbound.followed_id
-     and e.item_id = ${itemId}
+    join captures c
+      on c.user_id = outbound.followed_id
+     and c.possibility_id = ${possibilityId}
+     and c.visibility in (${sharedScopes})
+     and c.intent is not null
     join profiles p
-      on p.id = e.user_id
+      on p.id = c.user_id
     where outbound.follower_id = ${userId}
   `)
 
@@ -73,7 +106,7 @@ async function findMutualCounterparts(
 type Side = {
   userId: string
   intent: Intent
-  state: EntryState
+  state: CaptureState
   source: string
   sourceUserId: string | null
 }
@@ -230,7 +263,9 @@ async function writeNotifications(
 }
 
 /**
- * Run on insert into `entries`, and on any state change.
+ * Run when a capture is created, when its state changes, and when it becomes
+ * shared — the three moments a capture can start being a signal to somebody.
+ * The caller decides *whether* to run it; this decides who it reaches.
  *
  * Writes notification rows and returns — push delivery is a background worker's
  * job, never inline (§6). Takes the ambient transaction so the entry write and
@@ -239,16 +274,16 @@ async function writeNotifications(
 export async function runOverlap(
   tx: Executor,
   actor: Side & Named,
-  item: { id: string; title: string },
+  possibility: { id: string; title: string },
 ): Promise<Match[]> {
-  const counterparts = await findMutualCounterparts(tx, actor.userId, item.id)
+  const counterparts = await findMutualCounterparts(tx, actor.userId, possibility.id)
 
   const names = new Map<string, Named>([[actor.userId, actor]])
   for (const c of counterparts) names.set(c.userId, c)
 
   return writeNotifications(
     tx,
-    counterparts.flatMap((v) => classify(actor, v).map((match) => ({ match, item }))),
+    counterparts.flatMap((v) => classify(actor, v).map((match) => ({ match, item: possibility }))),
     names,
   )
 }
@@ -261,11 +296,11 @@ type PairRow = {
   itemId: string
   title: string
   aIntent: Intent
-  aState: EntryState
+  aState: CaptureState
   aSource: string
   aSourceUserId: string | null
   bIntent: Intent
-  bState: EntryState
+  bState: CaptureState
   bSource: string
   bSourceUserId: string | null
 }
@@ -281,9 +316,14 @@ type PairRow = {
  *
  * Same module, same `classify`, same writer: a second **caller**, not a second
  * copy of the rules. Scoped to the one pair, and still one set-based statement —
- * `entries` joined to itself on `item_id`, which is what
- * `entries_item_intent_state_idx` and the `(user_id, item_id, intent)` unique
- * index are both able to drive.
+ * `captures` joined to itself on `possibility_id`, which is what
+ * `captures_possibility_intent_state_idx` and the
+ * `(user_id, possibility_id, intent)` unique index are both able to drive.
+ *
+ * ⚠ **A capture with no possibility joins to nothing here, and that is correct
+ * for now.** Two people who both typed the same unmatched words are the Phase 2
+ * possible-match path, which reads `normalised_text` and is not this function.
+ * Exact convergence means the same canonical thing.
  *
  * ⚠ **Deliberately uncapped, and that is a decision with a date on it.** Two
  * people with forty items in common produce forty matches per side at the moment
@@ -301,21 +341,25 @@ export async function runOverlapForNewMutual(
     select
       i.id              as "itemId",
       i.title           as "title",
-      ea.intent         as "aIntent",
-      ea.state          as "aState",
-      ea.source         as "aSource",
-      ea.source_user_id as "aSourceUserId",
-      eb.intent         as "bIntent",
-      eb.state          as "bState",
-      eb.source         as "bSource",
-      eb.source_user_id as "bSourceUserId"
-    from entries ea
-    join entries eb
-      on eb.item_id = ea.item_id
-     and eb.user_id = ${b.userId}
+      ca.intent         as "aIntent",
+      ca.state          as "aState",
+      ca.source         as "aSource",
+      ca.source_user_id as "aSourceUserId",
+      cb.intent         as "bIntent",
+      cb.state          as "bState",
+      cb.source         as "bSource",
+      cb.source_user_id as "bSourceUserId"
+    from captures ca
+    join captures cb
+      on cb.possibility_id = ca.possibility_id
+     and cb.user_id = ${b.userId}
+     and cb.visibility in (${sharedScopes})
+     and cb.intent is not null
     join items i
-      on i.id = ea.item_id
-    where ea.user_id = ${a.userId}
+      on i.id = ca.possibility_id
+    where ca.user_id = ${a.userId}
+      and ca.visibility in (${sharedScopes})
+      and ca.intent is not null
   `)
 
   const names = new Map<string, Named>([

@@ -50,20 +50,17 @@ export { getMyProfile, getProfileByHandle, createProfile } from './profiles'
 export { getTrackState, listMyTracks, trackUser, untrackUser } from './tracks'
 export type { TrackState, TrackedPerson } from './tracks'
 
+/*
+  `entries` is read-only from Phase 0 on. The mutations that were exported here
+  are gone — they are in `./captures` now, against `captures` — and what
+  remains is the compatibility projection: the reads that let the migration be
+  compared against its own source while both tables exist.
+*/
 export {
   listMyEntries,
   countMyEntries,
   listMyEntriesForExternalId,
   listEntriesForOtherUser,
-  addEntry,
-  copyEntry,
-  setEntryNote,
-  NOTE_MAX,
-  resolveEntry,
-  dropEntry,
-  restoreEntry,
-  undoEntry,
-  UNDO_WINDOW_MS,
   toEntryCard,
 } from './entries'
 export type {
@@ -97,6 +94,10 @@ export {
   setCaptureVisibility,
   undoCapture,
   toCaptureCard,
+  toLegacyEntryCards,
+  NOTE_MAX,
+  TEXT_MAX,
+  UNDO_WINDOW_MS,
 } from './captures'
 export type {
   SharedView,

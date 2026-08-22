@@ -358,6 +358,64 @@ and the first is one the app has no business making about somebody else. The
 function returns nothing in both cases by design; the page has to say the list
 is not shared, unconditionally.
 
+### The callers move, and `entries` stops being written (22 August)
+
+The Phase 0 exit criterion is that no parallel write path remains. It is met by
+subtraction: `addEntry`, `copyEntry`, `resolveEntry`, `dropEntry`,
+`restoreEntry`, `setEntryNote`, `undoEntry` and their shared `fireOverlap` are
+**deleted**, not deprecated. `entries.ts` holds reads and nothing else, so
+"read-only" is a fact about the module rather than a rule someone has to
+remember.
+
+The Server Actions keep their names. `addFilmAction`, `crossOffAction` and the
+rest still say entry, and every component that calls them is untouched — the
+actions file is the seam between a film-first interface and the capture model
+underneath it, and renaming the seam is Phase 1's job. What matters is that
+nothing in it *can* write an entry.
+
+**Reads had to move too, and that is not optional.** A frozen table read by
+live screens does not merely go stale: cross something off today and your page
+would still show it as a want, which is the app showing something its owner has
+retracted. Once the writes moved, the reads had no choice but to follow.
+
+#### The one deliberate copy change
+
+`/u/[handle]` now reads captures, so a non-mutual sees nothing — and its empty
+line said *Nothing here yet*, which is a claim about the owner that the app has
+no business making. It now reads *This list is not shared with you* for anyone
+who is not a mutual.
+
+⚠ **The condition is the track and only the track**, never the size of the
+result, so the sentence is identical whether the owner holds a thousand
+captures or none. A copy that depended on the count would leak exactly what the
+scope was hiding.
+
+#### Overlap fans out from captures, and the scope is part of the query
+
+Both statements — the counterpart lookup and the pair fan-out — now join
+`captures`, and both carry two new terms: the capture must be shared, and its
+intention must not be null. A private capture is not a signal to anybody, so a
+fan-out that ignored the scope would notify someone about a list its owner
+never opened. `classify` decides on the pair of intents, so a capture without
+one cannot be classified; it is excluded in SQL rather than filtered afterwards,
+which keeps the statement one statement.
+
+**Sharing became the third trigger.** Creation, state change, and now
+`setCaptureVisibility` — because every migrated capture landed private, so
+nothing converges until its owner shares it, and without this the moment a
+capture became a signal would pass unobserved.
+
+⚠ **Expect convergence to be quiet.** That is the cost of the private
+migration, and it is the accepted one, not a regression.
+
+⚠ **`= any(${array})` does not work and fails only at runtime.** Drizzle sends
+a JS array as one parameter and Postgres reads it as an array literal, which
+`'mutuals'` is not — `22P02`, from a statement that type-checks perfectly.
+`sql.join` expands to one placeholder per value, which is what an `in` list
+wants. **The test written for the visibility guard is what found it**, on its
+first run, which is the argument for writing the test alongside the query
+rather than after it.
+
 ---
 
 ## Still open

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { EntryList } from '@/components/entry-list'
-import { getSessionUser, listMyEntries, toEntryCard } from '@/lib/db'
+import { getSessionUser, listMyCaptures, toLegacyEntryCards } from '@/lib/db'
 
 /**
  * §5. Things you own and would keep. Deliberately *not* in the live pool —
@@ -12,7 +12,7 @@ export default async function FixturesPage() {
   const sessionUser = await getSessionUser()
   if (!sessionUser) redirect('/sign-in')
 
-  const entries = await listMyEntries(sessionUser, 'fixtures')
+  const entries = await listMyCaptures(sessionUser, 'fixtures')
 
-  return <EntryList entries={entries.map(toEntryCard)} view="fixtures" />
+  return <EntryList entries={toLegacyEntryCards(entries)} view="fixtures" />
 }
