@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { EntryList } from '@/components/entry-list'
-import { getSessionUser, listMyEntries, toEntryCard } from '@/lib/db'
+import { getSessionUser, listMyCaptures, toLegacyEntryCards } from '@/lib/db'
 
 /**
  * §5.2. Things you would return to. Ordered most recently resolved first —
@@ -12,7 +12,7 @@ export default async function GoBackTosPage() {
   const sessionUser = await getSessionUser()
   if (!sessionUser) redirect('/sign-in')
 
-  const entries = await listMyEntries(sessionUser, 'go_back_tos')
+  const entries = await listMyCaptures(sessionUser, 'go_back_tos')
 
-  return <EntryList entries={entries.map(toEntryCard)} view="go_back_tos" />
+  return <EntryList entries={toLegacyEntryCards(entries)} view="go_back_tos" />
 }

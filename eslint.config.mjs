@@ -3,12 +3,79 @@ import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 
 /**
- * Words that must never appear in the UI or in code identifiers (§4). The
- * naming is load bearing: "go-back-to" states the entry criterion, and the
- * banned words all import a model the product is deliberately not.
+ * Words that must never appear in the UI or in code identifiers. The naming is
+ * load bearing: each banned word imports a model the product is deliberately
+ * not. See CLAUDE.md, "Re-direction vocabulary", and §3 of
+ * docs/re-direction/implementation-spec.md for the words that replace them.
+ *
+ * ⚠ **Two words came off this list in Phase 0, and neither is an oversight.**
+ *
+ * `saved` was named in the rule's *message* but was never in its pattern —
+ * which is the only reason the specification is implementable, because saving
+ * is the new product's central verb ("pressing Return saves the text",
+ * "optimistic save and undo"). Anyone reconciling the message to the pattern
+ * would have banned the capture flow. The message now states the actual rule.
+ *
+ * `score` is required by §7: the internal reliability score may rank results,
+ * while the interface must speak the evidence states instead. A linter cannot
+ * tell a ranking value from a rendered number, so this rule no longer claims
+ * to — the guarantee is the state list in §7, not the pattern below.
  */
-const BANNED_VOCABULARY =
-  /(recommendation|review|rating|score|favourite|favorite|bookmark)/i
+const BANNED_WORDS = [
+  'recommendation',
+  'review',
+  'rating',
+  'favourite',
+  'favorite',
+  'bookmark',
+  'feed',
+]
+
+/**
+ * A word is banned as a **word**, not as a run of letters that happens to
+ * appear inside one.
+ *
+ * The pattern used to be unanchored, so it read `migrating` as *rating* and
+ * `preview` as *review*. Both are words Phase 0 and Phase 1 are written in —
+ * a data migration and an image preview — and CLAUDE.md requires that this
+ * rule never block an implementation the specification asks for. `hydrating`,
+ * `operating` and `underscore` were waiting behind them.
+ *
+ * So a banned word must *begin* a segment and *end* one, give or take an
+ * inflection. The inflections keep `reviews`, `bookmarked` and `Ratings`
+ * caught; the ending is what lets `feedback` through, which is a different
+ * word from `feed` and the reason an end constraint is needed at all.
+ *
+ * ⚠ **A segment ends differently in `SCREAMING_SNAKE`, and this is where the
+ * first attempt was wrong.** `camelCase` marks a new segment with a capital,
+ * so "not followed by a lowercase letter" ends a word there — but in all caps
+ * every letter is a capital and the only separator is `_`, so that same test
+ * read `FEEDBACK` as `FEED` while `feedback` passed. The three casings are
+ * therefore three branches with two different endings: the lower and
+ * capitalised forms end where a lowercase letter stops, and the all-caps form
+ * ends only where letters stop.
+ *
+ * ⚠ **`String.raw` is load bearing.** In an ordinary template literal `\d` is
+ * not an escape sequence, so it evaluates to a bare `d` — the boundary set
+ * becomes start, `_`, or the letter d, and `hydrating` is a *rating* again.
+ */
+const INFLECTIONS = '(?:s|d|ed|es|ing|er|ers)?'
+
+const CAPS_INFLECTIONS = '(?:S|D|ED|ES|ING|ER|ERS)?'
+
+const segmentStart = (word) => {
+  const capitalised = `${word[0].toUpperCase()}${word.slice(1)}`
+
+  return [
+    String.raw`(?:^|_|\d)${word}${INFLECTIONS}(?![a-z])`,
+    String.raw`${capitalised}${INFLECTIONS}(?![a-z])`,
+    String.raw`(?:^|_|\d)${word.toUpperCase()}${CAPS_INFLECTIONS}(?![A-Za-z])`,
+  ].join('|')
+}
+
+const BANNED_VOCABULARY = new RegExp(
+  BANNED_WORDS.map((word) => `(?:${segmentStart(word)})`).join('|'),
+)
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -29,11 +96,19 @@ const eslintConfig = defineConfig([
       against. A test that inserted a private note *through* the layer would be
       asking the layer whether it agrees with itself.
     */
+    /*
+      `scripts/**` is exempt for the same reason `tests/**` is, and it is the
+      migration scripts that need it: verifying a backfill *through* the data
+      layer would be asking the layer whether it agrees with itself. They run
+      under node, outside Next, never in a request and never in a bundle —
+      which is the thing this rule exists to prevent.
+    */
     ignores: [
       'lib/db/**',
       'lib/auth.ts',
       'lib/overlap.ts',
       'drizzle.config.ts',
+      'scripts/**',
       'tests/**',
       'vitest.config.ts',
     ],
@@ -87,7 +162,7 @@ const eslintConfig = defineConfig([
         {
           selector: `Identifier[name=${BANNED_VOCABULARY}]`,
           message:
-            'Banned vocabulary (§4). Never use: recommendation, review, rating, score, favourite, saved, bookmark, feed.',
+            'Banned vocabulary: recommendation, review, rating, favourite, bookmark, feed. Banned as words — a banned word inside a longer one (preview, migrating, feedback) is fine. See CLAUDE.md, "Re-direction vocabulary", for the words that replace them.',
         },
         /**
          * **A `style` attribute does not survive the CSP, and fails only in

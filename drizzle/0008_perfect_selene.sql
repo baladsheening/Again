@@ -1,0 +1,2 @@
+ALTER TABLE "captures" ADD COLUMN "normalised_text" text GENERATED ALWAYS AS (btrim(regexp_replace(lower("text"), '[^[:alnum:]]+', ' ', 'g'))) STORED NOT NULL;--> statement-breakpoint
+CREATE INDEX "captures_normalised_text_idx" ON "captures" USING btree ("normalised_text");

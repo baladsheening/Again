@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { EntryList } from '@/components/entry-list'
-import { getSessionUser, listMyEntries, toEntryCard } from '@/lib/db'
+import { getSessionUser, listMyCaptures, toLegacyEntryCards } from '@/lib/db'
 
 /**
  * §5.3. `state = 'done'` — tried, and not pushed to go-back-tos.
@@ -15,7 +15,7 @@ export default async function ArchivePage() {
   const sessionUser = await getSessionUser()
   if (!sessionUser) redirect('/sign-in')
 
-  const entries = await listMyEntries(sessionUser, 'archive')
+  const entries = await listMyCaptures(sessionUser, 'archive')
 
-  return <EntryList entries={entries.map(toEntryCard)} view="archive" />
+  return <EntryList entries={toLegacyEntryCards(entries)} view="archive" />
 }

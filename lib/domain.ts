@@ -57,6 +57,87 @@ export const PUBLIC_STATES = [
 /** How an entry got here. Drives the §6 suppression rule. */
 export type EntrySource = 'self' | 'copy' | 'swap'
 
+/* -------------------------------------------------------------------------- */
+/*  The re-direction (Phase 0). Captures, possibilities, provenance, scope.    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A capture's lifecycle, and deliberately the same five values as
+ * `EntryState`.
+ *
+ * Every legacy entry is backfilled into a capture, so the two unions have to
+ * agree at the moment of migration or the backfill loses information. The
+ * specification does say these outcomes will generalise — *bought*, *visited*,
+ * *tried* and *watched* are not one word — but generalising them is a product
+ * change with screens attached, and Phase 0 is the phase where nothing the
+ * user can see moves.
+ *
+ * ⚠ The alias is the record of that: when the outcomes do generalise, this is
+ * the line that stops being an alias, and `PUBLIC_STATES` is the line that has
+ * to be re-derived beside it.
+ */
+export type CaptureState = EntryState
+
+/**
+ * How a capture got here. **Server-owned, and immutable once written.**
+ *
+ * This is the provenance the §6 suppression rule reads: a capture copied from
+ * the person you would otherwise converge with is not an independent common
+ * intention, and pinging them that you match is telling them something they
+ * are the source of.
+ *
+ * `transfer` is the third value the re-direction adds, for the in-person
+ * exchange in §9. It occupies the slot `EntrySource` reserved for `swap`,
+ * which was designed and never built.
+ *
+ * ⚠ There is no `unknown`, and there must not be one. A capture whose origin
+ * is unknown is a capture whose suppression cannot be decided, and the failure
+ * would be a notification sent to the one person it should never reach.
+ */
+export type CaptureSource = 'self' | 'copy' | 'transfer'
+
+/**
+ * Who, apart from its owner, a capture can reach.
+ *
+ * **Private is the default, the floor, and what every migrated row lands as.**
+ * Release 1 supports exactly one sharing scope. Selected-person sharing waits
+ * for an access-control table, and public discovery waits for Phase 6's
+ * consent, blocking, reporting and moderation requirements.
+ */
+export type Visibility = 'private' | 'mutuals'
+
+/**
+ * The scopes that can reach another person, as a positive list.
+ *
+ * ⚠ **Adding a scope to this array is a decision to publish it**, in exactly
+ * the sense `PUBLIC_STATES` means it. The two arrays have the same shape for
+ * the same reason: a scope that is added and not listed here is invisible,
+ * so the mistake produces a missing row rather than a leak.
+ */
+export const SHARED_SCOPES = ['mutuals'] as const satisfies readonly Visibility[]
+
+/*
+  **Visibility is a fourth positive term, not a replacement for the other
+  three.** A capture reaches another person only when all of these hold:
+
+  1. its scope is in `SHARED_SCOPES`
+  2. the relationship is a *mutual* track — both rows of `tracks` exist
+  3. its state is in `PUBLIC_STATES`
+  4. the reader is not its owner, who sees everything of their own anyway
+
+  ⚠ **Retiring the state allowlist because a visibility column now exists
+  would reintroduce the bug that `dropped` exposed.** A private state on a
+  shared capture must stay unreachable; scope answers *who*, state answers
+  *what*, and neither answers the other's question.
+
+  The conjunction is enforced in `lib/db/` and nowhere else — there is no RLS
+  backstop. It is deliberately not written as a predicate here: a second copy
+  in TypeScript is a second thing to keep true, and the copy that runs is the
+  SQL one.
+*/
+
+/* -------------------------------------------------------------------------- */
+
 export type SwapStatus = 'pending' | 'committed' | 'complete' | 'declined'
 
 /**

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { CaptureProvider } from '@/components/capture-provider'
 import { SearchProvider } from '@/components/search-provider'
 import { Shell } from '@/components/shell'
-import { countMyEntries, getMyProfile, getSessionUser } from '@/lib/db'
+import { countMyCaptures, getMyProfile, getSessionUser } from '@/lib/db'
 
 /**
  * The signed-in shell.
@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
   const profile = await getMyProfile(sessionUser)
   if (!profile) redirect('/onboarding')
 
-  const counts = await countMyEntries(sessionUser)
+  const counts = await countMyCaptures(sessionUser)
 
   /*
     `CaptureProvider` wraps the shell rather than sitting inside it, because the

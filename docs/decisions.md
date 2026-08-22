@@ -126,6 +126,535 @@ no dormant surface: *remove the mechanism* is the first reach in `CLAUDE.md`,
 and the app already carries one thing living behind a constant — the wall
 caption, after D1. A second one is a pattern.
 
+### The vocabulary rule bans words, not letters (22 August)
+
+The first change of Phase 0, and deliberately the smallest: no product
+behaviour moves, and the model can be written in its own names from its first
+line of code.
+
+**The pattern was matching letters.** One unanchored alternation of seven
+words, tested against the whole identifier, so it read `migrating` as a
+*rating* and `preview` as a *review*. Phase 0 is a data migration and Phase 1
+attaches an image; `hydrating`, `operating`, `separating` and `underscore` were
+queued behind the same fault. A rule that fails this way fails as a build error
+inside whatever feature was unlucky, and the person who meets it has no reason
+to suspect the linter.
+
+**A banned word must now begin a segment and end one, give or take an
+inflection.** Start is the identifier, a `_` segment, or a camel hump; the
+inflections keep `reviews`, `reviewer` and `bookmarked` caught. The end
+constraint exists for exactly one word — `feed`, without which `feedback` is a
+violation — and `feed` could not be added to the list until it existed.
+
+**The message and the pattern had disagreed for months.** The message read
+"recommendation, review, rating, score, favourite, saved, bookmark, feed"; the
+pattern contained neither `saved` nor `feed`. There were two ways to reconcile
+them and only one was survivable: **`saved` must never be added**, because
+saving is the new product's central verb — "pressing Return saves the text",
+"optimistic save and undo". Someone tidying the message into the pattern would
+have banned the capture flow, and would have been reading the message as the
+rule.
+
+**`score` came off the list.** §7 requires an internal reliability score that
+ranks results while the interface speaks evidence states — Unverified,
+Corroborated, Disputed. A linter cannot tell a ranking value from a rendered
+number, so the rule stops claiming to; the guarantee is §7's state list. Banned
+copy is now the reviewer's job for this one word, which is the honest position
+rather than a rule that is wrong in both directions.
+
+**A segment ends differently in `SCREAMING_SNAKE`, and the first attempt at
+this got it wrong.** In `camelCase` a capital opens a new segment, so "not
+followed by a lowercase letter" is a sound ending. In all caps every letter is
+a capital and the only separator is `_`, so the same test read `FEEDBACK` as
+`FEED` — the exact false positive the change was made to remove, reintroduced
+one casing over. The three casings are now three branches with two endings:
+lower and capitalised end where lowercase stops, all-caps ends where letters
+stop. ⚠ It survived the first table because that table tested one casing per
+word; every word now appears in more than one.
+
+**`recommendation` stays banned as an identifier.** CLAUDE.md permits the
+*idea* narrowly — an explained, user-controlled local relevance result — but
+the specification's own words for that surface are "For you here" and
+"relevance". Nothing the specification asks for needs the identifier, so the
+strongest available signal costs nothing to keep.
+
+**There is now a third test, against a config that says there are two.**
+`vitest.config.ts` admits only guarantees that fail with no symptom, and this
+one qualifies on both of its failure modes: a pattern that stops matching
+leaves lint, typecheck and every screen exactly as they were, and a pattern
+that matches too much is discovered by someone else, later, as an error about
+their own code. The regex is now *built* from a word list, so one edit to the
+builder moves every word at once — `tests/vocabulary.test.ts` holds a table of
+seventeen identifiers that must be rejected and twenty-four that must pass —
+the re-direction's own vocabulary, ordinary English containing a banned word,
+and both of those in more than one casing.
+
+### Captures, possibilities, and a fourth positive term (22 August)
+
+Phase 0's schema. Nothing the user can see moves: every legacy entry becomes a
+capture, every capture lands private, and the film-first screens keep reading
+the tables they always read.
+
+**The table is `captures` and the physical relation is still `items`.** §12
+says to retain the items table as the starting point for canonical
+possibilities and migrate the film rows rather than discard them, so the recast
+is a rename in code — `possibilities`, with `items` left as a deprecated alias
+while the film-first modules still compile against it. Renaming the relation
+would have put a data move underneath a vocabulary change, and the two want
+separate migrations for the same reason they want separate reasoning.
+
+**`possibility_id` and `intent` are both nullable, and that is the product.**
+A person who types *try pottery* has said something complete; the specification
+is explicit that no catalogue result may gate a save and that nobody is asked
+to categorise anything before saving. A schema that made either column
+mandatory would have re-imposed the search gate the re-direction removed.
+
+**`external_source` lost its `'tmdb'` default at the same time it became
+nullable, and that matters more than the nullability.** A default is an
+invention arrived at by omission: a user-created possibility would have
+acquired a provider it never came from, silently, at insert time. §12 forbids
+the fake identifier; the default was the mechanism that would have produced
+one. A check constraint now requires both halves or neither, because a source
+without an id and an id without a source are each half a provenance, and the
+half that goes missing is the one naming which catalogue the number belongs to.
+
+**Uniqueness is carried by NULLs being distinct, not by partial indexes.** One
+unique key on (user, possibility, intention) is simultaneously the §6 rule that
+a resolved capture is one active record, and the §6 rule that repeated raw text
+is not discarded — because a capture that resolved to nothing does not collide
+with anything. The same trick keeps user-created possibilities out of the
+(kind, external id) key. Neither constraint needed a predicate.
+
+**Provenance is the input to suppression, so it has a shape and the shape is
+checked.** `self` means both origin columns are empty; every other source must
+name a person. A capture sourced from its own owner is refused outright — it
+would suppress the convergence it should have caused. Immutability is a
+`lib/db/` property: no mutation function exposes the three columns.
+
+#### The deletion that would have aborted
+
+`source_user_id` was first written ON DELETE SET NULL, copying the legacy
+column. That is unimplementable next to the shape check: nulling the column
+leaves `source = 'copy'` with nobody to name, the check refuses it, and the
+referential action raises — **taking the account deletion down with it.** The
+fault would have surfaced at whatever moment someone first deleted an account,
+which is to say long after the decision that caused it.
+
+**The conversion runs before the delete, and the constraint became RESTRICT
+behind it.** A capture whose origin has left becomes self-sourced: the account
+is gone and so are its captures, so there is nobody left to suppress a
+convergence against and self is the only description still true of the row.
+RESTRICT then stands behind the conversion as proof that it ran.
+
+⚠ **The conversion is a `before delete` trigger on `profiles`, and it is the
+only behaviour in this schema that does not live in `lib/db/`.** Better Auth
+deletes `user` rows through its own adapter, and the cascade from `user` to
+`profiles` never passes through this application's data layer — so a conversion
+written in `lib/db/` would be bypassed by the code most likely to need it. This
+is a deliberate exception to the rule in `CLAUDE.md`, and the argument for it is
+the same argument that rule is made of: enforcement belongs where it cannot be
+routed around.
+
+Both halves were verified against the development branch rather than reasoned
+about: with the trigger disabled the deletion aborts on
+`captures_source_user_id_profiles_id_fk`, and with it enabled the deletion
+succeeds and the capture comes back `self` with both origin columns null.
+
+#### Still missing from §7's minimum fields
+
+`updated_at` was missing and is now in. Three more are named in the same list
+and are deliberately not here yet: **normalised text for matching**, an
+**optional image asset**, and an **optional source URL**. Each wants the code
+that fills it — normalisation with the capture mutation, the asset with the
+media-storage decision in §6 — and a column nobody writes is a column that
+lies about what the row contains.
+
+### The normalisation lives in the column (22 August)
+
+§7's minimum fields ask a capture to carry normalised text as well as the words
+someone typed. Phase 2 needs it for the case a possibility cannot serve: two
+people who both typed *try pottery* and neither of whom resolved it to anything
+canonical. Exact convergence runs on `possibility_id`; this is the only handle
+the possible-match path has when that column is null on both sides.
+
+**It is a generated column, not a TypeScript function.** One implementation of
+the rule, living where the rows live, so a writer cannot forget it and two
+writers cannot disagree about it.
+
+⚠ **The decisive case is the day the rule changes.** A generated column makes
+that a migration that re-derives every row. A TypeScript function would leave
+every existing row normalised by the old rule while new rows used the new one,
+and the two would quietly stop matching each other — a failure with no symptom,
+in the one part of the product whose whole job is finding that two things are
+the same. It also backfilled all thirty-three migrated rows for free, because
+that is what `ADD COLUMN ... GENERATED` does.
+
+The rule is: lowercase, every run of non-alphanumerics collapsed to a single
+space, trimmed. ⚠ **`[[:alnum:]]` rather than `[a-z0-9]`** — an ASCII class
+would reduce a Japanese or Arabic capture to the empty string and drop it out
+of matching entirely, which is not a defect anyone would see until someone
+captured something in their own language.
+
+⚠ **Accents are not folded.** `café` and `cafe` will not match. `unaccent()` is
+not immutable, so it cannot appear in a generated column without wrapping it,
+and folding is a lossy choice that deserves its own decision rather than
+arriving as a side effect of this one.
+
+#### The gate, and testing it in its failing configurations
+
+`listCapturesForOtherUser` requires four positive terms: the scope is shared,
+the track is mutual in *both* directions, the state is published, and the
+reader is not the owner. Mutuality is two INNER JOINs rather than a flag, so a
+missing track row removes every candidate rather than widening the result.
+
+⚠ **All four are in the predicate, and the fourth one started out as an early
+return.** `if (targetUserId === viewer.id) return []` is control flow, and
+control flow is what gets refactored away — a test written against it passes
+whether or not the query is correct, because the query never runs. It is now
+`ne(captures.userId, viewer.id)` and the early return is gone: one mechanism,
+and the one that can be tested.
+
+⚠ **The joins do not stand in for that term.** Nothing stops a `tracks` row
+from naming the same person twice, and a self-track satisfies both of them —
+so the owner-target test seeds exactly that row, leaving the reader-is-not-the-
+owner term as the only thing that can refuse the read.
+
+The tests take the terms away one at a time. A guarantee only ever exercised in
+its passing configuration is a guarantee nobody has checked — so the visibility
+filter, the state filter, the second track join and the owner term were each
+removed in turn and the suite confirmed to fail on exactly the assertion that
+names them, and to pass again when restored.
+
+#### Provenance is not something a caller can say
+
+The three source columns were reachable twice over, and a comment saying
+"server-supplied only" was the whole of the enforcement.
+
+**They were optional fields on the public input type**, which is one spread of
+a parsed request body away from being client-controlled — and a caller that can
+name its own provenance can switch suppression off, which turns copying
+somebody's list into a way of notifying them. The public input no longer has
+them. The writer that does is private to the module, so the only two callers
+that can supply a provenance are `addCapture`, which always supplies *self*,
+and `copyCapture`, which reads it off the row being copied.
+
+**And reviving a dropped capture rewrote it.** The legacy `addEntry`
+deliberately refreshed `source` on every revive, reasoning that a stale source
+would withhold a notification that should now fire. Captures invert that: a row
+that came off somebody's page came off it, and if re-adding the thing erases
+that, the suppression rule can be switched off from the client by anyone
+willing to cross something out first.
+
+⚠ **The one movement still allowed is `self` → sourced, and it is allowed
+because it can only ever suppress more.** Add something yourself, cross it off,
+then copy it from the person who had it: without this the revived row claims to
+be independently yours and notifies the very person you took it from. Clearing
+provenance is impossible in either direction; that belongs to a deliberate
+*make this one mine* mutation, which does not exist yet.
+
+⚠ **`/u/[handle]` must not render an empty list for a non-mutual.** *This
+person has nothing* and *this person has nothing for you* are different claims,
+and the first is one the app has no business making about somebody else. The
+function returns nothing in both cases by design; the page has to say the list
+is not shared, unconditionally.
+
+### The callers move, and `entries` stops being written (22 August)
+
+The Phase 0 exit criterion is that no parallel write path remains. It is met by
+subtraction: `addEntry`, `copyEntry`, `resolveEntry`, `dropEntry`,
+`restoreEntry`, `setEntryNote`, `undoEntry` and their shared `fireOverlap` are
+**deleted**, not deprecated. `entries.ts` holds reads and nothing else, so
+"read-only" is a fact about the module rather than a rule someone has to
+remember.
+
+The Server Actions keep their names. `addFilmAction`, `crossOffAction` and the
+rest still say entry, and every component that calls them is untouched — the
+actions file is the seam between a film-first interface and the capture model
+underneath it, and renaming the seam is Phase 1's job. What matters is that
+nothing in it *can* write an entry.
+
+**Reads had to move too, and that is not optional.** A frozen table read by
+live screens does not merely go stale: cross something off today and your page
+would still show it as a want, which is the app showing something its owner has
+retracted. Once the writes moved, the reads had no choice but to follow.
+
+#### The one deliberate copy change
+
+`/u/[handle]` now reads captures, so a non-mutual sees nothing — and its empty
+line said *Nothing here yet*, which is a claim about the owner that the app has
+no business making. It now reads *This list is not shared with you* for anyone
+who is not a mutual.
+
+⚠ **The condition is the track and only the track**, never the size of the
+result, so the sentence is identical whether the owner holds a thousand
+captures or none. A copy that depended on the count would leak exactly what the
+scope was hiding.
+
+#### Overlap fans out from captures, and the scope is part of the query
+
+Both statements — the counterpart lookup and the pair fan-out — now join
+`captures`, and both carry two new terms: the capture must be shared, and its
+intention must not be null. A private capture is not a signal to anybody, so a
+fan-out that ignored the scope would notify someone about a list its owner
+never opened. `classify` decides on the pair of intents, so a capture without
+one cannot be classified; it is excluded in SQL rather than filtered afterwards,
+which keeps the statement one statement.
+
+**Sharing became the third trigger.** Creation, state change, and now
+`setCaptureVisibility` — because every migrated capture landed private, so
+nothing converges until its owner shares it, and without this the moment a
+capture became a signal would pass unobserved.
+
+⚠ **Expect convergence to be quiet.** That is the cost of the private
+migration, and it is the accepted one, not a regression.
+
+⚠ **`= any(${array})` does not work and fails only at runtime.** Drizzle sends
+a JS array as one parameter and Postgres reads it as an array literal, which
+`'mutuals'` is not — `22P02`, from a statement that type-checks perfectly.
+`sql.join` expands to one placeholder per value, which is what an `in` list
+wants. **The test written for the visibility guard is what found it**, on its
+first run, which is the argument for writing the test alongside the query
+rather than after it.
+
+### Suppression names the source that does *not* suppress (22 August)
+
+`isSuppressed` read `source === 'copy' || source === 'swap'`. `swap` was
+designed and never built; `transfer` took its slot in the capture model, and
+the backfill maps the one legacy value to it. So a transferred capture looked
+independent to the most important line in the app, and the person it would have
+notified is the person who had just handed the list over.
+
+⚠ **It is now the inverse: everything that is not `self` suppresses.** A source
+added later suppresses until somebody decides it should not, which is the
+direction this has to fail in — the cost of suppressing too much is a
+notification nobody gets, and the cost of suppressing too little is telling
+someone they match a list they gave you.
+
+`Side.source` and `Counterpart.source` are `CaptureSource` rather than `string`
+for the same reason, so a value that genuinely should notify has to be admitted
+on purpose.
+
+⚠ **Nothing about the old line looked incomplete**, which is why it survived
+the port that renamed everything around it: a list of two values reads like a
+finished thought. The regression test is the part that would have caught it —
+with the old rule restored it fails on the transfer case and passes on the copy
+case, which is exactly the shape of the bug.
+
+A transfer is also the copy argument at volume: §9 hands over a selected set at
+once, so a transfer that did not suppress would fire one alert per row at the
+person who had just handed them over, in the minute after they did it.
+
+### Amendment 1 to the specification — vocabulary and fixtures (22 August)
+
+Two Phase 0 deliverables moved, one because it was mis-specified and one
+because it was unsatisfiable. The specification is normative, so both moved by
+a dated amendment listed at the top of it rather than by an edit to §13 that
+nobody would notice.
+
+**Unused types are not delivery.** `kind` and `intent` are plain `text`
+columns — no enum, no check — so widening `Kind` to §3's seven possibility
+types and `Intent` to its six intentions needs no DDL at all. It was described
+here earlier as a migration, which overstated it: what needs a migration is
+*converting* existing rows, not expanding the vocabulary they are checked
+against.
+
+That correction cuts both ways, and the second cut is the one that decided
+this. If the expansion is nearly free, the argument for landing it in Phase 0
+becomes *it is nearly free* — which is not an argument that it is finished.
+Nothing constructs a `place` or a `visit` today: no screen offers enrichment,
+no surface renders a possibility type, and `specFor` entries for the new pairs
+would be written against nothing that could show them wrong.
+
+⚠ **It is the same fault as a column nobody writes**, which this project
+already refused twice — `image_asset` and `source_url` were held back from the
+capture table for exactly this reason. A union nobody constructs is that fault
+at type level, and it is worse in one respect: a column reads as empty, while a
+type reads as done.
+
+**And expanding it would not have satisfied §13 anyway.** The deliverable is
+*canonical vocabulary and status copy* — the conversion of existing records and
+the words on screen. Types without either leave every row saying `film` and
+every heading saying *Wants*. Landing them in Phase 0 would have bought unused
+surface while leaving the deviation open, which is the worst of both.
+
+So the whole deliverable moves to Phase 1, where conversion, copy and the
+screens that display them arrive together and can be checked against each
+other. Phase 1 gains an exit criterion saying so.
+
+⚠ **That criterion first said "no stored record", which Phase 1 could never
+have met.** `entries` and `captures.legacy_entry_id` are retained on purpose —
+they are how the migration is verified against its own source — and every one
+of those rows is film-first by definition. An exit criterion that counted them
+would have been unsatisfiable for as long as the thing it depends on exists,
+which is the same defect as the fixtures clause it sits three paragraphs below.
+It now names active product data and the interface, and exempts the read-only
+comparison surface explicitly, until its own separate retirement.
+
+**The fixtures clause was unsatisfiable rather than deferred.** §13 asked Phase
+0 for fixtures covering *disputed* and *stale* — states Phase 4 and Phase 5
+introduce, which this schema cannot represent. A phase cannot produce a fixture
+for a state that does not exist, so those two move to the phases that create
+them, and Phase 0 keeps the four it can actually build: raw, resolved, private,
+shared.
+
+⚠ **Neither change touches migrations `0004`–`0008` or the production
+runbook.** That was a condition of making them, not a happy result: an
+amendment that moved the verified migration set would have invalidated the
+procedure written against it, and the amendment is not urgent enough to be
+worth re-verifying a database migration for.
+
+What Phase 0 is, stated plainly, so the exit criteria can be honest about it:
+**a compatibility and data-safety step. It changes what the records are, not
+what they say.**
+
+### The runbook runs in the shell it will actually be typed into (22 August)
+
+Review found it written in POSIX — `DATABASE_URL="$PROD_URL" npm run db:migrate`
+— against a checkout where PowerShell is the shell. PowerShell has no inline
+environment prefix at all, so that line is not merely awkward there; it is a
+parse error.
+
+⚠ **A production runbook is executable or it is decorative.** Every other kind
+of document survives being approximately right, because a reader adapts. This
+one gets followed literally, under time pressure, by someone who has just taken
+a backup and is watching a migration they cannot undo.
+
+So the operator shell is stated once at the top, every command is written for
+it, and the two POSIX equivalents that are genuinely useful are marked as *not
+the version to run*. `DATABASE_URL` is set as a session variable in §1.2 and
+removed in §4.5 — PowerShell keeps it for the whole session otherwise, which
+would leave a later `npm run dev` in the same window pointed at production.
+
+#### The checks became scripts, which is the larger half of the fix
+
+`npm run migration:preflight` and `npm run migration:verify`. Both read and
+write nothing, both print the host and database name **before any check runs**,
+and both end in a single line that says whether to continue.
+
+⚠ **The SQL left the document.** Fifteen statements pasted into a console by
+hand is fifteen chances to paste one wrong, and a prose copy drifts from the
+real one the moment either is edited. The runbook now says what each check
+means; the script says it in SQL, once. It also makes the checks testable — all
+of them were run against `development` before this was written, which a
+document full of SQL blocks cannot claim.
+
+⚠ *Confirm the host* was a step, and steps get skipped. It is now the first two
+lines of output from a command the operator has to run anyway.
+
+### The film add carries no client mutation id (22 August)
+
+§6 says every capture submission carries one. `addFilmAction` does not send one,
+so every Phase 0 film addition stores `null`, and the acceptance test that
+covers mutation ids calls the data layer directly — proving the layer and not
+the shipped path. Review caught the gap.
+
+**Recorded rather than closed, and the reason is that closing it properly is
+Phase 1 work.** An id only does anything if it is *stable across a retry*,
+which needs the client to hold one per intent-to-save rather than per call.
+Generating a fresh id inside the action would satisfy the sentence and carry
+nothing — the failure mode this project keeps refusing.
+
+**What carries §10's idempotency on the only write path Phase 0 has:** a film
+add resolves a possibility first, so the unique key on (user, possibility,
+intent) catches a retry and returns the existing row with `created: false`, and
+`fireOverlap` does not run on that conflict path, so no second
+notification is written either.
+
+⚠ **Not "only on the insert path", which is what this said first and is
+slightly false.** It also runs when the conflict *revives* a crossed-off
+capture — a real change of state rather than a retry, and one that can happen
+only once, because a second attempt finds the row is a want again and takes the
+no-op path. The accurate claim is about the retry path specifically. Both halves are now asserted in `tests/acceptance.test.ts`
+rather than argued for here.
+
+⚠ **It stops being true in Phase 1.** A raw capture has no possibility, so it
+has no key to collide with, and the mutation id becomes the only thing between
+a double-tap and two rows. Phase 1's exit criteria now require it, and the
+action carries a comment saying what it relies on until then.
+
+This is not an amendment. §13 never asked Phase 0 for §6's capture flow — the
+action is a compatibility seam, the flow arrives in Phase 1 — so the
+requirement is being scheduled, not weakened.
+
+### A revive is not a creation (22 August)
+
+Review of the Phase 0 branch found the fan-out and the undo window disagreeing
+about what reviving a crossed-off capture is. Three defects, one cause, and the
+first of them destroyed data.
+
+**Undo was deleting rows that had existed for months.** `writeCapture`'s
+conflict path revives a `dropped` capture, and it reset `created_at` to `now()`
+— inherited from `addEntry`, on the reasoning that *a want which restarted
+today belongs at the top of the list*. But `created_at` is also the clock
+§5.1's undo window runs on. So: cross a want off, tap `+`, tap undo within ten
+seconds, and the original row is gone — with its private note, its provenance,
+and its `legacy_entry_id` link to the backfill. §5.1 permits exactly one
+deletion and it is an undo **on creation**.
+
+Reproduced before it was fixed, which is the only reason it is written up with
+this much confidence:
+
+    revived same row: true | created reported as: true
+    undo accepted: true | row still exists: false
+
+⚠ **The same defect is live in production today** — `addEntry` and `undoEntry`
+have the identical shape, and `addEntry`'s comment says a revived row is
+*indistinguishable from a fresh one* as though that were the goal. Phase 0
+raises the stakes rather than creating them: the row now carries the audit link
+the whole migration verification depends on.
+
+**`created_at` is no longer reset, and that is the fix rather than a guard on
+top of it.** The undo window is bounded by `created_at` in SQL, so leaving it
+alone makes the deletion *impossible* rather than merely unoffered — a caller
+that offers undo anyway is refused by the data layer.
+
+⚠ It also settles an argument the two paths were having. Restoring with the ×
+deliberately leaves the row where it was — *finding it somewhere else would
+undo the point of striking it through in place* — while reviving with `+` sent
+it to the top. Same transition, two positions, decided by which control you
+used. Now neither moves.
+
+`addCapture` returns `created: false` for a revive. `film-screen.tsx` already
+says *only a real creation is undoable*; it was being told a revive was one.
+
+#### One rule for the fan-out, replacing three separate judgements
+
+The second and third findings were the same disagreement wearing different
+clothes. `setCaptureVisibility` fired on every call, so setting `mutuals` on
+something already shared wrote a second identical notification — verified:
+*after first share: 1 | after redundant second: 2*. And the revive path fired
+while `restoreCapture` did not, though they are the same transition.
+
+**The fan-out runs when a capture becomes a signal it was not already, and
+never merely because a writer touched the row.** Three moments qualify: a
+capture created shared, a state change, and a scope moving into
+`SHARED_SCOPES`. Two deliberately do not: revive and restore, because dropping
+never withdrew the notification it had already sent, so coming back announces
+nothing new.
+
+⚠ **Overlap does not deduplicate**, so every avoidable re-fire is a second
+identical row at somebody. That is why the rule is written once, above
+`fireOverlap`, rather than decided again at each caller — which is how the
+three call sites came to disagree.
+
+The review also suggested fixing the asymmetry the other way, by firing on
+restore. Firing more would have been the wrong direction: the notification the
+counterpart already has is still true, and §5.1 makes dropping a resolution
+rather than a delete.
+
+#### Two findings not acted on
+
+**The `poster.tsx` magnify race is not in this branch.** The reviewer diffed
+against the stale local `main` at `68ce007` and picked up sixty-three commits
+instead of this pull request's fourteen. It may well be real; it is already
+deployed, and it is not Phase 0's.
+
+**The `clientMutationId` race is real and unreachable.** Two concurrent
+requests carrying the same id for an *unresolved* capture would both pass the
+read and the second would raise rather than returning a typed `Result`. No
+caller passes an id today, and the file already records that Phase 1 is where
+that changes — so it is Phase 1's to close, alongside the stable id itself.
+
 ---
 
 ## Still open

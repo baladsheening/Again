@@ -1,5 +1,7 @@
+import { sql } from 'drizzle-orm'
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -9,6 +11,7 @@ import {
   timestamp,
   unique,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 
 /**
@@ -16,21 +19,27 @@ import {
  * and Client Components need them without reaching the database.
  */
 import type {
+  CaptureSource,
+  CaptureState,
   EntrySource,
   EntryState,
   Intent,
   Kind,
   NotificationKind,
   SwapStatus,
+  Visibility,
 } from '@/lib/domain'
 
 export type {
+  CaptureSource,
+  CaptureState,
   EntrySource,
   EntryState,
   Intent,
   Kind,
   NotificationKind,
   SwapStatus,
+  Visibility,
 } from '@/lib/domain'
 
 /* -------------------------------------------------------------------------- */
@@ -126,8 +135,15 @@ export const profiles = pgTable('profiles', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-/** Canonical, shared across all users. One row per real-world thing. */
-export const items = pgTable(
+/**
+ * Canonical possibilities: one row per real-world thing, shared across all
+ * users. **The physical table is still `items`**, and deliberately — §12 says
+ * to retain it as the starting point and migrate the film rows rather than
+ * discard them, so Phase 0 recasts what the table *means* without moving a
+ * single row. Renaming the relation is a later migration with nothing riding
+ * on it; renaming it now would put a data move underneath a vocabulary change.
+ */
+export const possibilities = pgTable(
   'items',
   {
     id: uuid('id').primaryKey().defaultRandom(),
@@ -143,17 +159,48 @@ export const items = pgTable(
      * as §5 specifies: one canonical row per real thing. If a provider
      * migration ever happens, widening it is a decision to take then, with a
      * deduplication strategy — not a guess to bake in now.
+     *
+     * ⚠ **Nullable since Phase 0, and the default is gone with it.** A
+     * possibility a person typed has no catalogue behind it, and §12 is
+     * explicit that a fake TMDB identifier must not be used to give it one.
+     * A default of `'tmdb'` on a user-created row is exactly that invention,
+     * arrived at by omission rather than by decision.
      */
-    externalSource: text('external_source').notNull().default('tmdb'),
-    /** TMDB id for films. Namespaced by `kind`. */
-    externalId: text('external_id').notNull(),
+    externalSource: text('external_source'),
+    /** TMDB id for films, when a provider resolved this. Namespaced by `kind`. */
+    externalId: text('external_id'),
     title: text('title').notNull(),
     year: integer('year'),
     /** poster_path, director */
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
   },
-  (t) => [unique('items_kind_external_id_key').on(t.kind, t.externalId)],
+  (t) => [
+    /*
+      Unchanged, and it still means one canonical row per real thing. Postgres
+      treats NULLs as distinct in a unique index, so every user-created
+      possibility is its own row while the provider-resolved ones stay unique
+      per (kind, external id) — which is the behaviour this constraint was
+      written for and the reason it does not need a partial predicate.
+    */
+    unique('items_kind_external_id_key').on(t.kind, t.externalId),
+    /*
+      A source without an id, or an id without a source, is a half-recorded
+      provenance — and the half that goes missing is the one that says which
+      catalogue the number belongs to. Both or neither.
+    */
+    check(
+      'items_external_pair',
+      sql`(${t.externalSource} is null) = (${t.externalId} is null)`,
+    ),
+  ],
 )
+
+/**
+ * @deprecated The legacy name for the same table. It exists so the film-first
+ * modules keep compiling through Phase 0 verification, and it goes when they
+ * do. New code says `possibilities`.
+ */
+export const items = possibilities
 
 /** One user's relationship to one item, under one intent. */
 export const entries = pgTable(
@@ -200,6 +247,212 @@ export const entries = pgTable(
     // The overlap fan-out drives off this one (§6).
     index('entries_item_intent_state_idx').on(t.itemId, t.intent, t.state),
     index('entries_user_state_idx').on(t.userId, t.state),
+  ],
+)
+
+/**
+ * The durable, user-owned record of an intention — and from Phase 0 on, the
+ * only thing new writes create.
+ *
+ * A capture is valid with nothing but its words. `possibility_id` is nullable
+ * because the specification is explicit that a person who types *try pottery*
+ * has said something complete, and that no catalogue result is required before
+ * it can be saved. `intent` is nullable for the same reason: the interface must
+ * not ask anyone to categorise anything before they have saved it.
+ *
+ * ⚠ **`text` is what the person typed, and it survives resolution.** Selecting
+ * a suggestion links the capture to a possibility; it does not overwrite the
+ * words. That is a §6 requirement, and it is also the only record of what
+ * someone meant when the match turns out to be wrong.
+ */
+export const captures = pgTable(
+  'captures',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    /** The words, as typed. Never replaced by a suggestion's title (§6). */
+    text: text('text').notNull(),
+    /**
+     * The words reduced to what matching can compare: lowercased, every run of
+     * non-alphanumerics collapsed to one space, trimmed.
+     *
+     * §7 asks for it, and Phase 2 needs it for the case a possibility cannot
+     * serve — two people who both typed *try pottery* and neither of whom
+     * resolved it to anything canonical. Exact convergence runs on
+     * `possibility_id`; this is the only handle the possible-match path has
+     * when that column is null on both sides.
+     *
+     * ⚠ **Generated, and deliberately not computed in TypeScript.** There is
+     * one implementation of the rule and it lives where the rows live, so a
+     * writer cannot forget it and two writers cannot disagree about it. The
+     * decisive case is the day the rule changes: a generated column makes that
+     * a migration which re-derives every row, where a TypeScript function
+     * would leave every existing row normalised by the old rule and quietly
+     * stop matching them. That failure has no symptom.
+     *
+     * ⚠ **`[[:alnum:]]` rather than `[a-z0-9]`.** The product is not
+     * English-only and a capture is any intention in any script; an ASCII
+     * class would normalise a Japanese or Arabic capture to the empty string
+     * and silently exclude it from matching altogether.
+     */
+    normalisedText: text('normalised_text')
+      .notNull()
+      .generatedAlwaysAs(
+        sql`btrim(regexp_replace(lower("text"), '[^[:alnum:]]+', ' ', 'g'))`,
+      ),
+    /** Null until this resolves to something canonical. Most captures start here. */
+    possibilityId: uuid('possibility_id').references(() => possibilities.id),
+    /** Optional at capture, refined later. Never asked for before saving (§3). */
+    intent: text('intent').$type<Intent>(),
+    state: text('state').$type<CaptureState>().notNull(),
+    /** Experiences only; revisits, rewatches, second attempts. */
+    returnCount: integer('return_count').notNull().default(0),
+    /**
+     * A private one-line note. **Owner only, forever** — the same guarantee the
+     * legacy column carries, and the same reason it must never reach a
+     * projection built for anyone else.
+     */
+    note: text('note'),
+    /**
+     * ⚠ **Private is the default, in the column.** A capture that is written
+     * without an opinion about who can see it is private, so the failure mode
+     * of a forgetful writer is a capture nobody else can read.
+     */
+    visibility: text('visibility').$type<Visibility>().notNull().default('private'),
+    /* ---------------------------------------------------------------------- */
+    /*  Provenance. Server-owned, and immutable once written.                  */
+    /* ---------------------------------------------------------------------- */
+    /**
+     * ⚠ **Never accept these three from a client, and never update them.**
+     * They are the input to the §6 suppression rule, which is the difference
+     * between *we both independently want this* and *I took this off your
+     * page*. A client that can set its own provenance can make the second look
+     * like the first, and the person it notifies is the one person who already
+     * knew.
+     *
+     * Immutability is enforced in `lib/db/` — no mutation function exposes
+     * them — for the reason every other guarantee is: `lib/db/` is the only
+     * boundary this product has, and a second enforcement point is a second
+     * thing that can disagree.
+     */
+    source: text('source').$type<CaptureSource>().notNull().default('self'),
+    /**
+     * The capture this one was taken from, when there is one. Nullable
+     * forever: a transfer can outlive the record it came from, and the legacy
+     * backfill has only a user to point at for rows copied before captures
+     * existed.
+     */
+    sourceCaptureId: uuid('source_capture_id').references((): AnyPgColumn => captures.id, {
+      onDelete: 'set null',
+    }),
+    /**
+     * Who it came from. The directional test `isSuppressed` already performs.
+     *
+     * ⚠ **`restrict`, not `set null`, and the difference is a deletion that
+     * aborts.** Nulling this column leaves `source = 'copy'` with nobody to
+     * name, which `captures_provenance_shape` refuses — so the referential
+     * action would have raised on the constraint and taken the account
+     * deletion down with it, at whatever moment someone first tried to delete
+     * an account.
+     *
+     * The conversion runs first instead, in a `before delete` trigger on
+     * `profiles` (migration 0007). A capture whose origin has left becomes
+     * self-sourced: there is no longer anyone to suppress a convergence
+     * against, and self is the only description still true of it. `restrict`
+     * then stands behind the trigger as proof it ran.
+     *
+     * ⚠ **It is a trigger and not a function in `lib/db/` for one reason:
+     * Better Auth deletes `user` rows through its own adapter**, which never
+     * passes through this layer. A conversion written here would be bypassed
+     * by the code most likely to need it.
+     */
+    sourceUserId: uuid('source_user_id').references(() => profiles.id, {
+      onDelete: 'restrict',
+    }),
+    /* ---------------------------------------------------------------------- */
+    /**
+     * §6: every capture submission carries one, so a retried save cannot
+     * create a second row. Nullable because the backfill has no client and no
+     * submission to be idempotent about.
+     */
+    clientMutationId: text('client_mutation_id'),
+    /**
+     * The entry this capture was backfilled from, and nothing else writes it.
+     *
+     * It is what makes the migration re-runnable: a second pass inserts
+     * nothing, because the unique index below already holds the row. It is
+     * also the only way to verify the backfill against its source while the
+     * legacy tables are still there to compare against.
+     */
+    legacyEntryId: uuid('legacy_entry_id').references(() => entries.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * §7's minimum fields ask for both timestamps, and they answer different
+     * questions: `created_at` is when the intention was captured, this is when
+     * the record last moved. Enrichment after the fact is the whole shape of
+     * the product — resolve it, name the intention, write the note — so a
+     * capture's last change is not derivable from its creation.
+     *
+     * ⚠ **Maintained by `$onUpdate`, which is Drizzle-side.** That is sound
+     * only because every write goes through `lib/db/`, and it is one more
+     * reason no second write path may exist. A statement issued outside
+     * Drizzle leaves this stale rather than wrong-by-constraint, which is the
+     * quiet failure — so migrations that touch captures set it explicitly.
+     */
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (t) => [
+    /*
+      One active record per user, possibility and intention (§6) — and no
+      constraint at all on captures that have resolved to nothing, because
+      Postgres treats NULLs as distinct. That is exactly the behaviour the
+      specification asks for in the same paragraph: repeated raw text is not
+      automatically discarded, since the same words can mean a different thing
+      on a different day, but two captures of the *same possibility* under the
+      same intention are one intention.
+    */
+    unique('captures_user_possibility_intent_key').on(t.userId, t.possibilityId, t.intent),
+    /* Retry idempotency (§10). Null for anything the server wrote itself. */
+    unique('captures_user_client_mutation_key').on(t.userId, t.clientMutationId),
+    /* One capture per legacy entry, which is what makes the backfill re-runnable. */
+    unique('captures_legacy_entry_key').on(t.legacyEntryId),
+    /* The convergence fan-out drives off this one (§6). */
+    index('captures_possibility_intent_state_idx').on(t.possibilityId, t.intent, t.state),
+    index('captures_user_state_idx').on(t.userId, t.state),
+    /* Home is reverse-chronological and paginated (§10), not a poster wall. */
+    index('captures_user_created_idx').on(t.userId, t.createdAt),
+    /*
+      The possible-match path (Phase 2) joins on this, for the captures that
+      resolved to nothing and have only their words in common.
+    */
+    index('captures_normalised_text_idx').on(t.normalisedText),
+    /*
+      Provenance has a shape, and half of one is worse than none: a capture
+      that says it came from somewhere but cannot say from whom is a capture
+      whose suppression cannot be decided. `self` means both are empty; every
+      other source must name a person.
+    */
+    check(
+      'captures_provenance_shape',
+      sql`case when ${t.source} = 'self'
+            then ${t.sourceUserId} is null and ${t.sourceCaptureId} is null
+            else ${t.sourceUserId} is not null
+          end`,
+    ),
+    /*
+      You cannot take something off your own page. A capture sourced from its
+      own owner would suppress the convergence it should have caused.
+    */
+    check(
+      'captures_source_is_not_owner',
+      sql`${t.sourceUserId} is null or ${t.sourceUserId} <> ${t.userId}`,
+    ),
   ],
 )
 
@@ -286,7 +539,10 @@ export const pushSubscriptions = pgTable(
 /* -------------------------------------------------------------------------- */
 
 export type Profile = typeof profiles.$inferSelect
-export type Item = typeof items.$inferSelect
+export type Possibility = typeof possibilities.$inferSelect
+/** @deprecated The legacy name for {@link Possibility}. */
+export type Item = Possibility
+export type Capture = typeof captures.$inferSelect
 export type Entry = typeof entries.$inferSelect
 export type Swap = typeof swaps.$inferSelect
 export type Notification = typeof notifications.$inferSelect

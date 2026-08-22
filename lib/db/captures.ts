@@ -1,0 +1,882 @@
+import 'server-only'
+
+import { and, asc, desc, eq, getTableColumns, inArray, ne, sql } from 'drizzle-orm'
+import { alias, type PgColumn } from 'drizzle-orm/pg-core'
+
+import { db } from './client'
+import {
+  captures,
+  possibilities,
+  profiles,
+  tracks,
+  type Capture,
+  type CaptureState,
+  type Possibility,
+} from './schema'
+import type { SessionUser } from './session'
+import { err, ok, type Result } from './result'
+import { runOverlap } from '@/lib/overlap'
+import { specFor } from '@/lib/vocabulary'
+import { PUBLIC_STATES, SHARED_SCOPES } from '@/lib/domain'
+import type { CaptureSource, EntryCard, Intent, Kind, Visibility } from '@/lib/domain'
+
+/**
+ * The capture layer. **From Phase 0 on this is the only thing that writes a
+ * user's intentions** — `entries` is read-only, kept while the backfill is
+ * verified against it, and every function here replaces a counterpart there.
+ *
+ * The differences from `entries.ts` are not stylistic. A capture is valid with
+ * no possibility and no intention, so every join to `possibilities` is a LEFT
+ * join and every read of `intent` has to survive a null. And another person's
+ * captures are reached through four positive terms rather than one, which is
+ * the whole of the visibility model.
+ */
+
+/** §5 views, unchanged. `archive` is deliberately absent from `SharedView`. */
+export type OwnerView = 'live' | 'go_back_tos' | 'fixtures' | 'archive'
+export type SharedView = 'live' | 'go_back_tos' | 'fixtures'
+
+/** A capture, and the canonical thing it resolved to — if it resolved to one. */
+export type CaptureWithPossibility = {
+  capture: Capture
+  possibility: Possibility | null
+}
+
+/**
+ * What another person's capture may be.
+ *
+ * ⚠ **Named columns, never `captures`.** `select({ capture: captures })`
+ * returns whatever the table happens to hold, so the day a private column is
+ * added it is already in every shared read — nothing fails, nothing looks
+ * wrong, and the guarantee is gone. `note` is that column today. Listing the
+ * shared ones by hand means a new private field is excluded by default rather
+ * than by memory.
+ *
+ * Adding a column here is a decision to publish it. Do not spread `captures`.
+ */
+const SHARED_CAPTURE_COLUMNS = {
+  id: captures.id,
+  userId: captures.userId,
+  possibilityId: captures.possibilityId,
+  text: captures.text,
+  intent: captures.intent,
+  state: captures.state,
+  returnCount: captures.returnCount,
+  source: captures.source,
+  sourceUserId: captures.sourceUserId,
+  createdAt: captures.createdAt,
+  resolvedAt: captures.resolvedAt,
+} as const
+
+export type SharedCapture = {
+  [K in keyof typeof SHARED_CAPTURE_COLUMNS]: Capture[K]
+}
+
+export type SharedCaptureWithPossibility = {
+  capture: SharedCapture
+  possibility: Possibility | null
+}
+
+/**
+ * What a list row needs and nothing else (§10). The text is the row; the
+ * possibility fields are null until something canonical is attached, which is
+ * the ordinary state of a capture rather than a degraded one.
+ */
+export type CaptureCard = {
+  id: string
+  text: string
+  intent: Intent | null
+  state: CaptureState
+  kind: Kind | null
+  title: string | null
+  year: number | null
+  posterPath: string | null
+}
+
+/** Takes the shared shape, so it cannot be the thing that carries `note` out. */
+export function toCaptureCard({
+  capture,
+  possibility,
+}: SharedCaptureWithPossibility): CaptureCard {
+  const metadata = (possibility?.metadata ?? {}) as { posterPath?: string | null }
+  return {
+    id: capture.id,
+    text: capture.text,
+    intent: capture.intent,
+    state: capture.state,
+    kind: possibility?.kind ?? null,
+    title: possibility?.title ?? null,
+    year: possibility?.year ?? null,
+    posterPath: metadata.posterPath ?? null,
+  }
+}
+
+/**
+ * The compatibility projection, and the only reason it exists is that the
+ * film-first screens still render `EntryCard` (§12 — a read-only compatibility
+ * projection may keep legacy screens working while the migration is verified).
+ *
+ * ⚠ **It drops captures that resolved to nothing**, because an `EntryCard`
+ * cannot express one: it has a `kind` and a `title` and no way to say *the
+ * words somebody typed*. Today nothing creates such a capture — every write
+ * still comes through the film flow, which resolves a TMDB row first — so the
+ * filter removes nothing. It stops being harmless the moment raw capture ships,
+ * which is Phase 1, and that is the phase that replaces these screens.
+ *
+ * This function is temporary by construction. When the Home surface reads
+ * `CaptureCard`, it goes.
+ *
+ * ⚠ **It takes the three columns it needs rather than a whole capture**, so it
+ * accepts an owner's row and a shared one alike — and cannot read `note` from
+ * either, whatever it is handed.
+ */
+export function toLegacyEntryCards(
+  rows: readonly {
+    capture: Pick<Capture, 'id' | 'intent' | 'state'>
+    possibility: Possibility | null
+  }[],
+): EntryCard[] {
+  return rows.flatMap(({ capture, possibility }) => {
+    if (!possibility || !capture.intent) return []
+
+    const metadata = (possibility.metadata ?? {}) as { posterPath?: string | null }
+    return [
+      {
+        id: capture.id,
+        kind: possibility.kind,
+        intent: capture.intent,
+        state: capture.state,
+        title: possibility.title,
+        year: possibility.year,
+        posterPath: metadata.posterPath ?? null,
+      },
+    ]
+  })
+}
+
+const PAGE_SIZE = 50
+
+/** §10: paginate every list. */
+export type Page = { limit?: number; offset?: number }
+
+function stateFilter(view: OwnerView) {
+  switch (view) {
+    /*
+      A go-back-to is still a want (§5.2), and a crossed-off want stays on the
+      page struck through — safe here only because the shared read filters on
+      `PUBLIC_STATES` as well. See `listEntriesForOtherUser` for the full note;
+      the inversion it describes is what makes widening this view safe.
+    */
+    case 'live':
+      return inArray(captures.state, ['want', 'go_back_to', 'dropped'] as const)
+    case 'go_back_tos':
+      return eq(captures.state, 'go_back_to' as const)
+    case 'fixtures':
+      return eq(captures.state, 'fixture' as const)
+    case 'archive':
+      return eq(captures.state, 'done' as const)
+  }
+}
+
+function orderFor(view: OwnerView) {
+  if (view === 'go_back_tos') return [desc(captures.resolvedAt)]
+
+  /*
+    The CASE names `go_back_to` rather than `want`, so crossing a row off leaves
+    it where it was. The reasoning is in `entries.ts` and carries over
+    unchanged: it is a fact about what striking a row through means, not about
+    which table the row lives in.
+  */
+  if (view === 'live') {
+    return [
+      asc(sql`case when ${captures.state} = 'go_back_to' then 1 else 0 end`),
+      desc(captures.createdAt),
+    ]
+  }
+
+  return [desc(captures.createdAt)]
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Reads                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** The caller's own captures, every view, private states included (§5.3). */
+export async function listMyCaptures(
+  sessionUser: SessionUser,
+  view: OwnerView,
+  { limit = PAGE_SIZE, offset = 0 }: Page = {},
+): Promise<CaptureWithPossibility[]> {
+  return db
+    .select({ capture: captures, possibility: possibilities })
+    .from(captures)
+    /* LEFT, because a capture with nothing canonical behind it is the norm. */
+    .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+    .where(and(eq(captures.userId, sessionUser.id), stateFilter(view)))
+    .orderBy(...orderFor(view))
+    .limit(limit)
+    .offset(offset)
+}
+
+/** One grouped statement, not four counts — the note in `entries.ts` applies. */
+export async function countMyCaptures(
+  sessionUser: SessionUser,
+): Promise<Record<OwnerView, number>> {
+  const rows = await db
+    .select({ state: captures.state, count: sql<number>`count(*)::int` })
+    .from(captures)
+    .where(eq(captures.userId, sessionUser.id))
+    .groupBy(captures.state)
+
+  const byState = new Map(rows.map((r) => [r.state, r.count]))
+  const n = (state: CaptureState) => byState.get(state) ?? 0
+
+  return {
+    live: n('want') + n('go_back_to'),
+    go_back_tos: n('go_back_to'),
+    fixtures: n('fixture'),
+    archive: n('done'),
+  }
+}
+
+/**
+ * Another person's captures.
+ *
+ * **Four positive terms, all required, and none of them derived from a
+ * caller.** A capture reaches this projection only when its scope is shared,
+ * the track is mutual in both directions, and its state is published. The
+ * mutuality is two INNER JOINs rather than a flag, so a missing track row
+ * removes every candidate: the query returns nothing when the relationship is
+ * not there, which is the direction it has to fail in.
+ *
+ * ⚠ **Non-mutuals get nothing, and the caller must not render that as an empty
+ * list.** *This person has nothing* and *this person has nothing for you* are
+ * different claims, and the first is one the app has no business making about
+ * somebody else. The page says the list is not shared, unconditionally,
+ * whether the owner holds a thousand captures or none.
+ *
+ * ⚠ Do not add an `includeArchive` flag. Do not add a scope parameter. Do not
+ * rely on callers passing the right filter. This is one of the places where a
+ * silent bug damages trust rather than function (§13).
+ */
+export async function listCapturesForOtherUser(
+  viewer: SessionUser,
+  targetUserId: string,
+  view: SharedView,
+  { limit = PAGE_SIZE, offset = 0 }: Page = {},
+): Promise<SharedCaptureWithPossibility[]> {
+  const outbound = alias(tracks, 'outbound')
+  const inbound = alias(tracks, 'inbound')
+
+  return db
+    .select({ capture: SHARED_CAPTURE_COLUMNS, possibility: possibilities })
+    .from(captures)
+    .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+    .innerJoin(
+      outbound,
+      and(eq(outbound.followerId, viewer.id), eq(outbound.followedId, targetUserId)),
+    )
+    .innerJoin(
+      inbound,
+      and(eq(inbound.followerId, targetUserId), eq(inbound.followedId, viewer.id)),
+    )
+    .where(
+      and(
+        eq(captures.userId, targetUserId),
+        /*
+          The fourth term, and it is here rather than in an early return
+          because control flow is what gets refactored away. It is also not
+          implied by the joins: nothing stops a `tracks` row from naming the
+          same person twice, and a self-track would satisfy both of them.
+        */
+        ne(captures.userId, viewer.id),
+        /* Unconditional, all of them. None is derived from `view`. */
+        inArray(captures.visibility, SHARED_SCOPES),
+        inArray(captures.state, PUBLIC_STATES),
+        stateFilter(view),
+      ),
+    )
+    .orderBy(...orderFor(view))
+    .limit(limit)
+    .offset(offset)
+}
+
+/**
+ * What this user already holds for one catalogue item, named the way the
+ * catalogue names it. The film screen is the caller.
+ *
+ * Owner-only, and deliberately includes `done` and `dropped` — the reasoning
+ * in `listMyEntriesForExternalId` carries over unchanged.
+ */
+export type ListedCapture = {
+  captureId: string
+  intent: Intent | null
+  state: CaptureState
+}
+
+export async function listMyCapturesForExternalId(
+  sessionUser: SessionUser,
+  input: { kind: Kind; externalId: string },
+): Promise<ListedCapture[]> {
+  const rows = await db
+    .select({ id: captures.id, intent: captures.intent, state: captures.state })
+    .from(captures)
+    .innerJoin(possibilities, eq(captures.possibilityId, possibilities.id))
+    .where(
+      and(
+        eq(captures.userId, sessionUser.id),
+        eq(possibilities.kind, input.kind),
+        eq(possibilities.externalId, input.externalId),
+      ),
+    )
+    .limit(8)
+
+  return rows.map((r) => ({ captureId: r.id, intent: r.intent, state: r.state }))
+}
+
+/**
+ * §6's fan-out.
+ *
+ * ⚠ **One rule decides every call site: it runs when a capture becomes a
+ * signal it was not already, and never merely because a writer touched the
+ * row.** Three moments qualify — a capture created shared, a state change, and
+ * a scope moving into `SHARED_SCOPES`. Two deliberately do not: reviving a
+ * crossed-off capture and restoring one, because dropping never withdrew the
+ * notification it had already sent, so coming back announces nothing new.
+ *
+ * Overlap does not deduplicate. Every avoidable re-fire is a second identical
+ * row at somebody, which is why the rule lives here in one sentence rather
+ * than as a judgement made separately at each caller.
+ *
+ * ⚠ **Three guards, and each of them is a reason there is nothing to fan out
+ * rather than an optimisation.** A capture that resolved to nothing has no
+ * canonical thing to converge on — that is the Phase 2 possible-match path,
+ * which reads `normalised_text` and is not this. A capture with no intention
+ * cannot be classified, because `classify` decides on the pair of intents. And
+ * **a private capture is not a signal to anybody**: convergence is two people
+ * who have each shared an intention, so fanning out from an unshared one would
+ * notify someone about a list its owner never opened.
+ *
+ * ⚠ The counterpart side carries the same three conditions in SQL. Both halves
+ * are needed: this one stops the query, that one filters its result.
+ */
+async function fireOverlap(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  sessionUser: SessionUser,
+  capture: Capture,
+) {
+  if (!capture.possibilityId) return
+  if (!capture.intent) return
+  if (!(SHARED_SCOPES as readonly string[]).includes(capture.visibility)) return
+
+  // `displayName` as well as the handle: notifications only cross mutual
+  // tracks, which is the condition §5 attaches names to — see `nameFor`.
+  const [me] = await tx
+    .select({ handle: profiles.handle, displayName: profiles.displayName })
+    .from(profiles)
+    .where(eq(profiles.id, sessionUser.id))
+    .limit(1)
+
+  const [possibility] = await tx
+    .select({ id: possibilities.id, title: possibilities.title })
+    .from(possibilities)
+    .where(eq(possibilities.id, capture.possibilityId))
+    .limit(1)
+
+  if (!me || !possibility) return
+
+  await runOverlap(
+    tx,
+    {
+      userId: capture.userId,
+      handle: me.handle,
+      displayName: me.displayName,
+      intent: capture.intent,
+      state: capture.state,
+      source: capture.source,
+      sourceUserId: capture.sourceUserId,
+    },
+    possibility,
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Mutations                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/** How long a freshly created capture can be taken back (§5.1). */
+export const UNDO_WINDOW_MS = 10_000
+
+/** §10 bounds it at the boundary; this is the same number, owned here. */
+export const NOTE_MAX = 140
+
+export const TEXT_MAX = 280
+
+/**
+ * Everything a caller may say about a new capture.
+ *
+ * ⚠ **Provenance is deliberately absent, and a comment saying "server-supplied
+ * only" is not what keeps it absent — this type is.** The three source columns
+ * are the input to §6's suppression rule, so a caller that can name its own
+ * provenance can switch suppression off and turn copying somebody's list into
+ * a way of notifying them. An optional field on a public input type reaches a
+ * request body the first time someone spreads a parsed object into it.
+ */
+export type AddCaptureInput = {
+  text: string
+  possibilityId?: string | null
+  intent?: Intent | null
+  /** §6: the same id retried is the same capture, not a second one. */
+  clientMutationId?: string | null
+}
+
+/**
+ * How a capture came to exist. **Private to this module**, which is the whole
+ * of its enforcement: `writeCapture` is not exported, so the only two things
+ * that can supply one are `addCapture` — which always supplies `OWN` — and
+ * `copyCapture`, which reads it off the row being copied.
+ */
+type CaptureProvenance = {
+  source: CaptureSource
+  sourceUserId: string | null
+  sourceCaptureId: string | null
+}
+
+const OWN: CaptureProvenance = {
+  source: 'self',
+  sourceUserId: null,
+  sourceCaptureId: null,
+}
+
+/**
+ * Save a capture. The only public way to create one, and it is always your
+ * own: provenance comes from `OWN` and cannot be reached from here.
+ */
+export async function addCapture(
+  sessionUser: SessionUser,
+  input: AddCaptureInput,
+): Promise<Result<{ capture: Capture; created: boolean }>> {
+  return writeCapture(sessionUser, input, OWN)
+}
+
+/**
+ * The one writer.
+ *
+ * Two idempotencies, and they answer different questions. The **client
+ * mutation id** answers *is this the same submission?* — a retried request, a
+ * double-tapped button, a resumed connection. The **unique key** answers *is
+ * this the same intention?* — the same possibility under the same intention,
+ * whenever it was saved. §6 asks for both, and neither substitutes for the
+ * other.
+ *
+ * ⚠ **Raw text is never deduplicated.** Two captures of the same words are two
+ * captures: the same words can mean a different thing on a different day, and
+ * the unique key does not constrain rows whose possibility is null. Only a
+ * resolved capture collides.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Reviving a dropped capture does not rewrite where it came from
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The legacy `addEntry` refreshed `source` and `source_user_id` on every
+ * revive, on the reasoning that a stale source would withhold a notification
+ * that should now fire. **Captures invert that**, because provenance is
+ * immutable here: a row that came off somebody's page came off it, and the day
+ * that fact can be erased by re-adding the thing is the day the suppression
+ * rule can be switched off from the client.
+ *
+ * ⚠ **The one movement allowed is `self` → sourced, and it is allowed because
+ * it can only ever suppress more.** Add something yourself, cross it off, then
+ * copy it from the person who had it: without this the revived row claims to
+ * be independently yours and notifies the very person you took it from. The
+ * three CASEs branch on one condition so the triple stays consistent with
+ * `captures_provenance_shape` whichever way it falls.
+ *
+ * Clearing provenance is not possible here in either direction. That belongs
+ * to a deliberate *make this one mine* mutation, which does not exist yet.
+ */
+async function writeCapture(
+  sessionUser: SessionUser,
+  input: AddCaptureInput,
+  provenance: CaptureProvenance,
+): Promise<Result<{ capture: Capture; created: boolean }>> {
+  const text = input.text.trim()
+  if (text === '') return err('invalid', 'Type something first.')
+  if (text.length > TEXT_MAX) return err('invalid', 'That is too long to capture.')
+
+  return db.transaction(async (tx) => {
+    /*
+      The submission check comes first and is a read, so a retry costs one
+      query and never touches the unique key. Scoped to the owner, like
+      everything else here: two people may legitimately generate the same id.
+    */
+    if (input.clientMutationId) {
+      const [already] = await tx
+        .select()
+        .from(captures)
+        .where(
+          and(
+            eq(captures.userId, sessionUser.id),
+            eq(captures.clientMutationId, input.clientMutationId),
+          ),
+        )
+        .limit(1)
+
+      if (already) return ok({ capture: already, created: false })
+    }
+
+    /* The existing row, not `excluded` — Postgres resolves an unqualified
+       column in an ON CONFLICT SET to the row already in the table. */
+    const keepUnlessOwn = (existing: PgColumn, incoming: string) =>
+      sql`case when ${captures.source} = 'self' then excluded.${sql.raw(incoming)} else ${existing} end`
+
+    const [written] = await tx
+      .insert(captures)
+      .values({
+        userId: sessionUser.id,
+        text,
+        possibilityId: input.possibilityId ?? null,
+        intent: input.intent ?? null,
+        state: 'want',
+        clientMutationId: input.clientMutationId ?? null,
+        ...provenance,
+      })
+      .onConflictDoUpdate({
+        target: [captures.userId, captures.possibilityId, captures.intent],
+        setWhere: eq(captures.state, 'dropped'),
+        set: {
+          text,
+          state: 'want',
+          resolvedAt: null,
+          updatedAt: sql`now()`,
+          source: keepUnlessOwn(captures.source, 'source'),
+          sourceUserId: keepUnlessOwn(captures.sourceUserId, 'source_user_id'),
+          sourceCaptureId: keepUnlessOwn(captures.sourceCaptureId, 'source_capture_id'),
+        },
+      })
+      /*
+        `xmax = 0` is how Postgres answers *did this statement insert the row,
+        or update one that was already there*: an inserted tuple has no
+        deleting transaction, an updated one carries the id of the transaction
+        that superseded its predecessor. It is the only signal available —
+        both paths return a row, and both return the same shape.
+      */
+      .returning({ ...getTableColumns(captures), inserted: sql<boolean>`(xmax = 0)` })
+
+    if (!written) {
+      const [existing] = await tx
+        .select()
+        .from(captures)
+        .where(
+          and(
+            eq(captures.userId, sessionUser.id),
+            input.possibilityId
+              ? eq(captures.possibilityId, input.possibilityId)
+              : sql`${captures.possibilityId} is null`,
+            input.intent
+              ? eq(captures.intent, input.intent)
+              : sql`${captures.intent} is null`,
+          ),
+        )
+        .limit(1)
+
+      if (!existing) return err('conflict', 'Could not save that.')
+      return ok({ capture: existing, created: false })
+    }
+
+    const { inserted, ...capture } = written
+
+    /* A revive announces nothing and is not undoable. Only a real creation. */
+    if (!inserted) return ok({ capture, created: false })
+
+    await fireOverlap(tx, sessionUser, capture)
+    return ok({ capture, created: true })
+  })
+}
+
+/**
+ * Copy something off someone else's page (§6, `source = 'copy'`).
+ *
+ * The caller passes **the capture id it can already see**, never a possibility
+ * id, so a client cannot name a row it was never shown. Three things this gets
+ * right by construction:
+ *
+ *   - **Only a shared, published capture can be copied.** The same four terms
+ *     `listCapturesForOtherUser` applies, spelled again because this is a
+ *     second door onto the same rows. It returns `not_found` rather than
+ *     `forbidden`, deliberately: *that exists but is private* is itself the
+ *     leak (§5.3).
+ *   - **It always lands as a `want`**, whatever state the source was in.
+ *     Copying a fixture must not assert that you own the thing too.
+ *   - **It lands private**, like everything else. Copying someone's capture is
+ *     not a decision to publish your own.
+ *   - **Provenance is read from the row, never taken from the caller**, and it
+ *     now records the capture as well as the person.
+ */
+export async function copyCapture(
+  sessionUser: SessionUser,
+  sourceCaptureId: string,
+): Promise<Result<{ capture: Capture; created: boolean }>> {
+  const outbound = alias(tracks, 'outbound')
+  const inbound = alias(tracks, 'inbound')
+
+  const [source] = await db
+    .select({
+      id: captures.id,
+      text: captures.text,
+      possibilityId: captures.possibilityId,
+      intent: captures.intent,
+      ownerId: captures.userId,
+    })
+    .from(captures)
+    .innerJoin(outbound, and(eq(outbound.followerId, sessionUser.id), eq(outbound.followedId, captures.userId)))
+    .innerJoin(inbound, and(eq(inbound.followerId, captures.userId), eq(inbound.followedId, sessionUser.id)))
+    .where(
+      and(
+        eq(captures.id, sourceCaptureId),
+        inArray(captures.visibility, SHARED_SCOPES),
+        inArray(captures.state, PUBLIC_STATES),
+      ),
+    )
+    .limit(1)
+
+  if (!source) return err('not_found', 'That is no longer there.')
+
+  if (source.ownerId === sessionUser.id) {
+    return err('conflict', 'That one is already yours.')
+  }
+
+  return writeCapture(
+    sessionUser,
+    {
+      text: source.text,
+      possibilityId: source.possibilityId,
+      intent: source.intent,
+    },
+    { source: 'copy', sourceUserId: source.ownerId, sourceCaptureId: source.id },
+  )
+}
+
+/**
+ * Resolve a capture (§8). `keep` answers the single question — *Go back?* for
+ * an experience, *Keeping it?* for an object.
+ *
+ * ⚠ **A capture with no possibility and no intention has one kept-outcome
+ * available.** `specFor` needs both to say where a kept thing lands, and an
+ * unresolved capture supplies neither — so *yes* means `go_back_to`, the state
+ * that says *I would return to this* without claiming ownership. Generalising
+ * the outcomes properly is the later phase the specification describes, and
+ * inventing a richer answer here would be guessing at it.
+ */
+export async function resolveCapture(
+  sessionUser: SessionUser,
+  captureId: string,
+  keep: boolean,
+): Promise<Result<Capture>> {
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ capture: captures, possibility: possibilities })
+      .from(captures)
+      .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .limit(1)
+
+    if (!current) return err('not_found', 'No such capture.')
+    if (current.capture.state !== 'want') {
+      return err('conflict', 'That has already been resolved.')
+    }
+
+    const spec =
+      current.possibility && current.capture.intent
+        ? specFor(current.possibility.kind, current.capture.intent)
+        : null
+
+    const state = keep ? (spec?.landsIn ?? ('go_back_to' as const)) : ('done' as const)
+
+    const [updated] = await tx
+      .update(captures)
+      .set({ state, resolvedAt: new Date() })
+      .where(eq(captures.id, captureId))
+      .returning()
+
+    // §6 runs on any state change: a want·own becoming a fixture is what makes
+    // the lend match fire for someone who wants to see it.
+    await fireOverlap(tx, sessionUser, updated)
+
+    return ok(updated)
+  })
+}
+
+/**
+ * Cross a capture off. The × on the row.
+ *
+ * A resolution, not a delete (§5.1). `want` only — the same guard
+ * `resolveCapture` uses, which makes the droppable set exactly the resolvable
+ * set. One statement, so no transaction.
+ */
+export async function dropCapture(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<Result<Capture>> {
+  const [updated] = await db
+    .update(captures)
+    .set({ state: 'dropped', resolvedAt: new Date() })
+    .where(
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        eq(captures.state, 'want'),
+      ),
+    )
+    .returning()
+
+  /*
+    One message for both misses. A row that is not yours and a row that is no
+    longer a want are indistinguishable from here on purpose (§5.3).
+  */
+  if (!updated) return err('not_found', 'That is not a want any more.')
+  return ok(updated)
+}
+
+/**
+ * Put a crossed-off capture back. The same ×, tapped again.
+ *
+ * ⚠ `created_at` is untouched, which is the difference from `addCapture`'s
+ * revive: this is a want that never stopped being where it was.
+ */
+export async function restoreCapture(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<Result<Capture>> {
+  const [updated] = await db
+    .update(captures)
+    .set({ state: 'want', resolvedAt: null })
+    .where(
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        eq(captures.state, 'dropped'),
+      ),
+    )
+    .returning()
+
+  if (!updated) return err('not_found', 'That is not crossed off.')
+  return ok(updated)
+}
+
+/**
+ * Write the private note on your own capture. Owner-filtered, like every
+ * mutation here. An empty string clears to `null`, so "no note" has one
+ * representation.
+ */
+export async function setCaptureNote(
+  sessionUser: SessionUser,
+  captureId: string,
+  note: string | null,
+): Promise<Result<Capture>> {
+  const trimmed = note?.trim() ?? ''
+  if (trimmed.length > NOTE_MAX) return err('invalid', 'That note is too long.')
+
+  const [updated] = await db
+    .update(captures)
+    .set({ note: trimmed === '' ? null : trimmed })
+    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+    .returning()
+
+  if (!updated) return err('not_found', 'No such capture.')
+  return ok(updated)
+}
+
+/**
+ * Change who a capture reaches.
+ *
+ * **The only way a capture stops being private**, and it is one function so
+ * that sharing is always a deliberate act with a single implementation. It
+ * takes a `Visibility` rather than a boolean because the scopes will grow, and
+ * a boolean would have to be reinterpreted on the day they do.
+ *
+ * ⚠ Sharing does not publish a private *state*. A `done` capture set to
+ * `mutuals` still reaches nobody, because `PUBLIC_STATES` is a separate term
+ * in the read — which is exactly why visibility was added as a fourth term
+ * rather than as a replacement.
+ */
+export async function setCaptureVisibility(
+  sessionUser: SessionUser,
+  captureId: string,
+  visibility: Visibility,
+): Promise<Result<Capture>> {
+  const isShared = (scope: Visibility) =>
+    (SHARED_SCOPES as readonly string[]).includes(scope)
+
+  return db.transaction(async (tx) => {
+    /*
+      The scope it held before, read inside the transaction so the comparison
+      cannot race the write. It is the only reason this is a transaction at
+      all beyond §10's rule that a write and its notifications apply together.
+    */
+    const [before] = await tx
+      .select({ visibility: captures.visibility })
+      .from(captures)
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .limit(1)
+
+    if (!before) return err('not_found', 'No such capture.')
+
+    const [updated] = await tx
+      .update(captures)
+      .set({ visibility })
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .returning()
+
+    if (!updated) return err('not_found', 'No such capture.')
+
+    /*
+      ⚠ **Sharing is a fan-out trigger, and it is the one the migration made
+      load-bearing.** Every migrated capture landed private, so nothing
+      converges until its owner shares it — and if this did not fire, a capture
+      that was created private and shared afterwards would never converge at
+      all, because the moment it became a signal would have passed unobserved.
+
+      ⚠ **It fires on the transition, not on the call.** Setting `mutuals` on
+      something already shared changed nothing, so there is nothing to
+      announce — and announcing it anyway wrote a second identical
+      notification at the counterpart, every time. §10 requires a mutation to
+      be idempotent, and a share control that a person can tap twice is the
+      ordinary case rather than the strange one.
+
+      This is the same rule the revive path follows: **the fan-out runs when a
+      capture becomes a signal it was not already**, and never merely because
+      a writer touched the row.
+    */
+    if (!isShared(before.visibility) && isShared(updated.visibility)) {
+      await fireOverlap(tx, sessionUser, updated)
+    }
+
+    return ok(updated)
+  })
+}
+
+/**
+ * The one exception to "nothing is ever deleted" (§5.1): a 10-second undo on
+ * creation, for typos. Bounded by `created_at` in SQL rather than trusted from
+ * the client, and it will not touch anything already resolved.
+ */
+export async function undoCapture(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<Result<null>> {
+  const [deleted] = await db
+    .delete(captures)
+    .where(
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        eq(captures.state, 'want'),
+        sql`${captures.createdAt} > now() - make_interval(secs => ${UNDO_WINDOW_MS / 1000})`,
+      ),
+    )
+    .returning()
+
+  if (!deleted) return err('not_found', 'Too late to undo that.')
+  return ok(null)
+}

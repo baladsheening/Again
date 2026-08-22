@@ -11,8 +11,10 @@ specification is docs/re-direction/implementation-spec.md.
 This file continues to own engineering invariants: the database boundary,
 session handling, privacy enforcement, validation, transactionality,
 responsive quality, and testing. The film-specific vocabulary, state, visual,
-and scope sections below describe the legacy implementation until Phase 0 of
-the re-direction migration updates them. Do not use a legacy product rule to
+and scope sections below describe the legacy implementation. **Phase 1
+replaces them**, not Phase 0 — Amendment 1 to the specification moved the
+canonical vocabulary and status copy there, because converting the records and
+changing the words on screen want the screens that display them. Do not use a legacy product rule to
 block a feature required by the implementation specification.
 
 Unless marked legacy, section references (§n) point at the film-first build
@@ -121,10 +123,13 @@ Do not use review, rating, favourite, public score, or feed for either the new
 or legacy product. Use of recommendation is limited to an explained,
 user-controlled local relevance result; there is no recommendation feed.
 
-The current restricted-vocabulary ESLint rule reflects the legacy application.
-Phase 0 must update it alongside the schema migration so it permits the new
-terms and never blocks an implementation required by
-docs/re-direction/implementation-spec.md.
+The restricted-vocabulary ESLint rule enforces this list, and bans each word
+as a **word**: `migrating` is not a rating and `preview` is not a review.
+Two words the legacy section names are deliberately not in it. `saved` never
+was, and must not be added: saving is the new product's central verb. `score`
+came off, because §7 requires an internal reliability score that ranks results
+without ever surfacing as a number — a linter cannot tell those apart, so the
+guarantee is §7's evidence states and review, not the pattern.
 
 ## Legacy vocabulary (§4)
 
@@ -132,8 +137,10 @@ Use these exact words in the UI **and** in code identifiers: want, intent,
 go-back-to, fixture, track, swap, convergence. The naming is load bearing —
 "go-back-to" states the entry criterion, which is why it stays the label.
 
-Never use: recommendation, review, rating, score, favourite, saved, bookmark,
-feed. Enforced by `no-restricted-syntax` in `eslint.config.mjs`.
+Never use: recommendation, review, rating, favourite, bookmark, feed. Enforced
+by `no-restricted-syntax` in `eslint.config.mjs`. This list used to name
+`score` and `saved` as well; see "Re-direction vocabulary" above for why the
+rule does not, and why adding them back would break the specification.
 
 Intent is a property of the **entry**, never of the item. Never infer it from
 `items.kind`. Never ask the user to categorise anything — derive the label from

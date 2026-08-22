@@ -5,15 +5,15 @@ import { z } from 'zod'
 import { headers } from 'next/headers'
 
 import {
-  addEntry,
-  copyEntry,
-  dropEntry,
-  restoreEntry,
-  setEntryNote,
+  addCapture,
+  copyCapture,
+  dropCapture,
+  restoreCapture,
+  setCaptureNote,
   NOTE_MAX,
   requireSessionUser,
-  resolveEntry,
-  undoEntry,
+  resolveCapture,
+  undoCapture,
   upsertItem,
 } from '@/lib/db'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
@@ -25,6 +25,13 @@ import type { EntryState, Intent } from '@/lib/domain'
  * Thin actions delegating to `lib/db/` (§3). Auth is re-verified inside each
  * one, because a Server Action is a separate entry point and a page-level check
  * does not cover it.
+ *
+ * ⚠ **Every one of these writes a capture.** The action names still say entry,
+ * and the components that call them are unchanged — the file is the seam
+ * between a film-first interface and the capture model underneath it, and
+ * renaming the seam is Phase 1's job, not this migration's. What matters here
+ * is that nothing in this file can write to `entries`: the functions that did
+ * no longer exist.
  */
 
 export type ActionResult<T = null> =
@@ -82,8 +89,36 @@ export async function addFilmAction(
     metadata: { posterPath: film.posterPath, directors: film.directors },
   })
 
-  const result = await addEntry(sessionUser, {
-    itemId: item.id,
+  /*
+    The title is the text. A film chosen from a poster grid was never typed, so
+    there are no words of the person's own to preserve — the name of the thing
+    they picked is the honest reconstruction, and it is the same one the
+    backfill made for every migrated row.
+  */
+  /*
+    ⚠ **No `clientMutationId`, and that is a stated gap rather than an
+    oversight.** §6 says every capture submission carries one; this submission
+    does not, because the film flow has no client-side hold on a pending save
+    to keep an id stable across a retry, and generating a fresh one per call
+    would satisfy the letter of it while carrying nothing.
+
+    What carries §10's idempotency here is the unique key on (user,
+    possibility, intent): a film add always resolves a possibility first, so a
+    retry collides and returns the existing row with `created: false`, and
+    `fireOverlap` does not run on that conflict path, so there
+    is no second notification either. (It *does* run when the conflict revives
+    a crossed-off capture, which is a real change of state and not a retry —
+    and it can only happen once, because the second attempt finds the row is a
+    want again and takes the no-op path.) `tests/acceptance.test.ts` asserts both halves.
+
+    ⚠ **This stops being true in Phase 1.** A raw capture has no possibility,
+    so it has no key to collide with, and the mutation id becomes the only
+    thing standing between a double-tap and two rows. Phase 1's exit criteria
+    require it.
+  */
+  const result = await addCapture(sessionUser, {
+    text: film.title,
+    possibilityId: item.id,
     intent: parsed.data.intent,
   })
 
@@ -93,9 +128,9 @@ export async function addFilmAction(
   return {
     ok: true,
     value: {
-      entryId: result.value.entry.id,
+      entryId: result.value.capture.id,
       created: result.value.created,
-      state: result.value.entry.state,
+      state: result.value.capture.state,
     },
   }
 }
@@ -112,7 +147,7 @@ export async function resolveEntryAction(
     return { ok: false, message: 'Unknown entry.' }
   }
 
-  const result = await resolveEntry(sessionUser, entryId, keep)
+  const result = await resolveCapture(sessionUser, entryId, keep)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()
@@ -139,8 +174,8 @@ export async function crossOffAction(
   }
 
   const result = crossedOff
-    ? await dropEntry(sessionUser, entryId)
-    : await restoreEntry(sessionUser, entryId)
+    ? await dropCapture(sessionUser, entryId)
+    : await restoreCapture(sessionUser, entryId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()
@@ -154,7 +189,7 @@ export async function undoEntryAction(entryId: string): Promise<ActionResult> {
     return { ok: false, message: 'Unknown entry.' }
   }
 
-  const result = await undoEntry(sessionUser, entryId)
+  const result = await undoCapture(sessionUser, entryId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()
@@ -162,8 +197,9 @@ export async function undoEntryAction(entryId: string): Promise<ActionResult> {
 }
 
 /**
- * Copy an entry off someone else's page (§6). The id is theirs, not yours —
- * `copyEntry` resolves the item and the owner from it, and refuses a `done` row.
+ * Copy a capture off someone else's page (§6). The id is theirs, not yours —
+ * `copyCapture` resolves the possibility and the owner from it, and refuses
+ * anything that is not shared with you, published, and held by a mutual.
  *
  * Rate limited on `entryCreate` rather than a bucket of its own: it creates an
  * entry, and the fact that the item came off someone's page does not make it a
@@ -183,7 +219,7 @@ export async function copyEntryAction(
     if (!limit.ok) return { ok: false, message: 'Slow down a moment.' }
   }
 
-  const result = await copyEntry(sessionUser, sourceEntryId)
+  const result = await copyCapture(sessionUser, sourceEntryId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()
@@ -210,7 +246,7 @@ export async function setEntryNoteAction(
     return { ok: false, message: `Keep it under ${NOTE_MAX} characters.` }
   }
 
-  const result = await setEntryNote(sessionUser, entryId, note)
+  const result = await setCaptureNote(sessionUser, entryId, note)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()
