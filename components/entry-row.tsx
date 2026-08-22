@@ -118,9 +118,22 @@ export function EntryRow({
     What used to be the `li` is the wrapper inside it, so the words and the
     resolve action still stack on a phone and still sit side by side at `lg`.
   */
+  /*
+    ⚠ **The row is addressable, and the film screen's tick is why.** That tick
+    says *on your list — open Wants*, and it used to keep exactly that promise
+    and no more: on a list of forty it landed you at the top to hunt for the
+    title you had just been looking at. The fragment lands on the row instead.
+
+    ⚠ **`scroll-mt` is not decoration.** The masthead is `fixed`, so a browser
+    scrolling an element to the top of the viewport puts it *under* the bar. The
+    offset is `--masthead-height` — the token the masthead itself is built from,
+    so the two cannot disagree — and the rail layout has no fixed masthead, so
+    it takes a plain margin there instead of that expression.
+  */
   return (
     <li
-      className={`border-rule flex items-start gap-4 border-b py-7 transition-opacity last:border-b-0 ${
+      id={`capture-${card.id}`}
+      className={`border-rule scroll-mt-[var(--masthead-height)] rail:scroll-mt-8 flex items-start gap-4 border-b py-7 transition-opacity last:border-b-0 ${
         busy ? 'opacity-40' : ''
       }`}
     >

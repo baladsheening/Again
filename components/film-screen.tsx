@@ -1208,7 +1208,22 @@ function FilmBody({
         already listed when the screen opened can be in any of the four — so this
         is read off the entry rather than assumed from the action.
       */
-      listedIn={listedPrimary ? COLLECTION_FOR[listedPrimary.state] : null}
+      /*
+        ⚠ **With the row's fragment on it, when there is a row id to name.**
+        There is not, for the frame between an optimistic add and the server's
+        answer — and a fragment naming nothing scrolls nowhere, which is the
+        same landing the collection gets anyway.
+      */
+      listedIn={
+        listedPrimary
+          ? {
+              ...COLLECTION_FOR[listedPrimary.state],
+              href: listedPrimary.entryId
+                ? (`${COLLECTION_FOR[listedPrimary.state].href}#capture-${listedPrimary.entryId}` as Route)
+                : COLLECTION_FOR[listedPrimary.state].href,
+            }
+          : null
+      }
       onLeave={() => dialogRef.current?.close()}
       undoable={Boolean(undoablePrimary)}
       onAdd={() => add(primary)}
