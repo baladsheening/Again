@@ -6,7 +6,7 @@ import { defineConfig } from 'vitest/config'
 config({ path: '.env.local', quiet: true })
 
 /**
- * §13's two tests, and nothing else.
+ * §13's two tests, and the one that guards the vocabulary rule. Nothing else.
  *
  * This is deliberately not a test suite. Every fault that has actually mattered in
  * this project — an intent sheet behind a dropdown, a dead ×, three iOS keyboard
@@ -15,6 +15,9 @@ config({ path: '.env.local', quiet: true })
  * guarantees that fail with **no symptom at all**, where a passing build, a passing
  * typecheck and a screen that looks right are all consistent with the guarantee
  * being gone.
+ *
+ * ⚠ `vocabulary.test.ts` needs no database, and must not grow one — it lints
+ * text through the flat config and asserts which identifiers the rule rejects.
  *
  * ⚠ **It runs against the `development` branch**, through `.env.local`. It writes,
  * so it must never be pointed at production; `guarantees.test.ts` refuses to run if

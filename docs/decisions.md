@@ -126,6 +126,69 @@ no dormant surface: *remove the mechanism* is the first reach in `CLAUDE.md`,
 and the app already carries one thing living behind a constant — the wall
 caption, after D1. A second one is a pattern.
 
+### The vocabulary rule bans words, not letters (22 August)
+
+The first change of Phase 0, and deliberately the smallest: no product
+behaviour moves, and the model can be written in its own names from its first
+line of code.
+
+**The pattern was matching letters.** One unanchored alternation of seven
+words, tested against the whole identifier, so it read `migrating` as a
+*rating* and `preview` as a *review*. Phase 0 is a data migration and Phase 1
+attaches an image; `hydrating`, `operating`, `separating` and `underscore` were
+queued behind the same fault. A rule that fails this way fails as a build error
+inside whatever feature was unlucky, and the person who meets it has no reason
+to suspect the linter.
+
+**A banned word must now begin a segment and end one, give or take an
+inflection.** Start is the identifier, a `_` segment, or a camel hump; the
+inflections keep `reviews`, `reviewer` and `bookmarked` caught. The end
+constraint exists for exactly one word — `feed`, without which `feedback` is a
+violation — and `feed` could not be added to the list until it existed.
+
+**The message and the pattern had disagreed for months.** The message read
+"recommendation, review, rating, score, favourite, saved, bookmark, feed"; the
+pattern contained neither `saved` nor `feed`. There were two ways to reconcile
+them and only one was survivable: **`saved` must never be added**, because
+saving is the new product's central verb — "pressing Return saves the text",
+"optimistic save and undo". Someone tidying the message into the pattern would
+have banned the capture flow, and would have been reading the message as the
+rule.
+
+**`score` came off the list.** §7 requires an internal reliability score that
+ranks results while the interface speaks evidence states — Unverified,
+Corroborated, Disputed. A linter cannot tell a ranking value from a rendered
+number, so the rule stops claiming to; the guarantee is §7's state list. Banned
+copy is now the reviewer's job for this one word, which is the honest position
+rather than a rule that is wrong in both directions.
+
+**A segment ends differently in `SCREAMING_SNAKE`, and the first attempt at
+this got it wrong.** In `camelCase` a capital opens a new segment, so "not
+followed by a lowercase letter" is a sound ending. In all caps every letter is
+a capital and the only separator is `_`, so the same test read `FEEDBACK` as
+`FEED` — the exact false positive the change was made to remove, reintroduced
+one casing over. The three casings are now three branches with two endings:
+lower and capitalised end where lowercase stops, all-caps ends where letters
+stop. ⚠ It survived the first table because that table tested one casing per
+word; every word now appears in more than one.
+
+**`recommendation` stays banned as an identifier.** CLAUDE.md permits the
+*idea* narrowly — an explained, user-controlled local relevance result — but
+the specification's own words for that surface are "For you here" and
+"relevance". Nothing the specification asks for needs the identifier, so the
+strongest available signal costs nothing to keep.
+
+**There is now a third test, against a config that says there are two.**
+`vitest.config.ts` admits only guarantees that fail with no symptom, and this
+one qualifies on both of its failure modes: a pattern that stops matching
+leaves lint, typecheck and every screen exactly as they were, and a pattern
+that matches too much is discovered by someone else, later, as an error about
+their own code. The regex is now *built* from a word list, so one edit to the
+builder moves every word at once — `tests/vocabulary.test.ts` holds a table of
+seventeen identifiers that must be rejected and twenty-four that must pass —
+the re-direction's own vocabulary, ordinary English containing a banned word,
+and both of those in more than one casing.
+
 ---
 
 ## Still open
