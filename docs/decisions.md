@@ -662,6 +662,49 @@ that changes — so it is Phase 1's to close, alongside the stable id itself.
 Flagged to the client, not yet resolved. Listed first because they are the ones
 that get lost otherwise.
 
+### The mark on a crossed-off film should put it back — 22 August
+
+Raised on the first pass through production after the Phase 0 deploy: crossing
+a want off leaves the film still ticked on the wall, and the tick then does
+what it does for every other listed state — it navigates to the collection the
+row is in.
+
+**The tick staying is correct and deliberate.** A crossed-off want is still on
+the list: struck through, in the position it held. Unticking it would have the
+wall say *not on your list* while pointing at a page where the row is plainly
+sitting, which is why `COLLECTION_FOR` maps `dropped` to Wants like every
+other live state.
+
+**What is open is what a tap should do there.** The proposal: encountering the
+film again is the moment the crossing-off stops being true, so the tap should
+restore the row rather than send you to Wants to press an × you are already
+looking at the film for.
+
+Two things it would need, and neither is difficult:
+
+- ⚠ **The control must look different.** Every other listed state navigates. A
+  control that looks identical and does something else is the exact fault the
+  note at the top of `AddControl` describes — it was a `<span>` that looked
+  like the button it had been a second earlier and did nothing when pressed.
+  Dimming the tick is the product's existing word for *not current*, and it
+  belongs on the glyph rather than on the box, because the box is a tap target
+  and dimming that would say the control is unavailable.
+- ⚠ **It is a second way back**, where the notes currently say *one control, in
+  one place*. That is defensible — the two sit in different places because they
+  answer different moments, and the row's × stays the only way to cross
+  something off — but it is a change to a stated rule rather than a gap in it.
+
+**Deferred to the Home rebuild rather than built now.** The wall and the film
+screen are Phase 1's to replace, and the tick's whole vocabulary — absent,
+listed, listed-and-crossed-off, and the ten-second window — is part of what
+that surface has to restate for captures that may have no possibility behind
+them at all. Building a fourth state into a control that is about to be
+redesigned would be answering the question twice.
+
+The data layer already supports it: `crossOffAction(id, false)` runs
+`restoreCapture`, one action for both directions, so the work is entirely in
+the component.
+
 ### Five notification kinds or six?
 
 §6 says "those five kinds in the schema are the complete set." The schema lists
