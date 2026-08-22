@@ -189,6 +189,86 @@ seventeen identifiers that must be rejected and twenty-four that must pass —
 the re-direction's own vocabulary, ordinary English containing a banned word,
 and both of those in more than one casing.
 
+### Captures, possibilities, and a fourth positive term (22 August)
+
+Phase 0's schema. Nothing the user can see moves: every legacy entry becomes a
+capture, every capture lands private, and the film-first screens keep reading
+the tables they always read.
+
+**The table is `captures` and the physical relation is still `items`.** §12
+says to retain the items table as the starting point for canonical
+possibilities and migrate the film rows rather than discard them, so the recast
+is a rename in code — `possibilities`, with `items` left as a deprecated alias
+while the film-first modules still compile against it. Renaming the relation
+would have put a data move underneath a vocabulary change, and the two want
+separate migrations for the same reason they want separate reasoning.
+
+**`possibility_id` and `intent` are both nullable, and that is the product.**
+A person who types *try pottery* has said something complete; the specification
+is explicit that no catalogue result may gate a save and that nobody is asked
+to categorise anything before saving. A schema that made either column
+mandatory would have re-imposed the search gate the re-direction removed.
+
+**`external_source` lost its `'tmdb'` default at the same time it became
+nullable, and that matters more than the nullability.** A default is an
+invention arrived at by omission: a user-created possibility would have
+acquired a provider it never came from, silently, at insert time. §12 forbids
+the fake identifier; the default was the mechanism that would have produced
+one. A check constraint now requires both halves or neither, because a source
+without an id and an id without a source are each half a provenance, and the
+half that goes missing is the one naming which catalogue the number belongs to.
+
+**Uniqueness is carried by NULLs being distinct, not by partial indexes.** One
+unique key on (user, possibility, intention) is simultaneously the §6 rule that
+a resolved capture is one active record, and the §6 rule that repeated raw text
+is not discarded — because a capture that resolved to nothing does not collide
+with anything. The same trick keeps user-created possibilities out of the
+(kind, external id) key. Neither constraint needed a predicate.
+
+**Provenance is the input to suppression, so it has a shape and the shape is
+checked.** `self` means both origin columns are empty; every other source must
+name a person. A capture sourced from its own owner is refused outright — it
+would suppress the convergence it should have caused. Immutability is a
+`lib/db/` property: no mutation function exposes the three columns.
+
+#### The deletion that would have aborted
+
+`source_user_id` was first written ON DELETE SET NULL, copying the legacy
+column. That is unimplementable next to the shape check: nulling the column
+leaves `source = 'copy'` with nobody to name, the check refuses it, and the
+referential action raises — **taking the account deletion down with it.** The
+fault would have surfaced at whatever moment someone first deleted an account,
+which is to say long after the decision that caused it.
+
+**The conversion runs before the delete, and the constraint became RESTRICT
+behind it.** A capture whose origin has left becomes self-sourced: the account
+is gone and so are its captures, so there is nobody left to suppress a
+convergence against and self is the only description still true of the row.
+RESTRICT then stands behind the conversion as proof that it ran.
+
+⚠ **The conversion is a `before delete` trigger on `profiles`, and it is the
+only behaviour in this schema that does not live in `lib/db/`.** Better Auth
+deletes `user` rows through its own adapter, and the cascade from `user` to
+`profiles` never passes through this application's data layer — so a conversion
+written in `lib/db/` would be bypassed by the code most likely to need it. This
+is a deliberate exception to the rule in `CLAUDE.md`, and the argument for it is
+the same argument that rule is made of: enforcement belongs where it cannot be
+routed around.
+
+Both halves were verified against the development branch rather than reasoned
+about: with the trigger disabled the deletion aborts on
+`captures_source_user_id_profiles_id_fk`, and with it enabled the deletion
+succeeds and the capture comes back `self` with both origin columns null.
+
+#### Still missing from §7's minimum fields
+
+`updated_at` was missing and is now in. Three more are named in the same list
+and are deliberately not here yet: **normalised text for matching**, an
+**optional image asset**, and an **optional source URL**. Each wants the code
+that fills it — normalisation with the capture mutation, the asset with the
+media-storage decision in §6 — and a column nobody writes is a column that
+lies about what the row contains.
+
 ---
 
 ## Still open
