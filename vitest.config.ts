@@ -6,7 +6,16 @@ import { defineConfig } from 'vitest/config'
 config({ path: '.env.local', quiet: true })
 
 /**
- * §13's two tests, and the one that guards the vocabulary rule. Nothing else.
+ * §13's two tests, the one that guards the vocabulary rule, and §14's
+ * acceptance list. Nothing else.
+ *
+ * ⚠ **The two files mean different things when they go red.**
+ * `guarantees.test.ts` holds what fails with no symptom, and a red line there
+ * is a trust problem. `acceptance.test.ts` holds what the specification says
+ * must be true and would fail visibly — a duplicate row, an undo that does
+ * nothing — and a red line there is a bug somebody would have reported. Keep
+ * new tests on the right side of that line rather than adding whichever file
+ * is open.
  *
  * This is deliberately not a test suite. Every fault that has actually mattered in
  * this project — an intent sheet behind a dropdown, a dead ×, three iOS keyboard
@@ -18,6 +27,7 @@ config({ path: '.env.local', quiet: true })
  *
  * ⚠ `vocabulary.test.ts` needs no database, and must not grow one — it lints
  * text through the flat config and asserts which identifiers the rule rejects.
+ * The other two write, and both refuse to run against the production host.
  *
  * ⚠ **It runs against the `development` branch**, through `.env.local`. It writes,
  * so it must never be pointed at production; `guarantees.test.ts` refuses to run if
