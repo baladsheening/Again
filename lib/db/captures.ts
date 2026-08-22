@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, inArray, ne, sql } from 'drizzle-orm'
 import { alias, type PgColumn } from 'drizzle-orm/pg-core'
 
 import { db } from './client'
@@ -335,7 +335,18 @@ export async function listMyCapturesForExternalId(
 }
 
 /**
- * §6's fan-out, from the three moments a capture can start being a signal.
+ * §6's fan-out.
+ *
+ * ⚠ **One rule decides every call site: it runs when a capture becomes a
+ * signal it was not already, and never merely because a writer touched the
+ * row.** Three moments qualify — a capture created shared, a state change, and
+ * a scope moving into `SHARED_SCOPES`. Two deliberately do not: reviving a
+ * crossed-off capture and restoring one, because dropping never withdrew the
+ * notification it had already sent, so coming back announces nothing new.
+ *
+ * Overlap does not deduplicate. Every avoidable re-fire is a second identical
+ * row at somebody, which is why the rule lives here in one sentence rather
+ * than as a judgement made separately at each caller.
  *
  * ⚠ **Three guards, and each of them is a reason there is nothing to fan out
  * rather than an optimisation.** A capture that resolved to nothing has no
@@ -537,14 +548,20 @@ async function writeCapture(
           text,
           state: 'want',
           resolvedAt: null,
-          createdAt: sql`now()`,
           updatedAt: sql`now()`,
           source: keepUnlessOwn(captures.source, 'source'),
           sourceUserId: keepUnlessOwn(captures.sourceUserId, 'source_user_id'),
           sourceCaptureId: keepUnlessOwn(captures.sourceCaptureId, 'source_capture_id'),
         },
       })
-      .returning()
+      /*
+        `xmax = 0` is how Postgres answers *did this statement insert the row,
+        or update one that was already there*: an inserted tuple has no
+        deleting transaction, an updated one carries the id of the transaction
+        that superseded its predecessor. It is the only signal available —
+        both paths return a row, and both return the same shape.
+      */
+      .returning({ ...getTableColumns(captures), inserted: sql<boolean>`(xmax = 0)` })
 
     if (!written) {
       const [existing] = await tx
@@ -567,8 +584,13 @@ async function writeCapture(
       return ok({ capture: existing, created: false })
     }
 
-    await fireOverlap(tx, sessionUser, written)
-    return ok({ capture: written, created: true })
+    const { inserted, ...capture } = written
+
+    /* A revive announces nothing and is not undoable. Only a real creation. */
+    if (!inserted) return ok({ capture, created: false })
+
+    await fireOverlap(tx, sessionUser, capture)
+    return ok({ capture, created: true })
   })
 }
 
@@ -783,7 +805,23 @@ export async function setCaptureVisibility(
   captureId: string,
   visibility: Visibility,
 ): Promise<Result<Capture>> {
+  const isShared = (scope: Visibility) =>
+    (SHARED_SCOPES as readonly string[]).includes(scope)
+
   return db.transaction(async (tx) => {
+    /*
+      The scope it held before, read inside the transaction so the comparison
+      cannot race the write. It is the only reason this is a transaction at
+      all beyond §10's rule that a write and its notifications apply together.
+    */
+    const [before] = await tx
+      .select({ visibility: captures.visibility })
+      .from(captures)
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .limit(1)
+
+    if (!before) return err('not_found', 'No such capture.')
+
     const [updated] = await tx
       .update(captures)
       .set({ visibility })
@@ -799,10 +837,20 @@ export async function setCaptureVisibility(
       that was created private and shared afterwards would never converge at
       all, because the moment it became a signal would have passed unobserved.
 
-      The write and its notifications share a transaction, so they cannot
-      partially apply (§10).
+      ⚠ **It fires on the transition, not on the call.** Setting `mutuals` on
+      something already shared changed nothing, so there is nothing to
+      announce — and announcing it anyway wrote a second identical
+      notification at the counterpart, every time. §10 requires a mutation to
+      be idempotent, and a share control that a person can tap twice is the
+      ordinary case rather than the strange one.
+
+      This is the same rule the revive path follows: **the fan-out runs when a
+      capture becomes a signal it was not already**, and never merely because
+      a writer touched the row.
     */
-    await fireOverlap(tx, sessionUser, updated)
+    if (!isShared(before.visibility) && isShared(updated.visibility)) {
+      await fireOverlap(tx, sessionUser, updated)
+    }
 
     return ok(updated)
   })

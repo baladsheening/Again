@@ -382,6 +382,122 @@ describe('undo takes back a new capture and nothing else', () => {
 })
 
 /**
+ * §5.1 allows exactly one deletion — a ten-second undo **on creation** — and
+ * reviving a crossed-off capture is not one. It was, and it took the row's
+ * note, provenance and legacy link with it.
+ */
+describe('a revive is not a creation', () => {
+  const resolved = () =>
+    dal.addCapture(one(), { text: 'An Acceptance', possibilityId: filmId, intent: 'see' })
+
+  it('reports created: false, so no caller can offer an undo for it', async () => {
+    const first = await resolved()
+    expect(first.ok && first.value.created).toBe(true)
+    if (!first.ok) return
+
+    expect((await dal.dropCapture(one(), first.value.capture.id)).ok).toBe(true)
+
+    const again = await resolved()
+    expect(again.ok).toBe(true)
+    if (!again.ok) return
+
+    expect(again.value.capture.id).toBe(first.value.capture.id)
+    expect(again.value.created).toBe(false)
+    expect(again.value.capture.state).toBe('want')
+  })
+
+  it('leaves created_at alone, so undo refuses it at the data layer too', async () => {
+    const first = await resolved()
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    const id = first.value.capture.id
+
+    await pool.query("update captures set note = 'the private part' where id = $1", [id])
+    await pool.query(
+      "update captures set created_at = now() - interval '1 hour' where id = $1",
+      [id],
+    )
+    await dal.dropCapture(one(), id)
+    await resolved()
+
+    /*
+      The window is bounded by `created_at` in SQL, so not resetting it is what
+      makes the deletion impossible rather than merely unoffered.
+    */
+    expect((await dal.undoCapture(one(), id)).ok).toBe(false)
+
+    const { rows } = await pool.query('select note from captures where id = $1', [id])
+    expect(rows).toHaveLength(1)
+    expect(rows[0].note).toBe('the private part')
+  })
+
+  it('announces nothing, because dropping never withdrew the first notification', async () => {
+    await capture(twoId, { visibility: 'mutuals' })
+    for (const pair of [
+      [oneId, twoId],
+      [twoId, oneId],
+    ]) {
+      await pool.query('insert into tracks (follower_id, followed_id) values ($1, $2)', pair)
+    }
+
+    const first = await resolved()
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    await dal.setCaptureVisibility(one(), first.value.capture.id, 'mutuals')
+    expect(await convergences(twoId)).toHaveLength(1)
+
+    await dal.dropCapture(one(), first.value.capture.id)
+    await resolved()
+
+    expect(await convergences(twoId)).toHaveLength(1)
+  })
+})
+
+/**
+ * §10: a mutation is idempotent. A share control is a thing people tap twice.
+ */
+describe('sharing fires on the transition, not on the call', () => {
+  const mutual = async () => {
+    for (const pair of [
+      [oneId, twoId],
+      [twoId, oneId],
+    ]) {
+      await pool.query('insert into tracks (follower_id, followed_id) values ($1, $2)', pair)
+    }
+  }
+
+  it('writes nothing the second time the same scope is set', async () => {
+    await capture(twoId, { visibility: 'mutuals' })
+    await mutual()
+    const mine = await capture(oneId, { visibility: 'private' })
+
+    expect((await dal.setCaptureVisibility(one(), mine, 'mutuals')).ok).toBe(true)
+    expect(await convergences(twoId)).toHaveLength(1)
+
+    expect((await dal.setCaptureVisibility(one(), mine, 'mutuals')).ok).toBe(true)
+    expect(await convergences(twoId)).toHaveLength(1)
+  })
+
+  it('still fires when a capture is unshared and shared again', async () => {
+    await capture(twoId, { visibility: 'mutuals' })
+    await mutual()
+    const mine = await capture(oneId, { visibility: 'private' })
+
+    await dal.setCaptureVisibility(one(), mine, 'mutuals')
+    await dal.setCaptureVisibility(one(), mine, 'private')
+    await dal.setCaptureVisibility(one(), mine, 'mutuals')
+
+    /*
+      Taking a capture back and sharing it again is a real transition, and the
+      counterpart is entitled to hear about it. The rule is about the change,
+      not about how many times the function was called.
+    */
+    expect(await convergences(twoId)).toHaveLength(2)
+  })
+})
+
+/**
  * §14: *same text without canonical resolution does not create a false exact
  * match*. Exact convergence means the same canonical thing — two people who
  * typed the same words have not yet said they mean the same thing, and

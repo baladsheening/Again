@@ -576,6 +576,85 @@ This is not an amendment. §13 never asked Phase 0 for §6's capture flow — th
 action is a compatibility seam, the flow arrives in Phase 1 — so the
 requirement is being scheduled, not weakened.
 
+### A revive is not a creation (22 August)
+
+Review of the Phase 0 branch found the fan-out and the undo window disagreeing
+about what reviving a crossed-off capture is. Three defects, one cause, and the
+first of them destroyed data.
+
+**Undo was deleting rows that had existed for months.** `writeCapture`'s
+conflict path revives a `dropped` capture, and it reset `created_at` to `now()`
+— inherited from `addEntry`, on the reasoning that *a want which restarted
+today belongs at the top of the list*. But `created_at` is also the clock
+§5.1's undo window runs on. So: cross a want off, tap `+`, tap undo within ten
+seconds, and the original row is gone — with its private note, its provenance,
+and its `legacy_entry_id` link to the backfill. §5.1 permits exactly one
+deletion and it is an undo **on creation**.
+
+Reproduced before it was fixed, which is the only reason it is written up with
+this much confidence:
+
+    revived same row: true | created reported as: true
+    undo accepted: true | row still exists: false
+
+⚠ **The same defect is live in production today** — `addEntry` and `undoEntry`
+have the identical shape, and `addEntry`'s comment says a revived row is
+*indistinguishable from a fresh one* as though that were the goal. Phase 0
+raises the stakes rather than creating them: the row now carries the audit link
+the whole migration verification depends on.
+
+**`created_at` is no longer reset, and that is the fix rather than a guard on
+top of it.** The undo window is bounded by `created_at` in SQL, so leaving it
+alone makes the deletion *impossible* rather than merely unoffered — a caller
+that offers undo anyway is refused by the data layer.
+
+⚠ It also settles an argument the two paths were having. Restoring with the ×
+deliberately leaves the row where it was — *finding it somewhere else would
+undo the point of striking it through in place* — while reviving with `+` sent
+it to the top. Same transition, two positions, decided by which control you
+used. Now neither moves.
+
+`addCapture` returns `created: false` for a revive. `film-screen.tsx` already
+says *only a real creation is undoable*; it was being told a revive was one.
+
+#### One rule for the fan-out, replacing three separate judgements
+
+The second and third findings were the same disagreement wearing different
+clothes. `setCaptureVisibility` fired on every call, so setting `mutuals` on
+something already shared wrote a second identical notification — verified:
+*after first share: 1 | after redundant second: 2*. And the revive path fired
+while `restoreCapture` did not, though they are the same transition.
+
+**The fan-out runs when a capture becomes a signal it was not already, and
+never merely because a writer touched the row.** Three moments qualify: a
+capture created shared, a state change, and a scope moving into
+`SHARED_SCOPES`. Two deliberately do not: revive and restore, because dropping
+never withdrew the notification it had already sent, so coming back announces
+nothing new.
+
+⚠ **Overlap does not deduplicate**, so every avoidable re-fire is a second
+identical row at somebody. That is why the rule is written once, above
+`fireOverlap`, rather than decided again at each caller — which is how the
+three call sites came to disagree.
+
+The review also suggested fixing the asymmetry the other way, by firing on
+restore. Firing more would have been the wrong direction: the notification the
+counterpart already has is still true, and §5.1 makes dropping a resolution
+rather than a delete.
+
+#### Two findings not acted on
+
+**The `poster.tsx` magnify race is not in this branch.** The reviewer diffed
+against the stale local `main` at `68ce007` and picked up sixty-three commits
+instead of this pull request's fourteen. It may well be real; it is already
+deployed, and it is not Phase 0's.
+
+**The `clientMutationId` race is real and unreachable.** Two concurrent
+requests carrying the same id for an *unresolved* capture would both pass the
+read and the second would raise rather than returning a typed `Result`. No
+caller passes an id today, and the file already records that Phase 1 is where
+that changes — so it is Phase 1's to close, alongside the stable id itself.
+
 ---
 
 ## Still open
