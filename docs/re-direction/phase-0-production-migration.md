@@ -14,6 +14,19 @@ that holds `.env.local`.
 
 > **Migrate production first. Deploy second.**
 
+⚠ **Merging the pull request *is* the deploy.** There is no separate release
+step to hold: a merge to `main` ships, and so does a push to it. So approving
+the PR and merging it are two different decisions with §1–§4 in between —
+approve, migrate, verify, *then* merge. Treating approval and merge as one
+gesture is the exact mistake this ordering exists to prevent, and it is an easy
+one to make because every other change in this repository has been safe to
+merge the moment it was approved.
+
+The whole sequence, end to end:
+
+> review and approve → run §1–§4 against production while the PR is still
+> unmerged → merge, or push to `main` (this is the deploy) → §5's smoke checks
+
 The deployed code today writes and reads `entries`, never `captures`, and it
 passes `external_source` and `external_id` explicitly on every insert — so
 nothing in `0004`–`0008` changes what it does. Migrating first leaves a working
@@ -31,7 +44,7 @@ authenticated route is behind that layout.
 ### 1.1 The tree that is about to ship
 
 ```bash
-git log origin/main..HEAD --oneline   # the five Phase 0 commits, and nothing else
+git log origin/main..HEAD --oneline   # the six Phase 0 commits, and nothing else
 npm run lint
 npm run typecheck
 npm run build
@@ -225,7 +238,8 @@ running and still correct; there is no time pressure.
 
 ## 5. Deploy, and the smoke checks
 
-Merge PR #1, or push the branch to `main` — either is the deploy.
+Merge PR #1, or push the branch to `main` — either is the deploy, and §1–§4
+must all have passed before this point.
 
 ```bash
 git push --ipv4 origin HEAD:main
