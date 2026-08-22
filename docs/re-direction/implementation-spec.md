@@ -1,7 +1,8 @@
 # Again — implementation specification
 
 Status: normative product and build specification  
-Date: 22 August 2026
+Date: 22 August 2026  
+Amended: 22 August 2026 — Amendment 1, §13 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -18,6 +19,30 @@ Documentation precedence:
 
 No implementation phase may rely on a legacy product rule when it conflicts
 with this specification.
+
+### Amendments
+
+This document is normative, so it is amended in the open rather than edited
+quietly. Every change to a requirement is listed here with its date and its
+reason, and the reasoning behind it belongs in `docs/decisions.md`.
+
+**Amendment 1 — 22 August 2026, §13.** Two Phase 0 deliverables moved, and no
+requirement dropped:
+
+- *Canonical vocabulary and status copy* moves to Phase 1. Phase 0 established
+  the model's vocabulary — capture, possibility, visibility, provenance — in
+  the schema, the data layer, the linting and the documentation. What remains
+  is the conversion of existing records and the user-facing copy, and both want
+  the screens that display them. Expanding the type unions alone is not
+  delivery: nothing would construct the new values, so nothing would prove them
+  right.
+- *Fixtures for disputed and stale data* move to the phases that introduce
+  those states — disputed to Phase 4, stale and expired to Phase 5. Phase 0
+  cannot produce a fixture for a state its schema cannot represent, so the
+  clause was unsatisfiable rather than merely deferred.
+
+The Phase 0 migration is unaffected. It is a compatibility and data-safety
+step, and it is complete on its own terms.
 
 ## 1. Product definition
 
@@ -992,15 +1017,20 @@ Deliver:
 - migration of film-specific entries into captures and possibilities
 - captures established as the only new-write path for user intentions
 - private and mutual-track visibility implemented
-- canonical vocabulary and status copy
+- the model's vocabulary — capture, possibility, visibility, provenance — in
+  the schema, the data layer, the linting and the documentation
 - legacy product rules in CLAUDE.md, README.md, plan.md, and linting aligned
-- test fixtures for raw, resolved, private, shared, disputed, and stale data
+- test fixtures for raw, resolved, private, and shared data
 
 Exit criteria:
 
 - no parallel capture/entry write path remains
 - existing accounts and entries remain readable
 - privacy tests cover every new projection
+
+⚠ Amendment 1 moved *canonical vocabulary and status copy* to Phase 1, and the
+*disputed* and *stale* fixtures to Phases 4 and 5. Phase 0 is a compatibility
+and data-safety step: it changes what the records are, not what they say.
 
 ### Phase 1 — capture
 
@@ -1014,6 +1044,9 @@ Deliver:
 - personal list and detail view
 - optional image attachment
 - edit/enrichment after capture
+- canonical vocabulary and status copy: the possibility types and intentions in
+  §3, the conversion of existing records onto them, and the user-facing words
+  that replace the film-first ones (Amendment 1, from Phase 0)
 
 Exit criteria:
 
@@ -1023,6 +1056,8 @@ Exit criteria:
 - no film wall or intent modal is required
 - an unresolved capture can be offered a possible resolution without being
   silently converted or matched
+- no screen, label, or stored record still describes the product as film-first,
+  and every migrated record reads in the vocabulary of §3
 
 ### Phase 2 — friend convergence
 
@@ -1084,6 +1119,7 @@ Deliver:
 - confidence states
 - rate limits and abuse reporting
 - a moderator audit trail and review queue
+- test fixtures for disputed data (Amendment 1, from Phase 0)
 
 Exit criteria:
 
@@ -1105,6 +1141,7 @@ Deliver:
 - local possibility, offer, and occurrence records
 - source, freshness, and expiry display
 - horizontal Home rails plus an accessible dedicated page
+- test fixtures for stale and expired data (Amendment 1, from Phase 0)
 
 Exit criteria:
 

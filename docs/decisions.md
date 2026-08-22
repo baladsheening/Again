@@ -444,6 +444,60 @@ A transfer is also the copy argument at volume: §9 hands over a selected set at
 once, so a transfer that did not suppress would fire one alert per row at the
 person who had just handed them over, in the minute after they did it.
 
+### Amendment 1 to the specification — vocabulary and fixtures (22 August)
+
+Two Phase 0 deliverables moved, one because it was mis-specified and one
+because it was unsatisfiable. The specification is normative, so both moved by
+a dated amendment listed at the top of it rather than by an edit to §13 that
+nobody would notice.
+
+**Unused types are not delivery.** `kind` and `intent` are plain `text`
+columns — no enum, no check — so widening `Kind` to §3's seven possibility
+types and `Intent` to its six intentions needs no DDL at all. It was described
+here earlier as a migration, which overstated it: what needs a migration is
+*converting* existing rows, not expanding the vocabulary they are checked
+against.
+
+That correction cuts both ways, and the second cut is the one that decided
+this. If the expansion is nearly free, the argument for landing it in Phase 0
+becomes *it is nearly free* — which is not an argument that it is finished.
+Nothing constructs a `place` or a `visit` today: no screen offers enrichment,
+no surface renders a possibility type, and `specFor` entries for the new pairs
+would be written against nothing that could show them wrong.
+
+⚠ **It is the same fault as a column nobody writes**, which this project
+already refused twice — `image_asset` and `source_url` were held back from the
+capture table for exactly this reason. A union nobody constructs is that fault
+at type level, and it is worse in one respect: a column reads as empty, while a
+type reads as done.
+
+**And expanding it would not have satisfied §13 anyway.** The deliverable is
+*canonical vocabulary and status copy* — the conversion of existing records and
+the words on screen. Types without either leave every row saying `film` and
+every heading saying *Wants*. Landing them in Phase 0 would have bought unused
+surface while leaving the deviation open, which is the worst of both.
+
+So the whole deliverable moves to Phase 1, where conversion, copy and the
+screens that display them arrive together and can be checked against each
+other. Phase 1 gains an exit criterion saying so.
+
+**The fixtures clause was unsatisfiable rather than deferred.** §13 asked Phase
+0 for fixtures covering *disputed* and *stale* — states Phase 4 and Phase 5
+introduce, which this schema cannot represent. A phase cannot produce a fixture
+for a state that does not exist, so those two move to the phases that create
+them, and Phase 0 keeps the four it can actually build: raw, resolved, private,
+shared.
+
+⚠ **Neither change touches migrations `0004`–`0008` or the production
+runbook.** That was a condition of making them, not a happy result: an
+amendment that moved the verified migration set would have invalidated the
+procedure written against it, and the amendment is not urgent enough to be
+worth re-verifying a database migration for.
+
+What Phase 0 is, stated plainly, so the exit criteria can be honest about it:
+**a compatibility and data-safety step. It changes what the records are, not
+what they say.**
+
 ---
 
 ## Still open

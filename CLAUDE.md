@@ -11,8 +11,10 @@ specification is docs/re-direction/implementation-spec.md.
 This file continues to own engineering invariants: the database boundary,
 session handling, privacy enforcement, validation, transactionality,
 responsive quality, and testing. The film-specific vocabulary, state, visual,
-and scope sections below describe the legacy implementation until Phase 0 of
-the re-direction migration updates them. Do not use a legacy product rule to
+and scope sections below describe the legacy implementation. **Phase 1
+replaces them**, not Phase 0 — Amendment 1 to the specification moved the
+canonical vocabulary and status copy there, because converting the records and
+changing the words on screen want the screens that display them. Do not use a legacy product rule to
 block a feature required by the implementation specification.
 
 Unless marked legacy, section references (§n) point at the film-first build
