@@ -105,8 +105,11 @@ export async function addFilmAction(
     What carries §10's idempotency here is the unique key on (user,
     possibility, intent): a film add always resolves a possibility first, so a
     retry collides and returns the existing row with `created: false`, and
-    `fireOverlap` runs only on the insert path, so there is no second
-    notification either. `tests/acceptance.test.ts` asserts both halves.
+    `fireOverlap` does not run on that conflict path, so there
+    is no second notification either. (It *does* run when the conflict revives
+    a crossed-off capture, which is a real change of state and not a retry —
+    and it can only happen once, because the second attempt finds the row is a
+    want again and takes the no-op path.) `tests/acceptance.test.ts` asserts both halves.
 
     ⚠ **This stops being true in Phase 1.** A raw capture has no possibility,
     so it has no key to collide with, and the mutation id becomes the only

@@ -9,6 +9,16 @@
  * connection, and a runbook step that says *check the host* is a step that gets
  * skipped. This one cannot be.
  *
+ * ⚠ **It asserts the pre-migration baseline, and that is the point of it.**
+ * Four applied migrations and no `captures` table. Without those two checks it
+ * would pass on a database that is already migrated, or half-migrated, and
+ * "PREFLIGHT OK" would mean nothing more than "the connection works" — which
+ * is exactly what it meant in review.
+ *
+ * ⚠ **The `development` branch therefore fails this**, correctly: it is
+ * post-migration. `npm run migration:verify` is the rehearsal that applies to
+ * it.
+ *
  *   npm run migration:preflight
  *
  * with `DATABASE_URL` set to the branch being inspected. See the runbook for
@@ -49,6 +59,21 @@ const report = async (label, sql) => {
   console.log(`      ${label}: ${JSON.stringify(rows)}`)
 }
 
+/** A check that must come back exactly this, with the reason it exists. */
+const mustEqual = async (label, sql, expected, because) => {
+  let actual
+  try {
+    const { rows } = await pool.query(sql)
+    actual = rows[0]?.value
+  } catch (error) {
+    actual = `query failed: ${error.message}`
+  }
+  const ok = String(actual) === String(expected)
+  if (!ok) failures += 1
+  console.log(`${ok ? 'ok  ' : 'FAIL'}  ${label}: ${actual}${ok ? '' : `  (expected ${expected})`}`)
+  if (!ok) console.log(`      ${because}`)
+}
+
 try {
   console.log('counts — write these down; the post-migration checks compare against them')
   await report('entries ', 'select count(*)::int as n from entries')
@@ -76,16 +101,24 @@ try {
   )
   console.log('')
 
+  console.log('baseline — this database must not have been migrated yet')
+  await mustEqual(
+    'migrations applied               ',
+    'select count(*)::int as value from drizzle.__drizzle_migrations',
+    4,
+    'The baseline is 0000-0003. More than four means 0004-0008 are partly or wholly applied ' +
+      'already: read §6.3 before doing anything, and do not simply re-run the migration.',
+  )
+  await mustEqual(
+    'captures table absent            ',
+    "select (to_regclass('public.captures') is null) as value",
+    true,
+    'The table exists, so this database is past the baseline this procedure assumes.',
+  )
+  console.log('')
+
   console.log('context')
-  await report('entry sources    ', 'select source, count(*)::int as n from entries group by 1 order by 1')
-  await report(
-    'migrations applied',
-    `select count(*)::int as n from drizzle.__drizzle_migrations`,
-  )
-  await report(
-    'captures table   ',
-    `select (to_regclass('public.captures') is not null) as exists`,
-  )
+  await report('entry sources', 'select source, count(*)::int as n from entries group by 1 order by 1')
 } finally {
   await pool.end()
 }

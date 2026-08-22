@@ -557,8 +557,14 @@ nothing — the failure mode this project keeps refusing.
 **What carries §10's idempotency on the only write path Phase 0 has:** a film
 add resolves a possibility first, so the unique key on (user, possibility,
 intent) catches a retry and returns the existing row with `created: false`, and
-`fireOverlap` runs only on the insert path, so no second notification is
-written either. Both halves are now asserted in `tests/acceptance.test.ts`
+`fireOverlap` does not run on that conflict path, so no second
+notification is written either.
+
+⚠ **Not "only on the insert path", which is what this said first and is
+slightly false.** It also runs when the conflict *revives* a crossed-off
+capture — a real change of state rather than a retry, and one that can happen
+only once, because a second attempt finds the row is a want again and takes the
+no-op path. The accurate claim is about the retry path specifically. Both halves are now asserted in `tests/acceptance.test.ts`
 rather than argued for here.
 
 ⚠ **It stops being true in Phase 1.** A raw capture has no possibility, so it

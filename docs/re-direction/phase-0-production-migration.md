@@ -14,8 +14,9 @@ expansion, no here-strings from another shell. Where a POSIX equivalent is
 useful it is given underneath, marked as such, and is not the version to run.
 
 PowerShell has no inline environment prefix, so `DATABASE_URL` is set as a
-session variable and removed again at the end of §3. It is set **once**, and
-every command that needs it is between those two lines.
+session variable in §1.2 and removed again in §4.5. It is set **once**, and
+every command that needs it — the preflight, the migration, the verification —
+is between those two lines.
 
 ---
 
@@ -104,6 +105,18 @@ otherwise fail part-way through a migration rather than before one:
 It also prints the spread of legacy `source` values. `swap` was designed and
 never built; any row holding it is mapped to `transfer` by the backfill, which
 is correct, but it is worth knowing that it happened.
+
+**The baseline.** Two checks that must hold before any of this applies: four
+applied migrations — `0000`–`0003` — and no `captures` table. Without them the
+script would pass on a database that is already migrated or half-migrated, and
+`PREFLIGHT OK` would mean nothing beyond *the connection works*.
+
+⚠ **The `development` branch fails this, correctly**, because it is already
+past the baseline. Preflight cannot be rehearsed there; `npm run
+migration:verify` is the rehearsal that applies to it, and it passes.
+
+⚠ **If production reports more than four migrations, stop and read §6.3.** A
+partly-applied set is not something to fix by running the migration again.
 
 **`PREFLIGHT OK` on the last line, or stop.**
 
