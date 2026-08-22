@@ -242,6 +242,22 @@ git push --ipv4 origin HEAD:main
 vercel ls    # watch it land, ~25s
 ```
 
+⚠ **Do not use the app between §3 and the deploy.** Production is running the
+legacy code until the merge lands, and that code writes to `entries` — but the
+backfill in `0005` has already run. Anything saved in that window lands in
+`entries` with no capture and **disappears from the list after the deploy**.
+The window is a merge and about twenty-five seconds; keep it that.
+
+```powershell
+npm run migration:verify
+```
+
+**Run it again, first, after the deploy.** Its *entries with no capture* check
+is exactly the detector for the window above, and every other check in it stays
+valid once captures are being written — new captures carry no `legacy_entry_id`
+and are not counted by it. If it finds a straggler, the backfill in `0005` is
+re-runnable by construction: run that file's first statement by hand.
+
 Then, signed in as a real account:
 
 1. **`/wants`, `/go-back-tos`, `/fixtures`, `/archive`** all render, and hold
