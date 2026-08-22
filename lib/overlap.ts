@@ -6,6 +6,7 @@ import type { Executor } from '@/lib/db/client'
 import {
   nameFor,
   SHARED_SCOPES,
+  type CaptureSource,
   type CaptureState,
   type Intent,
   type NotificationKind,
@@ -53,7 +54,7 @@ type Counterpart = {
   displayName: string | null
   intent: Intent
   state: CaptureState
-  source: string
+  source: CaptureSource
   sourceUserId: string | null
 }
 
@@ -107,7 +108,7 @@ type Side = {
   userId: string
   intent: Intent
   state: CaptureState
-  source: string
+  source: CaptureSource
   sourceUserId: string | null
 }
 
@@ -116,14 +117,36 @@ type Side = {
  *
  * Without it, copying something off someone's page immediately pings them that
  * you match — which is noise, because they are the source. Only independent
- * convergence is worth interrupting anyone for. Swaps are bulk copying and
- * would otherwise fire a burst of false alerts.
+ * convergence is worth interrupting anyone for.
+ *
+ * A **transfer** is the same argument at volume: §9's in-person exchange hands
+ * over a selected set of captures at once, so a transfer that did not suppress
+ * would fire a burst of alerts at the person who had just handed the list
+ * over, one per row, in the minute after they did it.
  */
 function isSuppressed(u: Side, v: Side): boolean {
-  const copied = (side: Side, other: Side) =>
-    (side.source === 'copy' || side.source === 'swap') && side.sourceUserId === other.userId
+  /*
+    ⚠ **Not a list of the sources that suppress — the one source that does
+    not.** This was `source === 'copy' || source === 'swap'`, naming the values
+    by hand, and it went wrong exactly the way a hand-written list goes wrong:
+    `swap` was designed and never built, `transfer` took its slot in the
+    capture model, and the test that would have caught it did not exist because
+    nothing about the code looked incomplete. A transferred capture was an
+    independent intention as far as this function could tell, and the person it
+    would have notified is the person who handed it over.
 
-  return copied(u, v) || copied(v, u)
+    Written this way, a source added later suppresses until somebody decides it
+    should not. That is the direction this has to fail in: the cost of
+    suppressing too much is a notification nobody gets, and the cost of
+    suppressing too little is telling someone they match a list they gave you.
+
+    `CaptureSource` is a union rather than a string, so adding a value that
+    genuinely should notify means changing this line on purpose.
+  */
+  const sourced = (side: Side, other: Side) =>
+    side.source !== 'self' && side.sourceUserId === other.userId
+
+  return sourced(u, v) || sourced(v, u)
 }
 
 /* -------------------------------------------------------------------------- */
@@ -297,11 +320,11 @@ type PairRow = {
   title: string
   aIntent: Intent
   aState: CaptureState
-  aSource: string
+  aSource: CaptureSource
   aSourceUserId: string | null
   bIntent: Intent
   bState: CaptureState
-  bSource: string
+  bSource: CaptureSource
   bSourceUserId: string | null
 }
 

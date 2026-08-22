@@ -560,6 +560,50 @@ describe('convergence needs both sides to have shared', () => {
     expect(await notificationsFor(viewerId)).toHaveLength(1)
   })
 
+  /*
+    The suppression rule, at the value that was missing from it. A transferred
+    capture is not an independent intention — the person it names handed it
+    over — and notifying them that you match is telling them something they are
+    the source of.
+  */
+  it('writes nothing when the capture was transferred from the counterpart', async () => {
+    const mine = await setUp('mutuals')
+
+    await pool.query(
+      "update captures set source = 'transfer', source_user_id = $2 where id = $1",
+      [mine, ownerId],
+    )
+
+    const shared = await dal.setCaptureVisibility(
+      asViewer(viewerId, `${VIEWER}@example.com`),
+      mine,
+      'mutuals',
+    )
+    expect(shared.ok).toBe(true)
+
+    expect(await notificationsFor(ownerId)).toHaveLength(0)
+    expect(await notificationsFor(viewerId)).toHaveLength(0)
+  })
+
+  it('writes nothing when the capture was copied from the counterpart', async () => {
+    const mine = await setUp('mutuals')
+
+    await pool.query(
+      "update captures set source = 'copy', source_user_id = $2 where id = $1",
+      [mine, ownerId],
+    )
+
+    const shared = await dal.setCaptureVisibility(
+      asViewer(viewerId, `${VIEWER}@example.com`),
+      mine,
+      'mutuals',
+    )
+    expect(shared.ok).toBe(true)
+
+    expect(await notificationsFor(ownerId)).toHaveLength(0)
+    expect(await notificationsFor(viewerId)).toHaveLength(0)
+  })
+
   it('writes nothing when the counterpart has not shared', async () => {
     const mine = await setUp('private')
 

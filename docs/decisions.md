@@ -416,6 +416,34 @@ wants. **The test written for the visibility guard is what found it**, on its
 first run, which is the argument for writing the test alongside the query
 rather than after it.
 
+### Suppression names the source that does *not* suppress (22 August)
+
+`isSuppressed` read `source === 'copy' || source === 'swap'`. `swap` was
+designed and never built; `transfer` took its slot in the capture model, and
+the backfill maps the one legacy value to it. So a transferred capture looked
+independent to the most important line in the app, and the person it would have
+notified is the person who had just handed the list over.
+
+⚠ **It is now the inverse: everything that is not `self` suppresses.** A source
+added later suppresses until somebody decides it should not, which is the
+direction this has to fail in — the cost of suppressing too much is a
+notification nobody gets, and the cost of suppressing too little is telling
+someone they match a list they gave you.
+
+`Side.source` and `Counterpart.source` are `CaptureSource` rather than `string`
+for the same reason, so a value that genuinely should notify has to be admitted
+on purpose.
+
+⚠ **Nothing about the old line looked incomplete**, which is why it survived
+the port that renamed everything around it: a list of two values reads like a
+finished thought. The regression test is the part that would have caught it —
+with the old rule restored it fails on the transfer case and passes on the copy
+case, which is exactly the shape of the bug.
+
+A transfer is also the copy argument at volume: §9 hands over a selected set at
+once, so a transfer that did not suppress would fire one alert per row at the
+person who had just handed them over, in the minute after they did it.
+
 ---
 
 ## Still open
