@@ -5769,3 +5769,240 @@ the only source of an answer.
 state the app almost never meets in use. It now opens the same poster twice and
 asserts the two agree, which is the assertion that would have failed on the
 shipped build.
+
+## Phase 1: the page and Return — 23 August
+
+The landing screen is the record now: a blank page you type down, one line per
+capture, Return committing the line and dropping to a fresh one. The design is
+`docs/re-direction/phase-1-capture.md` and the artboards in `design/`; this
+records the calls that document did not make, and the two it made that were
+narrowed.
+
+**Scope, as instructed: the page and Return. No schema, no images, no
+suggestions.** What that ruled out, and what it cost, is below.
+
+### The stored state values did not move, and the words did
+
+The specification's table renames `want` to `active` and `go_back_to` to
+`again`. Those are Postgres enum values with every row in the product behind
+them, so renaming them is a migration and this phase is schema-free by
+instruction. **`STATE_WORD` in `lib/vocabulary.ts` is the words; the identifiers
+follow in the migration.**
+
+⚠ **`PUBLIC_STATES` was not touched, which is the point of saying so.** The
+specification warns that renaming its members in place without re-reading the
+array against the new set is the one edit in this phase that can leak somebody's
+private rows. Nothing here renames anything, so the array is the one it was.
+
+### Settle asks one question, and the word is *Again?*
+
+The design's foot has one settle glyph and no question drawn. `resolveCapture`
+needs an answer, because the two outcomes are different claims — *I would do
+this again* against *that is dealt with* — and nothing about a raw capture can
+supply one: `specFor` needs a type and an intention, which is exactly the empty
+case this phase had to answer for.
+
+Three options, and the argument for the one taken:
+
+- **Everything settles to `done`.** Simplest, and it retires `go_back_to`
+  quietly — which retires *Again*, which is the app's name and, in the
+  specification's own words, "the argument".
+- **Everything settles to `go_back_to`.** Asserts something nobody said.
+- **Ask.** One word, two answers, and the word generalises where the film-first
+  *Go back?* did not — a film you would watch again, a place you would go again,
+  a class you would take again.
+
+So the picked line opens a Yes/No pair, which is the pair `LineStates` already
+draws for the resolution offer. It costs one tap on an action that is not on the
+four-second path.
+
+⚠ **Nothing lands in `fixture` — *Have* — any more.** That distinction is
+`landsIn`, which is a property of a kind and an intention, and a raw capture has
+neither. The tray shows the word for rows that already carry the state; nothing
+new reaches it until types and intentions do.
+
+### The camera and search ship off
+
+Both are in the foot, at full shape, dimmed at every state — including the
+camera, which the design's table has lit on an empty page.
+
+That is scope rather than a change of mind. Images are a storage layer, not a
+button: §6 wants object storage outside Postgres, size and type limits, EXIF
+stripping, an access-controlled media path, retained provenance, and reportable
+removable assets. Search over captures is a surface of its own, and the search
+that exists today searches TMDB rather than the page.
+
+⚠ **This is the design's own device being honest, not a deviation from it.** The
+whole of "controls go off; they do not disappear" is that a bar keeps its shape
+and dims what cannot act — and neither of these can act. The table in the
+specification is what they go back to, and each is one prop away.
+
+### Return does not wait, and nothing calls `refresh()`
+
+`app/actions/captures.ts` is the first action file in the app that does not
+refresh the router, and the omission is the feature. A refresh per Return puts a
+server round trip between somebody and their next word, and then tells the page
+its own list a second time — a flicker on a screen whose promise is that it
+behaves like paper.
+
+**So the client owns the list for the length of the session and the server is
+the seed.** There is exactly one list on screen and no reconciliation, which is
+also why cross off, settle and undo are optimistic and revert on failure rather
+than waiting on success.
+
+Measured on the desk against `next start`, first key to the line being on the
+page: **34–152ms across nine captures**, which is the render and not the
+network — the save is still in flight when the line lands.
+
+⚠ **A line in flight looks exactly like a line that landed.** It was dimmed to
+`opacity-40` for one pass and measured wrong: Server Actions queue per client,
+so fourteen Returns left the last six pale for a second or two — the app
+doubting lines it had already promised. Failure is worth saying, and is said on
+the line it happened to; anything short of that is the app narrating its own
+network.
+
+### The stable client mutation id, and where `randomUUID` is not
+
+§13's exit criterion. Phase 0 could not ship it: its idempotency was the unique
+key on (user, possibility, intent), and **a raw capture has no such key** — two
+captures of the same words are legitimately two captures. The id is minted once
+per line, held with the line, and re-sent unchanged by a retry.
+
+It costs no column. `captures.client_mutation_id` and its unique key have been
+in the schema since Phase 0, waiting for a writer.
+
+⚠ **`crypto.randomUUID()` is gated on a secure context, and the place it is
+missing is exactly where this gets tested.** It exists on https and on localhost
+and is `undefined` on `http://192.168.x.x` — which is how a handset reaches a
+`next start` running on the desk. `lib/mutation-id.ts` assembles the UUID from
+`crypto.getRandomValues`, which carries no such gate, and uses the native call
+when it is there. Verified: v4 shape, 20 000 unique, accepted by
+`z.string().uuid()`.
+
+### The day stamps are computed on the server, and only there
+
+Grouping by day depends on a timezone. The server's is UTC on Vercel and the
+handset's is not, so a page that formatted on both sides would disagree about
+**how many groups there are** for anything written after 23:00 local — a
+structural hydration mismatch, in a list, which is the shape React cannot patch
+quietly.
+
+So `lib/day.ts` runs server-side only and stamps every line with the two strings
+the page needs, and the client is handed `todayKey` for the one line it creates
+itself. The zone comes from `x-vercel-ip-timezone` (`viewerTimeZone` in
+`lib/region.ts`), validated because it is handed to `Intl`, which throws
+`RangeError` on an unknown zone and would take the page down with it.
+
+⚠ **Absent in development**, where no edge sets it — so `Intl` falls back to the
+machine's own zone, which on a laptop is the right answer anyway. The failure
+this arrangement cannot see is therefore production-only.
+
+### The second tap does not edit yet
+
+The design says tap picks and a second tap edits, and leaves *where* that edit
+happens — in place or in a detail view — explicitly open. A second tap therefore
+holds the pick rather than teaching a gesture that has to be taken back.
+Unpicking is a tap on the page, which is also how you get back to writing.
+
+It also needs a mutation that does not exist: `setCaptureNote` writes the note,
+not the text.
+
+### `--color-caret` is deleted, by its own terms
+
+Its note said: *if it is ever used for anything other than the caret, delete it
+instead*, on the reasoning that a third meaningful colour is only defensible for
+a claim the other two cannot make. The page colours the chrome brass — bar,
+foot, caret, and the mark on a picked line — so the caret is the accent now and
+teal makes no claim any more.
+
+⚠ **That brass spends `--color-accent`, which §11 reserves for overlap.** The
+cost was stated in the design and is restated here because it is the one place
+Phase 1 breaks a rule in CLAUDE.md rather than extending it. **Overlap needs a
+different colour in Phase 2**, and the ladder back is §11's own argument: the
+accent's job is to interrupt, so its replacement has to out-shout brass on a
+screen that is now full of it.
+
+### The tray is one surface, and it has no foot
+
+`/settled` holds *Again*, *Have* and *Done* in one list, each row carrying its
+own word. Whether they want a surface each is still open in the specification;
+one here means splitting it later is a routing change and nothing that reads
+`WHERE_IT_IS` moves.
+
+⚠ **No foot on it.** The foot's four controls act on the line the caret is on,
+and nothing in the tray is live. Bringing a settled capture back is not built,
+and until it is, the honest surface is a list rather than a row of controls that
+do nothing.
+
+### The bar spans the window; the foot holds the measure
+
+Above `rail` they part company, and the artboards draw it: the bar is page-level
+machinery and sits on the window's own edges, while the foot's glyphs act on the
+column of text and stay over it rather than being stranded at the window's
+corners. Below `rail` the two coincide, because the measure is wider than the
+screen.
+
+`--bar-gutter` is a token rather than a `gutter` plus a `rail:px-8`, because two
+declarations of one property at equal specificity are resolved by their order in
+the compiled sheet and a class attribute has no way to state that order — the
+same reason `foot-collections` and `foot-bare` are in CSS.
+
+### What survived that the specification says should die
+
+**`toLegacyEntryCards` is still here, and still drops every capture with no
+possibility.** Its remaining caller is `/u/[handle]`, the Phase 2 shared page,
+which renders `EntryCard`. Rewriting that surface for captures is Phase 2's
+work, not this instruction's.
+
+⚠ **The risk it carries is contained rather than removed.** A raw capture on
+somebody's shared page would silently not appear. Nothing in Phase 1 shares a
+capture — every capture in production is private and this phase exposes no
+control that changes it — so the exposure is zero today and becomes real the
+moment sharing does. The specification's rule stands: **nothing may add a
+caller**, and the read to replace it is `toCaptureCard`, which already exists
+and carries text.
+
+`film-screen.tsx`, `poster.tsx`, `search-field.tsx`, `search-provider.tsx` and
+`capture-provider.tsx` are on disk and mounted by nothing. The specification
+keeps the film screen deliberately, as the media-resolved detail surface; the
+rest come back when resolution offers and capture search do. Nothing imports
+them, so nothing ships them.
+
+### What went
+
+`components/shell.tsx` (2 989 lines), `cinema-wall.tsx`, `poster-wall.tsx`,
+`entry-list.tsx`, `entry-row.tsx`, `icon-home.tsx`, the four collection routes,
+`V1_KINDS`, `COLLECTION_FOR` and `--color-caret`. `/me` still translates the old
+`?view=` parameter, now onto the page and the tray.
+
+`useKeyboardPin` was extracted from the shell to `components/keyboard-pin.ts`
+and reduced from two docks to one: the shell chose between a phone bar and a
+rail dock by asking the DOM which was laid out, and the page has the same foot
+at every width. The thermostat, the anchors and the frame loop are unchanged —
+they are the record of five wrong versions and none of that reasoning changed.
+
+### Measured, and what is not
+
+At 390×844 against `next start`: bar 46px, foot 68px, **every line exactly 44px
+whether or not it carries a year**, live line 44px, and the page and foot boxes
+meeting at 0.1px of clearance at maximum scroll — which is right, because the
+foot's own 26px of top padding is the air.
+
+At 1440: the column 680px centred, the foot 72px, the bar full width.
+
+⚠ **The year needed `leading-none` to hold 44px.** A 13px span inheriting the
+line's 28px line-height gets its own half-leading — (28 − 15.6)/2 against the
+18px strut's (28 − 21.6)/2 — so its inline box hung about 2px below the strut
+and grew the line box under it. Resolved lines measured 46px beside raw ones at
+44 until it was pinned. **One line is one line** is a measurement, not a
+sentiment.
+
+⚠ **Nothing here is measured on hardware, and two things can only be measured
+there.** The keyboard pin has no keyboard to hold in a desktop Chromium, and the
+four-second capture is a claim about a thumb. Both are the next thing.
+
+⚠ **The keyboard cannot be raised on a cold open on iOS**, and no arrangement of
+this code changes it: focus without a gesture does not open a keyboard there.
+`autoFocus` is on the field and answers the desk; what answers the handset is
+the filler under the live line — **a tap anywhere on the page starts writing**,
+so the gesture iOS insists on is the one somebody was going to make anyway.

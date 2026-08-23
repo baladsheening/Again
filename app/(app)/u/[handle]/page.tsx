@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 
 import { PersonList } from '@/components/person-list'
+import { Screen } from '@/components/screen'
 import { TrackButton } from '@/components/track-button'
 import {
   getProfileByHandle,
@@ -53,9 +54,9 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
   const person = await getProfileByHandle(viewer, handle)
   if (!person) notFound()
 
-  // Your own handle is your own collections. A second view of yourself would
-  // differ from them only by being worse.
-  if (person.id === viewer.id) redirect('/wants')
+  // Your own handle is your own page. A second view of yourself would differ
+  // from it only by being worse.
+  if (person.id === viewer.id) redirect('/')
 
   const track = await getTrackState(viewer, person.id)
 
@@ -73,7 +74,8 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
   const nameIsHandle = name === `@${person.handle}`
 
   return (
-    <div className="flex flex-col gap-10">
+    <Screen>
+      <div className="flex flex-col gap-10">
       <header className="flex flex-col items-start gap-4">
         <h1 className="title">{name}</h1>
 
@@ -104,7 +106,8 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
         empty={track.mutual ? 'Nothing here yet.' : 'This list is not shared with you.'}
       />
 
-      <PersonList heading={COLLECTIONS.fixtures} entries={toLegacyEntryCards(fixtures)} />
-    </div>
+        <PersonList heading={COLLECTIONS.fixtures} entries={toLegacyEntryCards(fixtures)} />
+      </div>
+    </Screen>
   )
 }

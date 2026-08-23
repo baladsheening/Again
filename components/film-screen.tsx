@@ -12,7 +12,7 @@ import { claimFilmRequest } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
 import { PosterReveal } from './poster'
 import { PosterTiles } from './poster-tiles'
-import { COLLECTION_FOR, intentsFor, specFor } from '@/lib/vocabulary'
+import { WHERE_IT_IS, intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
 import { ChevronIcon } from './icon-chevron'
 import { TickIcon } from './icon-tick'
@@ -1217,10 +1217,10 @@ function FilmBody({
       listedIn={
         listedPrimary
           ? {
-              ...COLLECTION_FOR[listedPrimary.state],
+              ...WHERE_IT_IS[listedPrimary.state],
               href: listedPrimary.entryId
-                ? (`${COLLECTION_FOR[listedPrimary.state].href}#capture-${listedPrimary.entryId}` as Route)
-                : COLLECTION_FOR[listedPrimary.state].href,
+                ? (`${WHERE_IT_IS[listedPrimary.state].href}#capture-${listedPrimary.entryId}` as Route)
+                : WHERE_IT_IS[listedPrimary.state].href,
             }
           : null
       }

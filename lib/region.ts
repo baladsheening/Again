@@ -41,3 +41,48 @@ export async function viewerRegion(): Promise<string | null> {
   const parsed = country.safeParse((await headers()).get('x-vercel-ip-country'))
   return parsed.success ? parsed.data : null
 }
+
+/**
+ * The viewer's timezone, as an IANA name, or `null` when nothing reliable says.
+ *
+ * One consumer: the day stamps on the capture page. **The day a line was written
+ * is a claim about a place**, and the server that renders it is in UTC while the
+ * handset reading it is not — so without this, anything captured after 23:00
+ * British Summer Time is filed under yesterday.
+ *
+ * Read off the request rather than asked for, exactly like `viewerRegion` above,
+ * and for the same reason: the header is already here, and the alternative is a
+ * setting nobody opened the app to fill in. The browser knows better —
+ * `Intl.DateTimeFormat().resolvedOptions().timeZone` is exact — and it is
+ * deliberately not used, because a page whose groups are computed on the client
+ * and on the server disagrees with itself at midnight. See `lib/day.ts`.
+ *
+ * ⚠ **Validated because it is handed to `Intl`**, which throws `RangeError` on
+ * an unknown zone and would take the whole page down with it. §10 wants Zod at
+ * every boundary and this is one. On Vercel the header is written at the edge
+ * and an inbound copy is overwritten, so a client cannot forge it; anywhere else
+ * it could, and the shape below is the whole of what may pass.
+ *
+ * ⚠ **Absent in development**, where no edge sets it — so `null`, and `Intl`
+ * falls back to the machine's own zone, which on a laptop is the right answer
+ * anyway. The failure this cannot see is therefore production-only, which is
+ * what the header being absent locally always costs.
+ */
+const timeZone = z.string().regex(/^[A-Za-z_+-]+(?:\/[A-Za-z_0-9+-]+){0,2}$/)
+
+export async function viewerTimeZone(): Promise<string | null> {
+  const parsed = timeZone.safeParse((await headers()).get('x-vercel-ip-timezone'))
+  if (!parsed.success) return null
+
+  /*
+    Zod says it has the shape of a zone name; only `Intl` knows whether it is
+    one. A bad value here is a blank page rather than a wrong date, so it is
+    worth the try/catch that `viewerRegion` does not need.
+  */
+  try {
+    new Intl.DateTimeFormat('en-CA', { timeZone: parsed.data })
+    return parsed.data
+  } catch {
+    return null
+  }
+}

@@ -117,35 +117,77 @@ export function specFor(kind: Kind, intent: Intent): IntentSpec {
   return spec
 }
 
-/**
- * Which collection an entry is in, from its state — 21 August.
- *
- * **The one place that answers "where did it go".** `shell.tsx` has a list keyed
- * by `OwnerView` for the navigation and `/me` has one keyed by the query
- * parameter it used to take; neither is keyed by the thing an entry actually
- * carries, which is its state. This is, and it reads `COLLECTIONS` for the words
- * so §4's naming stays spelled once.
- *
- * ⚠ **`done` lands in the archive, and that is the owner's own view.** §5.3 makes
- * `state = 'done'` private — never in anyone else's view, never in an aggregate —
- * so anything using this must already be looking at its own entries.
- * `listMyEntriesForExternalId` is the only source of the state that reaches it.
- */
-export const COLLECTION_FOR: Record<EntryState, { href: Route; label: string }> = {
-  want: { href: '/wants', label: COLLECTIONS.wants },
-  go_back_to: { href: '/go-back-tos', label: COLLECTIONS.goBackTos },
-  fixture: { href: '/fixtures', label: COLLECTIONS.fixtures },
-  done: { href: '/archive', label: COLLECTIONS.archive },
-  /*
-    A crossed-off want is still in Wants — struck through, where it was. That is
-    the whole design of it, so this points where every other live row points.
+/* -------------------------------------------------------------------------- */
+/*  The words — Phase 1                                                       */
+/* -------------------------------------------------------------------------- */
 
-    It is reached: the film screen's settled tick reads this map, and
-    `listMyEntriesForExternalId` returns `dropped` rows, so a film you crossed
-    off shows the tick and the tick opens the list it is crossed off in.
-  */
-  dropped: { href: '/wants', label: COLLECTIONS.wants },
+/**
+ * What each state is called on screen.
+ *
+ * | stored | on screen |
+ * |---|---|
+ * | `want` | nothing — it *is* the page |
+ * | `go_back_to` | **Again** |
+ * | `fixture` | **Have** |
+ * | `done` | **Done** |
+ * | `dropped` | nothing — struck through, in place |
+ *
+ * *Again* is the argument. `go_back_to` was chosen because it states the entry
+ * criterion, and the criterion generalises perfectly — a film you would watch
+ * again, a place you would go again, a class you would take again — while being
+ * the app's own name. *Have* is the generic of `fixture`: the distinction
+ * `landsIn` encodes is real, an experience you can repeat against a thing you
+ * now possess.
+ *
+ * ⚠ **The stored values do not move, and that is not an oversight.** Renaming
+ * `want` to `active` is a Postgres enum migration with every row in the product
+ * behind it, and Phase 1's page is schema-free by design. **These are the words;
+ * the identifiers follow in the migration**, and when they do, `PUBLIC_STATES`
+ * is the line that has to be re-derived beside them rather than renamed in
+ * place — a positive list of three whose members are read against the new set,
+ * because renaming its members without re-reading it is the one edit in this
+ * phase that can leak somebody's private rows.
+ *
+ * ⚠ **`null` is a word too.** Two states deliberately say nothing: an active
+ * capture is the page, and a crossed-off one has a strikethrough already saying
+ * it. A label on either would be the app narrating what the screen shows.
+ */
+export const STATE_WORD: Record<EntryState, string | null> = {
+  want: null,
+  go_back_to: 'Again',
+  fixture: 'Have',
+  done: 'Done',
+  dropped: null,
 }
 
-/** v1 ships films only. Guards the entry points against the kinds not yet built. */
-export const V1_KINDS: Kind[] = ['film']
+/**
+ * Where a capture is, from its state — **the one place that answers "where did
+ * it go".**
+ *
+ * Two destinations now, where there were four collections: the page, and the
+ * tray. Everything live is on the page; everything settled is behind the tray.
+ * That is the same reduction `listMyPage` and `listMySettled` make, spelled in
+ * routes, and the four collection routes went with it.
+ *
+ * ⚠ **`done` is in the tray, and the tray is the owner's own screen.** §5.3
+ * makes `state = 'done'` private — never in anyone else's view, never in an
+ * aggregate — so anything using this must already be looking at its own
+ * captures. `listMyCapturesForExternalId` is the only source of the state that
+ * reaches it.
+ *
+ * ⚠ **Whether the tray is one surface or three is still open.** It is one here
+ * because the states stay distinct inside it either way, so splitting it later
+ * changes these three `href`s and nothing that reads them.
+ */
+export const WHERE_IT_IS: Record<EntryState, { href: Route; label: string }> = {
+  /*
+    A crossed-off capture is still on the page — struck through, where it was.
+    That is the whole design of the ×, so this points where every other live row
+    points.
+  */
+  want: { href: '/', label: 'the page' },
+  dropped: { href: '/', label: 'the page' },
+  go_back_to: { href: '/settled', label: 'Again' },
+  fixture: { href: '/settled', label: 'Have' },
+  done: { href: '/settled', label: 'Done' },
+}

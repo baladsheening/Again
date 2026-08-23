@@ -1,30 +1,25 @@
 import { redirect } from 'next/navigation'
 
-import { CinemaWall } from '@/components/cinema-wall'
-import { PosterWall } from '@/components/poster-wall'
-import { getMyProfile, getSessionUser } from '@/lib/db'
-import { viewerRegion } from '@/lib/region'
-import { inCinemas, type CinemaListing } from '@/lib/tmdb'
+import { PageScreen, type PageLineView } from '@/components/page-screen'
+import { getMyProfile, getSessionUser, listMyPage, UNDO_WINDOW_MS } from '@/lib/db'
+import { dayStamper } from '@/lib/day'
+import { viewerTimeZone } from '@/lib/region'
 
 /**
- * Home: what is on, and what is about to be.
+ * Home: **the page.**
  *
- * `/` was the capture box alone for about an hour on 9 August, and before that
- * it was Wants. It is the poster wall now — see `components/poster-wall.tsx` for
- * why that is a capture prompt rather than the discovery feature §2 rules out,
- * and `docs/decisions.md` for what it costs.
+ * `/` was the capture box alone for about an hour on 9 August, then the poster
+ * wall for a fortnight, and it is the record itself now — a blank page you type
+ * down, one line per capture, oldest at the top and newest above the caret. See
+ * `docs/re-direction/phase-1-capture.md` and `components/page-screen.tsx`.
  *
- * **Search is not on this page at any width.** It lived here at rail widths, as
- * a bordered field above the wall; it moved into the rail on 9 August so that
- * both layouts reach it the same way — the phone from its masthead, the desk
- * from the column — and so the wall is the whole of the screen it is on.
+ * **Four routes went away with it** — `/wants`, `/go-back-tos`, `/fixtures` and
+ * `/archive`. Everything active is here; everything settled is behind the tray.
  *
- * TMDB failing is not an error page. The wall is a prompt, and a prompt that
- * cannot be drawn should leave the rest of the app working — so the failure
- * degrades to an empty wall with search still available, and is logged rather
- * than thrown.
+ * This component does three things and stops: the read, the stamps, and the
+ * seed. The page owns its list from the first paint on, because Return has to
+ * land in under a frame rather than after a round trip.
  */
-
 export default async function HomePage() {
   const sessionUser = await getSessionUser()
   if (!sessionUser) redirect('/sign-in')
@@ -33,53 +28,39 @@ export default async function HomePage() {
   if (!profile) redirect('/onboarding')
 
   /*
-    The region is passed in rather than reached for inside `lib/tmdb.ts`, which
-    is the same shape as `lib/db/` taking the `SessionUser` as an argument: the
-    module that talks to an upstream service does not also decide who is asking.
-    It keeps `inCinemas()` a pure function of its arguments, and therefore
-    testable without a request.
-  */
-  let listing: CinemaListing = { nowShowing: [], comingSoon: [], opening: null }
-  try {
-    listing = await inCinemas(await viewerRegion())
-  } catch (cause) {
-    console.error('Home: TMDB listings unavailable', cause)
-  }
+    §10: paginate every list. The read runs newest-first and is reversed here,
+    which is the only arrangement where *the most recent fifty* and *oldest at
+    the top* are both true — an ascending `limit` would open the app on
+    something typed in March.
 
-  const { nowShowing, comingSoon, opening } = listing
+    ⚠ **Earlier lines are not reachable yet, and that is a stated gap.** Fifty is
+    roughly a month of this, so it is not a fault to be found on the handset this
+    week; what closes it is the tray taking settled lines off the page (already
+    true), search (Phase 1, not built), and an *Earlier* control at the head of
+    the page, which is one more `offset` and no new read.
+  */
+  const rows = await listMyPage(sessionUser)
 
   /*
-    **The page's heading is `sr-only`, and the visible caption is not it.** The
-    caption names whichever half of the wall you are looking at and changes as
-    you scroll, so it describes a moment rather than a page — which is the one
-    thing an `<h1>` may not do. A quiet line saying what the whole screen is
-    costs nothing and holds still.
-
-    ⚠ **It read *In cinemas and coming soon* until 16 August, and that was the
-    same false claim one layer down.** D1 was answered `no` — the app is not
-    cinema-aware, TMDB knows release dates and not screens — and the visible
-    caption went with it (see `CAPTION` in `components/cinema-wall.tsx`).
-    Removing a sentence from the screen while leaving it in the accessibility
-    tree would be hiding the claim rather than dropping it. *New releases* is
-    what the data can carry: the first half is TMDB's recent-release window for
-    this country and the second is dated but unreleased.
-
-    ⚠ **The country is absent from the heading and present in the request**, and
-    the two have been confused once already. `viewerRegion()` still goes to TMDB
-    and the wall is still this country's releases; what was cut on 15 August is
-    the *word*, not the filtering. The cost of losing it is that a wrong guess
-    from an IP is now silent — see docs/decisions.md.
+    The stamps are computed here and only here. Grouping by day depends on a
+    timezone, and the server's and the browser's are not the same — a page that
+    formatted on both sides would disagree about how many groups there are for
+    anything written after 23:00 local, which is a structural hydration mismatch
+    in a list. See `lib/day.ts`.
   */
-  return (
-    <>
-      <h1 className="sr-only">New releases and coming soon</h1>
+  const { todayKey, stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
 
-      {nowShowing.length === 0 && comingSoon.length === 0 ? (
-        /* One empty state rather than a caption over nothing. */
-        <PosterWall films={[]} />
-      ) : (
-        <CinemaWall nowShowing={nowShowing} comingSoon={comingSoon} opening={opening} />
-      )}
-    </>
-  )
+  const lines: PageLineView[] = rows.reverse().map((row) => {
+    const day = stamp(row.createdAt)
+    return {
+      id: row.id,
+      text: row.text,
+      state: row.state,
+      year: row.year,
+      day: day.key,
+      dayLabel: day.label,
+    }
+  })
+
+  return <PageScreen lines={lines} todayKey={todayKey} undoWindowMs={UNDO_WINDOW_MS} />
 }

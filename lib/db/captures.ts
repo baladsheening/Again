@@ -401,6 +401,117 @@ async function fireOverlap(
 }
 
 /* -------------------------------------------------------------------------- */
+/*  The page (Phase 1)                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What is on the landing page: everything live, and nothing settled.
+ *
+ * ⚠ **Two states, positive, and it is not `OwnerView.live`.** That view is
+ * `want, go_back_to, dropped` — it carries go-back-tos because the film-first
+ * collections list a go-back-to among the wants. The page does not: **settled
+ * captures leave the page**, which is the largest single reduction available for
+ * reading back and it costs nothing new. A go-back-to is settled — it is
+ * *Again*, in the tray.
+ *
+ * A crossed-off capture stays, struck through, in the position it held. That is
+ * the whole design of the ×, and it is the reason `dropped` is here beside
+ * `want` rather than in the tray with the resolutions.
+ */
+const PAGE_STATES = ['want', 'dropped'] as const satisfies readonly CaptureState[]
+
+/**
+ * One line of the page. Named columns, like everything shared here — a `select`
+ * of the whole table is how `note` reaches a client the day somebody adds a
+ * column, and this shape crosses into a Client Component.
+ *
+ * `year` is the only thing a resolved line says beyond its own text. §3's types
+ * and intentions exist for a resolved capture and for no other, and most lines
+ * are raw — so the derivation that has to answer for `(undefined, undefined)`
+ * answers by saying nothing at all, which is what this shape encodes.
+ */
+export type PageLine = {
+  id: string
+  text: string
+  state: CaptureState
+  year: number | null
+  createdAt: Date
+}
+
+/**
+ * The page, newest first — **and the caller reverses it.**
+ *
+ * ⚠ **You type downward: oldest at the top, newest above the caret.** So the
+ * page reads ascending and the query runs descending, because the two answer
+ * different questions. §10 requires every list to be paginated, and a page of a
+ * two-hundred-line record has to be *the most recent* fifty rather than the
+ * first fifty ever written — an ascending `limit` would open the app on
+ * something typed in March. Ordering descending and reversing in the caller is
+ * the only arrangement where both hold.
+ *
+ * `offset` therefore walks backwards into the record, which is the direction
+ * *earlier* means here.
+ *
+ * The tie-break on `id` is not decoration: two captures saved in the same
+ * millisecond otherwise have no defined order, and a row that changes places
+ * between two pages is a row that can be shown twice or not at all.
+ */
+export async function listMyPage(
+  sessionUser: SessionUser,
+  { limit = PAGE_SIZE, offset = 0 }: Page = {},
+): Promise<PageLine[]> {
+  return db
+    .select({
+      id: captures.id,
+      text: captures.text,
+      state: captures.state,
+      year: possibilities.year,
+      createdAt: captures.createdAt,
+    })
+    .from(captures)
+    /* LEFT, because a capture with nothing canonical behind it is the norm. */
+    .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+    .where(and(eq(captures.userId, sessionUser.id), inArray(captures.state, PAGE_STATES)))
+    .orderBy(desc(captures.createdAt), desc(captures.id))
+    .limit(limit)
+    .offset(offset)
+}
+
+/**
+ * The tray: everything settled, in one read.
+ *
+ * **Three states, and whether they are one surface or three is still open** —
+ * the states stay distinct either way, so this returns them distinguished and
+ * lets the surface decide. `resolvedAt` orders it, because the interesting
+ * moment for something settled is when it was settled and not when it was first
+ * written down.
+ */
+export async function listMySettled(
+  sessionUser: SessionUser,
+  { limit = PAGE_SIZE, offset = 0 }: Page = {},
+): Promise<PageLine[]> {
+  return db
+    .select({
+      id: captures.id,
+      text: captures.text,
+      state: captures.state,
+      year: possibilities.year,
+      createdAt: captures.createdAt,
+    })
+    .from(captures)
+    .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+    .where(
+      and(
+        eq(captures.userId, sessionUser.id),
+        inArray(captures.state, ['go_back_to', 'fixture', 'done'] as const),
+      ),
+    )
+    .orderBy(desc(captures.resolvedAt), desc(captures.id))
+    .limit(limit)
+    .offset(offset)
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Mutations                                                                  */
 /* -------------------------------------------------------------------------- */
 

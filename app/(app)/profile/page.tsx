@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { ProfilePanel } from '@/components/profile-panel'
+import { Screen } from '@/components/screen'
 import { TrackedPeople } from '@/components/tracked-people'
 import { getMyProfile, getSessionUser, listMyTracks } from '@/lib/db'
 
@@ -28,7 +29,7 @@ export default async function ProfilePage() {
   const people = await listMyTracks(sessionUser)
 
   return (
-    <>
+    <Screen>
       {/*
         `sr-only`, and it lives here rather than in either child because it has to
         come **first**: `TrackedPeople` carries an `<h2>` and `ProfilePanel` is
@@ -42,6 +43,6 @@ export default async function ProfilePage() {
       <h1 className="sr-only">Profile</h1>
       <TrackedPeople people={people} />
       <ProfilePanel handle={profile.handle} />
-    </>
+    </Screen>
   )
 }

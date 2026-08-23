@@ -92,37 +92,17 @@
    */
   --color-active: #c1483c;
 
-  /**
-   * Turquoise. **The caret, and the caret only** — the chevron beside the search
-   * field in the masthead, which blinks while that field holds focus.
-   *
-   * Directed 15 August. ⚠ **It is the third meaningful colour in a palette whose
-   * whole argument is that it has two**, and that is worth stating rather than
-   * burying: §11 reserves amber for overlap, `--color-active` took red for "you
-   * are here" under the same scarcity rule, and each addition costs the others a
-   * little of their meaning. The case for this one is that a caret is a *system
-   * state* rather than decoration — it says the app is listening, which is
-   * neither of the other two claims — and that platforms tint their own carets
-   * for exactly that reason. **The same scarcity rule applies from here on: the
-   * moment turquoise appears on anything that is not the caret, it stops saying
-   * the app is listening.**
-   *
-   * 9.3:1 against the true-black ground — measured at 9.27 — well past the 3:1
-   * WCAG 1.4.11 asks of a graphical control. Cooler than anything else in the
-   * palette on purpose: `--color-text`, the accent and the active red are all
-   * warm, so it reads as a different kind of thing rather than as another member
-   * of the set.
-   *
-   * ⚠ **Unused since the same day, and kept rather than deleted.** The chevron
-   * went back to `text-muted` on instruction, which restores §11's position that
-   * this palette carries two meaningful colours. The value stays because it is
-   * measured and argued and putting it back is one class in
-   * `components/shell.tsx` — the same reason `--font-ojuju` outlived its own
-   * replacement and was there when it was wanted again. **If it is ever used for
-   * anything other than the caret, delete it instead**: a third colour is only
-   * defensible for a claim the other two cannot make.
-   */
-  --color-caret: #3fbfae;
+  /*
+    `--color-caret` was here — turquoise #3fbfae, "the caret and the caret
+    only", added 15 August and unused from the same day. **Deleted 23 August by
+    its own terms**: its note said *if it is ever used for anything other than
+    the caret, delete it instead*, on the reasoning that a third meaningful
+    colour is only defensible for a claim the other two cannot make.
+
+    The capture page colours the chrome brass — bar, foot, caret, and the mark on
+    a picked line — so the caret is the accent now and teal makes no claim any
+    more. The value and its measurements are in git.
+  */
 
   /**
    * Recording red. **The word "In cinemas" on the home wall, and nothing else.**
@@ -878,6 +858,103 @@
    */
   --wordmark-drop: calc(var(--text-wordmark) * var(--wordmark-drop-ratio));
   --wordmark-slack: calc(var(--text-wordmark) * var(--wordmark-slack-ratio));
+
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The capture page — Phase 1
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * The landing screen is a blank page you type down, one line per capture, and
+   * these are its measurements. They are tokens rather than literals for the
+   * usual reason plus one: the bar, the foot and the scrolling area between them
+   * all have to agree about how much room the other two take, and three
+   * restatements of 68px is three things that drift.
+   *
+   * ⚠ **`--foot-height` is what the page reserves at its foot**, so a line always
+   * comes to rest above the glyphs rather than sliding under them. That padding
+   * is the reason there is no rule above the foot — see the `<footer>` in
+   * `components/foot.tsx`. Reinstating a border would be correcting for a
+   * collision this prevents outright.
+   */
+
+  /** One capture: 18px on 28px, 8px of padding a side to reach a 44px target. */
+  --text-line: 1.125rem;
+  --leading-line: 1.75rem;
+  --line-hem: 0.5rem;
+
+  /**
+   * The caret, and the mark on a picked line — one width and one height, because
+   * they are the same object in two places. The picked line's mark is the
+   * caret's own width and colour sitting in the gutter rather than in the text,
+   * so it borrows a vocabulary the page has already taught without claiming a
+   * character position.
+   */
+  --caret-width: 2px;
+  --caret-height: 1.625rem;
+
+  /**
+   * The bar's mark. Smaller than `--text-wordmark`, which sets the mark on the
+   * auth pages where it is the whole screen; here it shares a row with three
+   * glyphs and states the page rather than announcing the product.
+   *
+   * ⚠ **Both sizes derive the ink from one ratio** — see `--wordmark-ink-ratio`
+   * in the fence at the top of this file. Two sizes are fine; two ratios would
+   * be two measurements of one typeface, free to disagree.
+   */
+  --text-mark: 1.25rem;
+  --text-mark-rail: 1.5rem;
+
+  /**
+   * The two bars. `--bar-row` is the glyph row's height at both ends of the
+   * page — 20px, the glyph grid — and it is a fixed height rather than a
+   * minimum for the reason the masthead's row is: **a bar's height is a property
+   * of the bar, not of whatever is currently inside it.** The trimmed mark is
+   * 15.5px at `--text-mark`, so the glyphs set the row and the mark centres in
+   * it; if that were a floor the row would resize the day the mark grew.
+   */
+  --bar-row: 1.25rem;
+  --bar-lead: 1rem;
+  --bar-tail: 0.625rem;
+  /**
+   * ⚠ **The bar spans the window; the foot holds the measure.** They are not the
+   * same piece of furniture and the artboards draw the difference: the bar is
+   * page-level machinery and sits on the window's own edges, while the foot's
+   * glyphs act on the column of text and stay over it rather than being stranded
+   * at the window's corners. Below `rail` the two coincide, because the measure
+   * is wider than the screen.
+   *
+   * It is a token rather than two padding utilities on one element: a `gutter`
+   * and a `rail:px-8` are two declarations of the same property at equal
+   * specificity, resolved by their order in the compiled sheet, and a class
+   * attribute has no way to state that order.
+   */
+  --bar-gutter: max(1.25rem, env(safe-area-inset-left));
+  --bar-height: calc(
+    env(safe-area-inset-top) + var(--bar-lead) + var(--bar-row) + var(--bar-tail)
+  );
+
+  /**
+   * ⚠ **The foot's own inset is the whole home-indicator inset**, unlike
+   * `--collections-inset`, which subtracts a centimetre from it. The collections
+   * bar this replaces was a band of labels sitting off the bottom edge; the foot
+   * is a row of glyphs on it, and a glyph under the indicator is a control that
+   * cannot be pressed. See the `<nav>` note in the shell for the account of why
+   * that inset is quoted against a toolbar that is not there when installed.
+   */
+  --foot-lead: 1.625rem;
+  --foot-tail: 1.375rem;
+  --foot-height: calc(
+    var(--foot-lead) + var(--bar-row) + var(--foot-tail) + env(safe-area-inset-bottom)
+  );
+
+  /**
+   * The reading column above `rail`. 680px — the same measure the design's
+   * `LandingRail` artboard holds the lines and the foot's glyphs to, so the
+   * glyphs stay over the column of text they act on rather than stranded at the
+   * window's edges.
+   */
+  --page-measure: 42.5rem;
+
 }
 
 @layer base {
@@ -1710,4 +1787,116 @@
   line-height: var(--wordmark-line);
   margin-top: var(--wordmark-lead);
   margin-bottom: var(--wordmark-tail);
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The capture page
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * One capture. **A page, not a table**: there is no rule between lines and there
+ * is not going to be one — 18px on 28px with 8px of padding a side reaches a
+ * 44px target without anything visible saying so, which is the whole device.
+ *
+ * The live line at the foot of the page wears this too, so a line being written
+ * and a line already written occupy exactly the same box. That is what stops the
+ * page jumping on Return, and it is why the textarea has its own padding and
+ * border zeroed in `page-input` rather than being spaced from outside.
+ */
+@utility page-line {
+  font-size: var(--text-line);
+  line-height: var(--leading-line);
+  padding-block: var(--line-hem);
+  letter-spacing: -0.01em;
+}
+
+/**
+ * The mark on the picked line: **the caret's own width and colour, in the gutter
+ * rather than in the text.** No highlight and no box — it borrows a vocabulary
+ * the page has already taught, while sitting outside the line so it never claims
+ * a character position.
+ *
+ * ⚠ **It hangs into the gutter's padding**, which is why the page's lines are
+ * inset by `gutter` rather than by a margin: there has to be something for this
+ * to hang into at the narrowest width, or the mark is off the left of the glass.
+ */
+@utility picked {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 50%;
+    translate: 0 -50%;
+    width: var(--caret-width);
+    height: var(--caret-height);
+    background-color: var(--color-accent);
+  }
+}
+
+/**
+ * The live line's box, made to be a line of the page rather than a form control.
+ *
+ * The caret is brass, with the rest of the chrome. ⚠ **That spends
+ * `--color-accent`, which §11 reserves for overlap** — see
+ * `docs/re-direction/phase-1-capture.md`, which states the cost and where the
+ * ladder back is. It is also why `--color-caret` was deleted rather than used
+ * here: a third colour was only defensible for a claim the other two could not
+ * make, and with a coloured chrome teal made none.
+ *
+ * `resize: none` and the JS-driven height are what make it grow with wrapped
+ * text; `field-sizing: content` would do it in CSS and is not in Safari yet, so
+ * the height is written from `scrollHeight` in `components/page-screen.tsx`. When
+ * Safari ships it, that code is deleted and one line replaces it here.
+ */
+@utility page-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+/**
+ * What the scrolling page reserves at its foot: **the foot's own height, so a
+ * line always comes to rest above the glyphs rather than sliding under them.**
+ *
+ * ⚠ **That reservation is the reason there is no rule above the foot.** A
+ * `border-t` was correcting for a collision this prevents outright, and Notes
+ * has none either — space does the separating.
+ *
+ * `--keyboard-overlap` is measured and written on by `useKeyboardPin`, and is
+ * zero whenever there is no keyboard. Without it the last line of a long page
+ * cannot be reached on iOS, which does not shrink the layout viewport for a
+ * keyboard — see the utility `safe-bottom` and app/layout.tsx.
+ *
+ * ⚠ **`--foot-height` already carries `env(safe-area-inset-bottom)`**, which is
+ * why this is not `safe-bottom`: that utility adds the inset itself, and the two
+ * together would reserve the home indicator twice.
+ */
+@utility page-hem {
+  padding-bottom: calc(var(--foot-height) + var(--keyboard-overlap, 0px));
+}
+
+@layer base {
+  /**
+   * The desk and the tablet. **The controls do not change** — the same four at
+   * every width, which is the design's own rule — only the air around them and
+   * the size of the mark.
+   */
+  @media (min-width: 45rem) {
+    :root {
+      --foot-lead: 1.75rem;
+      --foot-tail: 1.5rem;
+      --text-mark: var(--text-mark-rail);
+      --bar-gutter: 2rem;
+    }
+  }
 }
