@@ -9,8 +9,8 @@ with sourced local discovery and opt-in distal matching following later.
 
 **Where it stands, 23 August.** Phase 0 — the migration of film entries into
 captures and possibilities — is done, deployed and verified. **Phase 1's capture
-page is built on branch `phase-1-capture` and is not deployed**, so what is
-running at the moment is still the film-first interface over the new records.
+page is deployed**, so `/` is the page rather than the poster wall; it is not yet
+verified on a handset, which is a different thing.
 The target product, release sequence and acceptance criteria live in
 docs/re-direction/implementation-spec.md, whose §13 carries a status marker
 against every Phase 1 deliverable.

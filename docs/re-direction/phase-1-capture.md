@@ -16,12 +16,15 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ## Build status — 23 August
 
-> **Built and committed. Not deployed.** Branch `phase-1-capture`, four ahead
-> of `origin/main` at `33ff151` — the design (`3a0fc42`, `294469f`), the build
-> (`19bad74`) and this register (`450bd05`). Production is still the poster wall.
-> A push to `main` is the deploy (`git push --ipv4 origin HEAD:main`, ~25s), and
-> **there is no migration in it** — no schema moved, so the rollback is a revert
-> push and nothing else.
+> **Built and deployed — 23 August, `main` at `1fa2ea9`.** The design
+> (`3a0fc42`, `294469f`), the build (`19bad74`) and this register (`450bd05`).
+> **The deploy carried no migration** — no schema moved — so the rollback is a
+> revert push and nothing else.
+>
+> ⚠ **Deployed is not verified.** Everything under *Only hardware can answer
+> this* is now in front of a handset and still unanswered, and the installed app
+> **never reloads until it is force-quit** — check which build is running before
+> believing anything seen on it.
 
 The instruction this was built against was narrower than the document below:
 **the page and Return — no schema, no images, no suggestions.** So the design is

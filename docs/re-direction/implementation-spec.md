@@ -1038,8 +1038,8 @@ and data-safety step: it changes what the records are, not what they say.
 
 ### Phase 1 — capture
 
-⚠ **Status, 23 August: partly built, not deployed.** Branch `phase-1-capture`,
-four ahead of `origin/main`, and carrying no migration. The design and the build slice
+⚠ **Status, 23 August: partly built, deployed, unverified on hardware.** `main`
+is at `1fa2ea9`; the deploy carried no migration. The design and the build slice
 are `docs/re-direction/phase-1-capture.md`, which carries the full register —
 what is built, what is not, and the two things only a handset can answer. The
 markers below are that register in one line each; the document is the account.

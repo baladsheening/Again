@@ -26,11 +26,13 @@ flag the decision rather than inventing scope.
 
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
-**Phase 1's page and Return are built and NOT deployed** — branch
-`phase-1-capture`, four commits ahead of `origin/main` and carrying no
-migration. `/` is the capture page; the poster wall,
-`components/shell.tsx` and the four collection routes are deleted. Production is
-still the wall until somebody pushes.
+**Phase 1's page and Return are built and deployed** — `main` at `1fa2ea9`, no
+migration in it. `/` is the capture page in production. `/` is the capture page; the poster wall,
+`components/shell.tsx` and the four collection routes are deleted.
+
+⚠ **Deployed is not verified.** Nothing in Phase 1 has been seen on a handset,
+and the installed app never reloads until it is force-quit — so check which
+build is running before believing anything reported from it.
 
 ⚠ **Read `docs/re-direction/phase-1-capture.md` before touching Phase 1.** Its
 *Build status* section is the register: what is built, what is still to build in
