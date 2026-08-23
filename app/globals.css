@@ -918,14 +918,29 @@
   --line-hem: 0.5rem;
 
   /**
-   * The caret, and the mark on a picked line — one width and one height, because
-   * they are the same object in two places. The picked line's mark is the
-   * caret's own width and colour sitting in the gutter rather than in the text,
-   * so it borrows a vocabulary the page has already taught without claiming a
-   * character position.
+   * The caret. It was one object with the mark on a picked line until 23 August,
+   * on the reasoning that the mark borrows a vocabulary the page has already
+   * taught — which is still true, and stopped being a reason to share a number.
    */
   --caret-width: 2px;
   --caret-height: 1.625rem;
+
+  /**
+   * The mark on a picked line. **Its own width, because it is not a caret.**
+   *
+   * ⚠ **3px against the caret's 2px, and the extra pixel is the whole point.**
+   * The mark answers one question — *which line* — and on a handset it was
+   * answering *something* instead. Height was tried first and measured: spanning
+   * the line's own text took a single-line capture's mark from 26px to 28px,
+   * which is nothing, because `--caret-height` was already almost a line tall.
+   * The height change was kept anyway — it is derived rather than guessed, and a
+   * wrapped line now gets a taller mark for free — but **thickness is what the
+   * eye catches in the gutter**, so thickness is what was spent.
+   *
+   * ⚠ Do not spend it again. The next step up is a box or a scrim, and both are
+   * ruled out where the utility is defined.
+   */
+  --mark-width: 3px;
 
   /**
    * The bar's mark. Smaller than `--text-wordmark`, which sets the mark on the
@@ -1853,6 +1868,21 @@
  * the page has already taught, while sitting outside the line so it never claims
  * a character position.
  *
+ * ⚠ **The height is the line's, not the caret's, and that is the whole of the
+ * change made on 23 August.** It was `--caret-height` — a caret lying in the
+ * gutter beside the words. On a handset that reads as *something is picked*
+ * without reading as *this line is*, which is the only question the mark exists
+ * to answer. Spanning the line's own text instead makes it a margin bar: the
+ * same colour, the same width, the same gutter, and unmistakably attached to one
+ * line. **A wrapped line gets a taller mark for free**, because `top`/`bottom`
+ * describe the box rather than a fixed height guessing at it.
+ *
+ * ⚠ **A scrim was the alternative and was rejected.** Dimming the rest of the
+ * page to make one line stand out turns picking into a modal state, and it is
+ * not one — the next tap can pick another line. It also punishes the record,
+ * which is the product, and repeats the mistake `opacity-40` on in-flight lines
+ * already made: the app reading as though it doubts what it is showing.
+ *
  * ⚠ **It hangs into the gutter's padding**, which is why the page's lines are
  * inset by `gutter` rather than by a margin: there has to be something for this
  * to hang into at the narrowest width, or the mark is off the left of the glass.
@@ -1864,10 +1894,10 @@
     content: '';
     position: absolute;
     left: -0.75rem;
-    top: 50%;
-    translate: 0 -50%;
-    width: var(--caret-width);
-    height: var(--caret-height);
+    /* The words, not the row: the line's hem is air, and the mark is not. */
+    top: var(--line-hem);
+    bottom: var(--line-hem);
+    width: var(--mark-width);
     background-color: var(--color-chrome);
   }
 }
