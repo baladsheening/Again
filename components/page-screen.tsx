@@ -121,6 +121,19 @@ type Line = PageLineView & {
   pending?: boolean
   /** What went wrong, on the line it went wrong on. */
   failed?: string | null
+  /**
+   * Typed here rather than read from the server, which is the whole of what it
+   * means: the row flashes once as the line arrives on it.
+   *
+   * ⚠ **A property of the line, not a piece of state with a timer.** The flash
+   * is a CSS animation with `both`, so it runs once on mount and ends holding
+   * its final frame — nothing. A `landed` id held in state would need a timeout
+   * to clear it, and the timeout would be a second opinion about a duration the
+   * stylesheet already owns.
+   *
+   * Seeded lines never carry it, so a reload does not re-flash the record.
+   */
+  landed?: boolean
 }
 
 export function PageScreen({
@@ -280,6 +293,7 @@ export function PageScreen({
       mutationId,
       pending: true,
       failed: null,
+      landed: true,
     }
 
     /* The head of the list, because the head of the list is under the caret. */
@@ -474,19 +488,16 @@ export function PageScreen({
           a half-written line tapped away from looks exactly like something that
           landed.
 
-          ⚠ **It is a glow and not a fill, and it lights only when the line is
-          live.** Two flat grounds shipped on 23 August and both came back "too
-          grey" — the value was never it; a uniform tone inside a rectangle with
-          edges is what reads as grey, whatever the value. `live-band` in
-          globals.css carries the whole argument, including why glass cannot work
-          on a true black page.
-
-          `data-live` is focus **or** a draft. Focus alone would take the light
-          away at the moment it is most needed — a half-written line tapped away
-          from is the exact case this exists for — and a draft alone would leave
-          an empty focused row unlit while somebody waits to type into it.
+          ⚠ **It is a glow and not a fill, and it is always on.** Two flat
+          grounds shipped on 23 August and both came back "too grey" — the value
+          was never it; a uniform tone inside a rectangle with edges is what
+          reads as grey, whatever the value. It was then gated on focus-or-draft
+          for an hour, which was wrong for a different reason: the row is the
+          live one whether or not there is a word in it yet, and the light is the
+          affordance. `live-band` in globals.css carries both arguments, and why
+          glass cannot work on a true black page.
         */}
-        <div className="live-band" data-live={focused || draft !== '' ? '' : undefined}>
+        <div className="live-band">
           <div className="relative">
             <input
               ref={input}
@@ -583,7 +594,12 @@ export function PageScreen({
                   </p>
                 )}
 
-                <div className="flex items-stretch">
+                {/*
+                  ⚠ **The flash goes on the row, not on the line item.** The
+                  `<li>` carries the day stamp too, and a light that took in the
+                  date would be saying *this day just landed*.
+                */}
+                <div className={`flex items-stretch ${line.landed ? 'landed' : ''}`}>
                   <button
                     type="button"
                     onClick={() => pick(line)}

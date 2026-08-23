@@ -920,6 +920,28 @@
   --gutter-l: max(1.25rem, env(safe-area-inset-left));
   --gutter-r: max(1.25rem, env(safe-area-inset-right));
 
+  /**
+   * **The light a row is lit by** — one definition, two users, so the row you
+   * are writing in and the row a capture just landed on cannot drift apart.
+   *
+   * ⚠ **An ellipse inscribed in the row, not a fill.** `50% 50%` radii from the
+   * centre reach transparent exactly at all four sides, so the rectangle is
+   * bounded and never drawn — there is no edge anywhere for the eye to find.
+   * That is the whole reason it works: two flat grounds shipped on 23 August and
+   * both came back "too grey", because a uniform tone inside a rectangle with
+   * edges reads as a slab whatever its value. See `live-band` for the argument
+   * in full, including why glass cannot work on a true black page.
+   *
+   * 8% of the paper colour, peaking near #131312 across the middle. It can be
+   * brighter than either flat fill was and still read subtler, because nothing
+   * about it has a boundary.
+   */
+  --row-light: radial-gradient(
+    50% 50% at 50% 50%,
+    color-mix(in srgb, var(--color-text) 8%, transparent) 0%,
+    transparent 100%
+  );
+
   /** One capture: 18px on 28px, 8px of padding a side to reach a 44px target. */
   --text-line: 1.125rem;
   --leading-line: 1.75rem;
@@ -1986,10 +2008,13 @@
  * hairline, and hairlines are out. Frosted glass needs a busy backdrop; a true
  * black page is the one backdrop that gives it nothing to work with.
  *
- * ⚠ **It lights only when the line is live** — focused, or holding a draft. An
- * untouched empty page is pure black, because there is nothing on it yet to
- * distinguish from anything. A ground that is always on is decoration; one that
- * appears exactly when a line is unfinished is the statement.
+ * ⚠ **Always on, and it was gated for an hour.** The light came and went with
+ * focus-or-a-draft, on the argument that a ground which is always there is
+ * decoration. It is not: the row is always the live one whether or not there is
+ * a word in it yet, and a page whose only lit thing appears after you commit to
+ * typing has hidden the very affordance somebody opened the app to find. The
+ * gate also cost the flash below its meaning — light that comes and goes cannot
+ * also mean *this just landed*.
  *
  * ⚠ **Edge to edge with no media query and no `vw`.** It un-insets by exactly
  * the gutter that inset it, so on a handset — where `main` is the whole screen
@@ -2014,29 +2039,80 @@
   &::before {
     content: '';
     position: absolute;
-    /*
-      Inset to the row, and the gradient stops short of all four sides on its
-      own — `50% 50%` radii from the centre reach transparent exactly at the
-      box, so the rectangle is never drawn, only bounded.
-    */
     inset: 0;
     pointer-events: none;
-    background-image: radial-gradient(
-      50% 50% at 50% 50%,
-      color-mix(in srgb, var(--color-text) 8%, transparent) 0%,
-      transparent 100%
-    );
-    opacity: 0;
-    transition: opacity 200ms ease-out;
+    background-image: var(--row-light);
   }
+}
 
-  /*
-    ⚠ **An attribute, not a class.** `data-live` is set from React state and read
-    by nothing else; a bare class here would be a name Tailwind does not know
-    about and anyone could reuse by accident.
-  */
-  &[data-live]::before {
+/**
+ * **A capture blinks where it lands.** One flash of the same light the live row
+ * is lit by, on the row the line arrives on, decaying to nothing.
+ *
+ * It is the receipt. Return does not wait for the network — the line is on the
+ * page before the save goes out — so nothing else on screen marks the moment a
+ * capture became a record, and with the record newest-first the line lands one
+ * row below the caret where a run of Returns can otherwise blur together.
+ *
+ * ⚠ **The same `--row-light`, deliberately.** The page teaches one thing with
+ * light — *this row is the live one* — and the flash says the light moved here.
+ * A second colour or a second shape would be a second vocabulary for one idea.
+ *
+ * ⚠ **It fades out and never dims the words.** The light is behind the text and
+ * the text is full strength throughout, which is the `opacity-40` finding
+ * again: an app that dims what it is showing reads as doubting it. This adds
+ * and then stops adding.
+ *
+ * ⚠ **700ms, and a run of Returns is why it is not slower.** The whole design
+ * is built for captures a second or two apart; a decay long enough to overlap
+ * the next one would leave three rows glowing and say nothing about any of them.
+ *
+ * ⚠ **`z-index: -1`, so the light paints behind the words** without the row
+ * needing a stacking context of its own. `position: relative` with no `z-index`
+ * is what keeps the row out of the way of one.
+ *
+ * ⚠ **It hangs into the gutter** to reach the glass, the same bleed `live-band`
+ * makes with margins — as an absolutely positioned box it can do it with offsets
+ * instead, and nothing in the row's layout moves.
+ *
+ * ⚠ **Reduced motion ends it before it is seen**, by the global block above:
+ * every animation runs at 0.01ms, so the flash resolves instantly to its final
+ * state, which is nothing. That is the right answer rather than a missing one —
+ * a flash is the one thing a person who asked for no motion has asked not to see.
+ */
+@utility landed {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(-1 * var(--gutter-l));
+    right: calc(-1 * var(--gutter-r));
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--row-light);
+    animation: row-landed 700ms ease-out both;
+  }
+}
+
+/**
+ * Up fast, held for a beat, gone. A symmetric fade in and out reads as a pulse
+ * — something breathing — and this is a single event: it arrived.
+ */
+@keyframes row-landed {
+  0% {
+    opacity: 0;
+  }
+  15% {
     opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
