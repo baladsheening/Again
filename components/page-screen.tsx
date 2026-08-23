@@ -533,7 +533,7 @@ export function PageScreen({
                 it wants, and the caret is already the instruction.
               */
               aria-label="Capture"
-              className={`page-line page-input ${
+              className={`page-line page-input block ${
                 drawnCaret ? 'caret-transparent' : 'caret-chrome'
               }`}
             />

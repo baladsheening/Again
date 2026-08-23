@@ -1955,10 +1955,28 @@
  * shade says *this one is still yours to finish*, and the band says where it
  * ends.
  *
- * ⚠ **`--color-surface` is 1.29:1 against the true black**, which is as faint as
- * a shade can be and still be a shade. That is deliberate — it is the palette's
- * own value for the capture field, and it was chosen to separate without
- * becoming a box.
+ * ⚠ **A fade of `--color-surface`, not the token itself, and 40% is not a taste
+ * number.** Full strength shipped for an hour on 23 August and came back "too
+ * grey" — which is the second time that has been reported of this token used
+ * flat, the first being the People pill in `tracked-people.tsx`. The token is
+ * tuned for things meant to read as *raised off the ground*: the capture field,
+ * the intent sheet, the toast. At 1.29:1 against pure black that is a card, and
+ * the band is not a card — it wants to say *this row is still yours* without
+ * claiming to be a panel sitting on the page. At 40% it composites to about
+ * #0d0d0c, roughly 1.09:1, which is the value the pill already settled on for
+ * exactly this job.
+ *
+ * A tint rather than a hand-picked near-black, deliberately: it stays the same
+ * warm charcoal, so the band cannot drift away from the palette's warmth on its
+ * own.
+ *
+ * ⚠ **No `padding-block`, and there was some for an hour.** It made the band
+ * 12px taller than a written line, which broke the invariant `page-line` exists
+ * to state: *a line being written and a line already written occupy exactly the
+ * same box*, which is what stops the page jumping on Return. The band is the
+ * line's own box and nothing more — it is a ground, not a container, so it has
+ * no spacing of its own to get wrong. Air above the record belongs to the
+ * record; see the `mt-8` in `page-screen.tsx`.
  *
  * ⚠ **Edge to edge with no media query and no `vw`.** It un-insets by exactly
  * the gutter that inset it, so on a handset — where `main` is the whole screen
@@ -1968,12 +1986,11 @@
  * A `100vw` bleed would have needed both a breakpoint and a scrollbar caveat.
  */
 @utility live-band {
-  background-color: var(--color-surface);
+  background-color: color-mix(in srgb, var(--color-surface) 40%, transparent);
   margin-left: calc(-1 * var(--gutter-l));
   margin-right: calc(-1 * var(--gutter-r));
   padding-left: var(--gutter-l);
   padding-right: var(--gutter-r);
-  padding-block: 0.375rem;
 }
 
 /**
