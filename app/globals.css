@@ -2067,9 +2067,25 @@
  * is built for captures a second or two apart; a decay long enough to overlap
  * the next one would leave three rows glowing and say nothing about any of them.
  *
- * ⚠ **`z-index: -1`, so the light paints behind the words** without the row
- * needing a stacking context of its own. `position: relative` with no `z-index`
- * is what keeps the row out of the way of one.
+ * ⚠ **`isolation: isolate`, and the flash did not render at all without it.**
+ * Shipped once as `z-index: -1` on a row that was merely `position: relative`.
+ * Measured in a browser: the class was applied, the animation ran, `::before`
+ * reported opacity 1 — and not one pixel changed. A negative z-index descendant
+ * paints at step 2 of its nearest ancestor **stacking context**, and a relative
+ * row without a `z-index` is not one, so the light went into the root's negative
+ * layer — which is under step 3, the backgrounds of in-flow blocks. `body`
+ * carries an opaque `#000` of its own on top of `html`'s, and painted over it.
+ *
+ * `isolation: isolate` makes the row its own stacking context, so `-1` is now
+ * negative *within the row*: above the row's own background, below the row's
+ * words. It cannot be broken by an ancestor because it no longer consults one.
+ * Dropping `body`'s duplicate background would have fixed today's symptom and
+ * left the next opaque ancestor free to do it again — see *How things get
+ * fixed*: remove the condition, and the condition here is the dependence.
+ *
+ * ⚠ The pixels are the claim, not the opacity. `node_modules/.probe/flash.mjs`
+ * checks the class, the animation name, the computed opacity **and** the mean
+ * of the row's pixels early against late; only the last one caught this.
  *
  * ⚠ **It hangs into the gutter** to reach the glass, the same bleed `live-band`
  * makes with margins — as an absolutely positioned box it can do it with offsets
@@ -2081,6 +2097,7 @@
  * a flash is the one thing a person who asked for no motion has asked not to see.
  */
 @utility landed {
+  isolation: isolate;
   position: relative;
 
   &::before {
