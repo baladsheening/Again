@@ -10,7 +10,7 @@ and *canonical vocabulary and status copy* — because they are one decision.
 
 The drawings are in `design/`, and the artboards are the normative picture of
 this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
-(browsing), `BarStates`, `LineStates`, `LandingRail`.
+(browsing), `ReadingBack` (a month), `BarStates`, `LineStates`, `LandingRail`.
 
 ## Why the vocabulary is not a later step
 
@@ -42,8 +42,9 @@ filling as you write.
   specified, and it follows from the page: you do not write a note upwards.
 - **No rules between lines.** 18px on 28px leading, 8px of padding each side to
   reach a 44px target without anything visible saying so. A page, not a table.
-- Four routes go with it: `/wants`, `/go-back-tos`, `/fixtures`, `/archive`.
-  Everything active is on the page; everything settled is behind the tray.
+- **Four routes go away with it** — `/wants`, `/go-back-tos`, `/fixtures` and
+  `/archive`. Everything active is on the page; everything settled is behind
+  the tray.
 
 ⚠ **Nothing in the app can cause an open.** No feed, no notification in
 Phase 1, no streak. Every open is caused by something in the world — a shelf, a
@@ -330,21 +331,65 @@ nothing in this phase changes it or exposes a control that does.
 population being the author plus test accounts — not a principle. Phase 1 does
 not get to rely on it.
 
+## Reading back
+
+**A capture app nobody reads back is a diary**, so this is the difference
+between the product and a worse Notes. After three months the page is two
+hundred lines in the order they were typed.
+
+⚠ **Nothing the app knows in Phase 1 can answer *what could I do tonight*.**
+Possibility type exists only for resolved lines, and most lines are raw.
+Location is Phase 5. Offers and occurrences are a later sourced layer.
+Manufacturing the signal means asking somebody to categorise, which §2 forbids
+at capture — so the question is deferred honestly rather than answered badly.
+
+**Reading back is narrowing, not sorting.** Three parts, and two of them exist
+already:
+
+1. **The tray does the heavy lifting.** Settled captures leave the page, so
+   what remains is only live intention. That is the largest single reduction
+   available and it costs nothing new.
+2. **Search** finds the thing you can name.
+3. **The page groups by the day it was written.** Oldest at the top, newest
+   under the caret, each day announced by a quiet mono stamp — `stamp` in
+   `app/globals.css`, which is §11's own reserved use for mono. It asks nothing
+   of anybody, it uses a column the record already has, and it makes two
+   hundred lines navigable by *roughly when* rather than by scrolling.
+
+⚠ **Not a sort control and not a filter chip.** A page you wrote does not
+reorder itself, and a row of filters would be the organisation §2 says happens
+after capture — being demanded before it.
+
+⚠ Browsing by kind, place or time-of-day waits for the signal to exist. When
+types and location arrive, this is the section that gets revisited, and the
+constraint that governs it is Release 1's: an explained, user-controlled local
+relevance result, never a recommendation feed.
+
+## How long an offer stands
+
+**Forever, quietly.** No expiry — any number would be a constant tuned to
+nothing, and an unanswered question is not wrong, it is unanswered.
+
+Instead the offer uses picking:
+
+- **Shown in full while its line is live or picked** — so it arrives visibly at
+  the moment of capture, and comes back whenever the line is pointed at.
+- **Otherwise the line carries a trailing muted `?`**, in the same slot a
+  resolved line's year takes. One character, no glyph, no new vocabulary.
+
+⚠ **Ignoring is not No.** *No* is an answer: it records that this possibility
+is not the one, and the `?` goes. Ignoring leaves the mark standing
+indefinitely, which is correct — §13 requires that an unresolved capture can be
+offered a resolution without being converted, and a question that expires on
+its own has quietly answered itself.
+
 ## Still open
 
-In the order they block building.
-
-- **Reading back.** After three months the page is a hundred lines in the order
-  they were typed. Search finds a thing you can name; nothing answers *what
-  could I do tonight* — no grouping, no filter, no sense of what is near or
-  quick. §2's "organisation happens after capture" defers this without saying
-  to what. **A capture app nobody reads back is a diary**, so this is the
-  difference between the product and a worse Notes.
-- **How long an offer stands.** *Ignorable* with no expiry means an unanswered
-  question sits on a line indefinitely.
 - **The stable client mutation id.** Phase 0 ships none — the unique key on
   (user, possibility, intent) carries idempotency, and a raw capture has no
   such key. §13's exit criterion requires one, so it is Phase 1's to introduce,
   and it is the one place this phase is not schema-free.
 - **Whether the settled tray is one surface or three** (Again / Have / Done).
   The states stay distinct either way; this is only how they are reached.
+- **Whether editing a committed line happens in place or in a detail view.**
+  The second tap has to turn a rendered record back into an input either way.

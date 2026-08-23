@@ -36,6 +36,18 @@
       line-height: 1;
     }
     .muted { color: var(--muted); }
+    .line {
+      font-size: 18px;
+      line-height: 28px;
+      padding: 8px 0;
+      letter-spacing: -0.01em;
+    }
+    /*
+      §11's `stamp`: mono, micro, one step of weight, wide tracking. A word
+      pressed onto the page rather than typeset on it — which is exactly what a
+      day is here. It is furniture, so it is muted and it never competes with a
+      line.
+    */
     .day {
       font-family: 'IBM Plex Mono', ui-monospace, monospace;
       font-size: 0.6875rem;
@@ -47,28 +59,6 @@
       margin: 26px 0 10px 0;
     }
     .day:first-child { margin-top: 0; }
-    .line {
-      font-size: 18px;
-      line-height: 28px;
-      padding: 8px 0;
-      letter-spacing: -0.01em;
-      position: relative;
-    }
-    /*
-      The mark for the selected line. The caret's own width and colour, sitting
-      in the gutter rather than in the text — so it borrows a vocabulary the
-      page has already taught without claiming a character position.
-    */
-    .line.picked::before {
-      content: "";
-      position: absolute;
-      left: -12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 2px;
-      height: 26px;
-      background: #b49a62;
-    }
   </style>
 </helmet>
 
@@ -76,9 +66,7 @@
 
   <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px 20px; flex-shrink: 0;">
     <span class="wordmark" style="font-size: 1.25rem; color: #b49a62;">Again</span>
-
     <div style="display: flex; align-items: center; gap: 22px;">
-      <!-- the ten seconds are long gone -->
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M6.75 4.25 3.25 7.75l3.5 3.5" /><path d="M3.25 7.75h7.75a4.75 4.75 0 0 1 0 9.5H8.25" /></svg>
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M3.5 6.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 6.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><circle cx="10" cy="6.75" r="3.25" /><path d="M3.75 17c0-3.1 2.8-5 6.25-5s6.25 1.9 6.25 5" /></svg>
@@ -86,29 +74,34 @@
   </div>
 
   <!--
-    Browsing, not writing. No caret anywhere: the keyboard went away when he
-    picked a line, and the live line at the foot of the page is waiting rather
-    than being typed into.
+    A month down the page. The days are the only navigation it needs: they cost
+    a column the record already has, they ask nothing, and they let somebody
+    find a line by remembering roughly when they wrote it.
   -->
-  <div style="flex: 1 1 auto; padding: 20px 20px 0 20px;">
+  <div style="flex: 1 1 auto; padding: 16px 20px 0 20px;">
+
+    <p class="day">2 August</p>
+    <div class="line">sourdough starter from Ida</div>
+    <div class="line">fix the bike light</div>
 
     <p class="day">18 August</p>
-
-    <div class="line picked">moka pot — the 3-cup one</div>
-
-    <div class="line">learn to develop film at home</div>
-    <div class="line" style="opacity: 0.5; text-decoration: line-through;">that Georgian place on Cowley Rd</div>
-    <div class="line">Aftersun<span class="muted" style="font-size: 13px; margin-left: 8px;">2022</span></div>
-    <p class="day">Today</p>
     <div class="line">poster outside the Ultimate Picture House<span style="display: inline-block; width: 24px; height: 24px; background: #20201d; border: 1px solid #30302b; border-radius: 2px; margin-left: 8px; vertical-align: -6px;"></span></div>
+    <div class="line" style="opacity: 0.5; text-decoration: line-through;">that Georgian place on Cowley Rd</div>
     <div class="line">swim at the ponds before it gets cold</div>
+
+    <p class="day">Yesterday</p>
+    <div class="line">Aftersun<span class="muted" style="font-size: 13px; margin-left: 8px;">2022</span></div>
+    <div class="line">that aftersun film ida mentioned<span class="muted" style="font-size: 13px; margin-left: 8px;">?</span></div>
+
+    <p class="day">Today</p>
+    <div class="line">moka pot — the 3-cup one</div>
+    <div class="line">learn to develop film at home</div>
 
   </div>
 
-  <!-- a saved line is picked, so all four can act on it -->
   <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: space-around; padding: 26px 20px 22px 20px;">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" /><circle cx="10" cy="11.25" r="3.25" /></svg>
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><circle cx="8.75" cy="8.75" r="5.25" /><path d="M12.75 12.75 16.75 16.75" /></svg>
   </div>

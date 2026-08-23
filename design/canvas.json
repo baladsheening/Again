@@ -25,9 +25,17 @@
       "h": 844
     },
     {
+      "file": "ReadingBack.dc.html",
+      "title": "Reading back — a month",
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
       "file": "BarStates.dc.html",
       "title": "Off and on",
-      "x": 1410,
+      "x": 1880,
       "y": 0,
       "w": 390,
       "h": 530
@@ -35,15 +43,15 @@
     {
       "file": "LineStates.dc.html",
       "title": "A line, in each state",
-      "x": 1410,
+      "x": 1880,
       "y": 650,
       "w": 390,
-      "h": 720
+      "h": 810
     },
     {
       "file": "LandingRail.dc.html",
       "title": "Landing — desk",
-      "x": 1880,
+      "x": 2350,
       "y": 0,
       "w": 1280,
       "h": 900
@@ -59,7 +67,7 @@
     },
     {
       "id": "note-caption",
-      "x": 1410,
+      "x": 1880,
       "y": -160,
       "w": 440,
       "text": "Every capture carries text. A photograph opens a line with the image on it and the caret waiting; it is not a capture until it is captioned.\n\nSo a picture never costs the page its rhythm — the image rides the line in the same slot a resolved year takes, and one line is still one line."
@@ -77,6 +85,13 @@
       "y": -160,
       "w": 440,
       "text": "The page is not a text buffer. Only the bottom line is live; every line above it is a record, so tapping one has exactly one meaning — pick it.\n\nSecond tap edits. The brass bar sits in the gutter, not in the text: the caret’s width and colour, without claiming a character position.\n\nKeyboard follows liveness — up on a cold open, gone the moment you pick a saved line."
+    },
+    {
+      "id": "note-read",
+      "x": 1410,
+      "y": -160,
+      "w": 400,
+      "text": "Reading back is narrowing, not sorting. The tray takes settled things off the page, search finds what you can name, and the days make what is left navigable by memory.\n\nNothing else is available in Phase 1: type exists only for resolved lines, location is Phase 5, and manufacturing the signal means asking people to categorise."
     }
   ],
   "launch": {
