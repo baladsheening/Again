@@ -921,8 +921,14 @@
   --gutter-r: max(1.25rem, env(safe-area-inset-right));
 
   /**
-   * **The light a row is lit by** — one definition, two users, so the row you
-   * are writing in and the row a capture just landed on cannot drift apart.
+   * **The light the live row is lit by.** Named rather than inlined because it
+   * is a thing the page means — *this row is the one you are writing in* — and a
+   * gradient written into `live-band` would read as that utility's decoration.
+   *
+   * ⚠ **One user, and it briefly had two.** A flash of the same light marked
+   * where a capture landed, which was wrong: lighting the paper says *this
+   * area*, and what just happened is a *line*. The blink moved onto the words —
+   * see `landed` — and this went back to meaning one thing.
    *
    * ⚠ **An ellipse inscribed in the row, not a fill.** `50% 50%` radii from the
    * centre reach transparent exactly at all four sides, so the rectangle is
@@ -2046,90 +2052,64 @@
 }
 
 /**
- * **A capture blinks where it lands.** One flash of the same light the live row
- * is lit by, on the row the line arrives on, decaying to nothing.
+ * **A capture blinks where it lands** — the words themselves, once, as the line
+ * arrives on the page.
  *
  * It is the receipt. Return does not wait for the network — the line is on the
  * page before the save goes out — so nothing else on screen marks the moment a
- * capture became a record, and with the record newest-first the line lands one
- * row below the caret where a run of Returns can otherwise blur together.
+ * capture became a record, and with the record newest-first a run of Returns
+ * lands line after line one row under the caret with nothing separating them.
  *
- * ⚠ **The same `--row-light`, deliberately.** The page teaches one thing with
- * light — *this row is the live one* — and the flash says the light moved here.
- * A second colour or a second shape would be a second vocabulary for one idea.
+ * ⚠ **The text, and not a ground behind it.** A flash of the live row's own
+ * light shipped first and was wrong on sight: lighting the paper says *this
+ * area*, and the thing that just happened is a *line*. Whatever announces a
+ * capture has to be the capture. The ground version is gone rather than kept
+ * behind a flag — see *How things get fixed*.
  *
- * ⚠ **It fades out and never dims the words.** The light is behind the text and
- * the text is full strength throughout, which is the `opacity-40` finding
- * again: an app that dims what it is showing reads as doubting it. This adds
- * and then stops adding.
+ * ⚠ **A blink, so it is one event and not a state.** Out and back once, 420ms
+ * end to end, and the line is at full strength before and after. That is what
+ * separates it from the `opacity-40` pass on in-flight lines, which held a
+ * dimmed line for as long as the network took and read as the app doubting what
+ * it had already promised. This does not describe a condition; it marks an
+ * instant and is over.
  *
- * ⚠ **700ms, and a run of Returns is why it is not slower.** The whole design
- * is built for captures a second or two apart; a decay long enough to overlap
- * the next one would leave three rows glowing and say nothing about any of them.
+ * ⚠ **Not slower, because a run of Returns is the design.** Captures come a
+ * second or two apart; a blink long enough to overlap the next one would leave
+ * two lines mid-wink and say nothing about either.
  *
- * ⚠ **`isolation: isolate`, and the flash did not render at all without it.**
- * Shipped once as `z-index: -1` on a row that was merely `position: relative`.
- * Measured in a browser: the class was applied, the animation ran, `::before`
- * reported opacity 1 — and not one pixel changed. A negative z-index descendant
- * paints at step 2 of its nearest ancestor **stacking context**, and a relative
- * row without a `z-index` is not one, so the light went into the root's negative
- * layer — which is under step 3, the backgrounds of in-flow blocks. `body`
- * carries an opaque `#000` of its own on top of `html`'s, and painted over it.
- *
- * `isolation: isolate` makes the row its own stacking context, so `-1` is now
- * negative *within the row*: above the row's own background, below the row's
- * words. It cannot be broken by an ancestor because it no longer consults one.
- * Dropping `body`'s duplicate background would have fixed today's symptom and
- * left the next opaque ancestor free to do it again — see *How things get
- * fixed*: remove the condition, and the condition here is the dependence.
- *
- * ⚠ The pixels are the claim, not the opacity. `node_modules/.probe/flash.mjs`
- * checks the class, the animation name, the computed opacity **and** the mean
- * of the row's pixels early against late; only the last one caught this.
- *
- * ⚠ **It hangs into the gutter** to reach the glass, the same bleed `live-band`
- * makes with margins — as an absolutely positioned box it can do it with offsets
- * instead, and nothing in the row's layout moves.
+ * ⚠ **Nothing moves and nothing resizes** — opacity only, so the blink cannot
+ * shift the line it is on or the record under it. The four-second capture is a
+ * typing measurement, and a page that reflows while somebody types is the one
+ * way an animation could cost it.
  *
  * ⚠ **Reduced motion ends it before it is seen**, by the global block above:
- * every animation runs at 0.01ms, so the flash resolves instantly to its final
- * state, which is nothing. That is the right answer rather than a missing one —
- * a flash is the one thing a person who asked for no motion has asked not to see.
+ * every animation runs at 0.01ms, so the line resolves instantly to its final
+ * frame, which is the line at full strength. A blink is exactly what somebody
+ * who asked for no motion asked not to see, and skipping it costs them nothing —
+ * the line is on the page either way.
  */
 @utility landed {
-  isolation: isolate;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: calc(-1 * var(--gutter-l));
-    right: calc(-1 * var(--gutter-r));
-    z-index: -1;
-    pointer-events: none;
-    background-image: var(--row-light);
-    animation: row-landed 700ms ease-out both;
-  }
+  animation: line-landed 420ms ease-in-out both;
 }
 
 /**
- * Up fast, held for a beat, gone. A symmetric fade in and out reads as a pulse
- * — something breathing — and this is a single event: it arrived.
+ * Out and back, once. Asymmetric on purpose: away quickly, back a little more
+ * slowly, so the eye is caught by the leaving and reads the returning as the
+ * line settling rather than as a second flash.
+ *
+ * ⚠ **It never reaches zero.** At 0.15 the words are still legible for the whole
+ * blink, so nothing is taken away from somebody mid-sentence — the line dips,
+ * it does not vanish and come back, which on a record would read as a glitch.
  */
-@keyframes row-landed {
+@keyframes line-landed {
   0% {
-    opacity: 0;
-  }
-  15% {
     opacity: 1;
   }
-  45% {
-    opacity: 1;
+  30% {
+    opacity: 0.15;
   }
   100% {
-    opacity: 0;
+    opacity: 1;
   }
 }
 

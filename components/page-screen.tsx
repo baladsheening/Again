@@ -594,12 +594,7 @@ export function PageScreen({
                   </p>
                 )}
 
-                {/*
-                  ⚠ **The flash goes on the row, not on the line item.** The
-                  `<li>` carries the day stamp too, and a light that took in the
-                  date would be saying *this day just landed*.
-                */}
-                <div className={`flex items-stretch ${line.landed ? 'landed' : ''}`}>
+                <div className="flex items-stretch">
                   <button
                     type="button"
                     onClick={() => pick(line)}
@@ -618,9 +613,18 @@ export function PageScreen({
                       the line it happened to; anything short of that is the app
                       narrating its own network.
                     */
+                    /*
+                      ⚠ **`landed` blinks the words, and it goes here rather than
+                      on the row or the `<li>`.** A ground behind the line shipped
+                      first and was wrong on sight: lighting the paper says *this
+                      area*, and what just happened is a *line*. The `<li>` would
+                      have taken in the day stamp and said *this day landed*.
+                    */
                     className={`page-line min-w-0 text-start ${
                       isPicked ? 'picked' : ''
-                    } ${crossedOff ? 'line-through opacity-50' : ''}`}
+                    } ${crossedOff ? 'line-through opacity-50' : ''} ${
+                      line.landed ? 'landed' : ''
+                    }`}
                   >
                     {line.text}
                     {/*
