@@ -604,14 +604,14 @@ export function PageScreen({
             */
             aria-label="Capture"
             className={`page-line page-input block ${
-              drawnCaret ? 'caret-transparent' : 'caret-accent'
+              drawnCaret ? 'caret-transparent' : 'caret-chrome'
             }`}
           />
 
           {drawnCaret && (
             <span
               aria-hidden
-              className="animate-caret bg-accent pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+              className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
             />
           )}
         </div>

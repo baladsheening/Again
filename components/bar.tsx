@@ -28,12 +28,16 @@ import { TrayGlyph, UndoGlyph, YouGlyph } from './glyphs'
  * reason `--color-muted` is one: a fixed grey stays the shade it was mixed
  * against black and drifts on any other ground.
  *
- * ⚠ **The chrome is brass, and that spends `--color-accent`.** §11 reserves it
- * for overlap and nothing else. It was chosen deliberately with the cost stated,
- * and it is the one place the Phase 1 design breaks a rule in CLAUDE.md rather
- * than extending it: **overlap needs a different colour in Phase 2**, and the
- * ladder back is §11's own argument — the accent's job is to interrupt, so its
- * replacement has to out-shout brass on a screen that is now full of it. Pick it
+ * ⚠ **The chrome is `--color-chrome`, not `--color-accent`.** It spent the
+ * accent until 23 August, which was the one place the Phase 1 design broke a
+ * rule in CLAUDE.md rather than extending it. Splitting the token ended that:
+ * §11 reserves brass for overlap, and lit brass is a different colour with a
+ * different job — the thing a thumb aims at.
+ *
+ * ⚠ **It does not make Phase 2 easier.** Overlap still needs a colour that
+ * out-shouts a brass screen, and the screen is now louder than it was. §11's
+ * own argument still applies — the accent's job is to interrupt — and the
+ * candidate to beat is `--color-chrome`, not the muted brass beside it. Pick it
  * when Phase 2 has something to show, not now.
  *
  * ⚠ **No rule under the bar**, and none above the foot either. Notes has none;
@@ -95,7 +99,7 @@ export function Bar({
         */}
         <Link
           href="/"
-          className="wordmark wordmark-trim text-accent text-[length:var(--text-mark)]"
+          className="wordmark wordmark-trim text-chrome text-[length:var(--text-mark)]"
         >
           Again
         </Link>
@@ -112,7 +116,7 @@ export function Bar({
             onClick={() => undo?.onUndo()}
             aria-label="Undo the last capture"
             className={`tap-target flex items-center transition-colors ${
-              undo?.live ? 'text-accent' : OFF
+              undo?.live ? 'text-chrome' : OFF
             }`}
           >
             <UndoGlyph />
@@ -125,7 +129,7 @@ export function Bar({
           <Link
             href="/settled"
             aria-label="Settled"
-            className="text-accent tap-target flex items-center"
+            className="text-chrome tap-target flex items-center"
           >
             <TrayGlyph />
           </Link>
@@ -133,7 +137,7 @@ export function Bar({
           <Link
             href="/profile"
             aria-label="You"
-            className="text-accent tap-target flex items-center"
+            className="text-chrome tap-target flex items-center"
           >
             <YouGlyph />
           </Link>

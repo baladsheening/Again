@@ -52,11 +52,21 @@
   /* hairlines */
   --color-rule: #30302b;
   /**
-   * Muted brass. Used ONLY for overlap state.
+   * Muted brass. Used ONLY for overlap state — and, since 23 August, used by
+   * **nothing**, because the chrome that was borrowing it now has
+   * `--color-chrome` of its own.
    *
    * Not on buttons, not on links, not on the active tab. It marks the one
    * moment the app exists for, and it stops meaning anything the second it is
    * used for decoration.
+   *
+   * ⚠ **It is no longer the loudest brass on the screen, and that is now the
+   * question Phase 2 answers rather than a note about one.** The chrome is
+   * `--color-chrome` at `#e8b34a`, which out-shouts this by half again in
+   * luminance, so an overlap mark in this value would read as quieter chrome.
+   * **Phase 2 picks the convergence colour and this value is a candidate, not
+   * a default** — interrupting a brass screen is a different job from
+   * interrupting a black one.
    *
    * ⚠ Quieter than the `#e0a458` amber it replaces, and that is the one thing
    * this palette gave up. Brass is the better colour and amber was the louder
@@ -66,6 +76,29 @@
    * not the rule around it.
    */
   --color-accent: #b49a62;
+  /**
+   * Lit brass. **The chrome, and only the chrome**: the mark, the live glyphs
+   * in the two bars, the caret, and the mark on a picked line.
+   *
+   * Added 23 August, directed, after the page was seen on a handset: the muted
+   * brass read as correct and not as present, and the chrome is what a thumb
+   * aims at. This is the same hue carried up in lightness and chroma rather
+   * than a new colour, so the page stays one warm family and only the controls
+   * gain voice.
+   *
+   * ⚠ **This token exists so the chrome stops spending `--color-accent`.**
+   * That was the one place Phase 1 broke a rule in CLAUDE.md rather than
+   * extending it. With the two separated §11 holds again — brass marks
+   * overlap, and the chrome is a different brass with a different job. Do not
+   * merge them back, and do not reach for this one to mean anything: the
+   * moment it appears on a state rather than on a control, the chrome stops
+   * being chrome and the page loses the only colour a thumb can aim at.
+   *
+   * 10.98:1 against the true-black ground, against the muted brass’s 7.73:1 —
+   * past the 3:1 WCAG 1.4.11 asks of a graphical control, and past 4.5:1 for
+   * the mark, which is text.
+   */
+  --color-chrome: #e8b34a;
   /**
    * Lacquer red. **"You are here", on the two header glyphs and nowhere else.**
    *
@@ -100,8 +133,10 @@
     colour is only defensible for a claim the other two cannot make.
 
     The capture page colours the chrome brass — bar, foot, caret, and the mark on
-    a picked line — so the caret is the accent now and teal makes no claim any
-    more. The value and its measurements are in git.
+    a picked line — so the caret is the chrome now and teal makes no claim any
+    more. (It was the accent when this was written; `--color-chrome` took the
+    chrome on 23 August, which does not change the argument.) The value and its
+    measurements are in git.
   */
 
   /**
@@ -1833,19 +1868,18 @@
     translate: 0 -50%;
     width: var(--caret-width);
     height: var(--caret-height);
-    background-color: var(--color-accent);
+    background-color: var(--color-chrome);
   }
 }
 
 /**
  * The live line's box, made to be a line of the page rather than a form control.
  *
- * The caret is brass, with the rest of the chrome. ⚠ **That spends
- * `--color-accent`, which §11 reserves for overlap** — see
- * `docs/re-direction/phase-1-capture.md`, which states the cost and where the
- * ladder back is. It is also why `--color-caret` was deleted rather than used
- * here: a third colour was only defensible for a claim the other two could not
- * make, and with a coloured chrome teal made none.
+ * The caret is `--color-chrome`, with the rest of the chrome — lit brass since
+ * 23 August, when the chrome stopped spending `--color-accent` and took a token
+ * of its own. It is also why `--color-caret` was deleted rather than used here:
+ * a third colour was only defensible for a claim the other two could not make,
+ * and with a coloured chrome teal made none.
  *
  * `resize: none` and the JS-driven height are what make it grow with wrapped
  * text; `field-sizing: content` would do it in CSS and is not in Safari yet, so

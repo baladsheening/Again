@@ -72,7 +72,7 @@ export function Foot({
           onClick={() => crossOff?.act()}
           aria-label={crossOff?.crossedOff ? 'Put it back' : 'Cross it off'}
           className={`tap-target flex items-center transition-colors ${
-            crossOff ? 'text-accent' : OFF
+            crossOff ? 'text-chrome' : OFF
           }`}
         >
           <CrossOffGlyph />
@@ -84,7 +84,7 @@ export function Foot({
           onClick={() => settle?.()}
           aria-label="Settle it"
           className={`tap-target flex items-center transition-colors ${
-            settle ? 'text-accent' : OFF
+            settle ? 'text-chrome' : OFF
           }`}
         >
           <SettleGlyph />
