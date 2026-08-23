@@ -912,6 +912,14 @@
    * collision this prevents outright.
    */
 
+  /**
+   * The page's inset, left and right, as two numbers rather than two
+   * expressions. `gutter` pads by them and `live-band` un-pads by them, and the
+   * band only lines up with the record because both read the same value.
+   */
+  --gutter-l: max(1.25rem, env(safe-area-inset-left));
+  --gutter-r: max(1.25rem, env(safe-area-inset-right));
+
   /** One capture: 18px on 28px, 8px of padding a side to reach a 44px target. */
   --text-line: 1.125rem;
   --leading-line: 1.75rem;
@@ -940,7 +948,7 @@
    * ⚠ Do not spend it again. The next step up is a box or a scrim, and both are
    * ruled out where the utility is defined.
    */
-  --mark-width: 3px;
+  --mark-width: 2.5px;
 
   /**
    * The bar's mark. Smaller than `--text-wordmark`, which sets the mark on the
@@ -1222,9 +1230,15 @@
  * them and the content is shoved into the middle of the screen on exactly the
  * devices with least room.
  */
+/**
+ * The page's inset, and **the one number the live band bleeds back out by** —
+ * see `live-band`. Spelled once here so the two cannot drift: a band that
+ * un-insets by a different figure from the one that inset it is a band whose
+ * text does not line up with the record underneath it.
+ */
 @utility gutter {
-  padding-left: max(1.25rem, env(safe-area-inset-left));
-  padding-right: max(1.25rem, env(safe-area-inset-right));
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
 }
 
 /**
@@ -1894,9 +1908,14 @@
     content: '';
     position: absolute;
     left: -0.75rem;
-    /* The words, not the row: the line's hem is air, and the mark is not. */
-    top: var(--line-hem);
-    bottom: var(--line-hem);
+    /*
+      The row, not the words. It spanned the words for an afternoon on the
+      reasoning that the hem is air — which is true and lost to the only
+      question the mark answers. A bar taller than the line it marks is the
+      change-bar idiom, and it is what reads as *this one* at a glance.
+    */
+    top: 0;
+    bottom: 0;
     width: var(--mark-width);
     background-color: var(--color-chrome);
   }
@@ -1921,11 +1940,40 @@
   border: 0;
   background: transparent;
   outline: none;
-  resize: none;
-  overflow: hidden;
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
+}
+
+/**
+ * The live band: **the row you write in, edge to edge, in a shade of its own.**
+ *
+ * Two jobs, and they are the same job. A line being written is not yet a record,
+ * and after the record was turned newest-first the draft ended up directly above
+ * a committed line of identical size, face and colour — which is not merely
+ * unclear, it is the shape of losing something: it looks saved and is not. The
+ * shade says *this one is still yours to finish*, and the band says where it
+ * ends.
+ *
+ * ⚠ **`--color-surface` is 1.29:1 against the true black**, which is as faint as
+ * a shade can be and still be a shade. That is deliberate — it is the palette's
+ * own value for the capture field, and it was chosen to separate without
+ * becoming a box.
+ *
+ * ⚠ **Edge to edge with no media query and no `vw`.** It un-insets by exactly
+ * the gutter that inset it, so on a handset — where `main` is the whole screen
+ * because the measure does not bind — the band reaches both edges of the glass
+ * on its own. On the desk the same rule makes it the column's full width
+ * including its gutters, which is the right answer there and not a special case.
+ * A `100vw` bleed would have needed both a breakpoint and a scrollbar caveat.
+ */
+@utility live-band {
+  background-color: var(--color-surface);
+  margin-left: calc(-1 * var(--gutter-l));
+  margin-right: calc(-1 * var(--gutter-r));
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
+  padding-block: 0.375rem;
 }
 
 /**

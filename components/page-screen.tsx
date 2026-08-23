@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   captureAction,
@@ -155,7 +155,7 @@ export function PageScreen({
   /** The last line to land, while the ten seconds hold. */
   const [undoable, setUndoable] = useState<string | null>(null)
 
-  const input = useRef<HTMLTextAreaElement>(null)
+  const input = useRef<HTMLInputElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const foot = useRef<HTMLElement>(null)
   const footAnchor = useRef<HTMLDivElement>(null)
@@ -189,27 +189,18 @@ export function PageScreen({
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 
-  /**
-   * The textarea grows with wrapped text.
-   *
-   * `field-sizing: content` does this in CSS and is not in Safari, so the height
-   * is written from `scrollHeight`. Reset to zero first: `scrollHeight` never
-   * shrinks below the height already set, so without it a line that gets shorter
-   * keeps the room the longer one took.
-   *
-   * ⚠ **`el.style` rather than a rendered attribute.** The CSP blocks `style`
-   * attributes in production and nowhere else — see `eslint.config.mjs` — and
-   * governs attribute parsing, not the CSSOM.
-   */
-  const grow = useCallback((el: HTMLTextAreaElement | null) => {
-    if (!el) return
-    el.style.height = '0px'
-    el.style.height = `${el.scrollHeight}px`
-  }, [])
+  /*
+    ⚠ **The live line is one row and stays one row.** A growing textarea used to
+    be here — `scrollHeight` written back as a height, because `field-sizing:
+    content` is not in Safari — and it is gone with the element that needed it.
+    An `<input>` keeps the caret in view by scrolling its own text, so a capture
+    longer than the row pushes back through it rather than growing the row and
+    shoving the record down the page while somebody is still typing.
 
-  useLayoutEffect(() => {
-    grow(input.current)
-  }, [draft, grow])
+    That is a mechanism removed rather than corrected: no measurement, no
+    `el.style` write, no CSP note about attribute parsing, and no Safari
+    feature to wait for.
+  */
 
   useEffect(() => () => {
     if (undoTimer.current) clearTimeout(undoTimer.current)
@@ -476,75 +467,93 @@ export function PageScreen({
         <h1 className="sr-only">Again</h1>
 
         {/* --- the live line ------------------------------------------- */}
-        <div className="relative">
-          <textarea
-            ref={input}
-            rows={1}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onFocus={() => {
-              setFocused(true)
-              setPicked(null)
-              setAsking(null)
-            }}
-            onBlur={() => setFocused(false)}
-            onKeyDown={(e) => {
-              /*
-                ⚠ **Return commits and never inserts a newline.** One line is one
-                capture: a capture with a line break in it is two things somebody
-                meant to say separately, and the matching path would treat the
-                pair as one string forever after. `isComposing` is the exception
-                that has to be honoured — the Return that closes an IME candidate
-                window is not this Return.
-              */
-              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                e.preventDefault()
+        {/*
+          ⚠ **The band is the one row on the page that is not a record**, and
+          after the record went newest-first it needed saying: the draft sits
+          directly above a committed line of identical size, face and colour, and
+          a half-written line tapped away from looks exactly like something that
+          landed. The shade is the difference, and it runs edge to edge because a
+          band that stops short of the glass reads as a field rather than as the
+          row you are in. See `live-band` in globals.css for how it bleeds without
+          a breakpoint.
+        */}
+        <div className="live-band">
+          <div className="relative">
+            <input
+              ref={input}
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onFocus={() => {
+                setFocused(true)
+                setPicked(null)
+                setAsking(null)
+              }}
+              onBlur={() => setFocused(false)}
+              onKeyDown={(e) => {
                 /*
-                  ⚠ **Nothing scrolls after this.** The caret is the first thing
-                  in the document and the new line lands below it, so the page
-                  grows downward under a thumb that is already in the right
-                  place. A `requestAnimationFrame` scroll-to-end used to be here,
-                  and it went with the written order.
+                  ⚠ **Return commits and never inserts a newline.** One line is one
+                  capture: a capture with a line break in it is two things somebody
+                  meant to say separately, and the matching path would treat the
+                  pair as one string forever after. `isComposing` is the exception
+                  that has to be honoured — the Return that closes an IME candidate
+                  window is not this Return.
                 */
-                commit()
-              }
-            }}
-            /*
-              `autoFocus` is the keyboard being up on a cold open, which is why
-              the app was opened. ⚠ **iOS will not honour it** — focus without a
-              gesture cannot raise a keyboard there, and no arrangement of this
-              code changes that. What answers it instead is the paper: **the
-              words are the only thing on the page that is not a place to start
-              writing**, so the gesture iOS insists on is the one somebody was
-              going to make anyway, and it lands wherever the thumb already is.
-            */
-            autoFocus
-            enterKeyHint="enter"
-            inputMode="text"
-            autoCapitalize="sentences"
-            autoCorrect="on"
-            autoComplete="off"
-            spellCheck
-            /*
-              Named for a screen reader and **not placeheld on screen**: a word
-              sitting in the field would be the app talking over the one gesture
-              it wants, and the caret is already the instruction.
-            */
-            aria-label="Capture"
-            className={`page-line page-input block ${
-              drawnCaret ? 'caret-transparent' : 'caret-chrome'
-            }`}
-          />
-
-          {drawnCaret && (
-            <span
-              aria-hidden
-              className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  /*
+                    ⚠ **Nothing scrolls after this.** The caret is the first thing
+                    in the document and the new line lands below it, so the page
+                    grows downward under a thumb that is already in the right
+                    place. A `requestAnimationFrame` scroll-to-end used to be here,
+                    and it went with the written order.
+                  */
+                  commit()
+                }
+              }}
+              /*
+                `autoFocus` is the keyboard being up on a cold open, which is why
+                the app was opened. ⚠ **iOS will not honour it** — focus without a
+                gesture cannot raise a keyboard there, and no arrangement of this
+                code changes that. What answers it instead is the paper: **the
+                words are the only thing on the page that is not a place to start
+                writing**, so the gesture iOS insists on is the one somebody was
+                going to make anyway, and it lands wherever the thumb already is.
+              */
+              autoFocus
+              enterKeyHint="enter"
+              inputMode="text"
+              autoCapitalize="sentences"
+              autoCorrect="on"
+              autoComplete="off"
+              spellCheck
+              /*
+                Named for a screen reader and **not placeheld on screen**: a word
+                sitting in the field would be the app talking over the one gesture
+                it wants, and the caret is already the instruction.
+              */
+              aria-label="Capture"
+              className={`page-line page-input ${
+                drawnCaret ? 'caret-transparent' : 'caret-chrome'
+              }`}
             />
-          )}
+
+            {drawnCaret && (
+              <span
+                aria-hidden
+                className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+              />
+            )}
+          </div>
         </div>
 
-        <ol className="flex flex-col">
+        {/*
+          ⚠ **The air under the band is deliberate and is not the stamp’s.** The
+          first day stamp carries no top margin — it is the head of the list — so
+          without this the date sat right under a blinking caret and the two read
+          as one thing.
+        */}
+        <ol className="mt-8 flex flex-col">
           {lines.map((line, i) => {
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'
