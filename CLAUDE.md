@@ -27,7 +27,8 @@ flag the decision rather than inventing scope.
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
 **Phase 1's page and Return are built and NOT deployed** — branch
-`phase-1-capture`, commit `19bad74`. `/` is the capture page; the poster wall,
+`phase-1-capture`, four commits ahead of `origin/main` and carrying no
+migration. `/` is the capture page; the poster wall,
 `components/shell.tsx` and the four collection routes are deleted. Production is
 still the wall until somebody pushes.
 

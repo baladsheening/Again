@@ -1039,7 +1039,7 @@ and data-safety step: it changes what the records are, not what they say.
 ### Phase 1 — capture
 
 ⚠ **Status, 23 August: partly built, not deployed.** Branch `phase-1-capture`,
-commit `19bad74`, three ahead of `origin/main`. The design and the build slice
+four ahead of `origin/main`, and carrying no migration. The design and the build slice
 are `docs/re-direction/phase-1-capture.md`, which carries the full register —
 what is built, what is not, and the two things only a handset can answer. The
 markers below are that register in one line each; the document is the account.
