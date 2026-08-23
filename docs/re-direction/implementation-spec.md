@@ -1011,6 +1011,10 @@ decisions, each gated by the evidence and operating requirements in that phase.
 
 ### Phase 0 — product and data migration
 
+⚠ **Status: done, deployed and verified — 22 August, `origin/main` at
+`33ff151`.** The runbook and its record are
+`docs/re-direction/phase-0-production-migration.md`.
+
 Deliver:
 
 - this specification accepted as the product source of truth
@@ -1034,35 +1038,60 @@ and data-safety step: it changes what the records are, not what they say.
 
 ### Phase 1 — capture
 
+⚠ **Status, 23 August: partly built, not deployed.** Branch `phase-1-capture`,
+commit `19bad74`, three ahead of `origin/main`. The design and the build slice
+are `docs/re-direction/phase-1-capture.md`, which carries the full register —
+what is built, what is not, and the two things only a handset can answer. The
+markers below are that register in one line each; the document is the account.
+
 Deliver:
 
-- Notes-like Home
-- raw capture creation
-- optional provider suggestions
-- unmatched capture persistence
-- optimistic save and undo
-- personal list and detail view
-- optional image attachment
-- edit/enrichment after capture
-- canonical vocabulary and status copy: the possibility types and intentions in
-  §3, the conversion of existing records onto them, and the user-facing words
-  that replace the film-first ones (Amendment 1, from Phase 0)
+- **[built]** Notes-like Home
+- **[built]** raw capture creation
+- **[not started]** optional provider suggestions
+- **[built]** unmatched capture persistence
+- **[built]** optimistic save and undo
+- **[part]** personal list and detail view — the page and the settled tray are
+  built; the detail view is not, and `film-screen.tsx` is kept for it
+- **[not started]** optional image attachment — a storage layer, not a button;
+  the camera glyph is drawn and dark
+- **[not started]** edit/enrichment after capture — the second tap picks and
+  does not edit, and there is no `setCaptureText`
+- **[part]** canonical vocabulary and status copy: the possibility types and
+  intentions in §3, the conversion of existing records onto them, and the
+  user-facing words that replace the film-first ones (Amendment 1, from
+  Phase 0) — **the words are on screen** (`STATE_WORD`, `WHERE_IT_IS`); the
+  Postgres enum and §3's types and intentions are untouched, because the build
+  instruction was schema-free. ⚠ When that migration runs, `PUBLIC_STATES` is
+  **re-derived** rather than renamed
 
 Exit criteria:
 
-- a user can save any text without a provider result
-- a user can save and resolve a known film or other supported possibility
-- reload, sign-out, and provider failure do not lose saved captures
-- every capture submission from the interface carries a client mutation id that
-  is stable across a retry, and a retried submission returns the original
-  record rather than a second one. ⚠ Phase 0 does not meet this: its only write
-  path resolves a possibility first, so the unique key on (user, possibility,
-  intent) carries the idempotency instead. A raw capture has no such key
-- no film wall or intent modal is required
-- an unresolved capture can be offered a possible resolution without being
-  silently converted or matched
-- no user-visible screen, label, or new write uses film-first vocabulary, and
-  every active capture and possibility is represented in the vocabulary of §3
+- **[met]** a user can save any text without a provider result
+- **[not met]** a user can save and resolve a known film or other supported
+  possibility — saving is built, resolving is the unbuilt suggestion path
+- **[part]** reload, sign-out, and provider failure do not lose saved captures —
+  reload and sign-out hold; there is no provider to fail yet
+- **[met]** every capture submission from the interface carries a client
+  mutation id that is stable across a retry, and a retried submission returns
+  the original record rather than a second one. ⚠ Phase 0 does not meet this:
+  its only write path resolves a possibility first, so the unique key on (user,
+  possibility, intent) carries the idempotency instead. A raw capture has no
+  such key. ⚠ It cost no column — `client_mutation_id` was in the schema from
+  Phase 0 — and `crypto.randomUUID` is unavailable outside a secure context, so
+  `lib/mutation-id.ts` falls back to `getRandomValues`
+- **[met]** no film wall or intent modal is required — the wall is deleted
+- **[not met]** an unresolved capture can be offered a possible resolution
+  without being silently converted or matched — the offer is designed and
+  unbuilt
+- **[part]** no user-visible screen, label, or new write uses film-first
+  vocabulary, and every active capture and possibility is represented in the
+  vocabulary of §3 — no screen does; the stored values and `VOCABULARY` still
+  read `want`, `go_back_to`, `fixture`, `see`, `own`
+- ⚠ **and one criterion this list does not carry, which is the binding one:**
+  *open, typed into, and closed in under five seconds, one-handed.* It is
+  measured on a thumb and nothing else, and it is unmeasured — see the design
+  document's *Only hardware can answer this*
 - ⚠ the read-only legacy comparison surface is exempt: `entries` and
   `captures.legacy_entry_id` are retained historical records kept to verify the
   Phase 0 migration against its own source, and they are retired by their own

@@ -7,9 +7,18 @@ shared possibilities. People who meet can deliberately pair as contacts or
 transfer a selected list. Meaningful overlap between mutual tracks comes first,
 with sourced local discovery and opt-in distal matching following later.
 
-The checked-in application is still the earlier film-first implementation while
-the re-direction migration is planned. The target product, release sequence,
-and acceptance criteria live in docs/re-direction/implementation-spec.md.
+**Where it stands, 23 August.** Phase 0 — the migration of film entries into
+captures and possibilities — is done, deployed and verified. **Phase 1's capture
+page is built on branch `phase-1-capture` and is not deployed**, so what is
+running at the moment is still the film-first interface over the new records.
+The target product, release sequence and acceptance criteria live in
+docs/re-direction/implementation-spec.md, whose §13 carries a status marker
+against every Phase 1 deliverable.
+
+⚠ **Two things about Phase 1 are built and unverified, and both need a
+handset**: the keyboard pin that holds the foot above an open keyboard, and the
+four-second capture the whole design answers to. Neither can be measured on a
+desk. docs/re-direction/phase-1-capture.md, *Build status*, is the register.
 
 ## Documentation
 
@@ -18,6 +27,8 @@ and acceptance criteria live in docs/re-direction/implementation-spec.md.
 | [docs/re-direction/implementation-spec.md](docs/re-direction/implementation-spec.md) | **Normative product and build specification for the re-direction** |
 | [docs/re-direction/product-direction.md](docs/re-direction/product-direction.md) | Original product-direction discussion and rationale |
 | [docs/re-direction/implementation-of-product-implementation.md](docs/re-direction/implementation-of-product-implementation.md) | Supporting product rationale and sequencing |
+| [docs/re-direction/phase-0-production-migration.md](docs/re-direction/phase-0-production-migration.md) | Phase 0's runbook, and the record of it being run |
+| [docs/re-direction/phase-1-capture.md](docs/re-direction/phase-1-capture.md) | **Phase 1: the capture page's design, and what is built of it** |
 | [`docs/plan.md`](docs/plan.md) | Historical film-first build record and migration context |
 | [`docs/decisions.md`](docs/decisions.md) | Why things are the way they are, and what is still open |
 | [`docs/spec-sheet.md`](docs/spec-sheet.md) | Legacy film-first screen specification |

@@ -1,9 +1,18 @@
 # Phase 0 — production migration
 
-Status: **plan only. Nothing here has been run against production.**
+Status: **run, 22 August. Production is migrated and `origin/main` is at
+`33ff151`.** This document is kept as the record of what was done, in the order
+it was done, and as the shape the next production migration takes.
 
-Migrations `0004`–`0008` have been applied to the Neon `development` branch and
-verified there. Production has none of them.
+⚠ **The next one is Phase 1's**, and it is the one this document's ordering was
+written for: renaming the state values onto the words in
+`docs/re-direction/phase-1-capture.md`. **Migrate production first, deploy
+second**, and `PUBLIC_STATES` is re-derived beside it rather than renamed —
+that array is the only thing standing between a private state and somebody
+else's screen.
+
+Migrations `0004`–`0008` were applied to the Neon `development` branch and
+verified there first, which is what §1–§4 below are.
 
 Everything below is run from the repository root on the machine that holds
 `.env.local`.

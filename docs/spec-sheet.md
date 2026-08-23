@@ -1,9 +1,18 @@
 # Screen spec
 
-> **Legacy screen specification.** This document verifies the current
-> film-first interface. Preserve its accessibility and responsive lessons during
-> the migration, but use docs/re-direction/implementation-spec.md for the new
+> **Legacy screen specification.** This document verifies the film-first
+> interface. Preserve its accessibility and responsive lessons during the
+> migration, but use docs/re-direction/implementation-spec.md for the new
 > Notes-like capture interface and all future product screens.
+>
+> ⚠ **Several of the screens it verifies no longer exist — 23 August.** Phase 1
+> deleted the poster wall, the masthead and rail in `components/shell.tsx`, and
+> the `/wants`, `/go-back-tos`, `/fixtures` and `/archive` routes. Rules here
+> that name them are history, not regressions waiting to be found; the surfaces
+> that replaced them are specified in
+> docs/re-direction/phase-1-capture.md. What still binds is everything about
+> touch targets, focus, contrast, safe areas and the four shipping surfaces —
+> those were never about which screen was on.
 
 What must be true on every surface. Rules, not reasoning — `docs/decisions.md`
 holds why, and where a rule here has a story behind it, that is where it is.

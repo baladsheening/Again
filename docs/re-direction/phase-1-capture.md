@@ -12,6 +12,136 @@ The drawings are in `design/`, and the artboards are the normative picture of
 this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 (browsing), `ReadingBack` (a month), `BarStates`, `LineStates`, `LandingRail`.
 
+---
+
+## Build status — 23 August
+
+> **Built and committed. Not deployed.** Branch `phase-1-capture`, commit
+> `19bad74`, three ahead of `origin/main` at `33ff151`. Production is still the
+> poster wall. A push to `main` is the deploy
+> (`git push --ipv4 origin HEAD:main`, ~25s).
+
+The instruction this was built against was narrower than the document below:
+**the page and Return — no schema, no images, no suggestions.** So the design is
+whole and the build is a slice of it, and the slice is named here rather than
+left to be worked out from the diff.
+
+Everything under *Still to build* is Phase 1 work that has not started.
+Everything under *Only hardware can answer this* is built and **unverified** —
+which is a different state, and the more dangerous one, because it looks done.
+
+### What is built
+
+| | |
+|---|---|
+| `app/(app)/page.tsx` | the read, the day stamps, the seed |
+| `components/page-screen.tsx` | the page: lines, live line, picking, Return |
+| `components/bar.tsx` · `foot.tsx` · `glyphs.tsx` | the two bars and the seven glyphs |
+| `components/keyboard-pin.ts` | the foot held on the keyboard's top edge |
+| `components/screen.tsx` | the bar and a column, for every route that is not the page |
+| `app/actions/captures.ts` | capture · cross off · settle · undo |
+| `lib/db/captures.ts` | `listMyPage`, `listMySettled` |
+| `lib/day.ts` · `lib/region.ts` | the stamps, and the viewer's timezone |
+| `lib/mutation-id.ts` | the stable submission id, and its non-secure-context fallback |
+| `lib/vocabulary.ts` | `STATE_WORD`, `WHERE_IT_IS` |
+| `app/(app)/settled/page.tsx` | the tray |
+
+Removed, and **not to be rebuilt**: `components/shell.tsx`, `cinema-wall.tsx`,
+`poster-wall.tsx`, `entry-list.tsx`, `entry-row.tsx`, `icon-home.tsx`, the four
+collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
+
+### Still to build, in the order it wants doing
+
+1. **The keyboard on hardware, and the four-second capture.** Not a feature —
+   the acceptance criterion. See below.
+2. **Editing a committed line.** The second tap picks and does not edit, because
+   *where* the edit happens is the one thing this document leaves open and there
+   is no mutation for it. Needs `setCaptureText` in `lib/db/captures.ts` — text
+   only, owner-filtered, and it must not touch provenance or state.
+3. **Search over captures.** The foot's fourth glyph. The existing
+   `search-field.tsx` and `search-provider.tsx` search TMDB, not the page; they
+   are on disk and mounted by nothing.
+4. **An *Earlier* control at the head of the page.** `listMyPage` reads the most
+   recent 50 and nothing reaches past them. One more `offset` and no new read —
+   but until it exists, a record longer than about a month has lines that cannot
+   be scrolled to.
+5. **Resolution offers.** *Suggestions never gate the save*, above: saved →
+   line → then a quiet offer. The trailing muted `?`, the Yes/No pair while the
+   line is picked, and provider failure as the absence of an offer rather than
+   an error. `film-screen.tsx` is kept for this — it is the media-resolved
+   detail surface.
+6. **Images.** The heaviest item, and a storage layer rather than a button —
+   §6's object storage outside Postgres, size and type limits, EXIF stripping,
+   an access-controlled media path, retained provenance, reportable and
+   removable assets. The camera glyph is drawn and dark, waiting.
+7. **The words, in the schema.** `STATE_WORD` carries them on screen; the
+   Postgres enum still reads `want`, `go_back_to`, `fixture`. ⚠ When that
+   migration runs, **`PUBLIC_STATES` is re-derived rather than renamed** — see
+   the warning under *The words*.
+8. **The types and intentions of §3**, which is what makes *Have* reachable
+   again: `landsIn` is a property of a kind and an intention, and a raw capture
+   has neither, so nothing new lands in `fixture` today.
+9. **`toLegacyEntryCards` dies.** Its last caller is `/u/[handle]`, the Phase 2
+   shared page. **Nothing may add a caller.** The read that replaces it is
+   `toCaptureCard`, which already exists and carries text.
+
+### ⚠ Only hardware can answer this, and it is unanswered
+
+Two things are built and cannot be verified on a desk. Both are on the critical
+path — nothing else in Phase 1 is worth doing before them.
+
+**1. The keyboard pin.** `components/keyboard-pin.ts` holds the foot on the top
+edge of an open keyboard and writes `--keyboard-overlap` so the live line stays
+reachable. **A desktop Chromium has no software keyboard**, so every probe run
+so far exercised the no-keyboard branch and nothing else. The hook is the
+shell's, moved and reduced from two docks to one; its thermostat is the record
+of five wrong versions on this handset, so the mechanism is trusted and *this
+arrangement of it* is not.
+
+What to check, installed and in a Safari tab: tap the live line and watch the
+foot arrive with the keys rather than after them; scroll to the top of a long
+page with the keyboard up and confirm the foot stays level with it rather than
+floating; type past the fold and confirm the line being written is never behind
+the keys.
+
+**2. The four-second capture.** Open, typed into, and closed in under five
+seconds, one-handed. Measured on the desk against `next start`, first key to the
+line on the page: **34–152ms** — but that is a render, not a thumb, and the
+claim is about the thumb.
+
+⚠ **The keyboard cannot be raised on a cold open on iOS**, and no arrangement of
+this code changes it: focus without a gesture does not open a keyboard there.
+What answers it is the filler under the live line — a tap anywhere on the page
+starts writing — and **whether that is fast enough is the thing to find out**.
+If it is not, the honest next move is a share-sheet or shortcut entry point,
+not a hack on focus.
+
+⚠ **Two snags before testing over the LAN.** `crypto.randomUUID` is undefined on
+`http://192.168.x.x` — a secure-context gate — which `lib/mutation-id.ts`
+already works around; and `BETTER_AUTH_URL` still points at localhost, so
+signing in over the LAN may not complete. Deploying is the shorter route to a
+real handset test.
+
+### The deviations now standing
+
+- **The chrome is brass, which spends `--color-accent`.** §11 reserves it for
+  overlap. **Overlap needs a different colour in Phase 2**, and it has to
+  out-shout brass on a screen that is now full of it. Pick it when Phase 2 has
+  something to show.
+- **The camera and search are present and off at every state**, including the
+  camera the table above has lit on an empty page. Neither is built; a control
+  that cannot act goes off. The table is what they go back to.
+- **Settle asks one question and the word is *Again?*** — the design drew none,
+  and nothing about a raw capture can answer it. Yes → `go_back_to`, No →
+  `done`.
+- **The tray is one surface**, `/settled`, with each row carrying its own word.
+- **A second tap does not edit.**
+
+The full reasoning for each is in `docs/decisions.md`, *Phase 1: the page and
+Return — 23 August*.
+
+---
+
 ## Why the vocabulary is not a later step
 
 The agreed order was: design Home, then settle the vocabulary, then build. The
@@ -385,11 +515,22 @@ its own has quietly answered itself.
 
 ## Still open
 
-- **The stable client mutation id.** Phase 0 ships none — the unique key on
-  (user, possibility, intent) carries idempotency, and a raw capture has no
-  such key. §13's exit criterion requires one, so it is Phase 1's to introduce,
-  and it is the one place this phase is not schema-free.
+- ~~**The stable client mutation id.**~~ **Answered, and it cost no column.**
+  `captures.client_mutation_id` and its unique key on (user, id) have been in
+  the schema since Phase 0, waiting for a writer — so the one place this phase
+  was not going to be schema-free turned out to be schema-free after all. The id
+  is minted once per line in `lib/mutation-id.ts`, held with the line, and
+  re-sent unchanged by a retry. ⚠ `crypto.randomUUID` is gated on a secure
+  context and is missing on `http://192.168.x.x` — which is how a handset
+  reaches a `next start` on the desk — so it falls back to
+  `crypto.getRandomValues`.
 - **Whether the settled tray is one surface or three** (Again / Have / Done).
   The states stay distinct either way; this is only how they are reached.
+  **Built as one**, `/settled`, with each row carrying its own word — so
+  splitting it later is a routing change and nothing that reads `WHERE_IT_IS`
+  moves.
 - **Whether editing a committed line happens in place or in a detail view.**
   The second tap has to turn a rendered record back into an input either way.
+  **Still open, and therefore still unbuilt**: the second tap holds the pick
+  rather than teaching a gesture that has to be taken back. It also needs a
+  `setCaptureText` that does not exist — `setCaptureNote` writes the note.

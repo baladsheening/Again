@@ -22,6 +22,22 @@ specification. The re-direction specification is the complete brief for future
 product work. Where both are silent, prefer the simplest thing that works and
 flag the decision rather than inventing scope.
 
+## Where the build stands — 23 August
+
+**Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
+
+**Phase 1's page and Return are built and NOT deployed** — branch
+`phase-1-capture`, commit `19bad74`. `/` is the capture page; the poster wall,
+`components/shell.tsx` and the four collection routes are deleted. Production is
+still the wall until somebody pushes.
+
+⚠ **Read `docs/re-direction/phase-1-capture.md` before touching Phase 1.** Its
+*Build status* section is the register: what is built, what is still to build in
+the order it wants doing, and — the part that is easy to miss because it looks
+finished — **the two things only a handset can answer**: the keyboard pin, and
+the four-second capture itself. Neither can be measured on a desk, and nothing
+else in Phase 1 is worth doing before them.
+
 This file holds the engineering rules for building. Three companions:
 
 - **docs/re-direction/implementation-spec.md** — the normative product and
@@ -199,9 +215,31 @@ Tokens are in `app/globals.css`.
 buttons, not on links, not on the active tab. It stops meaning anything the
 second it is used for decoration.
 
+⚠ **Phase 1's capture page breaks this deliberately, and it is the one place a
+build has been allowed to.** The chrome is brass — bar, foot, caret, and the
+mark on a picked line — which is the design's own decision with the cost stated
+in `docs/re-direction/phase-1-capture.md`. It is not a licence to spend the
+accent elsewhere: everything else on the page is `--color-text` or a fade of it.
+
+**So overlap needs a different colour in Phase 2, and picking it is Phase 2's
+first visual decision.** The ladder is this rule's own argument — the accent's
+job is to interrupt, so its replacement has to out-shout brass on a screen that
+is now full of it. Do not pick it before there is a convergence to look at.
+
+⚠ `--color-caret` is deleted, by its own terms: a third meaningful colour was
+only defensible for a claim the other two could not make, and with a coloured
+chrome the caret is the accent.
+
 IBM Plex Sans for interface, IBM Plex Mono for return counts and timestamps.
-Avoid Inter. The signature element is the return count beside each go-back-to —
-mono numeral, quiet weight, large enough to read as the point.
+Avoid Inter.
+
+⚠ **Both halves of that sentence are out of date and are kept for the rule
+inside them.** The interface face is **Fira Sans** since 21 August, a stated
+deviation written up in `docs/decisions.md`; the mark is **Jost** in full caps.
+The return count was removed on 8 August, so there is no signature element and
+the sentence that named one is gone. Mono survives for what it was always for —
+timestamps, the handle input, and the page's day stamps — and it stays scarce
+for the reason the accent does: on every label it is texture rather than signal.
 
 ## Non-negotiables (§10)
 

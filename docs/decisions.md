@@ -718,6 +718,23 @@ its fifteen-second cache showing a `+` for a film that has just been crossed
 off. **A path that only a race can reach is a path nobody is testing by using
 the app**, which is worth knowing before that behaviour is relied on.
 
+⚠ **What Phase 1 did to this — 23 August.** The Home rebuild it was deferred to
+has landed, and it moved the question rather than answering it. The wall is
+deleted and the film screen is mounted by nothing, so **the surface this was
+raised on does not exist** — and on the page that replaced it, un-crossing-off
+is one tap: pick the line, press the same ×, which is what *one control, in one
+place* was always meant to look like.
+
+What survives is the part about the film screen, and it comes back when the
+resolution offer does: the moment a capture can open a media detail view again,
+that view has to state *listed*, *crossed off* and the ten-second window for a
+capture that may have no possibility behind it. **Decide it then, on the surface
+that will carry it**, and the strongest argument above still holds — a screen
+you can reach and cannot act from is worse than one extra control.
+
+The revive path is still unreachable by gesture, and now for a second reason:
+nothing in the interface resolves a possibility at all.
+
 ### Five notification kinds or six?
 
 §6 says "those five kinds in the schema are the complete set." The schema lists
