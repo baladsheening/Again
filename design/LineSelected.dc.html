@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Jost:wght@500&display=swap">
+  <style>
+    :root {
+      --bg: #000000;
+      --text: #eae6da;
+      --muted: color-mix(in srgb, #eae6da 60%, transparent);
+      --off: color-mix(in srgb, #eae6da 28%, transparent);
+      --rule: #30302b;
+      --brass: #b49a62;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Fira Sans', ui-sans-serif, system-ui, sans-serif;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { color: var(--text); }
+    .wordmark {
+      font-family: 'Jost', ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .muted { color: var(--muted); }
+    .line {
+      font-size: 18px;
+      line-height: 28px;
+      padding: 8px 0;
+      letter-spacing: -0.01em;
+      position: relative;
+    }
+    /*
+      The mark for the selected line. The caret's own width and colour, sitting
+      in the gutter rather than in the text — so it borrows a vocabulary the
+      page has already taught without claiming a character position.
+    */
+    .line.picked::before {
+      content: "";
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 26px;
+      background: #b49a62;
+    }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #000000; overflow: hidden; display: flex; flex-direction: column;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px 20px; flex-shrink: 0;">
+    <span class="wordmark" style="font-size: 1.25rem; color: #b49a62;">Again</span>
+
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <!-- the ten seconds are long gone -->
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M6.75 4.25 3.25 7.75l3.5 3.5" /><path d="M3.25 7.75h7.75a4.75 4.75 0 0 1 0 9.5H8.25" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M3.5 6.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 6.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><circle cx="10" cy="6.75" r="3.25" /><path d="M3.75 17c0-3.1 2.8-5 6.25-5s6.25 1.9 6.25 5" /></svg>
+    </div>
+  </div>
+
+  <!--
+    Browsing, not writing. No caret anywhere: the keyboard went away when he
+    picked a line, and the live line at the foot of the page is waiting rather
+    than being typed into.
+  -->
+  <div style="flex: 1 1 auto; padding: 20px 20px 0 20px;">
+
+    <div class="line picked">moka pot — the 3-cup one</div>
+
+    <div class="line">learn to develop film at home</div>
+    <div class="line" style="opacity: 0.5; text-decoration: line-through;">that Georgian place on Cowley Rd</div>
+    <div class="line">Aftersun<span class="muted" style="font-size: 13px; margin-left: 8px;">2022</span></div>
+    <div class="line">poster outside the Ultimate Picture House<span style="display: inline-block; width: 24px; height: 24px; background: #20201d; border: 1px solid #30302b; border-radius: 2px; margin-left: 8px; vertical-align: -6px;"></span></div>
+    <div class="line">swim at the ponds before it gets cold</div>
+
+  </div>
+
+  <!-- a saved line is picked, so all four can act on it -->
+  <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: space-around; padding: 26px 20px 22px 20px;">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" /><circle cx="10" cy="11.25" r="3.25" /></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><circle cx="8.75" cy="8.75" r="5.25" /><path d="M12.75 12.75 16.75 16.75" /></svg>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

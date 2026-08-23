@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Jost:wght@500&display=swap">
+  <style>
+    :root {
+      --bg: #000000;
+      --text: #eae6da;
+      --off: color-mix(in srgb, #eae6da 28%, transparent);
+      --rule: #30302b;
+      --brass: #b49a62;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Fira Sans', ui-sans-serif, system-ui, sans-serif;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { color: var(--text); }
+    .wordmark {
+      font-family: 'Jost', ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .caption {
+      font-size: 0.6875rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      line-height: 1.3;
+      color: #30302b;
+      margin: 0 0 8px 0;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+    }
+    .foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 18px 20px;
+    }
+    .glyphs { display: flex; align-items: center; gap: 22px; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 530px; background: #000000; overflow: hidden; padding: 24px 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px;">
+
+  <div>
+    <p class="caption" style="padding: 0 20px;">Bar — nothing to undo</p>
+    <div class="bar">
+      <span class="wordmark" style="font-size: 1.25rem; color: #b49a62;">Again</span>
+      <div class="glyphs">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent);"><path d="M6.75 4.25 3.25 7.75l3.5 3.5" /><path d="M3.25 7.75h7.75a4.75 4.75 0 0 1 0 9.5H8.25" /></svg>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M3.5 6.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 6.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><circle cx="10" cy="6.75" r="3.25" /><path d="M3.75 17c0-3.1 2.8-5 6.25-5s6.25 1.9 6.25 5" /></svg>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="caption" style="padding: 0 20px;">Bar — inside the ten seconds</p>
+    <div class="bar">
+      <span class="wordmark" style="font-size: 1.25rem; color: #b49a62;">Again</span>
+      <div class="glyphs">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M6.75 4.25 3.25 7.75l3.5 3.5" /><path d="M3.25 7.75h7.75a4.75 4.75 0 0 1 0 9.5H8.25" /></svg>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M3.5 6.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 6.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><circle cx="10" cy="6.75" r="3.25" /><path d="M3.75 17c0-3.1 2.8-5 6.25-5s6.25 1.9 6.25 5" /></svg>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="caption" style="padding: 0 20px;">Foot — nothing typed yet (the camera still starts one)</p>
+    <div class="foot">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent);"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent);"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" /><circle cx="10" cy="11.25" r="3.25" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent);"><circle cx="8.75" cy="8.75" r="5.25" /><path d="M12.75 12.75 16.75 16.75" /></svg>
+    </div>
+  </div>
+
+  <div>
+    <p class="caption" style="padding: 0 20px;">Foot — mid-line, nothing saved to act on yet</p>
+    <div class="foot">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent);"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent);"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" /><circle cx="10" cy="11.25" r="3.25" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><circle cx="8.75" cy="8.75" r="5.25" /><path d="M12.75 12.75 16.75 16.75" /></svg>
+    </div>
+  </div>
+
+  <div>
+    <p class="caption" style="padding: 0 20px;">Foot — a saved line to act on</p>
+    <div class="foot">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" /><circle cx="10" cy="11.25" r="3.25" /></svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62;"><circle cx="8.75" cy="8.75" r="5.25" /><path d="M12.75 12.75 16.75 16.75" /></svg>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":530}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

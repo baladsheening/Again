@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Jost:wght@500&display=swap">
+  <style>
+    :root {
+      --bg: #000000;
+      --text: #eae6da;
+      --muted: color-mix(in srgb, #eae6da 60%, transparent);
+      --off: color-mix(in srgb, #eae6da 28%, transparent);
+      --rule: #30302b;
+      --brass: #b49a62;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Fira Sans', ui-sans-serif, system-ui, sans-serif;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { color: var(--text); }
+    .wordmark {
+      font-family: 'Jost', ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #000000; overflow: hidden; display: flex; flex-direction: column;">
+
+  <!--
+    The bar keeps its full shape on an empty page. Nothing here disappears when
+    it cannot act — it goes off, which is what stops a blank screen reading as
+    an unfinished one.
+  -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px 20px; flex-shrink: 0;">
+    <span class="wordmark" style="font-size: 1.25rem; color: #b49a62;">Again</span>
+
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <!-- undo: off, because nothing has landed yet -->
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M6.75 4.25 3.25 7.75l3.5 3.5" /><path d="M3.25 7.75h7.75a4.75 4.75 0 0 1 0 9.5H8.25" /></svg>
+      <!-- settled: the things you are done deciding about -->
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M3.5 6.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 6.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+      <!-- you -->
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><circle cx="10" cy="6.75" r="3.25" /><path d="M3.75 17c0-3.1 2.8-5 6.25-5s6.25 1.9 6.25 5" /></svg>
+    </div>
+  </div>
+
+  <!-- the page. A caret on an empty page is already the instruction. -->
+  <div style="flex: 1 1 auto; padding: 20px 20px 0 20px;">
+    <span style="display: inline-block; width: 2px; height: 26px; background: #b49a62;"></span>
+  </div>
+
+  <!--
+    The foot acts on the line the caret is on. There is no line yet, so all four
+    are off — present, shaped, and plainly not yet available.
+  -->
+  <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: space-around; padding: 26px 20px 22px 20px;">
+    <!-- cross off -->
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M6 6 14 14" /><path d="M14 6 6 14" /></svg>
+    <!-- settle it -->
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><path d="M10 3v4" /><path d="m7.9 5 2.1 2.1 2.1-2.1" /><path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" /><path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" /></svg>
+    <!--
+      Live on an empty page, unlike the two beside it: a photograph STARTS a
+      capture rather than acting on one. It opens a fresh line with the image
+      on it and the caret waiting — and it is not a capture until it is
+      captioned, which is what keeps every record matchable.
+    -->
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: #b49a62; flex-shrink: 0;"><path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" /><circle cx="10" cy="11.25" r="3.25" /></svg>
+    <!-- search: nothing written yet, so nothing to find -->
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, #eae6da 28%, transparent); flex-shrink: 0;"><circle cx="8.75" cy="8.75" r="5.25" /><path d="M12.75 12.75 16.75 16.75" /></svg>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

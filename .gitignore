@@ -50,3 +50,7 @@ dev.log
 
 # vercel cli link state — written by `vercel link`, machine-specific
 .vercel
+
+# design canvas — the .dc.html artboards are the source; the seeded page is a build artifact
+/design/*.html
+!/design/*.dc.html
