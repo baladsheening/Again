@@ -1038,11 +1038,18 @@ and data-safety step: it changes what the records are, not what they say.
 
 ### Phase 1 — capture
 
-⚠ **Status, 23 August: partly built, deployed, unverified on hardware.** `main`
-is at `1fa2ea9`; the deploy carried no migration. The design and the build slice
-are `docs/re-direction/phase-1-capture.md`, which carries the full register —
-what is built, what is not, and the two things only a handset can answer. The
-markers below are that register in one line each; the document is the account.
+⚠ **Status, 23 August: partly built, deployed, and working on a handset.**
+`main` is at `949c698`; no deploy in this phase has carried a migration. The
+design and the build slice are `docs/re-direction/phase-1-capture.md`, which
+carries the full register — what is built, what is not, and what hardware has
+and has not answered. The markers below are that register in one line each; the
+document is the account.
+
+⚠ **The exit criterion is not met yet.** The four-second capture has never been
+stopwatched, and a desk cannot measure it. The first handset session also
+reversed two decisions the design had made — the record is newest-first with the
+caret under the bar, and a line is only as wide as its own words — both recorded
+in the register and in `docs/decisions.md`.
 
 Deliver:
 

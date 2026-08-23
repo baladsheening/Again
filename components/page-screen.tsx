@@ -513,9 +513,10 @@ export function PageScreen({
               `autoFocus` is the keyboard being up on a cold open, which is why
               the app was opened. ⚠ **iOS will not honour it** — focus without a
               gesture cannot raise a keyboard there, and no arrangement of this
-              code changes that. What answers it instead is the filler below:
-              **a tap anywhere on the page starts writing**, so the gesture iOS
-              insists on is the one somebody was going to make anyway.
+              code changes that. What answers it instead is the paper: **the
+              words are the only thing on the page that is not a place to start
+              writing**, so the gesture iOS insists on is the one somebody was
+              going to make anyway, and it lands wherever the thumb already is.
             */
             autoFocus
             enterKeyHint="enter"

@@ -6023,3 +6023,129 @@ this code changes it: focus without a gesture does not open a keyboard there.
 `autoFocus` is on the field and answers the desk; what answers the handset is
 the filler under the live line — **a tap anywhere on the page starts writing**,
 so the gesture iOS insists on is the one somebody was going to make anyway.
+
+⚠ **Both paragraphs above were superseded the same day** — see *The handset
+answered, and reversed two decisions* below. The live line is no longer at the
+bottom, so the keyboard has nothing to cover; and the filler is no longer what
+answers the cold open, because the paper of every row does. They are kept
+because the reasoning that produced them is what the reversal had to argue
+against.
+
+### The chrome stops borrowing the colour that means overlap (23 August)
+
+The muted brass read as correct and not as present on a handset, and the chrome
+is what a thumb aims at. Directed: *more in your face.*
+
+The obvious move was to brighten `--color-accent`, and it was wrong. The chrome
+was already spending that token, which is the one place this build broke a rule
+in `CLAUDE.md` rather than extending it — §11 gives brass to overlap and nothing
+else. Brightening it would have deepened the deviation and dragged Phase 3's
+convergence mark along with it, because the two would still have been one value.
+
+So the token was split instead. `--color-chrome` is `#e8b34a` — the same hue
+carried up in lightness and chroma, not a new colour, so the page stays one warm
+family and only the controls gain voice. It takes the mark, the live glyphs in
+both bars, the caret and the mark on a picked line. `--color-accent` keeps
+`#b49a62` and is now used by **nothing**, which is what §11 always asked of it.
+
+That is the ladder in `CLAUDE.md` taken in order: the collision was removed
+rather than corrected for.
+
+**Measured.** 10.98:1 against the true-black ground, against the muted brass's
+7.73:1 — about half again the luminance. Past the 3:1 WCAG 1.4.11 asks of a
+graphical control, and past 4.5:1 for the mark, which is text. The off state is
+untouched at `--color-text` 28%, so the gap between a live glyph and a dead one
+widened for free.
+
+**The mark moved too, and that was not asked for.** Leaving the wordmark at the
+muted value while the glyphs beside it got louder would have read as a bug on
+the same bar. The chrome is one thing.
+
+⚠ **This does not make Phase 2 easier, and the note on the token says so.**
+Overlap still needs a colour that out-shouts a brass screen, and the screen is
+louder than it was. The candidate to beat is `--color-chrome`, not the muted
+brass sitting beside it in the palette.
+
+### The handset answered, and reversed two decisions (23 August)
+
+The page was opened on a handset and it works. Two things came out of the first
+real use of it, and both reverse a decision made on a desk.
+
+#### The newest line is the first one
+
+The read always ran newest-first; `app/(app)/page.tsx` reversed it so the page
+could be written downward like a notebook. It is not reversed any more.
+
+This is the third position the design has held. An early draft of
+`docs/re-direction/phase-1-capture.md` specified newest-first; it was reversed to
+*oldest at the top* on the reasoning that you do not write a note upwards. That
+is true of a note, and it turned out not to be the point.
+
+Two things a desk could not produce argued it back:
+
+1. **What you just wrote is on screen without a scroll.** Under written order the
+   newest line was at the end of the document, which is why arrival needed a
+   `useLayoutEffect` scroll-to-end before paint and every Return needed another
+   scroll behind it.
+2. **A caret pinned under the bar cannot be covered by a keyboard.** The keyboard
+   rises from the bottom of the glass. This is the one that decided it: it does
+   not solve the problem, it deletes the condition — the order `CLAUDE.md` asks
+   for, and a subtraction cannot be wrong on a device nobody has tested.
+
+Three mechanisms went with the order rather than being adjusted to it: the
+layout scroll before paint, the `requestAnimationFrame` scroll after each Return,
+and the scroll-to-end helper itself. What is left is one call to the top of the
+page, and it exists for a case the old order did not have — see below.
+
+**What it cost.** The page metaphor, and it is a real cost: you no longer type
+down a page. The document that specified writing downward now carries the loop
+in full rather than quietly agreeing with the code.
+
+#### The words are the record, the paper is the page
+
+A line's hit area was the whole row, so a tap on a line always meant *pick*. The
+only place a tap could start writing was the filler at the end of the page —
+`grow` inside the page's minimum height, with no minimum of its own. That
+resolves to **zero** the moment the lines fill the viewport. The write target
+disappeared exactly when the record got long enough to need one, and every pixel
+on screen became a line.
+
+A line is now as wide as its own words, and the rest of the row is a second
+button that starts a capture. One rule with no modifier and no hidden gesture:
+tap the words to pick the line, tap the paper to write. On a 390 screen a short
+capture leaves about 275px of a 350px row as paper; on the desk, 565 of 640.
+
+**Why not a guaranteed band instead.** The first proposal was to give the filler
+a real minimum so it could never collapse. It was the right answer to the old
+layout and the wrong one to the new: with the caret at the top, a band at the end
+of the document is at the far end of the record from the place writing happens.
+It would also have been a second mechanism doing the paper's job — a corrector
+posted next to the collision rather than the collision removed.
+
+**Scroll first, then focus.** A tap on the paper can land anywhere in the record,
+and the caret is at the top. Focusing an off-screen input hands the scrolling to
+the browser, which on iOS does it again when the keyboard comes up, and with a
+fixed bar overhead either pass can leave the caret underneath it. Arriving at the
+caret *before* focusing leaves nothing to scroll into view, which removes the
+race rather than timing against it. Verified: scrolled 1810px down a record,
+tapped paper beside a line, and the page came back to `scrollY 0` with the
+textarea focused, the caret at 66px against a bar ending at 46px, and nothing
+picked.
+
+⚠ **A line that wraps to the full measure leaves no paper**, and that is accepted
+rather than corrected. The alternative is `display: inline` on a button, so
+hit-testing follows the text fragments rather than one box — which renders
+differently on every engine, and a workaround written for one engine still
+executes on all of them. Captures are short; a screen on which no row has paper
+is not a screen this record produces.
+
+⚠ **The paper is hidden from the accessibility tree**, `aria-hidden` and out of
+the tab order. It is a pointer convenience for a rule the pointer can see and the
+tree cannot: a record of two hundred lines would announce "Write" two hundred
+times. The named Write button at the tail of the page is kept and is the only one
+of the page's write targets that is reachable and announced — which is now the
+reason it exists at all.
+
+⚠ **A tap just right of a short word writes instead of picking.** Recoverable in
+one tap, and so is the reverse. Neither destroys anything, which is what made the
+trade acceptable.

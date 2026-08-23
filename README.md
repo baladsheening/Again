@@ -9,16 +9,16 @@ with sourced local discovery and opt-in distal matching following later.
 
 **Where it stands, 23 August.** Phase 0 — the migration of film entries into
 captures and possibilities — is done, deployed and verified. **Phase 1's capture
-page is deployed**, so `/` is the page rather than the poster wall; it is not yet
-verified on a handset, which is a different thing.
-The target product, release sequence and acceptance criteria live in
-docs/re-direction/implementation-spec.md, whose §13 carries a status marker
+page is deployed and works on a handset**, so `/` is the page rather than the
+poster wall. The target product, release sequence and acceptance criteria live
+in docs/re-direction/implementation-spec.md, whose §13 carries a status marker
 against every Phase 1 deliverable.
 
-⚠ **Two things about Phase 1 are built and unverified, and both need a
-handset**: the keyboard pin that holds the foot above an open keyboard, and the
-four-second capture the whole design answers to. Neither can be measured on a
-desk. docs/re-direction/phase-1-capture.md, *Build status*, is the register.
+⚠ **One acceptance criterion is still unmeasured**: the four-second capture the
+whole design answers to has never been stopwatched, and a desk cannot do it.
+docs/re-direction/phase-1-capture.md, *Build status*, is the register — it also
+records the two decisions the first handset session reversed: the record is
+newest-first, and a line is only as wide as its own words.
 
 ## Documentation
 

@@ -26,20 +26,31 @@ flag the decision rather than inventing scope.
 
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
-**Phase 1's page and Return are built and deployed** — `main` at `1fa2ea9`, no
-migration in it. `/` is the capture page in production. `/` is the capture page; the poster wall,
-`components/shell.tsx` and the four collection routes are deleted.
+**Phase 1's page and Return are built, deployed and seen on a handset** — `main`
+at `949c698`. **No Phase 1 deploy has carried a migration**, so the rollback is a
+revert push and nothing else. `/` is the capture page in production; the poster
+wall, `components/shell.tsx` and the four collection routes are deleted.
 
-⚠ **Deployed is not verified.** Nothing in Phase 1 has been seen on a handset,
-and the installed app never reloads until it is force-quit — so check which
-build is running before believing anything reported from it.
+**The page works on the handset**, and the first real use of it reversed two
+decisions the desk had made:
+
+- **The record is newest-first and the caret sits under the bar.** Nothing
+  scrolls on arrival or after a Return, and a keyboard rising from the bottom of
+  the glass has no way to cover the line being written.
+- **A line is only as wide as its own words.** Tap the words to pick the line;
+  tap the paper — the rest of the row, and the rest of the page — to start a
+  capture.
+
+⚠ **The four-second capture is still a claim**, because nobody has stopwatched
+it. It is the one acceptance criterion left in Phase 1 and nothing else there is
+worth doing first.
+
+⚠ The installed app never reloads until it is force-quit — so check which build
+is running before believing anything reported from it.
 
 ⚠ **Read `docs/re-direction/phase-1-capture.md` before touching Phase 1.** Its
 *Build status* section is the register: what is built, what is still to build in
-the order it wants doing, and — the part that is easy to miss because it looks
-finished — **the two things only a handset can answer**: the keyboard pin, and
-the four-second capture itself. Neither can be measured on a desk, and nothing
-else in Phase 1 is worth doing before them.
+the order it wants doing, and what hardware has and has not answered.
 
 This file holds the engineering rules for building. Three companions:
 
@@ -218,20 +229,28 @@ Tokens are in `app/globals.css`.
 buttons, not on links, not on the active tab. It stops meaning anything the
 second it is used for decoration.
 
-⚠ **Phase 1's capture page breaks this deliberately, and it is the one place a
-build has been allowed to.** The chrome is brass — bar, foot, caret, and the
-mark on a picked line — which is the design's own decision with the cost stated
-in `docs/re-direction/phase-1-capture.md`. It is not a licence to spend the
-accent elsewhere: everything else on the page is `--color-text` or a fade of it.
+⚠ **Phase 1's capture page broke this, and on 23 August it stopped.** The chrome
+— bar, foot, caret, and the mark on a picked line — spent `--color-accent` for a
+day. It now has `--color-chrome`, lit brass at `#e8b34a`: the same hue carried up
+in lightness and chroma, 10.98:1 on black against the muted brass’s 7.73:1.
+**`--color-accent` is used by nothing**, which is what this rule always asked of
+it. The collision was removed rather than corrected for — see *How things get
+fixed*.
 
-**So overlap needs a different colour in Phase 2, and picking it is Phase 2's
-first visual decision.** The ladder is this rule's own argument — the accent's
-job is to interrupt, so its replacement has to out-shout brass on a screen that
-is now full of it. Do not pick it before there is a convergence to look at.
+`--color-chrome` inherits the same scarcity rule from the other side: it means
+**a control**, never a state. The moment it appears on something that is not
+chrome, the chrome stops being chrome and the page loses the only colour a thumb
+can aim at. Everything else on the page is `--color-text` or a fade of it.
+
+**Overlap still needs a different colour in Phase 2, and picking it is Phase 2's
+first visual decision.** Splitting the token did not make that easier — the
+accent's job is to interrupt, and the screen is now louder than it was, so the
+colour to out-shout is `--color-chrome` rather than the muted brass beside it in
+the palette. Do not pick it before there is a convergence to look at.
 
 ⚠ `--color-caret` is deleted, by its own terms: a third meaningful colour was
 only defensible for a claim the other two could not make, and with a coloured
-chrome the caret is the accent.
+chrome the caret is the chrome.
 
 IBM Plex Sans for interface, IBM Plex Mono for return counts and timestamps.
 Avoid Inter.

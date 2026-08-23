@@ -16,15 +16,25 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ## Build status — 23 August
 
-> **Built and deployed — 23 August, `main` at `1fa2ea9`.** The design
-> (`3a0fc42`, `294469f`), the build (`19bad74`) and this register (`450bd05`).
-> **The deploy carried no migration** — no schema moved — so the rollback is a
-> revert push and nothing else.
+> **Built, deployed and seen on a handset — 23 August, `main` at `949c698`.**
+> The design (`3a0fc42`, `294469f`), the build (`19bad74`), this register
+> (`450bd05`), the chrome colour (`acfc4cb`) and the order and the paper rule
+> (`949c698`). **No deploy in this phase has carried a migration** — no schema
+> has moved — so the rollback is still a revert push and nothing else.
 >
-> ⚠ **Deployed is not verified.** Everything under *Only hardware can answer
-> this* is now in front of a handset and still unanswered, and the installed app
-> **never reloads until it is force-quit** — check which build is running before
-> believing anything seen on it.
+> **The page works on the handset.** That is the sentence this register waited
+> all day for, and it is worth being precise about what it does and does not
+> settle: the screen was opened, used and judged good. **The four-second claim
+> was not stopwatched**, so it is still a claim. See *What hardware answered*
+> below.
+>
+> Two things changed on the strength of that first look, and both reverse a
+> decision this document made: **the record is newest-first**, and **a line is
+> only as wide as its own words** so the rest of every row starts a capture.
+> The chrome also stopped spending `--color-accent`.
+>
+> ⚠ The installed app **never reloads until it is force-quit** — check which
+> build is running before believing anything seen on it.
 
 The instruction this was built against was narrower than the document below:
 **the page and Return — no schema, no images, no suggestions.** So the design is
@@ -32,8 +42,9 @@ whole and the build is a slice of it, and the slice is named here rather than
 left to be worked out from the diff.
 
 Everything under *Still to build* is Phase 1 work that has not started.
-Everything under *Only hardware can answer this* is built and **unverified** —
-which is a different state, and the more dangerous one, because it looks done.
+*What hardware answered* is the other list, and it is the one worth reading
+twice: a screen that has been used is not the same as a claim that has been
+measured, and only one of those is now true.
 
 ### What is built
 
@@ -57,8 +68,9 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 
 ### Still to build, in the order it wants doing
 
-1. **The keyboard on hardware, and the four-second capture.** Not a feature —
-   the acceptance criterion. See below.
+1. **The four-second capture, with a stopwatch.** Not a feature — the
+   acceptance criterion, and the only part of it hardware has not answered.
+   See below.
 2. **Editing a committed line.** The second tap picks and does not edit, because
    *where* the edit happens is the one thing this document leaves open and there
    is no mutation for it. Needs `setCaptureText` in `lib/db/captures.ts` — text
@@ -90,36 +102,36 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
    shared page. **Nothing may add a caller.** The read that replaces it is
    `toCaptureCard`, which already exists and carries text.
 
-### ⚠ Only hardware can answer this, and it is unanswered
+### What hardware answered, and what it did not
 
-Two things are built and cannot be verified on a desk. Both are on the critical
-path — nothing else in Phase 1 is worth doing before them.
+The page was opened on a handset on 23 August and it works. Two things were
+waiting on that, and they came back differently.
 
-**1. The keyboard pin.** `components/keyboard-pin.ts` holds the foot on the top
-edge of an open keyboard and writes `--keyboard-overlap` so the live line stays
-reachable. **A desktop Chromium has no software keyboard**, so every probe run
-so far exercised the no-keyboard branch and nothing else. The hook is the
-shell's, moved and reduced from two docks to one; its thermostat is the record
-of five wrong versions on this handset, so the mechanism is trusted and *this
-arrangement of it* is not.
+**1. The keyboard pin — the dangerous half is gone by construction.** The worry
+was the live line ending up behind the keys on a long page. It cannot: the caret
+is the first thing in the document now, pinned under the bar, so a keyboard
+rising from the bottom of the glass has nothing to cover. That is a subtraction
+rather than a fix, which is the order `CLAUDE.md` asks for — the condition was
+removed, not corrected for.
 
-What to check, installed and in a Safari tab: tap the live line and watch the
-foot arrive with the keys rather than after them; scroll to the top of a long
-page with the keyboard up and confirm the foot stays level with it rather than
-floating; type past the fold and confirm the line being written is never behind
-the keys.
+`components/keyboard-pin.ts` still holds the foot on the keyboard’s top edge and
+still writes `--keyboard-overlap`, and **that part is still only ever exercised
+on hardware** — a desktop Chromium has no software keyboard. What is left to
+watch, installed and in a Safari tab: the foot arriving *with* the keys rather
+than after them. It is no longer on the critical path, because nothing
+important is behind it any more.
 
-**2. The four-second capture.** Open, typed into, and closed in under five
-seconds, one-handed. Measured on the desk against `next start`, first key to the
-line on the page: **34–152ms** — but that is a render, not a thumb, and the
-claim is about the thumb.
+**2. The four-second capture is still a claim.** The screen was used and judged
+good; it was not stopwatched. The desk figure stands and is the wrong
+instrument: first key to the line on the page, **34–152ms** against
+`next start` — a render, not a thumb.
 
 ⚠ **The keyboard cannot be raised on a cold open on iOS**, and no arrangement of
 this code changes it: focus without a gesture does not open a keyboard there.
-What answers it is the filler under the live line — a tap anywhere on the page
-starts writing — and **whether that is fast enough is the thing to find out**.
-If it is not, the honest next move is a share-sheet or shortcut entry point,
-not a hack on focus.
+What answers it is the paper — **a line is only as wide as its own words, so
+every other pixel of the page starts a capture** — and whether that is fast
+enough is what a stopwatch has to say. If it is not, the honest next move is a
+share-sheet or shortcut entry point, not a hack on focus.
 
 ⚠ **Two snags before testing over the LAN.** `crypto.randomUUID` is undefined on
 `http://192.168.x.x` — a secure-context gate — which `lib/mutation-id.ts`
@@ -129,10 +141,24 @@ real handset test.
 
 ### The deviations now standing
 
-- **The chrome is brass, which spends `--color-accent`.** §11 reserves it for
-  overlap. **Overlap needs a different colour in Phase 2**, and it has to
-  out-shout brass on a screen that is now full of it. Pick it when Phase 2 has
-  something to show.
+- **The chrome has its own colour, and no longer spends `--color-accent`.** It
+  did until 23 August, and that was the one place this build broke a rule in
+  `CLAUDE.md` rather than extending it. `--color-chrome` is `#e8b34a`, lit brass
+  — the same hue carried up in lightness and chroma, 10.98:1 on black against
+  the muted brass’s 7.73:1 — and it took the mark, both bars’ live glyphs, the
+  caret and the mark on a picked line. `--color-accent` is now used by nothing,
+  which is what §11 always asked of it. **This does not make Phase 2 easier**:
+  overlap still needs a colour that out-shouts a brass screen, and the screen is
+  louder than it was, so the candidate to beat is `--color-chrome` rather than
+  the muted brass beside it.
+- **The record is newest-first, and the caret is at the top.** This document
+  specified writing downward and the build shipped it that way; a handset
+  reversed it. See *The shape* below, which now carries the reasoning.
+- **A line is only as wide as its own words.** The rest of every row is paper,
+  and tapping paper starts a capture. The hit area was the whole row, which
+  meant the only place a tap could start writing was the leftover space at the
+  end of the page — and leftover space is zero the moment the record fills the
+  screen.
 - **The camera and search are present and off at every state**, including the
   camera the table above has lit on an empty page. Neither is built; a control
   that cannot act goes off. The table is what they go back to.
@@ -172,9 +198,19 @@ filling as you write.
 
 - **One line is one capture.** Return commits the line and drops to a fresh
   one, so a run of captures is a run of Returns and nothing else.
-- **You type downward.** Oldest at the top, newest above the caret. This
-  reverses the newest-first ordering an earlier draft of this document
-  specified, and it follows from the page: you do not write a note upwards.
+- **The newest line is the first one.** The caret sits under the bar and the
+  record runs back in time beneath it.
+
+  ⚠ **This is the third position this document has held**, and the loop is
+  worth stating plainly. An early draft specified newest-first. It was reversed
+  to *you type downward, oldest at the top*, on the reasoning that you do not
+  write a note upwards — which is true of a note and turned out not to be the
+  point. It went back to newest-first on 23 August, on a handset, for two
+  reasons a desk could not produce: what you just wrote is on screen without a
+  scroll to the end of the record, and **a caret pinned under the bar cannot be
+  covered by a keyboard rising from the bottom of the glass.** The second one
+  removed a whole class of problem rather than solving it, which is why the
+  metaphor was the thing that gave way.
 - **No rules between lines.** 18px on 28px leading, 8px of padding each side to
   reach a 44px target without anything visible saying so. A page, not a table.
 - **Four routes go away with it** — `/wants`, `/go-back-tos`, `/fixtures` and
@@ -198,7 +234,10 @@ carry a thumbnail, and none of that is text.
 
 Once that is admitted, the collision disappears:
 
-- **Tap picks.** One meaning, no modifier, no hidden gesture.
+- **Tap the words and the line is picked.** One meaning, no modifier, no hidden
+  gesture. ⚠ The words, not the row: a line’s hit area is the width of its own
+  text, and the paper beside it starts a capture instead. See *The deviations*
+  above.
 - **A second tap edits**, turning that record back into an input. Picking is
   the common act — settle it, cross it off — and editing a captured line is
   rare, so the rare one pays the second tap.
@@ -485,8 +524,8 @@ already:
    what remains is only live intention. That is the largest single reduction
    available and it costs nothing new.
 2. **Search** finds the thing you can name.
-3. **The page groups by the day it was written.** Oldest at the top, newest
-   under the caret, each day announced by a quiet mono stamp — `stamp` in
+3. **The page groups by the day it was written.** Newest under the caret,
+   running back in time, each day announced by a quiet mono stamp — `stamp` in
    `app/globals.css`, which is §11's own reserved use for mono. It asks nothing
    of anybody, it uses a column the record already has, and it makes two
    hundred lines navigable by *roughly when* rather than by scrolling.
