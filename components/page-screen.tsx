@@ -472,12 +472,21 @@ export function PageScreen({
           after the record went newest-first it needed saying: the draft sits
           directly above a committed line of identical size, face and colour, and
           a half-written line tapped away from looks exactly like something that
-          landed. The shade is the difference, and it runs edge to edge because a
-          band that stops short of the glass reads as a field rather than as the
-          row you are in. See `live-band` in globals.css for how it bleeds without
-          a breakpoint.
+          landed.
+
+          ⚠ **It is a glow and not a fill, and it lights only when the line is
+          live.** Two flat grounds shipped on 23 August and both came back "too
+          grey" — the value was never it; a uniform tone inside a rectangle with
+          edges is what reads as grey, whatever the value. `live-band` in
+          globals.css carries the whole argument, including why glass cannot work
+          on a true black page.
+
+          `data-live` is focus **or** a draft. Focus alone would take the light
+          away at the moment it is most needed — a half-written line tapped away
+          from is the exact case this exists for — and a draft alone would leave
+          an empty focused row unlit while somebody waits to type into it.
         */}
-        <div className="live-band">
+        <div className="live-band" data-live={focused || draft !== '' ? '' : undefined}>
           <div className="relative">
             <input
               ref={input}
@@ -533,7 +542,7 @@ export function PageScreen({
                 it wants, and the caret is already the instruction.
               */
               aria-label="Capture"
-              className={`page-line page-input block ${
+              className={`page-line page-input ${
                 drawnCaret ? 'caret-transparent' : 'caret-chrome'
               }`}
             />

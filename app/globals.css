@@ -1930,12 +1930,13 @@
  * a third colour was only defensible for a claim the other two could not make,
  * and with a coloured chrome teal made none.
  *
- * `resize: none` and the JS-driven height are what make it grow with wrapped
- * text; `field-sizing: content` would do it in CSS and is not in Safari yet, so
- * the height is written from `scrollHeight` in `components/page-screen.tsx`. When
- * Safari ships it, that code is deleted and one line replaces it here.
+ * ⚠ **`block`, and it matters.** An `<input>` is inline-block by default, which
+ * puts it in a line box and hangs the strut's descender under it — a few pixels
+ * of air that belong to nothing, on the one row whose height has to match a
+ * written line exactly.
  */
 @utility page-input {
+  display: block;
   width: 100%;
   border: 0;
   background: transparent;
@@ -1946,37 +1947,49 @@
 }
 
 /**
- * The live band: **the row you write in, edge to edge, in a shade of its own.**
+ * The live band: **the row you are writing in, lit rather than filled.**
  *
- * Two jobs, and they are the same job. A line being written is not yet a record,
- * and after the record was turned newest-first the draft ended up directly above
- * a committed line of identical size, face and colour — which is not merely
- * unclear, it is the shape of losing something: it looks saved and is not. The
- * shade says *this one is still yours to finish*, and the band says where it
- * ends.
+ * A line being written is not yet a record, and with the record newest-first the
+ * draft sits directly above a committed line of identical size, face and colour.
+ * A half-written line tapped away from looks exactly like one that landed, which
+ * is the shape of losing something. This says *still yours to finish*.
  *
- * ⚠ **A fade of `--color-surface`, not the token itself, and 40% is not a taste
- * number.** Full strength shipped for an hour on 23 August and came back "too
- * grey" — which is the second time that has been reported of this token used
- * flat, the first being the People pill in `tracked-people.tsx`. The token is
- * tuned for things meant to read as *raised off the ground*: the capture field,
- * the intent sheet, the toast. At 1.29:1 against pure black that is a card, and
- * the band is not a card — it wants to say *this row is still yours* without
- * claiming to be a panel sitting on the page. At 40% it composites to about
- * #0d0d0c, roughly 1.09:1, which is the value the pill already settled on for
- * exactly this job.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why it is a glow and not a fill (23 August, third attempt)
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * A tint rather than a hand-picked near-black, deliberately: it stays the same
- * warm charcoal, so the band cannot drift away from the palette's warmth on its
- * own.
+ * ⚠ **Two flat fills shipped and both came back "too grey" — the value was
+ * never the problem.** `--color-surface` at full strength is 1.29:1 and read as
+ * a card; the same token at 40% composites to about #0d0d0c, roughly 1.09:1,
+ * and read as grey all over again. At that luminance no hue survives — 13/255
+ * of a warm charcoal and 13/255 of a warm white are the same three numbers — so
+ * darkening it further only makes a fainter slab. **What reads as grey is a
+ * uniform tone inside a rectangle with edges.** Light has neither.
  *
- * ⚠ **No `padding-block`, and there was some for an hour.** It made the band
- * 12px taller than a written line, which broke the invariant `page-line` exists
- * to state: *a line being written and a line already written occupy exactly the
- * same box*, which is what stops the page jumping on Return. The band is the
- * line's own box and nothing more — it is a ground, not a container, so it has
- * no spacing of its own to get wrong. Air above the record belongs to the
- * record; see the `mt-8` in `page-screen.tsx`.
+ * So the ground is an ellipse of light inscribed in the row: brightest across
+ * the middle, transparent by the time it reaches any of the four sides. There
+ * is no boundary anywhere for the eye to find, which is why the peak can be
+ * *brighter* than either fill and still read as subtler — 8% of the paper
+ * colour peaks near #131312 at the centre and averages well under what the flat
+ * 40% put everywhere.
+ *
+ * Prior art: Raycast's design system carries a "warm glow",
+ * `rgba(215, 201, 175, 0.05) 0 0 20px 5px` — a warm off-white at 5%, spread
+ * behind a featured element rather than filled into it. Same move, same reason.
+ * Ours tints `--color-text` so the light is the paper's own colour and cannot
+ * drift from the palette.
+ *
+ * ⚠ **Glass was asked for and is ruled out by the ground, not by taste.**
+ * `backdrop-filter` refracts what is behind it, and behind this is `#000000`.
+ * Blurring black returns black, so the effect can only appear through the
+ * border and inner highlight that conventionally come with it — which is a
+ * hairline, and hairlines are out. Frosted glass needs a busy backdrop; a true
+ * black page is the one backdrop that gives it nothing to work with.
+ *
+ * ⚠ **It lights only when the line is live** — focused, or holding a draft. An
+ * untouched empty page is pure black, because there is nothing on it yet to
+ * distinguish from anything. A ground that is always on is decoration; one that
+ * appears exactly when a line is unfinished is the statement.
  *
  * ⚠ **Edge to edge with no media query and no `vw`.** It un-insets by exactly
  * the gutter that inset it, so on a handset — where `main` is the whole screen
@@ -1984,13 +1997,47 @@
  * on its own. On the desk the same rule makes it the column's full width
  * including its gutters, which is the right answer there and not a special case.
  * A `100vw` bleed would have needed both a breakpoint and a scrollbar caveat.
+ *
+ * ⚠ **No padding of its own**, and it had some for an hour. It made the live row
+ * 12px taller than a written one, which breaks the invariant `page-line` exists
+ * to state: a line being written and a line already written occupy exactly the
+ * same box, which is what stops the page jumping on Return. The band is a
+ * ground, not a container. Air above the record belongs to the record.
  */
 @utility live-band {
-  background-color: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  position: relative;
   margin-left: calc(-1 * var(--gutter-l));
   margin-right: calc(-1 * var(--gutter-r));
   padding-left: var(--gutter-l);
   padding-right: var(--gutter-r);
+
+  &::before {
+    content: '';
+    position: absolute;
+    /*
+      Inset to the row, and the gradient stops short of all four sides on its
+      own — `50% 50%` radii from the centre reach transparent exactly at the
+      box, so the rectangle is never drawn, only bounded.
+    */
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(
+      50% 50% at 50% 50%,
+      color-mix(in srgb, var(--color-text) 8%, transparent) 0%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+
+  /*
+    ⚠ **An attribute, not a class.** `data-live` is set from React state and read
+    by nothing else; a bare class here would be a name Tailwind does not know
+    about and anyone could reuse by accident.
+  */
+  &[data-live]::before {
+    opacity: 1;
+  }
 }
 
 /**
