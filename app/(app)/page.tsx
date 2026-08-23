@@ -9,9 +9,9 @@ import { viewerTimeZone } from '@/lib/region'
  * Home: **the page.**
  *
  * `/` was the capture box alone for about an hour on 9 August, then the poster
- * wall for a fortnight, and it is the record itself now — a blank page you type
- * down, one line per capture, oldest at the top and newest above the caret. See
- * `docs/re-direction/phase-1-capture.md` and `components/page-screen.tsx`.
+ * wall for a fortnight, and it is the record itself now — a blank page, one line
+ * per capture, the caret under the bar and the record newest-first beneath it.
+ * See `docs/re-direction/phase-1-capture.md` and `components/page-screen.tsx`.
  *
  * **Four routes went away with it** — `/wants`, `/go-back-tos`, `/fixtures` and
  * `/archive`. Everything active is here; everything settled is behind the tray.
@@ -28,10 +28,11 @@ export default async function HomePage() {
   if (!profile) redirect('/onboarding')
 
   /*
-    §10: paginate every list. The read runs newest-first and is reversed here,
-    which is the only arrangement where *the most recent fifty* and *oldest at
-    the top* are both true — an ascending `limit` would open the app on
-    something typed in March.
+    §10: paginate every list. The read runs newest-first and is **used**
+    newest-first: the page puts the caret at the top and the record under it, so
+    the order the query returns is the order the page wants and there is nothing
+    left to reverse. An ascending `limit` would still be wrong — it would hand
+    back the fifty oldest lines somebody ever wrote.
 
     ⚠ **Earlier lines are not reachable yet, and that is a stated gap.** Fifty is
     roughly a month of this, so it is not a fault to be found on the handset this
@@ -50,7 +51,7 @@ export default async function HomePage() {
   */
   const { todayKey, stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
 
-  const lines: PageLineView[] = rows.reverse().map((row) => {
+  const lines: PageLineView[] = rows.map((row) => {
     const day = stamp(row.createdAt)
     return {
       id: row.id,

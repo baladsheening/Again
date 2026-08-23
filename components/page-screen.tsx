@@ -25,8 +25,15 @@ import { useKeyboardPin } from './keyboard-pin'
  * drops to a fresh one, so a run of captures is a run of Returns and nothing
  * else.
  *
- * **You type downward.** Oldest at the top, newest above the caret. It follows
- * from the page: you do not write a note upwards.
+ * **The newest line is the first one.** The caret sits under the bar and every
+ * capture pushes the record down, so what you just wrote is on screen without a
+ * scroll, and the line most likely to be settled is the one nearest the thumb.
+ *
+ * ⚠ **This reverses the written order the page shipped with**, and the metaphor
+ * it cost is real: you no longer type down a page the way you write in a
+ * notebook. It was traded for the two things a handset made obvious — arriving
+ * on the newest line without a scroll to the end of the record, and a caret the
+ * keyboard can never cover, because it is above the fold by construction.
  *
  * ⚠ **Nothing in the app can cause an open.** No feed, no notification, no
  * streak. Every open is caused by something in the world — a shelf, a poster, a
@@ -46,8 +53,19 @@ import { useKeyboardPin } from './keyboard-pin'
  *
  * Once that is admitted the collision disappears:
  *
- *   - **Tap picks.** One meaning, no modifier, no hidden gesture.
+ *   - **Tap the words and the line is picked.** One meaning, no modifier, no
+ *     hidden gesture.
+ *   - **Tap the paper and you are writing.** The words are the record; the rest
+ *     of every row is the page. A line's hit area is the width of its own text,
+ *     so a short capture hands the whole right-hand side of its row back.
  *   - **The keyboard follows liveness.** Gone the moment a saved line is picked.
+ *
+ * ⚠ **A line that wraps to the full measure leaves no paper**, and that is
+ * accepted rather than corrected. The alternative is `display: inline` on a
+ * button, so that hit-testing follows the text fragments rather than one box —
+ * which renders differently on every engine, and a workaround written for one
+ * engine still executes on all of them. Captures are short; a screen on which no
+ * row has paper is not a screen this record produces.
  *
  * ⚠ Without this, tapping a line to settle it would place a caret and start an
  * edit instead. The fix is not a modifier gesture on an always-editable page; it
@@ -149,29 +167,27 @@ export function PageScreen({
   const pickedLine = lines.find((l) => l.id === picked) ?? null
 
   /*
-    The bottom of the page, instantly.
+    The top of the page, instantly — which is where the caret is.
 
     ⚠ **`behavior: 'instant'` because `html` carries `scroll-behavior: smooth`**
-    (§10/§11 — respected throughout), and an animated scroll on arrival is the
-    app taking a second to show you where you already are. The same call runs
-    after every Return, where smooth would be a page sliding under a thumb that
-    is still typing.
-  */
-  const toFoot = useCallback(() => {
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })
-  }, [])
+    (§10/§11 — respected throughout), and an animated scroll is the app taking a
+    second to show somebody where they have just asked to be.
 
-  /*
-    ⚠ **Layout, not passive: this has to happen before the browser paints**, or
-    a page with three months in it opens on March and jumps to today. The
-    scrolling area reserves the foot's height at its bottom, so the document's
-    last pixel puts the live line above the glyphs rather than behind them —
-    which is why this is a plain scroll-to-end rather than an element being
-    revealed.
+    ⚠ **Nothing scrolls on arrival any more, and nothing scrolls after a Return.**
+    The caret is the first thing in the document, so the top of the page is where
+    the browser already opens. A `useLayoutEffect` used to run a scroll-to-end
+    before paint, so a record with three months in it did not open on March; it
+    went with the written order that put March first in the document. **A
+    subtraction cannot be wrong on a device nobody has tested.**
+
+    What is left is the one case that still needs a scroll: a tap on the paper
+    while the record is scrolled away from the caret. Focus alone would leave the
+    choice to the browser, and with a fixed bar overhead its choice can be a
+    caret sitting underneath it.
   */
-  useLayoutEffect(() => {
-    toFoot()
-  }, [toFoot])
+  const toCaret = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [])
 
   /**
    * The textarea grows with wrapped text.
@@ -275,7 +291,8 @@ export function PageScreen({
       failed: null,
     }
 
-    setLines((all) => [...all, line])
+    /* The head of the list, because the head of the list is under the caret. */
+    setLines((all) => [line, ...all])
     setDraft('')
     setPicked(null)
     setAsking(null)
@@ -345,7 +362,8 @@ export function PageScreen({
         still being on the page.
       */
       if (!result.ok) {
-        setLines((all) => [...all, { ...line, failed: result.message }])
+        /* Where it was: the newest line is the only one undo can reach. */
+        setLines((all) => [{ ...line, failed: result.message }, ...all])
       }
     })
   }
@@ -355,6 +373,15 @@ export function PageScreen({
   function write() {
     setPicked(null)
     setAsking(null)
+    /*
+      ⚠ **The scroll goes first, and the order is the whole point.** The tap may
+      have landed anywhere in the record, and focusing an input that is off
+      screen hands the scrolling to the browser — which on iOS happens again when
+      the keyboard comes up, and with a fixed bar overhead either pass can leave
+      the caret underneath it. Arriving at the caret first leaves nothing to
+      scroll into view, which removes the race rather than timing against it.
+    */
+    toCaret()
     input.current?.focus()
   }
 
@@ -432,15 +459,89 @@ export function PageScreen({
         actually true, and it is a no-op in a Safari tab, on Android and on the
         desk, where the inset reads 0.
 
-        **The minimum is what makes the filler below reach the bottom.** The page
-        is in the document flow, so there is no fixed box for a flex child to
-        fill; `grow` inside a minimum tall enough to reach the glass is what
-        makes a tap anywhere on an empty page start writing.
+        **The minimum is what makes the tail of the page reach the bottom.** The
+        page is in the document flow, so there is no fixed box for a flex child
+        to fill; `grow` inside a minimum tall enough to reach the glass is what
+        keeps the end of a short record tappable.
+
+        ⚠ **The tail is no longer the only way to start writing**, so it is not
+        given a minimum of its own. The paper on every row is the general case; a
+        guaranteed band at the end of the document would be a second mechanism
+        doing the first one's job, and it would sit at the far end of the record
+        from the caret, which is now at the top.
       */}
       <main
         className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)]"
       >
         <h1 className="sr-only">Again</h1>
+
+        {/* --- the live line ------------------------------------------- */}
+        <div className="relative">
+          <textarea
+            ref={input}
+            rows={1}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onFocus={() => {
+              setFocused(true)
+              setPicked(null)
+              setAsking(null)
+            }}
+            onBlur={() => setFocused(false)}
+            onKeyDown={(e) => {
+              /*
+                ⚠ **Return commits and never inserts a newline.** One line is one
+                capture: a capture with a line break in it is two things somebody
+                meant to say separately, and the matching path would treat the
+                pair as one string forever after. `isComposing` is the exception
+                that has to be honoured — the Return that closes an IME candidate
+                window is not this Return.
+              */
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                e.preventDefault()
+                /*
+                  ⚠ **Nothing scrolls after this.** The caret is the first thing
+                  in the document and the new line lands below it, so the page
+                  grows downward under a thumb that is already in the right
+                  place. A `requestAnimationFrame` scroll-to-end used to be here,
+                  and it went with the written order.
+                */
+                commit()
+              }
+            }}
+            /*
+              `autoFocus` is the keyboard being up on a cold open, which is why
+              the app was opened. ⚠ **iOS will not honour it** — focus without a
+              gesture cannot raise a keyboard there, and no arrangement of this
+              code changes that. What answers it instead is the filler below:
+              **a tap anywhere on the page starts writing**, so the gesture iOS
+              insists on is the one somebody was going to make anyway.
+            */
+            autoFocus
+            enterKeyHint="enter"
+            inputMode="text"
+            autoCapitalize="sentences"
+            autoCorrect="on"
+            autoComplete="off"
+            spellCheck
+            /*
+              Named for a screen reader and **not placeheld on screen**: a word
+              sitting in the field would be the app talking over the one gesture
+              it wants, and the caret is already the instruction.
+            */
+            aria-label="Capture"
+            className={`page-line page-input block ${
+              drawnCaret ? 'caret-transparent' : 'caret-chrome'
+            }`}
+          />
+
+          {drawnCaret && (
+            <span
+              aria-hidden
+              className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+            />
+          )}
+        </div>
 
         <ol className="flex flex-col">
           {lines.map((line, i) => {
@@ -463,45 +564,73 @@ export function PageScreen({
                   </p>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => pick(line)}
-                  aria-current={isPicked ? 'true' : undefined}
-                  /*
-                    ⚠ **A line in flight looks exactly like a line that landed,
-                    and that is the contract rather than an oversight.** It was
-                    dimmed to `opacity-40` for one pass, and measured: Server
-                    Actions queue per client, so a run of Returns leaves the last
-                    several in flight for a second or two — which showed as the
-                    app going pale under somebody who was still typing, doubting
-                    lines it had already promised were captured.
+                <div className="flex items-stretch">
+                  <button
+                    type="button"
+                    onClick={() => pick(line)}
+                    aria-current={isPicked ? 'true' : undefined}
+                    /*
+                      ⚠ **A line in flight looks exactly like a line that landed,
+                      and that is the contract rather than an oversight.** It was
+                      dimmed to `opacity-40` for one pass, and measured: Server
+                      Actions queue per client, so a run of Returns leaves the last
+                      several in flight for a second or two — which showed as the
+                      app going pale under somebody who was still typing, doubting
+                      lines it had already promised were captured.
 
-                    The page's promise is that the line is on the page. What is
-                    worth saying is a **failure**, which the message below says on
-                    the line it happened to; anything short of that is the app
-                    narrating its own network.
-                  */
-                  className={`page-line block w-full text-start ${
-                    isPicked ? 'picked' : ''
-                  } ${crossedOff ? 'line-through opacity-50' : ''}`}
-                >
-                  {line.text}
+                      The page's promise is that the line is on the page. What is
+                      worth saying is a **failure**, which the message below says on
+                      the line it happened to; anything short of that is the app
+                      narrating its own network.
+                    */
+                    className={`page-line min-w-0 text-start ${
+                      isPicked ? 'picked' : ''
+                    } ${crossedOff ? 'line-through opacity-50' : ''}`}
+                  >
+                    {line.text}
+                    {/*
+                      ⚠ **`leading-none`, and it is the difference between 44px and
+                      46px.** A 13px span inheriting the line's 28px line-height
+                      gets its own half-leading — (28 − 15.6)/2 against the 18px
+                      strut's (28 − 21.6)/2 — so its inline box hangs ~2px below
+                      the strut and grows the line box under it. **One line is one
+                      line**, whether or not it resolved to something, so the
+                      year's box is made smaller than the strut rather than left to
+                      push it about.
+                    */}
+                    {line.year !== null && (
+                      <span className="text-muted ms-2 text-[0.8125rem] leading-none">
+                        {line.year}
+                      </span>
+                    )}
+                  </button>
+
                   {/*
-                    ⚠ **`leading-none`, and it is the difference between 44px and
-                    46px.** A 13px span inheriting the line's 28px line-height
-                    gets its own half-leading — (28 − 15.6)/2 against the 18px
-                    strut's (28 − 21.6)/2 — so its inline box hangs ~2px below
-                    the strut and grows the line box under it. **One line is one
-                    line**, whether or not it resolved to something, so the
-                    year's box is made smaller than the strut rather than left to
-                    push it about.
+                    **The paper of the row: whatever width the words did not
+                    use.** The line above shrinks to its own text, so on a short
+                    capture this is most of the row — and tapping it starts
+                    writing rather than picking the line it sits beside.
+
+                    ⚠ **`aria-hidden` and out of the tab order, deliberately.**
+                    It is a pointer convenience for a rule the pointer can see
+                    and the accessibility tree cannot: two hundred lines would
+                    announce "Write" two hundred times. The reachable, announced
+                    way to start writing is the one button at the tail of the
+                    page, which is why that one is kept whatever else changes.
+
+                    ⚠ It shrinks to nothing when the words take the full
+                    measure, and that is the stated cost of the paper rule — see
+                    the head of this file. No minimum is given to it: a minimum
+                    would push the words off their own line.
                   */}
-                  {line.year !== null && (
-                    <span className="text-muted ms-2 text-[0.8125rem] leading-none">
-                      {line.year}
-                    </span>
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={write}
+                    aria-hidden
+                    tabIndex={-1}
+                    className="grow cursor-text"
+                  />
+                </div>
 
                 {/*
                   Full strength, at body size. There is no error colour in the
@@ -550,80 +679,17 @@ export function PageScreen({
           })}
         </ol>
 
-        {/* --- the live line ------------------------------------------- */}
-        <div className="relative">
-          <textarea
-            ref={input}
-            rows={1}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onFocus={() => {
-              setFocused(true)
-              setPicked(null)
-              setAsking(null)
-            }}
-            onBlur={() => setFocused(false)}
-            onKeyDown={(e) => {
-              /*
-                ⚠ **Return commits and never inserts a newline.** One line is one
-                capture: a capture with a line break in it is two things somebody
-                meant to say separately, and the matching path would treat the
-                pair as one string forever after. `isComposing` is the exception
-                that has to be honoured — the Return that closes an IME candidate
-                window is not this Return.
-              */
-              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                e.preventDefault()
-                commit()
-                /*
-                  After the line, not before it: the list has grown by one, so
-                  the caret is one line lower than the browser last knew.
-                */
-                requestAnimationFrame(toFoot)
-              }
-            }}
-            /*
-              `autoFocus` is the keyboard being up on a cold open, which is why
-              the app was opened. ⚠ **iOS will not honour it** — focus without a
-              gesture cannot raise a keyboard there, and no arrangement of this
-              code changes that. What answers it instead is the filler below:
-              **a tap anywhere on the page starts writing**, so the gesture iOS
-              insists on is the one somebody was going to make anyway.
-            */
-            autoFocus
-            enterKeyHint="enter"
-            inputMode="text"
-            autoCapitalize="sentences"
-            autoCorrect="on"
-            autoComplete="off"
-            spellCheck
-            /*
-              Named for a screen reader and **not placeheld on screen**: a word
-              sitting in the field would be the app talking over the one gesture
-              it wants, and the caret is already the instruction.
-            */
-            aria-label="Capture"
-            className={`page-line page-input block ${
-              drawnCaret ? 'caret-transparent' : 'caret-chrome'
-            }`}
-          />
-
-          {drawnCaret && (
-            <span
-              aria-hidden
-              className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
-            />
-          )}
-        </div>
-
         {/*
-          The rest of the page, and it is a control.
+          The tail of the page, and it is a control.
 
           On a phone the only way to raise a keyboard is a gesture, and the
           gesture nobody has to be taught is *tap the page*. It is a real button
           with a real name rather than a click handler on a div, so it is
           reachable and announced rather than being a trap for anyone not using a
-          finger.
+          finger — and it is the **only** one of the page's write targets that
+          is. That is deliberate: the paper on each row is hidden from the
+          accessibility tree, because a record of two hundred lines announcing
+          "Write" two hundred times is worse than announcing it once, here.
 
           It fills whatever the page's minimum leaves — see the note on `main`.
         */}
