@@ -58,6 +58,9 @@ import { useKeyboardHem } from './keyboard-hem'
  *     hidden gesture.
  *   - **Tap the live line and you are writing.** It is pinned under the bar and
  *     on screen at every scroll position, so it is always one tap away.
+ *   - **Tap the paper and the picked line is let go.** The inverse of the first
+ *     rule, and the only thing the paper does. It does not start a capture —
+ *     see below for why that affordance was built and taken out.
  *   - **The keyboard follows liveness.** Gone the moment a saved line is picked.
  *
  * ⚠ **The record used to be a way to start writing, and is not any more.** Every
@@ -76,9 +79,15 @@ import { useKeyboardHem } from './keyboard-hem'
  * ⚠ **A second tap does not yet edit.** The design says it should, and where
  * that edit happens — in place or in a detail view — is the one thing that
  * document leaves open. So the second tap holds the pick rather than teaching a
- * gesture that has to be taken back: unpicking is a tap on the page, which is
- * also how you get back to writing, which is the thing you were going to do
- * next anyway.
+ * gesture that has to be taken back: unpicking is a tap on the page.
+ *
+ * ⚠ **That sentence used to end "which is also how you get back to writing", and
+ * both halves of it were wrong until 24 August.** The second half went stale the
+ * day the record stopped being a way to start writing — the paper releases a
+ * pick and does not raise a keyboard. The first half was never built at all: a
+ * tap on the page did nothing whatever, and the only exits from a picked line
+ * were Return, crossing off, settling, or reaching back up to the live line.
+ * Both are true now. **A rule written in a header is not a rule that ships.**
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The client owns the list, and the server is the seed
@@ -447,6 +456,36 @@ export function PageScreen({
 
   /* ------------------------------------------------------------------ */
 
+  /**
+   * **Letting the picked line go.** Always both, because `asking` belongs to the
+   * picked line and outlives it otherwise — every other `setPicked(null)` on
+   * this page already travels with its `setAsking(null)`, and this is that pair
+   * given a name rather than a fifth copy.
+   */
+  function release() {
+    setPicked(null)
+    setAsking(null)
+  }
+
+  /**
+   * **Escape lets it go too**, because the paper tap above is a thumb's gesture
+   * and the desk is one of the four surfaces that ship. A pointer has no "tap
+   * beside it" — clicking the paper works, but the key is what a keyboard
+   * reaches for, and without it the desk keeps the trap the handset just lost.
+   *
+   * ⚠ **Only while something is picked**, so nothing is listening on a page at
+   * rest. Picking blurs the field, so this can never be the Escape that closes
+   * an IME candidate window — the two states do not overlap.
+   */
+  useEffect(() => {
+    if (picked === null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') release()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [picked])
+
   function pick(line: Line) {
     if (line.pending) return
     if (line.failed) {
@@ -591,7 +630,38 @@ export function PageScreen({
         text. Nothing fills it now, and nothing should: the space at the end of a
         short record is space.
       */}
+      {/*
+        ⚠ **The paper lets the picked line go, and that is the only thing it
+        does.** Picking had no inverse: `pick` is not a toggle, so re-tapping the
+        words re-picks them, and every other exit — Return, crossing off,
+        settling, reaching up to the live line — is somebody deciding something
+        rather than deciding *nothing*. Tapping beside a selection to drop it is
+        the one gesture everybody already has, and the page was ignoring it.
+
+        ⚠ **It does not raise the keyboard, and that is deliberate rather than
+        unfinished.** Paper as a way to *start writing* was built and removed —
+        see the foot's note above: the live line is pinned, so a second way to
+        reach it was a second way to reach something already in reach. Nothing
+        here reopens that. Picking blurs the field on purpose (*the keyboard
+        follows liveness*), so the gesture that undoes a pick has to land back in
+        the browsing state it came from, not overshoot into writing.
+
+        ⚠ **A tap that reached a control is that control's.** One rule instead of
+        a `stopPropagation` in every handler — the words, the settle buttons, the
+        input and anything added later are all covered by the same line, and none
+        of them has to remember this exists.
+      */}
       <main
+        onClick={(e) => {
+          if (picked === null) return
+          if (
+            e.target instanceof Element &&
+            e.target.closest('button, input, a, [role="button"]')
+          ) {
+            return
+          }
+          release()
+        }}
         className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+var(--band-height)+var(--band-tail))]"
       >
         <h1 className="sr-only">Again</h1>
