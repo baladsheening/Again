@@ -1,16 +1,16 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Both bars go when the record is being read, and come back when it is not.
  *
  * **The bars are furniture on a page whose product is the record.** Reading back
  * is the one thing the page does where none of the seven controls can act:
- * nothing is picked, no keyboard is up, and the chrome is 104px of black holding
- * glyphs that are all off. So it leaves, and the first flick upward brings it
- * back — which is the browser's own grammar, and the reason it needs no
- * affordance to explain it.
+ * nothing is picked, and the chrome is a hundred pixels of glass holding glyphs
+ * that are all off. So it leaves, and the first flick upward brings it back —
+ * which is the browser's own grammar, and the reason it needs no affordance to
+ * explain it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  Nothing moves that could take a control with it
@@ -24,33 +24,21 @@ import { useCallback, useEffect, useState } from 'react'
  *
  * ⚠ **A picked line, and not a focused one — the difference was measured.** This
  * held on `focused` for an afternoon, and on the desk that meant it never
- * receded at all: the live line takes focus on arrival there, so the page opened
- * held and stayed held. Worse, it was *unstable* — whether React saw the focus
- * depended on whether the autofocus beat hydration, so the same build receded on
- * some loads and not others. **A hold that means something different on two of
- * the four surfaces is the defect `CLAUDE.md` names**, and focus is exactly
- * that: on iOS it needs a gesture and implies a keyboard, on the desk it is the
- * resting state of the page.
+ * receded at all: the live line carries `autoFocus`, so the page opened held and
+ * stayed held. Worse, it was *unstable* — whether React saw the focus depended
+ * on whether the autofocus beat hydration, so the same build receded on some
+ * loads and not others. **A hold that means something different on two of the
+ * four surfaces is the defect `CLAUDE.md` names**, and focus is exactly that: on
+ * iOS it needs a gesture and implies a keyboard, on the desk it is the resting
+ * state of the page.
  *
  * What focus was standing in for is a **keyboard**, and that is measured rather
- * than inferred — see `keyboardUp`. While one is up every control in the foot
- * is off anyway, so what the check protects is not a control: it is the foot
- * itself, which `useKeyboardPin` is holding on the keyboard's top edge at the
- * same time.
+ * than inferred — see `keyboardUp`.
  *
- * ⚠ **The ten-second undo window deliberately does not hold it.** Scrolling down
- * through the record is the reading gesture, and undo is not what a thumb is
- * reaching for while it does that; the bar is one flick away for the whole
- * window either way. Holding on it would mean the chrome never recedes during a
- * run of captures, which is exactly when the record is worth seeing.
- *
- * ⚠ **It cannot fight `useKeyboardPin`, by construction and not by agreement.**
- * That hook writes `transform` to the foot every frame while the keyboard is up;
- * this one is a Tailwind `translate-y` utility, and in Tailwind v4 those compile
- * to the standalone **`translate`** property. Two properties, composed by the
- * browser in a fixed order — so even if both were ever live at once, neither can
- * overwrite the other. `held` already rules that out; this is why it does not
- * matter if it stops.
+ * ⚠ **It cannot fight `useKeyboardPin`.** That hook writes `transform` to the
+ * foot; this is a Tailwind `translate-y`, and in Tailwind v4 those compile to
+ * the standalone **`translate`** property. Two properties, composed by the
+ * browser in a fixed order, neither able to overwrite the other.
  *
  * ⚠ **Nothing reflows.** The page's top padding and `page-hem` still reserve the
  * full height of both bars, so the record does not move when they leave. A page
@@ -65,20 +53,15 @@ import { useCallback, useEffect, useState } from 'react'
  * **A human constant, not a device one** — it is the slack in a finger, and it
  * is the same slack on all four surfaces, which is the test `CLAUDE.md` sets. It
  * exists because a scroll is not monotonic: momentum wobbles, a thumb resettles,
- * and a bar that flips on every sign change is a bar flickering.
- */
-const STEP = 12
-
-/**
- * The bars stay while the page is scrolled by less than the foot's own height.
+ * and a bar that flipped on every sign change would be a bar flickering.
  *
- * **Measured off the foot rather than chosen**, so it is one bar's worth of
- * record: until that much has gone past, receding reveals less page than it
- * costs in furniture that has to come back.
+ * ⚠ **6px, halved on 24 August**, with the resting floor removed in the same
+ * pass. It was 12 against a floor of the foot's own height, which held the
+ * chrome for the first 56px of the record and then wanted 12 more — nearly
+ * seventy pixels of scrolling before anything happened, which reads as the page
+ * ignoring you. Now the only thing between a flick and an answer is the slack.
  */
-function floorOf(foot: React.RefObject<HTMLElement | null>) {
-  return foot.current?.getBoundingClientRect().height ?? 0
-}
+const STEP = 6
 
 /**
  * **Is a software keyboard up?** Read off the number `useKeyboardPin` already
@@ -95,42 +78,61 @@ function floorOf(foot: React.RefObject<HTMLElement | null>) {
  * would be wrong anyway — an iPad with a hardware keyboard is a coarse pointer
  * with nothing covering the glass. This asks the only question that matters, and
  * it answers 0 on the desk without being told what a desk is.
+ *
+ * Reading an inline custom property costs no layout, which is why it is allowed
+ * in the frame loop below and `getBoundingClientRect` is not.
  */
 function keyboardUp(host: React.RefObject<HTMLElement | null>) {
   return (
-    parseFloat(host.current?.style.getPropertyValue('--keyboard-overlap') ?? '') > 0
+    parseFloat(host.current?.style.getPropertyValue('--keyboard-overlap') ?? '') >
+    0
   )
 }
 
 /**
- * ⚠ **Clamped, which is what makes it survive iOS.** `scrollY` goes negative at
- * the top of a rubber-banded document and past the maximum at the bottom, and
- * both are *movement in a direction* to a naive reader — so the chrome flickers
- * on every bounce, on exactly one of the four surfaces. Clamping removes the
- * range the bounce lives in, so the bounce produces no delta at all. That is the
- * condition gone rather than a threshold tuned to outlast it.
+ * ⚠ **`scrollY` and nothing else, which is what makes this safe to run every
+ * frame.** It clamped against `scrollHeight − innerHeight` for a day, to swallow
+ * iOS's rubber band at both ends. Two things were wrong with that. It read
+ * layout inside a scroll handler, forcing a reflow per frame on the one gesture
+ * that cannot afford one — and it built the answer out of `innerHeight`, which
+ * `useKeyboardPin` spends forty lines warning is a number that means different
+ * things to different browsers, and which *changes mid-scroll* in a Safari tab
+ * as the address bar collapses. A clamp whose ceiling moves while you scroll
+ * reports movement that did not happen, in the direction that flickers the bars.
+ *
+ * What is left of it is the top: `scrollY` goes negative there on a bounce, and
+ * `Math.max` is arithmetic rather than a measurement. **The bottom no longer
+ * needs a clamp at all**, because the end of the record now shows the chrome
+ * outright — see `end` — so the bounce down there has nothing left to toggle.
  */
 function position() {
-  const max = Math.max(
-    0,
-    document.documentElement.scrollHeight - window.innerHeight,
-  )
-  return Math.max(0, Math.min(window.scrollY, max))
+  return Math.max(0, window.scrollY)
 }
 
 export function useChromeRecede({
   held,
-  foot,
   host,
+  end,
 }: {
   /** Something on screen can act — which on this page means a line is picked. */
   held: boolean
-  /** The foot, read for its height — see `floorOf`. */
-  foot: React.RefObject<HTMLElement | null>
   /** Where `useKeyboardPin` publishes `--keyboard-overlap` — see `keyboardUp`. */
   host: React.RefObject<HTMLElement | null>
+  /**
+   * A zero-height marker at the end of the record.
+   *
+   * **The bars come back when the record runs out**, because there is nothing
+   * further to reveal and what a thumb wants at the end of a list is the
+   * controls again. It is an `IntersectionObserver` on a rendered box rather
+   * than arithmetic on `scrollHeight`: the same argument `useKeyboardPin` makes
+   * at length — a rendered box is a fact, and the numbers around it are a model
+   * of the browser.
+   */
+  end: React.RefObject<HTMLElement | null>
 }) {
   const [receded, setReceded] = useState(false)
+  /** Whether the end of the record is on screen, for the frame loop to consult. */
+  const atEnd = useRef(false)
 
   /**
    * Bring the chrome back now, whatever the scroll said. The page calls it from
@@ -149,6 +151,20 @@ export function useChromeRecede({
    */
   const show = useCallback(() => setReceded(false), [])
 
+  /* The end of the record, watched rather than calculated. */
+  useEffect(() => {
+    const mark = end.current
+    if (!mark) return
+    const observer = new IntersectionObserver((entries) => {
+      const there = entries[0].isIntersecting
+      atEnd.current = there
+      /* Answer at once: the scroll may already have stopped. */
+      if (there) setReceded(false)
+    })
+    observer.observe(mark)
+    return () => observer.disconnect()
+  }, [end])
+
   useEffect(() => {
     /* Nothing to subscribe to while something on screen can act. */
     if (held) return
@@ -165,12 +181,12 @@ export function useChromeRecede({
       last = y
 
       /*
-        The keyboard is checked here rather than in `held` because it is a
-        measurement and not a React state: nothing re-renders when a keyboard
-        arrives, and every path that raises one scrolls to the caret first, so
-        this frame is the one that would otherwise take the foot away.
+        The three states with nothing to gain by hiding: the top of the record,
+        the end of it, and a keyboard up. The keyboard is checked here rather
+        than in `held` because it is a measurement and not a React state —
+        nothing re-renders when one arrives.
       */
-      if (y <= floorOf(foot) || keyboardUp(host)) {
+      if (y <= 0 || atEnd.current || keyboardUp(host)) {
         carried = 0
         setReceded(false)
         return
@@ -184,9 +200,8 @@ export function useChromeRecede({
 
     /*
       One read per frame. `scroll` fires far more often than that on every one of
-      the four surfaces, and this reads layout — so an unthrottled listener is a
-      forced reflow per event on the one gesture the page cannot afford to drop
-      frames during.
+      the four surfaces, and coalescing is most of what keeps this off the
+      critical path — the rest is that `read` no longer touches layout at all.
     */
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(read)
@@ -197,7 +212,7 @@ export function useChromeRecede({
       window.removeEventListener('scroll', schedule)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [held, foot, host])
+  }, [held, host])
 
   /*
     ⚠ **Derived, not stored** — a hold cannot leave the chrome away even if

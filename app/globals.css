@@ -1106,14 +1106,17 @@
    * and kept for a row of glyphs, and on a page whose whole product is the
    * record it was spending a line of it on nothing.
    *
-   * **What sets the floor is the thumb, not the look.** `--tap-floor` is 44px
-   * centred on the glyph, so the foot cannot go below it without the hit area
-   * hanging out of the bar and over the record: 16 + 26 + 14 leaves the area
-   * spanning 7px–51px inside 56px of foot. Take another 8px off the lead and
-   * taps start landing on the last line instead.
+   * **What sets the floor is the thumb, not the look**, and 24 August spent it
+   * down to the last two pixels. `--tap-floor` is 44px centred on the glyph, so
+   * the shortest honest foot is 9 + 26 + 9 = 44: below that the hit area hangs
+   * out of the bar and over the record, and taps meant for the last line land on
+   * the camera. **12 + 26 + 10 = 48**, and the area spans 3px–47px inside it.
+   *
+   * ⚠ **There is no third cut in this.** The next 4px puts a thumb on the
+   * record, and the fix then is not a smaller foot — it is fewer glyphs in it.
    */
-  --foot-lead: 1rem;
-  --foot-tail: 0.875rem;
+  --foot-lead: 0.75rem;
+  --foot-tail: 0.625rem;
   --foot-height: calc(
     var(--foot-lead) + var(--foot-row) + var(--foot-tail) + env(safe-area-inset-bottom)
   );
@@ -1131,6 +1134,40 @@
    * travel — right, since receding is about the space, not the movement.
    */
   --recede: 200ms;
+
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The two bars are glass
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **A tint over a blur of whatever is behind, rather than an opaque black
+   * band.** Both bars sit over a record that scrolls under them, so lines
+   * arriving at the chrome dissolve into it instead of being guillotined by an
+   * edge that is only visible because a line is crossing it.
+   *
+   * ⚠ **Glass was tried on this page before and failed, and the difference is
+   * the whole reason this one works.** The live row wore it for an afternoon in
+   * August and came back grey: a panel on **true black with nothing behind it**
+   * has nothing to refract, so all it can be is a lighter rectangle, and a
+   * lighter rectangle on black is exactly what "too grey" meant. A bar is the
+   * opposite case — there is always something behind it, or you are at an end of
+   * the record and it reads as the black it is sitting on. The mechanism only
+   * pays where there is a backdrop, which is why it belongs here and nowhere
+   * else on the page.
+   *
+   * ⚠ **The tint is most of the legibility, not the blur.** Blur alone leaves a
+   * bright smear where a line passes, and `--color-chrome` on a smear is a
+   * glyph that changes contrast as you scroll. 74% of the paper colour holds the
+   * ground dark enough that the brass never drops below the ratio it has on
+   * black — the blur is what makes what remains read as depth rather than as
+   * dirt.
+   *
+   * ⚠ **Mixed from `--color-bg`, not written as `#000c`.** A fixed hex is the
+   * shade it was mixed against one ground, which is the same argument that keeps
+   * `--color-muted` a mix — and this one is a tint of the paper by definition.
+   */
+  --glass-tint: color-mix(in srgb, var(--color-bg) 74%, transparent);
+  --glass-blur: 18px;
 
   /**
    * The reading column above `rail`. 680px — the same measure the design's
@@ -2261,8 +2298,8 @@
    */
   @media (min-width: 45rem) {
     :root {
-      --foot-lead: 1.125rem;
-      --foot-tail: 1rem;
+      --foot-lead: 0.875rem;
+      --foot-tail: 0.75rem;
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
     }

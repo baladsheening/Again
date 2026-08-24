@@ -98,7 +98,7 @@ export function Bar({
       see the note in `chrome-recede.ts` on why the property matters.
     */
     <header
-      className={`bg-bg fixed inset-x-0 top-0 z-20 px-[var(--bar-gutter)] pt-[calc(env(safe-area-inset-top)+var(--bar-lead))] pb-[var(--bar-tail)] transition-[translate] duration-(--recede) ease-out ${
+      className={`fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-lead))] pb-[var(--bar-tail)] transition-[translate] duration-(--recede) ease-out ${
         receded ? '-translate-y-full' : ''
       }`}
     >

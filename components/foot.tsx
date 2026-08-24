@@ -13,8 +13,14 @@ import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  * collision that padding prevents outright, and Notes has none either — space
  * does the separating, 16px on the handset and 18px on the desk.
  *
- * ⚠ **The foot is 56px, down from 72 on 24 August**, and what stops it going
- * lower is `--tap-floor` rather than taste — see `--foot-lead`.
+ * ⚠ **The foot is 48px, down from 72 on 24 August**, and what stops it going
+ * lower is `--tap-floor` rather than taste — see `--foot-lead`, which has the
+ * arithmetic and the reason there is no third cut in it.
+ *
+ * ⚠ **Both bars are glass** — a tint over a blur of the record passing under
+ * them, so a line dissolves into the chrome instead of being cut off by an edge.
+ * See `--glass-tint`, which also records why the same mechanism failed on the
+ * live row and why that is not an argument against it here.
  *
  * Three states, and they are the app's honest answer to what is available:
  *
@@ -77,7 +83,7 @@ export function Foot({
         recede is a Tailwind `translate`. That they are separate properties is
         what stops them overwriting each other — see `chrome-recede.ts`.
       */
-      className={`bg-bg gutter fixed inset-x-0 bottom-0 z-20 transition-[translate] duration-(--recede) ease-out will-change-[transform,translate] ${
+      className={`gutter fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out will-change-[transform,translate] ${
         receded ? 'translate-y-full' : ''
       }`}
     >

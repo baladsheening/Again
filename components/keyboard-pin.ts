@@ -102,6 +102,27 @@ export function useKeyboardPin({
     const hostEl = host.current
     const footEl = foot.current
 
+    /**
+     * ⚠ **Nothing is corrected while there is no keyboard, and that is a defect
+     * closed rather than a tidy-up.** This ran on every scroll event from the
+     * moment the live line took focus — and the live line carries `autoFocus`,
+     * so it ran from the moment the page opened, before a character was typed.
+     * With no keyboard there is nothing to hold the foot above, but the
+     * thermostat does not know that: a `fixed` element drifts while iOS
+     * scrolls, and Safari's address bar moves the visual viewport under it, so
+     * every frame produced a correction for a displacement that was the
+     * platform's own scrolling. **Reported as the foot riding up the screen
+     * during a scroll**, before typing, which is exactly when it was worst.
+     *
+     * The gate is the overlap this hook already computes for the page's hem —
+     * the same instrument, not a second one — so it is 0 on the desk and on a
+     * handset with the keys down, without anything being told what a desk is.
+     *
+     * ⚠ **It clears the transform rather than leaving the last one.** A stale
+     * lift is a foot parked wherever the last keyboard left it.
+     */
+    let lifted = false
+
     const measure = () => {
       frame = 0
       const el = foot.current
@@ -121,8 +142,22 @@ export function useKeyboardPin({
         correction wanted is *positive*. The clamp discarded exactly that, which
         is why the bar floated mid-page from a few hundred pixels in.
       */
+      /*
+        Nothing covering the glass, nothing to correct. `floor` runs first in
+        `run` below, so this reads the overlap for this frame rather than the
+        last one's.
+      */
+      if (!keyboard) {
+        if (lifted) {
+          el.style.transform = ''
+          lifted = false
+        }
+        return
+      }
+
       const lift = vv.offsetTop + vv.height - anchor.getBoundingClientRect().bottom
       el.style.transform = lift ? `translateY(${lift}px)` : ''
+      lifted = true
     }
 
     /*
@@ -143,6 +178,9 @@ export function useKeyboardPin({
       element that needs it already has a padding rule with the foot's height in
       it. Setting the property adds a term; setting the padding would replace it.
     */
+    /** Whether this frame has a keyboard on the glass — see `measure`. */
+    let keyboard = false
+
     const floor = () => {
       const box = host.current
       const edge = floorAnchor.current
@@ -151,6 +189,7 @@ export function useKeyboardPin({
         0,
         edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
       )
+      keyboard = overlap > 0
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
     }
 
@@ -169,8 +208,12 @@ export function useKeyboardPin({
       still costs exactly one.
     */
     const run = () => {
-      measure()
+      /*
+        ⚠ **The floor goes first now.** It is what decides whether there is a
+        keyboard at all, and `measure` will not correct anything without one.
+      */
       floor()
+      measure()
       frame = performance.now() < until ? requestAnimationFrame(run) : 0
     }
 

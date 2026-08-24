@@ -174,6 +174,8 @@ export function PageScreen({
   const foot = useRef<HTMLElement>(null)
   const footAnchor = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
+  /** The end of the record, watched so the bars come back there. */
+  const endMark = useRef<HTMLDivElement>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useKeyboardPin({ focused, foot, footAnchor, host, floorAnchor })
@@ -187,8 +189,8 @@ export function PageScreen({
   */
   const { receded, show: showChrome } = useChromeRecede({
     held: picked !== null,
-    foot,
     host,
+    end: endMark,
   })
 
   const pickedLine = lines.find((l) => l.id === picked) ?? null
@@ -753,6 +755,18 @@ export function PageScreen({
           It fills whatever the page's minimum leaves — see the note on `main`.
         */}
         <button type="button" onClick={write} aria-label="Write" className="w-full grow cursor-text" />
+
+        {/*
+          The end of the record, as a thing that can be observed — see
+          `useChromeRecede`. Zero height, no paint, no hit area: it exists to be
+          watched, the way `floorAnchor` exists to be measured.
+
+          ⚠ **It sits inside `page-hem`'s padding rather than after it**, so it
+          crosses into view when the last line does rather than when the reserved
+          band under it does. The bars are wanted back at the end of the
+          *record*, not at the end of the box holding it.
+        */}
+        <div ref={endMark} aria-hidden className="h-0" />
       </main>
 
       <Foot
