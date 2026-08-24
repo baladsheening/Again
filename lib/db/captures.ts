@@ -30,7 +30,7 @@ import {
 import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { runOverlap } from '@/lib/overlap'
-import { specFor } from '@/lib/vocabulary'
+import { DEFAULT_INTENT, specFor } from '@/lib/vocabulary'
 import { PUBLIC_STATES, SHARED_SCOPES } from '@/lib/domain'
 import type { CaptureSource, Intent, Kind, Visibility } from '@/lib/domain'
 
@@ -946,10 +946,31 @@ export async function resolveCapture(
       return err('conflict', 'That has already been resolved.')
     }
 
-    const spec =
-      current.possibility && current.capture.intent
-        ? specFor(current.possibility.kind, current.capture.intent)
-        : null
+    /*
+      ⚠ **The intention is derived when it was never set, and `'go_back_to'` is
+      no longer written down as a constant.**
+
+      `landsIn` needs a kind and an intention. A resolved capture has a kind —
+      that is what accepting an offer gives it — and its intention is null,
+      because §13 forbids asking for one before saving and nothing asks
+      afterwards yet. `DEFAULT_INTENT` is the kind's own answer to *and what
+      would you do with it*: see a film, read a book, try a place, own an
+      object. That is §4's rule exactly — derive, never ask.
+
+      ⚠ **It changes nothing today and that is the point.** The only catalogue
+      is TMDB, so every kind that exists here is `film`, whose default is `see`,
+      which lands in `go_back_to` — the same answer the hard-coded fallback
+      gave. What it removes is the *constant*: the day a capture can be about an
+      object, this lands it in `fixture` because the table says so, rather than
+      in `go_back_to` because someone typed it here.
+
+      ⚠ **A capture with no possibility still falls back**, and it has to: a raw
+      capture has no kind, so there is nothing to derive from, and *Again?* is
+      the only question that can be asked of it. See *Have is still not
+      reachable* in the register for what is actually missing.
+    */
+    const kind = current.possibility?.kind ?? null
+    const spec = kind ? specFor(kind, current.capture.intent ?? DEFAULT_INTENT[kind]) : null
 
     const state = keep ? (spec?.landsIn ?? ('go_back_to' as const)) : ('done' as const)
 

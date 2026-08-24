@@ -6477,3 +6477,37 @@ surface, and a notification nobody can look at is noise with a delivery cost.
 **`upsertPossibility` is the one writer**, and `upsertItem` now delegates to it.
 Two copies of one upsert over one table is how two callers come to disagree about
 what a canonical row is — and `items` and `possibilities` are one table.
+
+### *Have* is unreachable, and the fix is a kind rather than a button (24 August)
+
+`STATE_WORD.fixture` is **Have**, it is in the tray and in `WHERE_IT_IS`, and
+nothing in the product can put a capture there. It needs `landsIn`, which needs a
+kind and an intention.
+
+**The intention is now derived.** `resolveCapture` reads
+`capture.intent ?? DEFAULT_INTENT[kind]` — see a film, read a book, try a place,
+own an object — which is §4's rule exactly: derive from kind + intent, never ask.
+⚠ **It changes nothing today**, because the only kind that exists is `film`,
+whose default is `see`, which lands in `go_back_to` — the same answer the
+hard-coded fallback gave. What it removes is the constant. The day a capture can
+be about an object it lands in `fixture` because the vocabulary table says so,
+rather than in `go_back_to` because someone typed it in a function.
+
+**The kind is the part that cannot be supplied here.** A capture acquires a kind
+by resolving to a possibility, and the only catalogue is TMDB, so every
+possibility is a film. What is missing is a kind that is not a film — user
+contributed possibilities or a second catalogue, a later sourced layer with its
+own provenance requirements.
+
+⚠ **The tempting wrong fix is a third settle answer.** *Again?* has two, and a
+raw capture genuinely cannot answer *have you got one now*. A third button would
+make the page ask a categorisation question, which §13 forbids, and would put
+`fixture` on captures with no kind — the state meaning *a thing you possess*,
+applied to a line of text. **A state nobody can reach is a smaller problem than a
+state that means nothing.**
+
+⚠ **The other tempting wrong fix is asking at capture**, which §13 forbids
+outright. The specification's own answer is that an intention can be refined
+later, and where that refinement lives is undesigned: the foot is full at five
+glyphs and no artboard draws one. That is the decision this waits on, not an
+implementation.

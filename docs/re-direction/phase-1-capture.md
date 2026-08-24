@@ -157,9 +157,11 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
    Postgres enum still reads `want`, `go_back_to`, `fixture`. ⚠ When that
    migration runs, **`PUBLIC_STATES` is re-derived rather than renamed** — see
    the warning under *The words*.
-8. **The types and intentions of §3**, which is what makes *Have* reachable
-   again: `landsIn` is a property of a kind and an intention, and a raw capture
-   has neither, so nothing new lands in `fixture` today.
+8. **The types and intentions of §3.** ⚠ **Half done, and the other half is
+   blocked on something this phase cannot ship.** The intention is now derived
+   and `'go_back_to'` is no longer a constant in `resolveCapture`; the kind is
+   still only ever `film`. See *Have is still not reachable* below — it names
+   what is missing rather than leaving it to be rediscovered.
 - ~~*`toLegacyEntryCards` dies*~~ — **done, and it was hiding rows.** See
   *What the shared page was not showing* below. It was filed as a cleanup and it
   was a correctness fix.
@@ -204,6 +206,46 @@ honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### Have is still not reachable, and this is what is missing — 24 August
+
+`STATE_WORD.fixture` is **Have**, it is in the tray, it is in `WHERE_IT_IS`, and
+nothing in the product can put a capture there. That was item 8 on this list,
+filed as *the types and intentions of §3*. Half of it is now done and the other
+half cannot be done here, so this section says which is which.
+
+**What `fixture` needs is `landsIn`, and `landsIn` needs a kind and an
+intention.**
+
+- ⚠ **The intention is derived, since 24 August.** `resolveCapture` reads
+  `capture.intent ?? DEFAULT_INTENT[kind]` — see a film, read a book, try a
+  place, own an object — which is §4's rule exactly: *derive the label from
+  kind + intent, never ask*. **It changes nothing today**, because the only kind
+  that exists is `film`, whose default is `see`, which lands in `go_back_to` —
+  the same answer the hard-coded fallback gave. What it removes is the constant:
+  the day a capture can be about an object, it lands in `fixture` because the
+  vocabulary table says so rather than because someone typed `'go_back_to'` in a
+  function.
+- ⚠ **The kind is not available and cannot be made available here.** A capture
+  acquires a kind by resolving to a possibility, and the only catalogue in the
+  product is TMDB. Every possibility is a film. **So the missing piece is a kind
+  that is not a film**, which means user-contributed possibilities or a second
+  catalogue — a later sourced layer with its own provenance requirements, named
+  in `CLAUDE.md` under *Release 1 exclusions* as out of scope for now.
+
+⚠ **The tempting wrong fix is a third settle answer.** *Again?* has two, and a
+raw capture genuinely cannot answer *have you got one now* — but adding *Have* as
+a third button would make the page ask a categorisation question, which §13
+forbids, and would put `fixture` on captures with no kind, which is the state
+meaning *a thing you possess* applied to a line of text. **Do not do it to make
+the word reachable.** A state nobody can reach is a smaller problem than a state
+that means nothing.
+
+⚠ **The other tempting wrong fix is asking at capture.** §13 is explicit: the UI
+must not ask the user to choose an intention before saving. The specification's
+own answer is that an intention *can be refined later*, and **where that
+refinement lives is undesigned** — the page's foot is full, and no artboard draws
+one. That is the decision this is waiting on, not an implementation.
 
 ### Resolution offers — 24 August
 
