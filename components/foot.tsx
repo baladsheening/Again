@@ -89,10 +89,8 @@ export function Foot({
         recede's `translate` is the only thing that moves this element, and
         `will-change` names one property.
       */
-      className={`gutter fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] ease-[var(--ease-recede)] will-change-[translate] ${
-        receded
-          ? 'translate-y-full duration-[var(--recede-out)]'
-          : 'duration-[var(--recede-in)]'
+      className={`gutter fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] will-change-[translate] ${
+        receded ? 'translate-y-full' : ''
       }`}
     >
       {/* The foot's own glyph size, declared on the row — see `--glyph-foot`. */}

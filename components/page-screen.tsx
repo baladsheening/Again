@@ -579,7 +579,7 @@ export function PageScreen({
           input.current?.blur()
           setWriting(false)
         }}
-        className={`fixed inset-0 z-5 transition-opacity duration-[var(--recede-in)] ease-[var(--ease-recede)] ${
+        className={`fixed inset-0 z-5 transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
           writing
             ? 'bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
             : 'pointer-events-none opacity-0'
@@ -718,10 +718,16 @@ export function PageScreen({
             containing block is the viewport because no ancestor carries a
             transform — **do not put one on `main` or on `host`**.
           */
-          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-pad))] pb-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] ease-[var(--ease-recede)] ${
-            receded
-              ? 'duration-[var(--recede-out)]'
-              : 'translate-y-[var(--bar-visible)] duration-[var(--recede-in)]'
+          /*
+            ⚠ **The band never leaves — it slides between two resting positions**,
+            up into the space the bar vacates and back down when the bar returns.
+            Both of its moves are arrivals, which is why an exit curve was never
+            going to be right for it even when the bar was getting one. It shares
+            the bar's single duration and curve, because the two are one piece of
+            furniture moving.
+          */
+          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-pad))] pb-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+            receded ? '' : 'translate-y-[var(--bar-visible)]'
           }`}
         >
           <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
@@ -859,7 +865,7 @@ export function PageScreen({
           and two recedes stacked sink it twice as far as either one means.
         */}
         <ol
-          className={`flex flex-col transition-opacity duration-[var(--recede-in)] ease-[var(--ease-recede)] ${
+          className={`flex flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
             draft !== '' && !writing ? 'record-held' : ''
           }`}
         >

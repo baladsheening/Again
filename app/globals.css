@@ -1206,31 +1206,56 @@
   );
 
   /**
-   * **How long the chrome takes to go, and to come back — and they are not the
-   * same.**
+   * **How long the chrome takes to go, and to come back. One number for both.**
    *
-   * ⚠ **Going is quicker than coming back, which is the opposite of what looks
-   * right written down.** Leaving is a reply to a gesture the finger is still
-   * making: anything slower reads as the chrome hesitating over whether it was
-   * asked. Returning is not a reply to anything — the flick is over by the time
-   * it starts — so it has room to settle, and a bar that snapped back into place
-   * would read as a jolt on a page that is otherwise still.
+   * ─────────────────────────────────────────────────────────────────────────
+   *  It was two, and hardware overruled the argument for two — 24 August
+   * ─────────────────────────────────────────────────────────────────────────
    *
-   * ⚠ **The whole chrome shares each number.** Both bars and the band move on
-   * the same one in the same direction, because they are one piece of furniture
-   * moving; two durations would be three elements agreeing by coincidence.
+   * It was `--recede-out: 240ms` against `--recede-in: 340ms`, on this reasoning,
+   * which is kept because it is the thing that was wrong:
    *
-   * ⚠ **They are paired with `--ease-recede` and mean nothing without it.** Most
-   * of the travel happens in the first third of either number, so read them as
-   * *when it has arrived*, not as how long it is moving. 200ms of `ease-out` was
-   * the previous answer to both directions and read as a slab sliding.
+   * > Going is quicker than coming back, which is the opposite of what looks
+   * > right written down. Leaving is a reply to a gesture the finger is still
+   * > making: anything slower reads as the chrome hesitating over whether it was
+   * > asked.
    *
-   * `prefers-reduced-motion` cuts both to 0.01ms with every other transition,
-   * which leaves the behaviour and removes the travel — right, since receding is
-   * about the space, not the movement.
+   * **Judged on a handset: the return is right and the exit is not — too quick,
+   * read as the bar vanishing rather than leaving.** The hesitation that 240ms
+   * was protecting against never turned up; the abruptness it bought did. So the
+   * exit takes the return's length, and the two tokens **collapse into one rather
+   * than being set equal**, because two names that have to stay the same number
+   * are a drift waiting to happen.
+   *
+   * ⚠ **Do not re-split this to tune one direction.** The split existed for a
+   * desk argument that hardware contradicted; reintroducing it needs a *hardware*
+   * reason, stated here. If the recede now reads sluggish, move this one number —
+   * both directions are supposed to move together.
+   *
+   * ⚠ **A mirrored exit curve was built first and measured before it shipped.**
+   * If the exit ever wants to *accelerate* away rather than settle, the mirror of
+   * `--ease-recede` is not the answer: a quintic ease-in covers **0% of the
+   * travel by 80ms and 2% by 160ms** of a 240ms exit, which is the same
+   * hesitation the old note feared, arriving from the other side.
+   * `node_modules/.probe/exitcurves.mjs` has the table — linear, material
+   * accelerate, quad, cubic and quintic — and the reading that matters is that
+   * every curve measures 0% at 40ms, because the first frames are the scroll
+   * reaching a render and belong to no curve at all.
+   *
+   * ⚠ **The whole chrome shares it.** Both bars and the band move on the same
+   * number, because they are one piece of furniture moving; separate durations
+   * would be three elements agreeing by coincidence.
+   *
+   * ⚠ **Paired with `--ease-recede` and meaningless without it.** Most of the
+   * travel happens in the first third, so read this as *when it has arrived*,
+   * not as how long it is moving. 200ms of plain `ease-out` was the answer before
+   * either of these and read as a slab sliding.
+   *
+   * `prefers-reduced-motion` cuts it to 0.01ms with every other transition, which
+   * leaves the behaviour and removes the travel — right, since receding is about
+   * the space, not the movement.
    */
-  --recede-out: 240ms;
-  --recede-in: 340ms;
+  --recede: 340ms;
 
   /**
    * The curve the chrome moves on: **over half the distance in the first third,
@@ -1249,11 +1274,20 @@
    * then eases into place over the rest of the time. Fast, then slow, and the
    * slow half is what makes it read as smooth rather than as quick.
    *
-   * ⚠ **One curve for all four movers** — the bar, the foot, the band taking the
-   * bar's place, and the writing pane's fade. Two curves would be two systems,
-   * and the eye reads the disagreement long before it reads either curve.
+   * ⚠ **One curve, both directions, all four movers** — the bar, the foot, the
+   * band taking the bar's place, and the writing pane's fade. Two curves would be
+   * two systems, and the eye reads the disagreement long before it reads either
+   * curve.
+   *
+   * ⚠ **A separate exit curve was built on 24 August and measured before it
+   * shipped, and the measurement is why there is still only one.** See
+   * `--recede` for the numbers: the obvious candidate — this quintic mirrored,
+   * so the exit accelerates away instead of settling — covers 0% of the travel by
+   * 80ms. What the handset actually wanted was not a different shape but a longer
+   * exit, which is what `--recede` now is.
    */
   --ease-recede: cubic-bezier(0.22, 1, 0.36, 1);
+
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -2513,7 +2547,7 @@
     pointer-events: none;
     opacity: 1;
     background-image: var(--row-light-idle);
-    transition: opacity var(--recede-in) var(--ease-recede);
+    transition: opacity var(--recede) var(--ease-recede);
   }
 }
 
@@ -2529,7 +2563,7 @@
  * keyed to focus would open dim and never change. `writing` is the
  * gesture-driven mode, which on a handset is exactly "the keyboard is up".
  *
- * It fades on `--recede-in` rather than snapping, and shares the chrome's curve:
+ * It fades on `--recede` rather than snapping, and shares the chrome's curve:
  * the light going down is part of the same movement as the pane arriving over
  * the record, and two timings there would read as two things happening.
  */

@@ -51,10 +51,13 @@ Four features were keyed to focus and all four broke for one reason: the live
 line carries `autoFocus`, so **focus is the resting state of that page, not an
 event**. Everything reads `writing`, which is a gesture.
 
-⚠ **The open item is the chrome's exit.** The recede's arrival is right; its
-leaving is not, judged on hardware on 24 August. Both directions share one curve
-today, so the fix has to decide whether one curve still holds. See *The chrome's
-exit* in the Phase 1 register.
+⚠ **The chrome recedes and returns on one duration and one curve** —
+`--recede` at 340ms on `--ease-recede`. It was 240ms out against 340ms in, on a
+desk argument that leaving must not hesitate; a handset judged the exit too quick
+on 24 August, so the tokens **collapsed into one rather than being set equal**.
+Re-splitting them needs a hardware reason, stated in the token. A mirrored exit
+curve was built first and measured before it could ship — it covers 0% of the
+travel by 80ms, which is the same hesitation from the other side.
 
 ⚠ **The four-second capture is still a claim** — nobody has stopwatched it, and
 it is **set aside at the user's direction (24 August)**, not done. It is the last

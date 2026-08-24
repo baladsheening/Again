@@ -32,10 +32,11 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > answered* because it is the honest statement of what the page has and has not
 > proved.
 >
-> ⚠ **The one thing the page needs and does not have: the chrome's exit.** The
-> recede's *arrival* is right and settled. Its *leaving* is not — judged on
-> hardware, 24 August. See *The chrome's exit* below; it is the open UX item and
-> nothing else in the phase is ahead of it.
+> ⚠ **The chrome's exit was the open UX item and it is closed.** The recede was
+> judged too quick on hardware on 24 August; the exit took the return's length,
+> and the two duration tokens collapsed into one `--recede`. See *The chrome's
+> exit* below — including the mirrored exit curve that was built first and
+> measured before it could ship.
 >
 > ⚠ The installed app **never reloads until it is force-quit** — check which
 > build is running before believing anything seen on it.
@@ -120,16 +121,15 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 
 ### Still to build, in the order it wants doing
 
-1. **The chrome's exit.** The one thing the page needs that is not a new
-   feature — see *The chrome's exit* below. Judged on hardware on 24 August:
-   the arrival is right, the leaving is not.
+**Two items came off this list on 24 August and neither was built.** ~~*The
+chrome's exit*~~ was **done** — see that section below. ~~*The four-second
+capture, with a stopwatch*~~ is ⚠ **set aside at the user's direction and is not
+done**; this register does not claim it is. It was item 1. The reasoning is kept
+under *What hardware answered*, unchanged, because it is still the honest account
+of what the page has and has not proved, and anyone reopening Phase 1's
+acceptance starts there.
 
-   ~~**The four-second capture, with a stopwatch.**~~ ⚠ **Set aside at the
-   user's direction, 24 August.** It was item 1 and it is not done — this
-   register does not claim it is. The reasoning is kept under *What hardware
-   answered*, unchanged, because it is still the honest account of what the page
-   has and has not proved. Anyone reopening Phase 1's acceptance starts there.
-2. **Editing a committed line.** The second tap picks and does not edit, because
+1. **Editing a committed line.** The second tap picks and does not edit, because
    *where* the edit happens is the one thing this document leaves open and there
    is no mutation for it. Needs `setCaptureText` in `lib/db/captures.ts` — text
    only, owner-filtered, and it must not touch provenance or state.
@@ -201,50 +201,41 @@ already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
 
-### The chrome's exit — the open UX item
+### The chrome's exit — asked and answered, 24 August
 
-**Judged on hardware, 24 August: the arrival is right and the leaving is not.**
-That verdict is a split down the middle of one mechanism, which is what makes it
-worth writing down rather than fixing on sight.
+**Judged on hardware: the arrival was right and the leaving was not** — too
+quick, reading as the bar *vanishing* rather than leaving. **The exit now takes
+the return's length, and the two duration tokens collapsed into one `--recede`
+at 340ms.** One curve, one duration, four movers.
 
-What is there now, from `4b2e5bd`: **one curve, two durations, four movers.**
-`--ease-recede` is `cubic-bezier(0.22, 1, 0.36, 1)`, a quintic ease-out — over
-half the travel in the first third, then a long settle. It goes out in
-`--recede-out` 240ms and comes back in `--recede-in` 340ms, and both bars, the
-band taking the bar's place, and the writing pane's fade all share them.
+⚠ **The desk's argument for the asymmetry is what hardware overruled**, and it is
+kept in `--recede` because it is the thing that was wrong:
 
-The reasoning for the asymmetry, which is the thing any fix has to answer:
+> Going is quicker than coming back, which is the opposite of what looks right
+> written down. Leaving is a reply to a gesture the finger is still making, and
+> anything slower reads as the chrome hesitating over whether it was asked.
 
-> **Going is quicker than coming back**, which is the opposite of what looks
-> right written down. Leaving is a reply to a gesture the finger is still making,
-> and anything slower reads as the chrome hesitating over whether it was asked.
-> Returning is not a reply to anything — the flick is over before it starts — so
-> it has room to settle, and a bar that snapped back into place would be a jolt
-> on a page that is otherwise still.
+The hesitation 240ms was protecting against never turned up; the abruptness it
+bought did. ⚠ **The tokens collapsed rather than being set equal** — two names
+that have to stay the same number are a drift waiting to happen — and
+**re-splitting them needs a hardware reason, stated in the token.** If the recede
+now reads sluggish, that is one number and it moves both directions together.
 
-Measured from the *gesture* rather than from the transition, which is the honest
-way round since a scroll needs a frame or two to reach a render: **52% of the
-travel by 86ms of 240 going, 55% by 111ms of 340 coming back**, against a linear
-33%. `node_modules/.probe/motion.mjs` samples the bar frame by frame in both
-directions and is the instrument to re-run against any change.
+⚠ **The obvious fix was built first and the measurement is why it did not ship.**
+The reading *arrival good, exit bad* looks like a curve problem, since an ease-out
+decelerates into its own disappearance — so the exit got the mirror of the
+arrival's quintic, to accelerate away instead. Measured, that covers **0% of the
+travel by 80ms and 2% by 160ms** of a 240ms exit: the same hesitation the old note
+feared, arriving from the other side. `node_modules/.probe/exitcurves.mjs` has the
+table for linear, material accelerate, quad, cubic and quintic.
 
-⚠ **Both directions are the same curve today, so the leaving cannot be changed
-without deciding whether one curve still holds.** The argument for one was that
-*two curves would be two systems and the eye reads the disagreement long before
-it reads either curve* — which is a real constraint on the fix, not a detail. If
-the exit needs its own shape, that argument is what has to be beaten, and the
-answer belongs here.
+⚠ **Every curve measures 0% at 40ms**, and that number belongs to no curve: it is
+the frame or two a scroll needs to reach a render. Read any of these figures from
+the *gesture*, not from the transition, or the latency is charged to the easing.
 
-⚠ **The durations are tokens and the utilities are per-direction on purpose.**
-Each direction emits its own `duration-*` rather than one on the base and an
-override on the state: two utilities for one property are resolved by their order
-in the compiled sheet, which a class attribute has no way to state.
-
-⚠ **What is *not* known** is which part of the leaving is wrong — the speed, the
-curve's shape, the fact that all four movers leave together, or the trigger.
-Nobody has separated them, and the four movers sharing one timing means a change
-aimed at the bar lands on the band and the pane as well. That is the first thing
-to establish, and it is a question for a handset rather than for the desk.
+`node_modules/.probe/motion.mjs` is the instrument for any future change — it
+samples the bar frame by frame in both directions. After the collapse: **66.7% of
+the travel by 120ms going, 54.6% by 116ms coming back**, both of 340.
 
 ### The deviations now standing
 
