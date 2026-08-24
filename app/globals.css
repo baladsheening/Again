@@ -1092,6 +1092,27 @@
   );
 
   /**
+   * **The bar without the notch** — how far it stands off the top of the *glass*
+   * rather than off the top of the document.
+   *
+   * ⚠ **It exists because the band gets the inset wrong the other way round.**
+   * The live band is pinned at `top: 0` and slides down by the bar's height
+   * while the bar is shown; when the bar recedes it slides back to zero, and on
+   * an installed app zero is **under the status bar and the notch**, which is
+   * where the words ended up. The band therefore carries
+   * `env(safe-area-inset-top)` in its own padding — permanently, so the notch is
+   * cleared whether or not the bar is there — and what it slides by is this,
+   * which is the bar's height with that inset already spoken for. Slide by
+   * `--bar-height` on top of a padding that already holds the inset and the
+   * notch is paid for twice.
+   *
+   * Its glass still starts at zero, so the record is never visible in the strip
+   * behind the status bar. That is the whole point of paying for the inset with
+   * padding rather than with position.
+   */
+  --bar-visible: calc(var(--bar-lead) + var(--bar-row) + var(--bar-tail));
+
+  /**
    * ⚠ **The foot's own inset is the whole home-indicator inset**, unlike
    * `--collections-inset`, which subtracts a centimetre from it. The collections
    * bar this replaces was a band of labels sitting off the bottom edge; the foot
@@ -1107,16 +1128,18 @@
    * record it was spending a line of it on nothing.
    *
    * **What sets the floor is the thumb, not the look**, and 24 August spent it
-   * down to the last two pixels. `--tap-floor` is 44px centred on the glyph, so
-   * the shortest honest foot is 9 + 26 + 9 = 44: below that the hit area hangs
-   * out of the bar and over the record, and taps meant for the last line land on
-   * the camera. **12 + 26 + 10 = 48**, and the area spans 3px–47px inside it.
+   * to the floor exactly. `--tap-floor` is 44px centred on the glyph, so the
+   * shortest honest foot is 9 + 26 + 9 = **44, and that is what this is** — the
+   * hit area spans 0–44 inside 44px of foot, flush at both edges.
    *
-   * ⚠ **There is no third cut in this.** The next 4px puts a thumb on the
-   * record, and the fix then is not a smaller foot — it is fewer glyphs in it.
+   * ⚠ **This is the end of the road, and the arithmetic says so.** 72 became 56,
+   * then 48, and now 44; the next pixel pushes the 44px hit area out of the bar
+   * and over the record, so taps meant for the last line start landing on the
+   * camera. **A shorter foot from here is a smaller glyph or fewer glyphs**, and
+   * both are decisions of a different kind. Do not take it below `--tap-floor`.
    */
-  --foot-lead: 0.75rem;
-  --foot-tail: 0.625rem;
+  --foot-lead: 0.5625rem;
+  --foot-tail: 0.5625rem;
   --foot-height: calc(
     var(--foot-lead) + var(--foot-row) + var(--foot-tail) + env(safe-area-inset-bottom)
   );
@@ -2359,8 +2382,8 @@
    */
   @media (min-width: 45rem) {
     :root {
-      --foot-lead: 0.875rem;
-      --foot-tail: 0.75rem;
+      --foot-lead: 0.75rem;
+      --foot-tail: 0.625rem;
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
     }

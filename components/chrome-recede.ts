@@ -3,53 +3,48 @@
 import { useEffect, useState } from 'react'
 
 /**
- * Both bars go when the record is being read, and come back at either end of it.
+ * Both bars go when the record is being read, and come back at either end of it
+ * or on a flick upward.
  *
  * **The bars are furniture on a page whose product is the record.** Reading back
  * is the one thing the page does where none of the seven controls can act:
- * nothing is picked, and the chrome is a hundred pixels of glass holding glyphs
- * that are all off. So it leaves, and it is there again wherever the record
- * stops — the top, the end, or a line picked.
+ * nothing is picked, and the chrome is glass holding glyphs that are all off. So
+ * it leaves — and the live band stays, because that one can always act.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- *  There is no scroll handler here, and that is the fix
+ *  The flick came back, and this time it reads the record rather than the page
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **Two versions of this watched the scroll direction, and both were reported
- * flickering on a handset**: the bars receding, returning, receding again, over
- * and over until the scroll came to a halt. The second version was the first
- * with a smaller threshold and a cheaper reading, and it changed nothing — which
- * is the evidence that mattered. **The threshold was never the problem. The
- * signal was.**
+ * ⚠ **Two versions of this watched the scroll direction and both were reported
+ * flickering on a handset** — the bars receding, returning, receding again,
+ * until the scroll came to a halt. Direction detection was then removed
+ * entirely, and asked for again, so it is back on a different signal. The
+ * distinction is the whole of this file:
  *
- * `window.scrollY` is not a description of what the reader can see. In a Safari
- * tab the address bar collapses as you scroll, the layout viewport grows under
- * the content, and the number moves *backwards* while the page is still going
- * down. To a direction detector that is a flick upward, so the chrome comes
- * back; the next frames are downward again, so it leaves. Repeat for as long as
- * the momentum lasts. No threshold survives that, because the false movement is
- * as large as the real movement — and a threshold big enough to swallow it would
- * be a number tuned to outlast one platform's animation, which `CLAUDE.md` rules
- * out by name.
+ * **What made it flicker was never the threshold.** It was `window.scrollY`, and
+ * it was `--keyboard-overlap`. Neither describes what a reader can see. In a
+ * Safari tab the address bar collapses as you scroll: the layout viewport grows
+ * under the content, `scrollY` moves *backwards* while the page is still going
+ * down, and the gap `--keyboard-overlap` measures opens and closes for the
+ * length of the animation. A direction detector reads both as a flick upward, so
+ * the chrome comes back; the next frames are downward again, so it leaves.
+ * Repeat until the momentum stops. No threshold survives that, because the false
+ * movement is as large as the real movement.
  *
- * So direction detection is gone. **Where you are is a fact; which way you are
- * going was a guess about a moving number.** Two `IntersectionObserver`s on two
- * zero-height marks — the top of the document and the end of the record — and
- * the chrome is present when either is on screen. Crossing an edge is a thing
- * that happens once per gesture, so there is nothing left that can oscillate.
- * `CLAUDE.md` asks for the mechanism to be removed before the condition and the
- * condition before the correction; this is the mechanism.
+ * **So the signal is a rendered box.** `top` is a mark in the document's own
+ * flow, and its position on the glass is what the reader actually sees move: it
+ * does not care what the browser is doing with viewport units, address bars or
+ * keyboards. That is the old keyboard pin's lesson — *it measures, it does not
+ * calculate* — applied to the one number this hook needs.
  *
- * It also costs nothing: no `scroll` listener, no frame loop, no
- * `getBoundingClientRect`, no reading of `innerHeight` or `scrollHeight`. The
- * one gesture the page cannot afford to drop frames during now has no JavaScript
- * on it at all.
+ * ⚠ **And the retracement is measured from the extremum, not from the last
+ * frame.** A wobble of a few pixels inside a descent counts against the furthest
+ * point reached rather than resetting a running total, so it takes a real pull
+ * back to turn the chrome around. That is hysteresis, not a bigger number.
  *
- * ⚠ **What it trades is the flick back.** A scroll upward in the middle of the
- * record no longer returns the bars; reaching either end does, and so does
- * tapping. That is not a loss of reach — **tapping the paper scrolls to the
- * caret**, which is the top, and **tapping a line picks it**, which holds the
- * chrome down by `held`. Both were already the page's two gestures.
+ * ⚠ **`--keyboard-overlap` is not consulted, and must not be.** It is honest
+ * about what it measures and it is not a keyboard detector — see
+ * `keyboard-hem.ts`. There is deliberately no `keyboardUp` helper in the tree.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  Nothing moves that could take a control with it
@@ -64,26 +59,30 @@ import { useEffect, useState } from 'react'
  * ⚠ **A picked line, and not a focused one — the difference was measured.** This
  * held on `focused` for an afternoon, and on the desk that meant it never
  * receded at all: the live line carries `autoFocus`, so the page opened held and
- * stayed held. It was *unstable* too, because whether React saw the focus
- * depended on whether the autofocus beat hydration. **A hold that means
- * something different on two of the four surfaces is the defect `CLAUDE.md`
- * names.**
+ * stayed held. It was unstable too, because whether React saw the focus depended
+ * on whether the autofocus beat hydration. **A hold that means something
+ * different on two of the four surfaces is the defect `CLAUDE.md` names.**
  *
- * The keyboard it was standing in for needs no clause of its own any more.
- * Everything that raises one goes through `write`, which scrolls to the caret
- * first — and the caret is at the top, where the chrome is present by this
- * hook's own rule.
- *
- * ⚠ **Nothing else moves the foot any more.** `useKeyboardPin` used to lift it
- * onto the keyboard's top edge; that is deleted — see `keyboard-hem.ts` — so
- * this hook's `translate` is the only writer. **Do not add a second one.**
+ * ⚠ **Nothing moves the foot but this.** The keyboard pin used to lift it onto
+ * the keyboard's top edge; that is deleted, so this hook's `translate` is the
+ * only writer on that element. **Do not add a second one.**
  *
  * ⚠ **Nothing reflows.** The page's top padding and `page-hem` still reserve the
- * full height of both bars, so the record does not move when they leave. A page
- * that reflowed under a thumb mid-scroll would be the same defect the landing
- * blink is written to avoid, and worse — the reflow would move the very line
- * being read.
+ * full height of both bars, so the record does not move when they leave.
  */
+
+/**
+ * How far the record has to come back before the bars do.
+ *
+ * **A gesture, not a device measurement** — the same pull on all four surfaces,
+ * which is the test `CLAUDE.md` sets. Big enough that settling a thumb is not a
+ * request, small enough that one flick is.
+ *
+ * ⚠ **This number is not what went wrong twice.** The signal was; see the head
+ * of this file. Changing it is a matter of feel and nothing else, and it can be
+ * changed without any of that argument being reopened.
+ */
+const FLICK = 40
 
 /**
  * Watch one zero-height mark, and say whether it is on screen.
@@ -120,12 +119,16 @@ export function useChromeRecede({
   /** Something on screen can act — which on this page means a line is picked. */
   held: boolean
   /**
-   * A mark at the very top of the document.
+   * A mark at the very top of the document, and this hook's only instrument.
    *
    * **On screen means the record has not been scrolled**, and the chrome stays.
    * It is the first thing in the document rather than the first thing under the
-   * bar, so the bars answer the first pixel of a scroll — which is the least
-   * travel there is, and what was asked for twice.
+   * bar, so the bars answer the first pixel of a scroll — the least travel there
+   * is, which is what was asked for.
+   *
+   * **Its distance above the glass is also the scroll position**, measured off a
+   * rendered box instead of taken from `window.scrollY`. That is what the flick
+   * detector reads, and why it cannot be lied to by an address bar.
    */
   top: React.RefObject<HTMLElement | null>
   /**
@@ -140,6 +143,74 @@ export function useChromeRecede({
   /* Shown on arrival: the page opens at the top, which is this mark's own state. */
   const atTop = useOnScreen(top, true)
   const atEnd = useOnScreen(end, false)
+  /** Asked back by a flick, until a push the other way of the same size. */
+  const [recalled, setRecalled] = useState(false)
 
-  return !held && !atTop && !atEnd
+  useEffect(() => {
+    const mark = top.current
+    if (!mark) return
+
+    /** How far the record has travelled up the glass. A fact, not a viewport. */
+    const travel = () => -mark.getBoundingClientRect().top
+
+    /** The furthest point reached in the direction that currently governs. */
+    let extreme = travel()
+    /** A local mirror, so a frame never has to wait for a render to know. */
+    let shown = false
+    let frame = 0
+
+    const read = () => {
+      frame = 0
+      const y = travel()
+
+      /*
+        The top is not a flick, it is arrival — and it resets the machine, so
+        that leaving the top hides the chrome on the first pixel again rather
+        than asking for a whole pull.
+      */
+      if (y <= 0) {
+        extreme = 0
+        if (shown) {
+          shown = false
+          setRecalled(false)
+        }
+        return
+      }
+
+      if (shown) {
+        /* Watching for a push back down of the same size. */
+        if (y < extreme) extreme = y
+        else if (y - extreme > FLICK) {
+          extreme = y
+          shown = false
+          setRecalled(false)
+        }
+      } else {
+        if (y > extreme) extreme = y
+        else if (extreme - y > FLICK) {
+          extreme = y
+          shown = true
+          setRecalled(true)
+        }
+      }
+    }
+
+    /*
+      One read per frame. `scroll` fires far more often than that on every one of
+      the four surfaces, and this reads layout — so coalescing is what keeps a
+      single `getBoundingClientRect` off the critical path instead of one per
+      event.
+    */
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(read)
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', schedule)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [top])
+
+  return !held && !atTop && !atEnd && !recalled
 }

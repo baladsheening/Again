@@ -554,14 +554,24 @@ export function PageScreen({
             colour. See `--band-tint` for the argument and `--band-height` for
             why the box is derived from the line rather than chosen.
 
+            ⚠ **The notch is paid for in padding, not in position**, because
+            the band has to clear it in *both* states and only one of them has a
+            bar overhead. It shipped sliding to `top: 0` with no inset of its own
+            and the words ended up tucked under the status bar the moment the bar
+            receded. So the inset lives in `padding-top` permanently, the glass
+            still starts at zero — the record is never visible in the strip
+            behind the status bar — and what it slides by is `--bar-visible`, the
+            bar's height with the inset already spoken for. See that token: slide
+            by `--bar-height` instead and the notch is paid for twice.
+
             ⚠ **`fixed` inside `main`, deliberately.** It keeps the input inside
             the landmark and ahead of the record in reading order, which is where
             it belongs; out of flow, it takes nothing from the flex column. The
             containing block is the viewport because no ancestor carries a
             transform — **do not put one on `main` or on `host`**.
           */
-          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] py-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out ${
-            receded ? '' : 'translate-y-[var(--bar-height)]'
+          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-pad))] pb-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out ${
+            receded ? '' : 'translate-y-[var(--bar-visible)]'
           }`}
         >
           <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
