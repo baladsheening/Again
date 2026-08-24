@@ -13,7 +13,7 @@ import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar } from './bar'
 import { useChromeRecede } from './chrome-recede'
 import { Foot } from './foot'
-import { useKeyboardPin } from './keyboard-pin'
+import { useKeyboardHem } from './keyboard-hem'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -171,15 +171,13 @@ export function PageScreen({
 
   const input = useRef<HTMLInputElement>(null)
   const host = useRef<HTMLDivElement>(null)
-  const foot = useRef<HTMLElement>(null)
-  const footAnchor = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
   /** The two ends of the record, watched so the bars are there at both. */
   const topMark = useRef<HTMLDivElement>(null)
   const endMark = useRef<HTMLDivElement>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useKeyboardPin({ focused, foot, footAnchor, host, floorAnchor })
+  useKeyboardHem({ focused, host, floorAnchor })
 
   /*
     ⚠ **A picked line is the hold, and focus deliberately is not.** The foot is
@@ -466,7 +464,7 @@ export function PageScreen({
 
       {/*
         The floor of the layout viewport, as a thing that can be measured — see
-        `useKeyboardPin`. Zero height, no paint, no hit area: it exists to be
+        `useKeyboardHem`. Zero height, no paint, no hit area: it exists to be
         read.
       */}
       <div
@@ -474,13 +472,6 @@ export function PageScreen({
         aria-hidden
         className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
       />
-      {/* The foot's resting position, untransformed. Same reason. */}
-      <div
-        ref={footAnchor}
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
-      />
-
       {/*
         ⚠ **The page box is the screen, and `svh` is not the screen.**
         `100svh` in an installed app is the screen *less* the status-bar band —
@@ -777,7 +768,6 @@ export function PageScreen({
 
       <Foot
         receded={receded}
-        footRef={foot}
         crossOff={
           pickedLine
             ? {

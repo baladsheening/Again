@@ -7,6 +7,15 @@ import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  * **The foot: the tools.** Cross off, settle, camera, search — **the same four
  * at every width**, including the desk.
  *
+ * ⚠ **It does not sit above the keyboard, and that is the design.** It used to:
+ * `useKeyboardPin` held it on the keys' top edge, which spent a bar's worth of a
+ * shrunken screen on four glyphs that are **all off while somebody is writing** —
+ * cross off and settle are `null` with nothing picked, and the camera and search
+ * are not built. Picking a line blurs the live one, so the foot is never wanted
+ * while a keyboard is up. It stays at the bottom of the layout viewport now,
+ * which on iOS means behind the keys, which is where it belongs. See
+ * `keyboard-hem.ts`.
+ *
  * ⚠ **No rule above it.** The scrolling page reserves the foot's own height at
  * its bottom (`page-hem` in globals.css), so a line always comes to rest above
  * the glyphs rather than sliding under them. A `border-t` was correcting for a
@@ -44,12 +53,10 @@ import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  * they go back to.
  */
 export function Foot({
-  footRef,
   crossOff,
   settle,
   receded = false,
 }: {
-  footRef: React.RefObject<HTMLElement | null>
   /**
    * Off the bottom of the glass while the record is being read — see
    * `useChromeRecede`.
@@ -75,15 +82,14 @@ export function Foot({
 }) {
   return (
     <footer
-      ref={footRef}
       /*
-        `will-change` names **both** properties, because two things move this
-        element and they are not the same one: `useKeyboardPin` writes
-        `transform` every frame for the length of a keyboard's arrival, and the
-        recede is a Tailwind `translate`. That they are separate properties is
-        what stops them overwriting each other — see `chrome-recede.ts`.
+        ⚠ **One mover, since 24 August.** `useKeyboardPin` used to write
+        `transform` here every frame a keyboard was arriving, to hold the foot on
+        the keyboard's top edge. That is gone — see `keyboard-hem.ts` — so the
+        recede's `translate` is the only thing that moves this element, and
+        `will-change` names one property.
       */
-      className={`gutter fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out will-change-[transform,translate] ${
+      className={`gutter fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out will-change-[translate] ${
         receded ? 'translate-y-full' : ''
       }`}
     >

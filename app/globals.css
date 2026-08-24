@@ -1472,7 +1472,7 @@
  * Clearance at the foot of a scrolling page: the fixed furniture, the home
  * indicator, and — while a software keyboard is open — the keyboard.
  *
- * `--keyboard-overlap` is written onto `#scroll-root` by `useKeyboardPin` and
+ * `--keyboard-overlap` is written onto `#scroll-root` by `useKeyboardHem` and
  * inherits down to whatever wears this. **It is measured, not assumed**: the
  * distance between the bottom of the layout viewport and the bottom of the
  * visible area, which is zero whenever there is no keyboard.
@@ -1927,7 +1927,7 @@
  * ⚠ **Nothing may render a `style` attribute.** `no-restricted-syntax` in
  * `eslint.config.mjs` enforces it. Writing `el.style.x` from JS is unaffected —
  * CSP governs the parsing of attributes, not the CSSOM — which is what
- * `useKeyboardPin` relies on.
+ * `useKeyboardHem` relies on.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  Why the box is trimmed at all (9 August)
@@ -2277,7 +2277,7 @@
  * `border-t` was correcting for a collision this prevents outright, and Notes
  * has none either — space does the separating.
  *
- * `--keyboard-overlap` is measured and written on by `useKeyboardPin`, and is
+ * `--keyboard-overlap` is measured and written on by `useKeyboardHem`, and is
  * zero whenever there is no keyboard. Without it the last line of a long page
  * cannot be reached on iOS, which does not shrink the layout viewport for a
  * keyboard — see the utility `safe-bottom` and app/layout.tsx.

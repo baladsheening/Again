@@ -74,10 +74,9 @@ import { useEffect, useState } from 'react'
  * first — and the caret is at the top, where the chrome is present by this
  * hook's own rule.
  *
- * ⚠ **It cannot fight `useKeyboardPin`.** That hook writes `transform` to the
- * foot; this is a Tailwind `translate-y`, and in Tailwind v4 those compile to
- * the standalone **`translate`** property. Two properties, composed by the
- * browser in a fixed order, neither able to overwrite the other.
+ * ⚠ **Nothing else moves the foot any more.** `useKeyboardPin` used to lift it
+ * onto the keyboard's top edge; that is deleted — see `keyboard-hem.ts` — so
+ * this hook's `translate` is the only writer. **Do not add a second one.**
  *
  * ⚠ **Nothing reflows.** The page's top padding and `page-hem` still reserve the
  * full height of both bars, so the record does not move when they leave. A page
