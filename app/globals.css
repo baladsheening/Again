@@ -2235,6 +2235,59 @@
 }
 
 /**
+ * **Words that are not in the record yet.** The live line while it holds a draft
+ * nobody has committed.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Italic is the record's own answer to a question of state
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The symptom: type a line, tap away without pressing Return, and the words stay
+ * in the pinned band with the keyboard gone — where they read as one more line
+ * of the record, in the same size, face and colour as every line under them. The
+ * band's light says *this row is live*; it does not say *these particular words
+ * are not saved*.
+ *
+ * ⚠ **Italic, and it is a rule rather than a badge: italic is not in the record,
+ * roman is.** Pressing Return turns one into the other, so the vocabulary
+ * teaches itself the first time somebody uses it and needs no legend, no icon
+ * and no word of copy. It holds while the line is being typed as well, which is
+ * the same claim made continuously rather than a state that appears when you
+ * look away.
+ *
+ * ⚠ **Type, because §11 says type is the entire design** — and because the three
+ * other ways to say this are all spent or ruled out. Colour is not available:
+ * `--color-chrome` means *a control* and `--color-accent` is held for overlap,
+ * and a third meaningful colour was deleted once already. Dimming is the
+ * crossed-off vocabulary, and worse, it was measured to read as *the app
+ * doubting what it has already promised* — which is the exact opposite of what
+ * an unsent line should say. A rule, a box or a badge are ruled out where
+ * `picked` is defined, for the reasons written there.
+ *
+ * ⚠ **It costs no layout.** The live line is a single-line `<input>`, so italic
+ * cannot rewrap anything, and the row's height comes from `page-line` rather
+ * than from the glyphs. **One line is one line** whatever face it is set in.
+ *
+ * ⚠ **Nothing else in the app is italic**, and nothing else should be. It was
+ * tried once for the auth tagline and rejected there — see the type scale — so
+ * this is the only thing in the product it can be confused with, which is
+ * nothing.
+ */
+@utility unsent {
+  /*
+    ⚠ **The drawn italic, named explicitly.** `font-style: italic` alone would
+    not fail against an upright-only family — the browser synthesises a slant by
+    shearing the roman, which is a fake italic on a page whose rule is that type
+    is the entire design. `--font-fira-italic` is the real face, loaded for this
+    and nothing else; see `app/layout.tsx` for why it costs nothing until a
+    draft exists. The `font-style` stays so the match is exact rather than
+    incidental.
+  */
+  font-family: var(--font-fira-italic), var(--font-sans);
+  font-style: italic;
+}
+
+/**
  * The mark on the picked line: **the caret's own width and colour, in the gutter
  * rather than in the text.** No highlight and no box — it borrows a vocabulary
  * the page has already taught, while sitting outside the line so it never claims

@@ -86,6 +86,35 @@ const firaSans = Fira_Sans({
 })
 
 /**
+ * **The same face, slanted — for one thing: a capture that is not in the record
+ * yet.** See `unsent` in globals.css, which is the only rule that names it.
+ *
+ * ⚠ **A real italic, because the alternative is a fake one.** `font-style:
+ * italic` against a family loaded upright-only does not fail — the browser
+ * *synthesises* a slant by shearing the roman, which on a page whose §11 rule is
+ * *type is the entire design* is the one outcome worth spending a request to
+ * avoid. Fira Sans has a drawn italic; this is it.
+ *
+ * ⚠ **400 alone.** The body is the only thing that can be unsent, and it is the
+ * only weight on the page that this can reach. A `style` array on the loader
+ * above would have crossed with its three weights and declared six faces to use
+ * one.
+ *
+ * **`preload: false`, for the reason Bebas Neue carries it**: `@font-face` is
+ * lazy, so the file is fetched the first time somebody has a draft on screen and
+ * never on a page that has none. What would fetch it regardless is next/font's
+ * default preload hint, so that is the thing turned off.
+ */
+const firaSansItalic = Fira_Sans({
+  variable: '--font-fira-italic',
+  subsets: ['latin'],
+  weight: '400',
+  style: 'italic',
+  display: 'swap',
+  preload: false,
+})
+
+/**
  * §11: IBM Plex Mono for return counts and timestamps. The mono is not
  * ornament — counts are data, and they're the one number in the product that
  * can't be inflated.
@@ -172,7 +201,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${firaSans.variable} ${plexMono.variable} ${jost.variable} ${bebasNeue.variable} h-full`}
+      className={`${firaSans.variable} ${firaSansItalic.variable} ${plexMono.variable} ${jost.variable} ${bebasNeue.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>

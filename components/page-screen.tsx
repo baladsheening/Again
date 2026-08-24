@@ -741,7 +741,20 @@ export function PageScreen({
                 it wants, and the caret is already the instruction.
               */
               aria-label="Capture"
-              className={`page-line page-input ${
+              /*
+                ⚠ **Italic while the draft is unsent, roman once it is in the
+                record**, and Return is what turns one into the other. It is
+                there because a line typed and then tapped away from stays in the
+                pinned band with the keyboard gone, where it reads as one more
+                line of the record — the band's light says *this row is live*, it
+                does not say *these words are not saved*.
+
+                It holds while the line is being typed too, so the rule is one
+                claim made continuously rather than a badge that appears when you
+                look away. See `unsent` in globals.css for why it is type and not
+                colour, dimming, or a mark.
+              */
+              className={`page-line page-input ${draft === '' ? '' : 'unsent'} ${
                 drawnCaret ? 'caret-transparent' : 'caret-chrome'
               }`}
             />
