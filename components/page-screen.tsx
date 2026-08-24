@@ -726,7 +726,7 @@ export function PageScreen({
             the bar's single duration and curve, because the two are one piece of
             furniture moving.
           */
-          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-pad))] pb-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-lead))] pb-[var(--band-ground)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
             receded ? '' : 'translate-y-[var(--bar-visible)]'
           }`}
         >

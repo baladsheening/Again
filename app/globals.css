@@ -1348,9 +1348,30 @@
    * lead above it. Type a number here and the day the leading changes, the
    * record slides under the band.
    */
-  --band-pad: 1rem;
+  /**
+   * ⚠ **The air above the live line and the ground below it were one number
+   * until 24 August, and they do different jobs.** `--band-pad` was `1rem` on
+   * both sides, which is symmetry rather than a reason. Asked on hardware to
+   * bring the live row closer to the wordmark, and only the lead can move:
+   *
+   *   - **The lead** is the gap between the bar's tail and the words. It has no
+   *     job beyond air, so it is the one that gives.
+   *   - **The ground** is load-bearing — see `--band-tint`. It is where a record
+   *     line dissolves *before* it reaches the words being written, and without
+   *     it no tint is dark enough. **It must not follow the lead down.**
+   *
+   * The bar already carries `--bar-lead` and `--bar-tail` apart for the same
+   * kind of reason; this is that pattern, arrived at the same way.
+   *
+   * ⚠ **Lowering the lead moves the record too, and that is correct.** The page's
+   * top padding reads `--band-height`, so the whole column rises by whatever
+   * comes off here and the air between the band and the first line is unchanged.
+   */
+  --band-lead: 0.5rem;
+  --band-ground: 1rem;
   --band-height: calc(
-    var(--band-pad) * 2 + var(--leading-line) + var(--line-hem) * 2
+    var(--band-lead) + var(--band-ground) + var(--leading-line) +
+      var(--line-hem) * 2
   );
 
   /**
@@ -1369,7 +1390,7 @@
    * glass on the two bars exists to prevent.
    *
    * ⚠ **The padding is the other half of the answer, and it matters more.**
-   * `--band-pad` puts a line's worth of ground under the live line, so a record
+   * `--band-ground` puts a line’s worth of ground under the live line, so a record
    * line has somewhere to dissolve *before* it reaches the words being written.
    * Take it out and no tint is dark enough.
    */
