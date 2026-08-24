@@ -5,11 +5,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   captureAction,
   crossOffCaptureAction,
+  earlierAction,
   editCaptureAction,
   settleCaptureAction,
   undoCaptureAction,
 } from '@/app/actions/captures'
 import type { EntryState } from '@/lib/domain'
+import type { PageLineView } from '@/lib/page-line'
 import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar } from './bar'
 import { useChromeRecede } from './chrome-recede'
@@ -128,16 +130,15 @@ import { useKeyboardHem } from './keyboard-hem'
  * reverts on a failure rather than waiting on one.
  */
 
-/** One line, as the server hands it over. */
-export type PageLineView = {
-  id: string
-  text: string
-  state: EntryState
-  year: number | null
-  /** Stamped on the server — see `lib/day.ts` for why the client never formats. */
-  day: string
-  dayLabel: string
-}
+/**
+ * One line, as the server hands it over.
+ *
+ * ⚠ **Defined in `lib/page-line.ts` and re-exported here.** It moved the day
+ * *Earlier* was built: two things produce it now — the route's first read and
+ * the action — and a view shape with two producers drifts unless one mapper
+ * makes both.
+ */
+export type { PageLineView }
 
 /**
  * One line, as the page holds it.
@@ -173,8 +174,17 @@ export function PageScreen({
   lines: seed,
   todayKey,
   undoWindowMs,
+  earlier: earlierSeed,
 }: {
   lines: PageLineView[]
+  /**
+   * Where the record continues, or `null` if it does not.
+   *
+   * An opaque cursor: the page passes it back and never reads it. See
+   * `pageCursor` in `lib/db/captures.ts` for why *Earlier* is not an offset —
+   * a record with a live head cannot be paged by counting.
+   */
+  earlier: string | null
   /**
    * The group a line typed now belongs to, decided by the server so that it is
    * the same group the server already put today's other lines in.
@@ -240,6 +250,15 @@ export function PageScreen({
   const [editDraft, setEditDraft] = useState('')
   /** The last line to land, while the ten seconds hold. */
   const [undoable, setUndoable] = useState<string | null>(null)
+  /**
+   * **Where the record continues.** `null` is the end of it, and the tail
+   * control exists exactly while this is a string.
+   */
+  const [earlier, setEarlier] = useState<string | null>(earlierSeed)
+  /** A read in flight, so a second tap cannot ask for the same slice twice. */
+  const [reading, setReading] = useState(false)
+  /** What went wrong reading back, said where the reading happens. */
+  const [readFailed, setReadFailed] = useState<string | null>(null)
 
   /**
    * **The page's one field**, and since 24 August it is the only one: it holds a
@@ -441,6 +460,44 @@ export function PageScreen({
 
     /* Not in a transition: the list is already right, and this is the receipt. */
     void send(line.key, text, mutationId)
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Earlier                                                           */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * **The next slice, appended at the tail.**
+   *
+   * ⚠ **Appended, never merged.** The cursor names a place strictly older than
+   * every line on screen, so what comes back cannot overlap what is already
+   * here — which is the whole reason it is a cursor. There is nothing to
+   * de-duplicate and no key to reconcile on.
+   *
+   * ⚠ **Nothing scrolls.** The lines arrive below the last one, under a thumb
+   * that is already at the bottom of the record; moving the page as well would
+   * take the reader off the line they stopped at.
+   *
+   * ⚠ **It is not optimistic, because there is nothing to be optimistic
+   * about.** Every other mutation here puts its result on the page first and
+   * sends behind it; a read has no result until the server answers. So this is
+   * the one place on the page that waits, and `reading` is what stops a second
+   * tap asking for the same slice again.
+   */
+  async function readEarlier() {
+    if (earlier === null || reading) return
+    setReading(true)
+    setReadFailed(null)
+
+    const result = await earlierAction(earlier)
+    setReading(false)
+    if (!result.ok) {
+      setReadFailed(result.message)
+      return
+    }
+
+    setLines((all) => [...all, ...result.value.lines.map((l) => ({ ...l, key: l.id }))])
+    setEarlier(result.value.earlier)
   }
 
   /** The same submission again, with the same id — so a retry cannot double. */
@@ -1318,15 +1375,72 @@ export function PageScreen({
         </ol>
 
         {/*
-          ⚠ **The tail was a control and is not one any more.** A full-width
-          button filled whatever the page's minimum left over, named "Write", and
-          it was the announced way to raise a keyboard back when the live line
-          could be scrolled off the screen. The live line is pinned now, so the
-          announced way to write is the field itself — which is better than a
-          button whose only promise was to take you to one.
+          ⚠ **The tail was a control, stopped being one, and is one again for a
+          different reason.** It held a full-width button named "Write" — the
+          announced way to raise a keyboard, back when the live line could be
+          scrolled off the screen — and that went with the pin. What is here now
+          is not a way to write; it is the record continuing.
 
-          Nothing replaces it. The space at the end of a short record is space.
+          ⚠ **A word, on a page that says nothing.** Everywhere else the page
+          refuses copy because a gesture already carries the meaning: the caret
+          is the instruction, italic is the state, the mark is the pick. At the
+          end of fifty lines there is **no** gesture that says *there is more* —
+          scrolling has already stopped — so a door has to be drawn, and the
+          smallest honest door is the word for what is behind it.
+
+          ⚠ **In the day stamps' own type**, mono and muted, because this is the
+          same furniture: the stamps are how the record is navigated by *roughly
+          when*, and this reaches the days below the ones on screen. It is not a
+          fourth use of a scarce face; it is the third one arriving at its tail.
+
+          ⚠ **It exists only while there is more**, so a record under fifty lines
+          never grows one and nobody is offered a door to nothing.
         */}
+        {earlier !== null && (
+          <button
+            type="button"
+            onClick={readEarlier}
+            disabled={reading}
+            /*
+              ⚠ **The box is the target, which is what keeps it off the foot.**
+              It shipped as a bare word with `tap-target`, whose 44px pseudo-
+              element is centred on the text — so half of it hung *below* the
+              word, and at the bottom of a scroll that half is under the foot.
+              `page-hem` reserves the foot's height so a **line** comes to rest
+              above the glyphs, and a line is 44px because `page-line` gives it a
+              hem. This is a 14px word, so it needs the same thing said its own
+              way: a box a thumb's height, with the word centred in it. Then the
+              page's existing arrangement holds it clear with no special case.
+
+              Measured before the change: the word's box ended at 799.9 and the
+              foot began at 800.
+
+              ⚠ **No top margin, and that is the box paying for it.** The day
+              stamps carry `mt-[26px]` because their box hugs their text; half of
+              this one is air already, and adding both would set the word adrift
+              from the record it belongs to.
+
+              `self-start` for the same reason a line is only as wide as its own
+              words: a full-width target at the tail of the record is a large
+              invisible button beside every scroll that overshoots.
+            */
+            className="stamp text-muted hover:text-text flex min-h-[var(--tap-floor)] items-center self-start transition-colors"
+          >
+            Earlier
+          </button>
+        )}
+
+        {/*
+          The failure, in the page's own voice: full strength, at body size,
+          where the thing that failed is. There is no error colour in the
+          palette — see the line-level message above.
+        */}
+        {readFailed !== null && (
+          <p className="pt-2">
+            {readFailed}{' '}
+            <span className="text-muted">Tap Earlier to try again.</span>
+          </p>
+        )}
 
         {/*
           The end of the record, as a thing that can be observed — see

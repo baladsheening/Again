@@ -141,10 +141,9 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 1. **Search over captures.** The foot's fourth glyph. The existing
    `search-field.tsx` and `search-provider.tsx` search TMDB, not the page; they
    are on disk and mounted by nothing.
-4. **An *Earlier* control at the head of the page.** `listMyPage` reads the most
-   recent 50 and nothing reaches past them. One more `offset` and no new read —
-   but until it exists, a record longer than about a month has lines that cannot
-   be scrolled to.
+- ~~*An Earlier control*~~ — **done**, and it is at the **tail**: the record is
+  newest-first, so earlier is downward. See *Earlier* below. ⚠ It is a **cursor**
+  and not the `offset` this list predicted.
 5. **Resolution offers.** *Suggestions never gate the save*, above: saved →
    line → then a quiet offer. The trailing muted `?`, the Yes/No pair while the
    line is picked, and provider failure as the absence of an offer rather than
@@ -205,6 +204,56 @@ honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### Earlier — 24 August
+
+**The first read is fifty lines and nothing reached past them.** Fifty is roughly
+a month of this, so the gap was never going to be found on the handset in a week
+— and a record that keeps growing has lines that cannot be scrolled to, which is
+the app losing something quietly.
+
+⚠ **A cursor, not an offset, and this list predicted the wrong one.** `offset:
+50` means *skip fifty rows as they are ordered now*, and this record has a live
+head: every capture typed since the page loaded pushes one seeded line back into
+the next slice, so *Earlier* would hand back lines already on screen. Crossing a
+line off does the same in the other direction. A cursor names a place — the
+`(created_at, id)` pair the ordering already tie-breaks on — and an insertion at
+the head cannot move a place. It is opaque to the client, which passes it back
+and never reads it.
+
+⚠ **One row past the slice is how the page knows there is more.** The read asks
+for `PAGE_SIZE + 1`, drops the extra, and the fiftieth becomes the cursor. No
+count, no second query, and `null` — the record ending — is the only thing that
+makes the control exist.
+
+⚠ **The one place on this page that waits.** Every mutation here is optimistic
+and sends behind the screen; a read has no result until the server answers, so
+there is nothing to be optimistic about. `reading` is what stops a second tap
+asking for the same slice twice. **Nothing scrolls** — the lines arrive below the
+last one, under a thumb already at the bottom.
+
+**A word, on a page that says nothing.** Everywhere else the page refuses copy
+because a gesture carries the meaning: the caret is the instruction, italic is
+the state, the mark is the pick. At the end of fifty lines there is **no** gesture
+that says *there is more* — scrolling has already stopped — so a door has to be
+drawn, and the smallest honest door is the word for what is behind it. It is set
+in the day stamps' own mono, because that is the same furniture: the stamps are
+how the record is navigated by *roughly when*, and this reaches the days below.
+
+⚠ **The box is the target, and that is what keeps it off the foot.** It shipped
+as a bare word with `tap-target`, whose 44px pseudo-element is centred on the
+text — so half of it hung below the word, and at the bottom of a scroll that half
+is under the foot. Measured: the word's box ended at 799.9 and the foot began at
+800. `page-hem` reserves the foot's height so a *line* rests above the glyphs,
+and a line is 44px because `page-line` gives it a hem; a 14px word needs the same
+thing said its own way. `node_modules/.probe/earlier.mjs` checks the clearance,
+that nothing scrolls, and — with a capture typed *after* the page loaded — that
+no line comes back twice.
+
+⚠ **`PageLineView` moved to `lib/page-line.ts` with the mapper that builds it.**
+Two things produce it now, the route's first read and the action, and a view
+shape with two producers drifts. One mapper means a column added to the query
+reaches both or neither.
 
 ### The chrome's exit — asked and answered, 24 August
 

@@ -98,7 +98,10 @@ export {
   undoCapture,
   toCaptureCard,
   toLegacyEntryCards,
+  pageCursor,
+  parsePageCursor,
   NOTE_MAX,
+  PAGE_SIZE,
   TEXT_MAX,
   UNDO_WINDOW_MS,
 } from './captures'

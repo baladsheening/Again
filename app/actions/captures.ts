@@ -6,14 +6,21 @@ import { z } from 'zod'
 import {
   addCapture,
   dropCapture,
+  listMyPage,
+  pageCursor,
+  parsePageCursor,
   requireSessionUser,
   resolveCapture,
   restoreCapture,
   setCaptureText,
   undoCapture,
+  PAGE_SIZE,
   TEXT_MAX,
 } from '@/lib/db'
+import { dayStamper } from '@/lib/day'
+import { toPageLines, type PageLineView } from '@/lib/page-line'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
+import { viewerTimeZone } from '@/lib/region'
 import type { ActionResult } from './entries'
 
 /**
@@ -225,4 +232,54 @@ export async function undoCaptureAction(captureId: string): Promise<ActionResult
   if (!result.ok) return { ok: false, message: result.message }
 
   return { ok: true, value: null }
+}
+
+/**
+ * **Earlier: the next slice of the record, older than the last line on screen.**
+ *
+ * The first read is fifty lines, which is roughly a month of this, and before
+ * this existed nothing reached past them.
+ *
+ * ⚠ **A read, so it delegates and stamps and does nothing else.** It writes
+ * nothing, so there is no rate limit and no mutation id: the worst a loop of
+ * these can do is read a person their own record, which is what the page is for.
+ * §3 still holds — the query is `listMyPage`, which filters on the session user.
+ *
+ * ⚠ **The stamps are computed here, and that is not a duplicate of the route.**
+ * Both call `toPageLines` with a stamper built from the viewer's timezone, so a
+ * line fetched by this and a line rendered by the route agree about which day
+ * they belong to. Formatting on the client instead would put the browser's
+ * timezone against the server's and disagree about how many day groups there
+ * are — see `lib/day.ts`.
+ *
+ * ⚠ **A bad cursor reads the first page rather than failing.** `parsePageCursor`
+ * returns `null` for anything malformed and the query then carries no predicate;
+ * the client would see lines it already has, which is visible and harmless,
+ * where a 500 on a scroll is neither.
+ */
+export async function earlierAction(
+  cursor: string,
+): Promise<ActionResult<{ lines: PageLineView[]; earlier: string | null }>> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = z.string().min(3).max(120).safeParse(cursor)
+  if (!parsed.success) return { ok: false, message: 'Could not read further back.' }
+
+  const before = parsePageCursor(parsed.data)
+  if (!before) return { ok: false, message: 'Could not read further back.' }
+
+  /* One past the slice, so the answer carries whether there is another. */
+  const rows = await listMyPage(sessionUser, { limit: PAGE_SIZE + 1, before })
+  const more = rows.length > PAGE_SIZE
+  const shown = more ? rows.slice(0, PAGE_SIZE) : rows
+
+  const { stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
+
+  return {
+    ok: true,
+    value: {
+      lines: toPageLines(shown, stamp),
+      earlier: more && shown.length > 0 ? pageCursor(shown[shown.length - 1]) : null,
+    },
+  }
 }

@@ -6252,3 +6252,47 @@ only the first is true** — the screen was used on hardware and judged good, an
 nobody has stopwatched it. The reasoning for wanting the number stays in the
 register under *What hardware answered*, unchanged, because anyone reopening
 Phase 1's acceptance starts there rather than from the line that closed it.
+
+### *Earlier* is a cursor, because the record has a live head (24 August)
+
+The register predicted "one more `offset` and no new read". An offset is the
+wrong instrument here and the reason is specific to this page: `offset: 50` means
+*skip fifty rows as they are ordered now*, and this record's head moves while you
+look at it. Every capture typed since the page loaded pushes one seeded line back
+into the next slice, so *Earlier* would hand back lines already on screen;
+crossing a line off does the same in the other direction.
+
+A cursor names a place instead of counting to it, and an insertion at the head
+cannot move a place. It is the `(created_at, id)` pair the ordering already
+tie-breaks on, so the predicate and the sort cannot disagree about where a slice
+ends. It is opaque to the client, which passes it back and never reads it, and a
+malformed one reads the first page rather than throwing — a cursor arrives from a
+client, so it is input.
+
+**One row past the slice answers *is there more*** with no count and no second
+query, and `null` is the only thing that makes the tail control exist.
+
+⚠ **It is the one place on the capture page that waits.** Every mutation there is
+optimistic and sends behind the screen; a read has no result until the server
+answers.
+
+### The word *Earlier*, on a page that refuses copy (24 August)
+
+Everywhere else the page refuses copy because a gesture already carries the
+meaning: the caret is the instruction, italic is the state, the mark is the pick,
+and the empty page says nothing on purpose. At the end of fifty lines there is no
+gesture that says *there is more* — scrolling has already stopped. So a door has
+to be drawn, and the smallest honest door is the word for what is behind it.
+
+Set in the day stamps' mono, because it is the same furniture rather than a
+fourth use of a scarce face: the stamps are how the record is navigated by
+*roughly when*, and this reaches the days below the ones on screen.
+
+⚠ **The box is the target, and that is not a detail.** It shipped as a bare word
+with `tap-target`, whose 44px pseudo-element is centred on the text — so half of
+it hung below the word, and at the bottom of a scroll that half is under the
+foot. Measured: the word's box ended at 799.9 and the foot began at 800.
+`page-hem` reserves the foot's height so a *line* comes to rest above the glyphs,
+and a line is 44px because `page-line` gives it a hem. A 14px word needs the same
+thing said its own way — a box a thumb's height with the word centred in it —
+and then the page's existing arrangement holds it clear with no special case.

@@ -1,8 +1,16 @@
 import { redirect } from 'next/navigation'
 
-import { PageScreen, type PageLineView } from '@/components/page-screen'
-import { getMyProfile, getSessionUser, listMyPage, UNDO_WINDOW_MS } from '@/lib/db'
+import { PageScreen } from '@/components/page-screen'
+import {
+  getMyProfile,
+  getSessionUser,
+  listMyPage,
+  pageCursor,
+  PAGE_SIZE,
+  UNDO_WINDOW_MS,
+} from '@/lib/db'
 import { dayStamper } from '@/lib/day'
+import { toPageLines } from '@/lib/page-line'
 import { viewerTimeZone } from '@/lib/region'
 
 /**
@@ -34,13 +42,14 @@ export default async function HomePage() {
     left to reverse. An ascending `limit` would still be wrong — it would hand
     back the fifty oldest lines somebody ever wrote.
 
-    ⚠ **Earlier lines are not reachable yet, and that is a stated gap.** Fifty is
-    roughly a month of this, so it is not a fault to be found on the handset this
-    week; what closes it is the tray taking settled lines off the page (already
-    true), search (Phase 1, not built), and an *Earlier* control at the head of
-    the page, which is one more `offset` and no new read.
+    ⚠ **One row past the slice, which is how the page knows there is more.** No
+    count and no second query: if fifty-one came back there is a fifty-first, the
+    extra is dropped, and the fiftieth becomes the cursor *Earlier* reads from.
+    See `pageCursor` for why it is a cursor and not an offset.
   */
-  const rows = await listMyPage(sessionUser)
+  const rows = await listMyPage(sessionUser, { limit: PAGE_SIZE + 1 })
+  const more = rows.length > PAGE_SIZE
+  const shown = more ? rows.slice(0, PAGE_SIZE) : rows
 
   /*
     The stamps are computed here and only here. Grouping by day depends on a
@@ -51,17 +60,17 @@ export default async function HomePage() {
   */
   const { todayKey, stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
 
-  const lines: PageLineView[] = rows.map((row) => {
-    const day = stamp(row.createdAt)
-    return {
-      id: row.id,
-      text: row.text,
-      state: row.state,
-      year: row.year,
-      day: day.key,
-      dayLabel: day.label,
-    }
-  })
-
-  return <PageScreen lines={lines} todayKey={todayKey} undoWindowMs={UNDO_WINDOW_MS} />
+  return (
+    <PageScreen
+      lines={toPageLines(shown, stamp)}
+      todayKey={todayKey}
+      undoWindowMs={UNDO_WINDOW_MS}
+      /*
+        ⚠ **`null` is the record ending, and it is the only thing that says so.**
+        The tail control exists exactly while this is a string, so a record of
+        fewer than fifty lines never grows one.
+      */
+      earlier={more ? pageCursor(shown[shown.length - 1]) : null}
+    />
+  )
 }

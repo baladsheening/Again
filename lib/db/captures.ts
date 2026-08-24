@@ -1,6 +1,17 @@
 import 'server-only'
 
-import { and, asc, desc, eq, getTableColumns, inArray, ne, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  lt,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm'
 import { alias, type PgColumn } from 'drizzle-orm/pg-core'
 
 import { db } from './client'
@@ -154,7 +165,15 @@ export function toLegacyEntryCards(
   })
 }
 
-const PAGE_SIZE = 50
+/**
+ * §10: paginate every list.
+ *
+ * ⚠ **Exported, because the page asks for `PAGE_SIZE + 1`.** One row past the
+ * slice is how a read answers *is there more* without a second query and
+ * without a count — and the caller can only do that arithmetic if it is looking
+ * at the same number this file is.
+ */
+export const PAGE_SIZE = 50
 
 /** §10: paginate every list. */
 export type Page = { limit?: number; offset?: number }
@@ -439,18 +458,58 @@ export type PageLine = {
 }
 
 /**
- * The page, newest first — **and the caller reverses it.**
+ * A place in the record, for reading past the first page.
  *
- * ⚠ **You type downward: oldest at the top, newest above the caret.** So the
- * page reads ascending and the query runs descending, because the two answer
- * different questions. §10 requires every list to be paginated, and a page of a
- * two-hundred-line record has to be *the most recent* fifty rather than the
- * first fifty ever written — an ascending `limit` would open the app on
- * something typed in March. Ordering descending and reversing in the caller is
- * the only arrangement where both hold.
+ * ⚠ **A cursor, not an offset, and the reason is that the record has a live
+ * head.** `offset: 50` means *skip fifty rows as they are ordered now* — and a
+ * capture written during the session, or a line crossed off, changes what row
+ * fifty is. Every line typed since the page loaded would push one seeded line
+ * back into the next slice, so *Earlier* would hand back lines already on
+ * screen. A cursor names a place instead of counting to it, and insertions at
+ * the head cannot move a place.
  *
- * `offset` therefore walks backwards into the record, which is the direction
- * *earlier* means here.
+ * It is opaque to the client, which only ever passes it back.
+ */
+export type PageCursor = { createdAt: Date; id: string }
+
+const CURSOR_SEP = '|'
+
+/** The place *after* a line — i.e. where the next, earlier slice starts. */
+export function pageCursor(line: PageLine): string {
+  return `${line.createdAt.toISOString()}${CURSOR_SEP}${line.id}`
+}
+
+/**
+ * ⚠ **Returns `null` rather than throwing on anything malformed.** A cursor
+ * arrives from a client, so it is input: a bad one is a read of the first page,
+ * never a 500 and never an unbounded scan.
+ */
+export function parsePageCursor(raw: string): PageCursor | null {
+  const at = raw.indexOf(CURSOR_SEP)
+  if (at < 1) return null
+  const createdAt = new Date(raw.slice(0, at))
+  const id = raw.slice(at + 1)
+  if (Number.isNaN(createdAt.getTime()) || id === '') return null
+  return { createdAt, id }
+}
+
+/**
+ * The page, newest first — **and the page uses it that way.**
+ *
+ * ⚠ **The record is newest-first**: the caret is under the bar and every capture
+ * pushes the record down, so the order this query returns is the order the page
+ * wants and nothing reverses it. §10 requires every list to be paginated, and a
+ * page of a two-hundred-line record has to be *the most recent* fifty rather
+ * than the first fifty ever written — an ascending `limit` would open the app on
+ * something typed in March.
+ *
+ * ⚠ **This comment said "and the caller reverses it" until 24 August**, from
+ * the fortnight the page was written downward. The handset reversed the order
+ * and the caller stopped reversing; the query never changed.
+ *
+ * `before` walks backwards into the record, which is the direction *earlier*
+ * means here. It is the same `(createdAt, id)` pair the ordering uses, so the
+ * predicate and the sort cannot disagree about where a slice ends.
  *
  * The tie-break on `id` is not decoration: two captures saved in the same
  * millisecond otherwise have no defined order, and a row that changes places
@@ -458,7 +517,7 @@ export type PageLine = {
  */
 export async function listMyPage(
   sessionUser: SessionUser,
-  { limit = PAGE_SIZE, offset = 0 }: Page = {},
+  { limit = PAGE_SIZE, before }: { limit?: number; before?: PageCursor } = {},
 ): Promise<PageLine[]> {
   return db
     .select({
@@ -471,10 +530,25 @@ export async function listMyPage(
     .from(captures)
     /* LEFT, because a capture with nothing canonical behind it is the norm. */
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
-    .where(and(eq(captures.userId, sessionUser.id), inArray(captures.state, PAGE_STATES)))
+    .where(
+      and(
+        eq(captures.userId, sessionUser.id),
+        inArray(captures.state, PAGE_STATES),
+        /*
+          Strictly past the cursor, in the same order the sort uses: an earlier
+          instant, or the same instant and a lower id. `and()` drops the
+          `undefined`, so the first page carries no predicate at all.
+        */
+        before
+          ? or(
+              lt(captures.createdAt, before.createdAt),
+              and(eq(captures.createdAt, before.createdAt), lt(captures.id, before.id)),
+            )
+          : undefined,
+      ),
+    )
     .orderBy(desc(captures.createdAt), desc(captures.id))
     .limit(limit)
-    .offset(offset)
 }
 
 /**
