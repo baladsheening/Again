@@ -61,15 +61,18 @@ import {
  * | a record, nothing picked | off | off | off | **on** | **on** |
  * | a saved line picked | **on** | **on** | **on** | **on** | **on** |
  *
+ * The camera is the odd one because a photograph **starts** a capture rather
+ * than acting on one — so it is lit at every state, including the empty page,
+ * and it is the only control here that does not care what is picked.
+ *
  * The camera is the odd one because a photograph starts a capture rather than
  * acting on one.
  *
- * ⚠ **Search is built and lit; the camera is not.** Images are a storage layer
- * — object storage outside Postgres, size and type limits, EXIF stripping, an
- * access-controlled media path, retained provenance, reportable and removable
- * assets — so it stays off, and a control that cannot act goes off. **That is
- * the design's own device being honest, not a deviation from it**: the bar keeps
- * its full shape, and the day it lands it is a prop and no new geometry.
+ * ⚠ **All five act, since 24 August.** The camera was the last dark one and it
+ * lit the way the note below predicted — a prop and no new geometry. It is off
+ * only when there is nowhere to put a photograph, which is a store that has not
+ * been created rather than a feature that has not been built, and a control that
+ * cannot act still goes off.
  *
  * ⚠ **Search is the one link in the foot, so it is an `<a>` and not a button.**
  * Everything else here acts on the line in hand; this goes somewhere. A button
@@ -86,6 +89,7 @@ export function Foot({
   crossOff,
   settle,
   rewrite,
+  photograph,
   searchable = false,
   receded = false,
 }: {
@@ -123,6 +127,15 @@ export function Foot({
    * only answer the surface could give is *Nothing.*
    */
   searchable?: boolean
+  /**
+   * Open the picker. `null` when there is nowhere to put a photograph.
+   *
+   * ⚠ **It is a store that does not exist, not a feature that is not built.**
+   * The distinction matters for what to do about a dark camera: create a Blob
+   * store and set `BLOB_READ_WRITE_TOKEN`, and it lights on the next deploy with
+   * no code change.
+   */
+  photograph: (() => void) | null
 }) {
   return (
     <footer
@@ -175,12 +188,14 @@ export function Foot({
           <RewriteGlyph />
         </button>
 
-        {/* Not built — see the note at the top of this file. */}
         <button
           type="button"
-          disabled
+          disabled={!photograph}
+          onClick={() => photograph?.()}
           aria-label="Photograph"
-          className={`tap-target flex items-center ${OFF}`}
+          className={`tap-target flex items-center transition-colors ${
+            photograph ? 'text-chrome' : OFF
+          }`}
         >
           <CameraGlyph />
         </button>

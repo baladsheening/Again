@@ -10,6 +10,7 @@ import {
   UNDO_WINDOW_MS,
 } from '@/lib/db'
 import { dayStamper } from '@/lib/day'
+import { imagesAvailable } from '@/lib/media'
 import { toPageLines } from '@/lib/page-line'
 import { viewerTimeZone } from '@/lib/region'
 
@@ -71,6 +72,13 @@ export default async function HomePage() {
         fewer than fifty lines never grows one.
       */
       earlier={more ? pageCursor(shown[shown.length - 1]) : null}
+      /*
+        ⚠ **A server fact, because the token is one.** The camera is dark when
+        there is nowhere to put a photograph — a control that cannot act goes
+        off — which also means deploying with no Blob store is safe rather than
+        broken. See `imagesAvailable`.
+      */
+      imagesOn={imagesAvailable()}
     />
   )
 }

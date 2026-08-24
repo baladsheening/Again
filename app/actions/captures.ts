@@ -13,6 +13,7 @@ import {
   resolveCapture,
   acceptSuggestion,
   declineSuggestion,
+  findMyCaptureByMutationId,
   getMyCaptureText,
   restoreCapture,
   searchMyCaptures,
@@ -24,6 +25,7 @@ import {
   TEXT_MAX,
 } from '@/lib/db'
 import { dayStamper } from '@/lib/day'
+ import { removeImage, storeImage } from '@/lib/media'
  import { searchFilms } from '@/lib/tmdb'
 import { toPageLines, type PageLineView } from '@/lib/page-line'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
@@ -517,4 +519,80 @@ export async function declineOfferAction(captureId: string): Promise<ActionResul
   if (!result.ok) return { ok: false, message: result.message }
 
   return { ok: true, value: null }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Photographs                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * **A photograph is not a capture until it is captioned**, so this writes both
+ * or neither.
+ *
+ * ⚠ **One call rather than an upload followed by a save**, and the reason is
+ * orphans. An upload that returns a pathname before the capture exists leaves an
+ * object in the store the moment somebody changes their mind — invisible,
+ * unreferenced, and impossible to attribute later. Here the only object that
+ * survives is one a row points at.
+ *
+ * ⚠ **Idempotency comes first, before the upload.** A retried submission finds
+ * the capture already written and returns it **without storing a second copy of
+ * the picture**. Uploading first and deduplicating after would put a megabyte in
+ * the store for every resumed connection.
+ *
+ * ⚠ **It is slow and that is allowed.** Return does not wait: the line is on the
+ * page before this is called, and the save goes out behind it — which is what
+ * makes an upload on the same path as a capture acceptable at all.
+ *
+ * ⚠ **A failed write takes the object back out.** Best effort, because the
+ * alternative to a failed delete is an object nothing can reach.
+ */
+export async function captureWithImageAction(
+  form: FormData,
+): Promise<ActionResult<{ id: string; created: boolean }>> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = captureSchema.safeParse({
+    text: form.get('text'),
+    clientMutationId: form.get('clientMutationId'),
+  })
+  if (!parsed.success) return { ok: false, message: 'Type something first.' }
+
+  const image = form.get('image')
+  if (!(image instanceof File)) return { ok: false, message: 'That photo did not arrive.' }
+
+  for (const identifier of [sessionUser.id, clientIp(await headers())]) {
+    const limit = await rateLimit('entryCreate', identifier)
+    if (!limit.ok) return { ok: false, message: 'Slow down a moment.' }
+  }
+
+  /* The same submission again is the same capture, and the same photograph. */
+  const already = await findMyCaptureByMutationId(sessionUser, parsed.data.clientMutationId)
+  if (already) return { ok: true, value: { id: already.id, created: false } }
+
+  const stored = await storeImage(sessionUser.id, image)
+  if (!stored.ok) {
+    return {
+      ok: false,
+      message:
+        stored.reason === 'too-large'
+          ? 'That photo is too big.'
+          : stored.reason === 'wrong-type'
+            ? 'That is not a photo this can keep.'
+            : 'That photo did not arrive.',
+    }
+  }
+
+  const result = await addCapture(sessionUser, {
+    text: parsed.data.text,
+    clientMutationId: parsed.data.clientMutationId,
+    imagePath: stored.path,
+  })
+
+  if (!result.ok) {
+    await removeImage(stored.path)
+    return { ok: false, message: result.message }
+  }
+
+  return { ok: true, value: { id: result.value.capture.id, created: result.value.created } }
 }

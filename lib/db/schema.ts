@@ -359,6 +359,28 @@ export const captures = pgTable(
     resolutionDeclinedAt: timestamp('resolution_declined_at', { withTimezone: true }),
     /** Optional at capture, refined later. Never asked for before saving (§3). */
     intent: text('intent').$type<Intent>(),
+    /**
+     * **Where the photograph is**, as a blob pathname — never as a URL.
+     *
+     * ⚠ **The blob is private and the pathname is not a capability.** §6 asks
+     * for an access-controlled media path, and an unguessable public URL is not
+     * one: it is a secret that leaks the first time somebody shares a link, and
+     * it can never be revoked without deleting the file. The store holds these
+     * with `access: 'private'`, so the bytes are reachable only by a token that
+     * lives on the server, and `/api/media/[captureId]` is the one door — it
+     * checks the session against the owner of *this row* before it opens.
+     *
+     * ⚠ **A pathname rather than a URL, and the difference is what happens on a
+     * store migration.** A URL bakes the host in; a pathname is what the app
+     * asked to be stored, so moving stores is a config change rather than a
+     * rewrite of every row.
+     *
+     * ⚠ **A photograph is not a capture until it is captioned**, so this is
+     * never the only thing on a row: `text` is `NOT NULL` and the camera opens
+     * a line with the caret waiting. That rule is what keeps a textless capture
+     * out of the matching path entirely.
+     */
+    imagePath: text('image_path'),
     state: text('state').$type<CaptureState>().notNull(),
     /** Experiences only; revisits, rewatches, second attempts. */
     returnCount: integer('return_count').notNull().default(0),

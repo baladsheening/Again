@@ -1112,6 +1112,18 @@
    * whatever the glyph does, the centres stay 2px clear of the floor.
    */
   --tap-floor: 44px;
+
+  /**
+   * **A photograph, riding a line.**
+   *
+   * ⚠ **Derived from the line, not chosen.** It sits in the slot a resolved
+   * capture's year takes, and the rule that slot obeys is *one line is one
+   * line* — so the picture is the height of the text it sits beside rather than
+   * a number that happens to fit today. `--text-line` is 18px; a square of it
+   * clears the 28px line box with the half-leading intact, which is what stops a
+   * row with a picture standing taller than a row without one.
+   */
+  --thumb: var(--text-line);
   --bar-gap: calc(var(--tap-floor) - var(--glyph-bar) + 2px);
 
   /**

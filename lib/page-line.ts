@@ -28,6 +28,12 @@ export type PageLineView = {
    * *suggested, and not yet resolved, and not refused* — see `PageLine.offer`.
    */
   offer: { title: string; year: number | null } | null
+  /**
+   * **Whether there is a photograph on this line** — never where it is. The
+   * bytes are behind `/api/media/[id]`, which checks the session against the
+   * owner of that row; the id the client already has is all it needs to ask.
+   */
+  hasImage: boolean
 }
 
 /** What the mapper needs of a row, and nothing more. */
@@ -38,6 +44,7 @@ type Stampable = {
   year: number | null
   createdAt: Date
   offer?: { title: string; year: number | null } | null
+  hasImage?: boolean
 }
 
 /**
@@ -67,6 +74,7 @@ export function toPageLines(
         says so. Optional in, definite out.
       */
       offer: row.offer ?? null,
+      hasImage: row.hasImage ?? false,
     }
   })
 }

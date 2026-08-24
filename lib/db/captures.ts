@@ -426,6 +426,15 @@ export type PageLine = {
    * whether to draw a `?`.
    */
   offer: { title: string; year: number | null } | null
+  /**
+   * **Whether there is a photograph on this line** — not where it is.
+   *
+   * ⚠ **The pathname never crosses to a client.** The bytes live in a private
+   * store and `/api/media/[captureId]` is the one door; a client that held the
+   * pathname would be holding the only thing the door checks *for*, and the
+   * check would be decoration. The id it already has is enough to ask.
+   */
+  hasImage: boolean
 }
 
 /**
@@ -510,6 +519,7 @@ export async function listMyPage(
       declinedAt: captures.resolutionDeclinedAt,
       offerTitle: suggested.title,
       offerYear: suggested.year,
+      imagePath: captures.imagePath,
     })
     .from(captures)
     /* LEFT, because a capture with nothing canonical behind it is the norm. */
@@ -535,8 +545,10 @@ export async function listMyPage(
     .orderBy(desc(captures.createdAt), desc(captures.id))
     .limit(limit)
 
-  return rows.map(({ resolved, declinedAt, offerTitle, offerYear, ...line }) => ({
+  return rows.map(({ resolved, declinedAt, offerTitle, offerYear, imagePath, ...line }) => ({
     ...line,
+    /* Whether, never where — see `PageLine.hasImage`. */
+    hasImage: imagePath !== null,
     /*
       *Suggested, and not yet resolved, and not refused.* All three, or there is
       no question to draw — see `PageLine.offer`.
@@ -575,6 +587,7 @@ export async function listMySettled(
       year: possibilities.year,
       createdAt: captures.createdAt,
       offer: sql<null>`null`,
+      hasImage: sql<boolean>`${captures.imagePath} is not null`,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -641,6 +654,7 @@ export async function searchMyCaptures(
       year: possibilities.year,
       createdAt: captures.createdAt,
       offer: sql<null>`null`,
+      hasImage: sql<boolean>`${captures.imagePath} is not null`,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -688,6 +702,15 @@ export type AddCaptureInput = {
   intent?: Intent | null
   /** §6: the same id retried is the same capture, not a second one. */
   clientMutationId?: string | null
+  /**
+   * A blob pathname, already stored and already stripped.
+   *
+   * ⚠ **The upload happens before this and the row is what makes it reachable.**
+   * A photograph is not a capture until it is captioned, so the object exists
+   * for the moment between the two — and if this write fails, the caller takes
+   * it back out. See `captureWithImageAction`.
+   */
+  imagePath?: string | null
 }
 
 /**
@@ -797,6 +820,7 @@ async function writeCapture(
         text,
         possibilityId: input.possibilityId ?? null,
         intent: input.intent ?? null,
+        imagePath: input.imagePath ?? null,
         state: 'want',
         clientMutationId: input.clientMutationId ?? null,
         ...provenance,
@@ -1157,6 +1181,56 @@ export async function setCaptureText(
  * ask for one — the same argument `SHARED_CAPTURE_COLUMNS` makes, applied to a
  * read that has no business with anything but the words.
  */
+/**
+ * **Where this person's photograph is**, or `null`.
+ *
+ * ⚠ **Owner-filtered, and that filter is the access control.** `/api/media`
+ * has no other check: a request either names a capture belonging to the session
+ * user or it gets nothing, and there is deliberately no parameter here that
+ * could relax it. Images on somebody else's page are a later question and this
+ * function is not where it gets answered.
+ */
+/**
+ * **Has this submission already been written?**
+ *
+ * ⚠ **The same read `writeCapture` does, hoisted so a photograph is not
+ * uploaded twice.** A retried submission must not put a second megabyte in the
+ * store on its way to discovering the row exists — so the check happens before
+ * the upload rather than inside the insert. The two agree because they are the
+ * same predicate on the same unique key; if that ever stops being true, the
+ * upload is the thing that pays.
+ */
+export async function findMyCaptureByMutationId(
+  sessionUser: SessionUser,
+  clientMutationId: string,
+): Promise<Capture | null> {
+  const [row] = await db
+    .select()
+    .from(captures)
+    .where(
+      and(
+        eq(captures.userId, sessionUser.id),
+        eq(captures.clientMutationId, clientMutationId),
+      ),
+    )
+    .limit(1)
+
+  return row ?? null
+}
+
+export async function getMyCaptureImagePath(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ path: captures.imagePath })
+    .from(captures)
+    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+    .limit(1)
+
+  return row?.path ?? null
+}
+
 export async function getMyCaptureText(
   sessionUser: SessionUser,
   captureId: string,

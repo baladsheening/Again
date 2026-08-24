@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   acceptOfferAction,
   captureAction,
+  captureWithImageAction,
   crossOffCaptureAction,
   declineOfferAction,
   earlierAction,
@@ -155,6 +156,19 @@ type Line = PageLineView & {
   key: string
   /** Held for the length of the line, so a retry is the *same* submission. */
   mutationId?: string
+  /**
+   * The photograph, while it is still only on this device.
+   *
+   * ⚠ **The page cannot wait for the upload to show the picture.** `hasImage`
+   * is true the moment the line lands, but the bytes are behind
+   * `/api/media/[id]` and there is no id until the save returns — several
+   * seconds, on a photograph over a handset connection. Without this the line
+   * would show an empty slot where the picture is, which is the app looking like
+   * it lost it.
+   *
+   * An object URL, revoked when the page unmounts.
+   */
+  previewUrl?: string
   pending?: boolean
   /** What went wrong, on the line it went wrong on. */
   failed?: string | null
@@ -217,13 +231,58 @@ function Question({
   )
 }
 
+/**
+ * **The photograph, riding the line** — in the same slot a resolved capture's
+ * year takes, so a picture never costs the page its rhythm. One line is still
+ * one line.
+ *
+ * ⚠ **Its own button, beside the words rather than inside them.** The words are
+ * the pick target; a thumbnail inside them would be a tap that picks the line
+ * when the design says tapping the picture opens it. Two targets, two meanings,
+ * no modifier.
+ *
+ * ⚠ **The preview wins over the stored one while it exists.** There is no id to
+ * ask `/api/media` for until the upload returns, and an empty slot in the
+ * meantime is the app looking like it lost the photograph.
+ */
+function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
+  const src = line.previewUrl ?? (line.id === '' ? null : `/api/media/${line.id}`)
+  if (!src) return null
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label="Open the photograph"
+      className="tap-target ms-2 flex shrink-0 items-center self-center"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- a private route, not a CDN; see app/api/media */}
+      <img
+        src={src}
+        alt=""
+        className="size-[var(--thumb)] rounded-[3px] object-cover"
+      />
+    </button>
+  )
+}
+
 export function PageScreen({
   lines: seed,
   todayKey,
   undoWindowMs,
   earlier: earlierSeed,
+  imagesOn,
 }: {
   lines: PageLineView[]
+  /**
+   * Whether the app has anywhere to put a photograph.
+   *
+   * ⚠ **Decided on the server, because the token is a server fact.** The camera
+   * is dark without a store — a control that cannot act goes off, which is the
+   * foot's own rule, and it is what makes deploying with no Blob store safe
+   * rather than broken.
+   */
+  imagesOn: boolean
   /**
    * Where the record continues, or `null` if it does not.
    *
@@ -313,6 +372,18 @@ export function PageScreen({
    * control exists exactly while this is a string.
    */
   const [earlier, setEarlier] = useState<string | null>(earlierSeed)
+  /**
+   * The photograph waiting to be captioned, and its preview.
+   *
+   * ⚠ **A photograph is not a capture until it is captioned.** The camera puts
+   * the picture on the live line and leaves the caret waiting; there is no
+   * record until Return. That rule is a product decision with two engineering
+   * consequences worth having — nothing inert reaches the matching path, and
+   * Phase 2 never has to handle a textless capture.
+   */
+  const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null)
+  /** The picture being looked at, full size. */
+  const [looking, setLooking] = useState<Line | null>(null)
   /** A read in flight, so a second tap cannot ask for the same slice twice. */
   const [reading, setReading] = useState(false)
   /** What went wrong reading back, said where the reading happens. */
@@ -324,6 +395,18 @@ export function PageScreen({
    * was a second ref for a second `<input>` mounted in the record, and it is
    * deleted with it — see `startEdit` for what a field in normal flow cost.
    */
+  const camera = useRef<HTMLInputElement>(null)
+  /**
+   * Every object URL this page has minted, so they can all be given back.
+   *
+   * ⚠ **A set rather than one, because a session is a run of captures.** Each
+   * committed photograph leaves its preview on the line it belongs to — that is
+   * what stops the picture vanishing while the upload finishes — so they
+   * accumulate, and a page held open all afternoon would hold every one of them
+   * in memory with nothing to release them.
+   */
+  const previews = useRef(new Set<string>())
+
   const input = useRef<HTMLInputElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
@@ -429,6 +512,17 @@ export function PageScreen({
     if (undoTimer.current) clearTimeout(undoTimer.current)
   }, [])
 
+  /*
+    ⚠ **Read inside the effect, never during a render.** The set itself is
+    created once and never replaced, so capturing it here and releasing it in
+    the cleanup is exact — and it is the only arrangement React allows, because
+    a ref read during render is a value the renderer cannot know changed.
+  */
+  useEffect(() => {
+    const minted = previews.current
+    return () => minted.forEach((url) => URL.revokeObjectURL(url))
+  }, [])
+
   /** The ten seconds, as a colour on one glyph. The server owns the real bound. */
   const openUndo = useCallback(
     (id: string) => {
@@ -508,6 +602,43 @@ export function PageScreen({
     [ask, mark, openUndo],
   )
 
+  /**
+   * The same submission, carrying the photograph.
+   *
+   * ⚠ **One call, not an upload followed by a save**, and it is slow on purpose:
+   * the line is already on the page, so the upload happens behind a screen that
+   * has finished. A retried submission finds the capture already written and
+   * stores no second copy — see `captureWithImageAction`.
+   */
+  const sendWithImage = useCallback(
+    async (key: string, text: string, mutationId: string, file: File) => {
+      const form = new FormData()
+      form.set('text', text)
+      form.set('clientMutationId', mutationId)
+      form.set('image', file)
+
+      const result = await captureWithImageAction(form)
+      if (!result.ok) {
+        mark(key, { pending: false, failed: result.message })
+        return
+      }
+      mark(key, { id: result.value.id, pending: false, failed: null })
+      if (result.value.created) {
+        openUndo(result.value.id)
+        void ask(key, result.value.id)
+      }
+    },
+    [ask, mark, openUndo],
+  )
+
+  /** The photograph goes back and the caret stays where it is. */
+  function clearPhoto() {
+    if (!photo) return
+    previews.current.delete(photo.url)
+    URL.revokeObjectURL(photo.url)
+    setPhoto(null)
+  }
+
   function commit() {
     const text = draft.trim()
     if (text === '') return
@@ -531,6 +662,13 @@ export function PageScreen({
       dayLabel: 'Today',
       /* No question yet. One may arrive behind the save — see `ask`. */
       offer: null,
+      hasImage: photo !== null,
+      /*
+        The preview stays with the line rather than being revoked here: there is
+        no id to ask `/api/media` for until the upload returns, and an empty
+        slot in the meantime is the app looking like it lost the photograph.
+      */
+      previewUrl: photo?.url,
       mutationId,
       pending: true,
       failed: null,
@@ -553,7 +691,14 @@ export function PageScreen({
     toCaret()
 
     /* Not in a transition: the list is already right, and this is the receipt. */
-    void send(line.key, text, mutationId)
+    if (photo) {
+      const file = photo.file
+      /* The URL is kept — the line is holding it — so only the slot is cleared. */
+      setPhoto(null)
+      void sendWithImage(line.key, text, mutationId, file)
+    } else {
+      void send(line.key, text, mutationId)
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -595,8 +740,19 @@ export function PageScreen({
   }
 
   /** The same submission again, with the same id — so a retry cannot double. */
+  /**
+   * ⚠ **A line that carried a photograph has nothing to retry with.** The
+   * `File` was handed to the upload and the page does not keep it — only the
+   * object URL, which is a view of bytes the browser owns rather than the bytes
+   * themselves. So a failed photo capture says so on the line and stops there,
+   * where a failed text capture retries.
+   *
+   * That is a real limit and it is named rather than hidden: the alternative is
+   * holding every photograph of the session in memory against a failure that may
+   * not come, on the device least able to afford it.
+   */
   function retry(line: Line) {
-    if (!line.mutationId) return
+    if (!line.mutationId || line.hasImage) return
     mark(line.key, { pending: true, failed: null })
     void send(line.key, line.text, line.mutationId)
   }
@@ -1180,7 +1336,14 @@ export function PageScreen({
               `band-dim` and `--row-light-idle`.
             */}
             <div className={`live-band ${writing ? 'band-dim' : ''}`}>
-              <div className="relative">
+              {/*
+                ⚠ **The picture sits beside the field, not above it.** The band
+                is one row and stays one row — the whole reason the live line is
+                an `<input>` rather than a growing textarea — so a photograph
+                waiting to be captioned takes the year's slot like every other
+                one, and the field gives up the width.
+              */}
+              <div className="relative flex items-center">
             <input
               ref={input}
               type="text"
@@ -1313,9 +1476,9 @@ export function PageScreen({
                 look away. See `unsent` in globals.css for why it is type and not
                 colour, dimming, or a mark.
               */
-              className={`page-line page-input ${bandValue === '' ? '' : 'unsent'} ${
-                drawnCaret ? 'caret-transparent' : 'caret-chrome'
-              }`}
+              className={`page-line page-input min-w-0 flex-1 ${
+                bandValue === '' ? '' : 'unsent'
+              } ${drawnCaret ? 'caret-transparent' : 'caret-chrome'}`}
             />
 
                 {drawnCaret && (
@@ -1323,6 +1486,28 @@ export function PageScreen({
                     aria-hidden
                     className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
                   />
+                )}
+
+                {/*
+                  ⚠ **Tapping it takes it back off**, which is the only control a
+                  waiting photograph needs: there is no record yet, so there is
+                  nothing to undo and nothing to confirm. It is the same gesture
+                  as the × on a line — one control, and the way back is itself.
+                */}
+                {photo && (
+                  <button
+                    type="button"
+                    onClick={clearPhoto}
+                    aria-label="Take the photograph off"
+                    className="tap-target ms-2 flex shrink-0 items-center self-center"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL */}
+                    <img
+                      src={photo.url}
+                      alt=""
+                      className="size-[var(--thumb)] rounded-[3px] object-cover"
+                    />
+                  </button>
                 )}
               </div>
             </div>
@@ -1456,6 +1641,10 @@ export function PageScreen({
                     </span>
                   )}
                 </button>
+
+                {line.hasImage && (
+                  <Thumbnail line={line} onOpen={() => setLooking(line)} />
+                )}
 
                 {/*
                   ⚠ **The paper is gone, and it was here.** Every row carried
@@ -1668,7 +1857,81 @@ export function PageScreen({
           found.
         */
         searchable={!empty}
+        /*
+          ⚠ **Off unless there is somewhere to put a photograph**, which is
+          `imagesOn` — a server fact, because the token is one. A control that
+          cannot act goes off, and this is the last of the foot's five to stop
+          being dark.
+        */
+        photograph={imagesOn ? () => camera.current?.click() : null}
       />
+
+      {/*
+        ⚠ **A file input, hidden, driven by the foot's glyph.** The camera is a
+        control on a bar that is glass over the record; a visible `<input
+        type="file">` is the one element in HTML whose appearance no stylesheet
+        can fully take, so the drawing is the glyph and this is the mechanism
+        behind it.
+
+        ⚠ **`accept` names three types rather than `image/*`, and that is what
+        makes an iPhone convert.** Safari hands over HEIC for `image/*`, and
+        decoding HEIC needs a native codec this project will not carry — naming
+        the three transcodes on the way out, which puts the conversion before the
+        photograph rather than a failure after it.
+
+        ⚠ **No `capture` attribute.** It would force the camera and take away the
+        library, and *the poster I saw last week* is at least as likely as the one
+        in front of you.
+      */}
+      <input
+        ref={camera}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          /* Same file twice in a row: without this the second pick is no event. */
+          e.target.value = ''
+          if (!file) return
+          clearPhoto()
+          const url = URL.createObjectURL(file)
+          previews.current.add(url)
+          setPhoto({ file, url })
+          /* The caret is waiting, which is the whole of the caption step. */
+          input.current?.focus()
+          setWriting(true)
+        }}
+      />
+
+      {/*
+        **The picture, opened.** A takeover rather than a route: the record is
+        one page and looking at a photograph is not going somewhere.
+
+        ⚠ **Anywhere closes it**, because there is nothing else on the screen to
+        aim at and a close control would be the only chrome in a view whose whole
+        content is one picture.
+      */}
+      {looking && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photograph"
+          onClick={() => setLooking(null)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setLooking(null)
+          }}
+          tabIndex={-1}
+          ref={(el) => el?.focus()}
+          className="fixed inset-0 z-30 flex items-center justify-center bg-[var(--scrim-tint)] p-6 backdrop-blur-[var(--scrim-blur)]"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- a private route, not a CDN */}
+          <img
+            src={looking.previewUrl ?? `/api/media/${looking.id}`}
+            alt={looking.text}
+            className="max-h-full max-w-full rounded-[3px] object-contain"
+          />
+        </div>
+      )}
 
       {/*
         Nothing is said about an empty page, deliberately. The caret is the

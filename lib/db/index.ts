@@ -86,6 +86,8 @@ export {
   listMySettled,
   searchMyCaptures,
   getMyCaptureText,
+  getMyCaptureImagePath,
+  findMyCaptureByMutationId,
   suggestForCapture,
   acceptSuggestion,
   declineSuggestion,

@@ -149,10 +149,9 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
   still a rollback. See *Resolution offers* below. `film-screen.tsx` is still
   kept — it is the media-resolved detail surface and nothing on the page opens
   it yet.
-6. **Images.** The heaviest item, and a storage layer rather than a button —
-   §6's object storage outside Postgres, size and type limits, EXIF stripping,
-   an access-controlled media path, retained provenance, reportable and
-   removable assets. The camera glyph is drawn and dark, waiting.
+- ~~*Images*~~ — **built**, and ⚠ **the upload path has never run**: there is no
+  Blob store on the project, so the camera ships dark and lights the day one
+  exists. See *Photographs* below for what is verified and what is not.
 7. **The words, in the schema.** `STATE_WORD` carries them on screen; the
    Postgres enum still reads `want`, `go_back_to`, `fixture`. ⚠ When that
    migration runs, **`PUBLIC_STATES` is re-derived rather than renamed** — see
@@ -206,6 +205,93 @@ honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### Photographs — 24 August
+
+**A storage layer, not a button**, which is what the list said. Vercel Blob, at
+the user's direction.
+
+⚠ **The second additive migration**: `captures.image_path`, nullable. Old code
+ignores it, so a revert push is still a rollback — and like `0009` it has to
+reach production **before** the code does.
+
+⚠ **The camera is dark until a Blob store exists.** `imagesAvailable()` reads
+`BLOB_READ_WRITE_TOKEN`, and without it the glyph goes off — a control that
+cannot act, which is the foot's own rule. **So deploying with no store is a
+deploy without photographs rather than a broken one**, and the preflight says so
+as a *notice* rather than a failure, which is what stops a dark camera being
+investigated as a bug.
+
+**What is stored, and where.**
+
+- ⚠ **`access: 'private'`.** An unguessable public URL is **not** an
+  access-controlled media path (§6): it is a secret that leaks the first time
+  somebody shares a link and cannot be revoked without deleting the file. The
+  store refuses anonymous reads; the token never leaves the server.
+- ⚠ **The row holds a pathname, never a URL**, and the client is never given
+  either. `/api/media/[captureId]` is the one door and what it checks is *whose
+  capture this is* — `getMyCaptureImagePath` filters on the session user, and
+  there is deliberately no parameter that widens it. Images on somebody else's
+  page are a later question and that is not where it gets answered.
+- **404 for both *no such capture* and *not yours*.** A 403 would confirm the id
+  exists, which is the one fact the route must not hand out.
+- **`Cache-Control: private`**, because a shared cache holding one person's
+  bytes under a URL another session could ask for would undo the check without
+  touching the code that makes it.
+
+⚠ **EXIF is stripped structurally, not by re-encoding.** A handset photo
+routinely carries GPS to a few metres — and `CLAUDE.md` puts continuous location
+outside Release 1, so storing a co-ordinate that arrived inside a JPEG would be
+that by accident, with no consent step anywhere near it. The three containers
+keep metadata in named blocks: JPEG `APPn` and `COM`, PNG `eXIf`/`tEXt`/`zTXt`/
+`iTXt`/`tIME`, WebP `EXIF`/`XMP `. Dropping blocks is exact and has no decode
+step. **Re-encoding was the alternative and is worse**: a native codec, quality
+lost on every save, and every photograph silently rotated by the tag being
+removed. ⚠ **Orientation goes with the GPS, and that is accepted** — between a
+sideways photo and a stored location, the sideways photo wins.
+
+⚠ **HEIC is refused, and the `accept` attribute is what makes that work.**
+Safari hands over HEIC for `image/*`; naming the three types makes iOS transcode
+on the way out, which puts the conversion *before* the photograph rather than a
+failure after it. No `capture` attribute either — forcing the camera would take
+away the library, and *the poster I saw last week* is at least as likely as the
+thing in front of you.
+
+⚠ **One call, not an upload then a save.** An upload that returns a pathname
+before the capture exists leaves an object in the store the moment somebody
+changes their mind — invisible, unreferenced, unattributable. And **the
+idempotency check comes before the upload**, so a retried submission does not put
+a second megabyte in the store on its way to finding the row. A failed write
+takes the object back out, best effort.
+
+⚠ **The preview stays on the line after the save is sent.** There is no id to
+ask `/api/media` for until the upload returns — seconds, on a handset — and an
+empty slot in the meantime is the app looking like it lost the photograph. The
+object URLs are held in a set and revoked on unmount.
+
+⚠ **A line that carried a photograph cannot retry.** The `File` went to the
+upload and the page keeps only the object URL, which is a view of bytes the
+browser owns. A failed photo capture says so on the line and stops. The
+alternative is holding every photograph of a session in memory against a failure
+that may not come, on the device least able to afford it — named rather than
+hidden.
+
+⚠ **The thumbnail is its own button, beside the words rather than inside them.**
+The words are the pick target and the design says tapping the picture opens it;
+two targets, two meanings, no modifier. It rides the line in the year's slot at
+`--thumb`, which is `--text-line` — **derived from the line, not chosen**, so a
+row with a picture is not taller than a row without one.
+
+**What is verified and what is not.** The strippers are covered in
+`tests/guarantees.test.ts` — four cases, including one that caught a real bug:
+the WebP reader took the chunk size at the *name's* offset, which drops every
+chunk after the first. That test is in the guarantees file rather than the
+acceptance one because a surviving GPS tag has **no symptom at all**: the picture
+looks identical, the save succeeds, the page is right.
+
+⚠ **The upload, the media route and the camera have never run**, because there
+is no store to run them against. They typecheck, they build, and the route is
+registered. **Nothing about them has been seen working.**
 
 ### Have is still not reachable, and this is what is missing — 24 August
 

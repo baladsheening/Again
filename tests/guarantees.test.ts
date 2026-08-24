@@ -650,3 +650,89 @@ describe('a swap stays blind until both sides commit (§7.3)', () => {
   })
 })
 
+
+/**
+ * **A photograph's location must not survive the upload**, and that is the
+ * fourth thing here that fails with no symptom at all: the picture looks
+ * identical either way, the save succeeds, the page is right, and the app is
+ * quietly holding where somebody was to within a few metres.
+ *
+ * ⚠ **Structural stripping is exact, which is what makes it testable at all.**
+ * These are three container formats and the metadata lives in named blocks; the
+ * assertion is that the block is gone and everything else is byte-for-byte the
+ * same. A re-encoding stripper could only be tested by looking at the picture.
+ *
+ * No database. It is here rather than in `acceptance.test.ts` because of what
+ * its failure looks like, which is nothing.
+ */
+describe('EXIF and every other metadata block is stripped', () => {
+  /** `FF D8` · APP1 holding "Exif" · a quantisation table · `SOS` · data. */
+  const jpegWithExif = () => {
+    /* ⚠ The length counts itself: two bytes plus the eight that follow. */
+    const exif = [0xff, 0xe1, 0x00, 0x0a, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0x11, 0x22]
+    const dqt = [0xff, 0xdb, 0x00, 0x05, 0x01, 0x02, 0x03]
+    const sos = [0xff, 0xda, 0x00, 0x04, 0x01, 0x02, 0xaa, 0xbb, 0xcc]
+    return new Uint8Array([0xff, 0xd8, ...exif, ...dqt, ...sos])
+  }
+
+  it('drops a JPEG APP1 and keeps everything else byte for byte', async () => {
+    const { stripMetadata } = await import('@/lib/media')
+    const out = stripMetadata(jpegWithExif(), 'image/jpeg')
+
+    expect(Buffer.from(out).includes(Buffer.from('Exif'))).toBe(false)
+    /* SOI, the quantisation table, and the scan through to the last byte. */
+    expect([...out]).toEqual([
+      0xff, 0xd8, 0xff, 0xdb, 0x00, 0x05, 0x01, 0x02, 0x03, 0xff, 0xda, 0x00, 0x04, 0x01,
+      0x02, 0xaa, 0xbb, 0xcc,
+    ])
+  })
+
+  it('drops a PNG eXIf chunk and leaves IHDR and IEND', async () => {
+    const { stripMetadata } = await import('@/lib/media')
+    const chunk = (name: string, body: number[]) => {
+      const length = [0, 0, 0, body.length]
+      /* The CRC is not checked here; dropping whole chunks never invalidates one. */
+      return [...length, ...[...name].map((c) => c.charCodeAt(0)), ...body, 0, 0, 0, 0]
+    }
+    const png = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ...chunk('IHDR', [1, 2, 3, 4]),
+      ...chunk('eXIf', [0x47, 0x50, 0x53]),
+      ...chunk('IEND', []),
+    ])
+
+    const out = stripMetadata(png, 'image/png')
+    expect(Buffer.from(out).includes(Buffer.from('eXIf'))).toBe(false)
+    expect(Buffer.from(out).includes(Buffer.from('IHDR'))).toBe(true)
+    expect(Buffer.from(out).includes(Buffer.from('IEND'))).toBe(true)
+  })
+
+  it('drops a WebP EXIF chunk and corrects the RIFF length', async () => {
+    const { stripMetadata } = await import('@/lib/media')
+    const chunk = (name: string, body: number[]) => {
+      const size = [body.length & 0xff, 0, 0, 0]
+      const pad = body.length % 2 ? [0] : []
+      return [...[...name].map((c) => c.charCodeAt(0)), ...size, ...body, ...pad]
+    }
+    const body = [...chunk('VP8L', [1, 2, 3, 4]), ...chunk('EXIF', [0x47, 0x50, 0x53, 0x00])]
+    const webp = new Uint8Array([
+      ...[...'RIFF'].map((c) => c.charCodeAt(0)),
+      body.length + 4, 0, 0, 0,
+      ...[...'WEBP'].map((c) => c.charCodeAt(0)),
+      ...body,
+    ])
+
+    const out = stripMetadata(webp, 'image/webp')
+    expect(Buffer.from(out).includes(Buffer.from('EXIF'))).toBe(false)
+    expect(Buffer.from(out).includes(Buffer.from('VP8L'))).toBe(true)
+    /* ⚠ The header states what follows it, and a stale one is read past. */
+    const stated = new DataView(out.buffer, out.byteOffset, out.byteLength).getUint32(4, true)
+    expect(stated).toBe(out.length - 8)
+  })
+
+  it('leaves a format it does not know alone', async () => {
+    const { stripMetadata } = await import('@/lib/media')
+    const bytes = new Uint8Array([1, 2, 3, 4, 5])
+    expect([...stripMetadata(bytes, 'image/gif')]).toEqual([1, 2, 3, 4, 5])
+  })
+})

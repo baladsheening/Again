@@ -71,6 +71,13 @@
       "when": 1787603525229,
       "tag": "0009_chief_newton_destine",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787605153327,
+      "tag": "0010_aberrant_microchip",
+      "breakpoints": true
     }
   ]
 }

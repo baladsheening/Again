@@ -6511,3 +6511,54 @@ outright. The specification's own answer is that an intention can be refined
 later, and where that refinement lives is undesigned: the foot is full at five
 glyphs and no artboard draws one. That is the decision this waits on, not an
 implementation.
+
+### Photographs: a private store and a door of our own (24 August)
+
+Vercel Blob, at the user's direction, with `access: 'private'`. ⚠ **An
+unguessable public URL is not an access-controlled media path** (§6): it is a
+secret that leaks the first time somebody shares a link and cannot be revoked
+without deleting the file. The difference matters most for exactly what this
+stores — a photograph somebody took of something they want.
+
+**The row holds a pathname, never a URL, and the client is given neither.**
+`/api/media/[captureId]` is the one door, and what it checks is whose capture
+this is: `getMyCaptureImagePath` filters on the session user and there is
+deliberately no parameter that widens it. 404 for both *no such capture* and
+*not yours*, because a 403 confirms the id exists.
+
+⚠ **The camera is dark until a Blob store exists**, which makes deploying
+without one a deploy without photographs rather than a broken one. The preflight
+says so as a notice, not a failure — that is what stops a dark camera being
+investigated as a bug.
+
+**EXIF is stripped structurally, not by re-encoding.** A handset photo carries
+GPS to a few metres, and `CLAUDE.md` puts continuous location outside Release 1 —
+storing a co-ordinate that arrived inside a JPEG would be that, by accident, with
+no consent step near it. The three containers keep metadata in named blocks, so
+dropping blocks is exact and needs no decode. ⚠ **Re-encoding is worse**: a
+native codec, quality lost on every save, and every photograph silently rotated
+by the tag being removed. ⚠ **Orientation goes with the GPS and that is
+accepted** — between a sideways photo and a stored location, the sideways photo
+wins.
+
+⚠ **HEIC is refused and the `accept` attribute is what makes that work.** Safari
+hands over HEIC for `image/*`; naming three types makes iOS transcode on the way
+out, putting the conversion before the photograph rather than a failure after it.
+
+**One call, not an upload then a save.** An upload that returns a pathname before
+the capture exists leaves an unreferenced object the moment somebody changes
+their mind. The idempotency check comes *before* the upload, so a retried
+submission does not store a second copy on its way to finding the row.
+
+⚠ **A line that carried a photograph cannot retry.** The `File` went to the
+upload and the page keeps only an object URL, which is a view of bytes the
+browser owns. Holding every photograph of a session in memory against a failure
+that may not come is worse, on the device least able to afford it.
+
+⚠ **What is verified and what is not.** The strippers have four tests, in
+`guarantees.test.ts` rather than `acceptance.test.ts` because a surviving GPS tag
+has no symptom: the picture looks identical, the save succeeds, the page is
+right. One of them caught a real bug — the WebP reader took the chunk size at the
+name's offset, which drops every chunk after the first. **The upload, the media
+route and the camera have never run**, because there is no store to run them
+against. They typecheck and build; nothing about them has been seen working.

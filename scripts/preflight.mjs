@@ -134,6 +134,21 @@ if (dbHost) {
   }
 }
 
+/*
+  A notice and never a failure. Images are the one part of the product that is
+  optional by construction: without a store the camera glyph is dark, which is
+  the foot's own rule about a control that cannot act — so a deploy with no Blob
+  store is a deploy without photographs, not a broken one. Saying so is what
+  stops a dark camera being investigated as a bug.
+*/
+if (!set('BLOB_READ_WRITE_TOKEN')) {
+  notices.push(
+    'No BLOB_READ_WRITE_TOKEN, so the camera is off. Photographs need a Vercel ' +
+      'Blob store; create one, link it to this project, and the glyph lights on ' +
+      'the next deploy with no code change.',
+  )
+}
+
 if (set('RESEND_API_KEY') && !set('EMAIL_FROM')) {
   notices.push(
     "EMAIL_FROM is unset, so email sends from Resend's shared sender. That " +
