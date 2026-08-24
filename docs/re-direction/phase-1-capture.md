@@ -38,6 +38,11 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > exit* below — including the mirrored exit curve that was built first and
 > measured before it could ship.
 >
+> ⚠ **Three things came back off the handset the moment in-place editing shipped,
+> and none of them has been looked at.** They are the open items — see *What the
+> handset said about editing* below. Two are a movement bug and one is a design
+> question about whether the gesture should exist at all.
+>
 > ⚠ The installed app **never reloads until it is force-quit** — check which
 > build is running before believing anything seen on it.
 
@@ -305,6 +310,42 @@ idempotency comes free.
 survive a reload. ⚠ **It waits 4s before reloading**: the save is fire-and-forget
 by design, and a reload that races it reads the row before the write lands, which
 looks exactly like an edit that never persisted. It did, at 900ms.
+
+### What the handset said about editing — 24 August, open
+
+**Reported minutes after `0d72b1d` deployed. Nothing here has been investigated
+and nothing has been fixed.** This is the report as given, not a diagnosis.
+
+**1. Without scrolling first, double-tapping a line moves the row.** It shifts —
+down, probably. Then tapping *outside* the line that was double-tapped makes **the
+top banner recede**, with no scroll to explain it.
+
+**2. After scrolling down, double-tapping a line makes the row descend** far
+enough to obscure some of the entries. Tapping elsewhere returns it to the top.
+
+⚠ **Hypothesis, unverified, and it is one bug rather than two.** Focusing a record
+line makes the browser scroll it into view; the page moves; `useChromeRecede`
+reads the movement as a scroll and takes the bar away, while the band's thermostat
+in `keyboard-hem.ts` tries to correct a position that was not wrong. **The first
+suspect is this phase's own change**: `useKeyboardHem` was given
+`writing || editing !== null` so a record line being rewritten would get the band
+held off the status bar. The live line never had this problem because it is
+**pinned**; a record line is in normal flow, and that is precisely the condition
+that differs. ⚠ Test the hypothesis before acting on it — the last four bugs on
+this page all keyed to something that looked obvious and was not.
+
+**3. Two design questions, asked and deliberately left open:**
+
+- **How would anybody know a second tap edits?** Nothing on the page says so, and
+  this document has never had an answer for discoverability — it specified the
+  gesture and stopped. A legend, an icon or a word of copy are all ruled out
+  elsewhere on this screen, which makes it a real question rather than a small
+  one.
+- **Should a line be editable at all?** ⚠ **The design saying so is not the
+  answer.** This document has always said the second tap should edit; the question
+  now is whether that was right, and it is being reopened from hardware rather
+  than from the page. Nothing about *nothing is ever deleted* (§5.1) or the
+  suppression rule settles it either way.
 
 ### The deviations now standing
 
