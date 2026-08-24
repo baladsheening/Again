@@ -6410,3 +6410,70 @@ nothing is known: the old row printed `—` for a missing year, which was fine w
 a missing year was the exception and would be a column of em dashes on a page of
 raw captures. The state's word wins over the want label, because it is the one a
 raw capture can also carry.
+
+### Resolution offers, and the first Phase 1 migration (24 August)
+
+Saved → line → then a quiet offer. Additive only, at the user's direction: two
+nullable columns on `captures` — `suggested_possibility_id` and
+`resolution_declined_at` — plus one FK. Old code ignores a column it does not
+select, so **a revert push is still a rollback**, which is the property the rest
+of the phase has kept. ⚠ **The migration has to reach production before the code
+does**: the page's read selects the new column, so deploying first is a broken
+page rather than a degraded one.
+
+**The question is written on the row rather than recomputed.** That is what lets
+an offer stand *forever, quietly*. Recomputing would be a provider call per line
+per page open, answered differently each time — and a question that disappears
+when you reload has quietly answered itself, which is the failure the design
+names.
+
+**Ignoring is not No**, which is why the timestamp exists at all. *No* records
+that this possibility is not the one and takes the `?` away; ignoring leaves the
+mark standing indefinitely. The suggestion is kept beside the timestamp rather
+than cleared, so what was refused stays known.
+
+⚠ **The confidence rule is exact-match on the reduced words, and it is
+deliberately blunt.** TMDB is a relevance match ranked by popularity and answers
+something for almost any string, so the top result would put a film under every
+capture — *try pottery* offered a thriller called *Pottery*, forever, on a line
+that was never about a film. **A wrong offer costs more than no offer**: it asks
+a question somebody has to dismiss. The bar is that somebody typed the title and
+nothing else. The misses are silent and cost nothing, which is the right way
+round, and widening it is a decision with evidence behind it rather than a
+loosened constant.
+
+⚠ **`looksLikeTheSameTitle` is not the normalising rule and must never be used
+for matching.** `normalised()` in `schema.ts` is the one implementation of what
+the words reduce to, it lives in SQL, and rows and queries have to agree forever.
+This decides only whether to ask a question: if the two drift, an offer is made
+or not made, and nothing is stored under the wrong reduction. Naming them apart
+is what keeps that true — a shared helper would invite the second use.
+
+**Provider failure is the absence of an offer, logged and invisible**, and both
+halves are built. The invisible half was easy; the logged half is the one that
+matters, because a provider quietly answering nothing for a week looks exactly
+like a product where captures do not resolve, and without a line in the log there
+is no way to tell those apart. ⚠ **The words are never logged.** The reason is
+operational; the text that would make the log useful for debugging is the text
+that would make it a copy of everybody's diary.
+
+**The Yes/No pair is shared by being the same component.** The design asks the
+offer to reuse the settle flow's pair rather than invent an accept control, so
+`Question` is that pair and *Again?* renders through it too. They are the same
+kind of thing: one line of the record asking the person who wrote it to decide
+something, both answerable by ignoring.
+
+⚠ **`intent` stays null on an accepted offer, so the unique key cannot bite.**
+(user, possibility, intent) with NULLs distinct in Postgres means two captures of
+the same film are allowed — correct, since two captures on different days are two
+intentions until something says otherwise. The day intent is set on a resolution,
+`acceptSuggestion` has to answer for the collision. It does not today.
+
+⚠ **No overlap trigger.** §6 keys convergence on the possibility, so accepting an
+offer is exactly where `fireOverlap` belongs when Phase 2's second trigger is
+wired to captures. It is not called because this phase ships no convergence
+surface, and a notification nobody can look at is noise with a delivery cost.
+
+**`upsertPossibility` is the one writer**, and `upsertItem` now delegates to it.
+Two copies of one upsert over one table is how two callers come to disagree about
+what a canonical row is — and `items` and `possibilities` are one table.

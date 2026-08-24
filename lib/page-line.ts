@@ -23,6 +23,11 @@ export type PageLineView = {
   /** Stamped on the server — see `lib/day.ts` for why the client never formats. */
   day: string
   dayLabel: string
+  /**
+   * **A question standing on this line**, or `null`. Derived in the read —
+   * *suggested, and not yet resolved, and not refused* — see `PageLine.offer`.
+   */
+  offer: { title: string; year: number | null } | null
 }
 
 /** What the mapper needs of a row, and nothing more. */
@@ -32,6 +37,7 @@ type Stampable = {
   state: EntryState
   year: number | null
   createdAt: Date
+  offer?: { title: string; year: number | null } | null
 }
 
 /**
@@ -54,6 +60,13 @@ export function toPageLines(
       year: row.year,
       day: day.key,
       dayLabel: day.label,
+      /*
+        `?? null` because two of the three reads that build these rows have no
+        question to carry — the tray and search both select a literal null, and
+        a row that simply omits the field must mean the same thing as one that
+        says so. Optional in, definite out.
+      */
+      offer: row.offer ?? null,
     }
   })
 }

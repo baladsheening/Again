@@ -11,14 +11,20 @@ import {
   parsePageCursor,
   requireSessionUser,
   resolveCapture,
+  acceptSuggestion,
+  declineSuggestion,
+  getMyCaptureText,
   restoreCapture,
   searchMyCaptures,
+  suggestForCapture,
+  upsertPossibility,
   setCaptureText,
   undoCapture,
   PAGE_SIZE,
   TEXT_MAX,
 } from '@/lib/db'
 import { dayStamper } from '@/lib/day'
+ import { searchFilms } from '@/lib/tmdb'
 import { toPageLines, type PageLineView } from '@/lib/page-line'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { viewerTimeZone } from '@/lib/region'
@@ -336,4 +342,179 @@ export async function searchAction(
       earlier: more && shown.length > 0 ? pageCursor(shown[shown.length - 1]) : null,
     },
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Resolution offers                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * **Does this look like the same title?** — the confidence rule, and the whole
+ * of it.
+ *
+ * ⚠ **A wrong offer is worse than no offer**, which is what makes this
+ * conservative rather than clever. TMDB is a relevance match ranked by
+ * popularity and it answers *something* for almost any string, so taking the
+ * top result would put a film under every capture — *try pottery* would be
+ * offered a thriller called *Pottery*, forever, on a line that was never about
+ * a film. §13 requires that provider failure not lose a capture; a provider
+ * *success* that is nonsense costs more, because it asks a question the person
+ * has to dismiss.
+ *
+ * So the bar is that somebody typed the title and nothing else. **Exact match on
+ * the reduced words**: *jaws*, *Jaws!*, *  JAWS  * all offer *Jaws*; *watch jaws
+ * tonight* offers nothing. The misses are silent and cost nothing, which is the
+ * right way round.
+ *
+ * ⚠ **This is deliberately NOT the normalising rule, and must never be used for
+ * matching.** `normalised()` in `schema.ts` is the one implementation of *what
+ * the words reduce to* and it lives in SQL, because rows and queries have to
+ * agree forever. This decides only whether to *ask a question*: if the two ever
+ * drift, an offer is made or not made, and nothing is stored under the wrong
+ * reduction. Naming them apart is what keeps that true.
+ */
+function looksLikeTheSameTitle(a: string, b: string) {
+  const reduce = (v: string) =>
+    v
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim()
+  const left = reduce(a)
+  return left !== '' && left === reduce(b)
+}
+
+/**
+ * **Offer a capture a possibility, after it is saved.**
+ *
+ * Saved → line → *then* a quiet offer, if there is one. §13: a capture is
+ * complete when it is saved, an unresolved capture persisting is the ordinary
+ * case, and nothing may be silently converted or matched.
+ *
+ * ⚠ **Provider failure is not an error state.** It is the absence of an offer —
+ * logged and invisible. Every path out of here that is not *here is a
+ * possibility* returns `{ offer: null }`, including a TMDB outage, a rate limit,
+ * and a query that matched nothing. The page draws nothing, which is what it
+ * draws for the overwhelming majority of captures anyway.
+ *
+ * ⚠ **It is asked once, at the moment of capture, and the answer is stored.**
+ * Not on every page open: a record of fifty lines would be fifty provider calls
+ * per open, and the offer would still be a different one each time. The row
+ * carries the question so it can stand — see `suggested_possibility_id`.
+ *
+ * ⚠ **Only films, because only films have a provider.** The kind is not a guess
+ * about the capture: it is the only catalogue the app has, and a capture that is
+ * not about a film simply fails the title test above.
+ */
+export async function offerAction(
+  captureId: string,
+): Promise<ActionResult<{ offer: { title: string; year: number | null } | null }>> {
+  const sessionUser = await requireSessionUser()
+
+  if (!captureIdSchema.safeParse(captureId).success) {
+    return { ok: false, message: 'Unknown capture.' }
+  }
+
+  /**
+   * **No offer, and why — said to the log and to nobody else.**
+   *
+   * ⚠ **The design asks for this in those words**: provider failure is not an
+   * error state, it is *the absence of an offer, logged and invisible*. The
+   * invisible half was easy and the logged half is the half that matters — a
+   * provider quietly answering nothing for a week looks exactly like a product
+   * where captures do not resolve, and without a line in the log there is no
+   * way to tell those apart.
+   *
+   * ⚠ **The words are not logged.** A capture is the most private thing in the
+   * product; the reason an offer did not happen is operational, and the text
+   * that would make the log useful for debugging is the text that would make it
+   * a copy of everybody's diary.
+   */
+  const none = (why: string) => {
+    console.warn(`offer: none (${why})`)
+    return { ok: true, value: { offer: null } } as const
+  }
+
+  /*
+    The words as they are stored, read back rather than taken from the client:
+    the capture the offer attaches to is the one on the server, and its text may
+    have been rewritten between the Return and this call.
+  */
+  const text = await getMyCaptureText(sessionUser, captureId)
+  if (text === null) return none('no such capture')
+
+  for (const identifier of [sessionUser.id, clientIp(await headers())]) {
+    const limit = await rateLimit('search', identifier)
+    /* A rate limit is the absence of an offer, not a message. */
+    if (!limit.ok) return none('rate limited')
+  }
+
+  let results
+  try {
+    results = (await searchFilms(text, 1)).results
+  } catch (e) {
+    /*
+      ⚠ **Swallowed on purpose, and this is the §13 requirement.** A provider
+      being down must not reach the person who wrote the line: their capture is
+      saved and complete, and an error on it would be the app reporting a
+      failure of something it never promised. It is **logged**, which is the
+      other half of the same requirement.
+    */
+    return none(`provider threw: ${e instanceof Error ? e.message : 'unknown'}`)
+  }
+
+  const match = results.find((r) => looksLikeTheSameTitle(text, r.title))
+  if (!match) return none(`no title match in ${results.length} results`)
+
+  const possibility = await upsertPossibility(sessionUser, {
+    kind: 'film',
+    externalSource: 'tmdb',
+    externalId: match.externalId,
+    title: match.title,
+    year: match.year,
+    metadata: { posterPath: match.posterPath },
+  })
+
+  const written = await suggestForCapture(sessionUser, captureId, possibility.id)
+  /*
+    `false` means the capture moved while this was in flight — resolved,
+    already offered, or refused. The question belongs to the row, so the row's
+    answer wins and nothing is drawn.
+  */
+  if (!written.ok || !written.value) return none('the row moved')
+
+  return { ok: true, value: { offer: { title: possibility.title, year: possibility.year } } }
+}
+
+/** **Yes.** The suggestion becomes what the capture is about. */
+export async function acceptOfferAction(captureId: string): Promise<ActionResult> {
+  const sessionUser = await requireSessionUser()
+
+  if (!captureIdSchema.safeParse(captureId).success) {
+    return { ok: false, message: 'Unknown capture.' }
+  }
+
+  const result = await acceptSuggestion(sessionUser, captureId)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  return { ok: true, value: null }
+}
+
+/**
+ * **No.** This possibility is not the one.
+ *
+ * ⚠ **Not the same as ignoring**, which is why it is a mutation at all: an
+ * unanswered offer stands indefinitely, and a question that expires on its own
+ * has quietly answered itself.
+ */
+export async function declineOfferAction(captureId: string): Promise<ActionResult> {
+  const sessionUser = await requireSessionUser()
+
+  if (!captureIdSchema.safeParse(captureId).success) {
+    return { ok: false, message: 'Unknown capture.' }
+  }
+
+  const result = await declineSuggestion(sessionUser, captureId)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  return { ok: true, value: null }
 }

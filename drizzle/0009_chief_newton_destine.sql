@@ -1,0 +1,3 @@
+ALTER TABLE "captures" ADD COLUMN "suggested_possibility_id" uuid;--> statement-breakpoint
+ALTER TABLE "captures" ADD COLUMN "resolution_declined_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "captures" ADD CONSTRAINT "captures_suggested_possibility_id_items_id_fk" FOREIGN KEY ("suggested_possibility_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;

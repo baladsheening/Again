@@ -7,6 +7,8 @@ import {
   eq,
   getTableColumns,
   inArray,
+  isNotNull,
+  isNull,
   lt,
   ne,
   or,
@@ -413,6 +415,17 @@ export type PageLine = {
   state: CaptureState
   year: number | null
   createdAt: Date
+  /**
+   * **A question standing on this line**, or `null` — which is the ordinary
+   * case and always will be.
+   *
+   * ⚠ **Derived in the read, not exposed as three columns.** Whether an offer
+   * stands is *suggested, and not yet resolved, and not refused* — three facts
+   * that only mean something together. Handing the client the parts would let a
+   * screen invent a fourth reading of them, and the one that matters is
+   * whether to draw a `?`.
+   */
+  offer: { title: string; year: number | null } | null
 }
 
 /**
@@ -477,17 +490,31 @@ export async function listMyPage(
   sessionUser: SessionUser,
   { limit = PAGE_SIZE, before }: { limit?: number; before?: PageCursor } = {},
 ): Promise<PageLine[]> {
-  return db
+  /*
+    ⚠ **The second join is the *question*, and it is a different column.** A
+    capture's possibility is what it resolved to; its suggestion is what it was
+    offered. Joining one alias to both would collapse the two into whichever
+    happened to be set, which is precisely the confusion
+    `suggested_possibility_id` is documented against.
+  */
+  const suggested = alias(possibilities, 'suggested')
+
+  const rows = await db
     .select({
       id: captures.id,
       text: captures.text,
       state: captures.state,
       year: possibilities.year,
       createdAt: captures.createdAt,
+      resolved: captures.possibilityId,
+      declinedAt: captures.resolutionDeclinedAt,
+      offerTitle: suggested.title,
+      offerYear: suggested.year,
     })
     .from(captures)
     /* LEFT, because a capture with nothing canonical behind it is the norm. */
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+    .leftJoin(suggested, eq(suggested.id, captures.suggestedPossibilityId))
     .where(
       and(
         eq(captures.userId, sessionUser.id),
@@ -507,6 +534,18 @@ export async function listMyPage(
     )
     .orderBy(desc(captures.createdAt), desc(captures.id))
     .limit(limit)
+
+  return rows.map(({ resolved, declinedAt, offerTitle, offerYear, ...line }) => ({
+    ...line,
+    /*
+      *Suggested, and not yet resolved, and not refused.* All three, or there is
+      no question to draw — see `PageLine.offer`.
+    */
+    offer:
+      offerTitle !== null && resolved === null && declinedAt === null
+        ? { title: offerTitle, year: offerYear }
+        : null,
+  }))
 }
 
 /**
@@ -522,6 +561,12 @@ export async function listMySettled(
   sessionUser: SessionUser,
   { limit = PAGE_SIZE, offset = 0 }: Page = {},
 ): Promise<PageLine[]> {
+  /*
+    ⚠ **No offer, and it is a `null` written down rather than a join left
+    out.** A settled capture is one somebody is done deciding about; a question
+    on it would be the app asking about something already answered. The tray
+    has no way to answer one either.
+  */
   return db
     .select({
       id: captures.id,
@@ -529,6 +574,7 @@ export async function listMySettled(
       state: captures.state,
       year: possibilities.year,
       createdAt: captures.createdAt,
+      offer: sql<null>`null`,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -582,6 +628,11 @@ export async function searchMyCaptures(
   sessionUser: SessionUser,
   { q, limit = PAGE_SIZE, before }: { q: string; limit?: number; before?: PageCursor },
 ): Promise<PageLine[]> {
+  /*
+    ⚠ **No offer here either.** Search results are read-only — nothing on that
+    surface acts on a line — so a `?` would be a question with no way to answer
+    it, which is worse than not asking.
+  */
   return db
     .select({
       id: captures.id,
@@ -589,6 +640,7 @@ export async function searchMyCaptures(
       state: captures.state,
       year: possibilities.year,
       createdAt: captures.createdAt,
+      offer: sql<null>`null`,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -1064,6 +1116,157 @@ export async function setCaptureText(
     .returning()
 
   if (!updated) return err('not_found', 'No such capture.')
+  return ok(updated)
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Resolution offers                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * **One capture's own words, read back.**
+ *
+ * ⚠ **The offer path asks the server what the line says rather than trusting
+ * the client's copy.** A line can be rewritten between the Return that created
+ * it and the offer that arrives behind it, and a suggestion made against words
+ * that are no longer on the row is a question about something nobody wrote.
+ *
+ * ⚠ **It returns `text` and nothing else.** `note` is owner-only forever and
+ * a whole-row read is how a private column reaches a caller that never meant to
+ * ask for one — the same argument `SHARED_CAPTURE_COLUMNS` makes, applied to a
+ * read that has no business with anything but the words.
+ */
+export async function getMyCaptureText(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ text: captures.text })
+    .from(captures)
+    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+    .limit(1)
+
+  return row?.text ?? null
+}
+
+/**
+ * **Offer a capture a possibility.** Writes the suggestion; resolves nothing.
+ *
+ * A capture is complete when it is saved (§13). This is the *question*, held on
+ * the row so that it stands rather than being recomputed — see
+ * `suggested_possibility_id` in the schema for why a question that disappears
+ * on reload has answered itself.
+ *
+ * ⚠ **Four conditions, all in the `WHERE`, and none of them is a read-then-
+ * write.** A capture that already resolved has nothing to be asked; one that
+ * already carries a standing offer must not have it replaced under an open
+ * question; and one that was answered *No* must never be asked again — that is
+ * the whole difference between ignoring and refusing. Putting them in the
+ * predicate means a concurrent accept and a late-arriving suggestion cannot
+ * interleave into a capture that is both resolved and offered.
+ *
+ * ⚠ **Not an error when it writes nothing.** The provider path is
+ * fire-and-forget and races the person using the page; *the offer did not
+ * land* is an ordinary outcome and is reported as `false`, not as a failure.
+ */
+export async function suggestForCapture(
+  sessionUser: SessionUser,
+  captureId: string,
+  possibilityId: string,
+): Promise<Result<boolean>> {
+  const [updated] = await db
+    .update(captures)
+    .set({ suggestedPossibilityId: possibilityId })
+    .where(
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        isNull(captures.possibilityId),
+        isNull(captures.suggestedPossibilityId),
+        isNull(captures.resolutionDeclinedAt),
+      ),
+    )
+    .returning({ id: captures.id })
+
+  return ok(Boolean(updated))
+}
+
+/**
+ * **Yes.** The suggestion becomes the capture's possibility.
+ *
+ * ⚠ **The words are not touched.** §6: the text is what somebody typed and is
+ * never replaced by a suggestion's title. What changes is what the capture is
+ * *about*, which is the only thing resolving means.
+ *
+ * ⚠ **The suggestion is left where it is**, so the row still records what was
+ * offered as well as what was taken. They are equal after this and that is not
+ * redundancy: the day an offer can be superseded, the two columns are how you
+ * tell an accepted offer from a resolution that arrived another way.
+ *
+ * ⚠ **`intent` stays null, so the unique key cannot bite.** The key is
+ * (user, possibility, intent) and Postgres treats NULLs as distinct, so
+ * resolving two captures to the same film is allowed — which is correct, since
+ * two captures of the same thing on different days are two intentions until
+ * something says otherwise. The day intent is set on a resolution, this
+ * function has to answer for the collision; it does not today, and that is
+ * stated rather than discovered.
+ *
+ * ⚠ **No overlap trigger.** §6 keys convergence on the possibility, and this is
+ * the moment a capture acquires one — so this is exactly where `fireOverlap`
+ * will belong when Phase 2's second trigger is wired to captures. It is not
+ * called here because this phase ships no convergence surface, and a
+ * notification nobody can look at is noise with a delivery cost.
+ */
+export async function acceptSuggestion(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<Result<Capture>> {
+  const [updated] = await db
+    .update(captures)
+    .set({ possibilityId: sql`${captures.suggestedPossibilityId}` })
+    .where(
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        isNull(captures.possibilityId),
+        isNotNull(captures.suggestedPossibilityId),
+        isNull(captures.resolutionDeclinedAt),
+      ),
+    )
+    .returning()
+
+  if (!updated) return err('not_found', 'That question is no longer open.')
+  return ok(updated)
+}
+
+/**
+ * **No.** This possibility is not the one, and nothing offers it again.
+ *
+ * ⚠ **It stamps rather than clears.** Keeping `suggested_possibility_id`
+ * beside the timestamp is what makes the refusal specific — *not this one* —
+ * rather than a capture that merely stopped being asked. A future offer path
+ * has to be able to tell those apart.
+ *
+ * Idempotent: saying No twice leaves the same row, minus a second timestamp,
+ * which is what the `isNull` guarantees.
+ */
+export async function declineSuggestion(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<Result<Capture>> {
+  const [updated] = await db
+    .update(captures)
+    .set({ resolutionDeclinedAt: sql`now()` })
+    .where(
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        isNull(captures.resolutionDeclinedAt),
+      ),
+    )
+    .returning()
+
+  if (!updated) return err('not_found', 'That question is no longer open.')
   return ok(updated)
 }
 

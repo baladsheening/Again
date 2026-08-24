@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
+  acceptOfferAction,
   captureAction,
   crossOffCaptureAction,
+  declineOfferAction,
   earlierAction,
   editCaptureAction,
+  offerAction,
   settleCaptureAction,
   undoCaptureAction,
 } from '@/app/actions/captures'
@@ -170,6 +173,50 @@ type Line = PageLineView & {
   landed?: boolean
 }
 
+/**
+ * **One question, two answers**, and the page asks exactly two kinds: *Again?*
+ * when a line is settled, and *is this what you meant?* when a possibility is
+ * offered.
+ *
+ * ⚠ **The offer reuses the settle pair rather than inventing an accept
+ * control**, which the design asks for by name — and it reuses it by being the
+ * same component, so the two cannot drift into looking like different kinds of
+ * question. They are not: both are one line of the record asking the person who
+ * wrote it to decide something, and both are answerable by ignoring them.
+ *
+ * `gap-5` on a coarse pointer because Yes and No both carry a 44px hit area and
+ * at `gap-4` the two expansions meet in the middle.
+ */
+function Question({
+  ask,
+  onYes,
+  onNo,
+}: {
+  ask: string
+  onYes: () => void
+  onNo: () => void
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-4 pb-3 pointer-coarse:gap-5">
+      <span className="text-sm">{ask}</span>
+      <button
+        type="button"
+        onClick={onYes}
+        className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors"
+      >
+        Yes
+      </button>
+      <button
+        type="button"
+        onClick={onNo}
+        className="text-muted hover:text-text tap-target text-sm transition-colors"
+      >
+        No
+      </button>
+    </div>
+  )
+}
+
 export function PageScreen({
   lines: seed,
   todayKey,
@@ -250,6 +297,17 @@ export function PageScreen({
   const [editDraft, setEditDraft] = useState('')
   /** The last line to land, while the ten seconds hold. */
   const [undoable, setUndoable] = useState<string | null>(null)
+  /**
+   * The line whose offer is standing open **because it just arrived.**
+   *
+   * ⚠ **An id, and only ever the newest.** The design says an offer is shown in
+   * full while its line is *live or picked* — live meaning the moment of
+   * capture, so that a question arrives visibly rather than as a mark somebody
+   * has to notice. Every other line's offer is the trailing `?` until it is
+   * pointed at. Holding one id is what stops a session of captures ending with
+   * ten open questions down the page.
+   */
+  const [offering, setOffering] = useState<string | null>(null)
   /**
    * **Where the record continues.** `null` is the end of it, and the tail
    * control exists exactly while this is a string.
@@ -402,6 +460,28 @@ export function PageScreen({
   /*  Return                                                            */
   /* ------------------------------------------------------------------ */
 
+  /**
+   * **Ask the provider, after the line is on the page.**
+   *
+   * ⚠ **Nothing here can fail visibly**, which is §13's requirement rather than
+   * a shortcut: a capture is complete when it is saved, and provider failure is
+   * the absence of an offer — logged and invisible. `offerAction` returns *no
+   * offer* for an outage, a rate limit and a query that matched nothing alike,
+   * so there is one path and it draws nothing.
+   *
+   * ⚠ **It runs behind the save and never in front of it.** The line is on the
+   * page before this is called, and the four seconds are over by then.
+   */
+  const ask = useCallback(
+    async (key: string, id: string) => {
+      const result = await offerAction(id)
+      if (!result.ok || !result.value.offer) return
+      mark(key, { offer: result.value.offer })
+      setOffering(id)
+    },
+    [mark],
+  )
+
   const send = useCallback(
     async (key: string, text: string, mutationId: string) => {
       const result = await captureAction({ text, clientMutationId: mutationId })
@@ -411,6 +491,13 @@ export function PageScreen({
       }
       mark(key, { id: result.value.id, pending: false, failed: null })
       /*
+        ⚠ **Only a real creation is offered anything.** A retry that found the
+        submission already written is the same line arriving twice; asking the
+        provider again would either write the same suggestion or overwrite an
+        answer somebody has already given.
+      */
+      if (result.value.created) void ask(key, result.value.id)
+      /*
         Only a real creation opens the window. A retry that found the submission
         already written returns the row that was there, and offering to delete
         something that landed a minute ago because the connection came back is
@@ -418,7 +505,7 @@ export function PageScreen({
       */
       if (result.value.created) openUndo(result.value.id)
     },
-    [mark, openUndo],
+    [ask, mark, openUndo],
   )
 
   function commit() {
@@ -442,6 +529,8 @@ export function PageScreen({
       year: null,
       day: todayKey,
       dayLabel: 'Today',
+      /* No question yet. One may arrive behind the save — see `ask`. */
+      offer: null,
       mutationId,
       pending: true,
       failed: null,
@@ -453,6 +542,11 @@ export function PageScreen({
     setDraft('')
     setPicked(null)
     setAsking(null)
+    /*
+      The open offer belongs to the line that was just written; another line
+      being written is the moment that stops being true. It keeps its `?`.
+    */
+    setOffering(null)
     closeUndo()
 
     /* The line lands at the head, so the head is where the page goes. */
@@ -674,6 +768,43 @@ export function PageScreen({
         { ...line, failed: result.message },
         ...all.slice(at),
       ])
+    })
+  }
+
+  /**
+   * **Yes.** The line is about that possibility now.
+   *
+   * ⚠ **The words do not change.** §6: the text is what somebody typed and is
+   * never replaced by a suggestion's title. What appears is the year, in the
+   * slot the `?` was occupying — which is the whole visible difference between
+   * a raw line and a resolved one, and the reason the `?` lives in that slot.
+   */
+  function acceptOffer(line: Line) {
+    const offer = line.offer
+    if (!offer) return
+    if (offering === line.id) setOffering(null)
+    mark(line.key, { offer: null, year: offer.year, failed: null })
+
+    void acceptOfferAction(line.id).then((result) => {
+      if (!result.ok) mark(line.key, { offer, year: line.year, failed: result.message })
+    })
+  }
+
+  /**
+   * **No.** Not that one — and it is recorded, so nothing asks again.
+   *
+   * ⚠ **Ignoring is not this.** An unanswered offer stands indefinitely, which
+   * is correct: a question that expires on its own has quietly answered itself.
+   * This is the only thing that takes the `?` away without resolving anything.
+   */
+  function declineOffer(line: Line) {
+    const offer = line.offer
+    if (!offer) return
+    if (offering === line.id) setOffering(null)
+    mark(line.key, { offer: null, failed: null })
+
+    void declineOfferAction(line.id).then((result) => {
+      if (!result.ok) mark(line.key, { offer, failed: result.message })
     })
   }
 
@@ -1302,6 +1433,28 @@ export function PageScreen({
                       {line.year}
                     </span>
                   )}
+
+                  {/*
+                    ⚠ **The standing question, as one character in the year's own
+                    slot.** No glyph, no colour and no new vocabulary: a resolved
+                    line carries a year there and an offered one carries a `?`,
+                    which is exactly the difference between them. The two can
+                    never collide — an offer only exists on a capture that has
+                    not resolved, and a capture that has not resolved has no
+                    year.
+
+                    ⚠ **It stands forever.** No expiry: any number would be a
+                    constant tuned to nothing, and an unanswered question is not
+                    wrong, it is unanswered. Only *No* takes it away.
+                  */}
+                  {line.offer !== null && line.year === null && (
+                    <span
+                      className="text-muted ms-2 text-[0.8125rem] leading-none"
+                      title={`Is this ${line.offer.title}?`}
+                    >
+                      ?
+                    </span>
+                  )}
                 </button>
 
                 {/*
@@ -1339,6 +1492,36 @@ export function PageScreen({
                   </p>
                 )}
 
+                {/*
+                  ⚠ **Shown in full while the line is live or picked**, and as
+                  the `?` above the rest of the time. *Live* is the moment of
+                  capture — so a question arrives visibly rather than as a mark
+                  somebody has to notice — and *picked* is the line being pointed
+                  at, which is when somebody is deciding about it anyway.
+
+                  ⚠ **Ignoring it is simply not answering**, which is why there
+                  is no dismiss. Walking away leaves the `?` standing, and that
+                  is the correct outcome for a question nobody wanted asked.
+                */}
+                {line.offer !== null && (isPicked || offering === line.id) && (
+                  <Question
+                    /*
+                      The title, and the year when it has one — which is what
+                      distinguishes two films of the same name and is the whole
+                      of what somebody needs to answer. No poster: a picture is
+                      a second claim, and the question is *is this the thing*,
+                      not *do you like the look of it*.
+                    */
+                    ask={
+                      line.offer.year !== null
+                        ? `${line.offer.title} (${line.offer.year})?`
+                        : `${line.offer.title}?`
+                    }
+                    onYes={() => acceptOffer(line)}
+                    onNo={() => declineOffer(line)}
+                  />
+                )}
+
                 {asking === line.id && (
                   /*
                     ⚠ **One question, and the word is *Again?*** The two outcomes
@@ -1346,28 +1529,12 @@ export function PageScreen({
                     against *that is dealt with* — and nothing about a raw
                     capture can supply the answer. The word generalises where the
                     film-first *Go back?* did not, and it is the app's own name.
-
-                    `gap-5` on a coarse pointer because Yes and No both carry a
-                    44px hit area and at `gap-4` the two expansions meet in the
-                    middle.
                   */
-                  <div className="flex flex-wrap items-center gap-4 pb-3 pointer-coarse:gap-5">
-                    <span className="text-sm">Again?</span>
-                    <button
-                      type="button"
-                      onClick={() => settle(line, true)}
-                      className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors"
-                    >
-                      Yes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => settle(line, false)}
-                      className="text-muted hover:text-text tap-target text-sm transition-colors"
-                    >
-                      No
-                    </button>
-                  </div>
+                  <Question
+                    ask="Again?"
+                    onYes={() => settle(line, true)}
+                    onNo={() => settle(line, false)}
+                  />
                 )}
               </li>
             )

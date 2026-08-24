@@ -144,11 +144,11 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 - ~~*An Earlier control*~~ — **done**, and it is at the **tail**: the record is
   newest-first, so earlier is downward. See *Earlier* below. ⚠ It is a **cursor**
   and not the `offset` this list predicted.
-5. **Resolution offers.** *Suggestions never gate the save*, above: saved →
-   line → then a quiet offer. The trailing muted `?`, the Yes/No pair while the
-   line is picked, and provider failure as the absence of an offer rather than
-   an error. `film-screen.tsx` is kept for this — it is the media-resolved
-   detail surface.
+- ~~*Resolution offers*~~ — **done**, and ⚠ **it is the first Phase 1 deploy to
+  carry a migration.** Additive only: two nullable columns, so a revert push is
+  still a rollback. See *Resolution offers* below. `film-screen.tsx` is still
+  kept — it is the media-resolved detail surface and nothing on the page opens
+  it yet.
 6. **Images.** The heaviest item, and a storage layer rather than a button —
    §6's object storage outside Postgres, size and type limits, EXIF stripping,
    an access-controlled media path, retained provenance, reportable and
@@ -204,6 +204,109 @@ honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### Resolution offers — 24 August
+
+**Saved → line → then a quiet offer, if there is one.** A capture is complete
+when it is saved (§13); a suggestion may arrive afterwards, may be wrong, and
+may never arrive at all.
+
+⚠ **This is the first Phase 1 deploy with a migration, and it is additive.** Two
+nullable columns on `captures` — `suggested_possibility_id` and
+`resolution_declined_at` — plus one FK. Old code ignores a column it does not
+select, so **a revert push is still a rollback**, which is the property the rest
+of this phase has kept. ⚠ **The migration has to reach production *before* the
+code does**: the page's read selects the new column, so deploying first is a
+broken page rather than a degraded one.
+
+**How the question stands.** It is written on the row, not recomputed. That is
+what lets an offer stand *forever, quietly* — a record of fifty lines would
+otherwise be fifty provider calls per open, answered differently each time, and
+a question that disappears when you reload has answered itself.
+
+- **Shown in full while its line is live or picked.** *Live* is the moment of
+  capture, so a question arrives visibly rather than as a mark to notice; only
+  the newest is held open, or a session of captures ends with ten open questions
+  down the page.
+- **Otherwise a trailing muted `?`**, in the same slot a resolved line's year
+  takes. One character, no glyph, no colour, no new vocabulary — a resolved line
+  carries a year there and an offered one carries a `?`, which is exactly the
+  difference between them. They cannot collide: an offer exists only on a
+  capture that has not resolved, and one that has not resolved has no year.
+- **Ignoring is not No.** *No* stamps `resolution_declined_at` — it records that
+  this possibility is not the one, the `?` goes, and nothing asks again.
+  Ignoring leaves the mark standing indefinitely, which is correct.
+
+⚠ **The suggestion is kept when No is said**, rather than cleared. What was
+refused stays known, so a future offer path can ask *has this capture already
+been offered this?* and get a true answer.
+
+⚠ **The confidence rule is exact-match on the reduced words, and it is
+deliberately blunt.** TMDB is a relevance match ranked by popularity and answers
+*something* for almost any string, so taking the top result would put a film
+under every capture — *try pottery* offered a thriller called *Pottery*, forever,
+on a line that was never about a film. **A wrong offer costs more than no offer**,
+because it asks a question somebody has to dismiss. So the bar is that somebody
+typed the title and nothing else: *jaws*, *Jaws!*, *  JAWS  * all offer *Jaws*;
+*watch jaws tonight* offers nothing. The misses are silent and cost nothing.
+
+⚠ **`looksLikeTheSameTitle` is NOT the normalising rule and must never be used
+for matching.** `normalised()` in `schema.ts` is the one implementation of *what
+the words reduce to* and it lives in SQL, because rows and queries have to agree
+forever. This decides only whether to *ask*: if the two drift, an offer is made
+or not made, and nothing is stored under the wrong reduction. Naming them apart
+is what keeps that true.
+
+⚠ **Provider failure is the absence of an offer — logged and invisible**, and
+both halves are implemented. An outage, a rate limit, a query that matched
+nothing and a row that moved all return *no offer* and write one line to the log
+saying which. **The words are never logged**: the reason is operational, and the
+text that would make the log useful for debugging is the text that would make it
+a copy of everybody's diary.
+
+⚠ **Only a real creation is offered anything.** A retry that found the submission
+already written is the same line arriving twice; asking again would either write
+the same suggestion or overwrite an answer somebody has already given.
+
+⚠ **The Yes/No pair is shared by being the same component.** The design asks for
+the offer to reuse the settle flow's pair rather than invent an accept control;
+`Question` is that pair, and *Again?* now renders through it too. They are the
+same kind of thing — one line of the record asking the person who wrote it to
+decide something, both answerable by ignoring.
+
+⚠ **The words never change when an offer is accepted.** §6: the text is what
+somebody typed and is never replaced by a suggestion's title. What appears is the
+year, in the slot the `?` was in.
+
+⚠ **`intent` stays null on an accepted offer, so the unique key cannot bite.**
+The key is (user, possibility, intent) and Postgres treats NULLs as distinct, so
+two captures of the same film are allowed — correct, since two captures on
+different days are two intentions until something says otherwise. The day intent
+is set on a resolution, `acceptSuggestion` has to answer for the collision. It
+does not today, and that is stated rather than discovered.
+
+⚠ **No overlap trigger, and that is deliberate.** §6 keys convergence on the
+possibility, so accepting an offer is exactly where `fireOverlap` belongs when
+Phase 2's second trigger is wired to captures. It is not called because this
+phase ships no convergence surface, and a notification nobody can look at is
+noise with a delivery cost.
+
+⚠ **No offer on the tray or in search.** A settled capture is one somebody is
+done deciding about, and search rows act on nothing — a `?` on either is a
+question with no way to answer it. Both reads select a literal `null` rather
+than omitting the field, so the shape is one thing everywhere.
+
+**`upsertPossibility` is the one writer**, in `lib/db/possibilities.ts`.
+`upsertItem` was the same insert under the legacy name and now delegates to it —
+two copies of one upsert over one table is how two callers come to disagree about
+what a canonical row is.
+
+`node_modules/.probe/offer.mjs` drives all six claims. ⚠ **It waits for the
+question rather than for a duration.** A fixed 3.5s made it lie once: the offer
+runs behind the save and takes a provider round trip, so reading the row early
+makes a working offer look exactly like a capture the provider had nothing for.
+The only case that still needs a duration is proving there is **no** question,
+which no event announces.
 
 ### What the shared page was not showing — 24 August
 

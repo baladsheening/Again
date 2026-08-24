@@ -85,6 +85,10 @@ export {
   listMyPage,
   listMySettled,
   searchMyCaptures,
+  getMyCaptureText,
+  suggestForCapture,
+  acceptSuggestion,
+  declineSuggestion,
   countMyCaptures,
   listMyCapturesForExternalId,
   listCapturesForOtherUser,
@@ -118,6 +122,9 @@ export type {
 
 export { upsertItem } from './items'
 export type { ItemInput } from './items'
+
+export { upsertPossibility } from './possibilities'
+export type { PossibilityInput } from './possibilities'
 
 export { getSwap } from './swaps'
 export type { SwapView } from './swaps'

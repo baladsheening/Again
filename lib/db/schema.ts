@@ -324,6 +324,39 @@ export const captures = pgTable(
       .generatedAlwaysAs(normalised(sql`"text"`)),
     /** Null until this resolves to something canonical. Most captures start here. */
     possibilityId: uuid('possibility_id').references(() => possibilities.id),
+    /**
+     * **A provider's answer to *is this a thing?*, offered and not applied.**
+     *
+     * A capture is complete when it is saved; a suggestion may arrive
+     * afterwards, may be wrong, and may never arrive at all (§13). This column
+     * is what lets an offer **stand** rather than being recomputed: without it
+     * the trailing `?` would need a provider call per line per page open, and
+     * a question that disappears when you reload has answered itself.
+     *
+     * ⚠ **It is never read as a resolution.** Everything that means *this
+     * capture resolved to something canonical* reads `possibility_id`, and
+     * accepting an offer is the one path that moves the id from here to there.
+     * Nothing may join to this column for matching, convergence or display of a
+     * title — a suggestion is a question, and §6 keys convergence on the
+     * possibility a capture actually has.
+     */
+    suggestedPossibilityId: uuid('suggested_possibility_id').references(
+      () => possibilities.id,
+    ),
+    /**
+     * **When somebody said the suggestion was not the one.**
+     *
+     * ⚠ **Ignoring is not No, and this column is the difference.** An
+     * unanswered offer stands indefinitely — the design is explicit that a
+     * question expiring on its own has quietly answered itself. *No* is an
+     * answer: it records that this particular possibility is not the one, the
+     * `?` goes, and nothing offers it again.
+     *
+     * ⚠ **The suggestion is kept beside it rather than cleared**, so what was
+     * refused stays known. A future offer path has to be able to ask *has this
+     * capture already been offered this?* and get a true answer.
+     */
+    resolutionDeclinedAt: timestamp('resolution_declined_at', { withTimezone: true }),
     /** Optional at capture, refined later. Never asked for before saving (§3). */
     intent: text('intent').$type<Intent>(),
     state: text('state').$type<CaptureState>().notNull(),

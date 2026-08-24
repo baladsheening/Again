@@ -1,55 +1,28 @@
 import 'server-only'
 
-import { and, eq } from 'drizzle-orm'
-
-import { db, type Executor } from './client'
-import { items, type Item } from './schema'
+import type { Executor } from './client'
+import { upsertPossibility, type PossibilityInput } from './possibilities'
+import type { Item } from './schema'
 import type { SessionUser } from './session'
-import type { Kind } from '@/lib/domain'
-
-export type ItemInput = {
-  kind: Kind
-  externalSource: string
-  externalId: string
-  title: string
-  year: number | null
-  metadata: Record<string, unknown>
-}
 
 /**
- * Items are canonical and shared across all users — there is one row per real
- * thing, and that is what makes overlap possible at all. So unlike every other
- * function here, this one does not filter by the session user.
+ * The legacy film flow's name for a possibility.
  *
- * It still takes one: the convention is not decoration, and an unauthenticated
- * caller has no business minting canonical rows.
+ * ⚠ **`items` is an alias for `possibilities` in the schema, and this is an
+ * alias for `upsertPossibility`.** The insert used to live here and was moved
+ * on 24 August when the resolution path needed it under the re-direction's own
+ * vocabulary — two copies of one upsert over one table is how two callers come
+ * to disagree about what a canonical row is. See `lib/db/possibilities.ts`.
  *
- * Idempotent (§10). Two people adding the same film race to the same row and
- * both get it; neither gets a duplicate.
+ * It stays because the legacy film flow still calls it, and it goes when that
+ * does. **Nothing new may call it.**
  */
+export type ItemInput = PossibilityInput
+
 export async function upsertItem(
-  _sessionUser: SessionUser,
+  sessionUser: SessionUser,
   input: ItemInput,
-  tx: Executor = db,
+  tx?: Executor,
 ): Promise<Item> {
-  const [inserted] = await tx
-    .insert(items)
-    .values(input)
-    .onConflictDoNothing({ target: [items.kind, items.externalId] })
-    .returning()
-
-  if (inserted) return inserted
-
-  // Lost the race, or it already existed. Either way the row is there now.
-  const [existing] = await tx
-    .select()
-    .from(items)
-    .where(and(eq(items.kind, input.kind), eq(items.externalId, input.externalId)))
-    .limit(1)
-
-  if (!existing) {
-    throw new Error(`upsertItem: no row for ${input.kind}/${input.externalId}`)
-  }
-
-  return existing
+  return upsertPossibility(sessionUser, input, tx)
 }
