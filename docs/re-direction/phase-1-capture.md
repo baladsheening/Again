@@ -16,7 +16,7 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ## Build status — 24 August
 
-> **Built, deployed and seen on a handset — 24 August, `main` at `173e0ff`.**
+> **Built, deployed and seen on a handset — 24 August, `main` at `101aa33`.**
 > **No deploy in this phase has carried a migration** — no schema has moved — so
 > the rollback is still a revert push and nothing else.
 >

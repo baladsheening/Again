@@ -27,7 +27,7 @@ flag the decision rather than inventing scope.
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
 **Phase 1's page and Return are built, deployed and seen on a handset** — `main`
-at `173e0ff`. **No Phase 1 deploy has carried a migration**, so the rollback is a
+at `101aa33`. **No Phase 1 deploy has carried a migration**, so the rollback is a
 revert push and nothing else. `/` is the capture page in production; the poster
 wall, `components/shell.tsx` and the four collection routes are deleted.
 
