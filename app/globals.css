@@ -979,6 +979,19 @@
   --mark-width: 2.5px;
 
   /**
+   * How much of the row the mark gives back at each end — **half the hem**, so
+   * it is still 8px taller than the text it marks and still reads as a change
+   * bar rather than as an underline of the words. Full-row was a slab; the
+   * words' own height is the version 23 August rejected. This is between them,
+   * and it is the shortening asked for on 24 August.
+   *
+   * ⚠ **Derived from `--line-hem`, never typed as a number.** The mark's one
+   * job is to be unmistakably attached to a line, and a fixed inset beside a
+   * padding that can move is a mark that comes adrift of it.
+   */
+  --mark-inset: calc(var(--line-hem) / 2);
+
+  /**
    * The bar's mark. Smaller than `--text-wordmark`, which sets the mark on the
    * auth pages where it is the whole screen; here it shares a row with three
    * glyphs and states the page rather than announcing the product.
@@ -991,14 +1004,44 @@
   --text-mark-rail: 1.5rem;
 
   /**
+   * **The seven glyphs, at both ends of the page.** One number for the whole
+   * set, because it is one set drawn on one grid — see `components/glyphs.tsx`.
+   *
+   * ⚠ **24px, up from 20 on 24 August, and the strokes went up with it.** The
+   * viewBox stays 20 and `stroke-width` stays 1.25, so the effective stroke is
+   * 1.5px and each glyph is the same drawing larger rather than the same drawing
+   * stretched thinner. That is `--pane-glyph`'s lesson stated for a bar: scale
+   * the box and let the weight ride with it, or the mark goes spindly as it
+   * grows.
+   *
+   * ⚠ **What held the size at 20 was a match that no longer has anything to
+   * match.** The set was drawn to `ProfileIcon`'s geometry so the effective
+   * stroke would agree with the app's real icons; `ProfileIcon` and
+   * `SearchIcon` belong to the masthead the page replaced, and neither is
+   * mounted by anything today. These are the only icons on screen, so they set
+   * the standard now. If either file is revived it matches this.
+   *
+   * ⚠ **This is what the eye gets, not what the thumb gets.** `tap-target`
+   * floors every glyph at 44×44 on a coarse pointer and always did, so growing
+   * them buys legibility rather than hit area — and the gaps in the two bars are
+   * still sized against that 44, not against this.
+   */
+  --glyph: 1.5rem;
+
+  /**
    * The two bars. `--bar-row` is the glyph row's height at both ends of the
-   * page — 20px, the glyph grid — and it is a fixed height rather than a
+   * page — **the glyph itself** — and it is a fixed height rather than a
    * minimum for the reason the masthead's row is: **a bar's height is a property
    * of the bar, not of whatever is currently inside it.** The trimmed mark is
    * 15.5px at `--text-mark`, so the glyphs set the row and the mark centres in
    * it; if that were a floor the row would resize the day the mark grew.
+   *
+   * ⚠ **It derives rather than restates.** The row's height and the thing inside
+   * it were two 20s that agreed by coincidence, and the first resize would have
+   * found that out. `--bar-height` and `--foot-height` already read this, so
+   * both bars and the page's hem follow the glyph without being told.
    */
-  --bar-row: 1.25rem;
+  --bar-row: var(--glyph);
   --bar-lead: 1rem;
   --bar-tail: 0.625rem;
   /**
@@ -1937,15 +1980,35 @@
     position: absolute;
     left: -0.75rem;
     /*
-      The row, not the words. It spanned the words for an afternoon on the
-      reasoning that the hem is air — which is true and lost to the only
-      question the mark answers. A bar taller than the line it marks is the
-      change-bar idiom, and it is what reads as *this one* at a glance.
+      The row, not the words — less half a hem at each end. It spanned the words
+      for an afternoon on the reasoning that the hem is air, which is true and
+      lost to the only question the mark answers: a bar taller than the line it
+      marks is the change-bar idiom, and that is what reads as *this one* at a
+      glance. The inset keeps that reading and takes the slab off it. See
+      `--mark-inset` for why it is half of something rather than a number.
     */
-    top: 0;
-    bottom: 0;
+    top: var(--mark-inset);
+    bottom: var(--mark-inset);
     width: var(--mark-width);
+    /*
+      It no longer meets the row's edges, so it is an object in the gutter and
+      needs ends. A full round on a 2.5px bar is a capsule, which is what stops a
+      floating bar reading as a bar that got cut off.
+    */
+    border-radius: var(--mark-width);
     background-color: var(--color-chrome);
+    /*
+      **The pop is light, not thickness.** Width was spent once already and the
+      note on `--mark-width` rules out spending it again; a box and a scrim are
+      ruled out above; and a second colour is Phase 2's to pick. What is left is
+      the vocabulary this page teaches everywhere else — `--row-light` is an
+      edgeless glow, the landing blink is opacity — so the mark **emits** rather
+      than thickens. Edgeless, so it adds no boundary to a page that has none,
+      and free of layout, so a shorter bar can read brighter than the taller flat
+      one it replaces.
+    */
+    box-shadow: 0 0 0.5rem
+      color-mix(in srgb, var(--color-chrome) 55%, transparent);
   }
 }
 

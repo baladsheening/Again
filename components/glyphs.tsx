@@ -1,10 +1,11 @@
 /**
  * The seven glyphs of the capture page — Phase 1.
  *
- * **One grid: `viewBox="0 0 20 20"`, rendered at 20px, `stroke-width="1.25"`.**
- * That is the geometry `ProfileIcon` already ships with, so the effective stroke
- * is 1.25px on every one of them and the set matches the app's real icons rather
- * than only matching itself.
+ * **One grid: `viewBox="0 0 20 20"`, `stroke-width="1.25"`, rendered at
+ * `--glyph`.** One number sizes all seven, and the stroke rides with it: the
+ * viewBox is fixed, so a bigger box is the same drawing larger rather than the
+ * same drawing stretched thinner. See `--glyph` in globals.css for why the size
+ * became a token on 24 August, and why 20px stopped being a constraint.
  *
  * ⚠ **Do not scale a glyph from another viewBox into this one.** An earlier draft
  * of the design mixed viewBoxes 12, 16, 20 and 22 at a single rendered size,
@@ -38,6 +39,11 @@
 function Glyph({ children }: { children: React.ReactNode }) {
   return (
     <svg
+      /*
+        The attributes are the fallback; `size-(--glyph)` below outranks them,
+        because CSS beats an SVG presentation attribute. Same arrangement as the
+        film screen's corner — see `--pane-glyph`.
+      */
       width="20"
       height="20"
       viewBox="0 0 20 20"
@@ -47,7 +53,7 @@ function Glyph({ children }: { children: React.ReactNode }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="shrink-0"
+      className="size-(--glyph) shrink-0"
     >
       {children}
     </svg>
