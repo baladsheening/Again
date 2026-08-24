@@ -58,6 +58,7 @@ export const OFF = 'text-[color-mix(in_srgb,var(--color-text)_28%,transparent)]'
 
 export function Bar({
   undo = null,
+  receded = false,
 }: {
   /**
    * The bar's undo, and it **deletes** — the single exception to §5.1.
@@ -78,15 +79,40 @@ export function Bar({
    * so nothing else has one to take back.
    */
   undo?: { live: boolean; onUndo: () => void } | null
+  /**
+   * Off the top of the glass while the record is being read — see
+   * `useChromeRecede`, which decides it, and holds it down whenever anything
+   * here can act.
+   *
+   * ⚠ **`false` everywhere else, and that is not an oversight.** The capture
+   * page is the only route with a record to read; `/settled`, `/profile` and
+   * somebody else's page are short, and a bar that leaves a screen with nothing
+   * behind it is furniture animating for its own sake. The day one of those
+   * grows a scroll, it passes the prop.
+   */
+  receded?: boolean
 }) {
   return (
-    <header className="bg-bg fixed inset-x-0 top-0 z-20 px-[var(--bar-gutter)] pt-[calc(env(safe-area-inset-top)+var(--bar-lead))] pb-[var(--bar-tail)]">
+    /*
+      `translate` rather than `transform`, which Tailwind v4 gives for free —
+      see the note in `chrome-recede.ts` on why the property matters.
+    */
+    <header
+      className={`bg-bg fixed inset-x-0 top-0 z-20 px-[var(--bar-gutter)] pt-[calc(env(safe-area-inset-top)+var(--bar-lead))] pb-[var(--bar-tail)] transition-[translate] duration-(--recede) ease-out ${
+        receded ? '-translate-y-full' : ''
+      }`}
+    >
       {/*
         ⚠ **Full width, not the reading measure.** The foot holds the measure so
         its glyphs stay over the column of text they act on; this is page-level
         machinery and sits on the window's own edges. See `--bar-gutter`.
+
+        `--glyph` is declared on the row rather than passed to seven components:
+        every `Glyph` inside inherits it, and the bar's size is one line in the
+        file the bar is in. See `--glyph-bar`, and `--glyph-foot` for why the
+        two bars no longer share a number.
       */}
-      <div className="flex h-[var(--bar-row)] w-full items-center justify-between">
+      <div className="flex h-[var(--bar-row)] w-full items-center justify-between [--glyph:var(--glyph-bar)]">
         {/*
           The mark is the way home and nothing else — there is one page, so
           "home" is where you already are on every route but two.
@@ -104,7 +130,13 @@ export function Bar({
           Again
         </Link>
 
-        <div className="flex items-center gap-[22px]">
+        {/*
+          ⚠ **The gap is derived from `--tap-floor` and the glyph**, not chosen.
+          A flat 22px beside 20px glyphs put 42px between centres against a 44px
+          hit area, so the areas overlapped and the later one in DOM order took
+          the taps. See `--bar-gap`.
+        */}
+        <div className="flex items-center gap-[var(--bar-gap)]">
           <button
             type="button"
             /*

@@ -11,6 +11,7 @@ import {
 import type { EntryState } from '@/lib/domain'
 import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar } from './bar'
+import { useChromeRecede } from './chrome-recede'
 import { Foot } from './foot'
 import { useKeyboardPin } from './keyboard-pin'
 
@@ -176,6 +177,19 @@ export function PageScreen({
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useKeyboardPin({ focused, foot, footAnchor, host, floorAnchor })
+
+  /*
+    ⚠ **A picked line is the hold, and focus deliberately is not.** The foot is
+    the picked line's toolbar, so it cannot be off screen while one is picked.
+    Focus was in here for a day and was wrong on the desk, where the live line
+    takes focus on arrival and the chrome therefore never receded; the keyboard
+    it was standing in for is measured instead. See `chrome-recede.ts`.
+  */
+  const { receded, show: showChrome } = useChromeRecede({
+    held: picked !== null,
+    foot,
+    host,
+  })
 
   const pickedLine = lines.find((l) => l.id === picked) ?? null
 
@@ -398,6 +412,12 @@ export function PageScreen({
     }
     setPicked(line.id)
     setAsking(null)
+    /*
+      The foot is this line's toolbar, so it comes back with the pick — from the
+      handler rather than from a render, which is the whole of why this is a
+      call and not a derivation. See `useChromeRecede`.
+    */
+    showChrome()
     /* The keyboard follows liveness: gone the moment a saved line is picked. */
     input.current?.blur()
   }
@@ -434,7 +454,7 @@ export function PageScreen({
 
   return (
     <div ref={host}>
-      <Bar undo={{ live: undoable !== null, onUndo: undo }} />
+      <Bar undo={{ live: undoable !== null, onUndo: undo }} receded={receded} />
 
       {/*
         The floor of the layout viewport, as a thing that can be measured — see
@@ -736,6 +756,7 @@ export function PageScreen({
       </main>
 
       <Foot
+        receded={receded}
         footRef={foot}
         crossOff={
           pickedLine

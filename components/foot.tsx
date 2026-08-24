@@ -11,7 +11,10 @@ import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  * its bottom (`page-hem` in globals.css), so a line always comes to rest above
  * the glyphs rather than sliding under them. A `border-t` was correcting for a
  * collision that padding prevents outright, and Notes has none either — space
- * does the separating, 26px on the handset and 28px on the desk.
+ * does the separating, 16px on the handset and 18px on the desk.
+ *
+ * ⚠ **The foot is 56px, down from 72 on 24 August**, and what stops it going
+ * lower is `--tap-floor` rather than taste — see `--foot-lead`.
  *
  * Three states, and they are the app's honest answer to what is available:
  *
@@ -38,8 +41,18 @@ export function Foot({
   footRef,
   crossOff,
   settle,
+  receded = false,
 }: {
   footRef: React.RefObject<HTMLElement | null>
+  /**
+   * Off the bottom of the glass while the record is being read — see
+   * `useChromeRecede`.
+   *
+   * ⚠ **It can only ever be true while both controls here are off.** The foot is
+   * the picked line's toolbar, so picking holds it down; the hook owns that rule
+   * and this prop is the answer, not the decision.
+   */
+  receded?: boolean
   /**
    * The ×, both ways: on a live line it crosses off, on a crossed-off one it
    * puts back. `null` when nothing saved is picked.
@@ -58,14 +71,18 @@ export function Foot({
     <footer
       ref={footRef}
       /*
-        `will-change: transform` is deliberate: `useKeyboardPin` writes a
-        `translateY` to this element every frame for the length of a keyboard's
-        arrival, and promoting it once is cheaper than the compositor deciding
-        anew each time.
+        `will-change` names **both** properties, because two things move this
+        element and they are not the same one: `useKeyboardPin` writes
+        `transform` every frame for the length of a keyboard's arrival, and the
+        recede is a Tailwind `translate`. That they are separate properties is
+        what stops them overwriting each other — see `chrome-recede.ts`.
       */
-      className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 will-change-transform"
+      className={`bg-bg gutter fixed inset-x-0 bottom-0 z-20 transition-[translate] duration-(--recede) ease-out will-change-[transform,translate] ${
+        receded ? 'translate-y-full' : ''
+      }`}
     >
-      <div className="mx-auto flex w-full max-w-[var(--page-measure)] items-center justify-around pt-[var(--foot-lead)] pb-[calc(var(--foot-tail)+env(safe-area-inset-bottom))]">
+      {/* The foot's own glyph size, declared on the row — see `--glyph-foot`. */}
+      <div className="mx-auto flex w-full max-w-[var(--page-measure)] items-center justify-around pt-[var(--foot-lead)] pb-[calc(var(--foot-tail)+env(safe-area-inset-bottom))] [--glyph:var(--glyph-foot)]">
         <button
           type="button"
           disabled={!crossOff}

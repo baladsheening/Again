@@ -1022,11 +1022,36 @@
    * the standard now. If either file is revived it matches this.
    *
    * ⚠ **This is what the eye gets, not what the thumb gets.** `tap-target`
-   * floors every glyph at 44×44 on a coarse pointer and always did, so growing
-   * them buys legibility rather than hit area — and the gaps in the two bars are
-   * still sized against that 44, not against this.
+   * floors every glyph at `--tap-floor` on a coarse pointer, so growing them
+   * buys legibility rather than hit area — and the bar's gap is derived from
+   * that floor, so the two can no longer disagree. See `--bar-gap`.
+   *
+   * ⚠ **Two sizes, because the two bars are not the same furniture.** The bar is
+   * page-level machinery a thumb visits; the foot is the tools, and it is where
+   * the thumb already is. 22px and 26px, set on 24 August by eye on the handset
+   * after a day at a single 24. `--glyph` is what a lone glyph gets anywhere
+   * else, and each bar declares its own on the row, so the set stays one
+   * declaration per placement rather than a prop threaded through seven
+   * components.
    */
-  --glyph: 1.5rem;
+  --glyph-bar: 1.375rem;
+  --glyph-foot: 1.625rem;
+  --glyph: var(--glyph-bar);
+
+  /**
+   * **The hit area a coarse pointer gets, whatever the glyph inside it.** It was
+   * written twice inside `tap-target` and nowhere else, which made it invisible
+   * to the geometry that has to clear it.
+   *
+   * ⚠ **The bar's gap is derived from it, and that is a defect closed rather
+   * than a preference.** 20px glyphs at a flat 22px gap put 42px between
+   * centres against a 44px floor, so **neighbouring hit areas overlapped by 2px
+   * and the later one in DOM order took the taps** — invisible, and wrong on
+   * every touch device at once. Deriving the gap makes the overlap unreachable:
+   * whatever the glyph does, the centres stay 2px clear of the floor.
+   */
+  --tap-floor: 44px;
+  --bar-gap: calc(var(--tap-floor) - var(--glyph-bar) + 2px);
 
   /**
    * The two bars. `--bar-row` is the glyph row's height at both ends of the
@@ -1038,10 +1063,14 @@
    *
    * ⚠ **It derives rather than restates.** The row's height and the thing inside
    * it were two 20s that agreed by coincidence, and the first resize would have
-   * found that out. `--bar-height` and `--foot-height` already read this, so
-   * both bars and the page's hem follow the glyph without being told.
+   * found that out. `--bar-height` reads this, so the bar and the page's top
+   * padding follow the glyph without being told.
+   *
+   * ⚠ **The foot has its own**, since 24 August — `--foot-row` below. One row
+   * served both while both held the same glyph, and the day the two sizes parted
+   * it would have sized the foot from the bar's.
    */
-  --bar-row: var(--glyph);
+  --bar-row: var(--glyph-bar);
   --bar-lead: 1rem;
   --bar-tail: 0.625rem;
   /**
@@ -1070,11 +1099,38 @@
    * cannot be pressed. See the `<nav>` note in the shell for the account of why
    * that inset is quoted against a toolbar that is not there when installed.
    */
-  --foot-lead: 1.625rem;
-  --foot-tail: 1.375rem;
+  --foot-row: var(--glyph-foot);
+  /**
+   * ⚠ **26px of lead and 22px of tail came off on 24 August**, against a glyph
+   * that grew: 72px of foot became 56px. The air was drawn for a band of labels
+   * and kept for a row of glyphs, and on a page whose whole product is the
+   * record it was spending a line of it on nothing.
+   *
+   * **What sets the floor is the thumb, not the look.** `--tap-floor` is 44px
+   * centred on the glyph, so the foot cannot go below it without the hit area
+   * hanging out of the bar and over the record: 16 + 26 + 14 leaves the area
+   * spanning 7px–51px inside 56px of foot. Take another 8px off the lead and
+   * taps start landing on the last line instead.
+   */
+  --foot-lead: 1rem;
+  --foot-tail: 0.875rem;
   --foot-height: calc(
-    var(--foot-lead) + var(--bar-row) + var(--foot-tail) + env(safe-area-inset-bottom)
+    var(--foot-lead) + var(--foot-row) + var(--foot-tail) + env(safe-area-inset-bottom)
   );
+
+  /**
+   * **How long the chrome takes to go, and to come back.** Both bars read it, so
+   * they leave together — two durations would be two bars agreeing by
+   * coincidence, and the eye reads the disagreement long before it reads either
+   * number.
+   *
+   * Short, because it is an answer to a gesture rather than an event: the finger
+   * is still moving, and chrome that takes longer than the flick arrives after
+   * the reason for it has passed. `prefers-reduced-motion` cuts it to 0.01ms
+   * with every other transition, which leaves the behaviour and removes the
+   * travel — right, since receding is about the space, not the movement.
+   */
+  --recede: 200ms;
 
   /**
    * The reading column above `rail`. 680px — the same measure the design's
@@ -1610,8 +1666,8 @@
       translate: -50% -50%;
       width: 100%;
       height: 100%;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: var(--tap-floor);
+      min-height: var(--tap-floor);
     }
   }
 }
@@ -2205,8 +2261,8 @@
    */
   @media (min-width: 45rem) {
     :root {
-      --foot-lead: 1.75rem;
-      --foot-tail: 1.5rem;
+      --foot-lead: 1.125rem;
+      --foot-tail: 1rem;
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
     }
