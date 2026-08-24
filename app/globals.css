@@ -995,7 +995,29 @@
    * taught — which is still true, and stopped being a reason to share a number.
    */
   --caret-width: 2px;
-  --caret-height: 1.625rem;
+
+  /**
+   * ⚠ **The face's box, not the line's — and it is face-dependent, so it is
+   * fenced with the rest of the measured set.** It was `1.625rem`, 26px, chosen
+   * as "almost a line" off `--leading-line`'s 28px. A native caret is not drawn
+   * to the line box: it is drawn to the font's ascent plus descent at the font
+   * size, which is why the drawn caret and the real one were never the same
+   * object and the first keystroke stepped 26px down to 22px.
+   *
+   * Fira Sans at `--text-line` measures ascent 17 + descent 5 = 22px, read off
+   * the live face with `TextMetrics` by `node_modules/.probe/caretsize.mjs` —
+   * the same instruction the wordmark's numbers carry: **measure the face, never
+   * scale the previous set.** 22/18 is the 11/9 below. Change the interface face
+   * and this is wrong until it is measured again.
+   *
+   * ⚠ **It cannot be checked against a screenshot, and that is not a gap in the
+   * probe.** A native caret is composited outside the captured surface — headed
+   * or headless, Playwright never sees it (`caretpaint.mjs` establishes this and
+   * is kept for the next person who tries). So the two carets cannot be matched
+   * by eye or by pixel on any one engine; deriving both from the same face
+   * metric is the only way they agree on four surfaces at once.
+   */
+  --caret-height: calc(var(--text-line) * 11 / 9);
 
   /**
    * The mark on a picked line. **Its own width, because it is not a caret.**
@@ -1004,10 +1026,13 @@
    * The mark answers one question — *which line* — and on a handset it was
    * answering *something* instead. Height was tried first and measured: spanning
    * the line's own text took a single-line capture's mark from 26px to 28px,
-   * which is nothing, because `--caret-height` was already almost a line tall.
-   * The height change was kept anyway — it is derived rather than guessed, and a
-   * wrapped line now gets a taller mark for free — but **thickness is what the
-   * eye catches in the gutter**, so thickness is what was spent.
+   * which is nothing, because `--caret-height` was 26px at the time — almost a
+   * line tall. ⚠ **That reading was of a caret sized off the wrong thing**: the
+   * caret is 22px now, the face's own box, so the gap the mark gained over it is
+   * 6px rather than 2px and the measurement above understates the change. The
+   * conclusion is unaffected — the mark was already taller than the caret and
+   * still lost to it in the gutter — but **thickness is what the eye catches**,
+   * which is why thickness is what was spent.
    *
    * ⚠ Do not spend it again. The next step up is a box or a scrim, and both are
    * ruled out where the utility is defined.
