@@ -56,17 +56,18 @@ import { useKeyboardHem } from './keyboard-hem'
  *
  *   - **Tap the words and the line is picked.** One meaning, no modifier, no
  *     hidden gesture.
- *   - **Tap the paper and you are writing.** The words are the record; the rest
- *     of every row is the page. A line's hit area is the width of its own text,
- *     so a short capture hands the whole right-hand side of its row back.
+ *   - **Tap the live line and you are writing.** It is pinned under the bar and
+ *     on screen at every scroll position, so it is always one tap away.
  *   - **The keyboard follows liveness.** Gone the moment a saved line is picked.
  *
- * ⚠ **A line that wraps to the full measure leaves no paper**, and that is
- * accepted rather than corrected. The alternative is `display: inline` on a
- * button, so that hit-testing follows the text fragments rather than one box —
- * which renders differently on every engine, and a workaround written for one
- * engine still executes on all of them. Captures are short; a screen on which no
- * row has paper is not a screen this record produces.
+ * ⚠ **The record used to be a way to start writing, and is not any more.** Every
+ * row carried an invisible button filling whatever width its words did not use,
+ * and the tail of the page carried another named "Write". Both existed because
+ * the live line was the first thing in the document and scrolled away. Pinning
+ * it made them a second way to reach something already in reach — and a large
+ * invisible target beside every line of a record whose other gesture is *tap a
+ * line to pick it*. A line is still only as wide as its own words, which was a
+ * consequence of the paper rather than a decision of its own.
  *
  * ⚠ Without this, tapping a line to settle it would place a caret and start an
  * edit instead. The fix is not a modifier gesture on an always-editable page; it
@@ -528,7 +529,7 @@ export function PageScreen({
           input.current?.blur()
           setWriting(false)
         }}
-        className={`fixed inset-0 z-5 transition-opacity duration-(--recede) ease-out ${
+        className={`fixed inset-0 z-5 transition-opacity duration-[var(--recede-in)] ease-[var(--ease-recede)] ${
           writing
             ? 'bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
             : 'pointer-events-none opacity-0'
@@ -597,9 +598,9 @@ export function PageScreen({
             recede.** The bar goes when the record is being read; this stays,
             because it is the one control that can always act. When the bar
             leaves, the band takes its place at the top of the glass rather than
-            sitting under a hole — one `translate` on the same `--recede`
-            duration as the bar's own, so the chrome *thins* to the live line
-            instead of emptying.
+            sitting under a hole — one `translate` on the same durations and
+            the same curve as the bar's own, so the chrome *thins* to the live
+            line instead of emptying.
 
             ⚠ **Glass, for the same reason the bars are** — the record passes
             underneath it now, and a lit row with a transparent ground would have
@@ -625,12 +626,20 @@ export function PageScreen({
             containing block is the viewport because no ancestor carries a
             transform — **do not put one on `main` or on `host`**.
           */
-          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-pad))] pb-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out ${
-            receded ? '' : 'translate-y-[var(--bar-visible)]'
+          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-pad))] pb-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] ease-[var(--ease-recede)] ${
+            receded
+              ? 'duration-[var(--recede-out)]'
+              : 'translate-y-[var(--bar-visible)] duration-[var(--recede-in)]'
           }`}
         >
           <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
-            <div className="live-band">
+            {/*
+              ⚠ **Brighter while it is being written in** — a second glow faded
+              over the resting one, on `writing` rather than on `focused`, since
+              `autoFocus` makes focus the resting state of the page. See
+              `band-live` and `--row-light-lift`.
+            */}
+            <div className={`live-band ${writing ? 'band-live' : ''}`}>
               <div className="relative">
             <input
               ref={input}

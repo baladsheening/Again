@@ -948,6 +948,33 @@
     transparent 100%
   );
 
+  /**
+   * **The lift, while somebody is actually writing in the row.**
+   *
+   * The row is lit whenever it is the live one, which is always — that is
+   * `--row-light` above and it does not move. This is a **second** light laid
+   * over it and faded in while the keyboard is up, so the row that is being
+   * typed into is brighter than the row that is merely waiting.
+   *
+   * ⚠ **A second layer rather than a bigger number, so the resting look cannot
+   * drift.** The obvious version raises `--row-light` to the lit value and dims
+   * it back with an opacity for the resting state, which means the row's normal
+   * appearance is a division that has to keep coming out at 8%. Here the
+   * resting declaration is never touched: the extra light is a separate
+   * gradient that starts at zero. Two translucent layers compose to about 16% at
+   * the peak, so writing is roughly twice the light of waiting.
+   *
+   * ⚠ **Still a glow with no boundary**, for the reason the first one is: two
+   * flat fills shipped in August and both came back "too grey", and the value
+   * was never what was wrong — a uniform tone inside a rectangle with edges is
+   * what reads as grey, at any value. Do not answer "brighter" with a fill.
+   */
+  --row-light-lift: radial-gradient(
+    50% 50% at 50% 50%,
+    color-mix(in srgb, var(--color-text) 9%, transparent) 0%,
+    transparent 100%
+  );
+
   /** One capture: 18px on 28px, 8px of padding a side to reach a 44px target. */
   --text-line: 1.125rem;
   --leading-line: 1.75rem;
@@ -1145,18 +1172,54 @@
   );
 
   /**
-   * **How long the chrome takes to go, and to come back.** Both bars read it, so
-   * they leave together — two durations would be two bars agreeing by
-   * coincidence, and the eye reads the disagreement long before it reads either
-   * number.
+   * **How long the chrome takes to go, and to come back — and they are not the
+   * same.**
    *
-   * Short, because it is an answer to a gesture rather than an event: the finger
-   * is still moving, and chrome that takes longer than the flick arrives after
-   * the reason for it has passed. `prefers-reduced-motion` cuts it to 0.01ms
-   * with every other transition, which leaves the behaviour and removes the
-   * travel — right, since receding is about the space, not the movement.
+   * ⚠ **Going is quicker than coming back, which is the opposite of what looks
+   * right written down.** Leaving is a reply to a gesture the finger is still
+   * making: anything slower reads as the chrome hesitating over whether it was
+   * asked. Returning is not a reply to anything — the flick is over by the time
+   * it starts — so it has room to settle, and a bar that snapped back into place
+   * would read as a jolt on a page that is otherwise still.
+   *
+   * ⚠ **The whole chrome shares each number.** Both bars and the band move on
+   * the same one in the same direction, because they are one piece of furniture
+   * moving; two durations would be three elements agreeing by coincidence.
+   *
+   * ⚠ **They are paired with `--ease-recede` and mean nothing without it.** Most
+   * of the travel happens in the first third of either number, so read them as
+   * *when it has arrived*, not as how long it is moving. 200ms of `ease-out` was
+   * the previous answer to both directions and read as a slab sliding.
+   *
+   * `prefers-reduced-motion` cuts both to 0.01ms with every other transition,
+   * which leaves the behaviour and removes the travel — right, since receding is
+   * about the space, not the movement.
    */
-  --recede: 200ms;
+  --recede-out: 240ms;
+  --recede-in: 340ms;
+
+  /**
+   * The curve the chrome moves on: **over half the distance in the first third,
+   * then a long settle.**
+   *
+   * Measured from the gesture rather than from the transition — 52% of the
+   * travel by 86ms of 240 going, 55% by 111ms of 340 coming back, both including
+   * the frame or two it takes the scroll to reach a render. Against a linear
+   * 33%, that is the shape: leave at speed, arrive slowly.
+   *
+   * ⚠ **`ease-out` was not wrong so much as flat.** It is a gentle curve over a
+   * short duration, which reads as a slab sliding rather than as something
+   * getting out of the way — the eye sees the whole travel at roughly one speed
+   * and there is nothing at the end that reads as arrival. This is a quintic
+   * ease-out: it leaves at speed, so the record is uncovered almost at once, and
+   * then eases into place over the rest of the time. Fast, then slow, and the
+   * slow half is what makes it read as smooth rather than as quick.
+   *
+   * ⚠ **One curve for all four movers** — the bar, the foot, the band taking the
+   * bar's place, and the writing pane's fade. Two curves would be two systems,
+   * and the eye reads the disagreement long before it reads either curve.
+   */
+  --ease-recede: cubic-bezier(0.22, 1, 0.36, 1);
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -2326,6 +2389,42 @@
     inset: 0;
     pointer-events: none;
     background-image: var(--row-light);
+  }
+
+  /*
+    The lift, off until somebody is writing — see `--row-light-lift` and the
+    `band-live` utility below. It is a second layer rather than a brighter
+    first one so that the resting light is a declaration nothing edits, and so
+    that the change can be *faded*: `background-image` does not transition and
+    an opacity does.
+  */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    background-image: var(--row-light-lift);
+    transition: opacity var(--recede-in) var(--ease-recede);
+  }
+}
+
+/**
+ * The live row while it is being written in: **lit brighter than when it is
+ * merely waiting.**
+ *
+ * ⚠ **Driven by `writing`, not by `focused`.** The field carries `autoFocus`, so
+ * focus is the resting state of the page on the desk and in a Safari tab — a row
+ * lit by focus would open at full brightness and never change. `writing` is the
+ * gesture-driven mode, which on a handset is exactly "the keyboard is up".
+ *
+ * It fades on `--recede-in` rather than snapping, and shares the chrome's curve:
+ * the light coming up is part of the same movement as the pane arriving over the
+ * record, and two timings there would read as two things happening.
+ */
+@utility band-live {
+  &::after {
+    opacity: 1;
   }
 }
 
