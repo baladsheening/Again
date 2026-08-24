@@ -8,7 +8,7 @@ import {
   getSessionUser,
   getTrackState,
   listCapturesForOtherUser,
-  toLegacyEntryCards,
+  toCaptureCard,
 } from '@/lib/db'
 import { nameFor } from '@/lib/domain'
 import { COLLECTIONS } from '@/lib/vocabulary'
@@ -100,13 +100,23 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
         Fixtures render only when there are some — most pages will have none, and
         an empty *Fixtures* heading on every page would be furniture.
       */}
+      {/*
+        ⚠ **`toCaptureCard`, and the projection it replaced was losing rows.**
+        `toLegacyEntryCards` dropped every capture that resolved to nothing,
+        because an `EntryCard` has a title and no way to say *the words somebody
+        typed*. That was harmless while every write came through the film flow;
+        the day raw capture shipped it meant a mutual saw **none** of what this
+        person had actually written, with no symptom on either side. The register
+        called this the last caller and said nothing may add another — it is now
+        the last caller of nothing, and `toLegacyEntryCards` is deleted.
+      */}
       <PersonList
         heading={COLLECTIONS.wants}
-        entries={toLegacyEntryCards(live)}
+        entries={live.map(toCaptureCard)}
         empty={track.mutual ? 'Nothing here yet.' : 'This list is not shared with you.'}
       />
 
-        <PersonList heading={COLLECTIONS.fixtures} entries={toLegacyEntryCards(fixtures)} />
+        <PersonList heading={COLLECTIONS.fixtures} entries={fixtures.map(toCaptureCard)} />
       </div>
     </Screen>
   )

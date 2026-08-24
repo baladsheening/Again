@@ -6374,3 +6374,39 @@ this question first.
 person with an empty record types and gets *Nothing.*, by the same path as every
 other answer; a query whose only job is to pre-empt an answer the page already
 gives is a second opinion about the same fact.
+
+### The shared page was hiding every raw capture (24 August)
+
+`toLegacyEntryCards` dropped every capture that resolved to nothing, because an
+`EntryCard` has a `kind` and a `title` and no way to say *the words somebody
+typed*. Its own note said the filter removed nothing "today", because every write
+still came through the film flow and resolved a TMDB row first — and that stopped
+being true the day raw capture shipped.
+
+**So since Phase 1 went live, a mutual opening `/u/[handle]` saw none of what
+that person had written.** Not an empty list and not a partial one: the rows were
+absent, with no symptom on either side. The register had it filed as a cleanup —
+*item 9, `toLegacyEntryCards` dies* — and it was the only correctness bug on the
+Phase 1 list. Worth noting how it stayed invisible: the projection was written
+with the failure documented and dated to a future phase, and nothing re-read the
+note when that phase arrived.
+
+`toCaptureCard` carries the text, so a raw capture is an ordinary row, and
+`toLegacyEntryCards` is deleted.
+
+⚠ **The words are the row, and the title is not shown.** A capture that resolved
+to *Jaws* still reads as the words its owner typed. A shared page substituting a
+canonical title would show somebody's friends something that person did not
+write, which is the same reason §6 keeps `text` unreplaced in the column. The
+title names the poster for a screen reader and does nothing else.
+
+⚠ **They are set as lines, not titles.** The row was `title` — the largest type in
+the app — because every row used to be a film. A one-line capture at that size is
+a headline made out of a note.
+
+⚠ **`specFor` throws on `(null, null)` and it is right to**, so it is asked only
+when there is something to ask about. The sub-line renders nothing at all when
+nothing is known: the old row printed `—` for a missing year, which was fine when
+a missing year was the exception and would be a column of em dashes on a page of
+raw captures. The state's word wins over the want label, because it is the one a
+raw capture can also carry.

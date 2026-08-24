@@ -98,7 +98,6 @@ export {
   setCaptureVisibility,
   undoCapture,
   toCaptureCard,
-  toLegacyEntryCards,
   pageCursor,
   parsePageCursor,
   NOTE_MAX,

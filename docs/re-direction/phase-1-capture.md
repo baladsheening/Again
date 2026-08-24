@@ -160,9 +160,9 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 8. **The types and intentions of §3**, which is what makes *Have* reachable
    again: `landsIn` is a property of a kind and an intention, and a raw capture
    has neither, so nothing new lands in `fixture` today.
-9. **`toLegacyEntryCards` dies.** Its last caller is `/u/[handle]`, the Phase 2
-   shared page. **Nothing may add a caller.** The read that replaces it is
-   `toCaptureCard`, which already exists and carries text.
+- ~~*`toLegacyEntryCards` dies*~~ — **done, and it was hiding rows.** See
+  *What the shared page was not showing* below. It was filed as a cleanup and it
+  was a correctness fix.
 
 ### What hardware answered, and what it did not
 
@@ -204,6 +204,43 @@ honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### What the shared page was not showing — 24 August
+
+**`toLegacyEntryCards` dropped every capture that resolved to nothing**, because
+an `EntryCard` has a `kind` and a `title` and no way to say *the words somebody
+typed*. Its own note said so, and said the filter removed nothing "today"
+because every write still came through the film flow — and that stopped being
+true the day raw capture shipped.
+
+⚠ **So since Phase 1 went live, a mutual opening `/u/[handle]` saw none of what
+that person had actually written.** Not an empty list and not a partial one: the
+rows were absent, with no symptom on either side of the connection. It was filed
+in this register as a cleanup — *item 9, `toLegacyEntryCards` dies* — and it was
+the only correctness bug on the list.
+
+`toCaptureCard` carries the text, so a raw capture is now an ordinary row.
+
+⚠ **The words are the row, and the title is not shown.** A capture that resolved
+to *Jaws* still reads as the words its owner typed. A shared page substituting a
+canonical title would be showing somebody's friends something that person did
+not write, which is the same reason §6 keeps `text` unreplaced in the column.
+The title does the one job only it can: naming the poster for a screen reader.
+
+⚠ **And they are set as lines, not titles.** The row was `title` — the largest
+type in the app — because every row used to be a film. A one-line capture at that
+size is a headline made out of a note.
+
+⚠ **`specFor` throws on `(null, null)` and it is right to.** Intent is a property
+of the entry and `kind` comes from a possibility; a capture with neither has no
+want label. It is asked only when there is something to ask about, and the
+sub-line renders nothing at all when nothing is known — the old row printed `—`
+for a missing year, which was fine when a missing year was the exception and
+would be a column of em dashes on a page of raw captures.
+
+⚠ **The state's word wins over the want label**, because it is the one a raw
+capture can also carry: *Again* for `go_back_to`, *Have* for `fixture`, and
+nothing for a plain want — the same silence the owner's own page keeps.
 
 ### Search — 24 August
 

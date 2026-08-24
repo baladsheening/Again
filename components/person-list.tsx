@@ -1,4 +1,4 @@
-import type { EntryCard } from '@/lib/domain'
+import type { CaptureCard } from '@/lib/db'
 import { PersonRow } from './person-row'
 
 /**
@@ -17,7 +17,12 @@ export function PersonList({
   empty,
 }: {
   heading: string
-  entries: EntryCard[]
+  /**
+   * ⚠ **`CaptureCard`, since 24 August.** It was `EntryCard`, whose projection
+   * drops every capture that resolved to nothing — so everything typed as words
+   * on the capture page was silently absent from this list. See `PersonRow`.
+   */
+  entries: CaptureCard[]
   /** Omit to render nothing at all when the section is empty. */
   empty?: string
 }) {

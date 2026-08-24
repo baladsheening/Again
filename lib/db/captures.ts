@@ -30,7 +30,7 @@ import { err, ok, type Result } from './result'
 import { runOverlap } from '@/lib/overlap'
 import { specFor } from '@/lib/vocabulary'
 import { PUBLIC_STATES, SHARED_SCOPES } from '@/lib/domain'
-import type { CaptureSource, EntryCard, Intent, Kind, Visibility } from '@/lib/domain'
+import type { CaptureSource, Intent, Kind, Visibility } from '@/lib/domain'
 
 /**
  * The capture layer. **From Phase 0 on this is the only thing that writes a
@@ -121,49 +121,6 @@ export function toCaptureCard({
     year: possibility?.year ?? null,
     posterPath: metadata.posterPath ?? null,
   }
-}
-
-/**
- * The compatibility projection, and the only reason it exists is that the
- * film-first screens still render `EntryCard` (§12 — a read-only compatibility
- * projection may keep legacy screens working while the migration is verified).
- *
- * ⚠ **It drops captures that resolved to nothing**, because an `EntryCard`
- * cannot express one: it has a `kind` and a `title` and no way to say *the
- * words somebody typed*. Today nothing creates such a capture — every write
- * still comes through the film flow, which resolves a TMDB row first — so the
- * filter removes nothing. It stops being harmless the moment raw capture ships,
- * which is Phase 1, and that is the phase that replaces these screens.
- *
- * This function is temporary by construction. When the Home surface reads
- * `CaptureCard`, it goes.
- *
- * ⚠ **It takes the three columns it needs rather than a whole capture**, so it
- * accepts an owner's row and a shared one alike — and cannot read `note` from
- * either, whatever it is handed.
- */
-export function toLegacyEntryCards(
-  rows: readonly {
-    capture: Pick<Capture, 'id' | 'intent' | 'state'>
-    possibility: Possibility | null
-  }[],
-): EntryCard[] {
-  return rows.flatMap(({ capture, possibility }) => {
-    if (!possibility || !capture.intent) return []
-
-    const metadata = (possibility.metadata ?? {}) as { posterPath?: string | null }
-    return [
-      {
-        id: capture.id,
-        kind: possibility.kind,
-        intent: capture.intent,
-        state: capture.state,
-        title: possibility.title,
-        year: possibility.year,
-        posterPath: metadata.posterPath ?? null,
-      },
-    ]
-  })
 }
 
 /**
