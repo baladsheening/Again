@@ -138,9 +138,9 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
   kept under *What hardware answered*, unchanged, because it is still the honest
   account of what the page has and has not proved, and anyone reopening Phase 1's
   acceptance starts there.
-1. **Search over captures.** The foot's fourth glyph. The existing
-   `search-field.tsx` and `search-provider.tsx` search TMDB, not the page; they
-   are on disk and mounted by nothing.
+- ~~*Search over captures*~~ — **done**, at `/search`. See *Search* below.
+  `search-field.tsx` and `search-provider.tsx` still search TMDB and are still
+  mounted by nothing; they belong to *Resolution offers*, not to this.
 - ~~*An Earlier control*~~ — **done**, and it is at the **tail**: the record is
   newest-first, so earlier is downward. See *Earlier* below. ⚠ It is a **cursor**
   and not the `offset` this list predicted.
@@ -204,6 +204,87 @@ honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### Search — 24 August
+
+**`/search`, reached from the foot's magnifier.** *Where is that thing I wrote
+in June.*
+
+⚠ **A surface of its own, and it has to be.** It reads across **live,
+crossed-off and settled** captures — the page's list is `PAGE_STATES` and the
+tray's is the settled three, so search is their union and cannot be a filter over
+either. That is not a preference: a line you are trying to find again is usually
+one you already dealt with, which is the case the surface exists for.
+
+⚠ **`done` is private (§5.3) and it is in this read.** Safe for exactly one
+reason: `searchMyCaptures` filters on `sessionUser.id`. **Nothing derived from
+it may be handed to anybody else** — there is no shared search, and adding one is
+not a parameter on that function.
+
+⚠ **The normalising rule is written once.** `normalised()` in `schema.ts`
+generates `normalised_text` **and** is applied to the query string in SQL on its
+way in, so a change to the rule moves the rows and the queries together. A
+TypeScript copy of it would be exactly the drift the generated column exists to
+prevent, with the same symptomless failure. The refactor that extracted it
+produced **no migration** — `db:generate` says the DDL is unchanged.
+
+⚠ **A substring match, not a prefix and not full text.** People remember a word
+from the middle of a line as readily as the first, so `LIKE 'q%'` answers the
+wrong question; Postgres full-text brings stemming and a dictionary, which are
+language choices this product has not made and which mis-serve every capture
+written in a script the dictionary does not cover. The cost is carried by
+`captures_user_created_idx` — the user's own rows, newest first, bounded by
+`limit` (§10).
+
+⚠ **Punctuation alone is not everything.** Normalising a query of pure
+punctuation gives the empty string and `LIKE '%%'` matches every row. The action
+refuses it with a loose *is there a letter or a digit in this at all* — **not** a
+second copy of the rule, which is why the guard is deliberately not the matcher.
+
+**Typed, not submitted**, on a 200ms debounce, and **Return does nothing** — on
+the capture page Return commits a line, and a key that means two things across
+two screens is how somebody files a search query as a want. Out-of-order answers
+are settled by a ticket, not by arrival.
+
+**The answer is held with the question it answers.** One piece of state carrying
+`{ q, lines, earlier }`, compared against the field, so a list can never appear
+under a query it does not belong to. Clearing by effect was written first and
+removed: it is a second writer racing the one that fills them.
+
+⚠ **Nothing here acts on a line.** No pick, no ×, no settle — a surface that
+could would need the foot, the undo window and the whole state machine of the
+page carried into a second place. Reading is the whole promise.
+
+⚠ **`type="text"`, not `type="search"`, and the widget is why.** The engine
+paints its own clear button inside a search field — a bright blue × on a matte
+black page, seen on screen. Hiding it with `::-webkit-search-cancel-button` would
+be correcting for one engine's decoration on every engine; removing the type
+removes it, and `role="searchbox"`, `inputMode` and `enterKeyHint` carry
+everything the type was doing.
+
+**The heading is visible, set as the tray sets its own.** A glyph is not a name,
+and arriving at a caret in a field with no word for where you are is how a search
+field gets typed into as though it were the capture line.
+
+⚠ **The magnifier is the foot's one link**, so it is an `<a>`: everything else
+there acts on the line in hand, and a button with a `router.push` looks the same
+while losing the middle-click, the long press and the back button. Its off state
+is a `<span>` — there is no disabled state for a link.
+
+⚠ **The foot's table deviates in row two.** The design lights search while a line
+is being typed with nothing saved; it is lit whenever there is a **record** and
+dark when there is not, because searching an empty record can only answer
+*Nothing.* and *a control that cannot act goes off* is the rule the rest of that
+bar follows. The page's own list is the test, which is not quite the whole record
+— a person whose every line is settled has an empty page — and that is named in
+the code rather than left to be found: to have settled a line you had to write it
+there first.
+
+`node_modules/.probe/search.mjs` drives it: the link, a find with no Return, a
+**settled** line found after it left the page, *Nothing.*, punctuation, clearing,
+and Return committing nothing. ⚠ It waits on the **undo glyph lighting** rather
+than on a duration — a line is not pickable while it is in flight, and a fixed
+wait makes the probe a stopwatch on Neon's first connection.
 
 ### Earlier — 24 August
 

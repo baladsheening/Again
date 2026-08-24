@@ -1489,6 +1489,18 @@ export function PageScreen({
         rewrite={
           pickedLine && editing === null ? () => startEdit(pickedLine) : null
         }
+        /*
+          ⚠ **The page's own list is the test, and it is not the whole record.**
+          Search reads across settled captures too, so a person whose every line
+          is in the tray has an empty page and a searchable record — and the
+          glyph would be dark on the one screen that could use it. The
+          alternative is a count on every open of the page to light a link, which
+          is a query to avoid a wrong answer that is nearly unreachable: to have
+          settled a line you had to have written it *here*, so an empty page is a
+          first run or a tray that grew from one. Named rather than left to be
+          found.
+        */
+        searchable={!empty}
       />
 
       {/*

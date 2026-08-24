@@ -84,6 +84,7 @@ export {
   listMyCaptures,
   listMyPage,
   listMySettled,
+  searchMyCaptures,
   countMyCaptures,
   listMyCapturesForExternalId,
   listCapturesForOtherUser,

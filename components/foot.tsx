@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { OFF } from './bar'
 import {
   CameraGlyph,
@@ -55,27 +57,36 @@ import {
  *
  * | state | cross off | settle | rewrite | camera | search |
  * |---|---|---|---|---|---|
- * | empty page | off | off | off | **on** | off |
- * | mid-line, nothing saved | off | off | off | **on** | **on** |
+ * | empty record | off | off | off | **on** | off |
+ * | a record, nothing picked | off | off | off | **on** | **on** |
  * | a saved line picked | **on** | **on** | **on** | **on** | **on** |
  *
  * The camera is the odd one because a photograph starts a capture rather than
  * acting on one.
  *
- * ⚠ **The camera and search ship OFF at every state in this first cut, and that
- * is scope rather than design.** Images are a storage layer — object storage
- * outside Postgres, size and type limits, EXIF stripping, an access-controlled
- * media path, retained provenance, reportable and removable assets — and search
- * over captures is a surface of its own. Neither is built, so neither can act,
- * and a control that cannot act goes off. **That is the design's own device
- * being honest, not a deviation from it**: the bar keeps its full shape, and the
- * day either one lands it is a prop and no new geometry. The table above is what
- * they go back to.
+ * ⚠ **Search is built and lit; the camera is not.** Images are a storage layer
+ * — object storage outside Postgres, size and type limits, EXIF stripping, an
+ * access-controlled media path, retained provenance, reportable and removable
+ * assets — so it stays off, and a control that cannot act goes off. **That is
+ * the design's own device being honest, not a deviation from it**: the bar keeps
+ * its full shape, and the day it lands it is a prop and no new geometry.
+ *
+ * ⚠ **Search is the one link in the foot, so it is an `<a>` and not a button.**
+ * Everything else here acts on the line in hand; this goes somewhere. A button
+ * with a `router.push` would look identical and lose the middle-click, the long
+ * press and the back button, which are the whole of what a link is for.
+ *
+ * ⚠ **Row two of the table is where this deviates.** The design lights search
+ * while a line is being typed with nothing saved; it is lit here whenever there
+ * is a **record**, and dark when there is not. Searching an empty record is a
+ * surface that can only answer *Nothing.*, and *a control that cannot act goes
+ * off* is the rule the rest of this bar already follows.
  */
 export function Foot({
   crossOff,
   settle,
   rewrite,
+  searchable = false,
   receded = false,
 }: {
   /**
@@ -107,6 +118,11 @@ export function Foot({
    * is a discard nobody asked for. A control that cannot act goes off.
    */
   rewrite: (() => void) | null
+  /**
+   * Whether there is a record to search. `false` on an empty page, where the
+   * only answer the surface could give is *Nothing.*
+   */
+  searchable?: boolean
 }) {
   return (
     <footer
@@ -169,14 +185,26 @@ export function Foot({
           <CameraGlyph />
         </button>
 
-        <button
-          type="button"
-          disabled
-          aria-label="Search"
-          className={`tap-target flex items-center ${OFF}`}
-        >
-          <SearchGlyph />
-        </button>
+        {searchable ? (
+          <Link
+            href="/search"
+            aria-label="Search"
+            className="text-chrome tap-target flex items-center transition-colors"
+          >
+            <SearchGlyph />
+          </Link>
+        ) : (
+          /*
+            ⚠ **A `<span>`, not a disabled `<a>`.** There is no disabled state
+            for a link — an `<a>` without an `href` is not a control at all — so
+            the off state is the drawing without the door, and the `aria-label`
+            goes with the door rather than staying on something a screen reader
+            would announce as reachable.
+          */
+          <span aria-hidden className={`tap-target flex items-center ${OFF}`}>
+            <SearchGlyph />
+          </span>
+        )}
       </div>
     </footer>
   )

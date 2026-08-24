@@ -17,6 +17,7 @@ import { alias, type PgColumn } from 'drizzle-orm/pg-core'
 import { db } from './client'
 import {
   captures,
+  normalised,
   possibilities,
   profiles,
   tracks,
@@ -583,6 +584,71 @@ export async function listMySettled(
     .orderBy(desc(captures.resolvedAt), desc(captures.id))
     .limit(limit)
     .offset(offset)
+}
+
+/**
+ * **Everything the words are in — live, crossed off, and settled.**
+ *
+ * ⚠ **No state filter, and that is the point of the surface.** *Where is that
+ * thing I wrote in June* is usually something already dealt with, so a search
+ * that only saw the page would miss the case it exists for. The page's own read
+ * is `PAGE_STATES`, the tray's is the settled three, and this is the union —
+ * which is also why search cannot be a filter over the page's list and has to be
+ * a read of its own.
+ *
+ * ⚠ **`done` is private (§5.3), and it is in here.** That is safe for exactly
+ * one reason: this filters on `sessionUser.id`, so the only person who can reach
+ * a `done` row through it is the person who wrote it. **Nothing derived from
+ * this may be handed to anyone else** — there is no shared search, and adding
+ * one is not a parameter on this function.
+ *
+ * ⚠ **The query is normalised by the same rule as the column, in SQL.** Not by
+ * a TypeScript copy: `normalised` is the single implementation, applied to the
+ * parameter on its way in, so a change to the rule moves the rows and the
+ * queries together. See its note in `schema.ts`.
+ *
+ * ⚠ **A substring match, not a prefix and not full text.** A person looking for
+ * a line they wrote remembers a word from the middle of it as readily as the
+ * first, so `LIKE 'q%'` answers the wrong question — and Postgres full-text
+ * would bring stemming and a dictionary, which are language choices this product
+ * has not made and would silently mis-serve every capture written in a script
+ * the dictionary does not cover. The index that carries the cost is
+ * `captures_user_created_idx`: the user's own rows, newest first, bounded by
+ * `limit` (§10). Somebody's whole record is a few hundred lines.
+ *
+ * ⚠ **An empty needle is the caller's problem, not this one's.** Normalising a
+ * query of pure punctuation gives the empty string, and `LIKE '%%'` matches
+ * every row — which would answer *nothing to search for* with *everything*. The
+ * action refuses it before it gets here.
+ */
+export async function searchMyCaptures(
+  sessionUser: SessionUser,
+  { q, limit = PAGE_SIZE, before }: { q: string; limit?: number; before?: PageCursor },
+): Promise<PageLine[]> {
+  return db
+    .select({
+      id: captures.id,
+      text: captures.text,
+      state: captures.state,
+      year: possibilities.year,
+      createdAt: captures.createdAt,
+    })
+    .from(captures)
+    .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
+    .where(
+      and(
+        eq(captures.userId, sessionUser.id),
+        sql`${captures.normalisedText} LIKE '%' || ${normalised(sql`${q}`)} || '%'`,
+        before
+          ? or(
+              lt(captures.createdAt, before.createdAt),
+              and(eq(captures.createdAt, before.createdAt), lt(captures.id, before.id)),
+            )
+          : undefined,
+      ),
+    )
+    .orderBy(desc(captures.createdAt), desc(captures.id))
+    .limit(limit)
 }
 
 /* -------------------------------------------------------------------------- */

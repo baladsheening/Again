@@ -12,6 +12,7 @@ import {
   requireSessionUser,
   resolveCapture,
   restoreCapture,
+  searchMyCaptures,
   setCaptureText,
   undoCapture,
   PAGE_SIZE,
@@ -270,6 +271,59 @@ export async function earlierAction(
 
   /* One past the slice, so the answer carries whether there is another. */
   const rows = await listMyPage(sessionUser, { limit: PAGE_SIZE + 1, before })
+  const more = rows.length > PAGE_SIZE
+  const shown = more ? rows.slice(0, PAGE_SIZE) : rows
+
+  const { stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
+
+  return {
+    ok: true,
+    value: {
+      lines: toPageLines(shown, stamp),
+      earlier: more && shown.length > 0 ? pageCursor(shown[shown.length - 1]) : null,
+    },
+  }
+}
+
+/**
+ * **Search over the record — live, crossed off and settled.**
+ *
+ * ⚠ **A read, like `earlierAction`**: it delegates, stamps, and writes nothing.
+ * No rate limit and no mutation id; the worst a loop of these does is read
+ * somebody their own record. §3 holds because `searchMyCaptures` filters on the
+ * session user, which is also what makes it safe for it to see `done` (§5.3).
+ *
+ * ⚠ **An empty needle is refused here rather than in SQL.** Normalising a query
+ * of pure punctuation gives the empty string, and `LIKE '%%'` matches every row
+ * — *nothing to search for* answered with *everything*. The guard is a
+ * deliberately loose "is there a letter or a digit in this at all", **not** a
+ * second copy of the normalising rule: the rule lives in `schema.ts` and is
+ * applied in SQL, and this only decides whether to ask.
+ */
+const searchSchema = z.object({
+  q: z.string().trim().min(1).max(TEXT_MAX),
+  cursor: z.string().min(3).max(120).nullable(),
+})
+
+export async function searchAction(
+  input: z.infer<typeof searchSchema>,
+): Promise<ActionResult<{ lines: PageLineView[]; earlier: string | null }>> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = searchSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, message: 'Type something to look for.' }
+
+  /* Nothing to look for: an answer, not an error, and not every row. */
+  if (!/[\p{L}\p{N}]/u.test(parsed.data.q)) {
+    return { ok: true, value: { lines: [], earlier: null } }
+  }
+
+  const before = parsed.data.cursor ? parsePageCursor(parsed.data.cursor) : undefined
+  const rows = await searchMyCaptures(sessionUser, {
+    q: parsed.data.q,
+    limit: PAGE_SIZE + 1,
+    before: before ?? undefined,
+  })
   const more = rows.length > PAGE_SIZE
   const shown = more ? rows.slice(0, PAGE_SIZE) : rows
 

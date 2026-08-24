@@ -6296,3 +6296,81 @@ foot. Measured: the word's box ended at 799.9 and the foot began at 800.
 and a line is 44px because `page-line` gives it a hem. A 14px word needs the same
 thing said its own way — a box a thumb's height with the word centred in it —
 and then the page's existing arrangement holds it clear with no special case.
+
+### Search is a surface, not a filter (24 August)
+
+The foot's magnifier now goes somewhere: `/search`, reading across **live,
+crossed-off and settled** captures. That union is why it cannot be a filter over
+anything already on screen — the page's list is `PAGE_STATES` and the tray's is
+the settled three — and it is not a preference: a line you are trying to find
+again is usually one you already dealt with, which is the case the surface exists
+for.
+
+⚠ **`done` is private (§5.3) and it is in this read.** Safe for exactly one
+reason: `searchMyCaptures` filters on the session user. Nothing derived from it
+may be handed to anybody else; there is no shared search and adding one is not a
+parameter on that function.
+
+**The normalising rule is written once.** `normalised()` in `schema.ts` generates
+`normalised_text` and is applied to the query string in SQL on its way in. A
+TypeScript copy of it would be exactly the drift the generated column exists to
+prevent — rows normalised by one rule, queries written in another, matches
+quietly not happening, and no symptom. ⚠ The extraction produced **no migration**:
+`db:generate` reports the DDL unchanged, so Phase 1 still carries none.
+
+**A substring match**, not a prefix and not full text. People remember a word
+from the middle of a line as readily as the first, so `LIKE 'q%'` answers the
+wrong question; Postgres full-text brings stemming and a dictionary, which are
+language choices this product has not made and which mis-serve every capture
+written in a script the dictionary does not cover.
+
+⚠ **Punctuation alone must not mean everything.** Normalising a query of pure
+punctuation gives the empty string and `LIKE '%%'` matches every row. The guard
+is a deliberately loose *is there a letter or a digit in this at all* — not a
+second copy of the rule, because the whole point is that there is one copy and it
+is in SQL.
+
+**Nothing on the surface acts on a line.** No pick, no ×, no settle: a result is
+a line seen from somewhere else, and a surface that could act on it would need
+the foot, the undo window and the page's whole state machine carried into a
+second place. What a found line does next is a decision this does not have to
+make to be useful.
+
+**Typed, not submitted, and Return does nothing.** On the capture page Return
+commits a line; a key that means two things across two screens is how somebody
+files a search query as a want. The answer is held together with the question it
+answers — one piece of state carrying `{ q, lines, earlier }`, compared against
+the field — so a list can never appear under a query it does not belong to.
+Clearing the results from an effect was written first and removed: it is a second
+writer racing the one that fills them, and comparing is free where clearing has
+to be timed.
+
+⚠ **`type="text"`, not `type="search"`.** The engine paints its own clear button
+inside a search field, and on a matte black page that is a bright blue × — the
+browser talking in a palette §11 does not have. Seen on screen. Hiding it with
+`::-webkit-search-cancel-button` corrects for one engine's decoration on every
+engine; removing the type removes it, and `role="searchbox"`, `inputMode` and
+`enterKeyHint` carry everything the type was doing.
+
+⚠ **The magnifier is the foot's one link, so it is an `<a>`.** Everything else
+there acts on the line in hand; this goes somewhere, and a button with a
+`router.push` looks identical while losing the middle-click, the long press and
+the back button. Its off state is a `<span>`, because there is no disabled state
+for a link.
+
+**The foot's table deviates in row two.** The design lights search while a line is
+being typed with nothing saved. It is lit here whenever there is a record and
+dark when there is not: searching an empty record can only answer *Nothing.*, and
+*a control that cannot act goes off* is the rule the rest of that bar already
+follows.
+
+**The heading is visible, set as the tray sets its own.** A glyph is not a name.
+Arriving at a caret in a field with no word for where you are is how a search
+field gets typed into as though it were the capture line, and the tray answered
+this question first.
+
+⚠ **The route reads nothing.** It asked for a count to decide whether to say
+*nothing captured yet* before anybody typed — removed with the state it fed. A
+person with an empty record types and gets *Nothing.*, by the same path as every
+other answer; a query whose only job is to pre-empt an answer the page already
+gives is a second opinion about the same fact.
