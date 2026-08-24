@@ -95,29 +95,55 @@ const FLICK = 40
 function useOnScreen(
   mark: React.RefObject<HTMLElement | null>,
   initial: boolean,
+  paused: boolean,
 ) {
   const [seen, setSeen] = useState(initial)
 
   useEffect(() => {
     const el = mark.current
-    if (!el) return
+    /*
+      Paused means disconnected, which means the last answer stands. That is
+      what freezes the chrome while somebody is writing — see `writing`.
+    */
+    if (!el || paused) return
     const observer = new IntersectionObserver(([entry]) =>
       setSeen(entry.isIntersecting),
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [mark])
+  }, [mark, paused])
 
   return seen
 }
 
 export function useChromeRecede({
   held,
+  writing,
   top,
   end,
 }: {
   /** Something on screen can act — which on this page means a line is picked. */
   held: boolean
+  /**
+   * The live line has focus.
+   *
+   * **The chrome freezes where it stands.** Somebody who scrolled down the
+   * record and then tapped the live line asked for a keyboard, not for the bars
+   * back — and somebody who was at the top and tapped it should not lose them.
+   * Both are one rule: *writing does not move the furniture.*
+   *
+   * ⚠ **It freezes by disconnecting, not by latching.** The two observers stop
+   * observing and the flick loop stops listening, so every input this hook reads
+   * keeps the value it had; there is no copy of the answer to go stale, and
+   * nothing to synchronise on the way in or out. `held` cannot move either —
+   * focus clears the pick.
+   *
+   * ⚠ It is also true that the record cannot scroll while this is on, because
+   * the writing pane takes the touch. **Do not rely on that here.** One of those
+   * is a layout decision and this is a guarantee, and the guarantee should stand
+   * on its own.
+   */
+  writing: boolean
   /**
    * A mark at the very top of the document, and this hook's only instrument.
    *
@@ -141,14 +167,15 @@ export function useChromeRecede({
   end: React.RefObject<HTMLElement | null>
 }) {
   /* Shown on arrival: the page opens at the top, which is this mark's own state. */
-  const atTop = useOnScreen(top, true)
-  const atEnd = useOnScreen(end, false)
+  const atTop = useOnScreen(top, true, writing)
+  const atEnd = useOnScreen(end, false, writing)
   /** Asked back by a flick, until a push the other way of the same size. */
   const [recalled, setRecalled] = useState(false)
 
   useEffect(() => {
     const mark = top.current
-    if (!mark) return
+    /* Writing does not move the furniture — see `writing`. */
+    if (!mark || writing) return
 
     /** How far the record has travelled up the glass. A fact, not a viewport. */
     const travel = () => -mark.getBoundingClientRect().top
@@ -210,7 +237,7 @@ export function useChromeRecede({
       window.removeEventListener('scroll', schedule)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [top])
+  }, [top, writing])
 
   return !held && !atTop && !atEnd && !recalled
 }

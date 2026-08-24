@@ -164,6 +164,24 @@ export function PageScreen({
   const [draft, setDraft] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const [focused, setFocused] = useState(false)
+  /**
+   * Somebody is writing, as opposed to the field merely holding focus.
+   *
+   * ⚠ **`focused` cannot do this job, and the reason is the same one that took
+   * it out of the chrome's hold.** The live line carries `autoFocus`, so on the
+   * desk and in a Safari tab the page *opens* focused — and a writing mode keyed
+   * to focus would open with the record blurred, sunk and untouchable, before
+   * anybody had asked for anything. On iOS focus also arrives without a
+   * keyboard, so it is not even a proxy for one.
+   *
+   * So this is set by the gesture instead: a tap on the paper, a tap on the
+   * field, or a keystroke in it. All three are somebody saying *I am writing
+   * now*, on every surface, and none of them is a platform behaviour.
+   *
+   * Cleared on blur, which is the only way out — including the writing pane's
+   * own tap and `pick`, both of which blur the field.
+   */
+  const [writing, setWriting] = useState(false)
   /** The line whose *Again?* is standing open. */
   const [asking, setAsking] = useState<string | null>(null)
   /** The last line to land, while the ten seconds hold. */
@@ -186,8 +204,15 @@ export function PageScreen({
     takes focus on arrival and the chrome therefore never receded; the keyboard
     it was standing in for is measured instead. See `chrome-recede.ts`.
   */
+  /*
+    ⚠ **`writing` freezes the chrome where it stands.** Somebody who scrolled
+    down and then tapped the live line asked for a keyboard, not for the bars
+    back — and somebody who was at the top and tapped it should not lose them.
+    Both are one rule: *writing does not move the furniture.*
+  */
   const receded = useChromeRecede({
     held: picked !== null,
+    writing,
     top: topMark,
     end: endMark,
   })
@@ -413,6 +438,7 @@ export function PageScreen({
   function write() {
     setPicked(null)
     setAsking(null)
+    setWriting(true)
     /*
       ⚠ **Nothing scrolls here any more, and that is a subtraction.** This used
       to scroll to the caret first, because focusing an input that is off screen
@@ -481,6 +507,39 @@ export function PageScreen({
       <div ref={topMark} aria-hidden className="pointer-events-none -mb-px h-px" />
 
       <Bar undo={{ live: undoable !== null, onUndo: undo }} receded={receded} />
+
+      {/*
+        **The record, behind glass while a line is being written.**
+
+        ⚠ **One pane doing four jobs**, and the third is the one it exists for.
+        It blurs the record and sinks it a stop, so the words in hand are the
+        only sharp thing on the screen. It **takes the touch** — with a keyboard
+        up on iOS a `fixed` element is anchored to the layout viewport, which
+        does not shrink, so scrolling can carry the visual viewport away from the
+        live line and off the top of the glass; `touch-action: none` removes the
+        scroll rather than correcting for the drift, which is the order
+        `CLAUDE.md` asks for and is one standard property rather than a
+        thermostat that took five versions to get right at the other edge. And a
+        tap on it puts the keyboard away, which is the way back.
+
+        ⚠ **Under the band and under the two bars**, so everything that can act
+        stays sharp and stays tappable: `z-5` against the band's `z-10` and the
+        bars' `z-20`.
+
+        ⚠ **Inert when it is not wanted.** No blur is applied and no pointer is
+        taken unless the line has focus — a full-viewport `backdrop-filter` left
+        armed at zero opacity is a compositing layer the scrolling page pays for
+        and never sees.
+      */}
+      <div
+        aria-hidden
+        onClick={() => input.current?.blur()}
+        className={`fixed inset-0 z-5 transition-opacity duration-(--recede) ease-out ${
+          writing
+            ? 'bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
+            : 'pointer-events-none opacity-0'
+        }`}
+      />
 
       {/*
         The floor of the layout viewport, as a thing that can be measured — see
@@ -587,8 +646,15 @@ export function PageScreen({
                 setPicked(null)
                 setAsking(null)
               }}
-              onBlur={() => setFocused(false)}
+              onBlur={() => {
+                setFocused(false)
+                setWriting(false)
+              }}
+              /* A tap on the field is somebody saying they are writing. */
+              onPointerDown={() => setWriting(true)}
               onKeyDown={(e) => {
+                /* And so is a keystroke, for anyone who never taps. */
+                setWriting(true)
                 /*
                   ⚠ **Return commits and never inserts a newline.** One line is one
                   capture: a capture with a line break in it is two things somebody

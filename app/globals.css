@@ -1245,6 +1245,44 @@
   --band-tint: color-mix(in srgb, var(--color-bg) 90%, transparent);
 
   /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  Writing is a mode, and the record goes behind glass for it
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **While the live line has focus, the record is blurred and out of reach.**
+   * One full-viewport pane under the band does all of it: it blurs what is
+   * behind, it sinks it a stop, it takes the touch, and a tap on it puts the
+   * keyboard away.
+   *
+   * ⚠ **Taking the touch is the point, not a side effect.** With a keyboard up
+   * on iOS a `fixed` element is anchored to the *layout* viewport, which does
+   * not shrink — so scrolling can carry the visual viewport away from it and the
+   * live line goes off the top of the glass. That was reported. The old keyboard
+   * pin corrected the same class of error at the bottom edge with a thermostat
+   * and it took five wrong versions to get right; **`touch-action: none` removes
+   * the scroll instead of correcting for the drift**, which is the order
+   * `CLAUDE.md` asks for, and it is one standard property rather than a model of
+   * one browser.
+   *
+   * It costs nothing that matters: **scrolling the record is not what somebody
+   * doing this is doing.** The blur already says the record is not the thing in
+   * hand, and the way back is a tap — the same tap that dismisses the keyboard.
+   *
+   * ⚠ **Lighter than the band's ground, and it must stay that way.** This sinks
+   * the record; `--band-tint` protects the words being written from it. If this
+   * ever goes darker than that, the live line stops being the lit thing on the
+   * screen.
+   *
+   * ⚠ **The blur is small on purpose.** The record has to stay legible *as a
+   * record* — recognisably the lines you just wrote, out of focus — rather than
+   * becoming texture. Anything past a few pixels turns two hundred captures into
+   * a grey wash, and the page's whole argument is that the record is the
+   * product.
+   */
+  --scrim-tint: color-mix(in srgb, var(--color-bg) 45%, transparent);
+  --scrim-blur: 5px;
+
+  /**
    * The air between the band and the first line of the record.
    *
    * It was `mt-8` on the list. The band left the flow, so the air had to come
