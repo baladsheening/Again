@@ -25,12 +25,12 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > list of things not built, not a list of things unverified — with one exception,
 > named below.
 >
-> ⚠ **The four-second capture has been set aside, at the user's direction on 24
-> August.** It is still not stopwatched and this register does not claim it is.
-> It stops being *the next thing* and becomes an open question that Phase 1 can
-> close around; the reasoning for wanting it is kept under *What hardware
-> answered* because it is the honest statement of what the page has and has not
-> proved.
+> ⚠ **The four-second capture is closed, at the user's direction on 24 August —
+> and it was never stopwatched.** The register says *accepted*, not *measured*,
+> because those are different claims and only one of them is true. The screen
+> was used on hardware and judged good; nobody timed it. The reasoning for
+> wanting the number is kept under *What hardware answered* unchanged, because
+> anyone reopening Phase 1's acceptance starts there rather than from this line.
 >
 > ⚠ **The chrome's exit was the open UX item and it is closed.** The recede was
 > judged too quick on hardware on 24 August; the exit took the return's length,
@@ -38,10 +38,11 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > exit* below — including the mirrored exit curve that was built first and
 > measured before it could ship.
 >
-> ⚠ **Three things came back off the handset the moment in-place editing shipped,
-> and none of them has been looked at.** They are the open items — see *What the
-> handset said about editing* below. Two are a movement bug and one is a design
-> question about whether the gesture should exist at all.
+> ⚠ **The three things the handset said about editing are answered, and the
+> answer was to delete the field.** The rewrite happens in the pinned band now —
+> see *What the handset said about editing* below, which is a record of what was
+> reported and what it turned out to be. **None of it is verified on hardware
+> yet**, which is the one thing outstanding on this page.
 >
 > ⚠ The installed app **never reloads until it is force-quit** — check which
 > build is running before believing anything seen on it.
@@ -111,7 +112,7 @@ measured, and only one of those is now true.
 | `app/(app)/page.tsx` | the read, the day stamps, the seed |
 | `components/page-screen.tsx` | the page: lines, live line, picking, Return |
 | `components/bar.tsx` · `foot.tsx` · `glyphs.tsx` | the two bars and the seven glyphs |
-| `components/keyboard-pin.ts` | the foot held on the keyboard's top edge |
+| `components/keyboard-hem.ts` | the page's floor, and the band's own top edge |
 | `components/screen.tsx` | the bar and a column, for every route that is not the page |
 | `app/actions/captures.ts` | capture · rewrite · cross off · settle · undo |
 | `lib/db/captures.ts` | `listMyPage`, `listMySettled`, `setCaptureText` |
@@ -131,11 +132,12 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 - ~~*The chrome's exit*~~ — **done**, see that section below.
 - ~~*Editing a committed line*~~ — **done**, see *Rewriting a line* below. The
   question this document left open is answered: **in place**.
-- ~~*The four-second capture, with a stopwatch*~~ — ⚠ **set aside at the user's
-  direction, and not done.** This register does not claim it is. It was item 1.
-  The reasoning is kept under *What hardware answered*, unchanged, because it is
-  still the honest account of what the page has and has not proved, and anyone
-  reopening Phase 1's acceptance starts there.
+- ~~*The four-second capture, with a stopwatch*~~ — **closed at the user's
+  direction, and ⚠ never stopwatched.** *Accepted* and *measured* are different
+  claims and this register only makes the first. It was item 1. The reasoning is
+  kept under *What hardware answered*, unchanged, because it is still the honest
+  account of what the page has and has not proved, and anyone reopening Phase 1's
+  acceptance starts there.
 1. **Search over captures.** The foot's fourth glyph. The existing
    `search-field.tsx` and `search-provider.tsx` search TMDB, not the page; they
    are on disk and mounted by nothing.
@@ -175,7 +177,7 @@ rising from the bottom of the glass has nothing to cover. That is a subtraction
 rather than a fix, which is the order `CLAUDE.md` asks for — the condition was
 removed, not corrected for.
 
-`components/keyboard-pin.ts` still holds the foot on the keyboard’s top edge and
+`components/keyboard-hem.ts` still holds the page's floor clear of the keys and
 still writes `--keyboard-overlap`, and **that part is still only ever exercised
 on hardware** — a desktop Chromium has no software keyboard. What is left to
 watch, installed and in a Safari tab: the foot arriving *with* the keys rather
@@ -242,30 +244,55 @@ the travel by 120ms going, 54.6% by 116ms coming back**, both of 340.
 
 ### Rewriting a line — 24 August
 
-**In place, and that answers the question this document left open.** *In place or
-in a detail view* was undecided; a detail view loses to the page's own argument —
-it behaves like paper, and paper does not navigate to be written on. Exactly one
-line is borrowed as a field for as long as somebody is rewriting it, so the
-load-bearing premise is untouched: **lines are still records, and a record is
-still not an input.**
+**The words come to the writing line, and that answers the question this document
+left open.** *In place or in a detail view* was undecided; the answer is neither.
+A detail view loses to the page's own argument — it behaves like paper, and paper
+does not navigate to be written on — and **in place shipped for a day and was
+deleted**, because a field in normal flow breaks every instrument on this screen
+at once. See *What the handset said about editing*.
 
-**The gesture.** First tap picks, second tap opens the words. The pick is the
-common act — settle it, cross it off — so the rare one pays the second tap. While
-a line is open, a tap on its own words places a caret rather than resetting the
-draft.
+**The page has exactly one field, always.** It is the pinned band, and it holds
+either a new capture or the words of the line being rewritten. That makes the
+load-bearing premise stronger rather than merely untouched: **no line of the
+record is ever an input**, not even briefly.
 
-**Three exits, and only one discards.** Return and a tap on the paper commit;
-blur commits too, because the words on screen are the words somebody meant.
-`Escape` alone discards, and it leaves the line *picked* rather than releasing —
-so `Escape` steps rather than jumping. ⚠ **Unchanged words write nothing at all**:
-opening a line to look at it costs no round trip and no rate-limit token.
+⚠ **`draft` and `editDraft` are separate state, so nothing is stashed and
+nothing can drift.** Opening a line does not clobber a half-typed capture; the
+capture is simply not on screen while the line is, and it is handed back
+untouched when the line closes. The one that is not displayed is not displayed —
+there is no copy to keep in sync.
+
+⚠ **The pick is kept while the line is open**, so the record still carries the
+mark on the row the words came from, the foot is still that line's toolbar, and
+*let go* still has something to let go of. That is why the field's `onFocus` no
+longer clears the pick — **the fifth thing on this page to come off focus** — and
+why the two gestures that mean *I am starting a new capture* (a tap on the field,
+a keystroke in it) carry that job instead.
+
+**The gesture, and the door.** First tap picks, second tap lifts the words into
+the band. ⚠ **The foot's pencil does the same thing and is the announced way** —
+see *The glyph set* and the note in `foot.tsx` for why the discoverability
+question was really a consistency question. The pencil goes dark while a line is
+open: re-opening it would replace what is in the field with what is saved, which
+is a discard nobody asked for.
+
+⚠ **The keyboard is raised by `focus()` inside the tap**, which works because
+picking blurred the field on purpose. Nothing about it can move to an effect.
+
+**Three exits, and only one discards.** Return commits, and so does a tap on the
+writing pane — which is what the paper is while a keyboard is up. Blur commits
+too, because the words on screen are the words somebody meant. `Escape` alone
+discards, and it leaves the line *picked* **and leaves you writing**, so it steps
+back one state rather than jumping out of all of them: the band goes back to
+holding the capture that was in it, with the keyboard still up. A second
+`Escape` releases the pick. ⚠ **Unchanged words write nothing at all**: opening a
+line to look at it costs no round trip and no rate-limit token.
 
 ⚠ **`Escape` must not call `blur()`, and this is the trap that was caught in
 review rather than on screen.** `blur()` fires `onBlur` synchronously, inside the
 key handler, where the commit still closes over the draft the discard has only
 *queued* — so the one exit meant to throw the words away would have saved them.
-Clearing the open id unmounts the field on the next render and React fires no
-blur on unmount, which is what makes the discard the whole of what happens.
+Clearing the open id is the whole of what happens.
 
 ⚠ **The page-level `Escape` listener does not exist while a line is open**, for
 the same class of reason: `release()` commits an open edit on its way out, so it
@@ -307,14 +334,27 @@ it is editing, so a retry writes the same words to the same row and §10's
 idempotency comes free.
 
 `node_modules/.probe/edit.mjs` drives all of it at 390px and checks the words
-survive a reload. ⚠ **It waits 4s before reloading**: the save is fire-and-forget
-by design, and a reload that races it reads the row before the write lands, which
-looks exactly like an edit that never persisted. It did, at 900ms.
+survive a reload. It now also checks the three things the band model is for:
+**the field is inside `live-band`, `scrollY` does not move when a line opens,
+and the band carries no `transform`** — plus that the record holds no `<input>`
+at all, and that a half-typed capture comes back untouched.
 
-### What the handset said about editing — 24 August, open
+⚠ **It waits 4s before reloading**: the save is fire-and-forget by design, and a
+reload that races it reads the row before the write lands, which looks exactly
+like an edit that never persisted. It did, at 900ms.
 
-**Reported minutes after `0d72b1d` deployed. Nothing here has been investigated
-and nothing has been fixed.** This is the report as given, not a diagnosis.
+⚠ **Nothing in it counts taps against a fixed number any more.** A line is not
+pickable while it is still in flight, so "one tap picks" was timing the network;
+each step drives the page until it is in the state it wants and reports how many
+gestures that took. ⚠ **And the release taps the paper *beside* the first line,
+not below the last one** — below the record is the foot, and a tap that lands on
+a dark glyph does nothing, which reads exactly like a release that did not work.
+That cost a debugging pass.
+
+### What the handset said about editing — 24 August, answered
+
+**Reported minutes after `0d72b1d` deployed.** Three things, and the report is
+kept verbatim below because the diagnosis turned on a detail of it.
 
 **1. Without scrolling first, double-tapping a line moves the row.** It shifts —
 down, probably. Then tapping *outside* the line that was double-tapped makes **the
@@ -323,29 +363,65 @@ top banner recede**, with no scroll to explain it.
 **2. After scrolling down, double-tapping a line makes the row descend** far
 enough to obscure some of the entries. Tapping elsewhere returns it to the top.
 
-⚠ **Hypothesis, unverified, and it is one bug rather than two.** Focusing a record
-line makes the browser scroll it into view; the page moves; `useChromeRecede`
-reads the movement as a scroll and takes the bar away, while the band's thermostat
-in `keyboard-hem.ts` tries to correct a position that was not wrong. **The first
-suspect is this phase's own change**: `useKeyboardHem` was given
-`writing || editing !== null` so a record line being rewritten would get the band
-held off the status bar. The live line never had this problem because it is
-**pinned**; a record line is in normal flow, and that is precisely the condition
-that differs. ⚠ Test the hypothesis before acting on it — the last four bugs on
-this page all keyed to something that looked obvious and was not.
+**3. Two design questions:** how would anybody know a second tap edits, and
+should a line be editable at all.
 
-**3. Two design questions, asked and deliberately left open:**
+#### 1 and 2 are one bug, and the hypothesis in the register was right
 
-- **How would anybody know a second tap edits?** Nothing on the page says so, and
-  this document has never had an answer for discoverability — it specified the
-  gesture and stopped. A legend, an icon or a word of copy are all ruled out
-  elsewhere on this screen, which makes it a real question rather than a small
-  one.
-- **Should a line be editable at all?** ⚠ **The design saying so is not the
-  answer.** This document has always said the second tap should edit; the question
-  now is whether that was right, and it is being reopened from hardware rather
-  than from the page. Nothing about *nothing is ever deleted* (§5.1) or the
-  suppression rule settles it either way.
+**The register's first suspect was this phase's own change, and it was.**
+`useKeyboardHem` had been given `writing || editing !== null` so a record line
+being rewritten would get the band held off the status bar — and the band's
+correction is a thermostat that puts it on the **visible** top edge. With iOS
+having over-scrolled the layout viewport to reveal a focused in-flow field, the
+visible top edge is well down the glass, so the band went down there and covered
+the record. That is both reports: a small shift at the top of the page, where
+there is little room to over-scroll, and a descent after scrolling, where there
+is a lot.
+
+The second half of report 1 is the same over-scroll reaching the other
+instrument: `useChromeRecede` watches a mark in the document, so it read the
+keyboard's arithmetic as a reader scrolling and took the bar away — "with no
+scroll to explain it" is exactly what a transient looks like when something
+believes it.
+
+⚠ **The fix is not three corrections, it is one deletion.** Every instrument on
+this page is built on one premise: **there is one field and it is pinned.** A
+field in normal flow breaks it three ways — the recede is lied to, the band is
+corrected for a field that is not it, and a keyboard can cover the line being
+written, which is the exact defect pinning the live line was built to remove.
+Correcting each leaves a race at the moment the line is let go, while the
+keyboard is still closing and the over-scroll has not unwound. **So the second
+field is gone and the rewrite happens in the band**, which returns both hooks to
+what they were before this feature existed. `CLAUDE.md`: remove the condition
+rather than correct for it.
+
+⚠ **What is verified and what is not.** `edit.mjs` shows `scrollY` unmoved, no
+`transform` on the band, and no `<input>` anywhere in the record — on the desk,
+which has no software keyboard. **The handset has not seen it.**
+
+#### 3 — both answered
+
+**Should a line be editable at all? Yes.** A capture is one line typed fast and
+one-handed with autocorrect on, so typos are certain; §5.1's ten-second undo
+already concedes exactly that at creation and leaves a typo found later with no
+repair at all. And *Resolution offers* matches capture **text** against a
+provider — a mangled line can never resolve. Not editable means a permanently
+wrong record. ⚠ Nothing here is *nothing is ever deleted* being weakened: a
+rewrite changes words, and the × is still the only way a capture leaves the
+live view.
+
+**How would anybody know? The foot.** ⚠ **The discoverability question was really
+a consistency question.** Cross off and settle are controls in the foot;
+rewriting was a secret gesture — and all three are the same kind of thing,
+something you do to the line you have picked. So rewrite joins them as a fifth
+glyph, and the second tap survives as the accelerator. A legend, an icon with
+copy, or a hint are all still ruled out; none of them was needed.
+
+⚠ **A drawn caret on the picked line was the other candidate and it is rejected
+on its own terms.** The page has already taught that a caret means *writing
+happens here* — but on a picked line the next keystroke does **not** go there,
+because it takes another tap. A caret that lies about where typing goes is worse
+than no caret at all.
 
 ### The deviations now standing
 
@@ -413,7 +489,11 @@ this page all keyed to something that looked obvious and was not.
   and nothing about a raw capture can answer it. Yes → `go_back_to`, No →
   `done`.
 - **The tray is one surface**, `/settled`, with each row carrying its own word.
-- **A second tap opens the words, in place** — see *Rewriting a line* above.
+- **A second tap lifts the words into the band, and the foot's pencil is the
+  announced door** — see *Rewriting a line* above. ⚠ **In place shipped for a day
+  and is deleted.** The page has exactly one field and it is the pinned one; that
+  is what every instrument on the screen is built on, and it is what the day of
+  in-place editing broke.
 
 The full reasoning for each is in `docs/decisions.md`, *Phase 1: the page and
 Return — 23 August*.
@@ -634,8 +714,10 @@ belong to surfaces this design replaces and go with them.
 
 ## The glyph set
 
-**Seven glyphs, one grid: `viewBox="0 0 20 20"`, rendered at 20px,
-`stroke-width="1.25"`.** That is the geometry `ProfileIcon` and the masthead
+**Eight glyphs, one grid: `viewBox="0 0 20 20"`, rendered at 20px,
+`stroke-width="1.25"`.** ⚠ **It was seven until 24 August**, when the foot took
+a pencil — see *What the handset said about editing* for why the door had to be
+visible. That is the geometry `ProfileIcon` and the masthead
 `SearchIcon` already ship with, so the effective stroke is 1.25px on every one
 and the set matches the app's real icons rather than only matching itself.
 

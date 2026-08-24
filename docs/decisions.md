@@ -5914,7 +5914,7 @@ itself. The zone comes from `x-vercel-ip-timezone` (`viewerTimeZone` in
 machine's own zone, which on a laptop is the right answer anyway. The failure
 this arrangement cannot see is therefore production-only.
 
-### The second tap does not edit yet
+### The second tap does not edit yet — superseded 24 August
 
 The design says tap picks and a second tap edits, and leaves *where* that edit
 happens — in place or in a detail view — explicitly open. A second tap therefore
@@ -5923,6 +5923,11 @@ Unpicking is a tap on the page, which is also how you get back to writing.
 
 It also needs a mutation that does not exist: `setCaptureNote` writes the note,
 not the text.
+
+⚠ **Both halves of this are now false and it is kept for the question it left
+open.** `setCaptureText` exists, the second tap opens the words, and *where* the
+edit happens was answered twice in two days — in place, then in the band. See
+*The rewrite happens in the band* below.
 
 ### `--color-caret` is deleted, by its own terms
 
@@ -6149,3 +6154,101 @@ reason it exists at all.
 ⚠ **A tap just right of a short word writes instead of picking.** Recoverable in
 one tap, and so is the reverse. Neither destroys anything, which is what made the
 trade acceptable.
+
+### The rewrite happens in the band, and the second field is deleted (24 August)
+
+In-place editing shipped and a handset reported the page moving under it: the
+band descending far enough to cover entries, and the bar receding with no scroll
+to explain it. The register's hypothesis named the right suspect —
+`useKeyboardHem` had been widened to `writing || editing !== null` the same day —
+and the diagnosis is one sentence longer than that.
+
+**Every instrument on the capture page is built on one premise: there is one
+field and it is pinned.** A field in normal flow breaks it three ways at once.
+iOS over-scrolls the layout viewport to reveal a focused in-flow field, so
+`useChromeRecede` — which watches a mark in that document — reads a keyboard's
+arithmetic as a reader scrolling. The band's thermostat then puts the band on the
+*visible* top edge, which with the layout viewport over-scrolled is well down the
+glass and on top of the record. And a keyboard can cover a line in flow, which is
+the exact defect pinning the live line was built to remove.
+
+**Correcting each is three corrections and a race.** The over-scroll unwinds
+while the keyboard closes, so the instant a line is let go the observers
+reconnect and read a position that is about to stop being true. There is no
+threshold that survives that; it is the same shape as the flicker
+`chrome-recede.ts` records, where the false movement is as large as the real one.
+
+**So the second field is deleted and the rewrite happens in the pinned band.**
+Both hooks go back to exactly what they were before the feature existed, and the
+widened flag has nothing left to widen. `CLAUDE.md`: remove the condition rather
+than correct for it — a subtraction cannot be wrong on a device nobody has
+tested, and this one is not tested on a handset yet.
+
+⚠ **It does not reopen *a record is not a text buffer*; it closes it harder.** No
+line of the record is ever an input now, not even briefly. The question the
+design left open was *in place or in a detail view* — the answer is neither, and
+nothing navigates. The band is the page's one writing line and always was.
+
+⚠ **`draft` and `editDraft` were already separate state, which is why this costs
+nothing.** The field renders one or the other. There is no stash and nothing to
+keep in sync: a half-typed capture is simply not on screen while a line is open,
+and it is handed back untouched.
+
+⚠ **The pick survives an open rewrite, so `onFocus` stopped clearing it — the
+fifth thing on this page to come off focus.** The field carries `autoFocus`, so
+focus is the resting state of the page rather than an event; and now that a
+rewrite focuses the field *on purpose*, a pick cleared by focus would throw away
+the line whose words are in it. The two gestures that mean *I am starting a new
+capture* carry that job instead.
+
+**What was considered and rejected:** `focus({ preventScroll: true })` on the
+in-flow field. It only suppresses the scroll the focus call makes; iOS still
+scrolls when the keyboard rises over the field, which is the case that matters.
+It corrects rather than removes, and it leaves the keyboard able to cover the
+line being written.
+
+### Rewriting gets a glyph, because the question was consistency (24 August)
+
+*How would anybody know a second tap edits?* Nothing on the page said so, and a
+legend, an icon with copy and a hint are all ruled out on this screen — which is
+what made it look like a hard question. It was not. **Cross off and settle are
+controls in the foot and rewriting was a secret, when all three are the same kind
+of thing: something you do to the line you have picked.** The inconsistency was
+the discoverability problem, so rewrite joins them as a fifth glyph and the
+second tap survives as the accelerator.
+
+It goes third rather than first: cross off and settle keep the slots they have
+had since the foot existed — muscle memory is not worth a tidier reading order —
+and the split that falls out is the honest one, the three that can act and then
+the two that are not built.
+
+⚠ **A drawn caret at the end of the picked line was the other candidate, and it
+is rejected on its own terms.** The page has taught that a caret means *writing
+happens here*; on a picked line the next keystroke does not go there, because it
+takes another tap. A caret that lies about where typing goes is worse than none.
+
+⚠ **The pencil goes dark while a line is open.** Re-opening would replace what is
+in the field with what is saved — a discard nobody asked for — and a control that
+cannot act goes off, which is the rule the camera and search already follow.
+
+### A line is editable, and the argument is not "the design said so" (24 August)
+
+The design always said a second tap edits, and the handset reopened whether that
+was right. It is, and for reasons that do not depend on the design saying it: a
+capture is one line typed fast and one-handed with autocorrect on, so typos are
+certain; §5.1's ten-second undo already concedes exactly that at creation and
+leaves a typo found later with no repair at all; and *Resolution offers* matches
+capture **text** against a provider, so a mangled line can never resolve. Not
+editable means a permanently wrong record.
+
+⚠ **This does not weaken *nothing is ever deleted*.** A rewrite changes words. The
+× is still the only way a capture leaves the live view, and it crosses off rather
+than removing.
+
+### The four-second capture is closed, and was never measured (24 August)
+
+Closed at the user's direction. **Accepted and measured are different claims and
+only the first is true** — the screen was used on hardware and judged good, and
+nobody has stopwatched it. The reasoning for wanting the number stays in the
+register under *What hardware answered*, unchanged, because anyone reopening
+Phase 1's acceptance starts there rather than from the line that closed it.

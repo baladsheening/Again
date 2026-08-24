@@ -1,8 +1,8 @@
 /**
- * The seven glyphs of the capture page — Phase 1.
+ * The eight glyphs of the capture page — Phase 1.
  *
  * **One grid: `viewBox="0 0 20 20"`, `stroke-width="1.25"`, rendered at
- * `--glyph`.** One number sizes all seven, and the stroke rides with it: the
+ * `--glyph`.** One number sizes all eight, and the stroke rides with it: the
  * viewBox is fixed, so a bigger box is the same drawing larger rather than the
  * same drawing stretched thinner. See `--glyph` in globals.css for why the size
  * became a token on 24 August, and why 20px stopped being a constraint.
@@ -108,6 +108,26 @@ export function SettleGlyph() {
       <path d="m7.9 5 2.1 2.1 2.1-2.1" />
       <path d="M3.5 9.5h3.75l1 1.75h3.5l1-1.75h3.75" />
       <path d="M3.5 9.5v6a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6" />
+    </Glyph>
+  )
+}
+
+/**
+ * Foot. Rewrite the picked line — **the door the second tap did not have.**
+ *
+ * ⚠ **A known icon, which is what §11 permits.** The pencil is the one glyph
+ * everybody already reads as *change these words*, and the alternative was a
+ * legend, a hint or a word of copy — all three ruled out on this screen.
+ *
+ * Drawn on the grid rather than scaled from a 24 one: the body is a 45° bar
+ * 3.3 wide between two parallel edges, closed by a semicircular arc at the
+ * eraser end and a point at the tip. The second path is the ferrule.
+ */
+export function RewriteGlyph() {
+  return (
+    <Glyph>
+      <path d="M3.75 16.25 4.6 12.9 13.9 3.6a1.65 1.65 0 0 1 2.33 2.33L6.93 15.23z" />
+      <path d="M12.6 4.9 15 7.3" />
     </Glyph>
   )
 }

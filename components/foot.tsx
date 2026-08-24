@@ -1,11 +1,31 @@
 'use client'
 
 import { OFF } from './bar'
-import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
+import {
+  CameraGlyph,
+  CrossOffGlyph,
+  RewriteGlyph,
+  SearchGlyph,
+  SettleGlyph,
+} from './glyphs'
 
 /**
- * **The foot: the tools.** Cross off, settle, camera, search — **the same four
- * at every width**, including the desk.
+ * **The foot: the tools.** Cross off, settle, rewrite, camera, search — **the
+ * same five at every width**, including the desk.
+ *
+ * ⚠ **Rewrite is the fifth, and it is here because the gesture was invisible.**
+ * A second tap on a line's words opens them, and a handset asked the obvious
+ * question: *how would anybody know that?* Nothing on the page said so, and a
+ * legend, an icon-with-copy or a hint are all ruled out on this screen. But the
+ * inconsistency was the real answer — **cross off and settle are controls in the
+ * foot and rewriting was a secret**, when all three are the same kind of thing:
+ * something you do to the line you have picked. So it joins them, and the
+ * second tap survives as the accelerator for anybody who finds it.
+ *
+ * ⚠ **It goes third rather than first.** Cross off and settle keep the slots
+ * they have had since the foot existed — muscle memory is not worth a tidier
+ * reading order — and the split that results is the honest one: the three that
+ * can act, then the two that cannot.
  *
  * ⚠ **It does not sit above the keyboard, and that is the design.** It used to:
  * `useKeyboardPin` held it on the keys' top edge, which spent a bar's worth of a
@@ -33,11 +53,11 @@ import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  *
  * Three states, and they are the app's honest answer to what is available:
  *
- * | state | cross off | settle | camera | search |
- * |---|---|---|---|---|
- * | empty page | off | off | **on** | off |
- * | mid-line, nothing saved | off | off | **on** | **on** |
- * | a saved line picked | **on** | **on** | **on** | **on** |
+ * | state | cross off | settle | rewrite | camera | search |
+ * |---|---|---|---|---|---|
+ * | empty page | off | off | off | **on** | off |
+ * | mid-line, nothing saved | off | off | off | **on** | **on** |
+ * | a saved line picked | **on** | **on** | **on** | **on** | **on** |
  *
  * The camera is the odd one because a photograph starts a capture rather than
  * acting on one.
@@ -55,6 +75,7 @@ import { CameraGlyph, CrossOffGlyph, SearchGlyph, SettleGlyph } from './glyphs'
 export function Foot({
   crossOff,
   settle,
+  rewrite,
   receded = false,
 }: {
   /**
@@ -79,6 +100,13 @@ export function Foot({
   crossOff: { crossedOff: boolean; act: () => void } | null
   /** Settle the picked line: it leaves the page for the tray. */
   settle: (() => void) | null
+  /**
+   * Open the picked line's words in the band. `null` when nothing saved is
+   * picked, and also while a rewrite is already open — re-opening the line
+   * would throw away what is in the field for the words that are saved, which
+   * is a discard nobody asked for. A control that cannot act goes off.
+   */
+  rewrite: (() => void) | null
 }) {
   return (
     <footer
@@ -117,6 +145,18 @@ export function Foot({
           }`}
         >
           <SettleGlyph />
+        </button>
+
+        <button
+          type="button"
+          disabled={!rewrite}
+          onClick={() => rewrite?.()}
+          aria-label="Rewrite it"
+          className={`tap-target flex items-center transition-colors ${
+            rewrite ? 'text-chrome' : OFF
+          }`}
+        >
+          <RewriteGlyph />
         </button>
 
         {/* Not built — see the note at the top of this file. */}

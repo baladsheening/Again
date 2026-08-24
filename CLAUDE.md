@@ -26,10 +26,10 @@ flag the decision rather than inventing scope.
 
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
-**Phase 1's page and Return are built, deployed and seen on a handset** — `main`
-at `101aa33`. **No Phase 1 deploy has carried a migration**, so the rollback is a
-revert push and nothing else. `/` is the capture page in production; the poster
-wall, `components/shell.tsx` and the four collection routes are deleted.
+**Phase 1's page and Return are built, deployed and seen on a handset.** **No
+Phase 1 deploy has carried a migration**, so the rollback is a revert push and
+nothing else. `/` is the capture page in production; the poster wall,
+`components/shell.tsx` and the four collection routes are deleted.
 
 **The whole page has been seen on hardware and judged good.** The first real use
 of it reversed two decisions the desk had made:
@@ -38,7 +38,14 @@ of it reversed two decisions the desk had made:
   scrolls on arrival or after a Return, and a keyboard rising from the bottom of
   the glass has no way to cover the line being written.
 - **A line is only as wide as its own words.** Tap the words to pick the line;
-  tap them again to rewrite it in place; tap the paper to let it go.
+  tap them again to rewrite it; tap the paper to let it go.
+
+⚠ **The page has exactly one field and it is the pinned band.** It holds a new
+capture, or the words of the line being rewritten. **Every instrument on that
+screen is built on this** — the recede, the keyboard hem, the band's own
+correction — and an `<input>` mounted in the record broke all three at once on 24
+August. No line of the record is ever an input. Rewriting is the foot's pencil,
+or a second tap on the words.
 
 ⚠ **The paper does not start a capture.** It did for a day and that was removed:
 the live line is pinned and always on screen, so a second way to reach it was a
@@ -59,10 +66,9 @@ Re-splitting them needs a hardware reason, stated in the token. A mirrored exit
 curve was built first and measured before it could ship — it covers 0% of the
 travel by 80ms, which is the same hesitation from the other side.
 
-⚠ **The four-second capture is still a claim** — nobody has stopwatched it, and
-it is **set aside at the user's direction (24 August)**, not done. It is the last
-acceptance criterion in Phase 1 and the register keeps the reasoning intact for
-whoever reopens it.
+⚠ **The four-second capture is closed at the user's direction (24 August) and
+was never stopwatched.** *Accepted* and *measured* are different claims and only
+the first is true. The register keeps the reasoning intact for whoever reopens it.
 
 ⚠ The installed app never reloads until it is force-quit — so check which build
 is running before believing anything reported from it.
