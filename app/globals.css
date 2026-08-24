@@ -1170,6 +1170,67 @@
   --glass-blur: 18px;
 
   /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The live line is always on screen
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **The band is pinned under the bar, and the record scrolls beneath it.** It
+   * was the first thing in the document and scrolled away with everything else,
+   * which meant capture was one tap only while you happened to be at the top and
+   * a scroll-then-tap everywhere else. The page's one acceptance criterion is
+   * four seconds; a criterion that holds only at the top of the record is not
+   * one.
+   *
+   * ⚠ **It also deletes a race rather than adding a feature.** `write` used to
+   * scroll to the caret *before* focusing, because focusing an input that is off
+   * screen hands the scrolling to the browser — and on iOS that happens twice,
+   * once for the focus and once when the keyboard arrives, either of which can
+   * leave the caret under a fixed bar. With the band always on screen there is
+   * nothing to scroll into view, so the race has no argument to have.
+   *
+   * ⚠ **Derived from the line box, never typed.** The band *is* one line of the
+   * page — the same size, face and box as a committed one, which is what stops
+   * the page jumping on Return — so its height is that line's height and the
+   * lead above it. Type a number here and the day the leading changes, the
+   * record slides under the band.
+   */
+  --band-pad: 1rem;
+  --band-height: calc(
+    var(--band-pad) * 2 + var(--leading-line) + var(--line-hem) * 2
+  );
+
+  /**
+   * The band's own ground, and **it is not the bars'.**
+   *
+   * ⚠ **The band holds body text, and that is the whole difference.** A bar can
+   * be 74% because what shows through it is a wordmark and four glyphs, and
+   * nothing behind it can be mistaken for what is in front. The band is one line
+   * of the record's own size, face and colour — so a record line dissolving
+   * through it at 26% reads as **a second line of the draft**, which was exactly
+   * what it looked like when it first shipped pinned.
+   *
+   * 90% is dark enough that a line passing under is a smear rather than a
+   * sentence, and the blur is still what stops it being guillotined at the edge:
+   * an opaque band would cut a glyph in half at the boundary, which is what the
+   * glass on the two bars exists to prevent.
+   *
+   * ⚠ **The padding is the other half of the answer, and it matters more.**
+   * `--band-pad` puts a line's worth of ground under the live line, so a record
+   * line has somewhere to dissolve *before* it reaches the words being written.
+   * Take it out and no tint is dark enough.
+   */
+  --band-tint: color-mix(in srgb, var(--color-bg) 90%, transparent);
+
+  /**
+   * The air between the band and the first line of the record.
+   *
+   * It was `mt-8` on the list. The band left the flow, so the air had to come
+   * with it — and it belongs to the record's top padding now, alongside the two
+   * things it is clearing.
+   */
+  --band-tail: 2rem;
+
+  /**
    * The reading column above `rail`. 680px — the same measure the design's
    * `LandingRail` artboard holds the lines and the foot's glyphs to, so the
    * glyphs stay over the column of text they act on rather than stranded at the

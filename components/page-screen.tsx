@@ -213,6 +213,23 @@ export function PageScreen({
     choice to the browser, and with a fixed bar overhead its choice can be a
     caret sitting underneath it.
   */
+  /**
+   * The head of the record, instantly — which is where a new line lands.
+   *
+   * ⚠ **`behavior: 'instant'` because `html` carries `scroll-behavior: smooth`**
+   * (§10/§11 — respected throughout), and an animated scroll is the app taking a
+   * second to show somebody where they have just asked to be.
+   *
+   * ⚠ **It runs on `commit`, not on `write`, and the move is the point.** It
+   * used to go first in `write`, to get the caret on screen before focus handed
+   * the scrolling to the browser. The band is always on screen now, so there is
+   * nothing to scroll into view and that whole race is gone. What is left is the
+   * other job it was quietly doing: **a capture has to be seen to land.** Write
+   * from halfway down the record and the new line arrives at the head, out of sight,
+   * with the blink playing to nobody. So the record comes to the head *after*
+   * the keystroke — which cannot cost the four seconds, because the four seconds
+   * are over.
+   */
   const toCaret = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
@@ -318,6 +335,9 @@ export function PageScreen({
     setAsking(null)
     closeUndo()
 
+    /* The line lands at the head, so the head is where the page goes. */
+    toCaret()
+
     /* Not in a transition: the list is already right, and this is the receipt. */
     void send(line.key, text, mutationId)
   }
@@ -394,14 +414,14 @@ export function PageScreen({
     setPicked(null)
     setAsking(null)
     /*
-      ⚠ **The scroll goes first, and the order is the whole point.** The tap may
-      have landed anywhere in the record, and focusing an input that is off
-      screen hands the scrolling to the browser — which on iOS happens again when
-      the keyboard comes up, and with a fixed bar overhead either pass can leave
-      the caret underneath it. Arriving at the caret first leaves nothing to
-      scroll into view, which removes the race rather than timing against it.
+      ⚠ **Nothing scrolls here any more, and that is a subtraction.** This used
+      to scroll to the caret first, because focusing an input that is off screen
+      hands the scrolling to the browser — twice on iOS, once for the focus and
+      again when the keyboard arrives, either of which could leave the caret
+      under a fixed bar. **The band is always on screen now**, so there is
+      nothing to scroll into view and the race has no argument to have. The tap
+      lands wherever the thumb already was and the record does not move under it.
     */
-    toCaret()
     input.current?.focus()
   }
 
@@ -495,7 +515,7 @@ export function PageScreen({
         from the caret, which is now at the top.
       */}
       <main
-        className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)]"
+        className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+var(--band-height)+var(--band-tail))]"
       >
         <h1 className="sr-only">Again</h1>
 
@@ -516,8 +536,37 @@ export function PageScreen({
           affordance. `live-band` in globals.css carries both arguments, and why
           glass cannot work on a true black page.
         */}
-        <div className="live-band">
-          <div className="relative">
+        <div
+          /*
+            ⚠ **Pinned, and it is the only thing on this page that does not
+            recede.** The bar goes when the record is being read; this stays,
+            because it is the one control that can always act. When the bar
+            leaves, the band takes its place at the top of the glass rather than
+            sitting under a hole — one `translate` on the same `--recede`
+            duration as the bar's own, so the chrome *thins* to the live line
+            instead of emptying.
+
+            ⚠ **Glass, for the same reason the bars are** — the record passes
+            underneath it now, and a lit row with a transparent ground would have
+            two lines of text in it — but **darker than theirs, and padded**. A
+            bar can be 74% because nothing behind it can be mistaken for what is
+            in front; this holds one line of the record's own size, face and
+            colour. See `--band-tint` for the argument and `--band-height` for
+            why the box is derived from the line rather than chosen.
+
+            ⚠ **`fixed` inside `main`, deliberately.** It keeps the input inside
+            the landmark and ahead of the record in reading order, which is where
+            it belongs; out of flow, it takes nothing from the flex column. The
+            containing block is the viewport because no ancestor carries a
+            transform — **do not put one on `main` or on `host`**.
+          */
+          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] py-[var(--band-pad)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-(--recede) ease-out ${
+            receded ? '' : 'translate-y-[var(--bar-height)]'
+          }`}
+        >
+          <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
+            <div className="live-band">
+              <div className="relative">
             <input
               ref={input}
               type="text"
@@ -577,12 +626,14 @@ export function PageScreen({
               }`}
             />
 
-            {drawnCaret && (
-              <span
-                aria-hidden
-                className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
-              />
-            )}
+                {drawnCaret && (
+                  <span
+                    aria-hidden
+                    className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -590,9 +641,10 @@ export function PageScreen({
           ⚠ **The air under the band is deliberate and is not the stamp’s.** The
           first day stamp carries no top margin — it is the head of the list — so
           without this the date sat right under a blinking caret and the two read
-          as one thing.
+          as one thing. It is `--band-tail` in the page's top padding now, since
+          the band left the flow and the air had to go with the thing it clears.
         */}
-        <ol className="mt-8 flex flex-col">
+        <ol className="flex flex-col">
           {lines.map((line, i) => {
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'
