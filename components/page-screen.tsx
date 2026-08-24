@@ -174,7 +174,8 @@ export function PageScreen({
   const foot = useRef<HTMLElement>(null)
   const footAnchor = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
-  /** The end of the record, watched so the bars come back there. */
+  /** The two ends of the record, watched so the bars are there at both. */
+  const topMark = useRef<HTMLDivElement>(null)
   const endMark = useRef<HTMLDivElement>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -187,9 +188,9 @@ export function PageScreen({
     takes focus on arrival and the chrome therefore never receded; the keyboard
     it was standing in for is measured instead. See `chrome-recede.ts`.
   */
-  const { receded, show: showChrome } = useChromeRecede({
+  const receded = useChromeRecede({
     held: picked !== null,
-    host,
+    top: topMark,
     end: endMark,
   })
 
@@ -414,12 +415,6 @@ export function PageScreen({
     }
     setPicked(line.id)
     setAsking(null)
-    /*
-      The foot is this line's toolbar, so it comes back with the pick — from the
-      handler rather than from a render, which is the whole of why this is a
-      call and not a derivation. See `useChromeRecede`.
-    */
-    showChrome()
     /* The keyboard follows liveness: gone the moment a saved line is picked. */
     input.current?.blur()
   }
@@ -456,6 +451,17 @@ export function PageScreen({
 
   return (
     <div ref={host}>
+      {/*
+        The top of the document, as a thing that can be watched — see
+        `useChromeRecede`. It is **before the bar** rather than under it, so the
+        chrome answers the first pixel of a scroll.
+
+        `h-px -mb-px` costs no layout and takes no space: an element with no box
+        at all sits exactly on the viewport's edge at rest, which is the one
+        position where an intersection is ambiguous.
+      */}
+      <div ref={topMark} aria-hidden className="pointer-events-none -mb-px h-px" />
+
       <Bar undo={{ live: undoable !== null, onUndo: undo }} receded={receded} />
 
       {/*
