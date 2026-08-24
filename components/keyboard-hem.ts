@@ -11,7 +11,8 @@ import { useEffect } from 'react'
 const KEYBOARD_ARRIVAL_MS = 700
 
 /**
- * Holds the foot of the *page* above an open keyboard, and nothing else.
+ * Holds the foot of the *page* above an open keyboard, and the live band on the
+ * top edge of what is left visible.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  It used to hold the foot bar there too, and on 24 August it stopped
@@ -78,20 +79,39 @@ const KEYBOARD_ARRIVAL_MS = 700
  * re-render per event is how a page starts dropping frames while it is read.
  */
 export function useKeyboardHem({
-  focused,
+  writing,
   host,
   floorAnchor,
+  band,
+  bandAnchor,
 }: {
-  /** Whether the live line holds focus — which is the keyboard being asked for. */
-  focused: boolean
+  /**
+   * Somebody is writing — which is the keyboard being asked for.
+   *
+   * ⚠ **Not `focused`, and the probe caught why.** The live line carries
+   * `autoFocus`, so the field is focused before anybody has touched the screen
+   * and React may never see a `focus` event at all — this hook simply did not
+   * mount, and its corrections never ran. `writing` is set by the gesture that
+   * asks for a keyboard, which is the only thing either of the two jobs below
+   * cares about.
+   *
+   * That is the fourth thing on this page that has had to come off focus, after
+   * the chrome hold, the writing pane and the row light. Focus is the resting
+   * state of this page, not an event.
+   */
+  writing: boolean
   /** Where `--keyboard-overlap` is written. It has to inherit down to the page. */
   host: React.RefObject<HTMLElement | null>
   /** A zero-height fixed twin on the viewport's bottom edge — see `floor`. */
   floorAnchor: React.RefObject<HTMLElement | null>
+  /** The live band, held on the top edge of the visible area — see `head`. */
+  band: React.RefObject<HTMLElement | null>
+  /** A zero-height fixed twin on the viewport's top edge — see `head`. */
+  bandAnchor: React.RefObject<HTMLElement | null>
 }) {
   useEffect(() => {
     const vv = window.visualViewport
-    if (!focused || !vv) return
+    if (!writing || !vv) return
 
     let frame = 0
     let until = 0
@@ -101,9 +121,9 @@ export function useKeyboardHem({
       be reading it after React may have pointed it somewhere else.
     */
     const hostEl = host.current
+    const bandEl = band.current
 
     const floor = () => {
-      frame = 0
       const box = host.current
       const edge = floorAnchor.current
       if (!box || !edge) return
@@ -112,6 +132,45 @@ export function useKeyboardHem({
         edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
       )
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
+    }
+
+    /**
+     * **The live band, held on the top edge of the visible area.**
+     *
+     * ⚠ **The symptom, reported on a handset:** tap the live line after
+     * scrolling and the band bumps up to the status bar before dropping back
+     * into place. It does not happen at the top of the record, which is the tell
+     * — there has to be somewhere for the document to be dragged *from*.
+     *
+     * This file's own history has it in one line: on 11 August, focusing a field
+     * made iOS scroll the document to reveal it — 271px in a tab, 333 standalone
+     * — **dragging every `position: fixed` element up with it, the header
+     * included.** A lock and a pre-emptive lift used to answer that; both were
+     * removed as the design changed, and with the band now pinned at the top the
+     * old symptom came back on a new element.
+     *
+     * ⚠ **A thermostat, not a model.** It reads the position back off an
+     * untouched twin and corrects the difference, which is the one approach that
+     * survived five wrong versions of this at the other edge. It is a **no-op
+     * whenever the visual viewport starts where the layout one does** — which is
+     * every surface except an iOS keyboard mid-arrival — so if the bump turns
+     * out to have a different cause this costs nothing and hides nothing.
+     *
+     * ⚠ **`transform`, and the band's recede is a `translate`.** Two properties,
+     * composed by the browser in a fixed order, neither able to overwrite the
+     * other — the same arrangement that let the foot be moved by two things
+     * before one of them was deleted. **Do not write `translate` here.**
+     */
+    const head = () => {
+      const el = band.current
+      const anchor = bandAnchor.current
+      /*
+        A `display: none` anchor measures as all zeros, and a correction computed
+        from that is the height of the screen.
+      */
+      if (!el || !anchor || anchor.getClientRects().length === 0) return
+      const lift = vv.offsetTop - anchor.getBoundingClientRect().top
+      el.style.transform = lift ? `translateY(${lift}px)` : ''
     }
 
     /*
@@ -126,7 +185,9 @@ export function useKeyboardHem({
       while a scroll — genuinely a discrete event — still costs exactly one.
     */
     const run = () => {
+      frame = 0
       floor()
+      head()
       frame = performance.now() < until ? requestAnimationFrame(run) : 0
     }
 
@@ -139,7 +200,7 @@ export function useKeyboardHem({
       schedule()
     }
 
-    /* The effect re-runs on focus, which is the keyboard being asked for. */
+    /* The effect re-runs on the gesture, which is the keyboard being asked for. */
     hold()
 
     /*
@@ -166,6 +227,11 @@ export function useKeyboardHem({
         keyboard's worth of dead space under it for the rest of the session.
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
+      /*
+        And the band goes back to where the stylesheet puts it. A stale
+        correction is a band parked wherever the last keyboard left it.
+      */
+      if (bandEl) bandEl.style.transform = ''
     }
-  }, [focused, host, floorAnchor])
+  }, [writing, host, floorAnchor, band, bandAnchor])
 }

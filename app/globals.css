@@ -949,12 +949,21 @@
   );
 
   /**
-   * **The lift, while somebody is actually writing in the row.**
+   * **The extra light the row carries while it is waiting**, put out while
+   * somebody is writing in it.
    *
    * The row is lit whenever it is the live one, which is always — that is
    * `--row-light` above and it does not move. This is a **second** light laid
-   * over it and faded in while the keyboard is up, so the row that is being
-   * typed into is brighter than the row that is merely waiting.
+   * over it, on by default and faded *out* while the keyboard is up.
+   *
+   * ⚠ **It went in the other way round on 24 August and was inverted on sight.**
+   * Brightening on focus is the obvious reading and it is the wrong one: the
+   * light is an **invitation**, and an invitation is for somebody who has not
+   * accepted it yet. While the keyboard is up the row needs no advertising — the
+   * writing pane has already darkened everything else, the caret is in it, and a
+   * lit ground competing with the words is the app talking over the one thing it
+   * asked for. So the waiting row is the bright one and the working row steps
+   * back.
    *
    * ⚠ **A second layer rather than a bigger number, so the resting look cannot
    * drift.** The obvious version raises `--row-light` to the lit value and dims
@@ -969,7 +978,7 @@
    * was never what was wrong — a uniform tone inside a rectangle with edges is
    * what reads as grey, at any value. Do not answer "brighter" with a fill.
    */
-  --row-light-lift: radial-gradient(
+  --row-light-idle: radial-gradient(
     50% 50% at 50% 50%,
     color-mix(in srgb, var(--color-text) 9%, transparent) 0%,
     transparent 100%
@@ -2392,39 +2401,45 @@
   }
 
   /*
-    The lift, off until somebody is writing — see `--row-light-lift` and the
-    `band-live` utility below. It is a second layer rather than a brighter
-    first one so that the resting light is a declaration nothing edits, and so
-    that the change can be *faded*: `background-image` does not transition and
-    an opacity does.
+    The waiting row's extra light, put out while somebody writes — see
+    `--row-light-idle` and the `band-dim` utility below. It is a second layer
+    rather than a brighter first one so that the base light is a declaration
+    nothing edits, and so that the change can be *faded*: `background-image`
+    does not transition and an opacity does.
+
+    ⚠ **On by default**, so the row a class-less render produces is the lit,
+    inviting one. The dim state is the exception and says so.
   */
   &::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0;
-    background-image: var(--row-light-lift);
+    opacity: 1;
+    background-image: var(--row-light-idle);
     transition: opacity var(--recede-in) var(--ease-recede);
   }
 }
 
 /**
- * The live row while it is being written in: **lit brighter than when it is
- * merely waiting.**
+ * The live row while it is being written in: **dimmer than when it is waiting.**
+ *
+ * The light is an invitation, and it is spent once it has been accepted — the
+ * writing pane has already darkened everything else and the caret is in the row,
+ * so a lit ground would be competing with the words it exists to invite.
  *
  * ⚠ **Driven by `writing`, not by `focused`.** The field carries `autoFocus`, so
  * focus is the resting state of the page on the desk and in a Safari tab — a row
- * lit by focus would open at full brightness and never change. `writing` is the
+ * keyed to focus would open dim and never change. `writing` is the
  * gesture-driven mode, which on a handset is exactly "the keyboard is up".
  *
  * It fades on `--recede-in` rather than snapping, and shares the chrome's curve:
- * the light coming up is part of the same movement as the pane arriving over the
- * record, and two timings there would read as two things happening.
+ * the light going down is part of the same movement as the pane arriving over
+ * the record, and two timings there would read as two things happening.
  */
-@utility band-live {
+@utility band-dim {
   &::after {
-    opacity: 1;
+    opacity: 0;
   }
 }
 

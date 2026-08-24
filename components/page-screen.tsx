@@ -164,7 +164,15 @@ export function PageScreen({
   )
   const [draft, setDraft] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
-  const [focused, setFocused] = useState(false)
+  /*
+    ⚠ **There is no `focused` state on this page any more, and that is the end
+    of a long argument.** Four things were keyed to focus and all four had to
+    come off it — the chrome hold, the writing pane, the row light and the
+    keyboard hem — because the live line carries `autoFocus`: focus is the
+    *resting state* of this page on the desk and in a Safari tab, it arrives
+    without a keyboard on iOS, and React may never see the event at all. Every
+    one of those now reads `writing`, which is a gesture. Do not add it back.
+  */
   /**
    * Somebody is writing, as opposed to the field merely holding focus.
    *
@@ -191,12 +199,15 @@ export function PageScreen({
   const input = useRef<HTMLInputElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
+  /** The live band, and an untouched twin of where it rests — see the hook. */
+  const band = useRef<HTMLDivElement>(null)
+  const bandAnchor = useRef<HTMLDivElement>(null)
   /** The two ends of the record, watched so the bars are there at both. */
   const topMark = useRef<HTMLDivElement>(null)
   const endMark = useRef<HTMLDivElement>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useKeyboardHem({ focused, host, floorAnchor })
+  useKeyboardHem({ writing, host, floorAnchor, band, bandAnchor })
 
   /*
     ⚠ **A picked line is the hold, and focus deliberately is not.** The foot is
@@ -547,6 +558,16 @@ export function PageScreen({
         className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
       />
       {/*
+        The top edge of the layout viewport, as a thing that can be measured —
+        see `head` in `useKeyboardHem`. The band carries a correction, so the
+        correction cannot be measured off the band.
+      */}
+      <div
+        ref={bandAnchor}
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 h-0"
+      />
+      {/*
         ⚠ **The page box is the screen, and `svh` is not the screen.**
         `100svh` in an installed app is the screen *less* the status-bar band —
         `viewport-fit=cover` lets the page paint into that band, but the viewport
@@ -593,6 +614,7 @@ export function PageScreen({
           glass cannot work on a true black page.
         */}
         <div
+          ref={band}
           /*
             ⚠ **Pinned, and it is the only thing on this page that does not
             recede.** The bar goes when the record is being read; this stays,
@@ -634,12 +656,13 @@ export function PageScreen({
         >
           <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
             {/*
-              ⚠ **Brighter while it is being written in** — a second glow faded
-              over the resting one, on `writing` rather than on `focused`, since
+              ⚠ **Brightest while it is *waiting*, and dimmer while it is being
+              written in.** The light is an invitation and it is spent once it
+              has been accepted. On `writing` rather than on `focused`, since
               `autoFocus` makes focus the resting state of the page. See
-              `band-live` and `--row-light-lift`.
+              `band-dim` and `--row-light-idle`.
             */}
-            <div className={`live-band ${writing ? 'band-live' : ''}`}>
+            <div className={`live-band ${writing ? 'band-dim' : ''}`}>
               <div className="relative">
             <input
               ref={input}
@@ -647,14 +670,10 @@ export function PageScreen({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onFocus={() => {
-                setFocused(true)
                 setPicked(null)
                 setAsking(null)
               }}
-              onBlur={() => {
-                setFocused(false)
-                setWriting(false)
-              }}
+              onBlur={() => setWriting(false)}
               /*
                 ⚠ **`click`, and the event is the fix.**
 
