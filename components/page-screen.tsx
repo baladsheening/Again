@@ -777,7 +777,22 @@ export function PageScreen({
           as one thing. It is `--band-tail` in the page's top padding now, since
           the band left the flow and the air had to go with the thing it clears.
         */}
-        <ol className="flex flex-col">
+        {/*
+          ⚠ **The record holds its recede while the draft is unsent.** Italic
+          says *these words are not in the record*; this puts a gap around them
+          to say it in, which italic alone was not carrying once the writing
+          pane dropped on blur. Dimming the live line instead is the one thing
+          it cannot be — a crossed-off line is already struck and dimmed, and
+          the live line sits directly above it. See `record-held`.
+
+          `!writing` because the writing pane is already over the record then,
+          and two recedes stacked sink it twice as far as either one means.
+        */}
+        <ol
+          className={`flex flex-col transition-opacity duration-[var(--recede-in)] ease-[var(--ease-recede)] ${
+            draft !== '' && !writing ? 'record-held' : ''
+          }`}
+        >
           {lines.map((line, i) => {
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'

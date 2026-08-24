@@ -1355,6 +1355,24 @@
   --scrim-blur: 5px;
 
   /**
+   * **How far back the record sits while a capture is unfinished** — see the
+   * `record-held` utility for why the recede outlives the keyboard.
+   *
+   * ⚠ **Derived, not chosen.** `--scrim-tint` is the paper at 45% over the
+   * record, so the record already reads at 55% of its strength whenever the
+   * writing pane is up. This is that same 55%, reached by fading the record
+   * itself instead of laying paper over it. The two states are then the same
+   * depth by construction, and the blur is the only difference between them —
+   * which is the rule: **the record is receded for as long as a capture is
+   * unfinished; the blur is the extra that says the page is modal.**
+   *
+   * ⚠ **Do not tune this to taste.** If the recede is wrong, `--scrim-tint` is
+   * wrong too and both move together. A number picked here on one handset is
+   * exactly the failure `CLAUDE.md` rules out by name.
+   */
+  --record-held: 0.55;
+
+  /**
    * The air between the band and the first line of the record.
    *
    * It was `mt-8` on the list. The band left the flow, so the air had to come
@@ -2494,6 +2512,56 @@
   &::after {
     opacity: 0;
   }
+}
+
+/**
+ * **The record stays back for as long as the draft is unsent**, and not only
+ * while the keyboard is up.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Contrast, put on the record rather than on the line (24 August)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The symptom `unsent` was written for did not fully go away. Italic is the
+ * rule and it is the right rule, but it was carrying the state alone: on blur
+ * `writing` goes false, the writing pane drops, and the record comes back to
+ * full strength — so the unsent words lose the contrast around them at exactly
+ * the moment they need it, and sit one property away from the committed lines
+ * beneath them.
+ *
+ * ⚠ **Dimming the live line was asked for first, and it is the one place the
+ * dim cannot go.** A crossed-off line is already `line-through opacity-50`, so
+ * a dimmed live line is its unstruck neighbour — the same register, one
+ * property apart, directly above it. **Inverting it buys the identical contrast
+ * with no collision**: fade the record, and the words being typed stay the
+ * brightest thing on the page, which is what the four-second capture wants
+ * anyway. The collision was removed rather than corrected for — see *How things
+ * get fixed*.
+ *
+ * ⚠ **The objection recorded in `unsent` does not apply to the live line, and
+ * that is worth being exact about.** Dimming was measured to read as *the app
+ * doubting what it has already promised* — but that was measured on lines
+ * **in flight**: committed, on the page, waiting on the network. Nothing is
+ * promised about a draft nobody has sent, so dimming one is not doubt. What
+ * rules it out here is the crossed-off collision above, not that finding.
+ *
+ * ⚠ **Opacity on the list, not a second full-viewport layer.** The writing pane
+ * carries `backdrop-filter`, and the note on `--scrim-tint` says why one left
+ * armed is a compositing layer the scrolling page pays for. The record is
+ * scrollable while a draft is unsent — that is the difference between this
+ * state and the modal one — so it must not acquire a blur it drags through
+ * every scroll frame. Fading the element it is already painting costs nothing.
+ *
+ * ⚠ **It never applies while `writing`.** The pane is over the record then and
+ * does this job with paper; stacking both would sink the record twice as far as
+ * either state describes. Only one thing changes when the keyboard leaves.
+ *
+ * ⚠ **Nothing moves and nothing resizes**, so the record cannot reflow under a
+ * thumb mid-capture, and reduced motion loses only the fade — the state itself
+ * is not an animation and still reads.
+ */
+@utility record-held {
+  opacity: var(--record-held);
 }
 
 /**
