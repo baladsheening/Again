@@ -16,9 +16,21 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ## Build status — 24 August
 
-> **Built, deployed and seen on a handset — 24 August, `main` at `101aa33`.**
-> **No deploy in this phase has carried a migration** — no schema has moved — so
-> the rollback is still a revert push and nothing else.
+> **Built, deployed and seen on a handset — 24 August.**
+>
+> ⚠ **Everything on *Still to build* is now built, and three commits are held
+> back.** `origin/main` is `8f5ac94` and carries **no migration**, so what is
+> deployed still rolls back with a revert push. Local `main` runs three further
+> commits — resolution offers, the derived intention, photographs — carrying
+> **two additive migrations**, `0009` and `0010`: four nullable columns and two
+> FKs. Additive, so a revert push is still a rollback; **but they have to reach
+> production before the code does**, because the page's read selects the new
+> columns. Applied to `development` and verified there.
+>
+> ⚠ **Nothing in this repository can take the production credential** — it is a
+> Vercel *sensitive* value and `vercel env pull` redacts it, which the Phase 0
+> runbook already says. The operator sets `$env:DATABASE_URL` and runs
+> `npx drizzle-kit migrate`.
 >
 > **Everything in the page has now been seen on hardware and judged good**, the
 > 23 August evening's work and the 24th's alike. What is left in Phase 1 is a
@@ -125,9 +137,12 @@ Removed, and **not to be rebuilt**: `components/shell.tsx`, `cinema-wall.tsx`,
 `poster-wall.tsx`, `entry-list.tsx`, `entry-row.tsx`, `icon-home.tsx`, the four
 collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 
-### Still to build, in the order it wants doing
+### Still to build — and nothing is, except one thing that is not this phase's
 
-**Three items came off this list on 24 August, and one of them was not built.**
+⚠ **Everything on this list is struck through as of 24 August.** Two entries
+carry a qualifier rather than a tick, and the qualifiers are the point: one is
+*closed without being measured* and one is *built without ever having run*. A
+struck line here does not mean *seen working*.
 
 - ~~*The chrome's exit*~~ — **done**, see that section below.
 - ~~*Editing a committed line*~~ — **done**, see *Rewriting a line* below. The
@@ -152,15 +167,19 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 - ~~*Images*~~ — **built**, and ⚠ **the upload path has never run**: there is no
   Blob store on the project, so the camera ships dark and lights the day one
   exists. See *Photographs* below for what is verified and what is not.
-7. **The words, in the schema.** `STATE_WORD` carries them on screen; the
-   Postgres enum still reads `want`, `go_back_to`, `fixture`. ⚠ When that
-   migration runs, **`PUBLIC_STATES` is re-derived rather than renamed** — see
-   the warning under *The words*.
-8. **The types and intentions of §3.** ⚠ **Half done, and the other half is
-   blocked on something this phase cannot ship.** The intention is now derived
-   and `'go_back_to'` is no longer a constant in `resolveCapture`; the kind is
-   still only ever `film`. See *Have is still not reachable* below — it names
-   what is missing rather than leaving it to be rediscovered.
+- **The words, in the schema** — ⚠ **deferred at the user's direction, 24
+  August, and it is the one item nothing here has touched.** `STATE_WORD`
+  carries the words on screen; the Postgres enum still reads `want`,
+  `go_back_to`, `fixture`. It is deferred because it is the **one migration
+  that is not additive**: renaming enum values ends the revert-push rollback
+  permanently, where the two that shipped are nullable columns old code ignores.
+  It wants a phase that plans a down migration. ⚠ When it runs, **`PUBLIC_STATES`
+  is re-derived rather than renamed** — see the warning under *The words*.
+- ~~*The types and intentions of §3*~~ — **half done, and the other half is not
+  this phase's to ship.** The intention is derived now and `'go_back_to'` is no
+  longer a constant in `resolveCapture`; the kind is still only ever `film`. See
+  *Have is still not reachable* below, which names what is missing rather than
+  leaving it to be rediscovered.
 - ~~*`toLegacyEntryCards` dies*~~ — **done, and it was hiding rows.** See
   *What the shared page was not showing* below. It was filed as a cleanup and it
   was a correctness fix.

@@ -26,10 +26,22 @@ flag the decision rather than inventing scope.
 
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
-**Phase 1's page and Return are built, deployed and seen on a handset.** **No
-Phase 1 deploy has carried a migration**, so the rollback is a revert push and
-nothing else. `/` is the capture page in production; the poster wall,
-`components/shell.tsx` and the four collection routes are deleted.
+**Phase 1's page and Return are built, deployed and seen on a handset.** `/` is
+the capture page in production; the poster wall, `components/shell.tsx` and the
+four collection routes are deleted.
+
+⚠ **Everything on the Phase 1 list is now built, and three commits are held
+back.** `origin/main` is `8f5ac94` and carries **no migration**, so what is
+deployed still rolls back with a revert push. Local `main` runs three further
+commits — resolution offers, the derived intention, and photographs — which carry
+**two additive migrations** (`0009`, `0010`: four nullable columns and two FKs).
+Additive, so a revert push is still a rollback; **but the migrations have to
+reach production before the code does**, because the page's read selects the new
+columns. They are applied to the `development` branch and verified there.
+Production's `DATABASE_URL` is a Vercel *sensitive* value and `vercel env pull`
+redacts it, so nothing in this repository can take it — the runbook in
+`docs/re-direction/phase-0-production-migration.md` says exactly that, and the
+operator sets `$env:DATABASE_URL` and runs `npx drizzle-kit migrate`.
 
 **The whole page has been seen on hardware and judged good.** The first real use
 of it reversed two decisions the desk had made:
