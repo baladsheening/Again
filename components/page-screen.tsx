@@ -435,22 +435,6 @@ export function PageScreen({
 
   /* ------------------------------------------------------------------ */
 
-  function write() {
-    setPicked(null)
-    setAsking(null)
-    setWriting(true)
-    /*
-      ⚠ **Nothing scrolls here any more, and that is a subtraction.** This used
-      to scroll to the caret first, because focusing an input that is off screen
-      hands the scrolling to the browser — twice on iOS, once for the focus and
-      again when the keyboard arrives, either of which could leave the caret
-      under a fixed bar. **The band is always on screen now**, so there is
-      nothing to scroll into view and the race has no argument to have. The tap
-      lands wherever the thumb already was and the record does not move under it.
-    */
-    input.current?.focus()
-  }
-
   function pick(line: Line) {
     if (line.pending) return
     if (line.failed) {
@@ -533,7 +517,17 @@ export function PageScreen({
       */}
       <div
         aria-hidden
-        onClick={() => input.current?.blur()}
+        onClick={() => {
+          /*
+            ⚠ **Both, because the blur alone is not enough.** `blur` on a field
+            that is not focused fires no event, so the mode would stand there
+            with no way out — which is exactly what a user hit. This pane's one
+            job is *let me out*, so it says so directly as well as asking the
+            field to give up focus.
+          */
+          input.current?.blur()
+          setWriting(false)
+        }}
         className={`fixed inset-0 z-5 transition-opacity duration-(--recede) ease-out ${
           writing
             ? 'bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
@@ -562,16 +556,18 @@ export function PageScreen({
         actually true, and it is a no-op in a Safari tab, on Android and on the
         desk, where the inset reads 0.
 
-        **The minimum is what makes the tail of the page reach the bottom.** The
-        page is in the document flow, so there is no fixed box for a flex child
-        to fill; `grow` inside a minimum tall enough to reach the glass is what
-        keeps the end of a short record tappable.
+        ⚠ **The minimum used to make the tail of the page tappable, and there is
+        nothing left at the tail to tap.** It held a full-width `grow` button
+        named "Write" — the announced way to raise a keyboard, back when the live
+        line could be scrolled off the screen. Both it and the invisible paper on
+        every row are gone: the live line is pinned, so a second way to reach it
+        was a second way to reach something already in reach.
 
-        ⚠ **The tail is no longer the only way to start writing**, so it is not
-        given a minimum of its own. The paper on every row is the general case; a
-        guaranteed band at the end of the document would be a second mechanism
-        doing the first one's job, and it would sit at the far end of the record
-        from the caret, which is now at the top.
+        The minimum stays because it is doing another job — it is what makes a
+        two-line record end at the bottom of the glass rather than partway up it,
+        so `page-hem` reserves the foot against the screen and not against the
+        text. Nothing fills it now, and nothing should: the space at the end of a
+        short record is space.
       */}
       <main
         className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+var(--band-height)+var(--band-tail))]"
@@ -650,8 +646,28 @@ export function PageScreen({
                 setFocused(false)
                 setWriting(false)
               }}
-              /* A tap on the field is somebody saying they are writing. */
-              onPointerDown={() => setWriting(true)}
+              /*
+                ⚠ **`click`, and the event is the fix.**
+
+                It was `pointerdown`, which put the writing pane on the screen
+                *in the middle of the touch* — and on iOS an element appearing
+                over the touch point takes the click that follows. So the field
+                never received it, never focused, and the keyboard never rose:
+                the screen blurred and the **second** tap was the one that
+                worked. Worse, the pane could not be dismissed in between,
+                because its own tap blurs a field that was not focused.
+
+                `click` fires after the gesture is over and after the browser has
+                already acted on it, so nothing this handler does can cost the
+                tap that called it.
+
+                ⚠ **And not `focus`, which was the second wrong answer.** The
+                field carries `autoFocus`, so the page opens with it focused and
+                tapping it fires no `focus` event at all — the mode would never
+                start on the one surface where the whole thing was reported.
+                `click` fires either way.
+              */
+              onClick={() => setWriting(true)}
               onKeyDown={(e) => {
                 /* And so is a keystroke, for anyone who never taps. */
                 setWriting(true)
@@ -792,30 +808,26 @@ export function PageScreen({
                   </button>
 
                   {/*
-                    **The paper of the row: whatever width the words did not
-                    use.** The line above shrinks to its own text, so on a short
-                    capture this is most of the row — and tapping it starts
-                    writing rather than picking the line it sits beside.
+                    ⚠ **The paper is gone, and it was here.** Every row carried
+                    an invisible button filling whatever width the words did not
+                    use, and tapping it started a capture. It existed for one
+                    reason: the live line was the first thing in the document and
+                    scrolled away, so the record had to be a way back to it.
+                    **The live line is pinned now** — on screen at every scroll
+                    position — so the paper was a second way to reach a thing
+                    already in reach, and a large invisible target sitting beside
+                    every line of the record.
 
-                    ⚠ **`aria-hidden` and out of the tab order, deliberately.**
-                    It is a pointer convenience for a rule the pointer can see
-                    and the accessibility tree cannot: two hundred lines would
-                    announce "Write" two hundred times. The reachable, announced
-                    way to start writing is the one button at the tail of the
-                    page, which is why that one is kept whatever else changes.
+                    What is left in the row is the words and the space beside
+                    them, and the space does nothing. That is a page.
 
-                    ⚠ It shrinks to nothing when the words take the full
-                    measure, and that is the stated cost of the paper rule — see
-                    the head of this file. No minimum is given to it: a minimum
-                    would push the words off their own line.
+                    ⚠ **The line is still only as wide as its own words**, which
+                    was a consequence of the paper rather than a decision of its
+                    own. Left alone rather than quietly widened to the measure: a
+                    full-width row is a bigger target for picking *and* a bigger
+                    target for picking by accident, and that is a judgement for a
+                    thumb rather than a tidy-up.
                   */}
-                  <button
-                    type="button"
-                    onClick={write}
-                    aria-hidden
-                    tabIndex={-1}
-                    className="grow cursor-text"
-                  />
                 </div>
 
                 {/*
@@ -866,20 +878,15 @@ export function PageScreen({
         </ol>
 
         {/*
-          The tail of the page, and it is a control.
+          ⚠ **The tail was a control and is not one any more.** A full-width
+          button filled whatever the page's minimum left over, named "Write", and
+          it was the announced way to raise a keyboard back when the live line
+          could be scrolled off the screen. The live line is pinned now, so the
+          announced way to write is the field itself — which is better than a
+          button whose only promise was to take you to one.
 
-          On a phone the only way to raise a keyboard is a gesture, and the
-          gesture nobody has to be taught is *tap the page*. It is a real button
-          with a real name rather than a click handler on a div, so it is
-          reachable and announced rather than being a trap for anyone not using a
-          finger — and it is the **only** one of the page's write targets that
-          is. That is deliberate: the paper on each row is hidden from the
-          accessibility tree, because a record of two hundred lines announcing
-          "Write" two hundred times is worse than announcing it once, here.
-
-          It fills whatever the page's minimum leaves — see the note on `main`.
+          Nothing replaces it. The space at the end of a short record is space.
         */}
-        <button type="button" onClick={write} aria-label="Write" className="w-full grow cursor-text" />
 
         {/*
           The end of the record, as a thing that can be observed — see
