@@ -9,6 +9,7 @@ import {
   requireSessionUser,
   resolveCapture,
   restoreCapture,
+  setCaptureText,
   undoCapture,
   TEXT_MAX,
 } from '@/lib/db'
@@ -159,6 +160,45 @@ export async function settleCaptureAction(
   }
 
   const result = await resolveCapture(sessionUser, captureId, again)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  return { ok: true, value: null }
+}
+
+const editSchema = z.object({
+  captureId: z.string().uuid(),
+  text: z.string().trim().min(1).max(TEXT_MAX),
+})
+
+/**
+ * Rewrite a line's words.
+ *
+ * ⚠ **No client mutation id, and the asymmetry with `captureAction` is the
+ * point.** Creation needed one because a raw capture has no natural key — two
+ * captures of the same words are legitimately two captures, so a retried Return
+ * writes a second line unless something says *this is the same submission*. An
+ * edit names the row it is editing, so a retry writes the same words to the same
+ * row and §10's idempotency comes free. Adding an id here would be ceremony.
+ *
+ * ⚠ **Rate-limited on the same bucket as creation.** An edit is a write of the
+ * same shape and cost, and a per-mutation bucket would mean a limit somebody can
+ * step around by alternating between two of them.
+ */
+export async function editCaptureAction(
+  captureId: string,
+  text: string,
+): Promise<ActionResult> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = editSchema.safeParse({ captureId, text })
+  if (!parsed.success) return { ok: false, message: 'That will not save.' }
+
+  for (const identifier of [sessionUser.id, clientIp(await headers())]) {
+    const limit = await rateLimit('entryCreate', identifier)
+    if (!limit.ok) return { ok: false, message: 'Slow down a moment.' }
+  }
+
+  const result = await setCaptureText(sessionUser, parsed.data.captureId, parsed.data.text)
   if (!result.ok) return { ok: false, message: result.message }
 
   return { ok: true, value: null }

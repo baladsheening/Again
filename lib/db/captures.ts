@@ -899,6 +899,78 @@ export async function setCaptureNote(
 }
 
 /**
+ * Rewrite the words of your own capture. **Text and nothing else.**
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  What this deliberately does not touch, and why each one matters
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠ **Provenance.** `source`, `sourceUserId` and `sourceCaptureId` are immutable
+ * here for the reason `writeCapture` gives at length: they are the input to §6's
+ * suppression rule, so anything that can rewrite them can switch suppression off
+ * and turn copying somebody's list into a way of notifying them. Editing the
+ * words of a copied capture does not make it yours.
+ *
+ * ⚠ **State.** Crossing off, restoring, settling and undoing each own the state
+ * column and each carry a guard this does not duplicate. A line's words and a
+ * line's fate are separate facts, and an edit is not a revival.
+ *
+ * ⚠ **`possibilityId`.** So an edit cannot silently un-resolve a capture — and
+ * cannot silently *re*-resolve one either. **This leaves a real question open**,
+ * and it belongs to *Resolution offers* rather than here: a capture resolved to
+ * *Jaws* and then edited to read *pottery class* still matches as *Jaws*. It
+ * cannot happen today, because nothing on the page resolves anything yet. When
+ * offers exist, that path decides whether an edit withdraws a resolution — and
+ * it must decide it deliberately, not inherit it from this function.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠ **No overlap trigger, and that is a finding rather than an omission.**
+ * `fireOverlap` returns early without a `possibilityId`, so **convergence keys on
+ * the possibility and never on raw text.** An edit cannot change what a capture
+ * matches, so there is nothing to announce. Do not add a `fireOverlap` call here
+ * on the assumption that a changed line is a changed signal — it is not, and the
+ * fan-out's own rule is that it runs when a capture *becomes a signal it was not
+ * already*.
+ *
+ * ⚠ **`normalised_text` re-derives itself.** It is a generated column over
+ * `text`, so Phase 2's possible-match path stays correct after an edit with no
+ * second write and no chance of the two disagreeing. That is the column comment's
+ * argument for generating it, arriving exactly where it was predicted to.
+ *
+ * ⚠ **No state filter, unlike `dropCapture`.** Any capture you own can be
+ * rewritten, crossed off or settled included: a typo in a line is a typo whatever
+ * became of the intention, and there is no guarantee here that a state could
+ * protect.
+ *
+ * Idempotent by construction — it is a `SET`, so the same words written twice
+ * leave the same row, which is what §10 asks of a mutation that can be retried.
+ */
+export async function setCaptureText(
+  sessionUser: SessionUser,
+  captureId: string,
+  text: string,
+): Promise<Result<Capture>> {
+  const trimmed = text.trim()
+  /*
+    ⚠ **Empty is a refusal, not a clear.** `setCaptureNote` treats `''` as
+    "no note" because a capture without a note is ordinary; a capture without
+    words is not a capture at all. Deleting one is the ×, or the undo window.
+  */
+  if (trimmed === '') return err('invalid', 'A capture needs some words.')
+  if (trimmed.length > TEXT_MAX) return err('invalid', 'That is too long.')
+
+  const [updated] = await db
+    .update(captures)
+    .set({ text: trimmed })
+    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+    .returning()
+
+  if (!updated) return err('not_found', 'No such capture.')
+  return ok(updated)
+}
+
+/**
  * Change who a capture reaches.
  *
  * **The only way a capture stops being private**, and it is one function so

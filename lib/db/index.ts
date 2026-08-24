@@ -93,6 +93,7 @@ export {
   dropCapture,
   restoreCapture,
   setCaptureNote,
+  setCaptureText,
   setCaptureVisibility,
   undoCapture,
   toCaptureCard,

@@ -27,7 +27,7 @@ flag the decision rather than inventing scope.
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
 **Phase 1's page and Return are built, deployed and seen on a handset** — `main`
-at `d526d0b`. **No Phase 1 deploy has carried a migration**, so the rollback is a
+at `173e0ff`. **No Phase 1 deploy has carried a migration**, so the rollback is a
 revert push and nothing else. `/` is the capture page in production; the poster
 wall, `components/shell.tsx` and the four collection routes are deleted.
 
@@ -38,7 +38,7 @@ of it reversed two decisions the desk had made:
   scrolls on arrival or after a Return, and a keyboard rising from the bottom of
   the glass has no way to cover the line being written.
 - **A line is only as wide as its own words.** Tap the words to pick the line;
-  tap the paper to let it go again.
+  tap them again to rewrite it in place; tap the paper to let it go.
 
 ⚠ **The paper does not start a capture.** It did for a day and that was removed:
 the live line is pinned and always on screen, so a second way to reach it was a

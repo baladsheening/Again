@@ -16,7 +16,7 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ## Build status — 24 August
 
-> **Built, deployed and seen on a handset — 24 August, `main` at `d526d0b`.**
+> **Built, deployed and seen on a handset — 24 August, `main` at `173e0ff`.**
 > **No deploy in this phase has carried a migration** — no schema has moved — so
 > the rollback is still a revert push and nothing else.
 >
@@ -108,8 +108,8 @@ measured, and only one of those is now true.
 | `components/bar.tsx` · `foot.tsx` · `glyphs.tsx` | the two bars and the seven glyphs |
 | `components/keyboard-pin.ts` | the foot held on the keyboard's top edge |
 | `components/screen.tsx` | the bar and a column, for every route that is not the page |
-| `app/actions/captures.ts` | capture · cross off · settle · undo |
-| `lib/db/captures.ts` | `listMyPage`, `listMySettled` |
+| `app/actions/captures.ts` | capture · rewrite · cross off · settle · undo |
+| `lib/db/captures.ts` | `listMyPage`, `listMySettled`, `setCaptureText` |
 | `lib/day.ts` · `lib/region.ts` | the stamps, and the viewer's timezone |
 | `lib/mutation-id.ts` | the stable submission id, and its non-secure-context fallback |
 | `lib/vocabulary.ts` | `STATE_WORD`, `WHERE_IT_IS` |
@@ -121,19 +121,17 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 
 ### Still to build, in the order it wants doing
 
-**Two items came off this list on 24 August and neither was built.** ~~*The
-chrome's exit*~~ was **done** — see that section below. ~~*The four-second
-capture, with a stopwatch*~~ is ⚠ **set aside at the user's direction and is not
-done**; this register does not claim it is. It was item 1. The reasoning is kept
-under *What hardware answered*, unchanged, because it is still the honest account
-of what the page has and has not proved, and anyone reopening Phase 1's
-acceptance starts there.
+**Three items came off this list on 24 August, and one of them was not built.**
 
-1. **Editing a committed line.** The second tap picks and does not edit, because
-   *where* the edit happens is the one thing this document leaves open and there
-   is no mutation for it. Needs `setCaptureText` in `lib/db/captures.ts` — text
-   only, owner-filtered, and it must not touch provenance or state.
-3. **Search over captures.** The foot's fourth glyph. The existing
+- ~~*The chrome's exit*~~ — **done**, see that section below.
+- ~~*Editing a committed line*~~ — **done**, see *Rewriting a line* below. The
+  question this document left open is answered: **in place**.
+- ~~*The four-second capture, with a stopwatch*~~ — ⚠ **set aside at the user's
+  direction, and not done.** This register does not claim it is. It was item 1.
+  The reasoning is kept under *What hardware answered*, unchanged, because it is
+  still the honest account of what the page has and has not proved, and anyone
+  reopening Phase 1's acceptance starts there.
+1. **Search over captures.** The foot's fourth glyph. The existing
    `search-field.tsx` and `search-provider.tsx` search TMDB, not the page; they
    are on disk and mounted by nothing.
 4. **An *Earlier* control at the head of the page.** `listMyPage` reads the most
@@ -237,6 +235,77 @@ the *gesture*, not from the transition, or the latency is charged to the easing.
 samples the bar frame by frame in both directions. After the collapse: **66.7% of
 the travel by 120ms going, 54.6% by 116ms coming back**, both of 340.
 
+### Rewriting a line — 24 August
+
+**In place, and that answers the question this document left open.** *In place or
+in a detail view* was undecided; a detail view loses to the page's own argument —
+it behaves like paper, and paper does not navigate to be written on. Exactly one
+line is borrowed as a field for as long as somebody is rewriting it, so the
+load-bearing premise is untouched: **lines are still records, and a record is
+still not an input.**
+
+**The gesture.** First tap picks, second tap opens the words. The pick is the
+common act — settle it, cross it off — so the rare one pays the second tap. While
+a line is open, a tap on its own words places a caret rather than resetting the
+draft.
+
+**Three exits, and only one discards.** Return and a tap on the paper commit;
+blur commits too, because the words on screen are the words somebody meant.
+`Escape` alone discards, and it leaves the line *picked* rather than releasing —
+so `Escape` steps rather than jumping. ⚠ **Unchanged words write nothing at all**:
+opening a line to look at it costs no round trip and no rate-limit token.
+
+⚠ **`Escape` must not call `blur()`, and this is the trap that was caught in
+review rather than on screen.** `blur()` fires `onBlur` synchronously, inside the
+key handler, where the commit still closes over the draft the discard has only
+*queued* — so the one exit meant to throw the words away would have saved them.
+Clearing the open id unmounts the field on the next render and React fires no
+blur on unmount, which is what makes the discard the whole of what happens.
+
+⚠ **The page-level `Escape` listener does not exist while a line is open**, for
+the same class of reason: `release()` commits an open edit on its way out, so it
+holds the draft, and a document listener that mounted a keystroke ago would hold
+an old one. The field handles its own `Escape` because the field is where the
+focus is.
+
+⚠ **The caret is placed at the end, in writing.** Where a focused field puts its
+caret is an engine's choice and the four surfaces do not agree — one selects the
+whole value, which turns the next keystroke into *replace everything* and loses
+the line somebody opened to fix one word of.
+
+**What `setCaptureText` refuses to touch, each for its own reason:**
+
+- **Provenance** — the input to §6's suppression rule. Editing the words of a
+  copied capture does not make it yours.
+- **State** — a line's words and a line's fate are separate facts, and an edit is
+  not a revival.
+- **`possibilityId`** — so an edit cannot silently un-resolve *or* re-resolve.
+  ⚠ **This leaves a real question for *Resolution offers*:** a capture resolved to
+  *Jaws* and edited to read *pottery class* still matches as *Jaws*. It cannot
+  happen today because nothing on the page resolves anything yet, and that path
+  must decide it deliberately rather than inherit it.
+
+⚠ **No overlap trigger, and that is a finding rather than an omission.**
+`fireOverlap` returns early without a `possibilityId`, so **convergence keys on
+the possibility and never on raw text** — an edit cannot change what a capture
+matches. Do not add a `fireOverlap` call on the assumption that a changed line is
+a changed signal.
+
+⚠ **`normalised_text` re-derives itself**, being a generated column over `text`,
+so Phase 2's possible-match path stays correct after an edit with no second write
+and no chance of the two disagreeing. That is the column comment's own argument
+for generating it, arriving where it was predicted to.
+
+⚠ **No client mutation id, unlike creation.** A raw capture has no natural key, so
+a retried Return needs one to avoid writing a second line; an edit names the row
+it is editing, so a retry writes the same words to the same row and §10's
+idempotency comes free.
+
+`node_modules/.probe/edit.mjs` drives all of it at 390px and checks the words
+survive a reload. ⚠ **It waits 4s before reloading**: the save is fire-and-forget
+by design, and a reload that races it reads the row before the write lands, which
+looks exactly like an edit that never persisted. It did, at 900ms.
+
 ### The deviations now standing
 
 - **The chrome has its own colour, and no longer spends `--color-accent`.** It
@@ -303,7 +372,7 @@ the travel by 120ms going, 54.6% by 116ms coming back**, both of 340.
   and nothing about a raw capture can answer it. Yes → `go_back_to`, No →
   `done`.
 - **The tray is one surface**, `/settled`, with each row carrying its own word.
-- **A second tap does not edit.**
+- **A second tap opens the words, in place** — see *Rewriting a line* above.
 
 The full reasoning for each is in `docs/decisions.md`, *Phase 1: the page and
 Return — 23 August*.
@@ -710,8 +779,7 @@ its own has quietly answered itself.
   **Built as one**, `/settled`, with each row carrying its own word — so
   splitting it later is a routing change and nothing that reads `WHERE_IT_IS`
   moves.
-- **Whether editing a committed line happens in place or in a detail view.**
-  The second tap has to turn a rendered record back into an input either way.
-  **Still open, and therefore still unbuilt**: the second tap holds the pick
-  rather than teaching a gesture that has to be taken back. It also needs a
-  `setCaptureText` that does not exist — `setCaptureNote` writes the note.
+- ~~**Whether editing a committed line happens in place or in a detail view.**~~
+  **Answered 24 August: in place.** A detail view loses to the page's own
+  argument — it behaves like paper, and paper does not navigate to be written on.
+  `setCaptureText` exists now. See *Rewriting a line*.

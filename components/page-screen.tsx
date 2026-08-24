@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   captureAction,
   crossOffCaptureAction,
+  editCaptureAction,
   settleCaptureAction,
   undoCaptureAction,
 } from '@/app/actions/captures'
@@ -76,18 +77,29 @@ import { useKeyboardHem } from './keyboard-hem'
  * edit instead. The fix is not a modifier gesture on an always-editable page; it
  * is removing the premise that every line is a live input.
  *
- * ⚠ **A second tap does not yet edit.** The design says it should, and where
- * that edit happens — in place or in a detail view — is the one thing that
- * document leaves open. So the second tap holds the pick rather than teaching a
- * gesture that has to be taken back: unpicking is a tap on the page.
+ *   - **Tap the words again and they open.** The pick is the common act — settle
+ *     it, cross it off — and rewriting is the rare one, so the rare one pays the
+ *     second tap.
  *
- * ⚠ **That sentence used to end "which is also how you get back to writing", and
- * both halves of it were wrong until 24 August.** The second half went stale the
- * day the record stopped being a way to start writing — the paper releases a
- * pick and does not raise a keyboard. The first half was never built at all: a
- * tap on the page did nothing whatever, and the only exits from a picked line
- * were Return, crossing off, settling, or reaching back up to the live line.
- * Both are true now. **A rule written in a header is not a rule that ships.**
+ * ⚠ **The edit happens in place, which is the question the design left open.**
+ * *In place or in a detail view* was the one thing undecided, and a detail view
+ * loses to this page's own argument: it behaves like paper, and paper does not
+ * navigate to be written on. So exactly one line is borrowed as a field for as
+ * long as somebody is rewriting it, and the premise above is untouched — lines
+ * are still records, and a record is still not an input.
+ *
+ * ⚠ **Three exits, and only `Escape` discards.** Return and a tap on the paper
+ * commit; blur commits too, because the words on screen are the words somebody
+ * meant and a blur that threw them away would be the page losing something.
+ * Unchanged words write nothing at all, so opening a line to *look* at it costs
+ * no round trip.
+ *
+ * ⚠ **This header claimed two rules for weeks that nothing implemented.** It
+ * said a second tap should edit, and that unpicking was a tap on the page — and
+ * neither was built until 24 August; a third clause, "which is also how you get
+ * back to writing", had gone stale the day the record stopped being a way to
+ * start writing. All three are now true of the code below. **A rule written in a
+ * header is not a rule that ships.**
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The client owns the list, and the server is the seed
@@ -202,10 +214,26 @@ export function PageScreen({
   const [writing, setWriting] = useState(false)
   /** The line whose *Again?* is standing open. */
   const [asking, setAsking] = useState<string | null>(null)
+  /**
+   * The line being rewritten, and the words while they are being rewritten.
+   *
+   * ⚠ **The draft is held here rather than on the line**, so the record stays
+   * the record: `lines` holds what was saved until an edit is committed, and
+   * abandoning one costs nothing because nothing was overwritten to begin with.
+   * It is the same division the live line makes between `draft` and `lines`.
+   *
+   * ⚠ **An id, not a boolean**, for the same reason `picked` and `asking` are:
+   * exactly one line can be open at a time, and holding the id makes that true
+   * by construction rather than by remembering to close the last one.
+   */
+  const [editing, setEditing] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState('')
   /** The last line to land, while the ten seconds hold. */
   const [undoable, setUndoable] = useState<string | null>(null)
 
   const input = useRef<HTMLInputElement>(null)
+  /** The record line currently borrowed as a field — see `startEdit`. */
+  const editField = useRef<HTMLInputElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
   /** The live band, and an untouched twin of where it rests — see the hook. */
@@ -216,7 +244,20 @@ export function PageScreen({
   const endMark = useRef<HTMLDivElement>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useKeyboardHem({ writing, host, floorAnchor, band, bandAnchor })
+  /*
+    ⚠ **Editing a record line asks for a keyboard too**, which is the whole of
+    what this hook's flag means. It was `writing` alone, back when the live line
+    was the only field on the page — and a record line is *not* pinned, so it is
+    the one that needs the band held off the status bar while iOS scrolls it
+    into view.
+  */
+  useKeyboardHem({
+    writing: writing || editing !== null,
+    host,
+    floorAnchor,
+    band,
+    bandAnchor,
+  })
 
   /*
     ⚠ **A picked line is the hold, and focus deliberately is not.** The foot is
@@ -396,6 +437,91 @@ export function PageScreen({
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Rewriting a line                                                  */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * **The second tap opens the words.** The first picks the line; the second
+   * turns that one line into a field.
+   *
+   * ⚠ **One line becomes an input, not the page.** The load-bearing decision of
+   * this screen is that a record is not a text buffer — every line above the
+   * live one is a record rather than an input, which is what stops a tap meant
+   * to settle a line placing a caret in it instead. This does not reopen that:
+   * the premise is still *lines are records*, and exactly one of them is
+   * borrowed as a field for as long as somebody is rewriting it.
+   *
+   * ⚠ **Never a line that is not on the server yet.** A pending line has no id
+   * to name in the mutation, and a failed one wants its retry rather than an
+   * edit — `pick` already routes that case.
+   */
+  function startEdit(line: Line) {
+    if (line.id === '' || line.pending) return
+    setAsking(null)
+    setEditing(line.id)
+    setEditDraft(line.text)
+  }
+
+  /**
+   * Put the rewritten words in the record, and send them.
+   *
+   * ⚠ **Three ways out, and only one of them writes.** Return and a tap on the
+   * paper commit; `Escape` abandons. Blur commits as well, because the words on
+   * screen are the words somebody meant — a blur that silently threw them away
+   * would be the page losing something, which is the shape this screen spends
+   * most of its design avoiding.
+   *
+   * ⚠ **Unchanged text writes nothing at all.** Opening a line and closing it is
+   * the ordinary way to *look* at one, and it must not cost a round trip, a
+   * rate-limit token, or a row's `updated_at`.
+   *
+   * ⚠ **Empty is an abandon, not a delete.** `setCaptureText` refuses it
+   * server-side; this refuses it before the trip so the line simply stays as it
+   * was. Removing a capture is the ×, which is a resolution rather than a
+   * deletion (§5.1).
+   */
+  function commitEdit() {
+    const id = editing
+    if (id === null) return
+    setEditing(null)
+
+    const line = lines.find((l) => l.id === id)
+    const next = editDraft.trim()
+    if (!line || next === '' || next === line.text) return
+
+    const before = line.text
+    mark(line.key, { text: next, failed: null })
+
+    void editCaptureAction(id, next).then((result) => {
+      /* Back to the words that are actually saved, and say so on the line. */
+      if (!result.ok) mark(line.key, { text: before, failed: result.message })
+    })
+  }
+
+  /** Leave the words as they were. The line stays picked, so `Escape` steps. */
+  function abandonEdit() {
+    setEditing(null)
+    setEditDraft('')
+  }
+
+  /**
+   * **The caret goes to the end of the existing words, not the start.**
+   *
+   * ⚠ **Stated rather than inherited.** Where a focused field puts its caret is
+   * an engine's choice, and the four surfaces do not agree — one of them selects
+   * the whole value, which turns the next keystroke into *replace everything*.
+   * Somebody who opened a line to fix its last word would lose the line. So the
+   * position is written down, and a rewrite starts where writing left off.
+   */
+  useEffect(() => {
+    if (editing === null) return
+    const field = editField.current
+    if (!field) return
+    const end = field.value.length
+    field.setSelectionRange(end, end)
+  }, [editing])
+
+  /* ------------------------------------------------------------------ */
   /*  The foot's two live controls                                      */
   /* ------------------------------------------------------------------ */
 
@@ -463,35 +589,72 @@ export function PageScreen({
    * given a name rather than a fifth copy.
    */
   function release() {
+    /*
+      ⚠ **An open edit commits on the way out.** The paper is *I am done with
+      this line*, and the words on screen are the words somebody meant — leaving
+      by the paper must not be the one exit that discards them. `commitEdit`
+      writes nothing when nothing changed, so releasing a line that was only
+      being looked at still costs no round trip.
+    */
+    commitEdit()
     setPicked(null)
     setAsking(null)
   }
 
   /**
-   * **Escape lets it go too**, because the paper tap above is a thumb's gesture
-   * and the desk is one of the four surfaces that ship. A pointer has no "tap
-   * beside it" — clicking the paper works, but the key is what a keyboard
-   * reaches for, and without it the desk keeps the trap the handset just lost.
+   * **Escape steps back one state at a time**, because the paper tap above is a
+   * thumb's gesture and the desk is one of the four surfaces that ship. A
+   * pointer has no "tap beside it" — clicking the paper works, but the key is
+   * what a keyboard reaches for, and without it the desk keeps the trap the
+   * handset just lost.
    *
-   * ⚠ **Only while something is picked**, so nothing is listening on a page at
-   * rest. Picking blurs the field, so this can never be the Escape that closes
-   * an IME candidate window — the two states do not overlap.
+   * ⚠ **It does not listen while a line is open**, so `Escape` steps rather than
+   * jumping: an open line abandons its edit first — handled on the field itself,
+   * which is where the focus is — and only a second press releases. That is what
+   * `Escape` means everywhere, *cancel this* rather than *cancel everything*,
+   * and it keeps the one exit that discards from also being the one that lets go.
+   *
+   * ⚠ **Nothing here closes over anything that can go stale**, which is why the
+   * handler is two `setState` calls rather than `release()`. `release` commits an
+   * open edit on its way out, so it holds the draft — and a document listener
+   * that mounted a keystroke ago would hold an old one. The listener not existing
+   * while a line is open is what makes that unreachable rather than merely
+   * unlikely.
    */
   useEffect(() => {
-    if (picked === null) return
+    if (picked === null || editing !== null) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') release()
+      if (e.key !== 'Escape' || e.isComposing) return
+      setPicked(null)
+      setAsking(null)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [picked])
+  }, [picked, editing])
 
+  /**
+   * ⚠ **The first tap picks and the second opens the words**, which is the rule
+   * this page's header promised from the day it was written and did not keep.
+   * The pick is the common act — settle it, cross it off — and rewriting a line
+   * is the rare one, so the rare one pays the second tap.
+   *
+   * ⚠ **A line already open is not re-opened.** Tapping the words of the line
+   * you are editing is a tap inside the field, and it must place a caret rather
+   * than reset the draft to what is saved.
+   */
   function pick(line: Line) {
     if (line.pending) return
     if (line.failed) {
       retry(line)
       return
     }
+    if (editing === line.id) return
+    if (picked === line.id) {
+      startEdit(line)
+      return
+    }
+    /* Moving to another line closes whatever was open, and keeps its words. */
+    commitEdit()
     setPicked(line.id)
     setAsking(null)
     /* The keyboard follows liveness: gone the moment a saved line is picked. */
@@ -873,6 +1036,7 @@ export function PageScreen({
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'
             const isPicked = line.id !== '' && line.id === picked
+            const isEditing = line.id !== '' && line.id === editing
 
             return (
               <li key={line.key}>
@@ -890,6 +1054,82 @@ export function PageScreen({
                 )}
 
                 <div className="flex items-stretch">
+                  {isEditing ? (
+                    /*
+                      ⚠ **The same box, so the row does not move under the thumb
+                      that opened it.** `page-line` is the whole of a line's
+                      geometry — size, leading, and the hem that makes the row a
+                      44px target — so the field inherits it and the swap costs no
+                      layout. `page-input` strips the browser's own chrome; it is
+                      the utility the live line already uses, for the same reason.
+
+                      ⚠ **Full width, where the button is only as wide as its
+                      words.** That rule exists so the space beside a line can be
+                      paper; while the line is open there is no paper to protect,
+                      and a field that stopped at the end of the old words would
+                      have nowhere to put the new ones.
+
+                      ⚠ **`caret-chrome` rather than a drawn caret.** From the
+                      first character on, the position is one only the browser
+                      knows — the same reason the live line hands over.
+                    */
+                    <input
+                      ref={editField}
+                      /*
+                        ⚠ **`autoFocus`, and here it does what it cannot do on the
+                        live line.** The objection recorded there is that focus
+                        *without a gesture* raises no keyboard on iOS — true of a
+                        cold open, and not of this: the field mounts inside the
+                        `click` that opened it, so React commits the focus while
+                        the tap is still the current task and the keyboard is the
+                        gesture's own consequence. The caret is placed at the end
+                        by the effect above rather than left to the engine.
+                      */
+                      autoFocus
+                      type="text"
+                      value={editDraft}
+                      onChange={(e) => setEditDraft(e.target.value)}
+                      onBlur={commitEdit}
+                      onKeyDown={(e) => {
+                        if (e.nativeEvent.isComposing) return
+                        /* One line is one capture, here as in the live line. */
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          commitEdit()
+                        }
+                        /*
+                          ⚠ **Escape belongs to the field, not to the document.**
+                          This is where the focus is while a line is open, and
+                          handling it here is what lets the page-level listener
+                          stay off entirely — see it above for why a listener that
+                          could reach an edit would be holding a stale draft.
+
+                          ⚠ **It must not call `blur()`, and that is not tidiness.**
+                          `blur()` fires `onBlur` synchronously, inside this
+                          handler, where `commitEdit` still closes over the draft
+                          `abandonEdit` has only *queued* the discard of — so the
+                          one exit that is supposed to throw the words away would
+                          save them. Clearing `editing` unmounts the field on the
+                          next render and React fires no blur on unmount, so the
+                          discard is the whole of what happens.
+                        */
+                        if (e.key === 'Escape') {
+                          e.preventDefault()
+                          abandonEdit()
+                        }
+                      }}
+                      enterKeyHint="done"
+                      inputMode="text"
+                      autoCapitalize="sentences"
+                      autoCorrect="on"
+                      autoComplete="off"
+                      spellCheck
+                      aria-label="Rewrite this capture"
+                      className={`page-line page-input caret-chrome ${
+                        crossedOff ? 'line-through opacity-50' : ''
+                      }`}
+                    />
+                  ) : (
                   <button
                     type="button"
                     onClick={() => pick(line)}
@@ -938,6 +1178,7 @@ export function PageScreen({
                       </span>
                     )}
                   </button>
+                  )}
 
                   {/*
                     ⚠ **The paper is gone, and it was here.** Every row carried
