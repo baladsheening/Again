@@ -14,27 +14,79 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ---
 
-## Build status — 23 August
+## Build status — 24 August
 
-> **Built, deployed and seen on a handset — 23 August, `main` at `949c698`.**
-> The design (`3a0fc42`, `294469f`), the build (`19bad74`), this register
-> (`450bd05`), the chrome colour (`acfc4cb`) and the order and the paper rule
-> (`949c698`). **No deploy in this phase has carried a migration** — no schema
-> has moved — so the rollback is still a revert push and nothing else.
+> **Built, deployed and seen on a handset — 24 August, `main` at `d526d0b`.**
+> **No deploy in this phase has carried a migration** — no schema has moved — so
+> the rollback is still a revert push and nothing else.
 >
-> **The page works on the handset.** That is the sentence this register waited
-> all day for, and it is worth being precise about what it does and does not
-> settle: the screen was opened, used and judged good. **The four-second claim
-> was not stopwatched**, so it is still a claim. See *What hardware answered*
-> below.
+> **Everything in the page has now been seen on hardware and judged good**, the
+> 23 August evening's work and the 24th's alike. What is left in Phase 1 is a
+> list of things not built, not a list of things unverified — with one exception,
+> named below.
 >
-> Two things changed on the strength of that first look, and both reverse a
-> decision this document made: **the record is newest-first**, and **a line is
-> only as wide as its own words** so the rest of every row starts a capture.
-> The chrome also stopped spending `--color-accent`.
+> ⚠ **The four-second capture has been set aside, at the user's direction on 24
+> August.** It is still not stopwatched and this register does not claim it is.
+> It stops being *the next thing* and becomes an open question that Phase 1 can
+> close around; the reasoning for wanting it is kept under *What hardware
+> answered* because it is the honest statement of what the page has and has not
+> proved.
+>
+> ⚠ **The one thing the page needs and does not have: the chrome's exit.** The
+> recede's *arrival* is right and settled. Its *leaving* is not — judged on
+> hardware, 24 August. See *The chrome's exit* below; it is the open UX item and
+> nothing else in the phase is ahead of it.
 >
 > ⚠ The installed app **never reloads until it is force-quit** — check which
 > build is running before believing anything seen on it.
+
+### The 23 commits this register was missing
+
+It said `949c698` until 24 August while `main` ran 23 commits past it, so
+everything below lived only in commit messages. Grouped by what it decided,
+newest last; the code comments carry the full argument in every case.
+
+**The record's light, and what a row is** — `06ecd48` `a6f5036` `df1b6f6`
+`500a4f0` `13f6a79` `c7ffc3f` `9115a9a`. The live row is **lit, not filled**:
+an ellipse of warm light inscribed in the row, transparent at all four sides,
+**always on**. ⚠ Two flat grounds shipped and both came back "too grey" — the
+value was never the problem, because *a uniform tone inside a rectangle with
+edges* is what reads as grey at any value. **Do not answer "too grey", or
+"brighter", with a fill.** Glass was asked for and cannot work here:
+`backdrop-filter` blurring `#000000` returns black, so it can only show through
+a hairline, and hairlines are out. A capture **blinks the words** when it lands,
+never a ground behind them — lighting the paper says *this area* and what
+happened is a *line*. The mark on a picked line spends **thickness**, not
+height.
+
+**The bars** — `67238b3` `ad3593b` `66f1f55` `ecb2cc5` `9dd3871` `80deb9b`
+`423dec4`. The two bars are sized apart; they leave while the record is read and
+**answer where you are, not which way you were going**. The foot is *not* held
+above the keyboard — it was, and it is not wanted there. The live line is always
+on screen and the chrome **thins to it**: when the bar goes, the band takes its
+place at the top of the glass rather than sitting under a hole. The band clears
+the notch in **both** positions, paid for in padding rather than position, or the
+notch is paid for twice.
+
+**Writing is a mode** — `22aec55` `04d9c4b` `4b2e5bd` `917ae2a`. The record goes
+behind glass and stops moving while the keyboard is up. ⚠ **The mode is entered
+on `click`, never `pointerdown`**: a pane that appears over the touch point takes
+the click that follows on iOS, so the field never focused and the keyboard never
+rose. ⚠ **The light is an invitation, so the *waiting* row is the bright one and
+the row being written in steps back** — it shipped inverted; the writing pane has
+already darkened everything else, and a lit ground competing with the words is
+the app talking over the one thing it asked for.
+
+**⚠ `focused` is deleted from this page and nothing may add it back**
+(`917ae2a`). Four separate features were keyed to focus and all four were wrong
+for one reason: the live line carries `autoFocus`, so **focus is the resting
+state of this page, not an event** — it arrives without a keyboard on iOS and
+before hydration on the desk. All four read `writing` now, which is a gesture: a
+tap on the field or a keystroke in it, cleared on blur.
+
+**The unsent line, the caret, and letting go** — `ef33bda` `5e89431` `5cfa899`
+`d526d0b`. Covered in full under *The words that are not in the record yet* and
+*The chrome's exit* below.
 
 The instruction this was built against was narrower than the document below:
 **the page and Return — no schema, no images, no suggestions.** So the design is
@@ -68,9 +120,15 @@ collection routes, `V1_KINDS`, `COLLECTION_FOR`, `--color-caret`.
 
 ### Still to build, in the order it wants doing
 
-1. **The four-second capture, with a stopwatch.** Not a feature — the
-   acceptance criterion, and the only part of it hardware has not answered.
-   See below.
+1. **The chrome's exit.** The one thing the page needs that is not a new
+   feature — see *The chrome's exit* below. Judged on hardware on 24 August:
+   the arrival is right, the leaving is not.
+
+   ~~**The four-second capture, with a stopwatch.**~~ ⚠ **Set aside at the
+   user's direction, 24 August.** It was item 1 and it is not done — this
+   register does not claim it is. The reasoning is kept under *What hardware
+   answered*, unchanged, because it is still the honest account of what the page
+   has and has not proved. Anyone reopening Phase 1's acceptance starts there.
 2. **Editing a committed line.** The second tap picks and does not edit, because
    *where* the edit happens is the one thing this document leaves open and there
    is no mutation for it. Needs `setCaptureText` in `lib/db/captures.ts` — text
@@ -121,23 +179,72 @@ watch, installed and in a Safari tab: the foot arriving *with* the keys rather
 than after them. It is no longer on the critical path, because nothing
 important is behind it any more.
 
-**2. The four-second capture is still a claim.** The screen was used and judged
-good; it was not stopwatched. The desk figure stands and is the wrong
-instrument: first key to the line on the page, **34–152ms** against
-`next start` — a render, not a thumb.
+**2. The four-second capture is still a claim.** ⚠ **And it has been set aside
+at the user's direction on 24 August — everything in this item still stands, and
+none of it has been answered.** The screen was used and judged good; it was not
+stopwatched. The desk figure stands and is the wrong instrument: first key to the
+line on the page, **34–152ms** against `next start` — a render, not a thumb.
 
 ⚠ **The keyboard cannot be raised on a cold open on iOS**, and no arrangement of
 this code changes it: focus without a gesture does not open a keyboard there.
-What answers it is the paper — **a line is only as wide as its own words, so
-every other pixel of the page starts a capture** — and whether that is fast
-enough is what a stopwatch has to say. If it is not, the honest next move is a
-share-sheet or shortcut entry point, not a hack on focus.
+⚠ **What answered it when this was written no longer exists.** The answer was the
+paper — *every other pixel of the page starts a capture* — and `04d9c4b` removed
+that. What answers it now is that **the live line is pinned and on screen at
+every scroll position**, so the gesture iOS insists on is one tap on a target
+that is never more than a thumb's reach away, wherever the record is scrolled to.
+Whether that is fast enough is what a stopwatch has to say. If it is not, the
+honest next move is a share-sheet or shortcut entry point, not a hack on focus.
 
 ⚠ **Two snags before testing over the LAN.** `crypto.randomUUID` is undefined on
 `http://192.168.x.x` — a secure-context gate — which `lib/mutation-id.ts`
 already works around; and `BETTER_AUTH_URL` still points at localhost, so
 signing in over the LAN may not complete. Deploying is the shorter route to a
 real handset test.
+
+### The chrome's exit — the open UX item
+
+**Judged on hardware, 24 August: the arrival is right and the leaving is not.**
+That verdict is a split down the middle of one mechanism, which is what makes it
+worth writing down rather than fixing on sight.
+
+What is there now, from `4b2e5bd`: **one curve, two durations, four movers.**
+`--ease-recede` is `cubic-bezier(0.22, 1, 0.36, 1)`, a quintic ease-out — over
+half the travel in the first third, then a long settle. It goes out in
+`--recede-out` 240ms and comes back in `--recede-in` 340ms, and both bars, the
+band taking the bar's place, and the writing pane's fade all share them.
+
+The reasoning for the asymmetry, which is the thing any fix has to answer:
+
+> **Going is quicker than coming back**, which is the opposite of what looks
+> right written down. Leaving is a reply to a gesture the finger is still making,
+> and anything slower reads as the chrome hesitating over whether it was asked.
+> Returning is not a reply to anything — the flick is over before it starts — so
+> it has room to settle, and a bar that snapped back into place would be a jolt
+> on a page that is otherwise still.
+
+Measured from the *gesture* rather than from the transition, which is the honest
+way round since a scroll needs a frame or two to reach a render: **52% of the
+travel by 86ms of 240 going, 55% by 111ms of 340 coming back**, against a linear
+33%. `node_modules/.probe/motion.mjs` samples the bar frame by frame in both
+directions and is the instrument to re-run against any change.
+
+⚠ **Both directions are the same curve today, so the leaving cannot be changed
+without deciding whether one curve still holds.** The argument for one was that
+*two curves would be two systems and the eye reads the disagreement long before
+it reads either curve* — which is a real constraint on the fix, not a detail. If
+the exit needs its own shape, that argument is what has to be beaten, and the
+answer belongs here.
+
+⚠ **The durations are tokens and the utilities are per-direction on purpose.**
+Each direction emits its own `duration-*` rather than one on the base and an
+override on the state: two utilities for one property are resolved by their order
+in the compiled sheet, which a class attribute has no way to state.
+
+⚠ **What is *not* known** is which part of the leaving is wrong — the speed, the
+curve's shape, the fact that all four movers leave together, or the trigger.
+Nobody has separated them, and the four movers sharing one timing means a change
+aimed at the bar lands on the band and the pane as well. That is the first thing
+to establish, and it is a question for a handset rather than for the desk.
 
 ### The deviations now standing
 
@@ -154,11 +261,50 @@ real handset test.
 - **The record is newest-first, and the caret is at the top.** This document
   specified writing downward and the build shipped it that way; a handset
   reversed it. See *The shape* below, which now carries the reasoning.
-- **A line is only as wide as its own words.** The rest of every row is paper,
-  and tapping paper starts a capture. The hit area was the whole row, which
-  meant the only place a tap could start writing was the leftover space at the
-  end of the page — and leftover space is zero the moment the record fills the
-  screen.
+- **A line is only as wide as its own words.** The rest of every row is paper.
+  The hit area was the whole row, which meant the only place a tap could start
+  writing was the leftover space at the end of the page — and leftover space is
+  zero the moment the record fills the screen.
+- **The paper releases the picked line, and does nothing else.** ⚠ **This
+  reverses the second half of the rule above, which said tapping paper starts a
+  capture** — it did, for a day. `04d9c4b` removed it: the live line is pinned
+  and on screen at every scroll position, so a second way to reach it was a
+  second way to reach something already in reach, and a large invisible target
+  beside every line collides with the record's own gesture. `d526d0b` then gave
+  the paper the job it was actually missing. Picking had **no inverse**: `pick`
+  is not a toggle, so re-tapping the words re-picks them, and the only exits
+  were Return, crossing off, settling, or reaching back up to the live line.
+  Tapping beside a selection to drop it is the one gesture everybody already
+  has. ⚠ **It must not raise the keyboard** — picking blurs the field on purpose
+  (*the keyboard follows liveness*), so the gesture that undoes a pick lands
+  back in the browsing state it came from rather than overshooting into writing.
+  `Escape` does the same on the desk, which has no *tap beside it*.
+- **The words that are not in the record yet are italic, and the record steps
+  back behind them.** Italic is a rule rather than a badge — *italic is not in
+  the record, roman is* — so Return turns one into the other and the vocabulary
+  teaches itself with no legend, no icon and no copy. It is type because §11 says
+  type is the entire design, and because every other channel is spent: colour is
+  held (`--color-chrome` means *a control*, `--color-accent` is held for
+  overlap), and a rule, box or badge are ruled out where `picked` is defined.
+  ⚠ **Dimming the live line was asked for twice and refused twice** — a
+  crossed-off line is already struck *and* dimmed and the live line sits directly
+  above it. `5e89431` inverted it instead: the **record** holds its recede for as
+  long as the draft is unsent, which buys the identical contrast with no
+  collision and leaves the words being typed the brightest thing on the page.
+  ⚠ The objection recorded against dimming — *it reads as the app doubting what
+  it has already promised* — was measured on lines **in flight**, committed and
+  waiting on the network. Nothing is promised about an unsent draft, so that
+  finding does not transfer; the collision is the reason.
+- **The drawn caret is the size of the face, not the size of the line.** It was
+  26px, picked as "almost a line" off the 28px line box. A native caret is drawn
+  to **ascent + descent at the font size**, which for Fira Sans at 18px is 22px —
+  so the drawn caret on an empty line and the real one that replaced it on the
+  first keystroke were never the same object. ⚠ **Face-dependent: measure again
+  if the interface face changes**, never scale it. ⚠ **A native caret cannot be
+  screenshotted** — it is composited outside the captured surface, so Playwright
+  never sees it headed or headless. The two carets cannot be matched by eye or by
+  pixel on any one engine, which leaves one face metric feeding both as the only
+  way they agree on four surfaces.
 - **The camera and search are present and off at every state**, including the
   camera the table above has lit on an empty page. Neither is built; a control
   that cannot act goes off. The table is what they go back to.
@@ -236,8 +382,8 @@ Once that is admitted, the collision disappears:
 
 - **Tap the words and the line is picked.** One meaning, no modifier, no hidden
   gesture. ⚠ The words, not the row: a line’s hit area is the width of its own
-  text, and the paper beside it starts a capture instead. See *The deviations*
-  above.
+  text, and the paper beside it **releases the picked line** — it does not start
+  a capture, which it did for one day in August. See *The deviations* above.
 - **A second tap edits**, turning that record back into an input. Picking is
   the common act — settle it, cross it off — and editing a captured line is
   rare, so the rare one pays the second tap.

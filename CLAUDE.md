@@ -22,28 +22,44 @@ specification. The re-direction specification is the complete brief for future
 product work. Where both are silent, prefer the simplest thing that works and
 flag the decision rather than inventing scope.
 
-## Where the build stands — 23 August
+## Where the build stands — 24 August
 
 **Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
 
 **Phase 1's page and Return are built, deployed and seen on a handset** — `main`
-at `949c698`. **No Phase 1 deploy has carried a migration**, so the rollback is a
+at `d526d0b`. **No Phase 1 deploy has carried a migration**, so the rollback is a
 revert push and nothing else. `/` is the capture page in production; the poster
 wall, `components/shell.tsx` and the four collection routes are deleted.
 
-**The page works on the handset**, and the first real use of it reversed two
-decisions the desk had made:
+**The whole page has been seen on hardware and judged good.** The first real use
+of it reversed two decisions the desk had made:
 
 - **The record is newest-first and the caret sits under the bar.** Nothing
   scrolls on arrival or after a Return, and a keyboard rising from the bottom of
   the glass has no way to cover the line being written.
 - **A line is only as wide as its own words.** Tap the words to pick the line;
-  tap the paper — the rest of the row, and the rest of the page — to start a
-  capture.
+  tap the paper to let it go again.
 
-⚠ **The four-second capture is still a claim**, because nobody has stopwatched
-it. It is the one acceptance criterion left in Phase 1 and nothing else there is
-worth doing first.
+⚠ **The paper does not start a capture.** It did for a day and that was removed:
+the live line is pinned and always on screen, so a second way to reach it was a
+second way to reach something already in reach. The paper's job is the *inverse*
+of picking, and it must not raise the keyboard — picking blurs the field on
+purpose. `Escape` does the same on the desk.
+
+⚠ **`focused` is deleted from the capture page and nothing may add it back.**
+Four features were keyed to focus and all four broke for one reason: the live
+line carries `autoFocus`, so **focus is the resting state of that page, not an
+event**. Everything reads `writing`, which is a gesture.
+
+⚠ **The open item is the chrome's exit.** The recede's arrival is right; its
+leaving is not, judged on hardware on 24 August. Both directions share one curve
+today, so the fix has to decide whether one curve still holds. See *The chrome's
+exit* in the Phase 1 register.
+
+⚠ **The four-second capture is still a claim** — nobody has stopwatched it, and
+it is **set aside at the user's direction (24 August)**, not done. It is the last
+acceptance criterion in Phase 1 and the register keeps the reasoning intact for
+whoever reopens it.
 
 ⚠ The installed app never reloads until it is force-quit — so check which build
 is running before believing anything reported from it.
