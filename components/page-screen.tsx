@@ -291,23 +291,29 @@ function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
  * off the moment undo stops being possible. The pair can no longer be seen
  * together, which is a stronger answer than the colour the note proposed.
  *
- * ⚠ **They are always there, and the rule they follow is the two bars' own.**
- * They appeared only on a picked line for a few hours, and the objection to
- * showing them everywhere was real — a record of two hundred lines each carrying
- * two glyphs is the density device inverted. What answers it is the rule this
- * app already has: *controls go off; they do not disappear.* Quiet on every
- * line, brass on the picked one, and reachable on all of them.
- *
- * ⚠ **`--color-muted`, not the `OFF` fade.** They act on every line, so the 28%
- * that means *this cannot do anything* would be a lie told in the one place the
- * app spends real care being honest. Muted is the colour of a year and a day
- * stamp: present, secondary, true.
+ * ⚠ **Absent until the line is picked, and this is settled.** They were shown on
+ * every line for an hour and taken back off: a record of two hundred lines each
+ * carrying two glyphs is the density device inverted, which was the objection
+ * before it was tried and the answer after. *Controls go off; they do not
+ * disappear* stays the **two bars'** rule; on the line, absent is the off state.
  *
  * ⚠ **Immediately after the words, which is what "the end of the entry" means.**
  * `ms-auto` put them at the end of the *row* for an hour and the report was
  * immediate — a short line left its controls stranded out at the margin with a
  * gap of nothing between. A line is only as wide as its own words, so the end of
  * the entry is where the words stop.
+ *
+ * ⚠ **A crossed-off line offers one control and it is the way back.** Cross off
+ * is a resolution, not a delete — the row stays where it is, struck through —
+ * and while it is struck the other two would be acting on something somebody has
+ * said they are done with. Rewriting words that are crossed out is editing a
+ * decision rather than a capture.
+ *
+ * ⚠ **The rewrite *goes*, rather than going off**, and that is the same rule as
+ * the slot itself: on the line, absent is the off state. A dark pencil beside a
+ * struck line would be the record explaining what it is refusing; nothing there
+ * is the record showing one way back, which is the × that put it there. It
+ * returns the moment the strike is undone.
  *
  * ⚠ **It must not set the height of the row.** One line is one line: the glyph
  * is `--glyph-line`, the padding buys a hit area and the negative margin gives
@@ -332,6 +338,8 @@ function LineTools({
   /** `null` while a rewrite is already open — reopening would discard it. */
   onRewrite: (() => void) | null
 }) {
+  if (!undoable && !picked) return null
+
   return (
     <div className="ms-3 -my-2 flex shrink-0 items-center gap-2 self-center py-2 [--glyph:var(--glyph-line)]">
       {undoable ? (
@@ -349,23 +357,22 @@ function LineTools({
             type="button"
             onClick={onCrossOff}
             aria-label={crossedOff ? 'Put it back' : 'Cross it off'}
-            className={`flex items-center transition-colors ${
-              picked ? 'text-chrome' : 'text-muted hover:text-chrome'
-            }`}
+            className="text-chrome flex items-center"
           >
             <CrossOffGlyph />
           </button>
-          <button
-            type="button"
-            disabled={!onRewrite}
-            onClick={() => onRewrite?.()}
-            aria-label="Rewrite it"
-            className={`flex items-center transition-colors ${
-              !onRewrite ? OFF : picked ? 'text-chrome' : 'text-muted hover:text-chrome'
-            }`}
-          >
-            <RewriteGlyph />
-          </button>
+          {/* Gone while the line is struck, not dark — see the note above. */}
+          {!crossedOff && (
+            <button
+              type="button"
+              disabled={!onRewrite}
+              onClick={() => onRewrite?.()}
+              aria-label="Rewrite it"
+              className={`flex items-center ${onRewrite ? 'text-chrome' : OFF}`}
+            >
+              <RewriteGlyph />
+            </button>
+          )}
         </>
       )}
     </div>
@@ -2292,17 +2299,40 @@ export function PageScreen({
                   a fetched page title, an og:image — is a capture claiming
                   something nobody checked. §7's evidence rules come first.
                 */}
-                {line.sourceUrl !== null && (
-                  <a
-                    href={line.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Open ${linkLabel(line.sourceUrl)}`}
-                    className="text-muted hover:text-chrome ms-2 flex shrink-0 items-center self-center transition-colors [--glyph:var(--glyph-line)]"
-                  >
-                    <LinkGlyph />
-                  </a>
-                )}
+                {line.sourceUrl !== null &&
+                  (crossedOff ? (
+                    /*
+                      ⚠ **A struck line's link is struck with it, and it is a
+                      `<span>`.** There is no disabled state for an anchor — an
+                      `<a>` without an `href` is not a control at all — which is
+                      the same reason the foot's dark search is a span. A door
+                      out of a line somebody has crossed off is a door out of a
+                      decision they have already made.
+
+                      ⚠ **The same two classes the words carry**, so the strike
+                      and the fade match by being the identical rule rather than
+                      by two numbers agreeing. `[&>svg]:align-middle` is what
+                      puts the line *through* the glyph instead of under it: an
+                      inline SVG sits on the baseline, and the strike is drawn
+                      near the x-height.
+                    */
+                    <span
+                      aria-hidden
+                      className="text-muted ms-2 self-center line-through opacity-50 [--glyph:var(--glyph-line)] [&>svg]:align-middle"
+                    >
+                      <LinkGlyph />
+                    </span>
+                  ) : (
+                    <a
+                      href={line.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Open ${linkLabel(line.sourceUrl)}`}
+                      className="text-muted hover:text-chrome ms-2 flex shrink-0 items-center self-center transition-colors [--glyph:var(--glyph-line)]"
+                    >
+                      <LinkGlyph />
+                    </a>
+                  ))}
 
                 {/*
                   ⚠ **Immediately after the words, and "the end of the entry"
