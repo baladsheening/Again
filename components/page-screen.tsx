@@ -321,7 +321,7 @@ function LineTools({
   if (!undoable && !picked) return null
 
   return (
-    <div className="ms-3 -my-2 flex shrink-0 items-center gap-2 self-center py-2 [--glyph:var(--glyph-line)]">
+    <div className="ms-auto -my-2 flex shrink-0 items-center gap-2 self-center ps-3 py-2 [--glyph:var(--glyph-line)]">
       {undoable ? (
         <button
           type="button"
@@ -2056,11 +2056,19 @@ export function PageScreen({
                 )}
 
                 {/*
-                  ⚠ **Immediately after the words, not out at the measure.** The
-                  line is only as wide as its own words — see the note below on
-                  why that was left alone — so *to the right of the entry* is
-                  where the words end, and a slot pushed to the right edge would
-                  be a control belonging to the page rather than to the line.
+                  ⚠ **At the end of the row, not hard against the words.** It
+                  sat immediately after them for an hour, on the argument that a
+                  line is only as wide as its own words so *the end of the entry*
+                  is where the words stop. On a handset that put the controls at
+                  a different place on every line — a two-word capture floated
+                  them into the middle of the glass — and the report was
+                  immediate: they should **always** be at the end. `ms-auto`
+                  takes the free space, so the slot is a column down the record
+                  and the words are still only as wide as themselves.
+
+                  `ps-3` rather than a margin, because the auto margin has eaten
+                  the gap: a line long enough to leave no free space would
+                  otherwise put a glyph against its last letter.
                 */}
                 <LineTools
                   undoable={line.id !== '' && line.id === undoable}

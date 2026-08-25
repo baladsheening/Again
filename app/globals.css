@@ -244,16 +244,23 @@
 
       42.5rem  --page-measure
     +  2.75rem --stack-width
-    +  1.5rem  --stack-inset
+    +  3rem    --stack-inset
     ────────── x2 for the two margins
-      51rem
+      54rem
+
+    ⚠ **It moved from 51rem on 25 August because `--stack-inset` did**, and it
+    has to: the number is only a guarantee that the stack fits, so air added
+    beside the column has to be paid for at the breakpoint or the tools arrive
+    on a window that cannot hold them. **A Tailwind `--breakpoint-*` cannot be a
+    `calc()`** — the variant generator reads the literal — so the arithmetic
+    lives in this comment and both numbers move together by hand.
 
     ⚠ **It is not `--breakpoint-rail`, and the difference is the whole reason
     this token exists.** At 45rem the margin either side of the column is 20px,
     which does not hold a 44px stack — the tools would be off screen on exactly
     the window that first gets them. Below this the foot keeps them.
   */
-  --breakpoint-stack: 51rem;
+  --breakpoint-stack: 54rem;
 
   /*
     The width at which the film screen stops covering the app and stands beside
@@ -1546,8 +1553,16 @@
 
   /** The desk stack's box. */
   --stack-width: 2.75rem;
-  /** The air between the stack and the words it stands beside. */
-  --stack-inset: 1.5rem;
+  /**
+   * The air between the stack and the words it stands beside.
+   *
+   * ⚠ **Raised from 1.5rem on sight, 25 August, and `--breakpoint-stack` moves
+   * with it.** The two are one decision: the breakpoint exists to guarantee the
+   * stack is on screen, and it is the measure plus this air and the stack's own
+   * width on both sides. Change one without the other and the tools appear on a
+   * window that cannot hold them.
+   */
+  --stack-inset: 3rem;
   /**
    * The air between the stack's glyphs, and its own top and bottom padding.
    *
@@ -2850,7 +2865,7 @@
    * clear. With no foot the record still needs somewhere to end, and a page
    * whose last line sits on the bottom edge of the glass reads as cut off.
    */
-  @media (min-width: 51rem) {
+  @media (min-width: 54rem) {
     :root {
       --foot-height: 3rem;
     }
