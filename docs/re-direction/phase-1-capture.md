@@ -260,6 +260,27 @@ deploy without photographs rather than a broken one**, and the preflight says so
 as a *notice* rather than a failure, which is what stops a dark camera being
 investigated as a bug.
 
+⚠ **The store is DEFERRED at the user's direction, 25 August: nothing that costs
+money gets built for now.** Vercel Blob is a paid add-on past its free
+allowance, and it is the only thing between this path and its first execution.
+The intention is lodged rather than dropped — see *Photographs wait for a store*
+in `docs/decisions.md` for what to do when it is time (a dashboard action, no
+code change, no migration) and for the warning that matters:
+
+> **The first photograph anybody attaches is also the first test of three
+> files.** The strippers have four unit tests because a surviving GPS tag has no
+> symptom; the round trip — upload, store, read back, render — has none, because
+> there has never been anything to run it against.
+
+⚠ **The glyph moved to the live row on 25 August and was read as a bug within
+minutes.** It sat among five in the foot for a day without comment; alone on the
+row somebody is always looking at, the first question was *what does it do, it
+can't be pressed?* That is *controls go off; they do not disappear* meeting a
+surface it was not written for — the rule exists to hold a **bar's** shape so a
+blank page does not read as unfinished, and the live row is not a bar. Left as
+it is, and recorded, because the next person to see a dark paperclip will ask
+the same thing and the answer is *there is no store*.
+
 **What is stored, and where.**
 
 - ⚠ **`access: 'private'`.** An unguessable public URL is **not** an

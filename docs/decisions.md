@@ -6606,3 +6606,50 @@ this was a decision rather than a cleanup.
 Phase 6 generates a fresh pair and promotes both server variables to required
 in the same commit. They stay `.optional()` until then so the app boots without
 them, which is the rule the whole of `lib/env.ts` is built on.
+
+## Photographs wait for a store, and the store waits for a decision — 25 August
+
+**Deferred at the user's direction: nothing that costs money gets built for
+now.** Vercel Blob is a paid add-on beyond its free allowance, and creating one
+is the only thing standing between the photograph path and its first execution.
+
+**What is built and has never run.** The camera input, `storeImage`, the three
+metadata strippers, `/api/media/[captureId]`, the thumbnail on the line and the
+full-size view. They typecheck, they build, they ship. `imagesAvailable()` reads
+`BLOB_READ_WRITE_TOKEN`, the project has no such variable, so `imagesOn` is
+false and the control is off. **Nothing about the round trip has been seen
+working.**
+
+⚠ **The strippers have four unit tests and the round trip has none**, and the
+distinction is the useful part of this entry. `guarantees.test.ts` covers the
+JPEG, PNG and WebP readers because a surviving GPS tag has no symptom — the
+picture looks identical, the save succeeds, the page is right. What no test
+covers is upload → store → read back → render, because there is nothing to run
+it against. **The first photograph anybody attaches is also the first test of
+three files.** Expect to find something.
+
+### What to do when it is time
+
+Vercel → Storage → Create → Blob, connected to `again-msaef`. Vercel writes
+`BLOB_READ_WRITE_TOKEN` into the project itself, so **there is no code change
+and no migration** — the glyph lights on the next deploy. Nothing needs to be
+remembered beyond that.
+
+⚠ **`imagesOn` is a server fact and must stay one.** It is decided in the route
+and passed down, because the token is a server value; a client that decided this
+for itself would be guessing, and the guess would be wrong in exactly the
+direction that offers somebody an upload with nowhere to put it.
+
+### The cost of it being off
+
+⚠ **A permanently inert control on the live row was read as a bug within minutes
+of it moving there.** It sat among five glyphs in the foot for a day without
+comment; alone on the row somebody is always looking at, the first question
+asked was *what does it do, it can't be pressed?* — which is the app's own rule,
+*controls go off; they do not disappear*, meeting a surface it was not written
+for. The rule exists to keep a **bar's** shape stable so a blank page does not
+read as unfinished. The live row is not a bar.
+
+That is not resolved here. It is written down because the next person to look at
+a dark paperclip will ask the same question, and the answer is *there is no
+store*, not *it is broken*.
