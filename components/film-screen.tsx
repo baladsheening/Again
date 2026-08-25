@@ -12,6 +12,7 @@ import { claimFilmRequest } from '@/lib/film-request'
 import { posterUrl } from '@/lib/posters'
 import { PosterReveal } from './poster'
 import { PosterTiles } from './poster-tiles'
+import { paneQuery, touchQuery, useMatches } from './pointer'
 import { WHERE_IT_IS, intentsFor, specFor } from '@/lib/vocabulary'
 import { haptic } from '@/lib/haptics'
 import { ChevronIcon } from './icon-chevron'
@@ -2275,60 +2276,13 @@ export function filmPoster(posterPath: string | null, overlay: boolean, touch: b
   return posterUrl(posterPath, overlay && touch ? 'original' : 'w780')
 }
 
-export function paneQuery(): MediaQueryList {
-  const width = getComputedStyle(document.documentElement)
-    .getPropertyValue('--breakpoint-pane')
-    .trim()
-  return window.matchMedia(`(min-width: ${width})`)
-}
-
-/**
- * ⚠ **A hand, not a width — directed 18 August.** Everything built for the phone
- * was arriving in a maximally narrowed desk window, because a narrow window and a
- * phone were the same thing to this component. They are not: **a poster you push
- * out of the way with your thumb is a different object from one you click past
- * with a cursor**, and the glass, the chevron and the full-screen picture were all
- * asked for as the first.
- *
- * ⚠ **`(pointer: coarse)` is a capability, not a device.** CLAUDE.md rules out
- * branches that sniff for a browser, and this is the opposite of that: it asks
- * what the person is pointing with, which is the thing the design actually
- * depends on. Two other places in the app already ask it — the sign-in page's
- * optical padding and the entry rows' spacing.
- *
- * ⚠ **It stays testable.** A browser can be told it has a coarse pointer
- * (`hasTouch: true, isMobile: true` in Playwright), so the touch layout is still
- * driven and measured here rather than only on glass. What it can no longer do is
- * appear by accident when a window is dragged narrow.
- *
- * ⚠ **An iPad with a trackpad reports fine, and a touchscreen laptop reports
- * coarse.** Neither is wrong for this question — both get the layout that suits
- * what is in their hand — but it does mean the answer is not "phone".
- */
-export function touchQuery(): MediaQueryList {
-  return window.matchMedia('(pointer: coarse)')
-}
-
-/**
- * One subscription, two questions. `build` must be a module-level function so
- * the effect's dependency is stable; passing an inline arrow would resubscribe
- * on every render.
- */
-function useMatches(build: () => MediaQueryList): boolean {
-  const [matches, setMatches] = useState(() =>
-    typeof window === 'undefined' ? false : build().matches,
-  )
-
-  useEffect(() => {
-    const query = build()
-    const onChange = () => setMatches(query.matches)
-    onChange()
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
-  }, [build])
-
-  return matches
-}
+/*
+  ⚠ **`paneQuery`, `touchQuery` and `useMatches` moved to `components/pointer.ts`
+  on 25 August**, when the capture page needed the same answer about what is
+  pointing at the screen. Two components asking one question must not each own
+  the asking. They are imported at the top of this file; nothing about them
+  changed.
+*/
 
 /**
  * The `+` on the artwork, and what it becomes.

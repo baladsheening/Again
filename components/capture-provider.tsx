@@ -3,7 +3,8 @@
 import { createContext, use, useState } from 'react'
 
 import type { FilmSearchResult } from '@/lib/domain'
-import { FilmScreen, filmPoster, paneQuery, touchQuery } from './film-screen'
+import { FilmScreen, filmPoster } from './film-screen'
+import { paneQuery, touchQuery } from './pointer'
 
 /**
  * Adding a film, from wherever the film came from.
