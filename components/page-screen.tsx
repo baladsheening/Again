@@ -132,6 +132,11 @@ import { useKeyboardHem } from './keyboard-hem'
  * server again on the next load. There is exactly one list on screen and no
  * reconciliation, which is also why every mutation here is optimistic and
  * reverts on a failure rather than waiting on one.
+ *
+ * ⚠ **An installed app has no next load, so one is made** — see the resume
+ * effect. It re-enters on becoming visible, and only while the page is settled,
+ * which is what keeps the sentence above true rather than aspirational: a
+ * re-entry re-seeds, it does not merge, so there is still exactly one list.
  */
 
 /**
@@ -386,6 +391,17 @@ export function PageScreen({
   const [looking, setLooking] = useState<Line | null>(null)
   /** A read in flight, so a second tap cannot ask for the same slice twice. */
   const [reading, setReading] = useState(false)
+  /**
+   * Whether *Earlier* has been used this session.
+   *
+   * ⚠ **Only to stop a resume throwing the reading away** — see the resume
+   * effect. A record paged back through is a view somebody built a tap at a
+   * time, and re-entering would hand back the first fifty lines and lose it.
+   * `earlier` cannot answer this: it is non-null on arrival for anybody with
+   * more than a page of record, so it says there *is* more, never that anybody
+   * went and got it.
+   */
+  const [paged, setPaged] = useState(false)
   /** What went wrong reading back, said where the reading happens. */
   const [readFailed, setReadFailed] = useState<string | null>(null)
 
@@ -521,6 +537,97 @@ export function PageScreen({
   useEffect(() => {
     const minted = previews.current
     return () => minted.forEach((url) => URL.revokeObjectURL(url))
+  }, [])
+
+  /*
+    ────────────────────────────────────────────────────────────────────────
+     Resume is a load, because for an installed app it never was one
+    ────────────────────────────────────────────────────────────────────────
+
+    ⚠ **The header above is true and was quietly not being honoured.** It says
+    this component "owns the page for the length of the session and reads the
+    server again on the next load", and that is the right design — Return has to
+    land in under a frame, so the client owns the list and there is exactly one
+    list and no reconciliation. But an installed app has no next load. It
+    resumes the same document for days, so a capture written on another device
+    never appears, and the record on the handset is silently short.
+
+    ⚠ **Silently short is the part that matters.** Not freshness for its own
+    sake: a record that can be incomplete without saying so is one you check,
+    fail to find something in, and write twice. That is the same class of harm
+    as the two guarantees in `lib/db/` — a bug that costs trust rather than
+    function.
+
+    **So the condition is removed rather than corrected.** Not a poll, not a
+    merge: a real re-entry, which re-runs the seed against the server with no
+    reconciliation to get wrong, because there is still only ever one list.
+    `router.refresh()` was the obvious alternative and does nothing here — it
+    hands down a new `seed` prop that `useState`'s initialiser, having run once
+    on mount, ignores. Making it work means teaching this page to merge two
+    lists, which is the thing the header says it does not do.
+
+    ⚠ **Re-entry is cheap here by construction, which is the argument for it.**
+    The live line carries `autoFocus`, so the page comes back in its resting
+    state; the caret is at the top and the record beneath it, so scrolling to
+    the top loses no position. This page was built to be re-entered. It also
+    picks up new code, which is the same stale-document problem wearing its
+    other hat — the force-quit an installed build otherwise needs.
+
+    ⚠ **Only when the page is settled, and the list is the strictest term.** A
+    `pending` line has not been saved and a `failed` one exists nowhere else;
+    re-entering over either destroys work. So does a draft, a photograph waiting
+    for its caption, an open rewrite, or the ten seconds still holding. Somebody
+    using the page is never settled, so this cannot fire under their hands — and
+    somebody who put it down is settled by definition, which is exactly when
+    they wanted it.
+
+    ⚠ **`offering` is deliberately not in the gate.** An open offer is shown in
+    full "while its line is live or picked", and live means the moment of
+    capture — a moment a resume has already ended. It comes back as the trailing
+    `?`, which is what every other line's question looks like. Gating on it
+    would mean the one path that most needs a re-entry — capture on the phone,
+    put it down, come back — is the one path that never gets one.
+
+    ⚠ **No timer, and the reason is not battery.** A clock fires while somebody
+    is looking, and re-entry is precisely what must never happen to a page in
+    somebody's hands. Visibility cannot do that: by construction it fires when
+    they were not looking. The case a clock would buy — two screens open, this
+    one untouched, the other writing — costs a real merge to cover properly and
+    is bounded by the handset's own auto-lock in the meantime.
+  */
+  const settled =
+    draft === '' &&
+    !writing &&
+    picked === null &&
+    editing === null &&
+    asking === null &&
+    photo === null &&
+    looking === null &&
+    undoable === null &&
+    !reading &&
+    !paged &&
+    !lines.some((l) => l.pending || l.failed)
+
+  /*
+    ⚠ **Written in an effect and read in one**, per the note on `previews`
+    above: a ref assigned during render is a value the renderer cannot know
+    changed. Holding it this way is also what keeps the listener attached once
+    for the life of the page rather than being torn down and rebuilt on every
+    keystroke, which is what a dependency array of eleven values would do.
+  */
+  const settledNow = useRef(settled)
+  useEffect(() => {
+    settledNow.current = settled
+  })
+
+  useEffect(() => {
+    const resumed = () => {
+      if (document.visibilityState !== 'visible') return
+      if (!settledNow.current) return
+      window.location.reload()
+    }
+    document.addEventListener('visibilitychange', resumed)
+    return () => document.removeEventListener('visibilitychange', resumed)
   }, [])
 
   /** The ten seconds, as a colour on one glyph. The server owns the real bound. */
@@ -737,6 +844,7 @@ export function PageScreen({
 
     setLines((all) => [...all, ...result.value.lines.map((l) => ({ ...l, key: l.id }))])
     setEarlier(result.value.earlier)
+    setPaged(true)
   }
 
   /** The same submission again, with the same id — so a retry cannot double. */
