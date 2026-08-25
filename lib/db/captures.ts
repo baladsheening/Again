@@ -435,6 +435,19 @@ export type PageLine = {
    * check would be decoration. The id it already has is enough to ask.
    */
   hasImage: boolean
+  /**
+   * **The link this capture was written against**, or `null`.
+   *
+   * ⚠ **The value itself, unlike the photograph beside it.** A picture is
+   * *whether*, because its bytes are private and reachable only through a door
+   * that checks the session; a link is a public address and the page has to
+   * draw an `href` from it. There is nothing to withhold and no door to build.
+   *
+   * ⚠ **It is still private to the owner**, and the enforcement is that no
+   * projection built for anybody else selects it —
+   * `SHARED_CAPTURE_COLUMNS` is an allowlist and this is not on it.
+   */
+  sourceUrl: string | null
 }
 
 /**
@@ -520,6 +533,7 @@ export async function listMyPage(
       offerTitle: suggested.title,
       offerYear: suggested.year,
       imagePath: captures.imagePath,
+      sourceUrl: captures.sourceUrl,
     })
     .from(captures)
     /* LEFT, because a capture with nothing canonical behind it is the norm. */
@@ -588,6 +602,13 @@ export async function listMySettled(
       createdAt: captures.createdAt,
       offer: sql<null>`null`,
       hasImage: sql<boolean>`${captures.imagePath} is not null`,
+      /*
+        ⚠ **The link travels to both of these, unlike the offer above.** A
+        question is a thing to answer and neither surface can, so both write a
+        literal null; a link is a way back to the thing and both surfaces are
+        places somebody is looking for one.
+      */
+      sourceUrl: captures.sourceUrl,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -655,6 +676,13 @@ export async function searchMyCaptures(
       createdAt: captures.createdAt,
       offer: sql<null>`null`,
       hasImage: sql<boolean>`${captures.imagePath} is not null`,
+      /*
+        ⚠ **The link travels to both of these, unlike the offer above.** A
+        question is a thing to answer and neither surface can, so both write a
+        literal null; a link is a way back to the thing and both surfaces are
+        places somebody is looking for one.
+      */
+      sourceUrl: captures.sourceUrl,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -711,6 +739,47 @@ export type AddCaptureInput = {
    * it back out. See `captureWithImageAction`.
    */
   imagePath?: string | null
+  /**
+   * A link lifted out of the line that became this capture.
+   *
+   * ⚠ **Validated at the boundary and again here.** The action's Zod schema is
+   * the first check and this is the second, because §10 asks for Zod at every
+   * boundary and `lib/db/` is one: a `javascript:` or `data:` URL reaching a
+   * rendered `href` is script running against the session that stored it, and
+   * the column is written once but read on every page load forever.
+   */
+  sourceUrl?: string | null
+}
+
+/**
+ * **The two schemes a stored link may use, and there are exactly two.**
+ *
+ * ⚠ **An allowlist, never a denylist.** `javascript:` is the one everybody
+ * thinks of and it is not the only one — `data:`, `vbscript:`, `blob:` and
+ * anything a future browser invents all end in the same place, which is a
+ * rendered `href` executing. Naming what is permitted makes the set of
+ * dangerous schemes irrelevant rather than something to keep up with.
+ */
+const LINK_SCHEMES = ['http:', 'https:']
+
+/** How much URL is a URL. Longer than this is a payload wearing a link's shape. */
+export const SOURCE_URL_MAX = 2048
+
+/**
+ * A link, or nothing. **Never a thrown error and never a rejected capture** —
+ * the words are the capture, and a link that cannot be parsed is a link the
+ * page drops rather than a save the page refuses.
+ */
+export function cleanSourceUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  if (trimmed === '' || trimmed.length > SOURCE_URL_MAX) return null
+  try {
+    const url = new URL(trimmed)
+    return LINK_SCHEMES.includes(url.protocol) ? url.toString() : null
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -821,6 +890,14 @@ async function writeCapture(
         possibilityId: input.possibilityId ?? null,
         intent: input.intent ?? null,
         imagePath: input.imagePath ?? null,
+        /*
+          ⚠ **Cleaned here rather than trusted from the caller.** This is the
+          one writer, so a link that reaches a row has passed this exactly once
+          no matter which action called — and a scheme that is not http(s) is
+          dropped rather than refused, because the words are the capture and a
+          bad link must not cost somebody their sentence.
+        */
+        sourceUrl: cleanSourceUrl(input.sourceUrl),
         state: 'want',
         clientMutationId: input.clientMutationId ?? null,
         ...provenance,
@@ -830,6 +907,14 @@ async function writeCapture(
         setWhere: eq(captures.state, 'dropped'),
         set: {
           text,
+          /*
+            ⚠ **It travels with `text`, because it came out of it.** A revive
+            already replaces the words with the ones just typed; leaving the old
+            link on the row would attach the previous sentence's source to this
+            one, which is the app asserting a provenance nobody stated. Null is
+            the honest value when this capture arrived without a link.
+          */
+          sourceUrl: cleanSourceUrl(input.sourceUrl),
           state: 'want',
           resolvedAt: null,
           updatedAt: sql`now()`,

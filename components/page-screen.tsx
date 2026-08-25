@@ -20,7 +20,7 @@ import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
 import { Foot, ToolStack } from './foot'
-import { CrossOffGlyph, RewriteGlyph, UndoGlyph } from './glyphs'
+import { CrossOffGlyph, LinkGlyph, RewriteGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { touchQuery, useMatches } from './pointer'
 
@@ -472,6 +472,22 @@ export function PageScreen({
    * Phase 2 never has to handle a textless capture.
    */
   const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null)
+  /**
+   * **A link waiting on the live line**, lifted out of a paste.
+   *
+   * ⚠ **It is not in the words, and that is the whole idea.** A capture is a
+   * sentence somebody wrote; a URL pasted into the middle of one is forty
+   * characters of machine address sitting in it, and every line of the record
+   * would carry it forever. Pasting takes it *onto* the line rather than into
+   * it — the same relationship the photograph has — so the words stay the words
+   * and Return commits the three together.
+   *
+   * ⚠ **Only one, and the last paste wins.** A capture points at one thing;
+   * two links is a list, which is a different feature with a different shape.
+   * Pasting a second replaces the first, visibly, in a chip that is already on
+   * screen.
+   */
+  const [link, setLink] = useState<string | null>(null)
   /** The picture being looked at, full size. */
   const [looking, setLooking] = useState<Line | null>(null)
   /** A read in flight, so a second tap cannot ask for the same slice twice. */
@@ -822,8 +838,8 @@ export function PageScreen({
   )
 
   const send = useCallback(
-    async (key: string, text: string, mutationId: string) => {
-      const result = await captureAction({ text, clientMutationId: mutationId })
+    async (key: string, text: string, mutationId: string, sourceUrl: string | null) => {
+      const result = await captureAction({ text, clientMutationId: mutationId, sourceUrl })
       if (!result.ok) {
         mark(key, { pending: false, failed: result.message })
         return
@@ -856,11 +872,19 @@ export function PageScreen({
    * stores no second copy — see `captureWithImageAction`.
    */
   const sendWithImage = useCallback(
-    async (key: string, text: string, mutationId: string, file: File) => {
+    async (
+      key: string,
+      text: string,
+      mutationId: string,
+      file: File,
+      sourceUrl: string | null,
+    ) => {
       const form = new FormData()
       form.set('text', text)
       form.set('clientMutationId', mutationId)
       form.set('image', file)
+      /* Omitted rather than sent empty: the schema is nullish, not nullable-string. */
+      if (sourceUrl) form.set('sourceUrl', sourceUrl)
 
       const result = await captureWithImageAction(form)
       if (!result.ok) {
@@ -914,6 +938,13 @@ export function PageScreen({
         slot in the meantime is the app looking like it lost the photograph.
       */
       previewUrl: photo?.url,
+      /*
+        ⚠ **It goes on the line, so a retry carries it.** The chip is cleared
+        below and the state it held is gone with it; the line is what `retry`
+        re-sends from, and a link that lived only in `link` would be dropped by
+        the one path that exists to not drop anything.
+      */
+      sourceUrl: link,
       mutationId,
       pending: true,
       failed: null,
@@ -923,6 +954,8 @@ export function PageScreen({
     /* The head of the list, because the head of the list is under the caret. */
     setLines((all) => [line, ...all])
     setDraft('')
+    /* The link went with the line; the band starts empty like the field does. */
+    setLink(null)
     /*
       The line is written and the field is empty again — see `rest`. On glass
       this does nothing and must not: the keyboard is still up because a session
@@ -946,9 +979,9 @@ export function PageScreen({
       const file = photo.file
       /* The URL is kept — the line is holding it — so only the slot is cleared. */
       setPhoto(null)
-      void sendWithImage(line.key, text, mutationId, file)
+      void sendWithImage(line.key, text, mutationId, file, line.sourceUrl)
     } else {
-      void send(line.key, text, mutationId)
+      void send(line.key, text, mutationId, line.sourceUrl)
     }
   }
 
@@ -1006,7 +1039,7 @@ export function PageScreen({
   function retry(line: Line) {
     if (!line.mutationId || line.hasImage) return
     mark(line.key, { pending: true, failed: null })
-    void send(line.key, line.text, line.mutationId)
+    void send(line.key, line.text, line.mutationId, line.sourceUrl)
   }
 
   /* ------------------------------------------------------------------ */
@@ -1444,6 +1477,45 @@ export function PageScreen({
     if (!touch) setWriting(false)
   }
 
+  /**
+   * **A pasted address, read as an address.**
+   *
+   * ⚠ **The whole clipboard or nothing.** It lifts only when what was pasted
+   * *is* a link — not when a link is somewhere inside a paragraph somebody
+   * pasted. Fishing a URL out of prose would silently edit text a person
+   * deliberately put on the line, which is the one thing this page does not do
+   * to anybody's words.
+   *
+   * ⚠ **`http(s)` only, matching `cleanSourceUrl`.** Two checks that can
+   * disagree are worse than one, so this is the same allowlist under a
+   * different roof: a `mailto:` or a `data:` paste is left to land as text,
+   * where it is harmless and visible, rather than lifted into an `href`.
+   *
+   * ⚠ **A bare `example.com` is text.** `new URL` refuses it and nothing here
+   * invents a scheme for it — guessing `https://` in front of something a
+   * person typed is the app deciding what they meant about a thing they will
+   * later click.
+   */
+  function liftLink(pasted: string): string | null {
+    const trimmed = pasted.trim()
+    if (trimmed === '' || /\s/.test(trimmed)) return null
+    try {
+      const url = new URL(trimmed)
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null
+    } catch {
+      return null
+    }
+  }
+
+  /** What the chip says. The host, because the rest is machinery. */
+  function linkLabel(href: string): string {
+    try {
+      return new URL(href).host.replace(/^www\./, '')
+    } catch {
+      return href
+    }
+  }
+
   /*
     ────────────────────────────────────────────────────────────────────────
      A keystroke is a keystroke wherever it lands
@@ -1828,6 +1900,27 @@ export function PageScreen({
                 `click` fires either way.
               */
               onClick={live}
+              /*
+                ⚠ **A paste that is a link lands on the line, not in it.** See
+                `liftLink` for why it has to be the *whole* clipboard: pulling a
+                URL out of pasted prose would edit words somebody meant to keep.
+
+                ⚠ **`preventDefault` only when it lifts**, so every other paste
+                behaves exactly as it always did — including a link pasted into
+                the middle of a sentence somebody is writing around, which
+                arrives with the rest of the clipboard and is therefore text.
+
+                Not while a rewrite is open: an edit changes the words of a line
+                that already exists, and its link is not in the field to change.
+              */
+              onPaste={(e) => {
+                if (editing !== null) return
+                const lifted = liftLink(e.clipboardData.getData('text/plain'))
+                if (!lifted) return
+                e.preventDefault()
+                setLink(lifted)
+                live()
+              }}
               onKeyDown={(e) => {
                 /* And so is a keystroke, for anyone who never taps. */
                 live()
@@ -1958,6 +2051,32 @@ export function PageScreen({
                       alt=""
                       className="size-[var(--thumb)] rounded-[3px] object-cover"
                     />
+                  </button>
+                )}
+
+                {/*
+                  ⚠ **The host, not the URL.** A pasted address is mostly
+                  machinery — scheme, path, tracking — and the part a person
+                  recognises is the site. Showing the whole thing would put the
+                  forty characters back on the line that lifting them off was
+                  for.
+
+                  ⚠ **A button rather than a link, and here that is right.** On
+                  the record the same thing is an `<a>` because it goes
+                  somewhere; this one has not been committed to anything yet, so
+                  its only job is *take it back off* — the same gesture as the
+                  waiting photograph beside it, and the same reason: there is no
+                  record yet, so nothing to undo and nothing to confirm.
+                */}
+                {link !== null && (
+                  <button
+                    type="button"
+                    onClick={() => setLink(null)}
+                    aria-label={`Take the link to ${linkLabel(link)} off`}
+                    className="text-chrome ms-2 flex shrink-0 items-center gap-1 self-center rounded-full bg-[var(--glass-tint)] px-2 py-0.5 text-[0.8125rem] leading-none [--glyph:0.875rem]"
+                  >
+                    <LinkGlyph />
+                    {linkLabel(link)}
                   </button>
                 )}
               </div>
@@ -2095,6 +2214,38 @@ export function PageScreen({
 
                 {line.hasImage && (
                   <Thumbnail line={line} onOpen={() => setLooking(line)} />
+                )}
+
+                {/*
+                  ⚠ **A real `<a>`, and a sibling of the words rather than
+                  something inside them.** A line's words are a `<button>` —
+                  that is what makes tap-to-pick and tap-again-to-rewrite work —
+                  and an anchor nested in a button is invalid markup whose
+                  interaction breaks in a different way in every engine. Beside
+                  it, the pick gesture is untouched and the link keeps
+                  middle-click, long-press and the back button, which is the
+                  whole argument the foot's search control already makes.
+
+                  ⚠ **`noreferrer` as well as `noopener`.** The destination is
+                  somewhere a person saved privately; the Referer header would
+                  tell that site which page they came from, and this page is a
+                  private record.
+
+                  ⚠ **The host, never a title.** A URL is user input shaped like
+                  chrome, and rendering anything the app has not verified —
+                  a fetched page title, an og:image — is a capture claiming
+                  something nobody checked. §7's evidence rules come first.
+                */}
+                {line.sourceUrl !== null && (
+                  <a
+                    href={line.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open ${linkLabel(line.sourceUrl)}`}
+                    className="text-muted hover:text-chrome ms-2 flex shrink-0 items-center self-center transition-colors [--glyph:var(--glyph-line)]"
+                  >
+                    <LinkGlyph />
+                  </a>
                 )}
 
                 {/*

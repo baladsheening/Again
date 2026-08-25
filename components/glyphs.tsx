@@ -164,6 +164,27 @@ export function AttachGlyph() {
   )
 }
 
+/**
+ * The line's link — on the band while it waits, on the row once it is committed.
+ *
+ * ⚠ **A chain link, not an arrow leaving the box.** The outbound arrow says
+ * *this opens elsewhere*, which every link does and which therefore says
+ * nothing; the chain says *there is a thing behind these words*, which is what a
+ * capture's source is. It also has to read at 14px inside a chip, where an arrow
+ * and its box become two marks that touch.
+ *
+ * Two halves of one link, drawn as the same arc mirrored, with the bar joining
+ * them — so the shape stays legible when it is the smallest thing on the page.
+ */
+export function LinkGlyph() {
+  return (
+    <Glyph>
+      <path d="M8.5 11.5a3.25 3.25 0 0 0 4.9.35l2.4-2.4a3.25 3.25 0 0 0-4.6-4.6l-1.37 1.37" />
+      <path d="M11.5 8.5a3.25 3.25 0 0 0-4.9-.35l-2.4 2.4a3.25 3.25 0 0 0 4.6 4.6l1.37-1.37" />
+    </Glyph>
+  )
+}
+
 /** Foot. Where is that thing I wrote in June. Not per-line. */
 export function SearchGlyph() {
   return (

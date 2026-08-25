@@ -22,6 +22,7 @@ import {
   setCaptureText,
   undoCapture,
   PAGE_SIZE,
+  SOURCE_URL_MAX,
   TEXT_MAX,
 } from '@/lib/db'
 import { dayStamper } from '@/lib/day'
@@ -71,6 +72,20 @@ import type { ActionResult } from './entries'
 const captureSchema = z.object({
   text: z.string().trim().min(1).max(TEXT_MAX),
   clientMutationId: z.string().uuid(),
+  /**
+   * ⚠ **Optional, and a bad one never costs somebody their words.** It is
+   * `.nullish()` rather than a required field and the layer below drops
+   * anything that is not `http(s)` — so the failure mode of a mangled link is a
+   * capture saved without one, never a capture refused. The words are the
+   * capture; the link is context on it.
+   *
+   * ⚠ **This is the first of two checks, not the only one.** §10 asks for Zod
+   * at every boundary and `lib/db/` is a boundary of its own: `cleanSourceUrl`
+   * runs again inside the one writer, so a link that reaches a row has been
+   * checked whichever action called. The scheme allowlist lives there because
+   * that is the last place before the value becomes permanent.
+   */
+  sourceUrl: z.string().max(SOURCE_URL_MAX).nullish(),
 })
 
 export type CaptureInput = z.infer<typeof captureSchema>
@@ -101,6 +116,7 @@ export async function captureAction(
   const result = await addCapture(sessionUser, {
     text: parsed.data.text,
     clientMutationId: parsed.data.clientMutationId,
+    sourceUrl: parsed.data.sourceUrl,
   })
 
   if (!result.ok) return { ok: false, message: result.message }
@@ -555,6 +571,13 @@ export async function captureWithImageAction(
   const parsed = captureSchema.safeParse({
     text: form.get('text'),
     clientMutationId: form.get('clientMutationId'),
+    /*
+      ⚠ **A missing field is `null`, and the schema is `.nullish()` for it.**
+      `FormData.get` returns null for a key that was never set, which is exactly
+      what *this capture has no link* means — so the caller omits the key rather
+      than sending an empty string, and nothing has to special-case one.
+    */
+    sourceUrl: form.get('sourceUrl'),
   })
   if (!parsed.success) return { ok: false, message: 'Type something first.' }
 
@@ -587,6 +610,7 @@ export async function captureWithImageAction(
     text: parsed.data.text,
     clientMutationId: parsed.data.clientMutationId,
     imagePath: stored.path,
+    sourceUrl: parsed.data.sourceUrl,
   })
 
   if (!result.ok) {

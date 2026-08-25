@@ -34,6 +34,21 @@ export type PageLineView = {
    * owner of that row; the id the client already has is all it needs to ask.
    */
   hasImage: boolean
+  /**
+   * **The link this capture was written against**, or `null`.
+   *
+   * ⚠ **The address itself, unlike the photograph above.** A picture is
+   * *whether*: its bytes are private and reachable only through a door that
+   * checks the session. A link is a public address and the row has to draw an
+   * `href` from it, so there is nothing to withhold and no door to build.
+   *
+   * ⚠ **Cleaned before it was stored, not before it is drawn.**
+   * `cleanSourceUrl` in `lib/db/captures.ts` is what guarantees this is
+   * `http:` or `https:` — an allowlist, so `javascript:` is excluded by not
+   * being named rather than by being remembered. A row written before that
+   * existed cannot exist: the column and the check shipped together.
+   */
+  sourceUrl: string | null
 }
 
 /** What the mapper needs of a row, and nothing more. */
@@ -45,6 +60,7 @@ type Stampable = {
   createdAt: Date
   offer?: { title: string; year: number | null } | null
   hasImage?: boolean
+  sourceUrl?: string | null
 }
 
 /**
@@ -75,6 +91,7 @@ export function toPageLines(
       */
       offer: row.offer ?? null,
       hasImage: row.hasImage ?? false,
+      sourceUrl: row.sourceUrl ?? null,
     }
   })
 }

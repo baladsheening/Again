@@ -1,0 +1,1 @@
+ALTER TABLE "captures" ADD COLUMN "source_url" text;

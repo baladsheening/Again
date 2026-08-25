@@ -381,6 +381,28 @@ export const captures = pgTable(
      * out of the matching path entirely.
      */
     imagePath: text('image_path'),
+    /**
+     * **Where this came from**, when a link was pasted into the line that
+     * became it. §"Optional images" names it beside the image as one of the
+     * three things a capture is: text, optionally a picture, optionally a link.
+     *
+     * ⚠ **It is lifted out of the words, not copied from them.** Pasting a URL
+     * into the live row takes it off the line and onto it — a chip beside the
+     * caret — so the text stays the sentence somebody wrote rather than a
+     * sentence with a URL in the middle of it. That is why this column has to
+     * exist: once the link is out of `text`, `text` is no longer where it lives.
+     *
+     * ⚠ **Private, like `note`.** §"Sender flow" excludes source URLs from a
+     * transfer by default, alongside private notes — so no projection built for
+     * anybody but the owner may select it. `listCapturesForOtherUser` does not,
+     * and there is deliberately no parameter that would let it.
+     *
+     * ⚠ **Never rendered as anything but a link with the host on it.** A URL is
+     * user input that arrives looking like chrome; showing it as a title or a
+     * label is how a capture starts claiming something the app did not check.
+     * §7's evidence rules are what would have to be satisfied first.
+     */
+    sourceUrl: text('source_url'),
     state: text('state').$type<CaptureState>().notNull(),
     /** Experiences only; revisits, rewatches, second attempts. */
     returnCount: integer('return_count').notNull().default(0),

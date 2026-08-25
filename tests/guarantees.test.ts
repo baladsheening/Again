@@ -736,3 +736,61 @@ describe('EXIF and every other metadata block is stripped', () => {
     expect([...stripMetadata(bytes, 'image/gif')]).toEqual([1, 2, 3, 4, 5])
   })
 })
+
+/**
+ * **The source URL is private, and the enforcement is an absence.**
+ *
+ * §"Sender flow" excludes source URLs from a transfer by default, beside
+ * private notes — so a link is owner-only for the same reason a note is. It has
+ * no guard of its own: `SHARED_CAPTURE_COLUMNS` is an allowlist and this column
+ * is simply not on it.
+ *
+ * ⚠ **That is exactly the kind of guarantee that needs a test.** An allowlist
+ * protects by omission, and omission is what a future `select({ capture:
+ * captures })` would undo without failing, without looking wrong, and without
+ * anybody noticing. The note above it is one line from the same file and one
+ * mistake from being untrue.
+ */
+describe('the source URL never leaves its owner', () => {
+  const linked = async () => {
+    const { rows } = await pool.query(
+      `insert into captures (user_id, text, state, source_url, visibility)
+       values ($1, 'linked', 'want', 'https://example.com/private', 'friends')
+       on conflict do nothing returning id`,
+      [ownerId],
+    )
+    if (rows[0]) return rows[0].id as string
+    const existing = await pool.query(
+      `select id from captures where user_id = $1 and text = 'linked'`,
+      [ownerId],
+    )
+    return existing.rows[0].id as string
+  }
+
+  it('reaches the owner’s own page', async () => {
+    const owner = asViewer(ownerId, `${OWNER}@example.com`)
+    await linked()
+
+    const [mine] = (await dal.listMyPage(owner)).filter((l) => l.text === 'linked')
+    expect(mine.sourceUrl).toBe('https://example.com/private')
+  })
+
+  it('is absent from another user’s projection even when the capture is shared', async () => {
+    const viewer = asViewer(viewerId, `${VIEWER}@example.com`)
+    await linked()
+
+    const seen = await dal.listCapturesForOtherUser(viewer, ownerId, 'live')
+    for (const row of seen) {
+      expect('sourceUrl' in row.capture).toBe(false)
+    }
+  })
+
+  it('refuses a scheme that is not http or https', async () => {
+    const clean = dal.cleanSourceUrl
+    expect(clean('javascript:alert(1)')).toBe(null)
+    expect(clean('data:text/html,<script>')).toBe(null)
+    expect(clean('  https://example.com/x  ')).toBe('https://example.com/x')
+    expect(clean('not a url')).toBe(null)
+    expect(clean(null)).toBe(null)
+  })
+})
