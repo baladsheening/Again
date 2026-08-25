@@ -3,18 +3,26 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { CameraGlyph, SearchGlyph, SettleGlyph } from './glyphs'
+import { AttachGlyph, SearchGlyph, SettleGlyph } from './glyphs'
 
 /**
- * **The tools: settle, camera, search.**
+ * **The tools: settle, attach, search.**
  *
  * ⚠ **It was five until 25 August, and the two that left went to the line.**
  * Cross off and rewrite act on a *picked* line, and they are in that line's own
  * slot now — see `LineTools` in `page-screen.tsx`, which also carries the undo
  * for the ten seconds after a capture lands. What is left here is the three that
- * do not belong to any one line: settle sends the picked line to the tray, the
- * camera *starts* a capture, and search answers *where is that thing I wrote in
- * June*.
+ * do not belong to any one line: settle sends the picked line to the tray,
+ * attach *starts* a capture with a picture on it, and search answers *where is
+ * that thing I wrote in June*.
+ *
+ * ⚠ **Attach was a camera until the same day.** The control opens a file picker
+ * — on the desk that is a hard disk and no camera anywhere near it, and on glass
+ * the input carries no `capture` attribute on purpose, so the library is offered
+ * beside the lens. The drawing promised the lens and only the lens. One glyph
+ * rather than one per surface: a paperclip is honest on both, and the obvious
+ * reading — paperclip on the desk, camera on glass — would have been a platform
+ * branch bought to keep a drawing that was wrong either way. See `AttachGlyph`.
  *
  * ⚠ **Settle stayed, and it is the one asymmetry in that split.** It acts on the
  * picked line exactly as cross off and rewrite do, so on the face of it it
@@ -51,17 +59,23 @@ import { CameraGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  *
  * Three states, and they are the app's honest answer to what is available:
  *
- * | state | settle | camera | search |
+ * | state | settle | attach | search |
  * |---|---|---|---|
  * | empty record | off | **on** | off |
  * | a record, nothing picked | off | **on** | **on** |
  * | a saved line picked | **on** | **on** | **on** |
  *
- * The camera is the odd one because a photograph **starts** a capture rather
- * than acting on one — so it is lit at every state, including the empty page,
- * and it is the only control here that does not care what is picked. It is off
- * only when there is nowhere to put a photograph, which is a store that has not
- * been created rather than a feature that has not been built.
+ * Attach is the odd one because a picture **starts** a capture rather than
+ * acting on one — so it is lit at every state, including the empty page, and it
+ * is the only control here that does not care what is picked. It is off only
+ * when there is nowhere to put a picture, which is a store that has not been
+ * created rather than a feature that has not been built.
+ *
+ * ⚠ **It takes pictures and only pictures**, whatever the glyph now suggests.
+ * `accept` names JPEG, PNG and WebP; the strippers in `lib/media` know those
+ * three containers and `/api/media` serves them. A paperclip is the honest
+ * drawing for *choose a file from your disk*, and it is not a promise that the
+ * app has become a place to put documents.
  *
  * ⚠ **Search is the one link here, so it is an `<a>` and not a button.**
  * Everything else acts on the line in hand; this goes somewhere. A button with a
@@ -115,12 +129,12 @@ function ToolSet({ settle, photograph, searchable = false }: Tools) {
         type="button"
         disabled={!photograph}
         onClick={() => photograph?.()}
-        aria-label="Photograph"
+        aria-label="Attach a picture"
         className={`tap-target flex items-center transition-colors ${
           photograph ? 'text-chrome' : OFF
         }`}
       >
-        <CameraGlyph />
+        <AttachGlyph />
       </button>
 
       {searchable ? (

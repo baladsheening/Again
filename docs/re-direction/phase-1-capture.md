@@ -1235,6 +1235,20 @@ draft mixed viewBoxes 12, 16, 20 and 22 at a single rendered size, which put
 four different effective stroke weights in one bar — the cross-off came out at
 2.29px beside a 1.25px camera. Redraw on the grid instead.
 
+⚠ **The camera is a paperclip since 25 August, and it is one glyph rather than
+one per surface.** The control opens a file picker: on the desk that is a hard
+disk with no camera near it, and on glass the input carries no `capture`
+attribute *on purpose*, so the library is offered beside the lens. The camera
+promised the lens and only the lens on both. The obvious reading of the report
+— paperclip on the desk, camera on glass — would have been a platform branch
+bought to keep a drawing that was wrong either way.
+
+⚠ **It still takes pictures and only pictures.** `accept` names JPEG, PNG and
+WebP, and the strippers in `lib/media` know those three containers. A paperclip
+is the honest drawing for *choose a file from your disk*; it is not a promise
+that this has become a place to put documents. Widening it is a media-storage
+decision with provenance and rendering behind it, not a change of glyph.
+
 Two of them are a deliberate pair:
 
 - **The tray** (bar) is a plain tray: a *place* you go.

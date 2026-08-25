@@ -132,12 +132,34 @@ export function RewriteGlyph() {
   )
 }
 
-/** Foot. A photograph *starts* a capture rather than acting on one. */
-export function CameraGlyph() {
+/**
+ * Foot. A picture *starts* a capture rather than acting on one.
+ *
+ * ⚠ **It was a camera until 25 August, and the camera was overstating it on
+ * every surface.** The control opens a file picker: on the desk that is a
+ * window onto a hard disk with no camera anywhere near it, and even on glass the
+ * input carries **no `capture` attribute** — deliberately, so that the library
+ * is offered alongside the lens, because *the poster I saw last week* is at
+ * least as likely as the one in front of you. A camera glyph promised the lens
+ * and only the lens.
+ *
+ * ⚠ **One glyph, not one per surface.** The obvious reading of the report was
+ * *a paperclip on the desk, a camera on glass*, and that would have been a
+ * platform branch bought to keep a drawing that was wrong on both. A paperclip
+ * is honest everywhere: on a handset it opens the same sheet, with the camera
+ * as one of its offers.
+ *
+ * ⚠ **Redrawn on this grid rather than scaled onto it.** The proportions follow
+ * the paperclip everybody already knows; the coordinates are computed for
+ * `viewBox="0 0 20 20"` so the effective stroke is 1.25px like the other seven,
+ * and the drawing is inset to 3.63 on all four sides — a shade tighter than the
+ * camera's 3, because three turns of wire read busier than a box and a circle at
+ * the same size.
+ */
+export function AttachGlyph() {
   return (
     <Glyph>
-      <path d="M3 7h3.25l1.25-2h5l1.25 2H17v9.5H3z" />
-      <circle cx="10" cy="11.25" r="3.25" />
+      <path d="M16.36 9.74 9.74 16.36a4.32 4.32 0 0 1-6.11-6.11l6.62-6.62a2.88 2.88 0 0 1 4.08 4.08l-6.62 6.62a1.44 1.44 0 0 1-2.04-2.04l6.11-6.11" />
     </Glyph>
   )
 }
