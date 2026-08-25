@@ -78,7 +78,8 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > to remove. The words are a `<span role="button">` now, and the last word is
 > bound to the tail in a `nowrap` box so a tight last line brings the word down
 > with the glyphs rather than leaving them behind. Measured on the real page at
-> 390, 1024 and 1440 — see *The gesture, and the door*.
+> 390, 1024 and 1440, then **seen and accepted on a handset and on a desktop on
+> 25 August** — see *The gesture, and the door*.
 >
 > ⚠ **The second tap no longer edits, at the user's direction on 25 August.**
 > The foot's pencil is the only door to a rewrite; a tap on a line means *pick*

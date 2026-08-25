@@ -6783,6 +6783,11 @@ year, or spells out the standing question that used to reach a reader as a bare
 `?`. Verified on the page: one `role="button"` per line, Enter picks, a tap on
 the paper still lets go, and the strike runs unbroken across the split.
 
+⚠ **Hardware answered on 25 August and the answer was yes**, on a handset and on
+a desktop, for both halves — the element and the binding. That closes the claim
+the commit that caused this left open, which is the point: the earlier fix was
+flagged as wanting a look and shipped anyway.
+
 ### What this cost, and the rule it pays for
 
 Two mechanisms where the design wanted one, and a text split that the record has
