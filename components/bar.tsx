@@ -2,11 +2,22 @@
 
 import Link from 'next/link'
 
-import { TrayGlyph, UndoGlyph, YouGlyph } from './glyphs'
+import { TrayGlyph, YouGlyph } from './glyphs'
 
 /**
- * **The bar: the page, and where you go.** The wordmark, undo, the settled tray,
- * you.
+ * **The bar: the page, and where you go.** The wordmark, the settled tray, you.
+ *
+ * ⚠ **The undo left on 25 August, for the line it takes back.** It was here
+ * because it is page-level machinery — there is one last capture, not one per
+ * line — and it went because the *confusable moment* written down below it never
+ * had an answer: for ten seconds after a line landed, this undo and the foot's ×
+ * were both lit and both acted on it, with nothing saying that one erases and
+ * the other strikes through. They are one slot on the line now, in sequence
+ * rather than side by side, so the pair can no longer be seen at once. See
+ * `LineTools` in `page-screen.tsx`.
+ *
+ * That leaves three controls, the same three on every route, which is why this
+ * component no longer takes a handler of any kind.
  *
  * The split from the foot is worth stating because it was got wrong twice. This
  * bar is page-level machinery; the foot is the tools that act on a line. Search
@@ -43,42 +54,21 @@ import { TrayGlyph, UndoGlyph, YouGlyph } from './glyphs'
  * ⚠ **No rule under the bar**, and none above the foot either. Notes has none;
  * space does the separating.
  *
- * ⚠ **`'use client'`, because the undo carries a handler.** Every route renders
- * this, and `Screen` — which `/settled`, `/profile` and somebody else's page use
- * — is a Server Component: passing an event handler across that boundary is a
- * build-time error, and it is one that only appears on the routes where `undo`
- * is `null`, because a component with no handler in its props looks fine until
- * something reads the one inside it. The alternative was rendering a `<span>`
- * when there is nothing to undo, which loses `disabled` — and the platform
- * saying a control cannot act is half of what "off, not gone" means.
+ * ⚠ **`'use client'` is now only for the recede's transition class**, and it is
+ * kept deliberately. It used to be load-bearing: the undo carried a handler, and
+ * `Screen` — which `/settled`, `/profile` and somebody else's page use — is a
+ * Server Component, so passing one across that boundary was a build-time error
+ * that only appeared on the routes where `undo` was `null`. With no handler left
+ * anywhere in these props that hazard is gone, and the directive stays because
+ * removing it is a change to what this file *is* rather than to what it does.
  */
 
 /** The off state, spelled once. */
 export const OFF = 'text-[color-mix(in_srgb,var(--color-text)_28%,transparent)]'
 
 export function Bar({
-  undo = null,
   receded = false,
 }: {
-  /**
-   * The bar's undo, and it **deletes** — the single exception to §5.1.
-   *
-   * ⚠ **It carries the ten-second window as a colour**: brass while live, off
-   * once past. That is Notes' own undo/redo grammar doing real work, and it
-   * replaces both the inline undo control and the retreating hairline an earlier
-   * draft proposed.
-   *
-   * ⚠ **The confusable moment is narrow and real.** For ten seconds after a line
-   * lands, this and the foot's × are both lit and both act on it, and nothing
-   * says one erases while the other strikes through. Undo being dark almost
-   * always is most of what keeps them apart. If that proves too thin on
-   * hardware, the fix is a word rather than a glyph on the undo — not a new
-   * colour.
-   *
-   * `null` on every screen that is not the page: nothing else creates a capture,
-   * so nothing else has one to take back.
-   */
-  undo?: { live: boolean; onUndo: () => void } | null
   /**
    * Off the top of the glass while the record is being read — see
    * `useChromeRecede`, which decides it, and holds it down whenever anything
@@ -144,23 +134,6 @@ export function Bar({
           the taps. See `--bar-gap`.
         */}
         <div className="flex items-center gap-[var(--bar-gap)]">
-          <button
-            type="button"
-            /*
-              Present and off rather than absent, like everything else in the two
-              bars. `disabled` rather than a missing handler, so the platform
-              says so too.
-            */
-            disabled={!undo?.live}
-            onClick={() => undo?.onUndo()}
-            aria-label="Undo the last capture"
-            className={`tap-target flex items-center transition-colors ${
-              undo?.live ? 'text-chrome' : OFF
-            }`}
-          >
-            <UndoGlyph />
-          </button>
-
           {/*
             A *place* you go, which is why the glyph is a plain tray — see
             `glyphs.tsx` for the pair it makes with the foot's settle.

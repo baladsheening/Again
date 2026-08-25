@@ -3,224 +3,210 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import {
-  CameraGlyph,
-  CrossOffGlyph,
-  RewriteGlyph,
-  SearchGlyph,
-  SettleGlyph,
-} from './glyphs'
+import { CameraGlyph, SearchGlyph, SettleGlyph } from './glyphs'
 
 /**
- * **The foot: the tools.** Cross off, settle, rewrite, camera, search — **the
- * same five at every width**, including the desk.
+ * **The tools: settle, camera, search.**
  *
- * ⚠ **Rewrite is the fifth, and it is here because the gesture was invisible.**
- * A second tap on a line's words opens them, and a handset asked the obvious
- * question: *how would anybody know that?* Nothing on the page said so, and a
- * legend, an icon-with-copy or a hint are all ruled out on this screen. But the
- * inconsistency was the real answer — **cross off and settle are controls in the
- * foot and rewriting was a secret**, when all three are the same kind of thing:
- * something you do to the line you have picked. So it joins them, and the
- * second tap survives as the accelerator for anybody who finds it.
+ * ⚠ **It was five until 25 August, and the two that left went to the line.**
+ * Cross off and rewrite act on a *picked* line, and they are in that line's own
+ * slot now — see `LineTools` in `page-screen.tsx`, which also carries the undo
+ * for the ten seconds after a capture lands. What is left here is the three that
+ * do not belong to any one line: settle sends the picked line to the tray, the
+ * camera *starts* a capture, and search answers *where is that thing I wrote in
+ * June*.
  *
- * ⚠ **It goes third rather than first.** Cross off and settle keep the slots
- * they have had since the foot existed — muscle memory is not worth a tidier
- * reading order — and the split that results is the honest one: the three that
- * can act, then the two that cannot.
+ * ⚠ **Settle stayed, and it is the one asymmetry in that split.** It acts on the
+ * picked line exactly as cross off and rewrite do, so on the face of it it
+ * belongs beside them; it is here because it was directed here, and because
+ * three glyphs on a line is a toolbar rather than a slot. If the split reads
+ * wrong on hardware, **settle is the thing to move**, not the other two to move
+ * back.
+ *
+ * ⚠ **Two placements, one set.** Below `--breakpoint-stack` these are a bar
+ * across the foot of the glass; at and above it they stand in a column to the
+ * left of the reading column — see `ToolStack`. The glyphs, their order and
+ * their states are identical in both, which is what keeps this one component
+ * rather than two designs.
  *
  * ⚠ **It does not sit above the keyboard, and that is the design.** It used to:
  * `useKeyboardPin` held it on the keys' top edge, which spent a bar's worth of a
- * shrunken screen on four glyphs that are **all off while somebody is writing** —
- * cross off and settle are `null` with nothing picked, and the camera and search
- * are not built. Picking a line blurs the live one, so the foot is never wanted
- * while a keyboard is up. It stays at the bottom of the layout viewport now,
- * which on iOS means behind the keys, which is where it belongs. See
- * `keyboard-hem.ts`.
+ * shrunken screen on glyphs that are mostly off while somebody is writing.
+ * Picking a line blurs the live one, so the foot is never wanted while a
+ * keyboard is up. It stays at the bottom of the layout viewport now, which on
+ * iOS means behind the keys, which is where it belongs. See `keyboard-hem.ts`.
  *
  * ⚠ **No rule above it.** The scrolling page reserves the foot's own height at
  * its bottom (`page-hem` in globals.css), so a line always comes to rest above
  * the glyphs rather than sliding under them. A `border-t` was correcting for a
  * collision that padding prevents outright, and Notes has none either — space
- * does the separating, 16px on the handset and 18px on the desk.
+ * does the separating.
  *
  * ⚠ **The foot is 48px, down from 72 on 24 August**, and what stops it going
- * lower is `--tap-floor` rather than taste — see `--foot-lead`, which has the
- * arithmetic and the reason there is no third cut in it.
+ * lower is `--tap-floor` rather than taste — see `--foot-lead`.
  *
  * ⚠ **Both bars are glass** — a tint over a blur of the record passing under
  * them, so a line dissolves into the chrome instead of being cut off by an edge.
- * See `--glass-tint`, which also records why the same mechanism failed on the
- * live row and why that is not an argument against it here.
+ * See `--glass-tint`.
  *
  * Three states, and they are the app's honest answer to what is available:
  *
- * | state | cross off | settle | rewrite | camera | search |
- * |---|---|---|---|---|---|
- * | empty record | off | off | off | **on** | off |
- * | a record, nothing picked | off | off | off | **on** | **on** |
- * | a saved line picked | **on** | **on** | **on** | **on** | **on** |
+ * | state | settle | camera | search |
+ * |---|---|---|---|
+ * | empty record | off | **on** | off |
+ * | a record, nothing picked | off | **on** | **on** |
+ * | a saved line picked | **on** | **on** | **on** |
  *
  * The camera is the odd one because a photograph **starts** a capture rather
  * than acting on one — so it is lit at every state, including the empty page,
- * and it is the only control here that does not care what is picked.
- *
- * The camera is the odd one because a photograph starts a capture rather than
- * acting on one.
- *
- * ⚠ **All five act, since 24 August.** The camera was the last dark one and it
- * lit the way the note below predicted — a prop and no new geometry. It is off
+ * and it is the only control here that does not care what is picked. It is off
  * only when there is nowhere to put a photograph, which is a store that has not
- * been created rather than a feature that has not been built, and a control that
- * cannot act still goes off.
+ * been created rather than a feature that has not been built.
  *
- * ⚠ **Search is the one link in the foot, so it is an `<a>` and not a button.**
- * Everything else here acts on the line in hand; this goes somewhere. A button
- * with a `router.push` would look identical and lose the middle-click, the long
- * press and the back button, which are the whole of what a link is for.
+ * ⚠ **Search is the one link here, so it is an `<a>` and not a button.**
+ * Everything else acts on the line in hand; this goes somewhere. A button with a
+ * `router.push` would look identical and lose the middle-click, the long press
+ * and the back button, which are the whole of what a link is for.
  *
- * ⚠ **Row two of the table is where this deviates.** The design lights search
- * while a line is being typed with nothing saved; it is lit here whenever there
- * is a **record**, and dark when there is not. Searching an empty record is a
- * surface that can only answer *Nothing.*, and *a control that cannot act goes
- * off* is the rule the rest of this bar already follows.
+ * ⚠ **Row two of the table is where this deviates from the design.** The design
+ * lights search while a line is being typed with nothing saved; it is lit here
+ * whenever there is a **record**, and dark when there is not. Searching an empty
+ * record is a surface that can only answer *Nothing.*, and *a control that
+ * cannot act goes off* is the rule the rest of this bar already follows.
  */
-export function Foot({
-  crossOff,
-  settle,
-  rewrite,
-  photograph,
-  searchable = false,
-  receded = false,
-}: {
-  /**
-   * Off the bottom of the glass while the record is being read — see
-   * `useChromeRecede`.
-   *
-   * ⚠ **It can only ever be true while both controls here are off.** The foot is
-   * the picked line's toolbar, so picking holds it down; the hook owns that rule
-   * and this prop is the answer, not the decision.
-   */
-  receded?: boolean
-  /**
-   * The ×, both ways: on a live line it crosses off, on a crossed-off one it
-   * puts back. `null` when nothing saved is picked.
-   *
-   * **One control, two directions.** Nothing appears or disappears when it is
-   * pressed — the row stays where it is and the strikethrough is the whole of
-   * the feedback, which is why there is no confirmation and no ten-second window
-   * attached to it. The way back is the same control in the same place, so a
-   * mistap costs one more tap.
-   */
-  crossOff: { crossedOff: boolean; act: () => void } | null
+type Tools = {
   /** Settle the picked line: it leaves the page for the tray. */
   settle: (() => void) | null
   /**
-   * Open the picked line's words in the band. `null` when nothing saved is
-   * picked, and also while a rewrite is already open — re-opening the line
-   * would throw away what is in the field for the words that are saved, which
-   * is a discard nobody asked for. A control that cannot act goes off.
+   * Open the picker. `null` when there is nowhere to put a photograph.
+   *
+   * ⚠ **It is a store that does not exist, not a feature that is not built.**
+   * Create a Blob store and set `BLOB_READ_WRITE_TOKEN`, and it lights on the
+   * next deploy with no code change.
    */
-  rewrite: (() => void) | null
+  photograph: (() => void) | null
   /**
    * Whether there is a record to search. `false` on an empty page, where the
    * only answer the surface could give is *Nothing.*
    */
   searchable?: boolean
+}
+
+/**
+ * The three, in order, with nothing said about how they are arranged. Both
+ * placements render this and neither may reorder it.
+ */
+function ToolSet({ settle, photograph, searchable = false }: Tools) {
+  return (
+    <>
+      <button
+        type="button"
+        disabled={!settle}
+        onClick={() => settle?.()}
+        aria-label="Settle it"
+        className={`tap-target flex items-center transition-colors ${
+          settle ? 'text-chrome' : OFF
+        }`}
+      >
+        <SettleGlyph />
+      </button>
+
+      <button
+        type="button"
+        disabled={!photograph}
+        onClick={() => photograph?.()}
+        aria-label="Photograph"
+        className={`tap-target flex items-center transition-colors ${
+          photograph ? 'text-chrome' : OFF
+        }`}
+      >
+        <CameraGlyph />
+      </button>
+
+      {searchable ? (
+        <Link
+          href="/search"
+          aria-label="Search"
+          className="text-chrome tap-target flex items-center transition-colors"
+        >
+          <SearchGlyph />
+        </Link>
+      ) : (
+        /*
+          ⚠ **A `<span>`, not a disabled `<a>`.** There is no disabled state for
+          a link — an `<a>` without an `href` is not a control at all — so the
+          off state is the drawing without the door, and the `aria-label` goes
+          with the door rather than staying on something a screen reader would
+          announce as reachable.
+        */
+        <span aria-hidden className={`tap-target flex items-center ${OFF}`}>
+          <SearchGlyph />
+        </span>
+      )}
+    </>
+  )
+}
+
+/** The tools as a bar across the foot of the glass. Below `stack` only. */
+export function Foot({
+  receded = false,
+  ...tools
+}: Tools & {
   /**
-   * Open the picker. `null` when there is nowhere to put a photograph.
-   *
-   * ⚠ **It is a store that does not exist, not a feature that is not built.**
-   * The distinction matters for what to do about a dark camera: create a Blob
-   * store and set `BLOB_READ_WRITE_TOKEN`, and it lights on the next deploy with
-   * no code change.
+   * Off the bottom of the glass while the record is being read — see
+   * `useChromeRecede`.
    */
-  photograph: (() => void) | null
+  receded?: boolean
 }) {
   return (
     <footer
       /*
         ⚠ **One mover, since 24 August.** `useKeyboardPin` used to write
-        `transform` here every frame a keyboard was arriving, to hold the foot on
-        the keyboard's top edge. That is gone — see `keyboard-hem.ts` — so the
-        recede's `translate` is the only thing that moves this element, and
-        `will-change` names one property.
+        `transform` here every frame a keyboard was arriving. That is gone — see
+        `keyboard-hem.ts` — so the recede's `translate` is the only thing that
+        moves this element, and `will-change` names one property.
       */
-      className={`gutter fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] will-change-[translate] ${
+      className={`gutter stack:hidden fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] will-change-[translate] ${
         receded ? 'translate-y-full' : ''
       }`}
     >
       {/* The foot's own glyph size, declared on the row — see `--glyph-foot`. */}
       <div className="mx-auto flex w-full max-w-[var(--page-measure)] items-center justify-around pt-[var(--foot-lead)] pb-[calc(var(--foot-tail)+env(safe-area-inset-bottom))] [--glyph:var(--glyph-foot)]">
-        <button
-          type="button"
-          disabled={!crossOff}
-          onClick={() => crossOff?.act()}
-          aria-label={crossOff?.crossedOff ? 'Put it back' : 'Cross it off'}
-          className={`tap-target flex items-center transition-colors ${
-            crossOff ? 'text-chrome' : OFF
-          }`}
-        >
-          <CrossOffGlyph />
-        </button>
-
-        <button
-          type="button"
-          disabled={!settle}
-          onClick={() => settle?.()}
-          aria-label="Settle it"
-          className={`tap-target flex items-center transition-colors ${
-            settle ? 'text-chrome' : OFF
-          }`}
-        >
-          <SettleGlyph />
-        </button>
-
-        <button
-          type="button"
-          disabled={!rewrite}
-          onClick={() => rewrite?.()}
-          aria-label="Rewrite it"
-          className={`tap-target flex items-center transition-colors ${
-            rewrite ? 'text-chrome' : OFF
-          }`}
-        >
-          <RewriteGlyph />
-        </button>
-
-        <button
-          type="button"
-          disabled={!photograph}
-          onClick={() => photograph?.()}
-          aria-label="Photograph"
-          className={`tap-target flex items-center transition-colors ${
-            photograph ? 'text-chrome' : OFF
-          }`}
-        >
-          <CameraGlyph />
-        </button>
-
-        {searchable ? (
-          <Link
-            href="/search"
-            aria-label="Search"
-            className="text-chrome tap-target flex items-center transition-colors"
-          >
-            <SearchGlyph />
-          </Link>
-        ) : (
-          /*
-            ⚠ **A `<span>`, not a disabled `<a>`.** There is no disabled state
-            for a link — an `<a>` without an `href` is not a control at all — so
-            the off state is the drawing without the door, and the `aria-label`
-            goes with the door rather than staying on something a screen reader
-            would announce as reachable.
-          */
-          <span aria-hidden className={`tap-target flex items-center ${OFF}`}>
-            <SearchGlyph />
-          </span>
-        )}
+        <ToolSet {...tools} />
       </div>
     </footer>
+  )
+}
+
+/**
+ * **The same three, standing to the left of the reading column.** At
+ * `--breakpoint-stack` and above.
+ *
+ * ⚠ **Its top glyph is level with the first line of the record**, and the
+ * arithmetic says so rather than a measurement finding it: the page's own top
+ * padding, plus the block a day stamp occupies, because the record always opens
+ * with one. See `--stamp-block`.
+ *
+ * ⚠ **Anchored to the column, not to the window.** `left` is the middle of the
+ * viewport walked back by half the measure and the gutter the words sit in, then
+ * the stack's own air — so it holds its distance from the *text* at every width
+ * above the breakpoint, instead of drifting out to the window's edge on a wide
+ * monitor. `--breakpoint-stack` is what guarantees the result is on screen.
+ *
+ * ⚠ **A tint over a blur and no outline**, which is what the bars are. The
+ * shape is the only thing that says *these belong together*; a border would be
+ * the one rule this design does not have anywhere else.
+ *
+ * ⚠ **It does not recede.** The bar and the foot leave while the record is read
+ * because they sit over it; this sits beside it and covers nothing, so there is
+ * nothing to get out of the way of.
+ */
+export function ToolStack(tools: Tools) {
+  return (
+    <div
+      className="stack:flex fixed top-[calc(var(--bar-height)+var(--band-height)+var(--band-tail)+var(--stamp-block))] left-[calc(50%-var(--page-measure)/2+var(--gutter-l)-var(--stack-gap))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-1 rounded-2xl bg-[var(--glass-tint)] py-2 backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
+    >
+      <ToolSet {...tools} />
+    </div>
   )
 }

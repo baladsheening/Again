@@ -234,6 +234,28 @@
   --breakpoint-rail: 45rem;
 
   /*
+    The width at which the foot's remaining tools stand beside the reading
+    column instead of under it — 25 August.
+
+    **Derived from the columns, not from a device**, the same way
+    `--breakpoint-rail` and `--breakpoint-pane` are: the reading column plus a
+    stack and its air on *both* sides, because the column stays centred and a
+    stack that only fits on one side would hang off the left edge of the window.
+
+      42.5rem  --page-measure
+    +  2.75rem --stack-width
+    +  1.5rem  --stack-gap
+    ────────── x2 for the two margins
+      51rem
+
+    ⚠ **It is not `--breakpoint-rail`, and the difference is the whole reason
+    this token exists.** At 45rem the margin either side of the column is 20px,
+    which does not hold a 44px stack — the tools would be off screen on exactly
+    the window that first gets them. Below this the foot keeps them.
+  */
+  --breakpoint-stack: 51rem;
+
+  /*
     The width at which the film screen stops covering the app and stands beside
     it — 18 August.
 
@@ -1481,6 +1503,50 @@
    */
   --page-measure: 42.5rem;
 
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The tools move: onto the line, and beside the column — 25 August
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * Directed. The undo left the bar for the **line it acts on**, and once its
+   * ten seconds pass that same slot carries cross off and rewrite for a picked
+   * line. What is left of the foot — settle, camera, search — stands to the
+   * **left of the reading column** on the desk instead of under it.
+   *
+   * ⚠ **This is the one place the two bars' rule is deliberately broken.**
+   * *Controls go off; they do not disappear* holds for the bar and the foot, and
+   * it is what stops a blank page reading as an unfinished one. The line's own
+   * slot cannot follow it: a row of dark glyphs beside every line of the record
+   * would be the density device inverted — two hundred lines each carrying two
+   * controls nobody asked for. So on the line, and only on the line, absent is
+   * the off state.
+   */
+
+  /** The air under a day stamp, owned here so the stack can clear it too. */
+  --stamp-lead: 0.625rem;
+  /**
+   * A day stamp's whole block: its line box plus that air.
+   *
+   * ⚠ **It reads `.stamp`'s own line-height, so the two move together.** If the
+   * stamp's `line-height` changes, this changes with it — that is the point of
+   * writing the arithmetic out rather than measuring the rendered box.
+   */
+  --stamp-block: calc(var(--text-micro) * 1.3 + var(--stamp-lead));
+
+  /**
+   * A glyph on a line of the record.
+   *
+   * ⚠ **Smaller than either bar's, because it lives inside a line box.** One
+   * line is one line: at `--glyph-bar` the control would set the row's height
+   * and the record would grow a stripe wherever somebody had picked something.
+   * The hit area is bought with padding and taken back with a negative margin,
+   * so it is larger than the drawing without being larger than the row.
+   */
+  --glyph-line: 1.125rem;
+
+  /** The desk stack's box, and the air between it and the words. */
+  --stack-width: 2.75rem;
+  --stack-gap: 1.5rem;
 }
 
 @layer base {
@@ -2744,6 +2810,10 @@
    * The desk and the tablet. **The controls do not change** — the same four at
    * every width, which is the design's own rule — only the air around them and
    * the size of the mark.
+   *
+   * ⚠ **That sentence stopped being true at `--breakpoint-stack` on 25 August**,
+   * and this one is kept because the rule it states still holds *here*: between
+   * `rail` and `stack` the foot is the foot, wider air and all.
    */
   @media (min-width: 45rem) {
     :root {
@@ -2751,6 +2821,21 @@
       --foot-tail: 0.625rem;
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
+    }
+  }
+
+  /**
+   * Where the foot goes and the stack stands beside the column instead.
+   *
+   * ⚠ **`--foot-height` is re-pointed rather than zeroed**, because `page-hem`
+   * is the only thing that reads it and what it wants is *air under the last
+   * line*, not *the foot's height* — the foot was simply what that air had to
+   * clear. With no foot the record still needs somewhere to end, and a page
+   * whose last line sits on the bottom edge of the glass reads as cut off.
+   */
+  @media (min-width: 51rem) {
+    :root {
+      --foot-height: 3rem;
     }
   }
 }

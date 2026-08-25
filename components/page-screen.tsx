@@ -17,9 +17,10 @@ import {
 import type { EntryState } from '@/lib/domain'
 import type { PageLineView } from '@/lib/page-line'
 import { mutationId as newMutationId } from '@/lib/mutation-id'
-import { Bar } from './bar'
+import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
-import { Foot } from './foot'
+import { Foot, ToolStack } from './foot'
+import { CrossOffGlyph, RewriteGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { touchQuery, useMatches } from './pointer'
 
@@ -269,6 +270,89 @@ function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
         className="size-[var(--thumb)] rounded-[3px] object-cover"
       />
     </button>
+  )
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The line's own slot — 25 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Directed: the undo belongs beside the line it takes back, and when its ten
+ * seconds pass that same slot carries the two controls that act on a **picked**
+ * line — cross off and rewrite. One slot, three states, and never two of them at
+ * once.
+ *
+ * ⚠ **It answers the confusable moment the bar's undo had written down and left
+ * open.** For ten seconds after a line landed, the bar's undo and the foot's ×
+ * were both lit and both acted on it, with nothing saying that one erases and
+ * the other strikes through. They are the same slot now, in sequence rather than
+ * side by side: while the window is open the slot is undo, and it becomes cross
+ * off the moment undo stops being possible. The pair can no longer be seen
+ * together, which is a stronger answer than the colour the note proposed.
+ *
+ * ⚠ **Absent is the off state here, and only here.** *Controls go off; they do
+ * not disappear* is the two bars' rule and it stays theirs — see `--glyph-line`
+ * for why a record of two hundred lines cannot each carry two dark glyphs.
+ *
+ * ⚠ **It must not set the height of the row.** One line is one line: the glyph
+ * is `--glyph-line`, the padding buys a hit area and the negative margin gives
+ * the height back, so what the row measures is the drawing and what a thumb gets
+ * is bigger than it.
+ */
+function LineTools({
+  undoable,
+  picked,
+  crossedOff,
+  onUndo,
+  onCrossOff,
+  onRewrite,
+}: {
+  /** This line is the one inside its ten seconds. */
+  undoable: boolean
+  /** This line is the picked one. */
+  picked: boolean
+  crossedOff: boolean
+  onUndo: () => void
+  onCrossOff: () => void
+  /** `null` while a rewrite is already open — reopening would discard it. */
+  onRewrite: (() => void) | null
+}) {
+  if (!undoable && !picked) return null
+
+  return (
+    <div className="ms-3 -my-2 flex shrink-0 items-center gap-2 self-center py-2 [--glyph:var(--glyph-line)]">
+      {undoable ? (
+        <button
+          type="button"
+          onClick={onUndo}
+          aria-label="Undo the last capture"
+          className="text-chrome flex items-center"
+        >
+          <UndoGlyph />
+        </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={onCrossOff}
+            aria-label={crossedOff ? 'Put it back' : 'Cross it off'}
+            className="text-chrome flex items-center"
+          >
+            <CrossOffGlyph />
+          </button>
+          <button
+            type="button"
+            disabled={!onRewrite}
+            onClick={() => onRewrite?.()}
+            aria-label="Rewrite it"
+            className={`flex items-center ${onRewrite ? 'text-chrome' : OFF}`}
+          >
+            <RewriteGlyph />
+          </button>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -1239,6 +1323,43 @@ export function PageScreen({
   const empty = lines.length === 0
 
   /**
+   * **The three tools, built once and handed to both placements.**
+   *
+   * ⚠ **Built here rather than inline on each**, because `Foot` and `ToolStack`
+   * are the same set in two arrangements and the states must be identical. Two
+   * inline prop lists is how a bar and a stack start disagreeing about whether
+   * settle is lit.
+   */
+  const tools = {
+    /*
+      A crossed-off line cannot be settled: `resolveCapture` guards on `want`,
+      which makes the settleable set exactly the resolvable one, and the way back
+      is the × that put it there.
+    */
+    settle:
+      pickedLine && pickedLine.state === 'want'
+        ? () => setAsking((open) => (open === pickedLine.id ? null : pickedLine.id))
+        : null,
+    /*
+      ⚠ **The page's own list is the test, and it is not the whole record.**
+      Search reads across settled captures too, so a person whose every line is
+      in the tray has an empty page and a searchable record — and the glyph would
+      be dark on the one screen that could use it. The alternative is a count on
+      every open of the page to light a link, which is a query to avoid a wrong
+      answer that is nearly unreachable: to have settled a line you had to have
+      written it *here*, so an empty page is a first run or a tray that grew from
+      one. Named rather than left to be found.
+    */
+    searchable: !empty,
+    /*
+      ⚠ **Off unless there is somewhere to put a photograph**, which is
+      `imagesOn` — a server fact, because the token is one. A control that cannot
+      act goes off.
+    */
+    photograph: imagesOn ? () => camera.current?.click() : null,
+  }
+
+  /**
    * **What the one field is holding**: a new capture, or the words of the line
    * being rewritten. Everything that reads the field reads this — the italic
    * rule, the drawn caret, the field itself — so there is one answer to *what
@@ -1411,7 +1532,12 @@ export function PageScreen({
       */}
       <div ref={topMark} aria-hidden className="pointer-events-none -mb-px h-px" />
 
-      <Bar undo={{ live: undoable !== null, onUndo: undo }} receded={receded} />
+      {/*
+        ⚠ **No `undo` prop since 25 August.** It moved onto the line it takes
+        back — see `LineTools` — so the bar is the wordmark, the tray and you,
+        and every screen in the app now renders the same three.
+      */}
+      <Bar receded={receded} />
 
       {/*
         **The record, behind glass while a line is being written.**
@@ -1930,6 +2056,28 @@ export function PageScreen({
                 )}
 
                 {/*
+                  ⚠ **Immediately after the words, not out at the measure.** The
+                  line is only as wide as its own words — see the note below on
+                  why that was left alone — so *to the right of the entry* is
+                  where the words end, and a slot pushed to the right edge would
+                  be a control belonging to the page rather than to the line.
+                */}
+                <LineTools
+                  undoable={line.id !== '' && line.id === undoable}
+                  picked={isPicked}
+                  crossedOff={crossedOff}
+                  onUndo={undo}
+                  onCrossOff={() => crossOff(line)}
+                  /*
+                    Off while a rewrite is already open: reopening the line would
+                    replace what is in the field with what is saved, which is a
+                    discard nobody asked for.
+                  */
+                  onRewrite={editing === null ? () => startEdit(line) : null}
+                />
+
+
+                {/*
                   ⚠ **The paper is gone, and it was here.** Every row carried
                   an invisible button filling whatever width the words did not
                   use, and tapping it started a capture. It existed for one
@@ -2094,60 +2242,16 @@ export function PageScreen({
         <div ref={endMark} aria-hidden className="h-0" />
       </main>
 
-      <Foot
-        receded={receded}
-        crossOff={
-          pickedLine
-            ? {
-                crossedOff: pickedLine.state === 'dropped',
-                act: () => crossOff(pickedLine),
-              }
-            : null
-        }
-        /*
-          A crossed-off line cannot be settled: `resolveCapture` guards on
-          `want`, which makes the settleable set exactly the resolvable one, and
-          the way back is the × that put it there.
-        */
-        settle={
-          pickedLine && pickedLine.state === 'want'
-            ? () => setAsking((open) => (open === pickedLine.id ? null : pickedLine.id))
-            : null
-        }
-        /*
-          ⚠ **The announced way to rewrite a line**, and the second tap on the
-          words is the accelerator rather than the only door. A handset asked how
-          anybody would know the gesture existed; the honest answer was that
-          nothing said so, and that cross off and settle were controls while
-          rewriting was a secret. See `Foot`.
-
-          Off while a rewrite is already open: re-opening the line would replace
-          what is in the field with what is saved, which is a discard nobody
-          asked for.
-        */
-        rewrite={
-          pickedLine && editing === null ? () => startEdit(pickedLine) : null
-        }
-        /*
-          ⚠ **The page's own list is the test, and it is not the whole record.**
-          Search reads across settled captures too, so a person whose every line
-          is in the tray has an empty page and a searchable record — and the
-          glyph would be dark on the one screen that could use it. The
-          alternative is a count on every open of the page to light a link, which
-          is a query to avoid a wrong answer that is nearly unreachable: to have
-          settled a line you had to have written it *here*, so an empty page is a
-          first run or a tray that grew from one. Named rather than left to be
-          found.
-        */
-        searchable={!empty}
-        /*
-          ⚠ **Off unless there is somewhere to put a photograph**, which is
-          `imagesOn` — a server fact, because the token is one. A control that
-          cannot act goes off, and this is the last of the foot's five to stop
-          being dark.
-        */
-        photograph={imagesOn ? () => camera.current?.click() : null}
-      />
+      {/*
+        ⚠ **One set of props, two placements, and the props are built once.**
+        `Foot` is the bar under the record below `--breakpoint-stack` and
+        `ToolStack` is the column beside it above — the CSS decides which is on
+        screen, so neither placement can be given a different set of states than
+        the other. Cross off and rewrite are not here any more; they went to
+        `LineTools`, on the line they act on.
+      */}
+      <Foot receded={receded} {...tools} />
+      <ToolStack {...tools} />
 
       {/*
         ⚠ **A file input, hidden, driven by the foot's glyph.** The camera is a
