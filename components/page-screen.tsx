@@ -1380,7 +1380,31 @@ export function PageScreen({
    * it, and neither of them means that while a line is open.
    */
   function live() {
-    setWriting(true)
+    /*
+      ⚠ **On the desk the mode follows the words, not the gesture.** Directed 25
+      August, in one sentence: *the screen is blurred if there is one or more
+      characters in the live row and the row is active.* That is a rule about a
+      value, and the bug it came from is what happens when a gesture stands in
+      for one — press backspace on an empty line and this used to enter the mode
+      the delete could not leave, because no `onChange` follows a keystroke that
+      changed nothing, so `rest()` never ran. The mode was enterable by a key
+      that types nothing.
+
+      Reading the field instead makes that unreachable rather than corrected:
+      there is no key that both fails to change the line and leaves words on it.
+
+      ⚠ **The keystroke that lands is `onChange`'s business, not this.** This
+      runs on `keydown`, one event before the character exists, so the value here
+      is the line *before* the key — right for a click, and one behind for a
+      keystroke. `onChange` sets the flag from the value that actually arrived,
+      and it runs for every keystroke that changes anything.
+
+      ⚠ **Coarse pointers keep the gesture, and must.** Writing is a mode there:
+      the tap is what raises the keyboard and drops the record behind glass, and
+      a mode that waited for the first character would open the keyboard over a
+      page that had not moved.
+    */
+    setWriting(touch || (editing === null ? draft : editDraft) !== '')
     if (editing !== null) return
     setPicked(null)
     setAsking(null)
@@ -1756,19 +1780,19 @@ export function PageScreen({
               */
               value={bandValue}
               onChange={(e) => {
-                if (editing !== null) {
-                  setEditDraft(e.target.value)
-                  return
-                }
-                setDraft(e.target.value)
+                if (editing !== null) setEditDraft(e.target.value)
+                else setDraft(e.target.value)
                 /*
-                  Deleted back to nothing — see `rest`. The way back in is the
-                  keystroke that follows: `live()` runs on every `onKeyDown` in
-                  this field, and `onKeyDown` fires before this, so deleting the
-                  last character sets the flag and then clears it in the same
-                  batch, which is the order that makes it land.
+                  ⚠ **The value that arrived decides the mode, on the desk.**
+                  `live()` on `keydown` has only the line as it was; this has the
+                  line as it is, and it runs for every keystroke that changes
+                  anything — which is exactly the set of keystrokes that can move
+                  the answer. `rest()` carries the coarse-pointer guard, so on
+                  glass this whole branch does nothing and the mode stays the
+                  gesture it has to be there.
                 */
                 if (e.target.value === '') rest()
+                else if (!touch) setWriting(true)
               }}
               /*
                 ⚠ **The blur commits an open rewrite**, because the words on
@@ -1880,13 +1904,31 @@ export function PageScreen({
                 line of the record — the band's light says *this row is live*, it
                 does not say *these words are not saved*.
 
-                It holds while the line is being typed too, so the rule is one
-                claim made continuously rather than a badge that appears when you
-                look away. See `unsent` in globals.css for why it is type and not
-                colour, dimming, or a mark.
+                ⚠ **It no longer holds while somebody is typing on the desk**, by
+                direction of 25 August: setting the words in italic under the
+                cursor that is writing them is the app commenting on a sentence
+                being spoken. The claim is only needed once nobody is making it
+                any more — a line typed and then clicked away from, which is
+                exactly the case the rule was written for and the one it keeps.
+
+                ⚠ **`!writing` is that condition and nothing has to be added to
+                say it.** On the desk the mode now *is* "words in the live row and
+                the row active", so `unsent && !writing` reads as "words, and
+                nobody there" — the same pair `record-held` already uses two
+                elements down.
+
+                ⚠ **`touch ||` keeps glass exactly as it was**, and it is not
+                symmetry for its own sake. There `writing` is the gesture rather
+                than the words, and it stays true for the whole time a keyboard
+                is up — so without the guard the italic would go out on the first
+                character of every capture on a handset, which is not what was
+                asked for and is the surface the claim was written for.
+
+                See `unsent` in globals.css for why it is type and not colour,
+                dimming, or a mark.
               */
               className={`page-line page-input min-w-0 flex-1 ${
-                bandValue === '' ? '' : 'unsent'
+                bandValue !== '' && (touch || !writing) ? 'unsent' : ''
               } ${drawnCaret ? 'caret-transparent' : 'caret-chrome'}`}
             />
 

@@ -52,7 +52,25 @@ export async function GET(
 
   return new NextResponse(blob.stream, {
     headers: {
+      /*
+        ⚠ **The stored type is only ever one of `IMAGE_TYPES`, and this line is
+        what would stop being safe if that changed.** `storeImage` refuses
+        anything else, so the value handed back here cannot today be
+        `text/html` or `image/svg+xml` — either of which, served from this
+        origin, is somebody's own upload executing script against their own
+        session. Widening what may be stored means changing this line in the
+        same commit, not afterwards.
+      */
       'Content-Type': blob.headers.get('content-type') ?? 'application/octet-stream',
+      /*
+        ⚠ **`nosniff`, so the browser cannot decide it knows better.** Without
+        it a stored file whose bytes look like markup can be sniffed into being
+        treated as markup regardless of the type above — which turns the type
+        allowlist from a guarantee into a suggestion. It costs nothing and it is
+        the half of the defence that does not depend on the other half being
+        maintained.
+      */
+      'X-Content-Type-Options': 'nosniff',
       /*
         ⚠ **`private`, and it is the header that matters here.** The bytes are
         one person's; a shared cache holding them under a URL another session
