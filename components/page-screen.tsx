@@ -20,7 +20,7 @@ import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
 import { Foot, ToolStack } from './foot'
-import { CrossOffGlyph, LinkGlyph, RewriteGlyph, UndoGlyph } from './glyphs'
+import { AttachGlyph, CrossOffGlyph, LinkGlyph, RewriteGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { touchQuery, useMatches } from './pointer'
 
@@ -1384,12 +1384,6 @@ export function PageScreen({
       one. Named rather than left to be found.
     */
     searchable: !empty,
-    /*
-      ⚠ **Off unless there is somewhere to put a photograph**, which is
-      `imagesOn` — a server fact, because the token is one. A control that cannot
-      act goes off.
-    */
-    photograph: imagesOn ? () => camera.current?.click() : null,
   }
 
   /**
@@ -2079,6 +2073,52 @@ export function PageScreen({
                     {linkLabel(link)}
                   </button>
                 )}
+
+                {/*
+                  ─────────────────────────────────────────────────────────────
+                   Attach lives on the live row — 25 August
+                  ─────────────────────────────────────────────────────────────
+
+                  ⚠ **It was in the foot, and the foot's own note had been
+                  flagging why that was wrong.** *The camera is the odd one
+                  because a photograph starts a capture rather than acting on
+                  one — the only control there that does not care what is
+                  picked.* Everything else in that bar answers *what shall I do
+                  to the line I have picked*; this one answers *what shall I put
+                  on the line I am writing*, and those are two different
+                  questions asked from two different places. The link chip
+                  landing here is what made it plain: the control that creates
+                  an attachment was somewhere other than where the attachment
+                  appears.
+
+                  ⚠ **Last in the row, so it does not move.** The chips grow
+                  inward between the words and this, which keeps a control
+                  somebody aims at in one place whether the line is bare or
+                  already carrying a picture and a link. A leading glyph was the
+                  alternative and it pushes the caret right — and the caret is
+                  the instruction on an empty page.
+
+                  ⚠ **Tapping it is already the choice.** The input carries no
+                  `capture` attribute, deliberately, so iOS offers Photo Library,
+                  Take Photo and Choose File; the desk gets a file dialog. Moving
+                  the glyph changed where it is asked from, not what is offered.
+
+                  ⚠ **Off when there is nowhere to put a photograph**, which is
+                  `imagesOn` — a server fact. A control that cannot act goes off,
+                  and that rule is the two bars' and it comes here with the
+                  control.
+                */}
+                <button
+                  type="button"
+                  disabled={!imagesOn}
+                  onClick={() => camera.current?.click()}
+                  aria-label="Attach a picture"
+                  className={`-my-2 ms-2 flex shrink-0 items-center self-center py-2 transition-colors [--glyph:var(--glyph-line)] ${
+                    imagesOn ? 'text-chrome' : OFF
+                  }`}
+                >
+                  <AttachGlyph />
+                </button>
               </div>
             </div>
           </div>

@@ -3,33 +3,33 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { AttachGlyph, SearchGlyph, SettleGlyph } from './glyphs'
+import { SearchGlyph, SettleGlyph } from './glyphs'
 
 /**
- * **The tools: settle, attach, search.**
+ * **The tools: settle and search.**
  *
- * ⚠ **It was five until 25 August, and the two that left went to the line.**
- * Cross off and rewrite act on a *picked* line, and they are in that line's own
- * slot now — see `LineTools` in `page-screen.tsx`, which also carries the undo
- * for the ten seconds after a capture lands. What is left here is the three that
- * do not belong to any one line: settle sends the picked line to the tray,
- * attach *starts* a capture with a picture on it, and search answers *where is
- * that thing I wrote in June*.
+ * ⚠ **It was five on the morning of 25 August and it is two by the evening**,
+ * and the three that left all went to where their effect appears.
  *
- * ⚠ **Attach was a camera until the same day.** The control opens a file picker
- * — on the desk that is a hard disk and no camera anywhere near it, and on glass
- * the input carries no `capture` attribute on purpose, so the library is offered
- * beside the lens. The drawing promised the lens and only the lens. One glyph
- * rather than one per surface: a paperclip is honest on both, and the obvious
- * reading — paperclip on the desk, camera on glass — would have been a platform
- * branch bought to keep a drawing that was wrong either way. See `AttachGlyph`.
+ * - **Cross off and rewrite** act on a *picked* line, so they are in that line's
+ *   own slot — `LineTools` in `page-screen.tsx`, which also carries the undo for
+ *   the ten seconds after a capture lands.
+ * - **Attach** is on the **live row**, because it starts a capture rather than
+ *   acting on one. This file's own note had been saying so for a day: *the only
+ *   control here that does not care what is picked*. The link chip arriving on
+ *   the live row is what made it unarguable — the control that creates an
+ *   attachment was somewhere other than where the attachment appears.
  *
- * ⚠ **Settle stayed, and it is the one asymmetry in that split.** It acts on the
- * picked line exactly as cross off and rewrite do, so on the face of it it
- * belongs beside them; it is here because it was directed here, and because
- * three glyphs on a line is a toolbar rather than a slot. If the split reads
- * wrong on hardware, **settle is the thing to move**, not the other two to move
- * back.
+ * What is left is genuinely not per-line: settle sends the picked line to the
+ * tray, and search answers *where is that thing I wrote in June*.
+ *
+ * ⚠ **Settle is the last asymmetry, and it is now the only one.** It acts on the
+ * picked line exactly as cross off and rewrite do, and it stayed because it was
+ * directed here and because three glyphs on a line is a toolbar rather than a
+ * slot. With attach gone that argument is thinner than it was: this bar is one
+ * line-action and one navigation. **If the grouping is revisited, settle is the
+ * thing to move** — onto the line, where the other two that act on it already
+ * are, which would leave search alone and this file with nothing to be.
  *
  * ⚠ **Two placements, one set.** Below `--breakpoint-stack` these are a bar
  * across the foot of the glass; at and above it they stand in a column to the
@@ -59,23 +59,17 @@ import { AttachGlyph, SearchGlyph, SettleGlyph } from './glyphs'
  *
  * Three states, and they are the app's honest answer to what is available:
  *
- * | state | settle | attach | search |
- * |---|---|---|---|
- * | empty record | off | **on** | off |
- * | a record, nothing picked | off | **on** | **on** |
- * | a saved line picked | **on** | **on** | **on** |
+ * | state | settle | search |
+ * |---|---|---|
+ * | empty record | off | off |
+ * | a record, nothing picked | off | **on** |
+ * | a saved line picked | **on** | **on** |
  *
- * Attach is the odd one because a picture **starts** a capture rather than
- * acting on one — so it is lit at every state, including the empty page, and it
- * is the only control here that does not care what is picked. It is off only
- * when there is nowhere to put a picture, which is a store that has not been
- * created rather than a feature that has not been built.
- *
- * ⚠ **It takes pictures and only pictures**, whatever the glyph now suggests.
- * `accept` names JPEG, PNG and WebP; the strippers in `lib/media` know those
- * three containers and `/api/media` serves them. A paperclip is the honest
- * drawing for *choose a file from your disk*, and it is not a promise that the
- * app has become a place to put documents.
+ * ⚠ **Both are off on an empty page, which the five never were.** Attach was
+ * what lit that screen — the one control a first run could use — and it has
+ * gone to the live row, where a first run is already looking. This bar is dark
+ * on arrival now, and *controls go off; they do not disappear* is what stops
+ * that reading as broken.
  *
  * ⚠ **Search is the one link here, so it is an `<a>` and not a button.**
  * Everything else acts on the line in hand; this goes somewhere. A button with a
@@ -92,14 +86,6 @@ type Tools = {
   /** Settle the picked line: it leaves the page for the tray. */
   settle: (() => void) | null
   /**
-   * Open the picker. `null` when there is nowhere to put a photograph.
-   *
-   * ⚠ **It is a store that does not exist, not a feature that is not built.**
-   * Create a Blob store and set `BLOB_READ_WRITE_TOKEN`, and it lights on the
-   * next deploy with no code change.
-   */
-  photograph: (() => void) | null
-  /**
    * Whether there is a record to search. `false` on an empty page, where the
    * only answer the surface could give is *Nothing.*
    */
@@ -107,10 +93,10 @@ type Tools = {
 }
 
 /**
- * The three, in order, with nothing said about how they are arranged. Both
+ * The two, in order, with nothing said about how they are arranged. Both
  * placements render this and neither may reorder it.
  */
-function ToolSet({ settle, photograph, searchable = false }: Tools) {
+function ToolSet({ settle, searchable = false }: Tools) {
   return (
     <>
       <button
@@ -123,18 +109,6 @@ function ToolSet({ settle, photograph, searchable = false }: Tools) {
         }`}
       >
         <SettleGlyph />
-      </button>
-
-      <button
-        type="button"
-        disabled={!photograph}
-        onClick={() => photograph?.()}
-        aria-label="Attach a picture"
-        className={`tap-target flex items-center transition-colors ${
-          photograph ? 'text-chrome' : OFF
-        }`}
-      >
-        <AttachGlyph />
       </button>
 
       {searchable ? (
@@ -193,7 +167,7 @@ export function Foot({
 }
 
 /**
- * **The same three, standing to the left of the reading column.** At
+ * **The same two, standing to the left of the reading column.** At
  * `--breakpoint-stack` and above.
  *
  * ⚠ **Its top glyph is level with the first line of the record**, and the
