@@ -1,0 +1,4 @@
+# Shell scripts are run by bash, which reads a CR as part of the command.
+# `core.autocrlf` on Windows would hand them back with CRLF endings and every
+# line would fail with an unprintable character in it, so they are pinned.
+*.sh text eol=lf
