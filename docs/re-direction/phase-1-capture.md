@@ -14,23 +14,36 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ---
 
-## Build status — 24 August
+## Build status — 25 August
 
-> **Built, deployed and seen on a handset — 24 August.**
+> **Built, deployed, migrated and seen on a handset — 25 August.**
 >
-> ⚠ **Everything on *Still to build* is now built, and three commits are held
-> back.** `origin/main` is `8f5ac94` and carries **no migration**, so what is
-> deployed still rolls back with a revert push. Local `main` runs three further
-> commits — resolution offers, the derived intention, photographs — carrying
-> **two additive migrations**, `0009` and `0010`: four nullable columns and two
-> FKs. Additive, so a revert push is still a rollback; **but they have to reach
-> production before the code does**, because the page's read selects the new
-> columns. Applied to `development` and verified there.
+> **Everything on *Still to build* is built, and nothing is held back.**
+> `origin/main` is `0942423`. Migrations `0009` and `0010` are applied to
+> production.
+>
+> ⚠ **They were applied a day late, and production was down for it.** The three
+> commits carrying them — resolution offers, the derived intention, photographs
+> — were deployed while `0009` and `0010` sat applied on `development` only, so
+> the page's read selected `captures.suggested_possibility_id` from a table that
+> did not have it and **every signed-in request was a 500** until the morning of
+> 25 August. Additive columns and no data lost; the whole cost was the outage.
+> The Phase 0 runbook says *migrate production first, deploy second*, in those
+> words, and this register said the same. Saying it was not enough.
+>
+> ⚠ **What went wrong was the register, not the runbook.** This section and the
+> memory beside it both recorded the migrations as applied to production.
+> Neither had asked, and both sounded certain. **`npm run migration:state`
+> asks** — host first, then the applied count, then whether the columns the page
+> reads exist; it writes nothing, so it is safe against any branch.
+> `scripts/prod-check.sh` and `scripts/prod-migrate.sh` wrap it for production.
+> Do not record what state production is in. Ask it.
 >
 > ⚠ **Nothing in this repository can take the production credential** — it is a
-> Vercel *sensitive* value and `vercel env pull` redacts it, which the Phase 0
-> runbook already says. The operator sets `$env:DATABASE_URL` and runs
-> `npx drizzle-kit migrate`.
+> Vercel *sensitive* value that nothing reads back, including the dashboard, and
+> `vercel env pull` redacts it. It comes from `neonctl`, which is what the
+> wrappers do, and every command needing it must be one shell because an
+> exported variable does not outlive the command that set it.
 >
 > **Everything in the page has now been seen on hardware and judged good**, the
 > 23 August evening's work and the 24th's alike. What is left in Phase 1 is a
@@ -56,8 +69,14 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > reported and what it turned out to be. **None of it is verified on hardware
 > yet**, which is the one thing outstanding on this page.
 >
-> ⚠ The installed app **never reloads until it is force-quit** — check which
-> build is running before believing anything seen on it.
+> **The installed app re-enters on resume, since 25 August.** It used to never
+> reload until it was force-quit, which made every report from it a question
+> about which build was running. Becoming visible now reloads the page — but
+> **only while it is settled**, and somebody using the page is never settled, so
+> it cannot fire under their hands. Verified on a handset across all four cases:
+> a line written on the desktop arrives, a half-typed line survives, the undo
+> window holds, and a record paged back through is kept. See *Resume is a load*
+> below.
 
 ### The 23 commits this register was missing
 
@@ -839,6 +858,79 @@ on its own terms.** The page has already taught that a caret means *writing
 happens here* — but on a picked line the next keystroke does **not** go there,
 because it takes another tap. A caret that lies about where typing goes is worse
 than no caret at all.
+
+### Resume is a load — 25 August
+
+The component header has always said this page *"owns the page for the length of
+the session and reads the server again on the next load"*, and that is the right
+design: Return has to land in under a frame, so the client owns the list, there
+is exactly one list, and there is no reconciliation. **An installed app has no
+next load.** It resumes the same document for days.
+
+**The harm is not staleness, it is silence.** A capture written on the desktop
+never appears on the handset, so the record there is *short and does not say so*
+— you check it, fail to find what you wrote, and write it twice. That is the
+same class as the two guarantees in `lib/db/`: a bug that costs trust rather
+than function. Freshness for its own sake would not have been worth a mechanism.
+
+**`router.refresh()` does nothing here**, which is what decided the shape. It
+hands down a new `seed` prop that `useState`'s initialiser, having run once on
+mount, ignores. Making it work means teaching the page to merge two lists —
+which rows are server truth, which are optimistic and unacknowledged, which are
+locally deleted but inside their undo window — and that is precisely what the
+header says this component does not do.
+
+So the condition is removed rather than corrected. On becoming visible, and only
+while the page is **settled**, it re-enters. A re-entry re-seeds; it does not
+merge, so there is still exactly one list.
+
+**Settled**, and the list is the strictest term:
+
+- no draft, and not `writing`
+- nothing `picked`, no open rewrite, no `asking`
+- no photograph waiting for its caption, no picture open full size
+- the undo window closed
+- no read in flight, and *Earlier* unused this session
+- **no line `pending` or `failed`** — the first has not been saved and the
+  second exists nowhere else, so re-entering over either destroys work
+
+Somebody using the page is never settled, so this cannot fire under their hands.
+Somebody who put it down is settled by definition, which is when they wanted it.
+
+⚠ **Re-entry is cheap here by construction, and that is the argument for it.**
+The live line carries `autoFocus`, so the page returns in its resting state; the
+caret is at the top and the record beneath it, so scrolling to the top loses no
+position. This page was built to be re-entered. It picks up new code as well,
+which is the same stale-document problem wearing its other hat.
+
+⚠ **`paged` is new state because `earlier` could not answer the question.** It
+is non-null on arrival for anybody with more than a page of record, so it says
+there *is* more, never that anybody went and got it — and a record paged back
+through is a view built a tap at a time that a re-entry would throw away.
+
+⚠ **`offering` is deliberately not in the gate.** An open offer is shown in full
+while its line is *live or picked*, and live means the moment of capture, which
+a resume has already ended; it returns as the trailing `?`, like every other
+line's question. Gating on it would mean the one path that most needs a
+re-entry — capture on the phone, put it down, come back — is the one path that
+never gets one.
+
+⚠ **No timer, and the reason is not battery.** That was the first argument made
+against one and it was the weak one. The real one: a clock fires while somebody
+is looking, and re-entry is exactly what must never happen to a page in
+somebody's hands. Visibility cannot do that — by construction it fires when they
+were not looking.
+
+⚠ **Two screens open at once is not covered, and that is accepted.** Nothing
+became hidden, so nothing becomes visible; a line written on the desktop while
+the handset is awake and showing the page appears the next time the page is
+returned to. Covering it properly costs the merge above. It is bounded by the
+handset's own auto-lock in the meantime, and a person looks at one screen at a
+time.
+
+**Verified on a handset, all four cases**: a desktop line arrives on return, a
+half-typed line survives backgrounding, a capture inside its ten seconds keeps
+its undo, and a record paged back through is kept.
 
 ### The deviations now standing
 

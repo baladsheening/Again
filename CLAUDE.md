@@ -22,26 +22,34 @@ specification. The re-direction specification is the complete brief for future
 product work. Where both are silent, prefer the simplest thing that works and
 flag the decision rather than inventing scope.
 
-## Where the build stands — 24 August
+## Where the build stands — 25 August
 
-**Phase 0 is done, deployed and verified.** `origin/main` is at `33ff151`.
+**Phase 0 is done, deployed and verified.**
 
-**Phase 1's page and Return are built, deployed and seen on a handset.** `/` is
-the capture page in production; the poster wall, `components/shell.tsx` and the
-four collection routes are deleted.
+**Phase 1 is built, deployed, migrated and seen on a handset.** `origin/main` is
+`0942423`. `/` is the capture page in production; the poster wall,
+`components/shell.tsx` and the four collection routes are deleted. Migrations
+`0009` and `0010` are applied to production. Nothing is held back.
 
-⚠ **Everything on the Phase 1 list is now built, and three commits are held
-back.** `origin/main` is `8f5ac94` and carries **no migration**, so what is
-deployed still rolls back with a revert push. Local `main` runs three further
-commits — resolution offers, the derived intention, and photographs — which carry
-**two additive migrations** (`0009`, `0010`: four nullable columns and two FKs).
-Additive, so a revert push is still a rollback; **but the migrations have to
-reach production before the code does**, because the page's read selects the new
-columns. They are applied to the `development` branch and verified there.
-Production's `DATABASE_URL` is a Vercel *sensitive* value and `vercel env pull`
-redacts it, so nothing in this repository can take it — the runbook in
-`docs/re-direction/phase-0-production-migration.md` says exactly that, and the
-operator sets `$env:DATABASE_URL` and runs `npx drizzle-kit migrate`.
+⚠ **Production was a 500 for every signed-in request on the morning of 25
+August, and the cause is the rule this file states.** Three commits selecting
+`captures.suggested_possibility_id` were deployed while `0009` and `0010` sat
+applied on `development` only. The runbook says *migrate production first,
+deploy second*, in those words, and the ordering was inverted. Additive columns,
+no data lost, and the fix was to run the migration — but every authenticated
+page was down until it was.
+
+⚠ **A register that is confident and stale is what caused it.** Both this
+section and the memory beside it recorded the migrations as applied to
+production. Neither had asked. **`npm run migration:state` asks** — it prints the
+host first, then the applied count, then whether the columns the page reads
+exist, and it writes nothing, so it is safe against any branch.
+`scripts/prod-check.sh` and `scripts/prod-migrate.sh` wrap it for production,
+which needs one shell per command because an exported variable does not outlive
+the command that set it. Production's `DATABASE_URL` is a Vercel *sensitive*
+value that nothing can read back, including the dashboard, so it comes from
+`neonctl` — never from `vercel env pull`, which redacts it. Do not write down
+what state production is in. Ask.
 
 **The whole page has been seen on hardware and judged good.** The first real use
 of it reversed two decisions the desk had made:
@@ -82,8 +90,25 @@ travel by 80ms, which is the same hesitation from the other side.
 was never stopwatched.** *Accepted* and *measured* are different claims and only
 the first is true. The register keeps the reasoning intact for whoever reopens it.
 
-⚠ The installed app never reloads until it is force-quit — so check which build
-is running before believing anything reported from it.
+⚠ **The installed app used to never reload until it was force-quit, and since 25
+August it re-enters on resume.** Becoming visible reloads the page, but **only
+while it is settled** — no draft, nothing picked or being rewritten, no
+photograph awaiting a caption, the undo window closed, *Earlier* unused, and no
+line `pending` or `failed`. Somebody using the page is never settled, so it
+cannot fire under their hands. Verified on a handset across all four cases.
+
+The reason is not freshness. The client owns the list and the server is only the
+seed, so a document that resumes for days shows a record that is **silently
+short** — you check it, fail to find something you wrote on another device, and
+write it twice. `router.refresh()` cannot fix that: it hands down a new seed
+that the mount-time `useState` initialiser ignores, and making it work means
+teaching the page to merge two lists. A re-entry re-seeds instead, so there is
+still exactly one list and nothing to reconcile.
+
+⚠ **This does not cover two screens open at once** — nothing became hidden, so
+nothing becomes visible. Closing that costs a real merge, and a timer is not the
+cheap version of it: a clock fires while somebody is looking, and re-entry is
+precisely what must never happen to a page in somebody's hands.
 
 ⚠ **Read `docs/re-direction/phase-1-capture.md` before touching Phase 1.** Its
 *Build status* section is the register: what is built, what is still to build in
