@@ -21,6 +21,7 @@ import { Bar } from './bar'
 import { useChromeRecede } from './chrome-recede'
 import { Foot } from './foot'
 import { useKeyboardHem } from './keyboard-hem'
+import { touchQuery, useMatches } from './pointer'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -402,6 +403,16 @@ export function PageScreen({
    * went and got it.
    */
   const [paged, setPaged] = useState(false)
+  /**
+   * **Whether a thumb is doing this**, which on this page means one thing only:
+   * whether there is a keyboard covering the glass that an empty line cannot
+   * dismiss. See the field's `onChange`.
+   *
+   * ⚠ **It is `false` until mount**, so anything else reading it must be right
+   * while it still is — the only consumer here runs inside an event, which is
+   * always after the correction.
+   */
+  const touch = useMatches(touchQuery)
   /** What went wrong reading back, said where the reading happens. */
   const [readFailed, setReadFailed] = useState<string | null>(null)
 
@@ -785,6 +796,12 @@ export function PageScreen({
     /* The head of the list, because the head of the list is under the caret. */
     setLines((all) => [line, ...all])
     setDraft('')
+    /*
+      The line is written and the field is empty again — see `rest`. On glass
+      this does nothing and must not: the keyboard is still up because a session
+      of captures is a run, and `useKeyboardHem` reads this flag.
+    */
+    rest()
     setPicked(null)
     setAsking(null)
     /*
@@ -1206,6 +1223,111 @@ export function PageScreen({
   }
 
   /**
+   * **The inverse of `live()`: an empty line is not somebody writing.**
+   *
+   * ⚠ **Directed 25 August, in two halves that are one rule.** First: type,
+   * watch the page recede, delete it all back to nothing — and the page stayed
+   * sunk behind a scrim with an empty line on it. Then: write a capture, hit
+   * Return — and the page stayed sunk behind a scrim with an empty line on it.
+   * `writing` was a one-way gesture, cleared only on blur, so the way out of a
+   * mode entered by typing was to stop touching the field. Both moments leave
+   * the same thing on screen, so both call this.
+   *
+   * ⚠ **Not on a coarse pointer, and the reason is the keyboard.** Neither
+   * deleting the last character nor committing a capture dismisses an on-screen
+   * keyboard, so clearing `writing` there would drop the hem and the chrome's
+   * hold while the glass was still half covered — `useKeyboardHem` reads this
+   * exact flag. And after a Return on glass the keyboard staying up is the
+   * point: a session of captures is a run, not one line. The desk has no such
+   * disagreement, so an empty line can mean an empty line.
+   *
+   * ⚠ **A capability, not a platform** — `(pointer: coarse)`, the same question
+   * `film-screen.tsx` asks, owned by `components/pointer.ts`. An iPad with a
+   * keyboard attached reports fine and gets this, which is right: its keyboard
+   * stays where it is.
+   *
+   * ⚠ **Called with a value known to be empty, never from an effect.** An effect
+   * keyed to `draft === ''` would fire on the *first* keystroke too — `live()`
+   * sets the flag on `keydown`, and `onChange` has not run yet, so the page
+   * would return and recede again between one character and the next. Both call
+   * sites know what the line holds at the moment they call.
+   */
+  function rest() {
+    if (!touch) setWriting(false)
+  }
+
+  /*
+    ────────────────────────────────────────────────────────────────────────
+     A keystroke is a keystroke wherever it lands
+    ────────────────────────────────────────────────────────────────────────
+
+    `live()` above says the two gestures meaning *I am starting a new capture*
+    are a tap on the field and a keystroke in it. **A keystroke arriving while
+    the field is blurred is the same gesture** and was the one the page did not
+    hear: focus is the resting state here, but four things take it away on
+    purpose — picking a line, `Escape`, the writing pane's own click, and the
+    rewrite's exit — and after any of them somebody had to go and click the line
+    before they could write. On a page whose whole promise is paper, that is a
+    step paper does not ask for.
+
+    So the key is redirected rather than a new state added: focus the one field
+    and call `live()`, which is the same code path a tap takes. Nothing here
+    knows about focus as an event, and `focused` is still not a thing.
+
+    ⚠ **No `preventDefault`, which is what makes the character land.** A keydown
+    that is not cancelled dispatches its default action to whatever is focused
+    *after* the handlers have run, so focusing here puts the letter in the field
+    — spec behaviour, not a browser quirk. Appending the character by hand would
+    be the alternative and is worse: it would break IME composition, which is the
+    only way some people type at all.
+
+    ⚠ **Desk-only by construction, with no platform test in it.** A handset has
+    no physical keyboard, so a printable keydown can only come from the on-screen
+    one — which exists only when the field is already focused, and a focused
+    field is the target, which returns above. An iPad with a keyboard attached
+    gets this and should. That is the rule holding on four surfaces rather than
+    being switched on for one.
+
+    ⚠ **Space is deliberately not redirected.** It is the page's keyboard scroll
+    on the desk, and the record is the thing being scrolled. No capture begins
+    with a space, so nothing is lost; a broken spacebar on a long record would
+    be.
+  */
+  const typeHere = useRef<() => void>(() => {})
+  useEffect(() => {
+    typeHere.current = () => {
+      /* A picture open full size is not a page anybody is writing on. */
+      if (looking !== null) return
+      input.current?.focus()
+      live()
+    }
+  })
+
+  useEffect(() => {
+    const redirect = (e: KeyboardEvent) => {
+      /* Shortcuts belong to the browser and to the desk, not to the line. */
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      /*
+        One character, which is the whole test: `Escape`, `Tab`, `Enter`, the
+        arrows and the function keys all have longer names and all mean
+        something already. Enter especially — it would commit an empty capture.
+      */
+      if (e.key.length !== 1 || e.key === ' ') return
+      const el = e.target
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        (el instanceof HTMLElement && el.isContentEditable)
+      ) {
+        return
+      }
+      typeHere.current()
+    }
+    document.addEventListener('keydown', redirect)
+    return () => document.removeEventListener('keydown', redirect)
+  }, [])
+
+  /**
    * ───────────────────────────────────────────────────────────────────────────
    *  ⚠ While the line is empty, the caret is **drawn** rather than the field's
    * ───────────────────────────────────────────────────────────────────────────
@@ -1464,11 +1586,21 @@ export function PageScreen({
                 one that is not on screen is simply not on screen.
               */
               value={bandValue}
-              onChange={(e) =>
-                editing === null
-                  ? setDraft(e.target.value)
-                  : setEditDraft(e.target.value)
-              }
+              onChange={(e) => {
+                if (editing !== null) {
+                  setEditDraft(e.target.value)
+                  return
+                }
+                setDraft(e.target.value)
+                /*
+                  Deleted back to nothing — see `rest`. The way back in is the
+                  keystroke that follows: `live()` runs on every `onKeyDown` in
+                  this field, and `onKeyDown` fires before this, so deleting the
+                  last character sets the flag and then clears it in the same
+                  batch, which is the order that makes it land.
+                */
+                if (e.target.value === '') rest()
+              }}
               /*
                 ⚠ **The blur commits an open rewrite**, because the words on
                 screen are the words somebody meant and a blur that threw them
