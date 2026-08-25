@@ -291,9 +291,23 @@ function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
  * off the moment undo stops being possible. The pair can no longer be seen
  * together, which is a stronger answer than the colour the note proposed.
  *
- * ⚠ **Absent is the off state here, and only here.** *Controls go off; they do
- * not disappear* is the two bars' rule and it stays theirs — see `--glyph-line`
- * for why a record of two hundred lines cannot each carry two dark glyphs.
+ * ⚠ **They are always there, and the rule they follow is the two bars' own.**
+ * They appeared only on a picked line for a few hours, and the objection to
+ * showing them everywhere was real — a record of two hundred lines each carrying
+ * two glyphs is the density device inverted. What answers it is the rule this
+ * app already has: *controls go off; they do not disappear.* Quiet on every
+ * line, brass on the picked one, and reachable on all of them.
+ *
+ * ⚠ **`--color-muted`, not the `OFF` fade.** They act on every line, so the 28%
+ * that means *this cannot do anything* would be a lie told in the one place the
+ * app spends real care being honest. Muted is the colour of a year and a day
+ * stamp: present, secondary, true.
+ *
+ * ⚠ **Immediately after the words, which is what "the end of the entry" means.**
+ * `ms-auto` put them at the end of the *row* for an hour and the report was
+ * immediate — a short line left its controls stranded out at the margin with a
+ * gap of nothing between. A line is only as wide as its own words, so the end of
+ * the entry is where the words stop.
  *
  * ⚠ **It must not set the height of the row.** One line is one line: the glyph
  * is `--glyph-line`, the padding buys a hit area and the negative margin gives
@@ -318,10 +332,8 @@ function LineTools({
   /** `null` while a rewrite is already open — reopening would discard it. */
   onRewrite: (() => void) | null
 }) {
-  if (!undoable && !picked) return null
-
   return (
-    <div className="ms-auto -my-2 flex shrink-0 items-center gap-2 self-center ps-3 py-2 [--glyph:var(--glyph-line)]">
+    <div className="ms-3 -my-2 flex shrink-0 items-center gap-2 self-center py-2 [--glyph:var(--glyph-line)]">
       {undoable ? (
         <button
           type="button"
@@ -337,7 +349,9 @@ function LineTools({
             type="button"
             onClick={onCrossOff}
             aria-label={crossedOff ? 'Put it back' : 'Cross it off'}
-            className="text-chrome flex items-center"
+            className={`flex items-center transition-colors ${
+              picked ? 'text-chrome' : 'text-muted hover:text-chrome'
+            }`}
           >
             <CrossOffGlyph />
           </button>
@@ -346,7 +360,9 @@ function LineTools({
             disabled={!onRewrite}
             onClick={() => onRewrite?.()}
             aria-label="Rewrite it"
-            className={`flex items-center ${onRewrite ? 'text-chrome' : OFF}`}
+            className={`flex items-center transition-colors ${
+              !onRewrite ? OFF : picked ? 'text-chrome' : 'text-muted hover:text-chrome'
+            }`}
           >
             <RewriteGlyph />
           </button>
@@ -2289,19 +2305,14 @@ export function PageScreen({
                 )}
 
                 {/*
-                  ⚠ **At the end of the row, not hard against the words.** It
-                  sat immediately after them for an hour, on the argument that a
-                  line is only as wide as its own words so *the end of the entry*
-                  is where the words stop. On a handset that put the controls at
-                  a different place on every line — a two-word capture floated
-                  them into the middle of the glass — and the report was
-                  immediate: they should **always** be at the end. `ms-auto`
-                  takes the free space, so the slot is a column down the record
-                  and the words are still only as wide as themselves.
-
-                  `ps-3` rather than a margin, because the auto margin has eaten
-                  the gap: a line long enough to leave no free space would
-                  otherwise put a glyph against its last letter.
+                  ⚠ **Immediately after the words, and "the end of the entry"
+                  means the end of the words.** It was `ms-auto` for an hour —
+                  the end of the *row* — on a misreading of that phrase, and the
+                  report came back at once: on a handset the controls only met
+                  the words on a line long enough to fill the row, and every
+                  shorter capture left them stranded at the margin across a gap
+                  of nothing. A line is only as wide as its own words, so its end
+                  is where they stop.
                 */}
                 <LineTools
                   undoable={line.id !== '' && line.id === undoable}
