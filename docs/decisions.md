@@ -6562,3 +6562,47 @@ right. One of them caught a real bug — the WebP reader took the chunk size at 
 name's offset, which drops every chunk after the first. **The upload, the media
 route and the camera have never run**, because there is no store to run them
 against. They typecheck and build; nothing about them has been seen working.
+
+## The push keys come out, because the phase they were for moved — 25 August
+
+Three VAPID variables — `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` and
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` — were provisioned into Vercel's production and
+preview environments on 8 August and read by nothing for seventeen days. They
+are removed.
+
+**The reason is not tidiness, it is that the numbering under them went stale.**
+`docs/plan.md`'s film-first sequence made push Phase 5 — "PWA + push: manifest,
+service worker, VAPID, subscriptions, install prompt" — and `lib/env.ts`
+carried a `// Phase 5` comment beside the keys to say so. The re-direction
+renumbered every phase. Push delivery is now a **Phase 6** deliverable, the
+last one, listed beside adult eligibility, consent, blocking, reporting and
+moderation; and §"Notifications" says notifications are **in-app first**. So
+the comment pointed at a schedule that no longer exists, and the keys sat in a
+live environment against a phase that had moved months out.
+
+That staleness had a cost before it was found: reading `// Phase 5` next to
+`push_subscriptions`, an empty `public/`, and `lib/overlap.ts` writing
+`notifications` rows, the state reads as *half-built* — credentials with no
+receiver. It is not. It is a designed intermediate: overlap records what
+happened, the app shows it in-app, and delivery is a later phase's problem. The
+comment now says which phase and why, because the next person to look will make
+the same misreading otherwise.
+
+**Nothing was bound to the pair.** `push_subscriptions` cannot hold a row
+without a service worker to create one, and there is no service worker. So the
+keys were not a credential protecting anything — they were an unused secret,
+which is liability with no asset behind it.
+
+⚠ **The removal is irreversible and that is the interesting part.** Vercel's
+*Sensitive* values are write-only: nothing, including the dashboard, can read
+one back. This is the same property that made this morning's migration need
+Neon rather than Vercel — `vercel env pull` redacts `DATABASE_URL`, so the
+production connection string had to come from `neonctl`. Restoring a deleted
+sensitive value therefore means knowing it independently, which for a VAPID
+pair means generating a new one. That is free here — `npx web-push
+generate-vapid-keys`, one command, nothing to migrate — but it is the reason
+this was a decision rather than a cleanup.
+
+Phase 6 generates a fresh pair and promotes both server variables to required
+in the same commit. They stay `.optional()` until then so the app boots without
+them, which is the rule the whole of `lib/env.ts` is built on.

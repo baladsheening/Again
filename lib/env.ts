@@ -29,7 +29,22 @@ const schema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
-  // Phase 5
+  /*
+    Phase 6 — and the numbering is the point. These read `Phase 5` until 25
+    August, from `docs/plan.md`'s film-first sequence; the re-direction
+    renumbered the phases and moved push delivery to the last one, behind adult
+    eligibility, consent, blocking, reporting and moderation
+    (implementation-spec.md §"Phase 6"). Notifications are in-app first, so
+    `lib/overlap.ts` writing `notifications` rows with nothing delivering them
+    is the designed state rather than a gap.
+
+    ⚠ **The keys are gone from Vercel, deliberately, on 25 August.** They sat
+    unread in production and preview for seventeen days for a phase that had
+    moved. Nothing was bound to them — `push_subscriptions` cannot hold a row
+    without a service worker to create one — so Phase 6 generates a fresh pair
+    with `npx web-push generate-vapid-keys` and promotes these to required in
+    the same commit. They stay optional here so nothing breaks in between.
+  */
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
 
