@@ -244,7 +244,7 @@
 
       42.5rem  --page-measure
     +  2.75rem --stack-width
-    +  1.5rem  --stack-gap
+    +  1.5rem  --stack-inset
     ────────── x2 for the two margins
       51rem
 
@@ -1544,9 +1544,26 @@
    */
   --glyph-line: 1.125rem;
 
-  /** The desk stack's box, and the air between it and the words. */
+  /** The desk stack's box. */
   --stack-width: 2.75rem;
-  --stack-gap: 1.5rem;
+  /** The air between the stack and the words it stands beside. */
+  --stack-inset: 1.5rem;
+  /**
+   * The air between the stack's glyphs, and its own top and bottom padding.
+   *
+   * ⚠ **Derived the way `--bar-gap` is, then given more.** The first term is the
+   * overlap floor: `--tap-floor` centred on a glyph means two controls closer
+   * together than the difference have hit areas that overlap, and the later one
+   * in DOM order takes the taps. That floor is the *minimum*, not the answer —
+   * asked for on sight, 25 August, because a column of three read cramped
+   * against the foot it replaced, which spread the same glyphs across the whole
+   * measure with `justify-around`.
+   *
+   * ⚠ **The air is a rem and the floor is not.** `--tap-floor` is px on purpose
+   * — a thumb does not scale with the type — so only the second term moves when
+   * somebody changes their text size, which is the half that should.
+   */
+  --stack-gap: calc(var(--tap-floor) - var(--glyph-foot) + 0.5rem);
 }
 
 @layer base {

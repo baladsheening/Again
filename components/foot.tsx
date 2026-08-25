@@ -197,6 +197,11 @@ export function Foot({
  * shape is the only thing that says *these belong together*; a border would be
  * the one rule this design does not have anywhere else.
  *
+ * ⚠ **The air between the glyphs is its own token and the padding matches it**,
+ * so the column has one rhythm rather than a gap and an unrelated inset. It was
+ * `gap-1` for an hour and read cramped on sight — see `--stack-gap` for the
+ * overlap floor it is built on and why only half of it scales with the type.
+ *
  * ⚠ **It does not recede.** The bar and the foot leave while the record is read
  * because they sit over it; this sits beside it and covers nothing, so there is
  * nothing to get out of the way of.
@@ -204,7 +209,7 @@ export function Foot({
 export function ToolStack(tools: Tools) {
   return (
     <div
-      className="stack:flex fixed top-[calc(var(--bar-height)+var(--band-height)+var(--band-tail)+var(--stamp-block))] left-[calc(50%-var(--page-measure)/2+var(--gutter-l)-var(--stack-gap))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-1 rounded-2xl bg-[var(--glass-tint)] py-2 backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
+      className="stack:flex fixed top-[calc(var(--bar-height)+var(--band-height)+var(--band-tail)+var(--stamp-block))] left-[calc(50%-var(--page-measure)/2+var(--gutter-l)-var(--stack-inset))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-[var(--stack-gap)] rounded-2xl bg-[var(--glass-tint)] py-[var(--stack-gap)] backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
     >
       <ToolSet {...tools} />
     </div>
