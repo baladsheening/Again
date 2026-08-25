@@ -2443,6 +2443,38 @@
 }
 
 /**
+ * **The same type, without the hem** — for the record's own rows, where the air
+ * belongs to the row rather than to the words.
+ *
+ * ⚠ **This split exists so the line's controls can follow the last character.**
+ * A capture that wraps used to leave its × and pencil out at the right margin,
+ * level with the middle of a two-line entry, because the row was a flex
+ * container and the controls were a flex *item* — flex has no notion of *after
+ * the text ends*. Inline layout does and nothing else does, so the words became
+ * an inline box and the controls inline beside them.
+ *
+ * ⚠ **`padding-block` is what forced the split.** On an inline box it does not
+ * grow the line, which is exactly what makes a glyph's hit area free — and
+ * exactly what would have silently taken `--line-hem` out of every row of the
+ * record. The hem moved to `page-row`, which is a block and can hold it.
+ *
+ * ⚠ **Declared rather than composed**, because `@utility` has no `@apply` into
+ * another utility that survives Tailwind's ordering. Three declarations in two
+ * places: if `--text-line` or `--leading-line` moves, both move with it, and the
+ * only thing that can drift is a letter-spacing typed twice.
+ */
+@utility page-words {
+  font-size: var(--text-line);
+  line-height: var(--leading-line);
+  letter-spacing: -0.01em;
+}
+
+/** The hem `page-words` gave up, on the block that can carry it. */
+@utility page-row {
+  padding-block: var(--line-hem);
+}
+
+/**
  * **Words that are not in the record yet.** The live line while it holds a draft
  * nobody has committed.
  *

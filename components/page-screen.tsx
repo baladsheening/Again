@@ -261,7 +261,7 @@ function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
       type="button"
       onClick={onOpen}
       aria-label="Open the photograph"
-      className="tap-target ms-2 flex shrink-0 items-center self-center"
+      className="tap-target ms-2 inline-flex shrink-0 items-center align-middle"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- a private route, not a CDN; see app/api/media */}
       <img
@@ -341,7 +341,7 @@ function LineTools({
   if (!undoable && !picked) return null
 
   return (
-    <div className="ms-3 -my-2 flex shrink-0 items-center gap-2 self-center py-2 [--glyph:var(--glyph-line)]">
+    <div className="ms-3 -my-2 inline-flex shrink-0 items-center gap-2 py-2 align-middle [--glyph:var(--glyph-line)]">
       {undoable ? (
         <button
           type="button"
@@ -2190,7 +2190,29 @@ export function PageScreen({
                   </p>
                 )}
 
-                <div className="flex items-stretch">
+                {/*
+                  ⚠ **Inline flow, not flex — 25 August.** This was
+                  `flex items-stretch` and the line's controls were a flex item,
+                  so a capture that wrapped to two lines left its × and pencil
+                  out at the right margin, level with the middle of the entry. A
+                  flex container has no notion of *after the text ends*; inline
+                  layout has, and nothing else does. So the words are an inline
+                  box and everything that belongs after them is inline beside
+                  them, which puts them after the last character wherever the
+                  last character falls.
+
+                  ⚠ **The hem and the picked mark moved up here with it.**
+                  `page-line`'s `padding-block` is what set a row's height while
+                  the words were a block; on an inline box it does not, so the
+                  words take `page-words` and this takes the hem. The mark hangs
+                  off `picked`, which is `position: relative` with an absolutely
+                  placed `::before` — on an inline box that spans two lines it
+                  would resolve against the first fragment, so it belongs to the
+                  row, which is what its own note always said it was measuring.
+                */}
+                <div
+                  className={`page-row ${isPicked ? 'picked' : ''}`}
+                >
                   {/*
                     ⚠ **A line of the record is never an input, not even
                     briefly.** An `<input>` was mounted here for a day, borrowing
@@ -2229,11 +2251,17 @@ export function PageScreen({
                     area*, and what just happened is a *line*. The `<li>` would
                     have taken in the day stamp and said *this day landed*.
                   */
-                  className={`page-line min-w-0 text-start ${
-                    isPicked ? 'picked' : ''
-                  } ${crossedOff ? 'line-through opacity-50' : ''} ${
-                    line.landed ? 'landed' : ''
-                  }`}
+                  /*
+                    ⚠ **`inline`, which is the whole of this change.** A
+                    block-level box ends its own line, so anything after it
+                    starts a new one or sits beside the *box*; an inline box ends
+                    where its last character does, and the controls follow it
+                    there. It is also what lets `line-through` run across every
+                    fragment of a wrapped capture rather than across a rectangle.
+                  */
+                  className={`page-words inline text-start ${
+                    crossedOff ? 'line-through opacity-50' : ''
+                  } ${line.landed ? 'landed' : ''}`}
                 >
                   {line.text}
                   {/*
@@ -2318,7 +2346,7 @@ export function PageScreen({
                     */
                     <span
                       aria-hidden
-                      className="text-muted ms-2 self-center line-through opacity-50 [--glyph:var(--glyph-line)] [&>svg]:align-middle"
+                      className="text-muted ms-2 inline align-middle line-through opacity-50 [--glyph:var(--glyph-line)] [&>svg]:align-middle"
                     >
                       <LinkGlyph />
                     </span>
@@ -2328,7 +2356,7 @@ export function PageScreen({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`Open ${linkLabel(line.sourceUrl)}`}
-                      className="text-muted hover:text-chrome ms-2 flex shrink-0 items-center self-center transition-colors [--glyph:var(--glyph-line)]"
+                      className="text-muted hover:text-chrome ms-2 inline-flex shrink-0 items-center align-middle transition-colors [--glyph:var(--glyph-line)]"
                     >
                       <LinkGlyph />
                     </a>
