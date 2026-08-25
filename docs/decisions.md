@@ -5925,9 +5925,14 @@ It also needs a mutation that does not exist: `setCaptureNote` writes the note,
 not the text.
 
 ⚠ **Both halves of this are now false and it is kept for the question it left
-open.** `setCaptureText` exists, the second tap opens the words, and *where* the
-edit happens was answered twice in two days — in place, then in the band. See
-*The rewrite happens in the band* below.
+open.** `setCaptureText` exists, and *where* the edit happens was answered twice
+in two days — in place, then in the band. See *The rewrite happens in the band*
+below.
+
+⚠ **The heading came true again on 25 August, for a different reason.** The
+second tap does not edit — not because the mutation is missing but because the
+foot carries a pencil, and one act does not get two doors. See *The second tap
+stops editing, because the pencil is a door*.
 
 ### `--color-caret` is deleted, by its own terms
 
@@ -6217,6 +6222,10 @@ of thing: something you do to the line you have picked.** The inconsistency was
 the discoverability problem, so rewrite joins them as a fifth glyph and the
 second tap survives as the accelerator.
 
+⚠ **That last clause is reversed on 25 August** — see *The second tap stops
+editing, because the pencil is a door*. The glyph stands; the accelerator does
+not, on this entry's own consistency argument.
+
 It goes third rather than first: cross off and settle keep the slots they have
 had since the foot existed — muscle memory is not worth a tidier reading order —
 and the split that falls out is the honest one, the three that can act and then
@@ -6234,7 +6243,9 @@ cannot act goes off, which is the rule the camera and search already follow.
 ### A line is editable, and the argument is not "the design said so" (24 August)
 
 The design always said a second tap edits, and the handset reopened whether that
-was right. It is, and for reasons that do not depend on the design saying it: a
+was right. ⚠ **The gesture is gone since 25 August and this conclusion is not** —
+what is argued here is that a line is editable, never that a tap is how. It is,
+and for reasons that do not depend on the design saying it: a
 capture is one line typed fast and one-handed with autocorrect on, so typos are
 certain; §5.1's ten-second undo already concedes exactly that at creation and
 leaves a typo found later with no repair at all; and *Resolution offers* matches
@@ -6653,3 +6664,128 @@ read as unfinished. The live row is not a bar.
 That is not resolved here. It is written down because the next person to look at
 a dark paperclip will ask the same question, and the answer is *there is no
 store*, not *it is broken*.
+
+## The second tap stops editing, because the pencil is a door — 25 August
+
+**A tap on a line means *pick*, and now it means nothing else.** The second tap
+that lifted the words into the band is removed at the user's direction. The
+foot's rewrite glyph is the one door to a rewrite.
+
+### Why the accelerator did not survive the control
+
+The 24 August entry above — *Rewriting gets a glyph, because the question was
+consistency* — argued that cross off, settle and rewrite are the same kind of
+thing, something you do to the line you have picked, and that rewriting being a
+secret gesture was the inconsistency. It then kept the gesture "as the
+accelerator". ⚠ **That last clause is the one this reverses, and it fails on the
+entry's own argument.** With a pencil in the foot, a tap on a line answers *pick*
+or *rewrite* depending on what the tap before it was — a gesture whose meaning
+depends on history, which is precisely the modifier gesture `page-screen.tsx`'s
+header rules out. Two doors to the rare act cost the common act its single
+meaning, and the common act is the one every thumb performs.
+
+It is also the cheaper half to lose. The pencil is announced, is dark when it
+cannot act, and cannot be triggered by a thumb that lands twice; the gesture is
+none of those things.
+
+### It is a no-op, not a release
+
+⚠ **A second tap on the words does nothing at all**, and that is deliberate
+rather than an omission. Letting go stays a tap on the paper, or `Escape` on the
+desk, because *the paper is the inverse of picking* is a rule the page already
+holds. Making the words release as well would give one target two readings again
+— and the failure mode is worse than the one just removed: a thumb that
+double-taps a line it meant to settle would un-pick it and darken the very
+control it was aiming for.
+
+### What did not change
+
+The band is still the one field, the pick is still kept while a line is open,
+and the pencil still goes dark while it is. **A line is still editable** — the
+24 August argument for that (typos are certain, and *Resolution offers* matches
+capture text) is untouched; only the way in is.
+
+## A button cannot be inline, and that is why the glyphs kept dropping — 25 August
+
+**Reported:** the × and pencil that are meant to sit after a line's last
+character sometimes appear under it, on their own line. **Two causes, and the
+big one is that the fix for this earlier the same day never took effect.**
+
+### The words were a `<button>`, so they never fragmented
+
+The row was made inline flow that afternoon on the argument that *a flex
+container has no notion of after the text ends*. That argument is right and the
+change was not enough: the words carried `display: inline` on a `<button>`, and
+**an engine will not honour it**. Measured side by side on identical markup and
+styles — `node_modules/.probe/inlinebutton.mjs`:
+
+| element | computed display | fragments | tail lands at |
+|---|---|---|---|
+| `<button>` | **`inline-block`** | 1, filling the 358px column | x=12, next line |
+| `<span>` | `inline` | 2 | x=186, after the last character |
+| `<a>` | `inline` | 2 | x=186, after the last character |
+
+So the words were one atomic box as wide as the column and the tail went after
+the *box* — the flex behaviour again, reached by another road. For any capture
+that wrapped this was not intermittent, it was total.
+
+⚠ **The commit that introduced it said so.** Its last line was *`display: inline`
+on a `<button>` is the load-bearing part and wants a look on hardware.* The look
+came back the same day. A claim flagged as unverified is not a claim that holds
+until someone disproves it.
+
+**The fix is the element**: `<span role="button" tabIndex={0}>` with an
+Enter/Space handler. This is a subtraction and it is right by construction on
+every surface — a span is an inline box in every engine, so nothing here depends
+on which of them coerce buttons. `text-start` went with it: it existed to undo a
+`<button>`'s centred UA text, and a span has nothing to undo. `cursor-default`
+and `select-none` came in for the opposite reason — they are what a button gave
+for free, and an I-beam over a line that cannot be typed into is the same lie as
+a caret on it.
+
+### The tail is an atomic inline, so it can still be left behind
+
+Even with the words fragmenting properly, everything after them — thumbnail,
+link, controls — is an atomic inline that cannot break. The cluster is 56px
+(two glyphs at `--glyph-line`, their gap, and the `ms-3` lead), so it drops to
+its own line whenever the last line ends with less than that remaining: about
+one line in six, and it lands at the **left margin**, where it reads as a
+separate entry rather than as this line's controls.
+
+⚠ **Three cheaper mechanisms were built and measured, and none of them works.**
+Written down because each looks obviously correct until it is run:
+
+- **`padding-inline-end` on the words, pulled back by a negative margin.** Inline
+  end padding does not participate in line breaking — it *hangs* past the line.
+  Measured: 407px of box on a 358px column, the break unmoved.
+- **The same padding on an empty spacer after the words.** An empty inline
+  contributes nothing to the line at all; identical results with and without it.
+- **A `U+2060` word joiner between the words and the tail.** It does not suppress
+  the break across an element boundary; identical results.
+- **A `white-space: nowrap` wrapper around both, with `normal` restored on the
+  words** so their own text still wraps. The inner `normal` re-opens the boundary
+  break; identical results.
+
+**What works is binding the last word to the tail** in one `nowrap` box: when the
+pair will not fit, the *word* comes down with the glyphs and they are still
+immediately after the last character. `node_modules/.probe/keepwith.mjs`, then
+`rowtail.mjs` on the real page — 18 captures at a spread of last-line widths, all
+with the tail 12px after the last character and nothing spilling past the column.
+
+### The split must not reach the accessibility tree
+
+Binding the last word means the words are two elements, and two controls per line
+would double the tab stops on a two-hundred-line record. ⚠ **One half carries
+`role="button"` and is labelled with the whole capture; the other is
+`aria-hidden` with the same click.** A thumb sees one target, a reader sees one
+control, and the label is now *better* than the button's was — it carries the
+year, or spells out the standing question that used to reach a reader as a bare
+`?`. Verified on the page: one `role="button"` per line, Enter picks, a tap on
+the paper still lets go, and the strike runs unbroken across the split.
+
+### What this cost, and the rule it pays for
+
+Two mechanisms where the design wanted one, and a text split that the record has
+to carry. The alternative was a permanent 56px control gutter down the right of
+every line — which is the other honest answer, and it loses because it charges
+every capture for a control that appears on one.

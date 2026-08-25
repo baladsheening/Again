@@ -113,7 +113,8 @@ export function SettleGlyph() {
 }
 
 /**
- * Foot. Rewrite the picked line — **the door the second tap did not have.**
+ * Foot. Rewrite the picked line — **the only door to it**, since the second tap
+ * that used to open the words came out on 25 August.
  *
  * ⚠ **A known icon, which is what §11 permits.** The pencil is the one glyph
  * everybody already reads as *change these words*, and the alternative was a

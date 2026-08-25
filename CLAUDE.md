@@ -58,14 +58,37 @@ of it reversed two decisions the desk had made:
   scrolls on arrival or after a Return, and a keyboard rising from the bottom of
   the glass has no way to cover the line being written.
 - **A line is only as wide as its own words.** Tap the words to pick the line;
-  tap them again to rewrite it; tap the paper to let it go.
+  tap the paper to let it go. ⚠ **A second tap on the words did the rewriting
+  for a day and does nothing since 25 August** — the foot's pencil is the one
+  door, so a tap on a line means *pick* and never two things depending on the
+  tap before it.
+
+⚠ **The words of a record line are a `<span role="button">`, and nothing may
+make them a `<button>` again.** A button cannot be inline — every engine
+computes `inline-block` for it whatever the declaration says — so the words do
+not fragment, the box fills the column, and the line's controls land after the
+*box* instead of after the last character. That shipped for a day on 25 August
+and every wrapping capture wore it. The measurement is
+`node_modules/.probe/inlinebutton.mjs`.
+
+⚠ **The last word is split off and bound to the tail.** Everything after the
+words is an atomic inline that cannot fragment, so a last line ending with less
+room than the tail needs would put the controls on a line of their own at the
+left margin, reading as a separate entry. The last word and the tail sit in one
+`white-space: nowrap` box, so the **word** comes down with the glyphs instead.
+Three cheaper mechanisms were built and measured and none of them works —
+`padding-inline-end` hangs past the column rather than forcing a break, the same
+padding on an empty spacer contributes nothing, and a word joiner does not
+suppress a break across an element boundary. The split is a layout device only:
+one half carries `role="button"` labelled with the whole capture and the other
+is `aria-hidden`, so a reader still gets one control per line.
 
 ⚠ **The page has exactly one field and it is the pinned band.** It holds a new
 capture, or the words of the line being rewritten. **Every instrument on that
 screen is built on this** — the recede, the keyboard hem, the band's own
 correction — and an `<input>` mounted in the record broke all three at once on 24
 August. No line of the record is ever an input. Rewriting is the foot's pencil,
-or a second tap on the words.
+and only the foot's pencil.
 
 ⚠ **The paper does not start a capture.** It did for a day and that was removed:
 the live line is pinned and always on screen, so a second way to reach it was a

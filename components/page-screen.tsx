@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+/* Aliased: the bare name is the DOM one, which this file also listens with. */
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 
 import {
   acceptOfferAction,
@@ -85,10 +87,11 @@ import { touchQuery, useMatches } from './pointer'
  * edit instead. The fix is not a modifier gesture on an always-editable page; it
  * is removing the premise that every line is a live input.
  *
- *   - **Tap the words again and they come to the live line.** The pick is the
- *     common act — settle it, cross it off — and rewriting is the rare one, so
- *     the rare one pays the second tap. The foot's pencil is the same door for
- *     anybody who never tries a second tap.
+ *   - **The foot's pencil is the only door to a rewrite.** Tapping the words
+ *     again did it too for a day, and that is removed: the pick is the common
+ *     act — settle it, cross it off — and a gesture that means one thing the
+ *     first time and another the second is the modifier gesture this section
+ *     rules out. One control, one meaning, and a tap on a line always picks it.
  *
  * ⚠ **The rewrite happens in the band, and that is the answer to the question
  * the design left open.** *In place or in a detail view* was the one thing
@@ -116,8 +119,10 @@ import { touchQuery, useMatches } from './pointer'
  * said a second tap should edit, and that unpicking was a tap on the page — and
  * neither was built until 24 August; a third clause, "which is also how you get
  * back to writing", had gone stale the day the record stopped being a way to
- * start writing. All three are now true of the code below. **A rule written in a
- * header is not a rule that ships.**
+ * start writing. **A rule written in a header is not a rule that ships** — and
+ * the first of the three no longer ships either: the second tap was built and
+ * then taken out again once the foot carried a pencil of its own, because two
+ * doors to a rare act cost the common one its single meaning.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The client owns the list, and the server is the seed
@@ -1070,9 +1075,14 @@ export function PageScreen({
   /* ------------------------------------------------------------------ */
 
   /**
-   * **The words come to the writing line.** The first tap picks; the second — or
-   * the foot's rewrite glyph — lifts that line's words into the band and puts
-   * the caret at the end of them.
+   * **The words come to the writing line.** A tap picks the line; the foot's
+   * rewrite glyph then lifts that line's words into the band and puts the caret
+   * at the end of them.
+   *
+   * ⚠ **The pencil is the only caller, and a second tap on the words is not.**
+   * It was, briefly. Two doors to the rare act meant a tap on a line answered
+   * *pick* or *rewrite* depending on what the last tap had been, which is a
+   * modifier gesture on a page whose header rules them out — see `pick`.
    *
    * ─────────────────────────────────────────────────────────────────────────
    *  ⚠ The field this used to mount in the record is deleted (24 August)
@@ -1348,14 +1358,22 @@ export function PageScreen({
   }, [picked, editing])
 
   /**
-   * ⚠ **The first tap picks and the second opens the words**, which is the rule
-   * this page's header promised from the day it was written and did not keep.
-   * The pick is the common act — settle it, cross it off — and rewriting a line
-   * is the rare one, so the rare one pays the second tap.
+   * ⚠ **Tapping the words picks the line, and that is all it ever does.** A
+   * second tap used to open the words for rewriting; it does not any more. The
+   * foot's pencil is the one door to a rewrite, so the gesture and the control
+   * cannot disagree about what a tap on a line means — and a tap that changes
+   * meaning the second time it lands is the modifier gesture this page's header
+   * rules out, wearing a different coat.
    *
-   * ⚠ **A line already open is not re-opened.** Tapping the words of the line
-   * you are editing is a tap inside the field, and it must place a caret rather
-   * than reset the draft to what is saved.
+   * ⚠ **A second tap is therefore a no-op, deliberately, rather than a
+   * release.** Letting go is a tap on the paper (or `Escape`), and it has to
+   * stay the *inverse* of picking rather than a second reading of the same
+   * target — otherwise a thumb that lands twice on a line it meant to settle
+   * un-picks it and darkens the foot it was aiming for.
+   *
+   * ⚠ **A line already open is not re-picked.** Tapping the words of the line
+   * you are rewriting is a tap on a row whose words are in the band, and it must
+   * leave both alone.
    */
   function pick(line: Line) {
     if (line.pending) return
@@ -1364,10 +1382,7 @@ export function PageScreen({
       return
     }
     if (editing === line.id) return
-    if (picked === line.id) {
-      startEdit(line)
-      return
-    }
+    if (picked === line.id) return
     /* Moving to another line closes whatever was open, and keeps its words. */
     commitEdit()
     setPicked(line.id)
@@ -2175,6 +2190,75 @@ export function PageScreen({
             const crossedOff = line.state === 'dropped'
             const isPicked = line.id !== '' && line.id === picked
 
+            /*
+              ⚠ **The last word is split off the rest, and it is the only thing
+              that keeps the line's tail on the line.** Everything after the
+              words — the thumbnail, the link, the controls — is an *atomic*
+              inline: it cannot fragment, so when the last line of a capture ends
+              with less room than the tail needs, the whole cluster goes to a line
+              of its own at the left margin, where it reads as a separate entry.
+
+              Four ways to stop that were built and measured, and three do not
+              work. `padding-inline-end` on the words hangs past the column
+              instead of forcing a break (measured: 407px of padding on a 358px
+              column). The same padding on an empty spacer contributes nothing at
+              all. A `U+2060` word joiner does not suppress the break across an
+              element boundary. And a `white-space: nowrap` wrapper is overridden
+              by the `normal` the words need for their own text.
+
+              What works is binding the last word to the tail inside one nowrap
+              box: when the pair will not fit, the **word** comes down with the
+              glyphs and they are still immediately after the last character.
+              `node_modules/.probe/keepwith.mjs` is the measurement.
+            */
+            const cut = line.text.lastIndexOf(' ')
+            const head = cut === -1 ? '' : line.text.slice(0, cut + 1)
+            const lastWord = cut === -1 ? line.text : line.text.slice(cut + 1)
+
+            /*
+              **One control per line, and it is named with the whole capture.**
+              The split is a layout device, so it must not reach the a11y tree as
+              two buttons and two tab stops per line. The half that carries the
+              role is labelled with everything the line says — including the year
+              or the standing question, which a reader would otherwise get as a
+              bare `?` — and the other half is `aria-hidden` with the same click,
+              so a thumb sees one target and a reader sees one control.
+            */
+            const label =
+              line.year !== null
+                ? `${line.text} ${line.year}`
+                : line.offer !== null
+                  ? `${line.text} — is this ${line.offer.title}?`
+                  : line.text
+
+            const pickable = {
+              role: 'button' as const,
+              tabIndex: 0,
+              'aria-label': label,
+              'aria-current': isPicked ? ('true' as const) : undefined,
+              onClick: () => pick(line),
+              onKeyDown: (e: ReactKeyboardEvent<HTMLSpanElement>) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                /* Space scrolls the page otherwise, which a button never does. */
+                e.preventDefault()
+                pick(line)
+              },
+            }
+            /* The same target to a thumb, silent to a reader. */
+            const quiet = { 'aria-hidden': true, onClick: () => pick(line) }
+
+            /*
+              ⚠ **Both halves of the words wear this, from one place.** They are
+              one line as far as anybody looking at them is concerned, so a
+              strike or a landing that reached only one of them would be the
+              split becoming visible. `cursor-default` and `select-none` are what
+              a `<button>` gave for free and a span does not: an I-beam over a
+              line that cannot be typed into is the same lie as a caret on it.
+            */
+            const words = `page-words inline cursor-default select-none ${
+              crossedOff ? 'line-through opacity-50' : ''
+            } ${line.landed ? 'landed' : ''}`
+
             return (
               <li key={line.key}>
                 {stamped && (
@@ -2226,10 +2310,40 @@ export function PageScreen({
                     `startEdit` for the full argument, and for why this is a
                     condition removed rather than three corrections applied.
                   */}
-                <button
-                  type="button"
-                  onClick={() => pick(line)}
-                  aria-current={isPicked ? 'true' : undefined}
+                {/*
+                  ⚠ **A span, because a `<button>` cannot be inline — and that
+                  is the whole of the bug this replaced.** The row was made
+                  inline flow on 25 August so the controls would follow the last
+                  character, and the words kept `display: inline` on a
+                  `<button>`. Engines refuse it: the computed display comes back
+                  `inline-block`, so the words never fragment, the box is as wide
+                  as the whole column, and the tail lands after the *box* —
+                  which is the flex behaviour that change set out to remove,
+                  reached by another road. Measured side by side in
+                  `node_modules/.probe/inlinebutton.mjs`: `<button>` gives one
+                  fragment 358px wide and the glyphs at x=12 on the next line;
+                  `<span>` and `<a>` give two fragments and the glyphs at x=186,
+                  immediately after the last character.
+
+                  ⚠ **This is why `text-start` is gone with it.** It was undoing
+                  a `<button>`'s centred UA text — a span has nothing to undo,
+                  and the row already reads its alignment from the page.
+                */}
+                {head !== '' && (
+                  <span {...pickable} className={words}>
+                    {head}
+                  </span>
+                )}
+
+                {/*
+                  ⚠ **The binding.** The last word and everything after it sit in
+                  one box that cannot break, so the glyphs can never be left
+                  behind on a line of their own — see the note where `lastWord`
+                  is cut for the three mechanisms that do not work.
+                */}
+                <span className="whitespace-nowrap">
+                <span
+                  {...(head === '' ? pickable : quiet)}
                   /*
                     ⚠ **A line in flight looks exactly like a line that landed,
                     and that is the contract rather than an oversight.** It was
@@ -2259,11 +2373,9 @@ export function PageScreen({
                     there. It is also what lets `line-through` run across every
                     fragment of a wrapped capture rather than across a rectangle.
                   */
-                  className={`page-words inline text-start ${
-                    crossedOff ? 'line-through opacity-50' : ''
-                  } ${line.landed ? 'landed' : ''}`}
+                  className={words}
                 >
-                  {line.text}
+                  {lastWord}
                   {/*
                     ⚠ **`leading-none`, and it is the difference between 44px and
                     46px.** A 13px span inheriting the line's 28px line-height
@@ -2301,7 +2413,7 @@ export function PageScreen({
                       ?
                     </span>
                   )}
-                </button>
+                </span>
 
                 {line.hasImage && (
                   <Thumbnail line={line} onOpen={() => setLooking(line)} />
@@ -2309,13 +2421,14 @@ export function PageScreen({
 
                 {/*
                   ⚠ **A real `<a>`, and a sibling of the words rather than
-                  something inside them.** A line's words are a `<button>` —
-                  that is what makes tap-to-pick and tap-again-to-rewrite work —
-                  and an anchor nested in a button is invalid markup whose
-                  interaction breaks in a different way in every engine. Beside
-                  it, the pick gesture is untouched and the link keeps
-                  middle-click, long-press and the back button, which is the
-                  whole argument the foot's search control already makes.
+                  something inside them.** The words are the pick target, and a
+                  control nested inside another control is exposed differently by
+                  every reader and every engine — which is as true of an anchor
+                  inside `role="button"` as it was of one inside the `<button>`
+                  this used to be. Beside it, the pick gesture is untouched and
+                  the link keeps middle-click, long-press and the back button,
+                  which is the whole argument the foot's search control already
+                  makes.
 
                   ⚠ **`noreferrer` as well as `noopener`.** The destination is
                   somewhere a person saved privately; the Referer header would
@@ -2385,7 +2498,7 @@ export function PageScreen({
                   */
                   onRewrite={editing === null ? () => startEdit(line) : null}
                 />
-
+                </span>
 
                 {/*
                   ⚠ **The paper is gone, and it was here.** Every row carried

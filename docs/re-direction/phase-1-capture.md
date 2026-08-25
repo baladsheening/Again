@@ -69,6 +69,24 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > reported and what it turned out to be. **None of it is verified on hardware
 > yet**, which is the one thing outstanding on this page.
 >
+> ⚠ **The line's controls now actually follow the last character, which they
+> did not when that was first built.** The row was made inline flow on 25 August
+> so a wrapping capture would stop stranding its × and pencil at the margin —
+> but the words stayed a `<button>`, and **a button cannot be inline**: every
+> engine computes `inline-block` for it, so the box never fragmented and the
+> tail landed after the *box*, which is the flex behaviour that change set out
+> to remove. The words are a `<span role="button">` now, and the last word is
+> bound to the tail in a `nowrap` box so a tight last line brings the word down
+> with the glyphs rather than leaving them behind. Measured on the real page at
+> 390, 1024 and 1440 — see *The gesture, and the door*.
+>
+> ⚠ **The second tap no longer edits, at the user's direction on 25 August.**
+> The foot's pencil is the only door to a rewrite; a tap on a line means *pick*
+> and nothing else, and a second one does nothing. It was kept as an accelerator
+> when the glyph shipped on the 24th, and that is what came out — see *The gesture,
+> and the door* below and `docs/decisions.md`, *The second tap stops editing,
+> because the pencil is a door*.
+>
 > **The installed app re-enters on resume, since 25 August.** It used to never
 > reload until it was force-quit, which made every report from it a question
 > about which build was running. Becoming visible now reloads the page — but
@@ -726,12 +744,44 @@ longer clears the pick — **the fifth thing on this page to come off focus** �
 why the two gestures that mean *I am starting a new capture* (a tap on the field,
 a keystroke in it) carry that job instead.
 
-**The gesture, and the door.** First tap picks, second tap lifts the words into
-the band. ⚠ **The foot's pencil does the same thing and is the announced way** —
-see *The glyph set* and the note in `foot.tsx` for why the discoverability
-question was really a consistency question. The pencil goes dark while a line is
-open: re-opening it would replace what is in the field with what is saved, which
-is a discard nobody asked for.
+**The gesture, and the door.** A tap picks the line; **the foot's pencil is the
+one door to a rewrite** — see *The glyph set* and the note in `foot.tsx` for why
+the discoverability question was really a consistency question. The pencil goes
+dark while a line is open: re-opening it would replace what is in the field with
+what is saved, which is a discard nobody asked for.
+
+⚠ **A second tap lifted the words too, for a day, and that is removed (25
+August).** Once the pencil existed the accelerator was a second answer to *what
+does tapping a line do* — the gesture meant *pick* or *rewrite* depending on what
+the previous tap had been, which is the modifier gesture this page rules out
+wearing a different coat. **The control won**, because it is the discoverable one
+and because a control cannot be triggered by a thumb that lands twice.
+
+**The target, and where the controls land.** ⚠ **The words are a
+`<span role="button">`, never a `<button>`.** A button cannot be inline — every
+engine computes `inline-block` for it whatever the declaration says — so as a
+button the words did not fragment, the box filled the column, and the tail landed
+after the *box*: the margin behaviour that inline flow was adopted to remove.
+That shipped for a day on 25 August and every wrapping capture wore it. See
+`docs/decisions.md`, *A button cannot be inline*.
+
+⚠ **The last word is split off and bound to the tail in a `nowrap` box.**
+Everything after the words is an atomic inline that cannot break, so a last line
+ending with less than the tail's width remaining would drop the glyphs to the
+left margin of a new line, where they read as a separate entry. Bound, the
+**word** comes down with them instead. Three cheaper mechanisms were built and
+measured and all three fail — inline end padding hangs past the column instead of
+forcing a break, the same padding on an empty spacer contributes nothing, and a
+word joiner does not suppress a break across an element boundary.
+
+⚠ **The split is layout only.** One half carries `role="button"` labelled with
+the whole capture, the other is `aria-hidden` with the same click — one target
+for a thumb, one control for a reader, one tab stop per line.
+
+⚠ **The second tap is a no-op rather than a release**, deliberately: letting go
+stays a tap on the paper (or `Escape`), the *inverse* of picking. Making the
+words release as well would mean a thumb that double-taps a line it meant to
+settle un-picks it and darkens the foot it was aiming for.
 
 ⚠ **The keyboard is raised by `focus()` inside the tap**, which works because
 picking blurred the field on purpose. Nothing about it can move to an effect.
@@ -871,8 +921,15 @@ live view.
 a consistency question.** Cross off and settle are controls in the foot;
 rewriting was a secret gesture — and all three are the same kind of thing,
 something you do to the line you have picked. So rewrite joins them as a fifth
-glyph, and the second tap survives as the accelerator. A legend, an icon with
-copy, or a hint are all still ruled out; none of them was needed.
+glyph. A legend, an icon with copy, or a hint are all still ruled out; none of
+them was needed.
+
+⚠ **The second tap survived as the accelerator for a day and then did not (25
+August).** Consistency was the argument for the glyph and it is the argument
+against keeping both: with a pencil in the foot, a tap on a line answered *pick*
+or *rewrite* depending on the tap before it, and a gesture whose meaning depends
+on history is the modifier gesture the section above rules out. One control, one
+meaning. See *The gesture, and the door*.
 
 ⚠ **A drawn caret on the picked line was the other candidate and it is rejected
 on its own terms.** The page has already taught that a caret means *writing
@@ -1019,11 +1076,13 @@ its undo, and a record paged back through is kept.
   and nothing about a raw capture can answer it. Yes → `go_back_to`, No →
   `done`.
 - **The tray is one surface**, `/settled`, with each row carrying its own word.
-- **A second tap lifts the words into the band, and the foot's pencil is the
-  announced door** — see *Rewriting a line* above. ⚠ **In place shipped for a day
-  and is deleted.** The page has exactly one field and it is the pinned one; that
-  is what every instrument on the screen is built on, and it is what the day of
-  in-place editing broke.
+- **The foot's pencil lifts the words into the band, and it is the only door** —
+  see *Rewriting a line* above. ⚠ **In place shipped for a day and is deleted.**
+  The page has exactly one field and it is the pinned one; that is what every
+  instrument on the screen is built on, and it is what the day of in-place
+  editing broke. ⚠ **The second tap shipped for a day too and is deleted (25
+  August)**: with a control in the foot it made a tap on a line mean two things
+  depending on the tap before it.
 
 The full reasoning for each is in `docs/decisions.md`, *Phase 1: the page and
 Return — 23 August*.
@@ -1095,9 +1154,10 @@ Once that is admitted, the collision disappears:
   gesture. ⚠ The words, not the row: a line’s hit area is the width of its own
   text, and the paper beside it **releases the picked line** — it does not start
   a capture, which it did for one day in August. See *The deviations* above.
-- **A second tap edits**, turning that record back into an input. Picking is
-  the common act — settle it, cross it off — and editing a captured line is
-  rare, so the rare one pays the second tap.
+- **A tap on the words means *pick* and never anything else.** A second tap edited
+  for a day in August and does not since the 25th: the foot's pencil is the one
+  door to a rewrite, so a tap on a line cannot also be one. A second tap does
+  nothing at all — releasing stays a tap on the paper.
 - **The keyboard follows liveness.** Up on a cold open, because capture is why
   the app was opened. Gone the moment a saved line is picked.
 

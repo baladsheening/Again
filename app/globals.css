@@ -2453,6 +2453,14 @@
  * the text ends*. Inline layout does and nothing else does, so the words became
  * an inline box and the controls inline beside them.
  *
+ * ⚠ **That did not take for a day, because the words were a `<button>` and a
+ * button cannot be inline.** Engines compute `inline-block` for it whatever the
+ * declaration says, so the box never fragmented, filled the whole column, and
+ * the tail landed after the *box* — the flex behaviour again, by another road.
+ * The words are a `<span role="button">` since 25 August. Nothing here may put
+ * this class on a `<button>` again; `node_modules/.probe/inlinebutton.mjs` is
+ * the measurement.
+ *
  * ⚠ **`padding-block` is what forced the split.** On an inline box it does not
  * grow the line, which is exactly what makes a glyph's hit area free — and
  * exactly what would have silently taken `--line-hem` out of every row of the
