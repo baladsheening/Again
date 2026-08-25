@@ -214,12 +214,45 @@ export function useKeyboardHem({
     window.addEventListener('resize', hold)
     window.addEventListener('orientationchange', hold)
 
+    /*
+      ─────────────────────────────────────────────────────────────────────────
+       And a fifth: coming back, because nothing could be measured while away
+      ─────────────────────────────────────────────────────────────────────────
+
+      ⚠ **Reported on a handset, 25 August:** type in the live line, background
+      the app with the keyboard up, come back — and a keyboard's worth of the
+      screen is still spoken for with no keyboard in it.
+
+      ⚠ **`requestAnimationFrame` does not run while the document is hidden**,
+      which is the whole of it. iOS takes the keyboard away on the way out and
+      the viewport events for that fire into a loop that cannot execute; by the
+      time the page is visible again `until` is long past, so unless the platform
+      volunteers a fresh viewport event nothing re-measures. `--keyboard-overlap`
+      and the band's `transform` then keep the values they were given while the
+      keys were up, and there is no path back to zero — the cleanup only runs
+      when `writing` goes false, and somebody who left mid-line is still writing.
+
+      ⚠ **It does not need to know what happened while it was away**, which is
+      why this is one line rather than a restoration. iOS sometimes brings the
+      keyboard back with the focus and sometimes does not; a measurement of a
+      rendered box is right either way. That is the same property that survived
+      the five wrong versions above — measure the box, calculate nothing.
+
+      `hold` rather than `schedule`, because a keyboard returning on resume is an
+      animation like any other and one frame would catch it halfway.
+    */
+    const returned = () => {
+      if (document.visibilityState === 'visible') hold()
+    }
+    document.addEventListener('visibilitychange', returned)
+
     return () => {
       window.removeEventListener('scroll', schedule)
       vv.removeEventListener('resize', hold)
       vv.removeEventListener('scroll', hold)
       window.removeEventListener('resize', hold)
       window.removeEventListener('orientationchange', hold)
+      document.removeEventListener('visibilitychange', returned)
       if (frame) cancelAnimationFrame(frame)
 
       /*
