@@ -626,16 +626,59 @@ export function PageScreen({
     for the life of the page rather than being torn down and rebuilt on every
     keystroke, which is what a dependency array of eleven values would do.
   */
-  const settledNow = useRef(settled)
+  const onResume = useRef<() => void>(() => {})
   useEffect(() => {
-    settledNow.current = settled
+    onResume.current = () => {
+      if (settled) {
+        window.location.reload()
+        return
+      }
+
+      /*
+        ──────────────────────────────────────────────────────────────────────
+         Not settled: the page stays, and stops claiming a keyboard it has lost
+        ──────────────────────────────────────────────────────────────────────
+
+        ⚠ **Reported on a handset, 25 August:** background the app with the
+        keyboard up, come back, and the keyboard rises and then collapses. It is
+        iOS drawing its resume snapshot, finding no focused field underneath and
+        dropping the keys — **focus does not survive the background, and the
+        words on the line prove nothing about it**, because `draft` is state and
+        has never depended on focus.
+
+        ⚠ **The keyboard cannot be held up, and that half of the request is not
+        buildable.** Raising one needs a gesture, and a resume is not one. What
+        was left behind instead was worse than the flash: `writing` still true,
+        so the scrim was up and the chrome receded — a page insisting somebody
+        was writing, with no keyboard and no caret anywhere on it.
+
+        So the claim is dropped rather than the symptom covered. `writing` means
+        *a keyboard has been asked for*; after a resume on glass that is false,
+        and saying so puts the page back at rest with the words still on the
+        line. One tap resumes writing and raises the keyboard — the gesture iOS
+        was always going to require.
+
+        ⚠ **Both, because the blur alone is not enough** — the same trap the
+        writing pane's click hit. `blur()` on a field that is not focused fires
+        no event, and after a resume it is exactly that, so the flag would stand
+        with no way out.
+
+        ⚠ **Coarse pointers only, and it is the mirror of `rest()`.** That fires
+        only on a fine pointer, this only on a coarse one, and both turn on one
+        fact: whether there is an on-screen keyboard that can disagree with the
+        page. On the desk focus survives an app switch, so somebody who alt-tabs
+        away mid-line is still writing and nothing should say otherwise.
+      */
+      if (!touch) return
+      input.current?.blur()
+      setWriting(false)
+    }
   })
 
   useEffect(() => {
     const resumed = () => {
       if (document.visibilityState !== 'visible') return
-      if (!settledNow.current) return
-      window.location.reload()
+      onResume.current()
     }
     document.addEventListener('visibilitychange', resumed)
     return () => document.removeEventListener('visibilitychange', resumed)
