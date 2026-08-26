@@ -96,6 +96,42 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 > a line written on the desktop arrives, a half-typed line survives, the undo
 > window holds, and a record paged back through is kept. See *Resume is a load*
 > below.
+>
+> ⚠ **The handset reported three things on 26 August. Two are fixed, one is a
+> decision.**
+>
+> - **The undo did not sit on the line, and it was two faults at once.** The
+>   line's type lived on the words while the row around them was still the
+>   page's body 15/1.45 — and `vertical-align: middle` centres a box on its
+>   *parent's* x-height, so every glyph riding a line was aligned against the
+>   wrong face. Measured 3.29px under the words' cap centre. The type moved to
+>   `page-row`, `page-words` is deleted, and `line-glyph` replaces
+>   `align-middle` throughout: the box is exactly the line box, top-aligned, so
+>   the glyph lands on the line's own centre with **no face metric anywhere in
+>   it**. Now 6.00px above the baseline, which is the line box centre to the
+>   pixel. The hit area went 34px → 44px as a side effect, and every row still
+>   measures 44px. Separately, `UndoGlyph` was the one drawing of eight not
+>   centred in its own 20-grid — ink at 10.75 against a box centred on 10 — and
+>   is redrawn. `node_modules/.probe/glyphline.mjs` and `linealign.mjs`.
+> - **The blink was behind the writing pane on glass**, because `rest()` is a
+>   no-op on a coarse pointer and must be — the keyboard stays up for a run of
+>   captures — so `writing` is still true at the instant a line lands. Neither
+>   the pane nor the blink could be removed, so the rule is that **the receipt
+>   is exempt**: `surfaced` lifts the row to `z-6` and makes it untouchable for
+>   exactly the blink's length, on one shared `--landed` token, with no timer.
+>   `node_modules/.probe/receipt.mjs` shows it sharp while lifted and blurred
+>   after.
+> - ⚠ **The live row stays one row, at the user's direction.** A 50-character
+>   capture overflows the band by 92px on a 390px handset and an `<input>`
+>   cannot be panned on glass, while the same words land in the record as two
+>   lines — so the page shows less of a capture while it is being written than
+>   after it is committed. The only real fix is a band that wraps, which costs
+>   `--band-height` its constancy. It was put as a question and the answer was
+>   **leave it**. `node_modules/.probe/bandwidth.mjs` has the numbers, and
+>   `docs/decisions.md` has the reasoning, so nobody re-derives it.
+>
+> ⚠ **None of the three is verified on hardware**, which is now the one thing
+> outstanding on this page.
 
 ### The 23 commits this register was missing
 

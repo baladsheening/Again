@@ -1329,6 +1329,23 @@
    */
   --ease-recede: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /**
+   * **How long a capture blinks where it lands**, and how long it is allowed
+   * through the writing pane's glass while it does — see `landed` and
+   * `surfaced`.
+   *
+   * ⚠ **One number for both, because they are one event.** The blink is the
+   * receipt and the lift is what makes the receipt visible on glass; two
+   * durations would be a line that finishes winking and then sinks, or sinks
+   * and then finishes winking. Neither is a thing that happened.
+   *
+   * ⚠ **Not `--recede`.** The chrome's number describes furniture getting out
+   * of the way and is answerable to a thumb still making the gesture; this
+   * describes an instant that is over. They are unrelated and must not be
+   * collapsed — see `landed` for why a run of Returns caps this one.
+   */
+  --landed: 420ms;
+
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -2443,43 +2460,101 @@
 }
 
 /**
- * **The same type, without the hem** — for the record's own rows, where the air
- * belongs to the row rather than to the words.
+ * **A row of the record: the line's own type, and the air around it.**
  *
- * ⚠ **This split exists so the line's controls can follow the last character.**
- * A capture that wraps used to leave its × and pencil out at the right margin,
- * level with the middle of a two-line entry, because the row was a flex
- * container and the controls were a flex *item* — flex has no notion of *after
- * the text ends*. Inline layout does and nothing else does, so the words became
- * an inline box and the controls inline beside them.
+ * ⚠ **The type is declared here rather than on the words — 26 August, and it is
+ * the fix for a control that read as sitting low.** It lived on `page-words`, so
+ * the words were 18/28 inside a row that was still the page's body 15/1.45 —
+ * and every inline that rides a line aligns against **its parent's** font, not
+ * against the words beside it. `vertical-align: middle` centres on the parent's
+ * x-height, so the undo, the link and the photograph were being centred on a
+ * 15px x-height while sitting next to 18px words: measured 3.3px below the
+ * words' cap centre, which is what a handset reported on the undo.
+ * `node_modules/.probe/glyphline.mjs` is the measurement.
+ *
+ * The row **is** the line, so the row carries the line's type and everything in
+ * it inherits — the words, the year, and the reference every glyph beside them
+ * aligns against. One declaration instead of two, and nothing left that can
+ * align against the wrong face. See `line-glyph` for what the furniture then
+ * does with it.
+ *
+ * ⚠ **The hem is the row's, and that is why the split existed at all.**
+ * `padding-block` on an inline box does not grow the line, which is what makes a
+ * glyph's hit area free — and what would silently take `--line-hem` out of every
+ * row of the record if it were set on the words. This is a block and can hold it.
+ *
+ * ⚠ **The words themselves are `display: inline` and carry no type of their
+ * own.** A capture that wraps used to leave its × and pencil out at the right
+ * margin, because the row was a flex container and the controls were a flex
+ * *item* — flex has no notion of *after the text ends*. Inline layout does and
+ * nothing else does.
  *
  * ⚠ **That did not take for a day, because the words were a `<button>` and a
  * button cannot be inline.** Engines compute `inline-block` for it whatever the
  * declaration says, so the box never fragmented, filled the whole column, and
  * the tail landed after the *box* — the flex behaviour again, by another road.
- * The words are a `<span role="button">` since 25 August. Nothing here may put
- * this class on a `<button>` again; `node_modules/.probe/inlinebutton.mjs` is
- * the measurement.
- *
- * ⚠ **`padding-block` is what forced the split.** On an inline box it does not
- * grow the line, which is exactly what makes a glyph's hit area free — and
- * exactly what would have silently taken `--line-hem` out of every row of the
- * record. The hem moved to `page-row`, which is a block and can hold it.
- *
- * ⚠ **Declared rather than composed**, because `@utility` has no `@apply` into
- * another utility that survives Tailwind's ordering. Three declarations in two
- * places: if `--text-line` or `--leading-line` moves, both move with it, and the
- * only thing that can drift is a letter-spacing typed twice.
+ * The words are a `<span role="button">` since 25 August. Nothing may make them
+ * a `<button>` again; `node_modules/.probe/inlinebutton.mjs` is the measurement.
  */
-@utility page-words {
+@utility page-row {
   font-size: var(--text-line);
   line-height: var(--leading-line);
   letter-spacing: -0.01em;
+  padding-block: var(--line-hem);
 }
 
-/** The hem `page-words` gave up, on the block that can carry it. */
-@utility page-row {
+/**
+ * **Furniture that rides a line of the record** — the line's controls, its link,
+ * its photograph. Centred on the *line's own box*, never on its x-height.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why `vertical-align: middle` is the wrong middle
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * `middle` is defined as the parent's baseline plus half its **x-height** — the
+ * middle of a lowercase `x`, with nothing said about the capitals and ascenders
+ * a line of running text is mostly made of. So it always lands below where the
+ * eye puts the centre of a line, and it lands further below the larger the type
+ * is next to the glyph. Measured on this page: 1.8px under the words' cap centre
+ * with the row's type right, and 3.3px under it while the row was still the
+ * page's body type. A handset read the second as *the undo sits low*, and it did.
+ *
+ * ⚠ **The answer is the line box, and it needs no face metrics at all.** A line
+ * box is the strut's leading split evenly above and below its content, so its
+ * centre **is** the text's own centre by construction — whatever the face, the
+ * size or the leading. So the box is made exactly `--leading-line` tall and
+ * top-aligned to the line box it sits in, and the glyph centres inside it.
+ * Nothing here is tuned and nothing reads a font.
+ *
+ * ⚠ **`vertical-align: top` is safe only because this box is exactly the line
+ * box.** A taller one would grow the line and then pin itself to the top of what
+ * it grew — a row standing taller than its neighbours with its glyph against the
+ * ceiling. Anything wearing this must be no taller than `--leading-line`; the
+ * record's furniture is all `--glyph-line` or `--thumb`, and both of those are
+ * the height of the text by derivation.
+ *
+ * ⚠ **`content-box`, which is what buys the hit area for nothing.** The height is
+ * the *content* box, so the hem adds outside it and the border box comes to
+ * `--leading-line` plus two hems — 44px, which is `--tap-floor`. The negative
+ * margin takes the same hem straight back, so the margin box is the line box
+ * again and the row is not one pixel taller for it. That is `--glyph-line`'s own
+ * rule — *larger than the drawing without being larger than the row* — met
+ * exactly rather than approximately, and the overhang lands inside the row's own
+ * `--line-hem`, so two rows' hit areas meet and never overlap.
+ *
+ * ⚠ **The struck line's link deliberately does not wear this.** Its glyph stays
+ * on `middle` so the strike runs *through* it rather than under it: a strikeout
+ * is drawn near the x-height, which is the one place `middle` is the right
+ * answer. See the note beside it in `page-screen.tsx`.
+ */
+@utility line-glyph {
+  box-sizing: content-box;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: top;
+  height: var(--leading-line);
   padding-block: var(--line-hem);
+  margin-block: calc(-1 * var(--line-hem));
 }
 
 /**
@@ -2832,7 +2907,73 @@
  * the line is on the page either way.
  */
 @utility landed {
-  animation: line-landed 420ms ease-in-out both;
+  animation: line-landed var(--landed) ease-in-out both;
+}
+
+/**
+ * **The receipt comes through the glass.** A line that has just landed is lifted
+ * clear of the writing pane for exactly as long as it blinks, and drops back
+ * behind it.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Reported on a handset, 26 August: the blink is obscured by the blur
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The pane blurs the record and sinks it a stop while a line is being written,
+ * so the words in hand are the only sharp thing on screen. On the desk that is
+ * invisible here, because `rest()` ends the writing mode on Return and the pane
+ * fades as the line arrives. **On glass it does not and must not**: the keyboard
+ * stays up because a session of captures is a run of them, so `writing` is still
+ * true at the moment the line lands and the blink happens behind the blur.
+ *
+ * ⚠ **Neither half could be removed, which is what makes this a correction.**
+ * The pane's whole job is to blur the record; the blink is the only thing on the
+ * page that marks the instant a capture became a record. So the rule is that the
+ * **receipt is exempt** — the one thing the record is allowed to say through the
+ * glass — and it is exempt for exactly the length of the saying.
+ *
+ * ⚠ **The animation owns the duration, not a timer.** `landed` is a property of
+ * the line and never clears, so a class keyed on it would leave every capture
+ * made this session floating above the pane forever. This is an animation with
+ * `both`, so it holds `z-index: auto` the moment it is over and the row is behind
+ * the glass again — the same argument that keeps `landed` off a piece of state
+ * with a `setTimeout`.
+ *
+ * ⚠ **`step-end`, because a z-index has no in-between.** The lift is on for the
+ * blink and off after it; interpolating it would be asking the engine to invent
+ * a state that does not exist.
+ *
+ * ⚠ **6, which is above the pane and below everything that can act.** The pane
+ * is `z-5`, the band `z-10` and the two bars `z-20`. A receipt must never come up
+ * over the line being written.
+ *
+ * ⚠ **It cannot be touched while it is up.** The pane's other job is to take the
+ * tap that puts the keyboard away, and a row sitting over it would steal that
+ * tap and pick the line instead. A control at 15% opacity mid-blink is not armed
+ * yet, so the row is transparent to the pointer for the same instant it is
+ * transparent to the pane — which reads as *the pane is still the pane*.
+ *
+ * ⚠ **Nothing between this row and the pane may become a stacking context.**
+ * `main`, the `<ol>` and the `<li>` are all plain, which is what lets a z-index
+ * this deep in the tree compete with a `fixed` sibling of `main` at all. The
+ * `<ol>`'s `record-held` opacity would make one — it cannot apply here, because a
+ * draft that is unsent is a draft that has not landed.
+ */
+@utility surfaced {
+  position: relative;
+  animation: line-surfaced var(--landed) step-end both;
+}
+
+/** Up for the blink, back for good. See `surfaced`. */
+@keyframes line-surfaced {
+  from {
+    z-index: 6;
+    pointer-events: none;
+  }
+  to {
+    z-index: auto;
+    pointer-events: auto;
+  }
 }
 
 /**

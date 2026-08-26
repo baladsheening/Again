@@ -266,7 +266,9 @@ function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
       type="button"
       onClick={onOpen}
       aria-label="Open the photograph"
-      className="tap-target ms-2 inline-flex shrink-0 items-center align-middle"
+      /* The line's own centre — see `line-glyph`. `tap-target` is still what
+         gives it 44px of *width*; the utility only answers the height. */
+      className="line-glyph tap-target ms-2 shrink-0"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- a private route, not a CDN; see app/api/media */}
       <img
@@ -346,7 +348,15 @@ function LineTools({
   if (!undoable && !picked) return null
 
   return (
-    <div className="ms-3 -my-2 inline-flex shrink-0 items-center gap-2 py-2 align-middle [--glyph:var(--glyph-line)]">
+    /*
+      ⚠ **`line-glyph`, not `align-middle` — 26 August.** A handset read the undo
+      as sitting low, and it was: `middle` centres a box on the *parent's*
+      x-height, so this was being centred on a lowercase x while sitting beside
+      the line's words. The utility makes the box the line box and top-aligns it,
+      which puts the glyph on the line's own centre with no number in it. See
+      `line-glyph` and `page-row` in globals.css.
+    */
+    <div className="line-glyph ms-3 shrink-0 gap-2 [--glyph:var(--glyph-line)]">
       {undoable ? (
         <button
           type="button"
@@ -2254,8 +2264,13 @@ export function PageScreen({
               split becoming visible. `cursor-default` and `select-none` are what
               a `<button>` gave for free and a span does not: an I-beam over a
               line that cannot be typed into is the same lie as a caret on it.
+
+              ⚠ **No type here.** It was `page-words` until 26 August; the line's
+              size, leading and tracking live on the row now, so the words
+              inherit them — and so does every glyph that has to align against
+              them, which is what that move was for.
             */
-            const words = `page-words inline cursor-default select-none ${
+            const words = `inline cursor-default select-none ${
               crossedOff ? 'line-through opacity-50' : ''
             } ${line.landed ? 'landed' : ''}`
 
@@ -2287,15 +2302,31 @@ export function PageScreen({
 
                   ⚠ **The hem and the picked mark moved up here with it.**
                   `page-line`'s `padding-block` is what set a row's height while
-                  the words were a block; on an inline box it does not, so the
-                  words take `page-words` and this takes the hem. The mark hangs
-                  off `picked`, which is `position: relative` with an absolutely
-                  placed `::before` — on an inline box that spans two lines it
-                  would resolve against the first fragment, so it belongs to the
-                  row, which is what its own note always said it was measuring.
+                  the words were a block; on an inline box it does not, so this
+                  takes the hem. The mark hangs off `picked`, which is
+                  `position: relative` with an absolutely placed `::before` — on
+                  an inline box that spans two lines it would resolve against the
+                  first fragment, so it belongs to the row, which is what its own
+                  note always said it was measuring.
+
+                  ⚠ **The line's type is the row's too, since 26 August**, and
+                  that is the fix for furniture that read as sitting low. It was
+                  on the words, so every glyph beside them was aligning against
+                  the page's body type instead of the line's — see `page-row` in
+                  globals.css for the measurement.
                 */}
                 <div
-                  className={`page-row ${isPicked ? 'picked' : ''}`}
+                  /*
+                    ⚠ **`surfaced` lifts a just-landed line clear of the writing
+                    pane for exactly as long as it blinks.** On glass the keyboard
+                    is still up when a line lands — a run of captures is a run of
+                    Returns — so the pane is over the record and the receipt was
+                    happening behind the blur. See `surfaced` in globals.css for
+                    why neither the pane nor the blink could be removed instead.
+                  */
+                  className={`page-row ${isPicked ? 'picked' : ''} ${
+                    line.landed ? 'surfaced' : ''
+                  }`}
                 >
                   {/*
                     ⚠ **A line of the record is never an input, not even
@@ -2456,6 +2487,16 @@ export function PageScreen({
                       puts the line *through* the glyph instead of under it: an
                       inline SVG sits on the baseline, and the strike is drawn
                       near the x-height.
+
+                      ⚠ **This is the one glyph on the row that keeps `middle`,
+                      and `line-glyph` must not be put on it.** Everything else
+                      here was moved off `middle` on 26 August because it centres
+                      on the x-height and therefore sits low against the words —
+                      but the x-height is exactly where a strikeout is drawn, so
+                      it is the right middle for the one glyph the strike has to
+                      pass through. The 1.3px it now sits below its live twin is
+                      on a line that is struck and at half strength, and the two
+                      can never appear together.
                     */
                     <span
                       aria-hidden
@@ -2469,7 +2510,7 @@ export function PageScreen({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`Open ${linkLabel(line.sourceUrl)}`}
-                      className="text-muted hover:text-chrome ms-2 inline-flex shrink-0 items-center align-middle transition-colors [--glyph:var(--glyph-line)]"
+                      className="line-glyph text-muted hover:text-chrome ms-2 shrink-0 transition-colors [--glyph:var(--glyph-line)]"
                     >
                       <LinkGlyph />
                     </a>

@@ -83,6 +83,32 @@ suppress a break across an element boundary. The split is a layout device only:
 one half carries `role="button"` labelled with the whole capture and the other
 is `aria-hidden`, so a reader still gets one control per line.
 
+⚠ **A row of the record carries the line's type, and nothing else may.** It was
+on the words until 26 August, and `vertical-align: middle` centres a box on its
+*parent's* x-height — so every glyph riding a line was aligned against the page's
+body 15/1.45 instead of the line's 18/28, and read as sitting low. Measured
+3.29px under the words' cap centre. `page-words` is deleted and `line-glyph`
+replaces `align-middle` on the line's furniture: the box is exactly the line box,
+top-aligned, so the glyph lands on the line's own centre with **no face metric
+anywhere in it**. Do not reach for `vertical-align: middle` beside 18px text
+again, and do not correct a glyph's position from outside the glyph —
+`UndoGlyph` was drawn off its own grid and was redrawn on it.
+
+⚠ **A capture's blink is exempt from the writing pane, and only for as long as
+it blinks.** On glass the keyboard stays up when a line lands, so the pane is
+over the record and the only receipt on the page was happening behind the blur.
+Neither could be removed, so `surfaced` lifts the row above the pane and makes
+it untouchable for exactly the blink. **One token, `--landed`, drives both** —
+they are one event — and it is an animation with `both` rather than a timer,
+because `landed` is a property of the line and never clears.
+
+⚠ **The live row is one row and the head of a long line scrolls away, and that
+is a decision.** A 50-character capture overflows the band by 92px on a handset
+and an `<input>` cannot be panned on glass, while the same words land in the
+record as two lines. The band that wraps is the only real fix and it costs
+`--band-height` its constancy; it was put as a question on 26 August and the
+answer was to leave it. See `docs/decisions.md` before reopening it.
+
 ⚠ **The page has exactly one field and it is the pinned band.** It holds a new
 capture, or the words of the line being rewritten. **Every instrument on that
 screen is built on this** — the recede, the keyboard hem, the band's own

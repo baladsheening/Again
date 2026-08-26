@@ -6794,3 +6794,135 @@ Two mechanisms where the design wanted one, and a text split that the record has
 to carry. The alternative was a permanent 56px control gutter down the right of
 every line — which is the other honest answer, and it loses because it charges
 every capture for a control that appears on one.
+
+## Three things a handset said about the page — 26 August
+
+Reported after using it: the undo does not sit optically on the line it belongs
+to, the live row cannot be scrolled horizontally, and on glass the blink that
+marks a capture landing is behind the writing pane's blur. Two are defects with
+one cause each; the third is a decision, and it was taken to leave it.
+
+### The undo sat low because the row was the wrong type
+
+⚠ **`vertical-align: middle` centres a box on the *parent's* x-height**, and the
+parent was not the line. The words carried `page-words` — 18/28 with the line's
+tracking — and the row around them was still the page's body 15/1.45, because
+`page-row` had been given nothing but the hem when the two were split apart on
+25 August. So every inline that rides a line of the record — the undo, the cross
+off, the pencil, the link, the photograph — was being centred on a 15px
+lowercase `x` while sitting beside 18px words.
+
+Measured on the real page with `node_modules/.probe/glyphline.mjs`: the tail
+glyph's centre sat **3.29px below the words' cap centre**, of which 0.68px was
+the drawing's own fault (below) and the rest was the wrong reference.
+
+**The row is the line, so the row carries the line's type.** `page-words` is
+deleted and its three declarations moved to `page-row`; the words are
+`display: inline` and inherit, and so does everything that has to align against
+them. One declaration where there were two, and nothing left that can align
+against the wrong face.
+
+### `middle` is the wrong middle even when the type is right
+
+That leaves 1.8px, and it is not a bug in the parent — it is what `middle`
+means. The keyword is *baseline plus half the x-height*, which says nothing
+about the capitals and ascenders a line of running text is mostly made of, so it
+always lands below where the eye puts the centre of a line, and further below
+the larger the type is next to the glyph.
+
+⚠ **The answer is the line box, and it needs no face metrics at all.** A line
+box is the strut's leading split evenly above and below its content, so its
+centre **is** the text's own centre by construction — whatever the face, the
+size, or the leading. `line-glyph` makes the box exactly `--leading-line` tall,
+top-aligns it to the line box it sits in, and centres the glyph inside. Nothing
+in it is tuned and nothing reads a font, which is the difference between this and
+a `vertical-align: -3px` derived from Fira Sans' ascent and descent — that
+version was written first and thrown away, because it would have been a number
+waiting to be wrong on the next face.
+
+Measured after: the glyph's centre is **6.00px above the baseline, which is the
+line box centre to the pixel**, and 0.5px under the cap centre.
+
+⚠ **It also buys the hit area rather than borrowing it.** `box-sizing:
+content-box` means the height is the *content* box, so the hem adds outside it
+and the border box comes to `--leading-line` plus two hems — 44px, which is
+`--tap-floor`. The negative margin takes the same hem straight back, so the
+margin box is the line box again and the row is not one pixel taller for it. The
+old arrangement (`-my-2 py-2`) reached 34px. Every row still measures 44px, all
+twelve of them, before and after.
+
+⚠ **The struck line's link deliberately keeps `middle`.** A strikeout is drawn
+near the x-height, which is the one place `middle` is the right answer — it is
+what puts the line *through* the glyph rather than under it. The 1.3px it now
+sits below its live twin is on a line that is struck and at half strength, and
+the two can never appear together.
+
+### The undo glyph was the one of eight not centred on its own grid
+
+Independently of the row: `UndoGlyph`'s ink ran y 4.25 → 17.25 and x 3.25 →
+15.75 inside a box centred on 10, so the drawing sat three quarters of a unit low
+and half a unit left of every glyph it appears beside. The seven others are
+within a third of a unit of centre. The two arcs are moved by (+0.5, −0.75) and
+the ink now spans 3.5 → 16.5 in both axes.
+
+⚠ **A glyph off its own centre cannot be corrected from outside it.** A row
+aligns the *box*. A drawing that is not centred in its box is wrong at every size
+and in every bar it is ever put in — so it is redrawn on the grid, and the box is
+never nudged.
+
+### The receipt comes through the glass
+
+The writing pane blurs the record and sinks it a stop while a line is being
+written, so the words in hand are the only sharp thing on screen. On the desk
+that is invisible: `rest()` ends the writing mode on Return and the pane fades as
+the line arrives. **On glass it does not and must not** — the keyboard stays up
+because a session of captures is a run of them — so `writing` is still true at
+the instant the line lands, and the blink that is the only receipt on the page
+happens behind the blur.
+
+Both halves were checked for removal first, in the order `CLAUDE.md` asks for.
+The pane's whole job is to blur the record, so the mechanism cannot go. The
+condition is *the keyboard is up when a line lands*, which is the design. So it
+is a correction, stated as a rule: **the receipt is exempt — the one thing the
+record is allowed to say through the glass** — and it is exempt for exactly the
+length of the saying.
+
+⚠ **The animation owns the duration; there is no timer.** `landed` is a property
+of the line and never clears, so a class keyed on it would leave every capture
+made this session floating above the pane forever. `surfaced` is an animation
+with `both`, so it holds `z-index: auto` the moment it is over — the same
+argument that keeps `landed` off a piece of state with a `setTimeout`. Both read
+one token, `--landed`, because the blink and the lift are one event: two
+durations would be a line that finishes winking and then sinks, or sinks and then
+finishes winking, and neither is a thing that happened.
+
+⚠ **`z-index: 6`, and it cannot be touched while it is up.** The pane is `z-5`,
+the band `z-10`, the bars `z-20` — a receipt must never come up over the line
+being written. And the pane's other job is to take the tap that puts the keyboard
+away, which a row sitting over it would steal, so the row is `pointer-events:
+none` for the same instant. A control at 15% opacity mid-blink is not armed yet.
+
+Verified with `node_modules/.probe/receipt.mjs`, which stretches `--landed` so
+the lift can be looked at: the row paints sharp and unblurred while the lift is
+on and blurred and sunk when it is over, `z-index` reads `6` then `auto`, and the
+pane takes the tap at both ends.
+
+### The live row stays one row, at the user's direction
+
+**Measured first.** A fifty-character capture overflows the band by 92px on a
+390px handset — about eleven characters off the left edge — and a single-line
+`<input>` cannot be panned on glass, so there is no gesture that brings them
+back. The same words land in the record as a two-line row, so the page shows the
+whole capture the moment it is committed and less than the whole of it while it
+is being written. `node_modules/.probe/bandwidth.mjs` has the numbers.
+
+The only real fix is a band that wraps, which is what the record already does.
+It was put as a question with its costs — `--band-height` stops being a constant,
+so `main`'s top padding and `useKeyboardHem` both have to read a measured height
+instead — and **the answer on 26 August was to leave it one row.**
+
+⚠ **Recorded so nobody re-derives it.** This is a decision, not an oversight: the
+band is one row and stays one row, which is the whole reason the live line is an
+`<input>` rather than a growing textarea, and the head of a long line scrolling
+away while it is typed is the price. Reopening it needs the numbers above and a
+new answer to the same question.

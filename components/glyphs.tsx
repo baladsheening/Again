@@ -60,12 +60,26 @@ function Glyph({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** Bar. Notes' own undo arrow, and it deletes — see `undoCapture`. */
+/**
+ * The line's own slot. Notes' undo arrow, and it deletes — see `undoCapture`.
+ *
+ * ⚠ **Centred on the grid, since 26 August — it was the one glyph of the eight
+ * that was not.** Its ink ran y 4.25 → 17.25 inside a box centred on 10, so the
+ * drawing sat three quarters of a unit low and half a unit left of every glyph
+ * it appears beside, and on a line of the record it read as *sitting low*
+ * against the words. The paths are the same two arcs moved by (+0.5, −0.75):
+ * the ink spans 3.5 → 16.5 in both axes now, centred on 10 like the rest.
+ *
+ * ⚠ **A glyph off its own centre cannot be corrected from outside it.** A row
+ * aligns the *box*, so a drawing that is not centred in its box is wrong at
+ * every size and in every bar it is ever put in. Redraw on the grid; never
+ * nudge the box.
+ */
 export function UndoGlyph() {
   return (
     <Glyph>
-      <path d="M6.75 4.25 3.25 7.75l3.5 3.5" />
-      <path d="M3.25 7.75h7.75a4.75 4.75 0 0 1 0 9.5H8.25" />
+      <path d="M7.25 3.5 3.75 7l3.5 3.5" />
+      <path d="M3.75 7h7.75a4.75 4.75 0 0 1 0 9.5H8.75" />
     </Glyph>
   )
 }
