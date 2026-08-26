@@ -94,13 +94,23 @@ anywhere in it**. Do not reach for `vertical-align: middle` beside 18px text
 again, and do not correct a glyph's position from outside the glyph —
 `UndoGlyph` was drawn off its own grid and was redrawn on it.
 
-⚠ **A capture's blink is exempt from the writing pane, and only for as long as
-it blinks.** On glass the keyboard stays up when a line lands, so the pane is
-over the record and the only receipt on the page was happening behind the blur.
-Neither could be removed, so `surfaced` lifts the row above the pane and makes
-it untouchable for exactly the blink. **One token, `--landed`, drives both** —
-they are one event — and it is an animation with `both` rather than a timer,
-because `landed` is a property of the line and never clears.
+⚠ **A commit ends the writing mode on every surface, and on glass it gives the
+keyboard back.** Directed 27 August: **once a line is submitted the person is
+presumed done**, and another capture is a tap back into the live row. It
+reverses the older rule that a session of captures is a run of Returns, which is
+why the keyboard used to stay up — and that rule is what left the record behind
+glass at the one moment it has something to say. `commit` calls `done()`, which
+takes the same `blur()` + `setWriting(false)` door the writing pane's own tap
+opens. An empty line is still just an empty line and still takes `rest()`, which
+keeps its coarse-pointer guard: deleting the last character must not dismiss a
+keyboard.
+
+⚠ **A lift that carried the blink over the pane was built and deleted inside a
+day.** It was right while the pane outlived the commit; the commit ends the mode
+now, so the pane is down before the line arrives and there is nothing to see
+through. **The condition went, so the correction went** — putting a lift back
+means the commit has stopped ending the mode, and that is the thing to fix
+instead.
 
 ⚠ **The live row is one row and the head of a long line scrolls away, and that
 is a decision.** A 50-character capture overflows the band by 92px on a handset

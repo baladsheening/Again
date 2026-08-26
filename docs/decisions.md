@@ -6926,3 +6926,64 @@ band is one row and stays one row, which is the whole reason the live line is an
 `<input>` rather than a growing textarea, and the head of a long line scrolling
 away while it is typed is the price. Reopening it needs the numbers above and a
 new answer to the same question.
+
+## Submitting a line ends the writing — 27 August
+
+**Directed, on seeing the blink work:** *it shouldn't settle back behind the
+glass. Once submitted, the user should be presumed to be done. If the user wants
+to add another entry, they can tap in the live row again.*
+
+### What it reverses
+
+`rest()` carried a coarse-pointer guard with two justifications, and the second
+of them is now wrong. The first stands: neither deleting the last character nor
+anything else dismisses an on-screen keyboard, so clearing `writing` there would
+drop the hem and the chrome's hold while the glass was still half covered, and
+`useKeyboardHem` reads that exact flag. **The second was that a session of
+captures is a run of Returns**, so after a commit the keyboard staying up was
+the point.
+
+That rule is what put the record behind glass at the one moment it has something
+to say. It also made a run the default case, when one capture is the common one —
+the whole design is *open, type, close*, and a page that holds the keyboard after
+a line has landed is holding the screen for a second capture most people are not
+going to make.
+
+**A commit now calls `done()`**, which is `blur()` then `setWriting(false)` — the
+same pair, in the same order, that a tap on the writing pane already performs. It
+is deliberately not a new exit: that pair is the only way out of the mode on
+glass, it is proven, and blurring a field that is not focused fires no event,
+which is why the flag has to be cleared directly as well.
+
+### What it costs, stated
+
+A run of captures is now Return, tap, type, rather than Return, type. One tap per
+extra line, on a target that is pinned and never off screen — which is the same
+tap iOS already insists on for the first line of a cold open, since focus without
+a gesture cannot raise a keyboard there.
+
+### The lift over the pane is deleted, one day after it shipped
+
+`surfaced` lifted a just-landed row to `z-6` and made it untouchable for exactly
+the blink, so the receipt could be seen through the pane. It was the right answer
+to *the pane is up when a line lands*, and the direction above removes that
+condition outright. **So the correction goes with it**, per *How things get
+fixed*: a subtraction cannot be wrong on a device nobody has tested. The
+`--landed` token goes too — it existed to keep the blink and the lift on one
+number, and with one consumer left the duration belongs in the utility that
+spends it.
+
+⚠ **Putting a lift back would mean the commit had stopped ending the mode**,
+which is the thing to fix instead. Nothing else on the page produces a `landed`
+line: `retry` does not set it and `commitEdit` does not, so `commit` is the only
+producer and it now always takes the pane down first.
+
+### Verified
+
+`node_modules/.probe/submitdone.mjs` on the built page: the pane is up and
+blurred while typing; at the instant the line lands the pane is down, the blur is
+gone, the field is blurred and the record is at full strength; the hem and the
+band's correction are unset throughout, because `commit` scrolls to the caret
+first and at `scrollY` 0 the visual viewport starts where the layout one does; and
+a tap on the live row puts the mode back. **Not yet seen on a handset**, which is
+where the keyboard itself can be watched leaving.

@@ -113,14 +113,18 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   measures 44px. Separately, `UndoGlyph` was the one drawing of eight not
 >   centred in its own 20-grid — ink at 10.75 against a box centred on 10 — and
 >   is redrawn. `node_modules/.probe/glyphline.mjs` and `linealign.mjs`.
-> - **The blink was behind the writing pane on glass**, because `rest()` is a
->   no-op on a coarse pointer and must be — the keyboard stays up for a run of
->   captures — so `writing` is still true at the instant a line lands. Neither
->   the pane nor the blink could be removed, so the rule is that **the receipt
->   is exempt**: `surfaced` lifts the row to `z-6` and makes it untouchable for
->   exactly the blink's length, on one shared `--landed` token, with no timer.
->   `node_modules/.probe/receipt.mjs` shows it sharp while lifted and blurred
->   after.
+> - **The blink was behind the writing pane on glass**, because `rest()` was a
+>   no-op on a coarse pointer — the keyboard stayed up for a run of captures —
+>   so `writing` was still true at the instant a line landed. A lift over the
+>   pane shipped first and **was deleted the same day**: seen on a handset, the
+>   answer came back that the line should not settle back behind the glass at
+>   all. ⚠ **A commit ends the writing mode now, and on glass gives the keyboard
+>   back** — `done()` in `page-screen.tsx`, taking the pane's own
+>   `blur()` + `setWriting(false)` door. Once a line is submitted the person is
+>   presumed done; another capture is a tap back into the live row. That removes
+>   the condition, so the lift and its token are gone with it.
+>   `node_modules/.probe/submitdone.mjs` shows the pane down, the field blurred
+>   and the record at full strength at the instant the line lands.
 > - ⚠ **The live row stays one row, at the user's direction.** A 50-character
 >   capture overflows the band by 92px on a 390px handset and an `<input>`
 >   cannot be panned on glass, while the same words land in the record as two

@@ -995,11 +995,11 @@ export function PageScreen({
     /* The link went with the line; the band starts empty like the field does. */
     setLink(null)
     /*
-      The line is written and the field is empty again — see `rest`. On glass
-      this does nothing and must not: the keyboard is still up because a session
-      of captures is a run, and `useKeyboardHem` reads this flag.
+      The line is written, so the writing is over — see `done`. On glass the
+      keyboard goes with it, which is what puts the record back in front of the
+      person at the moment it has something to show them.
     */
-    rest()
+    done()
     setPicked(null)
     setAsking(null)
     /*
@@ -1496,13 +1496,18 @@ export function PageScreen({
    * mode entered by typing was to stop touching the field. Both moments leave
    * the same thing on screen, so both call this.
    *
-   * ⚠ **Not on a coarse pointer, and the reason is the keyboard.** Neither
-   * deleting the last character nor committing a capture dismisses an on-screen
-   * keyboard, so clearing `writing` there would drop the hem and the chrome's
-   * hold while the glass was still half covered — `useKeyboardHem` reads this
-   * exact flag. And after a Return on glass the keyboard staying up is the
-   * point: a session of captures is a run, not one line. The desk has no such
-   * disagreement, so an empty line can mean an empty line.
+   * ⚠ **Not on a coarse pointer, and the reason is the keyboard.** Deleting the
+   * last character does not dismiss an on-screen keyboard, so clearing
+   * `writing` here would drop the hem and the chrome's hold while the glass was
+   * still half covered — `useKeyboardHem` reads this exact flag. The desk has no
+   * such disagreement, so an empty line can mean an empty line.
+   *
+   * ⚠ **This used to be the commit's exit too, and it is not since 27 August.**
+   * The argument was that a session of captures is a run of Returns, so the
+   * keyboard staying up after one was the point. Directed otherwise: **once a
+   * line is submitted the person is presumed done**, and another capture is a
+   * tap back into the live row. A commit takes `done()` below, which gives the
+   * keyboard back; an empty line is still just an empty line and takes this.
    *
    * ⚠ **A capability, not a platform** — `(pointer: coarse)`, the same question
    * `film-screen.tsx` asks, owned by `components/pointer.ts`. An iPad with a
@@ -1517,6 +1522,42 @@ export function PageScreen({
    */
   function rest() {
     if (!touch) setWriting(false)
+  }
+
+  /**
+   * **The line is written, so the writing is over** — the pane goes, and on
+   * glass the keyboard goes with it.
+   *
+   * ⚠ **Directed 27 August, and it reverses `rest()`'s coarse-pointer guard for
+   * this one caller.** The page held the mode after a Return on the argument
+   * that a session of captures is a run of them; on a handset that left the
+   * record behind glass at the one moment it has something to say, so the blink
+   * that is the whole receipt happened in a blur. **Once a line is submitted the
+   * person is presumed done.** Another capture is a tap back into the live row,
+   * which is one gesture on a target that is never off screen.
+   *
+   * ⚠ **It takes the door the writing pane already opens, rather than a new
+   * one.** `blur()` then `setWriting(false)` is exactly what a tap on the pane
+   * does, and for the same reason it does both: blurring a field that is not
+   * focused fires no event, so the flag has to be cleared directly as well. That
+   * pair is the only way out of the mode on glass and it is proven; a commit
+   * should not invent a second.
+   *
+   * ⚠ **`blur()` fires `onBlur` synchronously, which calls `commitEdit`** — a
+   * no-op here, because `commit` is only ever reached while `editing` is
+   * `null` and `commitEdit` returns on that first line.
+   *
+   * ⚠ **Safe against the hem, because `commit` has already scrolled to the
+   * caret.** Dropping `writing` unmounts `useKeyboardHem`, whose cleanup takes
+   * `--keyboard-overlap` and the band's correction off while an iOS keyboard is
+   * still animating away. At `scrollY` 0 the visual viewport starts where the
+   * layout one does, so the band's correction is already the empty string and
+   * the hem is padding at the foot of a page nobody is looking at the foot of.
+   */
+  function done() {
+    /* The keyboard follows focus, and nothing else can dismiss it. */
+    if (touch) input.current?.blur()
+    setWriting(false)
   }
 
   /**
@@ -2317,16 +2358,17 @@ export function PageScreen({
                 */}
                 <div
                   /*
-                    ⚠ **`surfaced` lifts a just-landed line clear of the writing
-                    pane for exactly as long as it blinks.** On glass the keyboard
-                    is still up when a line lands — a run of captures is a run of
-                    Returns — so the pane is over the record and the receipt was
-                    happening behind the blur. See `surfaced` in globals.css for
-                    why neither the pane nor the blink could be removed instead.
+                    ⚠ **A landed line was lifted clear of the writing pane here
+                    for a day, and the lift is deleted rather than kept.** It
+                    existed because the pane was still over the record when a
+                    line landed on glass, so the blink happened behind the blur.
+                    The commit gives the keyboard back now — see `done` — so the
+                    pane is down before the line arrives and there is nothing
+                    left to see through. **The condition went, so the correction
+                    goes**, per *How things get fixed* in CLAUDE.md; putting the
+                    lift back means the commit has stopped ending the mode.
                   */
-                  className={`page-row ${isPicked ? 'picked' : ''} ${
-                    line.landed ? 'surfaced' : ''
-                  }`}
+                  className={`page-row ${isPicked ? 'picked' : ''}`}
                 >
                   {/*
                     ⚠ **A line of the record is never an input, not even

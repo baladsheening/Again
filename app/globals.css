@@ -1329,22 +1329,6 @@
    */
   --ease-recede: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /**
-   * **How long a capture blinks where it lands**, and how long it is allowed
-   * through the writing pane's glass while it does — see `landed` and
-   * `surfaced`.
-   *
-   * ⚠ **One number for both, because they are one event.** The blink is the
-   * receipt and the lift is what makes the receipt visible on glass; two
-   * durations would be a line that finishes winking and then sinks, or sinks
-   * and then finishes winking. Neither is a thing that happened.
-   *
-   * ⚠ **Not `--recede`.** The chrome's number describes furniture getting out
-   * of the way and is answerable to a thumb still making the gesture; this
-   * describes an instant that is over. They are unrelated and must not be
-   * collapsed — see `landed` for why a run of Returns caps this one.
-   */
-  --landed: 420ms;
 
 
   /**
@@ -2907,73 +2891,7 @@
  * the line is on the page either way.
  */
 @utility landed {
-  animation: line-landed var(--landed) ease-in-out both;
-}
-
-/**
- * **The receipt comes through the glass.** A line that has just landed is lifted
- * clear of the writing pane for exactly as long as it blinks, and drops back
- * behind it.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Reported on a handset, 26 August: the blink is obscured by the blur
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * The pane blurs the record and sinks it a stop while a line is being written,
- * so the words in hand are the only sharp thing on screen. On the desk that is
- * invisible here, because `rest()` ends the writing mode on Return and the pane
- * fades as the line arrives. **On glass it does not and must not**: the keyboard
- * stays up because a session of captures is a run of them, so `writing` is still
- * true at the moment the line lands and the blink happens behind the blur.
- *
- * ⚠ **Neither half could be removed, which is what makes this a correction.**
- * The pane's whole job is to blur the record; the blink is the only thing on the
- * page that marks the instant a capture became a record. So the rule is that the
- * **receipt is exempt** — the one thing the record is allowed to say through the
- * glass — and it is exempt for exactly the length of the saying.
- *
- * ⚠ **The animation owns the duration, not a timer.** `landed` is a property of
- * the line and never clears, so a class keyed on it would leave every capture
- * made this session floating above the pane forever. This is an animation with
- * `both`, so it holds `z-index: auto` the moment it is over and the row is behind
- * the glass again — the same argument that keeps `landed` off a piece of state
- * with a `setTimeout`.
- *
- * ⚠ **`step-end`, because a z-index has no in-between.** The lift is on for the
- * blink and off after it; interpolating it would be asking the engine to invent
- * a state that does not exist.
- *
- * ⚠ **6, which is above the pane and below everything that can act.** The pane
- * is `z-5`, the band `z-10` and the two bars `z-20`. A receipt must never come up
- * over the line being written.
- *
- * ⚠ **It cannot be touched while it is up.** The pane's other job is to take the
- * tap that puts the keyboard away, and a row sitting over it would steal that
- * tap and pick the line instead. A control at 15% opacity mid-blink is not armed
- * yet, so the row is transparent to the pointer for the same instant it is
- * transparent to the pane — which reads as *the pane is still the pane*.
- *
- * ⚠ **Nothing between this row and the pane may become a stacking context.**
- * `main`, the `<ol>` and the `<li>` are all plain, which is what lets a z-index
- * this deep in the tree compete with a `fixed` sibling of `main` at all. The
- * `<ol>`'s `record-held` opacity would make one — it cannot apply here, because a
- * draft that is unsent is a draft that has not landed.
- */
-@utility surfaced {
-  position: relative;
-  animation: line-surfaced var(--landed) step-end both;
-}
-
-/** Up for the blink, back for good. See `surfaced`. */
-@keyframes line-surfaced {
-  from {
-    z-index: 6;
-    pointer-events: none;
-  }
-  to {
-    z-index: auto;
-    pointer-events: auto;
-  }
+  animation: line-landed 420ms ease-in-out both;
 }
 
 /**
