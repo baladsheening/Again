@@ -6987,3 +6987,140 @@ band's correction are unset throughout, because `commit` scrolls to the caret
 first and at `scrollY` 0 the visual viewport starts where the layout one does; and
 a tap on the live row puts the mode back. **Not yet seen on a handset**, which is
 where the keyboard itself can be watched leaving.
+
+## The field is summoned, and the live line stops being pinned — 27 August
+
+**Directed**, after the 26 August answer to leave the live row alone was
+reopened: *I want the horizontal scrolling. What would we need to change to make
+it possible. We can change everything, get rid of the glass, the light, make it
+so the row appears when a user taps a '+' glyph in the bottom row/vertical
+column, whatever.* And, in the same session: *this is for handset/phone app
+only.*
+
+### What the measurement said, and why the literal thing was not built
+
+A horizontal drag inside a focused single-line `<input>` is a text interaction
+on every engine — caret placement and selection — not a pan. That is the
+platform's contract for editable text, not a bug, and it is the same on all of
+them.
+
+⚠ **But it is not uniform in practice, and the measurement is the point.**
+`node_modules/.probe/panfield.mjs` drives a real touch drag through CDP across
+four cells — focused/not × `touch-action: pan-x`/auto — and in Chromium the
+focused, overflowing input **pans the full range and leaves the caret alone**,
+with `pan-x` making no difference either way. So Android already scrolls. What
+was reported is an iOS behaviour, and nothing on this machine can test iOS.
+
+That kills the obvious build. A hand-written pan would run on both engines: a
+second pan fighting the native one on Android, and a platform branch if gated to
+iOS. *How things get fixed* rules out both by name.
+
+### So the row stops being a row
+
+⚠ **The fix is not to scroll the field; it is to stop the field being one line.**
+The band was one row because it had to be — the record's top padding read
+`--band-height`, so a band that grew would have pushed the record down under
+somebody's thumb. A **sheet is not in the record's flow**, so its height answers
+to the words in it. A long capture wraps, exactly as it will in the record, and
+there is nothing off screen to reach. The condition is removed rather than
+corrected.
+
+### The `+` costs nothing on a handset, which is what made this affordable
+
+iOS raises a keyboard only for a gesture. Starting a capture therefore *already*
+took one tap — on the pinned live row — and it is a tap on the `+` now. The same
+gesture, a different target, and the page gets its screen back: what sits above
+the record is the bar and `--page-lead`, where it was the bar, the band, and the
+air between them.
+
+⚠ **What it costs is the caret on arrival.** The app used to say *type* before
+anybody had done anything; it says *here is your record* now, and you ask for
+the field. That was named as the one thing to weigh before this was chosen, and
+it was chosen with it named.
+
+### The one non-negotiable
+
+⚠ **The field is mounted at all times, and the `+` focuses it synchronously
+before any state is set.** iOS raises a keyboard only for a focus that happens
+*inside* the gesture that asked for it; a field mounted by a state change is
+focused a tick too late and the keys stay down. So the sheet exists from the
+first paint, translated off the bottom of the glass, and `openSheet` calls
+`focus({ preventScroll: true })` as its first statement. `startEdit` does the
+same, from the pencil's own click. **Never make the textarea conditional, and
+never move its focus into an effect.**
+
+### The field grows without measuring anything
+
+`grow-field` is a one-cell grid holding the `<textarea>` and a `::after` carrying
+the same text from `data-value`; the invisible ghost sizes the cell and the
+field stretches to it. No `scrollHeight` read, no `el.style` write, no resize
+loop, no engine feature to wait for.
+
+⚠ **A `scrollHeight`-driven textarea shipped on this page in August and was
+deleted**, and this is deliberately not that mechanism returning. `field-sizing:
+content` is the declarative answer and is still not in every engine this ships
+to; the ghost needs neither. The trailing space in the content is load-bearing —
+a value ending in a newline measures one line short without it.
+
+⚠ **The hem is the row's, not the field wrapper's.** It is the same arrangement
+`page-row` uses in the record, and it is what lets `line-glyph` centre the
+photograph and the link chip on the field's **first** line by the same
+arithmetic. Put the hem on the wrapper and every chip sits a hem too high; that
+was built, seen and moved.
+
+### What went, and why none of it should drift back
+
+- **`--band-height`, `--band-lead`, `--band-ground`, `--band-tint`,
+  `--band-tail`, `--bar-visible`.** All described a band pinned under the bar.
+  `--band-height` was the load-bearing one: it is why the field could never grow.
+- **`live-band`'s idle layer and `band-dim`.** A summoned sheet is never
+  *waiting* — it exists because somebody asked for it — so there is one light and
+  no fade between two.
+- **`unsent` and `record-held`.** Both described a draft sitting uncommitted in a
+  row on the page. The sheet's two thumb-reachable exits both commit, so there is
+  no such state. The italic face stays wired in `app/layout.tsx` in reserve, as
+  Bebas Neue is; `preload: false` means a face nothing names is a face nothing
+  fetches.
+- **The scrim's `backdrop-blur`.** It existed so the words in hand would be the
+  only sharp thing while the record sat *directly under them* in the same size
+  and face. The sheet has its own opaque ground and its own light, so the
+  separation is made by an object rather than by a filter — and a full-viewport
+  `backdrop-filter` was a compositing layer the page paid for on every keystroke.
+  `--scrim-blur` survives for the photograph opened full size.
+- **`head()` in `useKeyboardHem`.** It held the *top*-pinned band on the visible
+  viewport's top edge against iOS dragging fixed elements. The field is on the
+  bottom edge and reads `--keyboard-overlap` for its `bottom`, so the correction
+  and the position are one number instead of two. ⚠ If a top-pinned field ever
+  returns, so does this — the symptom it answered was real and reported.
+- **`live()` and `rest()`.** They inferred a writing *mode* from gestures,
+  because the field was always on screen and there was no other way to tell
+  writing from resting. **The sheet is the mode.** Every instrument that read
+  `writing` now reads a fact instead of an inference. Do not reintroduce a
+  gesture that opens it implicitly.
+
+### What is kept
+
+- **The drawn caret**, and it earned its return within the hour: the empty sheet
+  screenshotted as a black rectangle, because a field's own caret is a platform
+  behaviour rather than a promise. It lost its `picked === null` half — the sheet
+  cannot be open while the record is being browsed.
+- **Return commits and never inserts a newline**, which a textarea has to be told
+  rather than being told by its own nature. The field *wraps*, which is the
+  browser laying one sentence over several lines; a newline would be the person
+  doing it, and that is what is refused.
+- **The foot recedes while the sheet is up.** Not a stacking fix: the sheet rests
+  on `--keyboard-overlap`, which is zero wherever there is no on-screen keyboard,
+  so the two would share the bottom edge. None of the foot's three is wanted while
+  somebody writes, and the `+` least of all.
+
+### Verified
+
+`node_modules/.probe/sheet.mjs` on the built page at 390×844: at rest the sheet
+is off the glass and the record's first line is 68px from the top; the `+` brings
+it to the bottom edge focused with the scrim up; a 65-character capture makes the
+field **two lines with zero horizontal overflow**, which is the whole point;
+Return commits and closes, and a tap on the scrim commits and closes.
+
+⚠ **Not seen on hardware**, and three things can only be answered there: whether
+the `+` raises the keyboard, whether the sheet sits on the keys, and whether the
+caret is where it should be while typing.

@@ -78,12 +78,17 @@ const KEYBOARD_ARRIVAL_MS = 700
  * `visualViewport` emits `scroll` continuously while a finger is down, and a
  * re-render per event is how a page starts dropping frames while it is read.
  */
+/*
+  ⚠ **One measurement, one consumer — 27 August.** This used to do two jobs: the
+  page's bottom hem, and a correction that held the pinned live band on the
+  visible viewport's top edge. The field is summoned onto the *bottom* edge now
+  and positions itself from `--keyboard-overlap`, so the second job is the first
+  one read by somebody else. See `writing-sheet` in globals.css.
+*/
 export function useKeyboardHem({
   writing,
   host,
   floorAnchor,
-  band,
-  bandAnchor,
 }: {
   /**
    * Somebody is writing — which is the keyboard being asked for.
@@ -104,10 +109,6 @@ export function useKeyboardHem({
   host: React.RefObject<HTMLElement | null>
   /** A zero-height fixed twin on the viewport's bottom edge — see `floor`. */
   floorAnchor: React.RefObject<HTMLElement | null>
-  /** The live band, held on the top edge of the visible area — see `head`. */
-  band: React.RefObject<HTMLElement | null>
-  /** A zero-height fixed twin on the viewport's top edge — see `head`. */
-  bandAnchor: React.RefObject<HTMLElement | null>
 }) {
   useEffect(() => {
     const vv = window.visualViewport
@@ -121,7 +122,6 @@ export function useKeyboardHem({
       be reading it after React may have pointed it somewhere else.
     */
     const hostEl = host.current
-    const bandEl = band.current
 
     const floor = () => {
       const box = host.current
@@ -134,44 +134,20 @@ export function useKeyboardHem({
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
     }
 
-    /**
-     * **The live band, held on the top edge of the visible area.**
-     *
-     * ⚠ **The symptom, reported on a handset:** tap the live line after
-     * scrolling and the band bumps up to the status bar before dropping back
-     * into place. It does not happen at the top of the record, which is the tell
-     * — there has to be somewhere for the document to be dragged *from*.
-     *
-     * This file's own history has it in one line: on 11 August, focusing a field
-     * made iOS scroll the document to reveal it — 271px in a tab, 333 standalone
-     * — **dragging every `position: fixed` element up with it, the header
-     * included.** A lock and a pre-emptive lift used to answer that; both were
-     * removed as the design changed, and with the band now pinned at the top the
-     * old symptom came back on a new element.
-     *
-     * ⚠ **A thermostat, not a model.** It reads the position back off an
-     * untouched twin and corrects the difference, which is the one approach that
-     * survived five wrong versions of this at the other edge. It is a **no-op
-     * whenever the visual viewport starts where the layout one does** — which is
-     * every surface except an iOS keyboard mid-arrival — so if the bump turns
-     * out to have a different cause this costs nothing and hides nothing.
-     *
-     * ⚠ **`transform`, and the band's recede is a `translate`.** Two properties,
-     * composed by the browser in a fixed order, neither able to overwrite the
-     * other — the same arrangement that let the foot be moved by two things
-     * before one of them was deleted. **Do not write `translate` here.**
-     */
-    const head = () => {
-      const el = band.current
-      const anchor = bandAnchor.current
-      /*
-        A `display: none` anchor measures as all zeros, and a correction computed
-        from that is the height of the screen.
-      */
-      if (!el || !anchor || anchor.getClientRects().length === 0) return
-      const lift = vv.offsetTop - anchor.getBoundingClientRect().top
-      el.style.transform = lift ? `translateY(${lift}px)` : ''
-    }
+    /*
+      ⚠ **`head()` was here and is deleted — 27 August.** It held the *pinned*
+      live band on the visible viewport's top edge, correcting for iOS dragging
+      every `position: fixed` element up when it scrolls to reveal a focused
+      field. There is no pinned band: the field is summoned and arrives on the
+      bottom edge, where `floor()`'s own measurement already puts it — the sheet
+      reads `--keyboard-overlap` for its `bottom`, so the correction and the
+      position are one number instead of two.
+
+      ⚠ **If a top-pinned field ever comes back, so does this.** The symptom it
+      answered is real and was reported: tap the live line after scrolling and
+      the band bumps up to the status bar before dropping back. It is only
+      unreachable because nothing is pinned to the top any more.
+    */
 
     /*
       ─────────────────────────────────────────────────────────────────────────
@@ -187,7 +163,6 @@ export function useKeyboardHem({
     const run = () => {
       frame = 0
       floor()
-      head()
       frame = performance.now() < until ? requestAnimationFrame(run) : 0
     }
 
@@ -248,11 +223,6 @@ export function useKeyboardHem({
         keyboard's worth of dead space under it for the rest of the session.
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
-      /*
-        And the band goes back to where the stylesheet puts it. A stale
-        correction is a band parked wherever the last keyboard left it.
-      */
-      if (bandEl) bandEl.style.transform = ''
     }
-  }, [writing, host, floorAnchor, band, bandAnchor])
+  }, [writing, host, floorAnchor])
 }

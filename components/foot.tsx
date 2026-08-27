@@ -3,25 +3,46 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { SearchGlyph, SettleGlyph } from './glyphs'
+import { SearchGlyph, SettleGlyph, WriteGlyph } from './glyphs'
 
 /**
- * **The tools: settle and search.**
+ * **The tools: write, settle and search.**
  *
- * ⚠ **It was five on the morning of 25 August and it is two by the evening**,
- * and the three that left all went to where their effect appears.
+ * ⚠ **Write arrived on 27 August and it is the reason this bar exists now.**
+ * The page had a live line pinned under the bar; the field is summoned, and
+ * this is what summons it. That reverses the argument that sent attach away
+ * from here — *a photograph starts a capture rather than acting on one, the
+ * only control here that does not care what is picked* — because the thing a
+ * capture starts **in** is now summoned from this bar too. Attach goes back on
+ * the field, which is where what it makes appears; that rule is untouched.
+ *
+ * ⚠ **It is the middle glyph, and that is a rule rather than a preference.** It
+ * is the app's one primary action, and the centre of the foot is the single
+ * position equally within reach of either thumb. The other two are line-actions
+ * and navigation, and they take the edges.
+ *
+ * ⚠ **It lights an empty page, which is what attach used to do.** A first run
+ * has no record, so settle and search are both off — and *controls go off; they
+ * do not disappear* only reads as deliberate if something on the screen is lit.
+ * This is that something, and unlike attach it is never off: there is nowhere a
+ * capture cannot be started.
+ *
+ * ⚠ **It was five on the morning of 25 August, two by that evening, and three
+ * again on the 27th** — and every one of those moves went the same way: a
+ * control belongs where its effect appears.
  *
  * - **Cross off and rewrite** act on a *picked* line, so they are in that line's
  *   own slot — `LineTools` in `page-screen.tsx`, which also carries the undo for
  *   the ten seconds after a capture lands.
- * - **Attach** is on the **live row**, because it starts a capture rather than
+ * - **Attach** is on the **field**, because it starts a capture rather than
  *   acting on one. This file's own note had been saying so for a day: *the only
- *   control here that does not care what is picked*. The link chip arriving on
- *   the live row is what made it unarguable — the control that creates an
+ *   control here that does not care what is picked*. The link chip arriving
+ *   beside it is what made it unarguable — the control that creates an
  *   attachment was somewhere other than where the attachment appears.
  *
- * What is left is genuinely not per-line: settle sends the picked line to the
- * tray, and search answers *where is that thing I wrote in June*.
+ * What is left is genuinely not per-line: write summons the field, settle sends
+ * the picked line to the tray, and search answers *where is that thing I wrote
+ * in June*.
  *
  * ⚠ **Settle is the last asymmetry, and it is now the only one.** It acts on the
  * picked line exactly as cross off and rewrite do, and it stayed because it was
@@ -39,10 +60,11 @@ import { SearchGlyph, SettleGlyph } from './glyphs'
  *
  * ⚠ **It does not sit above the keyboard, and that is the design.** It used to:
  * `useKeyboardPin` held it on the keys' top edge, which spent a bar's worth of a
- * shrunken screen on glyphs that are mostly off while somebody is writing.
- * Picking a line blurs the live one, so the foot is never wanted while a
- * keyboard is up. It stays at the bottom of the layout viewport now, which on
- * iOS means behind the keys, which is where it belongs. See `keyboard-hem.ts`.
+ * shrunken screen on glyphs that are all off while somebody is writing. It stays
+ * at the bottom of the layout viewport, which on iOS means behind the keys, and
+ * it recedes outright while the sheet is up — so the thing that rides the keys'
+ * top edge is the field, which is the one thing that wants to be there. See
+ * `writing-sheet` and `keyboard-hem.ts`.
  *
  * ⚠ **No rule above it.** The scrolling page reserves the foot's own height at
  * its bottom (`page-hem` in globals.css), so a line always comes to rest above
@@ -59,17 +81,23 @@ import { SearchGlyph, SettleGlyph } from './glyphs'
  *
  * Three states, and they are the app's honest answer to what is available:
  *
- * | state | settle | search |
- * |---|---|---|
- * | empty record | off | off |
- * | a record, nothing picked | off | **on** |
- * | a saved line picked | **on** | **on** |
+ * | state | write | settle | search |
+ * |---|---|---|---|
+ * | empty record | **on** | off | off |
+ * | a record, nothing picked | **on** | off | **on** |
+ * | a saved line picked | **on** | **on** | **on** |
  *
- * ⚠ **Both are off on an empty page, which the five never were.** Attach was
- * what lit that screen — the one control a first run could use — and it has
- * gone to the live row, where a first run is already looking. This bar is dark
- * on arrival now, and *controls go off; they do not disappear* is what stops
- * that reading as broken.
+ * ⚠ **Write is never off, and it is the only entry here that never is.** Every
+ * other control needs something to act on; there is nowhere a capture cannot be
+ * started. On a first run it is the one lit thing on the screen, which is the
+ * job attach used to do here before it went to the field — and *controls go off;
+ * they do not disappear* only reads as deliberate when something is lit.
+ *
+ * ⚠ **The whole bar goes while the sheet is up.** It is not a stacking problem:
+ * the sheet rests on `--keyboard-overlap`, which is zero wherever there is no
+ * on-screen keyboard, so the two would share the bottom edge. None of these
+ * three is wanted while somebody is writing, and the `+` least of all — it
+ * would be a second door to the thing already open. See `PageScreen`.
  *
  * ⚠ **Search is the one link here, so it is an `<a>` and not a button.**
  * Everything else acts on the line in hand; this goes somewhere. A button with a
@@ -83,6 +111,14 @@ import { SearchGlyph, SettleGlyph } from './glyphs'
  * cannot act goes off* is the rule the rest of this bar already follows.
  */
 type Tools = {
+  /**
+   * Summon the field. **Never null** — a capture can always be started.
+   *
+   * ⚠ **It must focus the field synchronously inside its own click handler**,
+   * or iOS will not raise a keyboard. That is the caller's job and it is why
+   * the field is mounted at all times — see `openSheet` in `page-screen.tsx`.
+   */
+  write: () => void
   /** Settle the picked line: it leaves the page for the tray. */
   settle: (() => void) | null
   /**
@@ -93,10 +129,10 @@ type Tools = {
 }
 
 /**
- * The two, in order, with nothing said about how they are arranged. Both
+ * The three, in order, with nothing said about how they are arranged. Both
  * placements render this and neither may reorder it.
  */
-function ToolSet({ settle, searchable = false }: Tools) {
+function ToolSet({ write, settle, searchable = false }: Tools) {
   return (
     <>
       <button
@@ -109,6 +145,20 @@ function ToolSet({ settle, searchable = false }: Tools) {
         }`}
       >
         <SettleGlyph />
+      </button>
+
+      {/*
+        ⚠ **The middle one, and the only one that is never off.** See the note at
+        the head of this file: the centre is what either thumb reaches, and this
+        is the app's one primary action.
+      */}
+      <button
+        type="button"
+        onClick={write}
+        aria-label="Write a capture"
+        className="text-chrome tap-target flex items-center"
+      >
+        <WriteGlyph />
       </button>
 
       {searchable ? (
@@ -197,7 +247,7 @@ export function Foot({
 export function ToolStack(tools: Tools) {
   return (
     <div
-      className="stack:flex fixed top-[calc(var(--bar-height)+var(--band-height)+var(--band-tail)+var(--stamp-block))] left-[calc(50%-var(--page-measure)/2+var(--gutter-l)-var(--stack-inset))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-[var(--stack-gap)] rounded-2xl bg-[var(--glass-tint)] py-[var(--stack-gap)] backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
+      className="stack:flex fixed top-[calc(var(--bar-height)+var(--page-lead)+var(--stamp-block))] left-[calc(50%-var(--page-measure)/2+var(--gutter-l)-var(--stack-inset))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-[var(--stack-gap)] rounded-2xl bg-[var(--glass-tint)] py-[var(--stack-gap)] backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
     >
       <ToolSet {...tools} />
     </div>

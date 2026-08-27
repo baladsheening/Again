@@ -112,12 +112,48 @@ through. **The condition went, so the correction went** — putting a lift back
 means the commit has stopped ending the mode, and that is the thing to fix
 instead.
 
-⚠ **The live row is one row and the head of a long line scrolls away, and that
-is a decision.** A 50-character capture overflows the band by 92px on a handset
-and an `<input>` cannot be panned on glass, while the same words land in the
-record as two lines. The band that wraps is the only real fix and it costs
-`--band-height` its constancy; it was put as a question on 26 August and the
-answer was to leave it. See `docs/decisions.md` before reopening it.
+⚠ **The live line is not pinned any more. The field is summoned — 27 August.**
+The record has the whole screen; the foot's `+` raises a **writing sheet** on
+the bottom edge of the glass, above the keyboard, and it grows with the words in
+it. It reverses the 26 August decision to leave the row alone, at the user's
+direction, after that decision was measured and found to cost more than it saved.
+
+The reported bug is closed **by construction, not by correction**: a capture
+longer than the column wraps in the sheet exactly as it will in the record, so
+there is nothing off screen to scroll to. That matters because there was no
+honest way to scroll it — **a drag inside a focused single-line field means
+caret-and-selection on every engine**, and Chromium already pans one while iOS
+does not, so a hand-written pan would have been a second pan on Android and a
+platform branch everywhere. `node_modules/.probe/panfield.mjs` is the
+measurement.
+
+⚠ **On a handset the `+` costs nothing, which is why this was affordable.** iOS
+raises a keyboard only for a gesture, so starting a capture always took one tap
+— on the pinned row before, on the `+` now. What the page gets back is the
+screen: what sits above the record is the bar and `--page-lead`, where it was
+the bar, the band and the air between.
+
+⚠ **The field is mounted at all times and the `+` focuses it synchronously.**
+That is the one non-negotiable in this design: iOS raises a keyboard only for a
+focus that happens *inside* the gesture that asked for it, and a field mounted
+by a state change is focused a tick too late. Never make the sheet's
+`<textarea>` conditional, and never move its focus into an effect.
+
+⚠ **Deleted with the band, and none of it should come back on its own:**
+`--band-height` and its siblings, `--bar-visible`, `live-band`'s idle layer and
+`band-dim`, `unsent`, `record-held`, the pane's `backdrop-blur`, the hem's
+`head()` correction, and `live()`/`rest()`. The mode is no longer inferred from
+gestures — the sheet is open or it is not — and every instrument that read
+`writing` now reads a fact instead of an inference.
+
+⚠ **Two exits on a handset and both commit**; `Escape` is the third and the only
+one that discards, and a thumb never reaches it. There is no unsent draft, which
+is what took `unsent` and `record-held` with it.
+
+⚠ **The foot recedes while the sheet is up**, and it is not a stacking problem:
+the sheet rests on `--keyboard-overlap`, which is zero wherever there is no
+on-screen keyboard, so the two would otherwise share the bottom edge. None of
+the foot's three is wanted while somebody writes.
 
 ⚠ **The page has exactly one field and it is the pinned band.** It holds a new
 capture, or the words of the line being rewritten. **Every instrument on that

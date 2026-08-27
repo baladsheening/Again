@@ -31,15 +31,35 @@ import { touchQuery, useMatches } from './pointer'
  *  The page is the app
  * ─────────────────────────────────────────────────────────────────────────────
  *
+ * ⚠ **The field is summoned since 27 August, and much of what follows was
+ * written for a pinned one.** The live line is not on the page: the record has
+ * the screen, and the foot's `+` raises a **writing sheet** on the bottom edge
+ * of the glass, above the keyboard, which grows with the words in it. Read
+ * `writing-sheet` in globals.css for the argument — the short version is that a
+ * one-row field cannot show a capture longer than the column, and **a drag
+ * inside a focused single-line field means caret-and-selection on every engine**,
+ * so it could not be scrolled back to either.
+ *
+ * What is unchanged is everything about the *record*: the order, the picking,
+ * the line's own slot, the day stamps, *Earlier*. What is corrected below is
+ * marked; what is not marked was true of the pinned band and is true of the
+ * sheet.
+ *
  * **The landing screen is a blank page you type down.** Not a capture field
  * pinned above a list — the page itself is the record, empty on first run and
  * filling as you write. One line is one capture; Return commits the line and
  * drops to a fresh one, so a run of captures is a run of Returns and nothing
  * else.
  *
- * **The newest line is the first one.** The caret sits under the bar and every
- * capture pushes the record down, so what you just wrote is on screen without a
- * scroll, and the line most likely to be settled is the one nearest the thumb.
+ * **The newest line is the first one.** Every capture pushes the record down,
+ * so what you just wrote is at the top without a scroll, and the line most
+ * likely to be settled is the one nearest the thumb.
+ *
+ * ⚠ **The caret used to sit under the bar and does not.** It is in the sheet, at
+ * the bottom, where the thumb and the keyboard already are — which is what the
+ * original argument for the top wanted (*a caret the keyboard can never cover*)
+ * and gets more directly: the sheet rides the keys, so nothing can cover it.
+ * The record keeps the top because a line has to be **seen** to land.
  *
  * ⚠ **This reverses the written order the page shipped with**, and the metaphor
  * it cost is real: you no longer type down a page the way you write in a
@@ -67,12 +87,15 @@ import { touchQuery, useMatches } from './pointer'
  *
  *   - **Tap the words and the line is picked.** One meaning, no modifier, no
  *     hidden gesture.
- *   - **Tap the live line and you are writing.** It is pinned under the bar and
- *     on screen at every scroll position, so it is always one tap away.
+ *   - **Tap the `+` and you are writing.** It is in the foot, so it is one tap
+ *     away wherever the record is scrolled to — and on iOS starting a capture
+ *     always cost one gesture anyway, because a keyboard cannot be raised
+ *     without one. This is that gesture, given a target of its own.
  *   - **Tap the paper and the picked line is let go.** The inverse of the first
  *     rule, and the only thing the paper does. It does not start a capture —
  *     see below for why that affordance was built and taken out.
- *   - **The keyboard follows liveness.** Gone the moment a saved line is picked.
+ *   - **The keyboard follows the sheet.** It comes up with it and goes with it,
+ *     and the sheet cannot be open while a line is picked.
  *
  * ⚠ **The record used to be a way to start writing, and is not any more.** Every
  * row carried an invisible button filling whatever width its words did not use,
@@ -93,8 +116,8 @@ import { touchQuery, useMatches } from './pointer'
  *     first time and another the second is the modifier gesture this section
  *     rules out. One control, one meaning, and a tap on a line always picks it.
  *
- * ⚠ **The rewrite happens in the band, and that is the answer to the question
- * the design left open.** *In place or in a detail view* was the one thing
+ * ⚠ **The rewrite happens in the sheet** — the band's successor, and the same
+ * one field. This is the answer to the question the design left open.** *In place or in a detail view* was the one thing
  * undecided; the answer is neither. In place shipped for a day and a handset
  * reported the page moving under it — see `startEdit` for why a field in normal
  * flow breaks three instruments at once, and why removing it is the fix rather
@@ -104,16 +127,16 @@ import { touchQuery, useMatches } from './pointer'
  * **no line of the record is ever an input**, not even for a moment.
  *
  * ⚠ **The page has exactly one field, always.** It holds a new capture, or the
- * words of the line being rewritten. That is what makes the keyboard, the
- * chrome and the band answerable at all: every one of them is built on *the
- * field is the pinned one*, and the day that stopped being true all three
- * started lying.
+ * words of the line being rewritten. It is the sheet's since 27 August and it
+ * was the pinned band's before; what has never changed is that there is one of
+ * them, and that **no line of the record is ever an input**.
  *
- * ⚠ **Three exits, and only `Escape` discards.** Return and a tap on the paper
- * commit; blur commits too, because the words on screen are the words somebody
- * meant and a blur that threw them away would be the page losing something.
+ * ⚠ **Two exits on a handset, and both commit.** Return, and a tap on the scrim
+ * — because the words on screen are the words somebody meant, and an exit that
+ * threw them away would be the page losing something. `Escape` is the third and
+ * the only one that discards, and it is a key, so a thumb never reaches it.
  * Unchanged words write nothing at all, so opening a line to *look* at it costs
- * no round trip.
+ * no round trip. See `leave` and `discard`.
  *
  * ⚠ **This header claimed two rules for weeks that nothing implemented.** It
  * said a second tap should edit, and that unpicking was a tap on the page — and
@@ -572,31 +595,43 @@ export function PageScreen({
    */
   const previews = useRef(new Set<string>())
 
-  const input = useRef<HTMLInputElement>(null)
+  /**
+   * ⚠ **A `<textarea>` since 27 August, and it is mounted at all times.**
+   *
+   * Multi-line, because the field is no longer a row of the page: a capture
+   * longer than the column wraps in the sheet instead of scrolling sideways
+   * inside a box it cannot be panned out of. Return still commits — see the key
+   * handler, which has always refused a newline.
+   *
+   * ⚠ **Mounted even while the sheet is closed, and that is load-bearing.** iOS
+   * raises a keyboard only for a focus that happens *inside* a user gesture, and
+   * a component mounted by a state change is focused a tick too late. So the
+   * field exists from the first paint, off the bottom of the glass, and the
+   * `+`'s own click handler focuses it synchronously before anything is asked
+   * to render. See `openSheet`.
+   */
+  const input = useRef<HTMLTextAreaElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
-  /** The live band, and an untouched twin of where it rests — see the hook. */
-  const band = useRef<HTMLDivElement>(null)
-  const bandAnchor = useRef<HTMLDivElement>(null)
+  /** The writing sheet, for nothing but a name in the DOM to aim probes at. */
+  const sheet = useRef<HTMLDivElement>(null)
   /** The two ends of the record, watched so the bars are there at both. */
   const topMark = useRef<HTMLDivElement>(null)
   const endMark = useRef<HTMLDivElement>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /*
-    ⚠ **`writing` alone, and the widening that stood here for a day is deleted.**
-    It read `writing || editing !== null`, so that a record line being rewritten
-    would get the band held off the status bar — and a handset reported the band
-    descending over the record the moment a line was opened. That is the
-    thermostat doing its job for a band that was **not the field**: the
-    correction exists to keep the field on the visible top edge, and while a
-    record line was the field the band was furniture being moved for no reason.
+    ⚠ **The band's correction is gone with the band — 27 August.** The hook used
+    to hold a *top*-pinned live line on the visible viewport's top edge, because
+    iOS drags every `position: fixed` element up when it scrolls to reveal a
+    focused field. The field is on the bottom edge now and rides
+    `--keyboard-overlap`, which the hook's other half already measures — so what
+    is left is one measurement with one consumer.
 
-    There is no record line to be the field any more — a rewrite happens in this
-    band — so `writing` covers both again and the flag has nothing left to
-    widen. See `startEdit`.
+    `writing` is the sheet being open, which is the only thing that asks for a
+    keyboard.
   */
-  useKeyboardHem({ writing, host, floorAnchor, band, bandAnchor })
+  useKeyboardHem({ writing, host, floorAnchor })
 
   /*
     ⚠ **A picked line is the hold, and focus deliberately is not.** The foot is
@@ -646,11 +681,11 @@ export function PageScreen({
    * (§10/§11 — respected throughout), and an animated scroll is the app taking a
    * second to show somebody where they have just asked to be.
    *
-   * ⚠ **It runs on `commit`, not on `write`, and the move is the point.** It
+   * ⚠ **It runs on `commit`, and that is the whole of what it is for now.** It
    * used to go first in `write`, to get the caret on screen before focus handed
-   * the scrolling to the browser. The band is always on screen now, so there is
-   * nothing to scroll into view and that whole race is gone. What is left is the
-   * other job it was quietly doing: **a capture has to be seen to land.** Write
+   * the scrolling to the browser; the field brings its own position with it, so
+   * that race is gone. What is left is the job it was quietly doing:
+   * **a capture has to be seen to land.** Write
    * from halfway down the record and the new line arrives at the head, out of sight,
    * with the blink playing to nobody. So the record comes to the head *after*
    * the keystroke — which cannot cost the four seconds, because the four seconds
@@ -661,16 +696,15 @@ export function PageScreen({
   }, [])
 
   /*
-    ⚠ **The live line is one row and stays one row.** A growing textarea used to
-    be here — `scrollHeight` written back as a height, because `field-sizing:
-    content` is not in Safari — and it is gone with the element that needed it.
-    An `<input>` keeps the caret in view by scrolling its own text, so a capture
-    longer than the row pushes back through it rather than growing the row and
-    shoving the record down the page while somebody is still typing.
+    ⚠ **The field grows again since 27 August, and it is not the mechanism that
+    was deleted.** A `scrollHeight`-driven textarea used to live here and went
+    with the pinned band; what replaced it is `grow-field`, a one-cell grid
+    sized by a ghost copy of the same text. **No measurement, no `el.style`
+    write, no resize loop, and no engine feature to wait for.**
 
-    That is a mechanism removed rather than corrected: no measurement, no
-    `el.style` write, no CSP note about attribute parsing, and no Safari
-    feature to wait for.
+    What made growing wrong before was where it grew: a row in the page's own
+    flow shoved the record down while somebody was typing. A sheet is not in the
+    flow, so the objection went with the band.
   */
 
   useEffect(() => () => {
@@ -790,11 +824,14 @@ export function PageScreen({
         so the scrim was up and the chrome receded — a page insisting somebody
         was writing, with no keyboard and no caret anywhere on it.
 
-        So the claim is dropped rather than the symptom covered. `writing` means
-        *a keyboard has been asked for*; after a resume on glass that is false,
-        and saying so puts the page back at rest with the words still on the
-        line. One tap resumes writing and raises the keyboard — the gesture iOS
-        was always going to require.
+        So the claim is dropped rather than the symptom covered. `writing` is
+        the sheet being open, which means *a keyboard has been asked for*; after
+        a resume on glass that is false, and saying so puts the page back at rest.
+
+        ⚠ **The draft survives the sheet closing, and always did.** `draft` is
+        state and has never depended on focus or on the sheet, so re-opening with
+        the `+` hands back the words that were there. That is what makes closing
+        it the honest answer rather than a loss.
 
         ⚠ **Both, because the blur alone is not enough** — the same trap the
         writing pane's click hit. `blur()` on a field that is not focused fires
@@ -995,9 +1032,9 @@ export function PageScreen({
     /* The link went with the line; the band starts empty like the field does. */
     setLink(null)
     /*
-      The line is written, so the writing is over — see `done`. On glass the
-      keyboard goes with it, which is what puts the record back in front of the
-      person at the moment it has something to show them.
+      The line is written, so the writing is over — see `done`. The sheet closes
+      and the keyboard goes with it, which is what puts the record back in front
+      of the person at the moment it has something to show them.
     */
     done()
     setPicked(null)
@@ -1144,22 +1181,28 @@ export function PageScreen({
    */
   function startEdit(line: Line) {
     if (line.id === '' || line.pending) return
+    /*
+      ⚠ **Focus first and synchronously, before any state is set** — the same
+      rule `openSheet` states and for the same reason: iOS raises a keyboard only
+      inside the gesture that asked for it, and the pencil's click is that
+      gesture. `preventScroll` because the sheet is still off the glass at this
+      instant and is about to come up on its own.
+    */
+    input.current?.focus({ preventScroll: true })
     setAsking(null)
     setEditing(line.id)
     setEditDraft(line.text)
     setWriting(true)
-    input.current?.focus()
   }
 
   /**
    * Put the rewritten words in the record, and send them.
    *
    * ⚠ **Three ways out, and only one of them discards.** Return commits, and so
-   * does a tap on the writing pane — which is the paper, while a keyboard is up.
-   * `Escape` abandons. Blur commits as well, because the words on
-   * screen are the words somebody meant — a blur that silently threw them away
-   * would be the page losing something, which is the shape this screen spends
-   * most of its design avoiding.
+   * does a tap on the scrim. `Escape` abandons. Both of the first two are
+   * `leave`, because the words on screen are the words somebody meant — an exit
+   * that silently threw them away would be the page losing something, which is
+   * the shape this screen spends most of its design avoiding.
    *
    * ⚠ **Unchanged text writes nothing at all.** Opening a line and closing it is
    * the ordinary way to *look* at one, and it must not cost a round trip, a
@@ -1191,7 +1234,7 @@ export function PageScreen({
   /**
    * Leave the words as they were. The line stays picked, so `Escape` steps.
    *
-   * The band goes back to holding whatever capture was being typed before the
+   * The field goes back to holding whatever capture was being typed before the
    * line was opened — `draft` was never touched, so there is nothing to put
    * back and nothing that could have gone stale.
    */
@@ -1413,6 +1456,13 @@ export function PageScreen({
    */
   const tools = {
     /*
+      ⚠ **Never null.** Every other entry here can be off, because every other
+      entry needs something to act on. There is nowhere a capture cannot be
+      started, so this is the one control on the page that is always lit — and on
+      an empty record it is the only one.
+    */
+    write: openSheet,
+    /*
       A crossed-off line cannot be settled: `resolveCapture` guards on `want`,
       which makes the settleable set exactly the resolvable one, and the way back
       is the × that put it there.
@@ -1443,85 +1493,77 @@ export function PageScreen({
   const bandValue = editing === null ? draft : editDraft
 
   /**
-   * **Somebody is writing on this line now**, which is the gesture the whole
-   * page reads instead of focus.
+   * **Summon the field.**
    *
-   * ⚠ **Clearing the pick moved here from `onFocus`, and that is the fifth
-   * thing on this page to come off focus.** The field carries `autoFocus`, so
-   * focus is the resting state of the page rather than an event — and since a
-   * rewrite now *focuses this field on purpose*, a pick cleared by focus would
-   * throw away the line whose words are in it. The two gestures that mean
-   * **I am starting a new capture** are a tap on the field and a keystroke in
-   * it, and neither of them means that while a line is open.
+   * ⚠ **Focus first, synchronously, and only then ask React for anything.** iOS
+   * raises a keyboard only for a focus that happens inside the user gesture that
+   * caused it; a focus run from an effect after a re-render is a tick too late
+   * and the keys stay down. That is why the field is mounted from the first
+   * paint rather than by this function — there is something to focus before
+   * there is anything to show.
+   *
+   * ⚠ **`preventScroll`, because the field is off the glass when this runs.**
+   * Without it the browser scrolls the document to reveal an element that is
+   * about to come to the bottom edge on its own, which is a page jumping under a
+   * thumb for no reason.
+   *
+   * ⚠ **`live()` and `rest()` were here and are deleted.** They inferred a
+   * writing *mode* from gestures — a tap on the field, a keystroke in it, the
+   * value going empty — because the field was always on screen and there was no
+   * other way to tell writing from resting. The sheet is the mode: it is open or
+   * it is not, and every instrument that read `writing` now reads a fact instead
+   * of an inference. Do not reintroduce a gesture that opens it implicitly.
    */
-  function live() {
-    /*
-      ⚠ **On the desk the mode follows the words, not the gesture.** Directed 25
-      August, in one sentence: *the screen is blurred if there is one or more
-      characters in the live row and the row is active.* That is a rule about a
-      value, and the bug it came from is what happens when a gesture stands in
-      for one — press backspace on an empty line and this used to enter the mode
-      the delete could not leave, because no `onChange` follows a keystroke that
-      changed nothing, so `rest()` never ran. The mode was enterable by a key
-      that types nothing.
-
-      Reading the field instead makes that unreachable rather than corrected:
-      there is no key that both fails to change the line and leaves words on it.
-
-      ⚠ **The keystroke that lands is `onChange`'s business, not this.** This
-      runs on `keydown`, one event before the character exists, so the value here
-      is the line *before* the key — right for a click, and one behind for a
-      keystroke. `onChange` sets the flag from the value that actually arrived,
-      and it runs for every keystroke that changes anything.
-
-      ⚠ **Coarse pointers keep the gesture, and must.** Writing is a mode there:
-      the tap is what raises the keyboard and drops the record behind glass, and
-      a mode that waited for the first character would open the keyboard over a
-      page that had not moved.
-    */
-    setWriting(touch || (editing === null ? draft : editDraft) !== '')
-    if (editing !== null) return
+  function openSheet() {
+    input.current?.focus({ preventScroll: true })
+    setWriting(true)
     setPicked(null)
     setAsking(null)
   }
 
   /**
-   * **The inverse of `live()`: an empty line is not somebody writing.**
+   * **Leaving the sheet, which always commits.**
    *
-   * ⚠ **Directed 25 August, in two halves that are one rule.** First: type,
-   * watch the page recede, delete it all back to nothing — and the page stayed
-   * sunk behind a scrim with an empty line on it. Then: write a capture, hit
-   * Return — and the page stayed sunk behind a scrim with an empty line on it.
-   * `writing` was a one-way gesture, cleared only on blur, so the way out of a
-   * mode entered by typing was to stop touching the field. Both moments leave
-   * the same thing on screen, so both call this.
+   * ⚠ **There are two exits and neither discards.** Return and a tap on the
+   * scrim, and both land the words — because the words on screen are the words
+   * somebody meant, and a page that threw them away on a stray tap would be the
+   * page losing something. That is the same rule the old blur-commits behaviour
+   * stated; what has gone with the pinned band is the *third* state it needed, a
+   * draft sitting uncommitted in a row on the page. There is no unsent draft any
+   * more, which is why `unsent` and `record-held` are deleted.
    *
-   * ⚠ **Not on a coarse pointer, and the reason is the keyboard.** Deleting the
-   * last character does not dismiss an on-screen keyboard, so clearing
-   * `writing` here would drop the hem and the chrome's hold while the glass was
-   * still half covered — `useKeyboardHem` reads this exact flag. The desk has no
-   * such disagreement, so an empty line can mean an empty line.
-   *
-   * ⚠ **This used to be the commit's exit too, and it is not since 27 August.**
-   * The argument was that a session of captures is a run of Returns, so the
-   * keyboard staying up after one was the point. Directed otherwise: **once a
-   * line is submitted the person is presumed done**, and another capture is a
-   * tap back into the live row. A commit takes `done()` below, which gives the
-   * keyboard back; an empty line is still just an empty line and takes this.
-   *
-   * ⚠ **A capability, not a platform** — `(pointer: coarse)`, the same question
-   * `film-screen.tsx` asks, owned by `components/pointer.ts`. An iPad with a
-   * keyboard attached reports fine and gets this, which is right: its keyboard
-   * stays where it is.
-   *
-   * ⚠ **Called with a value known to be empty, never from an effect.** An effect
-   * keyed to `draft === ''` would fire on the *first* keystroke too — `live()`
-   * sets the flag on `keydown`, and `onChange` has not run yet, so the page
-   * would return and recede again between one character and the next. Both call
-   * sites know what the line holds at the moment they call.
+   * ⚠ **An empty sheet writes nothing.** Opening the field and closing it is how
+   * somebody changes their mind, and it must not cost a row.
    */
-  function rest() {
-    if (!touch) setWriting(false)
+  /**
+   * **The one exit that discards**, and it is a key.
+   *
+   * ⚠ **A thumb has no such gesture, deliberately.** Both exits a handset can
+   * reach — Return and a tap on the scrim — commit, because the words on screen
+   * are the words somebody meant. `Escape` is the desk's way of saying *not
+   * this*, and it takes the chips with the words: a photograph and a link belong
+   * to the capture being abandoned, not to the next one.
+   */
+  function discard() {
+    if (editing !== null) {
+      abandonEdit()
+    } else {
+      setDraft('')
+      setLink(null)
+      clearPhoto()
+    }
+    done()
+  }
+
+  function leave() {
+    if (editing !== null) {
+      commitEdit()
+      done()
+      return
+    }
+    /* `commit` ends with `done`, so this is not two closings. */
+    if (draft.trim() !== '') commit()
+    else done()
   }
 
   /**
@@ -1556,7 +1598,7 @@ export function PageScreen({
    */
   function done() {
     /* The keyboard follows focus, and nothing else can dismiss it. */
-    if (touch) input.current?.blur()
+    input.current?.blur()
     setWriting(false)
   }
 
@@ -1641,8 +1683,7 @@ export function PageScreen({
     typeHere.current = () => {
       /* A picture open full size is not a page anybody is writing on. */
       if (looking !== null) return
-      input.current?.focus()
-      live()
+      openSheet()
     }
   })
 
@@ -1696,7 +1737,34 @@ export function PageScreen({
    * Nothing is drawn while a saved line is picked. That is the browsing state,
    * and the design's own word for it is *no caret anywhere*.
    */
-  const drawnCaret = bandValue === '' && picked === null
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  ⚠ While the field is empty, the caret is **drawn** rather than the field's
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * An empty sheet with no caret in it is a black rectangle. The words are the
+   * only thing on it, so before there are any there has to be something saying
+   * *here*, and a caret is the one mark that says it without copy.
+   *
+   * ⚠ **It is drawn because a field's own caret is a platform behaviour rather
+   * than a promise.** This page has been bitten by that before: whether a
+   * focused field paints one, and when, is not something the app controls, and
+   * on the one surface that matters the keyboard arrives on its own schedule.
+   * Drawing it removes the question instead of answering it — brass, blinking on
+   * `--animate-caret`, exactly where the field's own would sit, with the real
+   * one suppressed by `caret-transparent` so the two can never both appear.
+   *
+   * ⚠ **Empty only, and that is what makes the position free.** The moment a
+   * character exists the browser's caret takes over, because from there it has
+   * to track a position only the browser knows. While it is empty the field is
+   * exactly one line tall, so *centred on the wrapper* and *centred on the first
+   * line* are the same place and no arithmetic is needed.
+   *
+   * ⚠ **It lost its `picked === null` half with the pinned band.** That clause
+   * kept a caret off the page while somebody was browsing the record; the sheet
+   * cannot be open and the record be browsed at the same time.
+   */
+  const drawnCaret = bandValue === ''
 
   return (
     <div ref={host}>
@@ -1743,20 +1811,10 @@ export function PageScreen({
       */}
       <div
         aria-hidden
-        onClick={() => {
-          /*
-            ⚠ **Both, because the blur alone is not enough.** `blur` on a field
-            that is not focused fires no event, so the mode would stand there
-            with no way out — which is exactly what a user hit. This pane's one
-            job is *let me out*, so it says so directly as well as asking the
-            field to give up focus.
-          */
-          input.current?.blur()
-          setWriting(false)
-        }}
+        onClick={leave}
         className={`fixed inset-0 z-5 transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
           writing
-            ? 'bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
+            ? 'bg-[var(--scrim-tint)] opacity-100 [touch-action:none]'
             : 'pointer-events-none opacity-0'
         }`}
       />
@@ -1770,16 +1828,6 @@ export function PageScreen({
         ref={floorAnchor}
         aria-hidden
         className="pointer-events-none fixed inset-x-0 bottom-0 h-0"
-      />
-      {/*
-        The top edge of the layout viewport, as a thing that can be measured —
-        see `head` in `useKeyboardHem`. The band carries a correction, so the
-        correction cannot be measured off the band.
-      */}
-      <div
-        ref={bandAnchor}
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 h-0"
       />
       {/*
         ⚠ **The page box is the screen, and `svh` is not the screen.**
@@ -1837,405 +1885,20 @@ export function PageScreen({
           }
           release()
         }}
-        className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+var(--band-height)+var(--band-tail))]"
+        className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+var(--page-lead))]"
       >
         <h1 className="sr-only">Again</h1>
 
-        {/* --- the live line ------------------------------------------- */}
         {/*
-          ⚠ **The band is the one row on the page that is not a record**, and
-          after the record went newest-first it needed saying: the draft sits
-          directly above a committed line of identical size, face and colour, and
-          a half-written line tapped away from looks exactly like something that
-          landed.
-
-          ⚠ **It is a glow and not a fill, and it is always on.** Two flat
-          grounds shipped on 23 August and both came back "too grey" — the value
-          was never it; a uniform tone inside a rectangle with edges is what
-          reads as grey, whatever the value. It was then gated on focus-or-draft
-          for an hour, which was wrong for a different reason: the row is the
-          live one whether or not there is a word in it yet, and the light is the
-          affordance. `live-band` in globals.css carries both arguments, and why
-          glass cannot work on a true black page.
+          ⚠ **No recede on the record any more.** It used to sit back while a
+          draft was unsent, because a draft could be left in the pinned band with
+          the keyboard gone and nothing else said it was not saved. The sheet's
+          two exits both commit, so there is no such state — see `leave`, and
+          `record-held` in globals.css for what went with it. What sinks the
+          record while somebody writes is the scrim, and only for as long as the
+          sheet is up.
         */}
-        <div
-          ref={band}
-          /*
-            ⚠ **Pinned, and it is the only thing on this page that does not
-            recede.** The bar goes when the record is being read; this stays,
-            because it is the one control that can always act. When the bar
-            leaves, the band takes its place at the top of the glass rather than
-            sitting under a hole — one `translate` on the same durations and
-            the same curve as the bar's own, so the chrome *thins* to the live
-            line instead of emptying.
-
-            ⚠ **Glass, for the same reason the bars are** — the record passes
-            underneath it now, and a lit row with a transparent ground would have
-            two lines of text in it — but **darker than theirs, and padded**. A
-            bar can be 74% because nothing behind it can be mistaken for what is
-            in front; this holds one line of the record's own size, face and
-            colour. See `--band-tint` for the argument and `--band-height` for
-            why the box is derived from the line rather than chosen.
-
-            ⚠ **The notch is paid for in padding, not in position**, because
-            the band has to clear it in *both* states and only one of them has a
-            bar overhead. It shipped sliding to `top: 0` with no inset of its own
-            and the words ended up tucked under the status bar the moment the bar
-            receded. So the inset lives in `padding-top` permanently, the glass
-            still starts at zero — the record is never visible in the strip
-            behind the status bar — and what it slides by is `--bar-visible`, the
-            bar's height with the inset already spoken for. See that token: slide
-            by `--bar-height` instead and the notch is paid for twice.
-
-            ⚠ **`fixed` inside `main`, deliberately.** It keeps the input inside
-            the landmark and ahead of the record in reading order, which is where
-            it belongs; out of flow, it takes nothing from the flex column. The
-            containing block is the viewport because no ancestor carries a
-            transform — **do not put one on `main` or on `host`**.
-          */
-          /*
-            ⚠ **The band never leaves — it slides between two resting positions**,
-            up into the space the bar vacates and back down when the bar returns.
-            Both of its moves are arrivals, which is why an exit curve was never
-            going to be right for it even when the bar was getting one. It shares
-            the bar's single duration and curve, because the two are one piece of
-            furniture moving.
-          */
-          className={`fixed inset-x-0 top-0 z-10 bg-[var(--band-tint)] pt-[calc(env(safe-area-inset-top)+var(--band-lead))] pb-[var(--band-ground)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-            receded ? '' : 'translate-y-[var(--bar-visible)]'
-          }`}
-        >
-          <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
-            {/*
-              ⚠ **Brightest while it is *waiting*, and dimmer while it is being
-              written in.** The light is an invitation and it is spent once it
-              has been accepted. On `writing` rather than on `focused`, since
-              `autoFocus` makes focus the resting state of the page. See
-              `band-dim` and `--row-light-idle`.
-            */}
-            <div className={`live-band ${writing ? 'band-dim' : ''}`}>
-              {/*
-                ⚠ **The picture sits beside the field, not above it.** The band
-                is one row and stays one row — the whole reason the live line is
-                an `<input>` rather than a growing textarea — so a photograph
-                waiting to be captioned takes the year's slot like every other
-                one, and the field gives up the width.
-              */}
-              <div className="relative flex items-center">
-            <input
-              ref={input}
-              type="text"
-              /*
-                ⚠ **The field holds one of two things, and never both.** A new
-                capture, or the words of the line being rewritten — `draft` and
-                `editDraft` are separate state, so opening a line does not
-                clobber a half-typed capture and closing it hands the capture
-                back untouched. **No stash and nothing to keep in sync**: the
-                one that is not on screen is simply not on screen.
-              */
-              value={bandValue}
-              onChange={(e) => {
-                if (editing !== null) setEditDraft(e.target.value)
-                else setDraft(e.target.value)
-                /*
-                  ⚠ **The value that arrived decides the mode, on the desk.**
-                  `live()` on `keydown` has only the line as it was; this has the
-                  line as it is, and it runs for every keystroke that changes
-                  anything — which is exactly the set of keystrokes that can move
-                  the answer. `rest()` carries the coarse-pointer guard, so on
-                  glass this whole branch does nothing and the mode stays the
-                  gesture it has to be there.
-                */
-                if (e.target.value === '') rest()
-                else if (!touch) setWriting(true)
-              }}
-              /*
-                ⚠ **The blur commits an open rewrite**, because the words on
-                screen are the words somebody meant and a blur that threw them
-                away would be the page losing something. `commitEdit` writes
-                nothing when nothing changed, so a line opened only to be looked
-                at costs no round trip. `Escape` is the one exit that discards,
-                and it does not blur — see the key handler below.
-              */
-              onBlur={() => {
-                setWriting(false)
-                commitEdit()
-              }}
-              /*
-                ⚠ **`click`, and the event is the fix.**
-
-                It was `pointerdown`, which put the writing pane on the screen
-                *in the middle of the touch* — and on iOS an element appearing
-                over the touch point takes the click that follows. So the field
-                never received it, never focused, and the keyboard never rose:
-                the screen blurred and the **second** tap was the one that
-                worked. Worse, the pane could not be dismissed in between,
-                because its own tap blurs a field that was not focused.
-
-                `click` fires after the gesture is over and after the browser has
-                already acted on it, so nothing this handler does can cost the
-                tap that called it.
-
-                ⚠ **And not `focus`, which was the second wrong answer.** The
-                field carries `autoFocus`, so the page opens with it focused and
-                tapping it fires no `focus` event at all — the mode would never
-                start on the one surface where the whole thing was reported.
-                `click` fires either way.
-              */
-              onClick={live}
-              /*
-                ⚠ **A paste that is a link lands on the line, not in it.** See
-                `liftLink` for why it has to be the *whole* clipboard: pulling a
-                URL out of pasted prose would edit words somebody meant to keep.
-
-                ⚠ **`preventDefault` only when it lifts**, so every other paste
-                behaves exactly as it always did — including a link pasted into
-                the middle of a sentence somebody is writing around, which
-                arrives with the rest of the clipboard and is therefore text.
-
-                Not while a rewrite is open: an edit changes the words of a line
-                that already exists, and its link is not in the field to change.
-              */
-              onPaste={(e) => {
-                if (editing !== null) return
-                const lifted = liftLink(e.clipboardData.getData('text/plain'))
-                if (!lifted) return
-                e.preventDefault()
-                setLink(lifted)
-                live()
-              }}
-              onKeyDown={(e) => {
-                /* And so is a keystroke, for anyone who never taps. */
-                live()
-                if (e.nativeEvent.isComposing) return
-                /*
-                  ⚠ **Return commits and never inserts a newline.** One line is one
-                  capture: a capture with a line break in it is two things somebody
-                  meant to say separately, and the matching path would treat the
-                  pair as one string forever after. `isComposing` is the exception
-                  that has to be honoured — the Return that closes an IME candidate
-                  window is not this Return.
-                */
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  /*
-                    ⚠ **Nothing scrolls after this.** The caret is the first thing
-                    in the document and the new line lands below it, so the page
-                    grows downward under a thumb that is already in the right
-                    place. A `requestAnimationFrame` scroll-to-end used to be here,
-                    and it went with the written order.
-                  */
-                  if (editing === null) commit()
-                  else commitEdit()
-                }
-                /*
-                  ⚠ **`Escape` is the one exit that discards, and it belongs to
-                  the field** — this is where the focus is while a line is open,
-                  which is what lets the page-level listener stay off entirely.
-                  See it above for why a listener that could reach a rewrite
-                  would be holding a stale draft.
-
-                  ⚠ **It must not call `blur()`, and that is not tidiness.**
-                  `blur()` fires `onBlur` synchronously, inside this handler,
-                  where `commitEdit` still closes over the draft `abandonEdit`
-                  has only *queued* the discard of — so the one exit meant to
-                  throw the words away would save them. Clearing `editing` is the
-                  whole of what happens, and the field goes back to holding the
-                  capture it was holding before.
-                */
-                if (e.key === 'Escape' && editing !== null) {
-                  e.preventDefault()
-                  abandonEdit()
-                }
-              }}
-              /*
-                `autoFocus` is the keyboard being up on a cold open, which is why
-                the app was opened. ⚠ **iOS will not honour it** — focus without a
-                gesture cannot raise a keyboard there, and no arrangement of this
-                code changes that. What answers it instead is the paper: **the
-                words are the only thing on the page that is not a place to start
-                writing**, so the gesture iOS insists on is the one somebody was
-                going to make anyway, and it lands wherever the thumb already is.
-              */
-              autoFocus
-              enterKeyHint="enter"
-              inputMode="text"
-              autoCapitalize="sentences"
-              autoCorrect="on"
-              autoComplete="off"
-              spellCheck
-              /*
-                Named for a screen reader and **not placeheld on screen**: a word
-                sitting in the field would be the app talking over the one gesture
-                it wants, and the caret is already the instruction.
-              */
-              aria-label={
-                editing === null ? 'Capture' : 'Rewrite this capture'
-              }
-              /*
-                ⚠ **Italic while the draft is unsent, roman once it is in the
-                record**, and Return is what turns one into the other. It is
-                there because a line typed and then tapped away from stays in the
-                pinned band with the keyboard gone, where it reads as one more
-                line of the record — the band's light says *this row is live*, it
-                does not say *these words are not saved*.
-
-                ⚠ **It no longer holds while somebody is typing on the desk**, by
-                direction of 25 August: setting the words in italic under the
-                cursor that is writing them is the app commenting on a sentence
-                being spoken. The claim is only needed once nobody is making it
-                any more — a line typed and then clicked away from, which is
-                exactly the case the rule was written for and the one it keeps.
-
-                ⚠ **`!writing` is that condition and nothing has to be added to
-                say it.** On the desk the mode now *is* "words in the live row and
-                the row active", so `unsent && !writing` reads as "words, and
-                nobody there" — the same pair `record-held` already uses two
-                elements down.
-
-                ⚠ **`touch ||` keeps glass exactly as it was**, and it is not
-                symmetry for its own sake. There `writing` is the gesture rather
-                than the words, and it stays true for the whole time a keyboard
-                is up — so without the guard the italic would go out on the first
-                character of every capture on a handset, which is not what was
-                asked for and is the surface the claim was written for.
-
-                See `unsent` in globals.css for why it is type and not colour,
-                dimming, or a mark.
-              */
-              className={`page-line page-input min-w-0 flex-1 ${
-                bandValue !== '' && (touch || !writing) ? 'unsent' : ''
-              } ${drawnCaret ? 'caret-transparent' : 'caret-chrome'}`}
-            />
-
-                {drawnCaret && (
-                  <span
-                    aria-hidden
-                    className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
-                  />
-                )}
-
-                {/*
-                  ⚠ **Tapping it takes it back off**, which is the only control a
-                  waiting photograph needs: there is no record yet, so there is
-                  nothing to undo and nothing to confirm. It is the same gesture
-                  as the × on a line — one control, and the way back is itself.
-                */}
-                {photo && (
-                  <button
-                    type="button"
-                    onClick={clearPhoto}
-                    aria-label="Take the photograph off"
-                    className="tap-target ms-2 flex shrink-0 items-center self-center"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL */}
-                    <img
-                      src={photo.url}
-                      alt=""
-                      className="size-[var(--thumb)] rounded-[3px] object-cover"
-                    />
-                  </button>
-                )}
-
-                {/*
-                  ⚠ **The host, not the URL.** A pasted address is mostly
-                  machinery — scheme, path, tracking — and the part a person
-                  recognises is the site. Showing the whole thing would put the
-                  forty characters back on the line that lifting them off was
-                  for.
-
-                  ⚠ **A button rather than a link, and here that is right.** On
-                  the record the same thing is an `<a>` because it goes
-                  somewhere; this one has not been committed to anything yet, so
-                  its only job is *take it back off* — the same gesture as the
-                  waiting photograph beside it, and the same reason: there is no
-                  record yet, so nothing to undo and nothing to confirm.
-                */}
-                {link !== null && (
-                  <button
-                    type="button"
-                    onClick={() => setLink(null)}
-                    aria-label={`Take the link to ${linkLabel(link)} off`}
-                    className="text-chrome ms-2 flex shrink-0 items-center gap-1 self-center rounded-full bg-[var(--glass-tint)] px-2 py-0.5 text-[0.8125rem] leading-none [--glyph:0.875rem]"
-                  >
-                    <LinkGlyph />
-                    {linkLabel(link)}
-                  </button>
-                )}
-
-                {/*
-                  ─────────────────────────────────────────────────────────────
-                   Attach lives on the live row — 25 August
-                  ─────────────────────────────────────────────────────────────
-
-                  ⚠ **It was in the foot, and the foot's own note had been
-                  flagging why that was wrong.** *The camera is the odd one
-                  because a photograph starts a capture rather than acting on
-                  one — the only control there that does not care what is
-                  picked.* Everything else in that bar answers *what shall I do
-                  to the line I have picked*; this one answers *what shall I put
-                  on the line I am writing*, and those are two different
-                  questions asked from two different places. The link chip
-                  landing here is what made it plain: the control that creates
-                  an attachment was somewhere other than where the attachment
-                  appears.
-
-                  ⚠ **Last in the row, so it does not move.** The chips grow
-                  inward between the words and this, which keeps a control
-                  somebody aims at in one place whether the line is bare or
-                  already carrying a picture and a link. A leading glyph was the
-                  alternative and it pushes the caret right — and the caret is
-                  the instruction on an empty page.
-
-                  ⚠ **Tapping it is already the choice.** The input carries no
-                  `capture` attribute, deliberately, so iOS offers Photo Library,
-                  Take Photo and Choose File; the desk gets a file dialog. Moving
-                  the glyph changed where it is asked from, not what is offered.
-
-                  ⚠ **Off when there is nowhere to put a photograph**, which is
-                  `imagesOn` — a server fact. A control that cannot act goes off,
-                  and that rule is the two bars' and it comes here with the
-                  control.
-                */}
-                <button
-                  type="button"
-                  disabled={!imagesOn}
-                  onClick={() => camera.current?.click()}
-                  aria-label="Attach a picture"
-                  className={`-my-2 ms-2 flex shrink-0 items-center self-center py-2 transition-colors [--glyph:var(--glyph-line)] ${
-                    imagesOn ? 'text-chrome' : OFF
-                  }`}
-                >
-                  <AttachGlyph />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/*
-          ⚠ **The air under the band is deliberate and is not the stamp’s.** The
-          first day stamp carries no top margin — it is the head of the list — so
-          without this the date sat right under a blinking caret and the two read
-          as one thing. It is `--band-tail` in the page's top padding now, since
-          the band left the flow and the air had to go with the thing it clears.
-        */}
-        {/*
-          ⚠ **The record holds its recede while the draft is unsent.** Italic
-          says *these words are not in the record*; this puts a gap around them
-          to say it in, which italic alone was not carrying once the writing
-          pane dropped on blur. Dimming the live line instead is the one thing
-          it cannot be — a crossed-off line is already struck and dimmed, and
-          the live line sits directly above it. See `record-held`.
-
-          `!writing` because the writing pane is already over the record then,
-          and two recedes stacked sink it twice as far as either one means.
-        */}
-        <ol
-          className={`flex flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
-            draft !== '' && !writing ? 'record-held' : ''
-          }`}
-        >
+        <ol className="flex flex-col">
           {lines.map((line, i) => {
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'
@@ -2756,7 +2419,195 @@ export function PageScreen({
         the other. Cross off and rewrite are not here any more; they went to
         `LineTools`, on the line they act on.
       */}
-      <Foot receded={receded} {...tools} />
+      {/*
+        ─────────────────────────────────────────────────────────────────────
+         The writing sheet — 27 August
+        ─────────────────────────────────────────────────────────────────────
+
+        **The field is summoned, and it arrives on the bottom edge of the
+        glass.** It was a row pinned under the bar, always on screen and always
+        one line tall; the report that closed that design was that a capture
+        longer than the column scrolls sideways inside it and cannot be scrolled
+        back — because **a drag inside a focused single-line field means
+        caret-and-selection on every engine**, not panning. See `writing-sheet`
+        in globals.css for the measurements and the whole argument.
+
+        ⚠ **Mounted at all times, translated off the glass when closed.** iOS
+        raises a keyboard only for a focus that happens inside the gesture that
+        asked for it, so there has to be something to focus *before* anything
+        re-renders. The `+` focuses this synchronously and then opens the sheet —
+        see `openSheet`. Do not make this conditional.
+
+        ⚠ **It is the last thing in the document**, which is where it is on the
+        screen. The pinned band came before the record because it was above it.
+
+        ⚠ **`z-10`: over the scrim, under the two bars.** Nothing about the
+        record may come up over the field.
+      */}
+      <div
+        ref={sheet}
+        className={`writing-sheet z-10 transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+          writing ? '' : 'pointer-events-none translate-y-full'
+        }`}
+      >
+        <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
+          {/*
+            ⚠ **The chips sit beside the field and the field gives up the
+            width**, exactly as they did on the pinned row. What has changed is
+            that the field may now be several lines tall, so they align to its
+            *first* line rather than to its middle — a photograph belongs beside
+            the words it captions, and the words start at the top.
+          */}
+          {/*
+            ⚠ **The hem is the row's, exactly as it is on a line of the record.**
+            `page-row` puts `--line-hem` on the block and the words inherit the
+            type from it; this is that arrangement, so `line-glyph` centres the
+            chips on the field's **first line** by the same arithmetic it uses in
+            the record. Put the hem on the field's own wrapper instead and every
+            chip sits a hem too high.
+          */}
+          <div className="page-line flex items-start">
+            <div className="relative min-w-0 flex-1">
+            <div
+              /*
+                ⚠ **The ghost is a copy of the same text, and it is what sizes
+                the box.** It can only measure the same line breaks if every
+                property that affects them is inherited from one place — which is
+                the row, since 27 August. See `grow-field`.
+              */
+              data-value={bandValue}
+              className="grow-field"
+            >
+              <textarea
+                ref={input}
+                rows={1}
+                value={bandValue}
+                onChange={(e) => {
+                  if (editing !== null) setEditDraft(e.target.value)
+                  else setDraft(e.target.value)
+                }}
+                /*
+                  ⚠ **A paste that is a link lands on the line, not in it.** See
+                  `liftLink` for why it has to be the *whole* clipboard: pulling a
+                  URL out of pasted prose would edit words somebody meant to keep.
+                */
+                onPaste={(e) => {
+                  if (editing !== null) return
+                  const lifted = liftLink(e.clipboardData.getData('text/plain'))
+                  if (!lifted) return
+                  e.preventDefault()
+                  setLink(lifted)
+                }}
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing) return
+                  /*
+                    ⚠ **Return commits and never inserts a newline**, which is
+                    the one thing a textarea has to be told. One line is one
+                    capture: a capture with a line break in it is two things
+                    somebody meant to say separately, and the matching path would
+                    treat the pair as one string forever after. `isComposing` is
+                    the exception — the Return that closes an IME candidate
+                    window is not this Return.
+
+                    ⚠ **The field wraps; it does not break.** Wrapping is the
+                    browser laying one sentence over several lines, which is what
+                    the record does with the same words. A newline would be the
+                    person doing it, and that is what is refused.
+                  */
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    leave()
+                  }
+                  /*
+                    ⚠ **`Escape` is the one exit that discards, and it belongs to
+                    the field.** It must not call `blur()`: blur is synchronous,
+                    so the discard would race the exit that performs it.
+                  */
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    discard()
+                  }
+                }}
+                enterKeyHint="enter"
+                inputMode="text"
+                autoCapitalize="sentences"
+                autoCorrect="on"
+                autoComplete="off"
+                spellCheck
+                /*
+                  Named for a screen reader and **not placeheld on screen**: a
+                  word sitting in the field would be the app talking over the one
+                  gesture it wants.
+                */
+                aria-label={editing === null ? 'Capture' : 'Rewrite this capture'}
+                className={`page-input ${
+                  drawnCaret ? 'caret-transparent' : 'caret-chrome'
+                }`}
+              />
+            </div>
+
+            {drawnCaret && (
+              <span
+                aria-hidden
+                className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+              />
+            )}
+            </div>
+
+{photo && (
+              <button
+                type="button"
+                onClick={clearPhoto}
+                aria-label="Take the photograph off"
+                className="line-glyph tap-target ms-2 shrink-0"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL */}
+                <img
+                  src={photo.url}
+                  alt=""
+                  className="size-[var(--thumb)] rounded-[3px] object-cover"
+                />
+              </button>
+            )}
+
+{link !== null && (
+              <button
+                type="button"
+                onClick={() => setLink(null)}
+                aria-label={`Take the link to ${linkLabel(link)} off`}
+                className="line-glyph text-chrome ms-2 shrink-0 gap-1 rounded-full bg-[var(--glass-tint)] px-2 text-[0.8125rem] leading-none [--glyph:0.875rem]"
+              >
+                <LinkGlyph />
+                {linkLabel(link)}
+              </button>
+            )}
+
+<button
+              type="button"
+              disabled={!imagesOn}
+              onClick={() => camera.current?.click()}
+              aria-label="Attach a picture"
+              className={`line-glyph ms-2 shrink-0 transition-colors [--glyph:var(--glyph-line)] ${
+                imagesOn ? 'text-chrome' : OFF
+              }`}
+            >
+              <AttachGlyph />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/*
+        ⚠ **The foot goes while the sheet is up, and it is not a z-index
+        problem.** The sheet rests on `--keyboard-overlap`, which is zero
+        wherever there is no on-screen keyboard — a Safari tab before the keys
+        rise, and the desk — so the two would share the bottom edge and the
+        glyphs would sit over the words. Stacking them would only hide the
+        collision: **none of these three is wanted while somebody is writing**,
+        and the `+` least of all, since it is a second door to the thing that is
+        already open. The way out is the scrim, which is the whole screen.
+      */}
+      <Foot receded={receded || writing} {...tools} />
       <ToolStack {...tools} />
 
       {/*
@@ -2791,8 +2642,7 @@ export function PageScreen({
           previews.current.add(url)
           setPhoto({ file, url })
           /* The caret is waiting, which is the whole of the caption step. */
-          input.current?.focus()
-          setWriting(true)
+          openSheet()
         }}
       />
 

@@ -200,6 +200,31 @@ export function LinkGlyph() {
   )
 }
 
+/**
+ * Foot. **Write something** — the one control that starts a capture.
+ *
+ * ⚠ **It is the whole of how a capture begins, since 27 August.** The page had a
+ * live line pinned under the bar and the caret lived in it; the field is
+ * summoned now, and this is the door. See `writing-sheet` in globals.css for why
+ * the row stopped being pinned, and `Foot` for why this glyph is the middle one.
+ *
+ * ⚠ **A plus, not a pencil.** The pencil already means *change these words* on a
+ * line of the record, and two drawings for two different acts would be a
+ * vocabulary with a collision in it. A plus means *another one*, which is
+ * exactly what a capture is.
+ *
+ * Two strokes crossing on the grid's centre, ink 4 → 16 in both axes like the
+ * rest.
+ */
+export function WriteGlyph() {
+  return (
+    <Glyph>
+      <path d="M10 4v12" />
+      <path d="M4 10h12" />
+    </Glyph>
+  )
+}
+
 /** Foot. Where is that thing I wrote in June. Not per-line. */
 export function SearchGlyph() {
   return (

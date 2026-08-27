@@ -1194,25 +1194,13 @@
   );
 
   /**
-   * **The bar without the notch** — how far it stands off the top of the *glass*
-   * rather than off the top of the document.
-   *
-   * ⚠ **It exists because the band gets the inset wrong the other way round.**
-   * The live band is pinned at `top: 0` and slides down by the bar's height
-   * while the bar is shown; when the bar recedes it slides back to zero, and on
-   * an installed app zero is **under the status bar and the notch**, which is
-   * where the words ended up. The band therefore carries
-   * `env(safe-area-inset-top)` in its own padding — permanently, so the notch is
-   * cleared whether or not the bar is there — and what it slides by is this,
-   * which is the bar's height with that inset already spoken for. Slide by
-   * `--bar-height` on top of a padding that already holds the inset and the
-   * notch is paid for twice.
-   *
-   * Its glass still starts at zero, so the record is never visible in the strip
-   * behind the status bar. That is the whole point of paying for the inset with
-   * padding rather than with position.
+   * ⚠ **`--bar-visible` was here and is deleted with the band — 27 August.** It
+   * was the bar's height with `env(safe-area-inset-top)` already spoken for, and
+   * its only consumer was the pinned live band sliding up into the space the bar
+   * vacated. There is no pinned band: the field is summoned from the foot and
+   * arrives at the bottom of the glass, so nothing on this page slides by the
+   * bar's height any more. See `writing-sheet`.
    */
-  --bar-visible: calc(var(--bar-lead) + var(--bar-row) + var(--bar-tail));
 
   /**
    * ⚠ **The foot's own inset is the whole home-indicator inset**, unlike
@@ -1391,52 +1379,55 @@
    * record slides under the band.
    */
   /**
-   * ⚠ **The air above the live line and the ground below it were one number
-   * until 24 August, and they do different jobs.** `--band-pad` was `1rem` on
-   * both sides, which is symmetry rather than a reason. Asked on hardware to
-   * bring the live row closer to the wordmark, and only the lead can move:
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The writing sheet's box — 27 August
+   * ───────────────────────────────────────────────────────────────────────────
    *
-   *   - **The lead** is the gap between the bar's tail and the words. It has no
-   *     job beyond air, so it is the one that gives.
-   *   - **The ground** is load-bearing — see `--band-tint`. It is where a record
-   *     line dissolves *before* it reaches the words being written, and without
-   *     it no tint is dark enough. **It must not follow the lead down.**
+   * ⚠ **These replace `--band-lead`, `--band-ground`, `--band-height` and
+   * `--band-tint`, which described a band pinned under the bar.** There is no
+   * band. The field is summoned by the foot's `+` and arrives on the bottom edge
+   * of the glass, above the keyboard — see `writing-sheet` for the whole
+   * argument.
    *
-   * The bar already carries `--bar-lead` and `--bar-tail` apart for the same
-   * kind of reason; this is that pattern, arrived at the same way.
+   * ⚠ **`--band-height` in particular has no successor, and that is the point.**
+   * It was load-bearing: the page's top padding read it, so the record's first
+   * line sat below a band whose height was a constant, which is why the live
+   * line could never grow and why a long capture had to scroll sideways inside
+   * it. A sheet is not in the record's flow, so its height is free — it grows
+   * with the words and the record is untouched. The reported bug is gone by
+   * construction rather than corrected.
    *
-   * ⚠ **Lowering the lead moves the record too, and that is correct.** The page's
-   * top padding reads `--band-height`, so the whole column rises by whatever
-   * comes off here and the air between the band and the first line is unchanged.
+   * The lead and the tail are the sheet's own air, and they are apart for the
+   * reason `--bar-lead` and `--bar-tail` are: the top of the sheet is a gap and
+   * the bottom of it sits on a keyboard, and those two answer to different
+   * things.
    */
-  --band-lead: 0.5rem;
-  --band-ground: 1rem;
-  --band-height: calc(
-    var(--band-lead) + var(--band-ground) + var(--leading-line) +
-      var(--line-hem) * 2
-  );
+  --sheet-lead: 0.75rem;
+  --sheet-tail: 0.75rem;
 
   /**
-   * The band's own ground, and **it is not the bars'.**
+   * **How tall the field may grow before it scrolls.**
    *
-   * ⚠ **The band holds body text, and that is the whole difference.** A bar can
-   * be 74% because what shows through it is a wordmark and four glyphs, and
-   * nothing behind it can be mistaken for what is in front. The band is one line
-   * of the record's own size, face and colour — so a record line dissolving
-   * through it at 26% reads as **a second line of the draft**, which was exactly
-   * what it looked like when it first shipped pinned.
-   *
-   * 90% is dark enough that a line passing under is a smear rather than a
-   * sentence, and the blur is still what stops it being guillotined at the edge:
-   * an opaque band would cut a glyph in half at the boundary, which is what the
-   * glass on the two bars exists to prevent.
-   *
-   * ⚠ **The padding is the other half of the answer, and it matters more.**
-   * `--band-ground` puts a line’s worth of ground under the live line, so a record
-   * line has somewhere to dissolve *before* it reaches the words being written.
-   * Take it out and no tint is dark enough.
+   * ⚠ **A product cap, not a device correction.** A capture is a sentence; six
+   * lines is far past one, and a sheet allowed to grow without limit would take
+   * the screen off the record it is supposed to be added to. Past this the field
+   * scrolls vertically, which is a gesture every engine gives a multi-line field
+   * for free — unlike the horizontal one a single-line field does not.
    */
-  --band-tint: color-mix(in srgb, var(--color-bg) 90%, transparent);
+  --sheet-cap: 6;
+
+  /**
+   * The sheet's ground.
+   *
+   * ⚠ **Opaque, unlike the two bars.** A bar is glass because what shows through
+   * it is a wordmark and four glyphs, and nothing behind it can be mistaken for
+   * what is in front. This holds body text at the record's own size, face and
+   * colour — a record line dissolving through it reads as a second line of the
+   * capture, which is exactly what the old pinned band looked like when it
+   * shipped. The scrim already separates the two; the sheet does not have to do
+   * it twice.
+   */
+  --sheet-tint: var(--color-bg);
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -1462,46 +1453,41 @@
    * doing this is doing.** The blur already says the record is not the thing in
    * hand, and the way back is a tap — the same tap that dismisses the keyboard.
    *
-   * ⚠ **Lighter than the band's ground, and it must stay that way.** This sinks
-   * the record; `--band-tint` protects the words being written from it. If this
-   * ever goes darker than that, the live line stops being the lit thing on the
-   * screen.
+   * ⚠ **Lighter than the sheet's ground, and it must stay that way.** This
+   * sinks the record; `--sheet-tint` protects the words being written from it.
+   * If this ever goes darker than that, the field stops being the lit thing on
+   * the screen.
    *
-   * ⚠ **The blur is small on purpose.** The record has to stay legible *as a
-   * record* — recognisably the lines you just wrote, out of focus — rather than
-   * becoming texture. Anything past a few pixels turns two hundred captures into
-   * a grey wash, and the page's whole argument is that the record is the
-   * product.
+   * ⚠ **The pane's blur is deleted — 27 August.** It existed so the words in
+   * hand would be the only sharp thing while the record sat *directly under
+   * them* in the same size and face. The sheet has its own opaque ground and its
+   * own edge of light, so the separation is made by an object rather than by a
+   * filter, and a full-viewport `backdrop-filter` is a compositing layer the
+   * page paid for on every keystroke. `--scrim-blur` survives for the
+   * photograph opened full size, which is the one place a blur is still doing
+   * work.
    */
   --scrim-tint: color-mix(in srgb, var(--color-bg) 45%, transparent);
   --scrim-blur: 5px;
 
   /**
-   * **How far back the record sits while a capture is unfinished** — see the
-   * `record-held` utility for why the recede outlives the keyboard.
-   *
-   * ⚠ **Derived, not chosen.** `--scrim-tint` is the paper at 45% over the
-   * record, so the record already reads at 55% of its strength whenever the
-   * writing pane is up. This is that same 55%, reached by fading the record
-   * itself instead of laying paper over it. The two states are then the same
-   * depth by construction, and the blur is the only difference between them —
-   * which is the rule: **the record is receded for as long as a capture is
-   * unfinished; the blur is the extra that says the page is modal.**
-   *
-   * ⚠ **Do not tune this to taste.** If the recede is wrong, `--scrim-tint` is
-   * wrong too and both move together. A number picked here on one handset is
-   * exactly the failure `CLAUDE.md` rules out by name.
+   * ⚠ **`--record-held` and `--band-tail` were here and are deleted — 27 August.**
+   * Both described a page with a pinned live line in it. The recede held the
+   * record back *while a draft was unsent*, and there is no unsent draft any
+   * more: the sheet's only two exits are Return and a tap on the scrim, and both
+   * of them commit. The tail was the air between the band and the first line of
+   * the record, and there is no band over the record to clear.
    */
-  --record-held: 0.55;
 
   /**
-   * The air between the band and the first line of the record.
+   * The air between the bar and the first line of the record.
    *
-   * It was `mt-8` on the list. The band left the flow, so the air had to come
-   * with it — and it belongs to the record's top padding now, alongside the two
-   * things it is clearing.
+   * ⚠ **It is the record's, not the chrome's.** The page's top padding used to
+   * read the bar *and* the band *and* the air between them, which is why the
+   * record started a third of the way down a handset. What is above the record
+   * now is the bar and this.
    */
-  --band-tail: 2rem;
+  --page-lead: 1.25rem;
 
   /**
    * The reading column above `rail`. 680px — the same measure the design's
@@ -2542,57 +2528,26 @@
 }
 
 /**
- * **Words that are not in the record yet.** The live line while it holds a draft
- * nobody has committed.
+ * ⚠ **`unsent` was here and is deleted — 27 August.**
  *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Italic is the record's own answer to a question of state
- * ─────────────────────────────────────────────────────────────────────────────
+ * It set a draft in italic, because a line typed into the pinned band and then
+ * tapped away from stayed there with the keyboard gone, where it read as one
+ * more line of the record. **Nothing can be unsent now.** The writing sheet has
+ * exactly two exits — Return, and a tap on the scrim — and both of them commit,
+ * so a draft is either in the field somebody is looking at or it is a line of
+ * the record. There is no third state for a rule to describe.
  *
- * The symptom: type a line, tap away without pressing Return, and the words stay
- * in the pinned band with the keyboard gone — where they read as one more line
- * of the record, in the same size, face and colour as every line under them. The
- * band's light says *this row is live*; it does not say *these particular words
- * are not saved*.
+ * ⚠ **It would also be wrong in the sheet, which is the second reason.** The
+ * direction of 25 August was that setting words in italic under the cursor
+ * writing them is the app commenting on a sentence being spoken — and in a
+ * summoned sheet somebody is always writing. The rule survived by holding for
+ * the one case it was written for, *a line typed and then tapped away from*,
+ * and that case no longer exists.
  *
- * ⚠ **Italic, and it is a rule rather than a badge: italic is not in the record,
- * roman is.** Pressing Return turns one into the other, so the vocabulary
- * teaches itself the first time somebody uses it and needs no legend, no icon
- * and no word of copy. It holds while the line is being typed as well, which is
- * the same claim made continuously rather than a state that appears when you
- * look away.
- *
- * ⚠ **Type, because §11 says type is the entire design** — and because the three
- * other ways to say this are all spent or ruled out. Colour is not available:
- * `--color-chrome` means *a control* and `--color-accent` is held for overlap,
- * and a third meaningful colour was deleted once already. Dimming is the
- * crossed-off vocabulary, and worse, it was measured to read as *the app
- * doubting what it has already promised* — which is the exact opposite of what
- * an unsent line should say. A rule, a box or a badge are ruled out where
- * `picked` is defined, for the reasons written there.
- *
- * ⚠ **It costs no layout.** The live line is a single-line `<input>`, so italic
- * cannot rewrap anything, and the row's height comes from `page-line` rather
- * than from the glyphs. **One line is one line** whatever face it is set in.
- *
- * ⚠ **Nothing else in the app is italic**, and nothing else should be. It was
- * tried once for the auth tagline and rejected there — see the type scale — so
- * this is the only thing in the product it can be confused with, which is
- * nothing.
+ * ⚠ **The italic face stays wired in app/layout.tsx, in reserve.** It is
+ * `preload: false`, so a face nothing names is a face nothing fetches — the same
+ * arrangement Bebas Neue is held under. Do not delete it to tidy up.
  */
-@utility unsent {
-  /*
-    ⚠ **The drawn italic, named explicitly.** `font-style: italic` alone would
-    not fail against an upright-only family — the browser synthesises a slant by
-    shearing the roman, which is a fake italic on a page whose rule is that type
-    is the entire design. `--font-fira-italic` is the real face, loaded for this
-    and nothing else; see `app/layout.tsx` for why it costs nothing until a
-    draft exists. The `font-style` stays so the match is exact rather than
-    incidental.
-  */
-  font-family: var(--font-fira-italic), var(--font-sans);
-  font-style: italic;
-}
 
 /**
  * The mark on the picked line: **the caret's own width and colour, in the gutter
@@ -2685,72 +2640,59 @@
 }
 
 /**
- * The live band: **the row you are writing in, lit rather than filled.**
- *
- * A line being written is not yet a record, and with the record newest-first the
- * draft sits directly above a committed line of identical size, face and colour.
- * A half-written line tapped away from looks exactly like one that landed, which
- * is the shape of losing something. This says *still yours to finish*.
+ * **The writing sheet: the field, summoned, on the bottom edge of the glass.**
  *
  * ─────────────────────────────────────────────────────────────────────────────
- *  Why it is a glow and not a fill (23 August, third attempt)
+ *  Why the live line stopped being pinned — 27 August
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **Two flat fills shipped and both came back "too grey" — the value was
- * never the problem.** `--color-surface` at full strength is 1.29:1 and read as
- * a card; the same token at 40% composites to about #0d0d0c, roughly 1.09:1,
- * and read as grey all over again. At that luminance no hue survives — 13/255
- * of a warm charcoal and 13/255 of a warm white are the same three numbers — so
- * darkening it further only makes a fainter slab. **What reads as grey is a
- * uniform tone inside a rectangle with edges.** Light has neither.
+ * The page had a live line pinned under the bar, always on screen, always the
+ * caret's home. It was one row and had to be: the record's top padding was
+ * derived from `--band-height`, so a band that grew would have pushed the record
+ * down the page under somebody's thumb. One row meant a capture longer than the
+ * column scrolled sideways inside an `<input>` — and **a drag inside a focused
+ * single-line field means caret-and-selection, not panning**, so the head of a
+ * long capture could not be got back to at all. Measured: 92px off the left edge
+ * of a 390px handset at fifty characters, while the same words land in the
+ * record as two lines. `node_modules/.probe/bandwidth.mjs` and `panfield.mjs`.
  *
- * So the ground is an ellipse of light inscribed in the row: brightest across
- * the middle, transparent by the time it reaches any of the four sides. There
- * is no boundary anywhere for the eye to find, which is why the peak can be
- * *brighter* than either fill and still read as subtler — 8% of the paper
- * colour peaks near #131312 at the centre and averages well under what the flat
- * 40% put everywhere.
+ * ⚠ **The fix is not to scroll the row; it is to stop the field being a row.**
+ * A sheet is not in the record's flow, so its height answers to the words in it
+ * rather than to a constant the page is built on. A long capture wraps, exactly
+ * as it will in the record, and there is nothing off screen to reach. That is
+ * the condition removed rather than corrected — see *How things get fixed*.
  *
- * Prior art: Raycast's design system carries a "warm glow",
- * `rgba(215, 201, 175, 0.05) 0 0 20px 5px` — a warm off-white at 5%, spread
- * behind a featured element rather than filled into it. Same move, same reason.
- * Ours tints `--color-text` so the light is the paper's own colour and cannot
- * drift from the palette.
+ * ⚠ **Summoned by the foot's `+`, and on a handset that costs nothing.** iOS will
+ * not raise a keyboard without a gesture, so starting a capture *already* took
+ * one tap — on the pinned row. It is a tap on the `+` now. The same gesture,
+ * and the page gets its whole screen back: what is above the record is the bar
+ * and `--page-lead`, where it used to be the bar, the band and the air between.
  *
- * ⚠ **Glass was asked for and is ruled out by the ground, not by taste.**
- * `backdrop-filter` refracts what is behind it, and behind this is `#000000`.
- * Blurring black returns black, so the effect can only appear through the
- * border and inner highlight that conventionally come with it — which is a
- * hairline, and hairlines are out. Frosted glass needs a busy backdrop; a true
- * black page is the one backdrop that gives it nothing to work with.
+ * ⚠ **It sits on the keyboard's top edge, and the measurement already existed.**
+ * `--keyboard-overlap` is written by `useKeyboardHem` — how much of the layout
+ * viewport the keys are covering — so `bottom` reads it and the sheet rides the
+ * keys up and down without a second thermostat. On every surface with no
+ * keyboard it is zero and the sheet sits on the bottom edge of the glass.
  *
- * ⚠ **Always on, and it was gated for an hour.** The light came and went with
- * focus-or-a-draft, on the argument that a ground which is always there is
- * decoration. It is not: the row is always the live one whether or not there is
- * a word in it yet, and a page whose only lit thing appears after you commit to
- * typing has hidden the very affordance somebody opened the app to find. The
- * gate also cost the flash below its meaning — light that comes and goes cannot
- * also mean *this just landed*.
+ * ⚠ **The light is the band's, unchanged.** An ellipse inscribed in the sheet,
+ * brightest across the middle and transparent by the time it reaches any of the
+ * four sides. Two flat fills shipped in August and both came back "too grey" —
+ * the value was never the problem, because *a uniform tone inside a rectangle
+ * with edges* is what reads as grey at any value. **Do not answer "too grey", or
+ * "brighter", with a fill.**
  *
- * ⚠ **Edge to edge with no media query and no `vw`.** It un-insets by exactly
- * the gutter that inset it, so on a handset — where `main` is the whole screen
- * because the measure does not bind — the band reaches both edges of the glass
- * on its own. On the desk the same rule makes it the column's full width
- * including its gutters, which is the right answer there and not a special case.
- * A `100vw` bleed would have needed both a breakpoint and a scrollbar caveat.
- *
- * ⚠ **No padding of its own**, and it had some for an hour. It made the live row
- * 12px taller than a written one, which breaks the invariant `page-line` exists
- * to state: a line being written and a line already written occupy exactly the
- * same box, which is what stops the page jumping on Return. The band is a
- * ground, not a container. Air above the record belongs to the record.
+ * ⚠ **The idle layer is deleted with the state it described.** `live-band` carried
+ * a second, brighter light for the row *waiting* to be written in, put out by
+ * `band-dim` once somebody started. A summoned sheet is never waiting: it exists
+ * because somebody asked for it, so there is one light and no fade between two.
  */
-@utility live-band {
-  position: relative;
-  margin-left: calc(-1 * var(--gutter-l));
-  margin-right: calc(-1 * var(--gutter-r));
-  padding-left: var(--gutter-l);
-  padding-right: var(--gutter-r);
+@utility writing-sheet {
+  position: fixed;
+  inset-inline: 0;
+  bottom: var(--keyboard-overlap, 0px);
+  padding-top: var(--sheet-lead);
+  padding-bottom: calc(var(--sheet-tail) + env(safe-area-inset-bottom));
+  background-color: var(--sheet-tint);
 
   &::before {
     content: '';
@@ -2759,99 +2701,68 @@
     pointer-events: none;
     background-image: var(--row-light);
   }
+}
 
-  /*
-    The waiting row's extra light, put out while somebody writes — see
-    `--row-light-idle` and the `band-dim` utility below. It is a second layer
-    rather than a brighter first one so that the base light is a declaration
-    nothing edits, and so that the change can be *faded*: `background-image`
-    does not transition and an opacity does.
+/**
+ * **A field that is as tall as its own words**, with no measurement in it.
+ *
+ * ⚠ **The replicated-content grid, and it is chosen over the alternatives.** The
+ * wrapper is a one-cell grid holding the `<textarea>` and a `::after` carrying the
+ * same text from `data-value`; the pseudo-element is invisible and sizes the
+ * cell, and the field stretches to it. **No `scrollHeight` read, no `el.style`
+ * write, no resize loop, and no engine feature to wait for.**
+ *
+ * A growing textarea driven by `scrollHeight` shipped on this page in August and
+ * was deleted with the band; `field-sizing: content` is the declarative answer
+ * and is still not in every engine this ships to. This is the construction that
+ * needs neither.
+ *
+ * ⚠ **The trailing space in the content is load-bearing.** A value ending in a
+ * newline measures one line short without it, so the sheet would fail to grow on
+ * exactly the keystroke that needed it.
+ *
+ * ⚠ **Every property that affects line breaking must be identical on both**, or
+ * the ghost and the field disagree about how many lines there are. They are set
+ * on the wrapper and inherited, which is what makes that true by construction
+ * rather than by two lists agreeing.
+ *
+ * ⚠ **Past `--sheet-cap` lines the field scrolls**, vertically, which every
+ * engine gives a multi-line field for free.
+ */
+@utility grow-field {
+  display: grid;
+  max-height: calc(var(--leading-line) * var(--sheet-cap));
+  overflow-y: auto;
 
-    ⚠ **On by default**, so the row a class-less render produces is the lit,
-    inviting one. The dim state is the exception and says so.
-  */
   &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 1;
-    background-image: var(--row-light-idle);
-    transition: opacity var(--recede) var(--ease-recede);
+    content: attr(data-value) ' ';
+    visibility: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  & > textarea,
+  &::after {
+    grid-area: 1 / 1;
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+  }
+
+  & > textarea {
+    resize: none;
+    overflow: hidden;
+    /* The hem belongs to the wrapper, or the ghost measures a line short. */
+    padding: 0;
   }
 }
 
 /**
- * The live row while it is being written in: **dimmer than when it is waiting.**
- *
- * The light is an invitation, and it is spent once it has been accepted — the
- * writing pane has already darkened everything else and the caret is in the row,
- * so a lit ground would be competing with the words it exists to invite.
- *
- * ⚠ **Driven by `writing`, not by `focused`.** The field carries `autoFocus`, so
- * focus is the resting state of the page on the desk and in a Safari tab — a row
- * keyed to focus would open dim and never change. `writing` is the
- * gesture-driven mode, which on a handset is exactly "the keyboard is up".
- *
- * It fades on `--recede` rather than snapping, and shares the chrome's curve:
- * the light going down is part of the same movement as the pane arriving over
- * the record, and two timings there would read as two things happening.
+ * ⚠ **`record-held` was here and is deleted — 27 August**, with `unsent` and for
+ * the same reason: it held the record back while a draft sat uncommitted in the
+ * pinned band, and the sheet's two exits both commit. What sinks the record now
+ * is the scrim, which is up for exactly as long as the sheet is.
  */
-@utility band-dim {
-  &::after {
-    opacity: 0;
-  }
-}
-
-/**
- * **The record stays back for as long as the draft is unsent**, and not only
- * while the keyboard is up.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Contrast, put on the record rather than on the line (24 August)
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * The symptom `unsent` was written for did not fully go away. Italic is the
- * rule and it is the right rule, but it was carrying the state alone: on blur
- * `writing` goes false, the writing pane drops, and the record comes back to
- * full strength — so the unsent words lose the contrast around them at exactly
- * the moment they need it, and sit one property away from the committed lines
- * beneath them.
- *
- * ⚠ **Dimming the live line was asked for first, and it is the one place the
- * dim cannot go.** A crossed-off line is already `line-through opacity-50`, so
- * a dimmed live line is its unstruck neighbour — the same register, one
- * property apart, directly above it. **Inverting it buys the identical contrast
- * with no collision**: fade the record, and the words being typed stay the
- * brightest thing on the page, which is what the four-second capture wants
- * anyway. The collision was removed rather than corrected for — see *How things
- * get fixed*.
- *
- * ⚠ **The objection recorded in `unsent` does not apply to the live line, and
- * that is worth being exact about.** Dimming was measured to read as *the app
- * doubting what it has already promised* — but that was measured on lines
- * **in flight**: committed, on the page, waiting on the network. Nothing is
- * promised about a draft nobody has sent, so dimming one is not doubt. What
- * rules it out here is the crossed-off collision above, not that finding.
- *
- * ⚠ **Opacity on the list, not a second full-viewport layer.** The writing pane
- * carries `backdrop-filter`, and the note on `--scrim-tint` says why one left
- * armed is a compositing layer the scrolling page pays for. The record is
- * scrollable while a draft is unsent — that is the difference between this
- * state and the modal one — so it must not acquire a blur it drags through
- * every scroll frame. Fading the element it is already painting costs nothing.
- *
- * ⚠ **It never applies while `writing`.** The pane is over the record then and
- * does this job with paper; stacking both would sink the record twice as far as
- * either state describes. Only one thing changes when the keyboard leaves.
- *
- * ⚠ **Nothing moves and nothing resizes**, so the record cannot reflow under a
- * thumb mid-capture, and reduced motion loses only the fade — the state itself
- * is not an animation and still reads.
- */
-@utility record-held {
-  opacity: var(--record-held);
-}
 
 /**
  * **A capture blinks where it lands** — the words themselves, once, as the line

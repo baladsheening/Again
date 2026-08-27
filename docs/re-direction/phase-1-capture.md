@@ -125,14 +125,17 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   the condition, so the lift and its token are gone with it.
 >   `node_modules/.probe/submitdone.mjs` shows the pane down, the field blurred
 >   and the record at full strength at the instant the line lands.
-> - ⚠ **The live row stays one row, at the user's direction.** A 50-character
->   capture overflows the band by 92px on a 390px handset and an `<input>`
->   cannot be panned on glass, while the same words land in the record as two
->   lines — so the page shows less of a capture while it is being written than
->   after it is committed. The only real fix is a band that wraps, which costs
->   `--band-height` its constancy. It was put as a question and the answer was
->   **leave it**. `node_modules/.probe/bandwidth.mjs` has the numbers, and
->   `docs/decisions.md` has the reasoning, so nobody re-derives it.
+> - ⚠ **The live row was left alone on the 26th and the whole design of it was
+>   replaced on the 27th.** A 50-character capture overflowed the band by 92px on
+>   a 390px handset while the same words land in the record as two lines, and an
+>   `<input>` cannot be panned on glass. Leaving it was the answer for a day;
+>   asked again, the direction was to have the scrolling, and the measurement
+>   that settled *how* is `node_modules/.probe/panfield.mjs` — **Chromium already
+>   pans a focused input and iOS does not**, so writing our own pan would have
+>   been a second pan on Android and a platform branch everywhere. **The field is
+>   summoned instead**: the foot's `+` raises a sheet on the bottom edge of the
+>   glass that grows with the words, so a long capture wraps and there is nothing
+>   off screen to reach. See *The field is summoned* below.
 >
 > ⚠ **None of the three is verified on hardware**, which is now the one thing
 > outstanding on this page.
