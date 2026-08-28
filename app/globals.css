@@ -1343,7 +1343,7 @@
    * thumb, not the look**, and 44 is where the thumb put it.
    */
   --foot-height: calc(
-    var(--leading-line) + var(--sheet-lead) + var(--sheet-hem) +
+    var(--leading-line) + var(--sheet-lead) + var(--sheet-foot) +
       env(safe-area-inset-bottom)
   );
 
@@ -1638,7 +1638,10 @@
     The strip's TOP hem, which is half its bottom one below the desk. See
     `sheet-row` for why the two are not equal and for what it is bending.
   */
-  --sheet-lead: calc(var(--sheet-hem) / 2);
+  --sheet-lead: calc(var(--sheet-hem) / 4);
+
+  /* Directed: the glyphs a tad higher. Same 40px box, 2px of it moved above. */
+  --sheet-foot: calc(var(--sheet-hem) * 1.25);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
@@ -2773,7 +2776,7 @@
     trade — air given back from ABOVE, with the line's own footing kept — and it
     was asked for after looking at the bar.
   */
-  padding-block: var(--sheet-lead) var(--sheet-hem);
+  padding-block: var(--sheet-lead) var(--sheet-foot);
   letter-spacing: -0.01em;
 }
 
@@ -3422,6 +3425,7 @@
 
       /* The desk keeps matched air: its strip is the field, not the glyph bar. */
       --sheet-lead: var(--sheet-hem);
+      --sheet-foot: var(--sheet-hem);
     }
   }
 
