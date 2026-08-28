@@ -7730,3 +7730,32 @@ should not be a third.
 **Below 72rem nothing moves at all**, which is the check that matters most: the
 handset is untouched. At 1152px exactly, the tool stack's left edge measures 27px
 — on screen, so the breakpoint's own guarantee holds at the pixel it is made.
+
+### The notch's clearance is split, so the glyphs sit on the bar's centre line
+
+**Reported from a handset, the same evening:** *in the handset version, move the
+glyphs in the bottom bar so they sit more centrally in the bar, i.e. lower than
+their current position.*
+
+They were high by **17px**, which is `34 / 2` and not a coincidence: all of
+`env(safe-area-inset-bottom)` was below the row, so on a Face-ID iPhone the strip
+is 78px of visible ground with its contents centred in the top 44.
+
+⚠ **`padding-block`, halved, rather than a nudge.** The same clearance split
+evenly above and below puts the row on the centre line **at any inset**, and the
+strip's total height does not change by a pixel — so `page-hem`'s reserve and
+everything else reading `--foot-height` are untouched. On a surface with no inset
+it is zero on both sides and nothing moves; with a keyboard up the term is
+already zero, so the writing state is unaffected.
+
+⚠ **The drawing stays clear of the indicator, which is the rule this could have
+broken.** Half the clearance leaves the glyph's lowest pixel 26px off the bottom
+of the glass, against a home-indicator pill inside the bottom 13. What reaches
+into the gesture area is the invisible half of the 44px hit box, where a *tap*
+still lands on the page — only an edge swipe belongs to the system.
+
+`node_modules/.probe/glyphsit.mjs`:
+
+    before   inset 34   strip 78   row 78→34   drawing 69→43   17px high
+    after    inset 34   strip 78   row 61→17   drawing 52→26   centred
+    after    inset  0   strip 44   row 44→0    drawing 35→9    centred

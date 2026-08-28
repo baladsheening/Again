@@ -3065,10 +3065,35 @@
     with this in, the inset was never the cause and the next suspect is
     `--keyboard-overlap` overshooting the keys — see `useKeyboardHem`, and read
     the property off the page before changing anything.
+
+    ─────────────────────────────────────────────────────────────────────────
+     And the clearance is split, so the row sits on the bar's centre line
+    ─────────────────────────────────────────────────────────────────────────
+
+    ⚠ **Reported from a handset: the glyphs sit high in the bottom bar.** They
+    did, by exactly half the notch. All of the clearance was below the row, so on
+    a Face-ID iPhone the strip is 78px of visible ground with its contents
+    centred in the top 44 — measured 17px above the bar's own centre, which is
+    `34 / 2` and not a coincidence.
+
+    ⚠ **`padding-block`, halved, rather than a nudge.** The same clearance, split
+    evenly above and below, puts the row on the centre line **at any inset** —
+    and the strip's total height does not change by a pixel, so `page-hem`'s
+    reserve and everything else built on `--foot-height` are untouched. On a
+    surface with no inset it is zero either side and nothing moves at all;
+    with a keyboard up the term is already zero, so the writing state is
+    unaffected too. `node_modules/.probe/glyphsit.mjs` measures both.
+
+    ⚠ **The drawing stays clear of the indicator, which is the rule this could
+    have broken.** Half the clearance leaves the glyph's lowest pixel 26px off
+    the bottom of the glass, against a home-indicator pill that lives inside the
+    bottom 13. What reaches into the gesture area is the invisible half of the
+    44px hit box, where a *tap* still lands on the page — only an edge swipe is
+    the system's.
   */
-  padding-bottom: max(
+  padding-block: max(
     0px,
-    calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px))
+    calc((env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)) / 2)
   );
 }
 
