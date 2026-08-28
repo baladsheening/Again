@@ -8026,6 +8026,51 @@ are re-checked rather than remembered.
    column may never overlap the logo's column* is claimed at every width from 916
    up. 915 is walked to show what it does **not** claim.
 
+### ⚠ STILL OPEN — read this before the section under it
+
+**The report was restated on the evening of 28 August and it does NOT describe
+the strip.** In the user's own words:
+
+> *The thing that's discontinuous is the change in font size of different
+> elements at the point the browser reaches the narrow state. When we go from big
+> to small by crossing the narrow state threshold, the entry column that had
+> approached the logo column shifts right. As the window is narrowed again, the
+> entry column approaches the now narrower logo column — narrower because the
+> logo font size has reduced. The jump is the first approach being somewhat
+> undone at the threshold, requiring a re-approach by continuing the narrowing.*
+
+⚠ **That is the shape of the ORIGINAL symptom**: a threshold where the mark's
+size drops, the mark's band therefore narrows, and the record column is thrown
+back rightwards and has to re-approach. The strip's jump at 1152 is a different
+object at a different moment, and offering it as the answer to this was wrong.
+**Do not conflate the two.** Both entries stay; this one is the reported one.
+
+**Two candidates, and the first is much the likelier:**
+
+1. ⚠ **A build without the ramp.** At the time this was reported the fix existed
+   only on `phase-1-capture` — `origin/main` was `0739d61`, two commits behind,
+   so **production still had the original 78.6px reversal**, and so would any
+   stale tab. **Establish which build was on screen before measuring anything.**
+   On the fixed build the walk shows 156.9 → 156.7 across 1152 and no reversal
+   anywhere in 34 widths.
+2. **If it was the fixed build, it is the rail step at 720px, not 1152.** That is
+   now the only place left where the mark's size changes discretely, and it
+   changes twice over: `--text-mark` 1.25 → 1.5rem **and** `--bar-gutter`
+   1.25 → 2rem, so `--mark-column` steps 5.711rem (91.4px) → 7.354rem (117.7px)
+   — a 26px jump in the logo's band. ⚠ **It was recorded as *pre-existing, much
+   smaller* and skipped**, on the grounds that the column measured continuous
+   through it (20 → 19.5). That reasoning has a hole worth checking: below 915
+   `--record-measure`'s clamp is off, so the column is gutter-driven and cannot
+   respond to the band at all — which means the *column* is continuous there
+   while the **gap between the column and the logo** is not. The report is about
+   an approach and a re-approach, i.e. about the gap. Measure the gap, not the
+   column.
+
+⚠ **The obvious fix for (2) is the one already ruled out elsewhere and it is
+still ruled out**: do not answer it by moving `--breakpoint-rail`. If the rail's
+two steps are the cause, they want ramping the way the root was ramped, or the
+mark's band wants deriving so the column tracks it below 915 as it does above.
+
 ### ⚠ STILL OPEN — the strip jumps at 1152, and it is not the type scale
 
 **Reported the same evening, after the ramp shipped and was looked at:** *there

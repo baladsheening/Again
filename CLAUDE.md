@@ -662,6 +662,17 @@ remove the mechanism, not correct for it:** the number stopped jumping.
   scrollbar.** Headless Chromium passes `--hide-scrollbars`, so a 0px bar cannot
   tell a stable `100vw` from an oscillating one. With a real 15px bar, `100vw` is
   `innerWidth` either way and the root does not move.
+- ⚠ **OPEN, and the report is about the MARK'S SIZE STEPPING, not the strip.**
+  Restated: *the entry column that had approached the logo column shifts right at
+  the threshold, then re-approaches the now narrower logo column as you keep
+  narrowing.* That is the original symptom's shape. ⚠ **Establish which build was
+  on screen first** — the ramp was on `phase-1-capture` only, so production and
+  any stale tab still had the 78.6px reversal. If it was the fixed build, the
+  suspect is **720px, not 1152**: `--text-mark` 1.25 → 1.5rem and `--bar-gutter`
+  1.25 → 2rem both step there, so `--mark-column` jumps 91.4 → 117.7px. It was
+  skipped because the *column* measures continuous through it — but below 915
+  `--record-measure`'s clamp is off, so the column cannot track the band, and the
+  report is about the **gap**. Measure the gap. `docs/decisions.md` has it.
 - ⚠ **OPEN, and reported the same evening: THE STRIP still jumps at 1152.** *There
   is still a discontinuity at the point we resize.* ⚠ **It is not the type scale
   and it is not the column** — both are measured continuous across that pixel, so
