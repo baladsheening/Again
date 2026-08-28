@@ -182,7 +182,19 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   `panfield.mjs`. Both swaps of this element are recorded in CLAUDE.md, because
 >   the next reader will assume one was a mistake.
 >
-> ⚠ **None of the six is verified on hardware**, which is now the one thing
+> - ⚠ **The handset's writing box is the line — the 28th, fourth pass.**
+>   Directed: *only tall enough to contain the one line.* 28px on glass, 44px on
+>   the desk; `--sheet-hem` is zero below `--breakpoint-stack`, the row wears
+>   `sheet-row`, and the type is otherwise identical to a record line. ⚠ **The
+>   chips keep their 44px** — `sheet-glyph` hangs the whole overhang upward over
+>   the scrim instead of splitting it, because half of `line-glyph`'s split would
+>   land on the keyboard. **A hit area does not have to be inside the box it
+>   belongs to**, which is why the short box and the tap floor are not in tension.
+>   Hit-tested rather than reasoned: `elementFromPoint` returns the chip across
+>   the whole 44px. `node_modules/.probe/shortbox.mjs` and `shorthit.mjs`; the
+>   record stays at one 44px row per entry in both.
+>
+> ⚠ **None of the seven is verified on hardware**, which is now the one thing
 > outstanding on this page.
 
 ### The 23 commits this register was missing

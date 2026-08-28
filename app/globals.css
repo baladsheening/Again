@@ -1448,6 +1448,37 @@
   );
 
   /**
+   * **The sheet's air, and on a handset there is none — 28 August.**
+   *
+   * Directed: *make the input box on the handset only tall enough to contain the
+   * one line.* So it is. The field is `--leading-line` and the paperclip's
+   * drawing is smaller than the line, so **nothing in that row is taller than the
+   * line box** — which makes the line box the height, 28px, with no padding
+   * around it. Below 44px, and the first number on this page that is deliberately
+   * under `--tap-floor`.
+   *
+   * ⚠ **That does not cost the chips their target, and the reason is worth
+   * stating because it looked like it would.** A hit area does not have to be
+   * inside the box it belongs to. `sheet-glyph` keeps the full 44px and hangs all
+   * of it *upward*, over the scrim, where there is nothing but record behind
+   * glass — instead of `line-glyph`'s split, half of which would land on the
+   * keyboard and be untappable. Same target, moved to where there is room.
+   *
+   * ⚠ **The field itself is bigger than the box it sits in and always was.** A
+   * `<input>` is the whole width of the sheet and 28px tall, which is a 28px
+   * target across the entire column — nothing about starting to write gets
+   * harder.
+   *
+   * ⚠ **The desk keeps its hem**, at the user's direction, and this is a width
+   * rule rather than a device rule: above `--breakpoint-stack` — where the sheet
+   * is already wider than the record and the tools stand beside the column —
+   * `--sheet-hem` goes back to `--line-hem`. See the `@media` in the base layer;
+   * a media query cannot resolve a `var()`, so 54rem is spelled there and this
+   * note is what ties the two together.
+   */
+  --sheet-hem: 0px;
+
+  /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
    * lines the field could grow to before it scrolled, six, *a capture is a
    * sentence and six lines is far past one*. **The cap is one now, and one is
@@ -2470,6 +2501,26 @@
 }
 
 /**
+ * **The writing sheet's row: the same line, with the sheet's own air — 28
+ * August.**
+ *
+ * It wore `page-line` until the box was asked to be only as tall as the line it
+ * holds. Everything except the padding is identical and has to be — a line being
+ * written and a line already written are the same words in the same face at the
+ * same size, which is what has stopped this page jumping on Return since the
+ * pinned band. Only the air differs, and only below `--breakpoint-stack`.
+ *
+ * ⚠ **The hem is `--sheet-hem`, which is `0px` on a handset and `--line-hem` on
+ * the desk.** See the token for why the chips do not lose their 44px to it.
+ */
+@utility sheet-row {
+  font-size: var(--text-line);
+  line-height: var(--leading-line);
+  padding-block: var(--sheet-hem);
+  letter-spacing: -0.01em;
+}
+
+/**
  * **A row of the record: the line's own type, and the air around it.**
  *
  * ⚠ **The type is declared here rather than on the words — 26 August, and it is
@@ -2599,6 +2650,41 @@
   height: var(--leading-line);
   padding-block: var(--line-hem);
   margin-block: calc(-1 * var(--line-hem));
+}
+
+/**
+ * **The same furniture, in the writing sheet, with its hit area hung upward —
+ * 28 August.**
+ *
+ * `line-glyph` splits the hem evenly above and below the line, which is right in
+ * the record: the overhang lands inside each row's own `--line-hem`, so two
+ * rows' targets meet and never overlap. **In the sheet there is no hem to land
+ * in.** The box is the line, the sheet's bottom edge is the top of the keyboard,
+ * and half a target on a keyboard is half a target — measured as 44px, tappable
+ * as 36.
+ *
+ * ⚠ **So the whole hem goes on top, and nothing is given up.** The border box is
+ * still `--leading-line` plus two hems — 44px, still `--tap-floor` — and the
+ * negative margin still takes all of it back, so the row is not one pixel
+ * taller. What changed is only *which side the invisible half hangs off*: it
+ * reaches up over the scrim, where there is nothing behind it but a record under
+ * glass, instead of down onto the keys.
+ *
+ * ⚠ **A hit area does not have to be inside the box it belongs to.** That is the
+ * whole of this, and it is why *the box is only as tall as the line* and *the
+ * controls stay thumb-sized* are not in tension.
+ *
+ * ⚠ **This holds on every surface, not only where the hem is zero.** Above
+ * `--breakpoint-stack` the sheet has a hem again and the upward hang is simply
+ * harmless — a pointer needs none of it. One rule, no branch.
+ */
+@utility sheet-glyph {
+  box-sizing: content-box;
+  display: inline-flex;
+  align-items: center;
+  height: var(--leading-line);
+  padding-block: calc(2 * var(--line-hem)) 0;
+  margin-block: calc(-2 * var(--line-hem)) 0;
 }
 
 /**
@@ -2971,6 +3057,15 @@
   @media (min-width: 54rem) {
     :root {
       --foot-height: 3rem;
+
+      /**
+       * ⚠ **The sheet gets its hem back on the desk**, and only here. The
+       * handset's writing box is the line and nothing else — see `--sheet-hem`
+       * for the argument and for why the chips keep their 44px through it. This
+       * is `--breakpoint-stack` spelled out because a media query cannot resolve
+       * a `var()`; if that token moves, this moves with it.
+       */
+      --sheet-hem: var(--line-hem);
     }
   }
 }

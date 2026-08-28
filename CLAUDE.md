@@ -171,6 +171,28 @@ Measured on both surfaces by `node_modules/.probe/oneline.mjs` — 50 rows, one
 height, 44px — `onepick.mjs` for a picked line's tools, and `slide.mjs` for the
 field.
 
+⚠ **On a handset the writing box is the line and nothing else — 28 August.** 28px,
+not 44. Directed. `--sheet-hem` is `0px` below `--breakpoint-stack` and
+`--line-hem` above it, the sheet's row wears `sheet-row` rather than `page-line`,
+and everything else about the type is identical to a line of the record — a line
+being written and a line already written are the same words in the same face at
+the same size, which is what keeps the page from jumping on Return.
+
+⚠ **It costs the chips nothing, because a hit area does not have to be inside the
+box it belongs to.** `line-glyph` splits its 44px evenly above and below the
+line; with no hem to land in, the lower half would sit on the keyboard and be
+untappable — 44px measured, 36px reachable. `sheet-glyph` hangs the whole
+overhang **upward**, over the scrim, where there is nothing behind it but a
+record under glass. Same 44px, same invisible box, somewhere a thumb can reach
+it. Verified by hit-test, not by arithmetic: `elementFromPoint` returns the chip
+at the very top, the quarter, the middle and the very bottom of its box, and
+`node_modules/.probe/shortbox.mjs` measures 16px of overhang above the row and
+**0px below the sheet**. One rule on every surface — above the breakpoint the
+upward hang is simply harmless.
+
+⚠ **The record keeps its 44px rows.** This is the sheet's box, not the page's
+density. Both probes assert it.
+
 ⚠ **This element has been swapped twice in two days and both reasons are
 recorded, because the next reader will assume one of them was a mistake.**
 

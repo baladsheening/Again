@@ -7382,3 +7382,63 @@ and the record's own furniture stay on the physical right, because the document
 is `lang="en"` with no `dir`. Making the page RTL is a page-level decision and
 this is not it — what was asked for is that the writing slide the right way, and
 it does.
+
+## The writing box is the line — 28 August
+
+**Directed:** *make the input box on the handset only tall enough to contain the
+one line* — and, when the reply came back weighing it against the paperclip's tap
+target, *I don't get why we can't simply have a row with just enough height to
+contain the text and the paperclip; it would still be a lot shorter.*
+
+**That objection was right and the reply that prompted it was wrong.** It had
+been put as a trade-off — a 28px box or a 44px target, pick one — and it is not
+one. The box has to *contain* the drawing; the target is invisible padding and
+does not have to be inside the box at all.
+
+### The height is the line box, and nothing in the row is taller
+
+18px on `--leading-line`. The paperclip, the link chip and the photograph are all
+`--glyph-line` or `--thumb`, and both are the height of the text by derivation —
+`line-glyph`'s own rule is *larger than the drawing without being larger than the
+row*. So there is nothing in that row asking for more than 28px, and 44 was the
+row's hem, twice.
+
+`--sheet-hem` is `0px`, with `--line-hem` restored above `--breakpoint-stack`. The
+row wears `sheet-row` instead of `page-line` — identical in face, size, leading
+and tracking, because a line being written and a line already written have to be
+the same words in the same box, and different in exactly one property.
+
+⚠ **A width rule, not a device rule.** The desk keeps its hem at the user's
+direction; the switch is `@media (min-width: 54rem)` on `:root`, which is
+`--breakpoint-stack` spelled out because a media query cannot resolve a `var()`.
+No browser sniff, which *How things get fixed* rules out by name.
+
+### `sheet-glyph`: the same 44px, hung where there is room
+
+`line-glyph` splits its hem evenly above and below the line. In the record that
+is exactly right — the overhang lands inside each row's own `--line-hem`, so two
+rows' targets meet and never overlap. In a sheet with no hem there is nothing for
+the lower half to land in: below the sheet is the top of the keyboard, so 8px of
+every chip's target would be on the keys. 44px measured, 36px reachable.
+
+⚠ **So the whole hem goes on top and nothing is given up.** Border box still
+`--leading-line` + two hems = 44px = `--tap-floor`; negative margin still takes
+all of it back, so the row is not a pixel taller. Only the side the invisible half
+hangs off has changed, and it now reaches up over the scrim — a full-viewport
+element with nothing behind it but a record already out of reach.
+
+⚠ **Hit-tested, not reasoned.** `elementFromPoint` down the chip's centre line
+returns the chip at the very top, the quarter, the middle and the very bottom of
+its box; `shortbox.mjs` measures 16px of overhang above the row and **0px below
+the sheet**. Both on a 390×844 handset.
+
+⚠ **One rule on every surface.** Above the breakpoint the sheet has a hem again
+and the upward hang is simply harmless — a pointer needs none of it. A `sheet-glyph`
+that split its hem on the desk and stacked it on glass would be two behaviours
+where one does.
+
+### Measured
+
+    handset   sheet 28   row 28   field 28   chip 44   above 16   below sheet 0
+    desk      sheet 44   row 44   field 28   chip 44   above  8   below sheet −8
+    record    one 44px row per entry, both surfaces, unchanged

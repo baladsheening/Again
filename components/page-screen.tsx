@@ -2529,21 +2529,29 @@ export function PageScreen({
             — it is the line, and `items-center` puts them on it.
           */}
           {/*
-            ⚠ **The hem is the row's, exactly as it is on a line of the record.**
-            `page-row` puts `--line-hem` on the block and the words inherit the
-            type from it; this is that arrangement, so `line-glyph` centres the
-            chips on the field's **first line** by the same arithmetic it uses in
-            the record. Put the hem on the field's own wrapper instead and every
-            chip sits a hem too high.
+            ⚠ **`sheet-row`, not `page-line` — 28 August.** Directed: on a
+            handset the writing box should be only as tall as the one line it
+            holds. Everything about the type is identical to a line of the record
+            and must stay so — same face, size, leading and tracking, which is
+            what has kept the page from jumping on Return since the pinned band.
+            **Only the air differs**, and only below `--breakpoint-stack`: the
+            hem is `--sheet-hem`, which is zero on a handset and `--line-hem` on
+            the desk. The row is then 28px on glass and 44px on a desk.
+
+            ⚠ **The hem still belongs to the row, wherever it is not zero.** Put
+            it on the field's own wrapper instead and every chip sits a hem too
+            high, because `sheet-glyph` centres on the row's line box.
+
+            ⚠ **The chips wear `sheet-glyph`, and that is what makes the short box
+            free.** `line-glyph` splits its 44px hit area evenly above and below
+            the line; with no hem to land in, the lower half would sit on the
+            keyboard and be untappable. `sheet-glyph` hangs the whole of it
+            upward over the scrim instead — same 44px, same invisible box,
+            somewhere it can be reached. **A hit area does not have to be inside
+            the box it belongs to**, which is the whole reason the height and the
+            tap floor are not in tension.
           */}
-          {/*
-            ⚠ **`items-center`, and the growing wrapper is gone — 28 August.**
-            The chips aligned to the field's *first* line while the sheet could
-            be several lines tall; the field is one line and stays one line, so
-            first line and only line are the same line and there is nothing left
-            for `items-start` to mean. See `page-input`.
-          */}
-          <div className="page-line flex items-center">
+          <div className="sheet-row flex items-center">
             <div className="relative min-w-0 flex-1">
               <input
                 ref={input}
@@ -2644,7 +2652,7 @@ export function PageScreen({
                 type="button"
                 onClick={clearPhoto}
                 aria-label="Take the photograph off"
-                className="line-glyph tap-target ms-2 shrink-0"
+                className="sheet-glyph tap-target ms-2 shrink-0"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL */}
                 <img
@@ -2660,7 +2668,7 @@ export function PageScreen({
                 type="button"
                 onClick={() => setLink(null)}
                 aria-label={`Take the link to ${linkLabel(link)} off`}
-                className="line-glyph text-chrome ms-2 shrink-0 gap-1 rounded-full bg-[var(--glass-tint)] px-2 text-[0.8125rem] leading-none [--glyph:0.875rem]"
+                className="sheet-glyph text-chrome ms-2 shrink-0 gap-1 rounded-full bg-[var(--glass-tint)] px-2 text-[0.8125rem] leading-none [--glyph:0.875rem]"
               >
                 <LinkGlyph />
                 {linkLabel(link)}
@@ -2672,7 +2680,7 @@ export function PageScreen({
               disabled={!imagesOn}
               onClick={() => camera.current?.click()}
               aria-label="Attach a picture"
-              className={`line-glyph ms-2 shrink-0 transition-colors [--glyph:var(--glyph-line)] ${
+              className={`sheet-glyph ms-2 shrink-0 transition-colors [--glyph:var(--glyph-line)] ${
                 imagesOn ? 'text-chrome' : OFF
               }`}
             >
