@@ -7557,3 +7557,81 @@ one — `node_modules/.probe/tad.mjs`:
 ⚠ **`sheet-glyph`'s upward hang stays right at 4px.** Half a hem does not hold
 half a 44px target: split evenly, 4px of every chip would still be on the keys.
 The probe checks the chip's box ends *inside* the sheet rather than past it.
+
+## One strip on the bottom edge — 28 August
+
+**Directed, and it closed four rounds at once:** *the row at the bottom that
+contains the glyphs should simply swap out the glyphs for the live row.*
+
+⚠ **Every question asked about the sheet's height that afternoon was really this
+one.** Too tall; only as tall as the line; a tad more; a tad more on the desk
+too. The thing being noticed was not a wrong number — it was that **the bottom
+edge of the screen changed shape when writing started**: 44px of foot bar became
+36px of writing sheet, in a different ground, with the contents at a different
+height. One strip with two states removes the question instead of answering it a
+fifth time.
+
+### The height was never chosen
+
+    --line-hem  +  --leading-line  +  --line-hem   =  44px
+
+which is `--tap-floor`, and a row of the record, and **exactly what the handset's
+foot bar already measured** — 9 + 26 + 9, a number arrived at on 24 August from
+the thumb rather than the look. Three constraints that had to agree turned out to
+already agree. Nothing new was introduced.
+
+⚠ **It undoes the 36px, knowingly.** That was the tighter box and it is the thing
+being traded for a strip that does not move.
+
+### What one strip forced, and what it deleted
+
+- ⚠ **It still has to lift to the keyboard.** The foot deliberately never did —
+  `useKeyboardPin` was deleted after five wrong versions of holding a bar on the
+  keys — and the field always must. One object in two positions does both: idle
+  on the glass, writing on `--keyboard-overlap`. The notch expression written an
+  hour earlier already covers both ends, clearing the home indicator on the glass
+  and collapsing to zero on the keys.
+- ⚠ **A one-cell grid, not a conditional render.** Both rows sit at `1 / 1`, so
+  the cell is as tall as the taller of them and swapping cannot resize anything.
+  **Neither may be unmounted or given `display: none`** — that would let the
+  strip resize again, and a hidden field cannot take the synchronous focus iOS
+  requires to raise a keyboard.
+- ⚠ **Two grounds, one box.** Idle is glass, because the record dissolving under
+  the glyphs is what the foot has always been. Writing is opaque and lit, because
+  the strip then holds body text at the record's own size and a line showing
+  through would read as a second line of the capture. Both rules survive intact;
+  the ground is what says which state it is in.
+- ⚠ **The glyphs' 44px stopped being a warning and became a construction.**
+  `--glyph-foot` is 26px centred in a 28px cell, so `tap-target`'s pseudo-element
+  reaches 9px each way — 1px of cell, 8px of hem — and lands flush with the
+  strip's edges. The old `--foot-lead` note said the next pixel would push that
+  hit area out over the record. There is no next pixel to take; the box is a row
+  of the record and the row is the floor.
+- **Deleted:** `--foot-lead`, `--foot-tail`, their 45rem overrides (48px was a
+  third box for the same strip), `Foot`'s `fixed inset-x-0 bottom-0`, its glass,
+  its safe-area padding, its `will-change`, and its `receded` prop.
+  `--foot-height` is now `--leading-line` between two `--sheet-hem`s.
+
+### Above the breakpoint, nothing
+
+There is no foot bar at or above `--breakpoint-stack` — the tools stand beside
+the reading column — so there is nothing to swap with and nothing to match. The
+strip is the field alone up there, at a hem and a half, translated off the glass
+when idle, exactly as the sheet always was. Untouched, at the user's direction.
+
+### Measured
+
+`node_modules/.probe/strip.mjs`, distances from the bottom of the window; the
+notch emulated on the handset:
+
+    phone   idle          strip 78   row 44   glyphs 70→42   field faded
+    phone   writing       strip 78   row 44   field  70→42   glyphs faded
+    phone   writing, keys strip 44   row 44   field 372→344, riding a 336px keyboard
+    narrow  idle          strip 44   row 44   glyphs 36→8
+    narrow  writing       strip 44   row 44   field  36→8
+    desk    idle          strip 52, off the glass          no glyph row at all
+    desk    writing       strip 52   row 52   field  40→12
+
+**The row is 44px in every state on both narrow surfaces, and the field and the
+glyphs occupy the same 28px.** `striprecede.mjs` confirms the strip still leaves
+while the record is read and comes back: 44 → off the glass → 44.

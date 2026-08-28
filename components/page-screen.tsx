@@ -2502,10 +2502,49 @@ export function PageScreen({
         ⚠ **`z-10`: over the scrim, under the two bars.** Nothing about the
         record may come up over the field.
       */}
+      {/*
+        ─────────────────────────────────────────────────────────────────────
+         One strip, two states — 28 August
+        ─────────────────────────────────────────────────────────────────────
+
+        **The glyph row and the writing line are the same strip on the bottom
+        edge of the glass.** Directed: *the row at the bottom that contains the
+        glyphs should simply swap out the glyphs for the live row.* It was two
+        objects sharing that edge — a 44px foot bar and a 36px sheet — so
+        starting a capture changed the shape of the bottom of the screen, and
+        four rounds of *a tad more* / *a tad less* were really that.
+
+        ⚠ **The box never changes; the contents and the ground do.** The strip is
+        `--line-hem` + `--leading-line` + `--line-hem` = 44px — a row of the
+        record, `--tap-floor`, and what the foot already measured on a handset.
+        Idle it is glass, with the record dissolving under the glyphs; writing it
+        is opaque and lit, because it holds body text at the record's own size
+        and a line showing through would read as a second line of the capture.
+
+        ⚠ **It moves between two positions and that is the one thing it does
+        move.** Idle it sits on the bottom edge; writing it rides
+        `--keyboard-overlap`, because the field is the one thing that wants the
+        keys' top edge and the foot deliberately never did — see
+        `keyboard-hem.ts` for the five wrong versions of holding a bar there. The
+        notch expression in `writing-sheet` covers both ends: the home indicator
+        is cleared on the glass and the term collapses to zero on the keys.
+
+        ⚠ **Above `--breakpoint-stack` there is no glyph row**, because the tools
+        stand beside the column — so up there the strip is the field alone and is
+        translated off the glass when idle, exactly as the sheet always was. That
+        layout is untouched.
+
+        ⚠ **`z-20`, which was the foot's.** The strip carries controls that must
+        stay over the record, and the scrim is `z-5` under it.
+      */}
       <div
         ref={sheet}
-        className={`writing-sheet z-10 transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-          writing ? '' : 'pointer-events-none translate-y-full'
+        className={`writing-sheet z-20 transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+          writing
+            ? 'sheet-lit'
+            : `stack:pointer-events-none stack:translate-y-full bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] ${
+                receded ? 'pointer-events-none translate-y-full' : ''
+              }`
         }`}
       >
         {/*
@@ -2551,7 +2590,19 @@ export function PageScreen({
             the box it belongs to**, which is the whole reason the height and the
             tap floor are not in tension.
           */}
-          <div className="sheet-row flex items-center">
+          {/*
+            ⚠ **A one-cell grid, and it is what makes the strip constant.** The
+            field row and the glyph row are both at `1 / 1`, so the cell is as
+            tall as the taller of them — 28px, the line — and swapping which one
+            is visible cannot resize anything. Neither may be unmounted or set to
+            `display: none`; they fade.
+          */}
+          <div className="sheet-row grid">
+          <div
+            className={`col-start-1 row-start-1 flex items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
+              writing ? '' : 'pointer-events-none opacity-0'
+            }`}
+          >
             <div className="relative min-w-0 flex-1">
               <input
                 ref={input}
@@ -2687,20 +2738,23 @@ export function PageScreen({
               <AttachGlyph />
             </button>
           </div>
+
+          {/*
+            ⚠ **The other state of the strip, in the same cell.** The foot used
+            to be a `fixed` bar of its own on this same edge and it *receded*
+            while somebody wrote — see the note this replaces. It does not
+            recede; it fades, in place, and the strip stays exactly where it is.
+
+            **None of the three is wanted while somebody is writing**, and the
+            `+` least of all, since it is a second door to the thing already
+            open. That rule is unchanged. What changed is that acting on it costs
+            no movement.
+          */}
+          <Foot hidden={writing} {...tools} />
+          </div>
         </div>
       </div>
 
-      {/*
-        ⚠ **The foot goes while the sheet is up, and it is not a z-index
-        problem.** The sheet rests on `--keyboard-overlap`, which is zero
-        wherever there is no on-screen keyboard — a Safari tab before the keys
-        rise, and the desk — so the two would share the bottom edge and the
-        glyphs would sit over the words. Stacking them would only hide the
-        collision: **none of these three is wanted while somebody is writing**,
-        and the `+` least of all, since it is a second door to the thing that is
-        already open. The way out is the scrim, which is the whole screen.
-      */}
-      <Foot receded={receded || writing} {...tools} />
       <ToolStack {...tools} />
 
       {/*

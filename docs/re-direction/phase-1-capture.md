@@ -223,7 +223,22 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   and their box still ends inside the sheet. `node_modules/.probe/tad.mjs`,
 >   with the notch emulated so the keyboard-up case is the real one.
 >
-> ⚠ **None of the nine is verified on hardware**, which is now the one thing
+> - ⚠ **One strip on the bottom edge — the 28th, seventh pass, and it supersedes
+>   the four before it.** Directed: *the row at the bottom that contains the
+>   glyphs should simply swap out the glyphs for the live row.* Every argument
+>   about the sheet's height that afternoon was really *the bottom edge changes
+>   shape when I start writing* — 44px of foot became 36px of sheet in a
+>   different ground. Now one box: `--line-hem` + `--leading-line` + `--line-hem`
+>   = 44px, which is `--tap-floor`, a row of the record, and what the handset's
+>   foot already measured. A one-cell grid holds both rows and **neither may be
+>   unmounted or hidden with `display: none`** — they fade, or the strip resizes
+>   again and the field stops being focusable. Two grounds, one box: glass idle,
+>   `sheet-lit` writing. Deleted with it: `--foot-lead`, `--foot-tail`, their
+>   45rem overrides, and `Foot`'s whole `fixed` box including its recede.
+>   Above `--breakpoint-stack` nothing changes — no foot bar exists there.
+>   `node_modules/.probe/strip.mjs` and `striprecede.mjs`.
+>
+> ⚠ **None of the ten is verified on hardware**, which is now the one thing
 > outstanding on this page — though the gap under the line is the first of them
 > to have come *from* hardware.
 

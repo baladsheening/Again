@@ -171,19 +171,46 @@ Measured on both surfaces by `node_modules/.probe/oneline.mjs` — 50 rows, one
 height, 44px — `onepick.mjs` for a picked line's tools, and `slide.mjs` for the
 field.
 
-⚠ **On a handset the writing box is very nearly the line and nothing else — 28
-August.** 36px, where it was 44. Directed. The sheet's row wears `sheet-row`
-rather than `page-line`, and everything else about the type is identical to a
-line of the record — a line being written and a line already written are the same
-words in the same face at the same size, which is what keeps the page from
-jumping on Return. Only the air differs.
+⚠ **The glyph row and the writing line are ONE STRIP on the bottom edge — 28
+August, and it supersedes four rounds of arguing about the sheet's height.**
+Directed: *the row at the bottom that contains the glyphs should simply swap out
+the glyphs for the live row.* They were two objects sharing that edge — a 44px
+foot bar and a 36px sheet — so starting a capture changed the shape of the bottom
+of the screen, and every *a tad more* / *a tad less* was really that.
 
-⚠ **`--sheet-hem` is half a hem on glass and a hem and a half on a desk**, both
-`--line-hem` scaled and neither typed, so the sheet's air follows the record's if
-that ever moves. It went to `0px` first — the box as literally the line — and
-came up by a quarter of a rem on both surfaces once the notch's dead 34px was out
-of the way and the real spacing could be seen. ⚠ **Above and below, never below
-alone**: air bought only on the keyboard's side is the *gap under the characters
+- **The box never changes; the contents and the ground do.** The strip is
+  `--line-hem` + `--leading-line` + `--line-hem` = **44px** — a row of the
+  record, `--tap-floor`, and exactly what the handset's foot already measured
+  (9 + 26 + 9). Nothing new was chosen. Idle it is glass with the record
+  dissolving under the glyphs; writing it is `sheet-lit`, opaque, because it
+  holds body text at the record's own size and a line showing through would read
+  as a second line of the capture.
+- ⚠ **A one-cell grid holds both rows, and neither may be unmounted or set to
+  `display: none`.** They fade in place. Unmounting either lets the strip resize,
+  which is the whole thing this removed — and a hidden field cannot take the
+  synchronous focus iOS requires.
+- ⚠ **It moves between two positions and that is all it moves.** Idle on the
+  glass, writing on `--keyboard-overlap`. The foot deliberately never rode the
+  keys — see `keyboard-hem.ts` and its five wrong versions — and the field always
+  must; one strip does both because it is the same object relocated. The notch
+  expression covers both ends.
+- ⚠ **The glyphs' 44px is now bounded by construction.** `--glyph-foot` is 26px
+  centred in a 28px cell, so `tap-target`'s pseudo-element reaches 9px each way
+  and stops **flush with the strip's edges**. The old note warning that the next
+  pixel would push that hit area out over the record is retired.
+- **Deleted:** `--foot-lead`, `--foot-tail`, their 45rem overrides, `Foot`'s
+  `fixed` box, its glass, its safe-area padding and its `receded` prop.
+  `--foot-height` is now the strip's own arithmetic.
+- **Above `--breakpoint-stack` nothing changes**, at the user's direction: there
+  is no foot bar up there — the tools stand beside the column — so the strip is
+  the field alone at `--sheet-hem` = a hem and a half, translated off the glass
+  when idle, exactly as before.
+
+⚠ **`--sheet-hem` is a hem on glass and a hem and a half on a desk**, both
+`--line-hem` scaled and neither typed. It was `0px` for an hour — the box as
+literally the line — then half a hem, and it is a whole one because a strip with
+two states can only have one height. ⚠ **Air goes above and below, never below
+alone**: bought only on the keyboard's side it is the *gap under the characters
 that is not matched above* all over again, in miniature.
 
 ⚠ **It costs the chips nothing, because a hit area does not have to be inside the
@@ -291,10 +318,12 @@ gestures — the sheet is open or it is not — and every instrument that read
 one that discards, and a thumb never reaches it. There is no unsent draft, which
 is what took `unsent` and `record-held` with it.
 
-⚠ **The foot recedes while the sheet is up**, and it is not a stacking problem:
-the sheet rests on `--keyboard-overlap`, which is zero wherever there is no
-on-screen keyboard, so the two would otherwise share the bottom edge. None of
-the foot's three is wanted while somebody writes.
+⚠ **The foot receded while the sheet was up, and it does not any more — it
+fades in place.** The rule it served is untouched: *none of the foot's three is
+wanted while somebody writes*, and the `+` least of all, since it is a second
+door to the thing already open. What went is the *movement* — the two were never
+really sharing the bottom edge, they were two boxes on it, and they are one strip
+now. See the one-strip entry above.
 
 ⚠ **The page has exactly one field and it is the pinned band.** It holds a new
 capture, or the words of the line being rewritten. **Every instrument on that

@@ -185,33 +185,50 @@ function ToolSet({ write, settle, searchable = false }: Tools) {
   )
 }
 
-/** The tools as a bar across the foot of the glass. Below `stack` only. */
+/**
+ * **The tools as one state of the strip on the bottom edge. Below `stack` only.**
+ *
+ * ⚠ **It stopped being a bar of its own on 28 August.** It was a `fixed` element
+ * with its own ground, its own lead and tail, and its own recede — and it sat on
+ * the same edge of the glass as the writing sheet, 44px against the sheet's 36,
+ * so starting a capture changed the shape of the bottom of the screen. Directed:
+ * *the row at the bottom that contains the glyphs should simply swap out the
+ * glyphs for the live row.* So this is now a row inside that strip, and the
+ * strip owns the position, the ground, the air and the recede. See
+ * `writing-sheet` and the strip in `page-screen.tsx`.
+ *
+ * ⚠ **What went with the box:** `--foot-lead`, `--foot-tail`, their 45rem
+ * overrides, the `fixed inset-x-0 bottom-0`, the glass, the safe-area padding,
+ * the recede's `translate` and `will-change`. Every one of them is the strip's
+ * now, stated once instead of twice.
+ *
+ * ⚠ **`hidden` fades, it does not unmount, and it must not become
+ * `display: none`.** The strip is a grid with one cell: this row and the field
+ * row are stacked in it, so the strip's height is the taller of the two and
+ * never changes as they swap. Removing either from the flow would let the strip
+ * resize, which is the whole thing this replaced.
+ */
 export function Foot({
-  receded = false,
+  hidden = false,
   ...tools
 }: Tools & {
-  /**
-   * Off the bottom of the glass while the record is being read — see
-   * `useChromeRecede`.
-   */
-  receded?: boolean
+  /** Somebody is writing, so the field has the strip. */
+  hidden?: boolean
 }) {
   return (
     <footer
       /*
-        ⚠ **One mover, since 24 August.** `useKeyboardPin` used to write
-        `transform` here every frame a keyboard was arriving. That is gone — see
-        `keyboard-hem.ts` — so the recede's `translate` is the only thing that
-        moves this element, and `will-change` names one property.
+        ⚠ **The glyph row is 26px inside a 28px cell, and that is what keeps the
+        44px.** `tap-target`'s pseudo-element is 44px centred on the button, so
+        it reaches 9px past it — 1px of the cell and the strip's 8px hem — and
+        stops flush with the strip's own edges. Nothing overhangs onto the record
+        above or the keyboard below.
       */
-      className={`gutter stack:hidden fixed inset-x-0 bottom-0 z-20 bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] will-change-[translate] ${
-        receded ? 'translate-y-full' : ''
+      className={`col-start-1 row-start-1 stack:hidden mx-auto flex w-full max-w-[var(--page-measure)] items-center justify-around transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
+        hidden ? 'pointer-events-none opacity-0' : ''
       }`}
     >
-      {/* The foot's own glyph size, declared on the row — see `--glyph-foot`. */}
-      <div className="mx-auto flex w-full max-w-[var(--page-measure)] items-center justify-around pt-[var(--foot-lead)] pb-[calc(var(--foot-tail)+env(safe-area-inset-bottom))] [--glyph:var(--glyph-foot)]">
-        <ToolSet {...tools} />
-      </div>
+      <ToolSet {...tools} />
     </footer>
   )
 }

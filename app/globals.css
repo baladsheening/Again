@@ -1171,6 +1171,12 @@
    * ⚠ **The foot has its own**, since 24 August — `--foot-row` below. One row
    * served both while both held the same glyph, and the day the two sizes parted
    * it would have sized the foot from the bar's.
+   *
+   * ⚠ **`--foot-row` stopped setting a height on 28 August and is kept as the
+   * glyph's own size.** The strip on the bottom edge is a row of the record —
+   * `--leading-line` between two `--sheet-hem`s — and the glyphs sit inside it,
+   * so what the foot's row measures now is the drawing rather than the box. See
+   * `--foot-height`.
    */
   --bar-row: var(--glyph-bar);
   --bar-lead: 1rem;
@@ -1212,26 +1218,44 @@
    */
   --foot-row: var(--glyph-foot);
   /**
-   * ⚠ **26px of lead and 22px of tail came off on 24 August**, against a glyph
-   * that grew: 72px of foot became 56px. The air was drawn for a band of labels
-   * and kept for a row of glyphs, and on a page whose whole product is the
-   * record it was spending a line of it on nothing.
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The foot and the writing sheet are one strip — 28 August
+   * ───────────────────────────────────────────────────────────────────────────
    *
-   * **What sets the floor is the thumb, not the look**, and 24 August spent it
-   * to the floor exactly. `--tap-floor` is 44px centred on the glyph, so the
-   * shortest honest foot is 9 + 26 + 9 = **44, and that is what this is** — the
-   * hit area spans 0–44 inside 44px of foot, flush at both edges.
+   * ⚠ **`--foot-lead` and `--foot-tail` are deleted.** They were the foot bar's
+   * own air, 9px a side on a handset and 12/10 between `rail` and `stack`, and
+   * the foot bar no longer has a box of its own: **the glyph row and the writing
+   * line are two states of one strip**, and the strip's air is `--sheet-hem`.
    *
-   * ⚠ **This is the end of the road, and the arithmetic says so.** 72 became 56,
-   * then 48, and now 44; the next pixel pushes the 44px hit area out of the bar
-   * and over the record, so taps meant for the last line start landing on the
-   * camera. **A shorter foot from here is a smaller glyph or fewer glyphs**, and
-   * both are decisions of a different kind. Do not take it below `--tap-floor`.
+   * Directed, and the reason it was directed is the last four rounds of this
+   * page: every question about the sheet's height was really *the bottom edge of
+   * the screen changes shape when I start writing*. It did — 44px of foot became
+   * 36px of sheet and the contents jumped. One strip with two states removes the
+   * question instead of answering it again.
+   *
+   * ⚠ **The strip is a row of the record, which is where all three numbers meet.**
+   * `--line-hem` + `--leading-line` + `--line-hem` = 44px, which is `--tap-floor`,
+   * which is also **exactly what the handset's foot already was** — 9 + 26 + 9.
+   * Nothing new was chosen; the two boxes were brought onto the number the page
+   * already uses everywhere.
+   *
+   * ⚠ **The glyphs still reach 44px and now do it without overhanging anything.**
+   * `--glyph-foot` is 26px, centred in a 28px content box, so `tap-target`'s
+   * 44px pseudo-element extends 9px each way — 1px of the content box and the
+   * 8px hem — and lands **flush with the strip's own edges**. The note this
+   * replaces said the next pixel would push that hit area out over the record;
+   * it is now bounded by construction rather than by an arithmetic warning.
+   *
+   * ⚠ **The 45rem override went with them.** 48px between `rail` and `stack` was
+   * a third box for the same strip. There is one.
+   *
+   * The history is worth keeping: 72px of foot became 56 on 24 August when 26px
+   * of lead and 22px of tail came off — air drawn for a band of labels and kept
+   * for a row of glyphs — then 48, then 44. **What set the floor was always the
+   * thumb, not the look**, and 44 is where the thumb put it.
    */
-  --foot-lead: 0.5625rem;
-  --foot-tail: 0.5625rem;
   --foot-height: calc(
-    var(--foot-lead) + var(--foot-row) + var(--foot-tail) + env(safe-area-inset-bottom)
+    var(--leading-line) + 2 * var(--sheet-hem) + env(safe-area-inset-bottom)
   );
 
   /**
@@ -1496,8 +1520,30 @@
    * the one hem this page has; the sheet says how much of it to spend rather
    * than naming a second number that could drift from the first. Move
    * `--line-hem` and the sheet's air follows.
+   *
+   * ─────────────────────────────────────────────────────────────────────────
+   *  And then it became the foot's hem too — 28 August, an hour later
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * ⚠ **Half a hem went back up to a whole one, because the sheet and the foot
+   * bar are one strip now.** Directed: *the row at the bottom that contains the
+   * glyphs should simply swap out the glyphs for the live row.* So it does, and
+   * a strip with two states can only have one height — `--line-hem` +
+   * `--leading-line` + `--line-hem` = **44px**, which is `--tap-floor`, a row of
+   * the record, and what the handset's foot already measured. Three things that
+   * had to agree, agreeing on a number none of them had to be given.
+   *
+   * ⚠ **This undoes the 4px, and knowingly.** 36px was the tighter box and it
+   * cost the bottom edge of the screen its shape: 44px of glyphs became 36px of
+   * field the moment somebody tapped `+`. What was being asked for through four
+   * rounds of *a tad more* / *a tad less* was a strip that does not move.
+   *
+   * The desk keeps its hem and a half: above `--breakpoint-stack` there is no
+   * foot bar at all — the tools stand beside the column — so there is nothing to
+   * swap with and nothing to match. That layout is untouched, at the user's
+   * direction.
    */
-  --sheet-hem: calc(var(--line-hem) / 2);
+  --sheet-hem: var(--line-hem);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
@@ -2964,6 +3010,31 @@
     0px,
     calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px))
   );
+}
+
+/**
+ * **The strip's writing ground: opaque, and lit.**
+ *
+ * ⚠ **Split off `writing-sheet` on 28 August, because the strip has two grounds
+ * now.** Idle it is glass — a tint over a blur, with the record dissolving under
+ * the glyphs, which is what the foot bar has always been. Writing it is this:
+ * opaque, because it holds body text at the record's own size, face and colour
+ * and a line showing through would read as a second line of the capture. **The
+ * box does not change; the ground says which state it is in.**
+ *
+ * ⚠ **The light is the band's, unchanged.** An ellipse inscribed in the strip,
+ * brightest across the middle and transparent by the time it reaches any of the
+ * four sides. Two flat fills shipped in August and both came back "too grey" —
+ * the value was never the problem, because *a uniform tone inside a rectangle
+ * with edges* is what reads as grey at any value. **Do not answer "too grey", or
+ * "brighter", with a fill.**
+ *
+ * ⚠ **The idle layer is deleted with the state it described.** `live-band`
+ * carried a second, brighter light for the row *waiting* to be written in, put
+ * out once somebody started. A summoned field is never waiting: it exists
+ * because somebody asked for it, so there is one light and no fade between two.
+ */
+@utility sheet-lit {
   background-color: var(--sheet-tint);
 
   &::before {
@@ -3099,8 +3170,13 @@
    */
   @media (min-width: 45rem) {
     :root {
-      --foot-lead: 0.75rem;
-      --foot-tail: 0.625rem;
+      /*
+        ⚠ **`--foot-lead` and `--foot-tail` were overridden here to 12/10 and
+        both are deleted — 28 August.** The foot bar has no box of its own any
+        more: it is one state of the strip on the bottom edge, and the strip's
+        air is `--sheet-hem`. A third box for the same strip is exactly what the
+        one-strip rule removes. See `--foot-height`.
+      */
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
     }
