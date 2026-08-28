@@ -7872,17 +7872,33 @@ the stack's centre is never left of the mark's midpoint:
     1366        230           907            163      tracking
     1440        267           907            200      tracking
 
-## OPEN — the column and the mark jump backwards at the desk threshold
+## The column and the mark jumped backwards at the desk threshold — fixed
 
-**Reported 28 August, and not yet fixed.** *One particular problem I have is the
+**Reported and fixed on 28 August. The scale is a ramp now, not a step.** What
+shipped is the approach this section had already worked out; everything below is
+kept, including what it got wrong, because the measurement is the argument. *One particular problem I have is the
 adjustment that happens at the threshold, namely the jump that the logo and the
 entry column make when resizing. I'd rather the entry column continues moving in
 the same direction it was moving when the browser was narrowing, instead of
 jumping back in the other direction before restarting in its previous shift
 leftwards. This has to be designed and managed with the other elements in mind.*
 
-**Nothing in this section is built.** It is the map, the measurement, and the
-approach that looks right, written down while it was fresh.
+**What shipped**, in one place, so nobody has to reconstruct it from the walk:
+
+- `html`'s `font-size` is `clamp(100%, calc(100% + (100vw − 57.207rem) ×
+  0.0225339), 133.3333%)`, inside `@media (min-width: 57.207rem)`.
+- `--record-measure`'s clamp moved into **that same media query**, down from
+  `--breakpoint-stack` where it was written.
+- `--breakpoint-scale` was written as a token and then **deleted**: it lives in
+  `@theme`, Tailwind prunes theme variables no class uses, and a
+  `--breakpoint-*` name also mints a variant nothing wants. It could not be a
+  `var()` at either site anyway — a media query cannot resolve one, and on the
+  root element a custom property carrying a `rem` into `font-size` is a cycle.
+  So the number lives where it is spent, with its derivation beside it, and
+  `threshold.mjs` reads both literals back out of the **shipped** stylesheet.
+
+The rest of this section is the map, the measurement, and the approach, written
+down while it was fresh — and then the three checks it asked for, answered.
 
 ### What actually happens, measured
 
@@ -7966,23 +7982,68 @@ the type is at 4/3 and the column is 838 at left 156.9. Checked for monotonicity
   rhythm, the glyphs and the caret all become continuous for free — which is the
   same reason the step is violent today.
 
-### Three things to verify before building it
+### The three things to verify, answered
 
-1. ⚠ **`calc()` mixing a percentage with `vw` for `font-size` on `html`.** The
-   percentage is what preserves the reader's own default — see the note on the
-   `133.3333%` choice — and a `rem` slope would throw that away, because on the
-   root element `rem` resolves against the initial value. Confirm all four
-   engines accept `calc(100% + Nvw)` there and that **browser zoom still scales
-   the page**; a `vw`-driven root size is the classic way to break zoom, and the
-   `clamp()` endpoints are what should stop it. Measure it, do not reason it.
-2. ⚠ **`100vw` includes the classic scrollbar on some engines**, which can
-   oscillate when a vertical scrollbar appears and disappears. If that bites, the
-   ramp wants a container query or `100svw` rather than a fudge.
-3. **Re-run `threshold.mjs` afterwards.** The check is that the column's left
-   edge is monotonic across the whole walk with no `← COLUMN MOVED RIGHT` row,
-   and that `logocol.mjs` still passes both of the mark's rules.
+All three are now assertions inside `node_modules/.probe/threshold.mjs`, so they
+are re-checked rather than remembered.
 
-### Alternatives considered and why they are worse
+1. **`calc()` mixing a percentage with `vw`, and zoom.** Accepted. The build
+   folds it — lightningcss rewrites `(100vw − 57.207rem) × 0.0225339` into
+   `2.25339vw − 1.2891rem` — which is why the probe recovers the start as
+   *rem term ÷ slope* out of the shipped sheet instead of trusting the source.
+   **Zoom is measured at 50 / 100 / 200%** on a 1440px window: at 200% the CSS
+   viewport is 720px and the root is back at the reader's own 16px; at 50% it is
+   2880px and the root is at the 4/3 ceiling. The `clamp()` endpoints are what
+   make both ends legal.
+
+   ⚠ **One correction to the note above: the two ends of the ramp are `rem`, and
+   deliberately.** The worry was that a `rem` would override a reader's default
+   — true of a *fixed* one, false of one measuring the window. The initial value
+   of `font-size` is `medium`, which **is** the reader's default, so `57.207rem`
+   on the root is 57.207 × their size, exactly as a media query's `rem` is. That
+   is what keeps the ramp's end and `--breakpoint-stack` on one pixel for every
+   reader rather than only for a 16px one. Only the *slope* is unitless.
+2. **The scrollbar does not oscillate, and it is measured rather than argued.**
+   At 1034px with a real 15px classic scrollbar, `100vw` is 1034 whether the bar
+   is drawn or not — it is `innerWidth`, the window including the bar's channel —
+   and the root does not move. ⚠ **That check needs its own browser**: headless
+   Chromium passes `--hide-scrollbars`, so every other measurement here runs at a
+   0px scrollbar and could not tell a stable `100vw` from an oscillating one. The
+   probe launches a second Edge with `ignoreDefaultArgs: ['--hide-scrollbars']`
+   and **fails if no bar was drawn**, because a check that proves nothing must not
+   pass.
+
+   ⚠ **The mismatch that remains is spent on the safe side.** `100vw` counts the
+   bar and a media query's width does not, so the ramp reaches its ceiling at
+   `100vw = 1152` — about 1137px of query width — and never after 1152. Late
+   would mean the type still climbing at `--breakpoint-stack`, and 72rem would
+   stop being the 54rem sum it claims to be. Early is invisible.
+3. **The walk is monotonic and both of the mark's rules still hold.** 34 widths
+   from 1440 to 390, no `← COLUMN MOVED RIGHT` row: the column's left edge goes
+   266.7 → 156.9 → 117.5 → 20 → 0 without ever reversing, and the 78.6px leap at
+   1152 is gone (156.9 → 156.7). `logocol.mjs` now walks from **916**, not 1152,
+   because the record's clamp moved down with the ramp — the rule *the entries
+   column may never overlap the logo's column* is claimed at every width from 916
+   up. 915 is walked to show what it does **not** claim.
+
+### What it cost, and what to look at
+
+- ⚠ **915–1152 is a layout nobody had seen.** The desk's type at part of its
+  growth, the record narrowed by the mark's band, and the foot's glyph strip
+  still under it because the tool stack does not arrive until
+  `--breakpoint-stack`. It reads as coherent in `scale-ramp-1034.png` and it has
+  **not been looked at on hardware**; an iPad in landscape lands in it.
+- ⚠ **The strip still steps at 1152, 58.67 → 69px**, because `--sheet-hem` is a
+  hem and a half above `--breakpoint-stack` and a hem below it. That step was
+  always there; it was hidden inside the bigger one. It is the same class as the
+  stack arriving, and it is deliberately not ramped — the strip is a different
+  object on each side of that line.
+- **`scale.mjs` lost 1151 and gained 915, 916 and 1034.** 1151 used to be the
+  pixel proving *below the breakpoint nothing moves*; it is inside the scale now,
+  and 915 carries that claim. 1034 is the new one: mid-ramp, every proportion
+  intact — root 18.67, line 21.01 on 32.68, rows 51, mark 28.01.
+
+### Alternatives considered and why they were worse
 
 - **Move the step to where the column is continuous.** The two positions coincide
   at V = 994px, so a threshold there makes the *column* smooth — but the mark,

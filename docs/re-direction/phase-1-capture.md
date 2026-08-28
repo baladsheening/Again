@@ -238,15 +238,28 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   Above `--breakpoint-stack` nothing changes — no foot bar exists there.
 >   `node_modules/.probe/strip.mjs` and `striprecede.mjs`.
 >
-> - **The desk was redesigned on the 28th and one thing is left open.** The root
->   scales by 4/3 above 72rem, so the desk is the same design four-thirds the
->   size; the mark now holds a column that neither the record nor the tool stack
->   may cross; the strip on the bottom edge is one object with two states. ⚠ **The
->   open item is the threshold**: narrowing the window moves the record column
->   left continuously and then leaps it 78.6px back to the right at 1152, because
->   the root scale steps rather than ramps. **`docs/decisions.md` holds the
->   measurement, the worked approach (a fluid ramp from ≈915px to 1152px) and
->   three things to verify before building it.** Do not start from scratch.
+> - **The desk was redesigned on the 28th, and the threshold it opened is
+>   closed.** The root scales by 4/3 for the desk, so the desk is the same design
+>   four-thirds the size; the mark holds a column that neither the record nor the
+>   tool stack may cross; the strip on the bottom edge is one object with two
+>   states.
+>
+>   ⚠ **The reported jump — the record column leaping 78.6px back to the right at
+>   1152 — is fixed the same day, and the fix was to remove the mechanism.** The
+>   root's scale is a **ramp** now, `clamp(100%, calc(100% + (100vw − 57.207rem)
+>   × 0.0225339), 133.3333%)` inside `@media (min-width: 57.207rem)`, pinned at
+>   both ends: it starts where `--record-measure`'s clamp is a no-op and finishes
+>   on `--breakpoint-stack`, so every number written against 72rem is untouched
+>   and nothing below 915px moves. `--record-measure`'s clamp moved into that same
+>   query, because switching it on anywhere else would be a second jump.
+>   `node_modules/.probe/threshold.mjs` walks 34 widths with no reversal and also
+>   asserts the fence, browser zoom and the scrollbar; `logocol.mjs` now claims
+>   the mark's two rules from 916px up. `docs/decisions.md` carries the argument.
+>
+>   ⚠ **Two things are deliberately not fixed**, both an element arriving rather
+>   than a position jumping: the stack still appears at 1152, and the strip still
+>   steps 58.67 → 69px there. ⚠ **And 915–1152 is a layout nobody has seen on
+>   hardware** — an iPad in landscape lands in it.
 >
 > ⚠ **None of the ten is verified on hardware**, which is now the one thing
 > outstanding on this page — though the gap under the line is the first of them

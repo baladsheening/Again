@@ -266,16 +266,21 @@
 
     ⚠ **The desk scales the root, so 54rem of columns is no longer 864px.** Every
     term above is a `rem`, and the desk's root is 4/3 of the browser's default —
-    see the `min-width: 72rem` block at the foot of the base layer. So the sum is
-    still `42.5 + 2 × (2.75 + 3) = 54rem`; it is just measured at a bigger rem,
-    and 54 × 4/3 = **72**.
+    see the ramp at the foot of the base layer. So the sum is still
+    `42.5 + 2 × (2.75 + 3) = 54rem`; it is just measured at a bigger rem, and
+    54 × 4/3 = **72**.
 
     ⚠ **A media query's `rem` is always the *initial* font size, never the
     root's**, which is the only reason this is expressible at all: the media
-    query stays anchored to 16px while everything it gates grows, so there is no
-    feedback loop between the scale and the width that triggers it. Set the scale
-    and the breakpoint to the same figure — 72rem here, 72rem there — and the
-    desk's type and the desk's layout arrive on the same pixel.
+    query stays anchored while everything it gates grows, so there is no feedback
+    loop between the scale and the width that triggers it.
+
+    ⚠ **This is where the scale ENDS, and it has to be, which is what makes the
+    sum above still true.** The root ramps up from 57.207rem and is pinned at
+    4/3 from here up — so at this width and every width above it the
+    scale is at its maximum and 72rem is 54rem measured at the desk's rem. A ramp
+    that were still climbing at this line would break the sum quietly, which is
+    why the ramp is deliberately arranged to arrive early rather than late.
 
     ⚠ **Between 54rem and 72rem the tools go back to the foot.** That is the same
     guarantee it always was, honestly recomputed: a 906px column does not leave
@@ -283,6 +288,19 @@
     complete layout and not a degradation.
   */
   --breakpoint-stack: 72rem;
+
+  /*
+    ⚠ **There is deliberately no `--breakpoint-scale` beside these three**, and
+    the ramp at the foot of the base layer explains why: the width where the
+    root's scale starts growing is spent twice in one media query and cannot be
+    a `var()` in either place — a query cannot resolve one, and on the root
+    element a custom property carrying a `rem` into `font-size` is a cycle the
+    engine drops the whole declaration for. A fourth `--breakpoint-*` would also
+    mint a Tailwind variant nothing wants, and `@theme` prunes what no class
+    uses, so the token would not survive the build to be read. The number lives
+    where it is spent, with its derivation, and `threshold.mjs` reads it back out
+    of the stylesheet rather than out of a mirror of it.
+  */
 
   /*
     The width at which the film screen stops covering the app and stands beside
@@ -347,8 +365,8 @@
   */
   /*
     ⚠ **74.6667rem became 99.5556rem on 28 August, and by the same 4/3 as
-    everything else.** The desk scales the root — see the `min-width: 72rem`
-    block at the foot of the base layer — so every term this number was derived
+    everything else.** The desk scales the root — see the ramp at the foot of the
+    base layer — so every term this number was derived
     from is bigger: the band's cap, the panel, the rail, and `--pane-corner`,
     which is the half-disc this breakpoint exists to keep on screen. A media
     query cannot resolve a `var()`, so the sum could not follow on its own.
@@ -1931,10 +1949,10 @@
   /*
     ⚠ **`0.9375rem`, not `15px` — 28 August.** It is the same 15px everywhere it
     was, because the root is the browser's default size on every surface below
-    the desk. What changed is that the desk scales the root — see the
-    `min-width: 72rem` block at the foot of this layer — and a px body would have
-    been the one tier that stayed behind while the record, the chrome and the
-    wordmark all grew around it.
+    the ramp's start. What changed is that the desk scales the root — see the
+    ramp at the foot of this layer — and a px body would have been the one tier
+    that stayed behind while the record, the chrome and the wordmark all grew
+    around it.
 
     The iOS caveat in the note above is unaffected: 15px is still under 16 on a
     handset, which is where that caveat lives.
@@ -3375,18 +3393,6 @@
        * `var()`; if that token moves, this moves with it.
        */
       --sheet-hem: calc(var(--line-hem) * 1.5);
-
-      /**
-       * ⚠ **The record gives up width before it crosses the mark's band.** See
-       * `--mark-column` for the whole argument and for why this is a clamp
-       * rather than a breakpoint. Only here, because only the desk has a tool
-       * stack to strand and a column narrow enough to reach the mark; below this
-       * the record is viewport-capped and the question does not arise.
-       */
-      --record-measure: min(
-        var(--page-measure),
-        calc(100% - 2 * var(--mark-column))
-      );
     }
   }
 
@@ -3418,8 +3424,17 @@
    * ⚠ **`133.3333%`, not `21.3333px`.** A percentage is relative to the size the
    * *browser* was told to use, so somebody who has set their default to 20px gets
    * 26.67px here rather than being overridden back down to ours. A `rem` would be
-   * no better than a px: on the root element `rem` resolves against the initial
-   * value, not the inherited one, so it would ignore the same preference.
+   * no better than a px for the *endpoints*: on the root element `rem` resolves
+   * against the initial value, not the inherited one, so it would ignore the same
+   * preference.
+   *
+   * ⚠ **The initial value is `medium`, which IS the reader's default** — so a
+   * `rem` on the root is that preference, and the two ends of the ramp below are
+   * `rem` deliberately. It is only a `rem` *fixed at ours* that would override
+   * somebody; a `rem` measuring the window against their own body size is the
+   * same figure a media query uses, which is what keeps the ramp's end and
+   * `--breakpoint-stack` on one pixel for every reader rather than only for a
+   * 16px one.
    *
    * ⚠ **4/3, which is a ratio this file already spends** — `--pane-glyph` and
    * `--pane-corner` are the same step. It puts the record's line on 24px, a whole
@@ -3443,9 +3458,109 @@
    * `body`'s 15px and `input-text`'s fine 13px, both now `rem`. If a third
    * appears, it will silently stay small here; there should not be a third.
    */
-  @media (min-width: 72rem) {
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The scale is a RAMP, not a step — 28 August, same day, on a report
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **Reported:** *the adjustment that happens at the threshold — the jump the
+   * logo and the entry column make when resizing. I'd rather the entry column
+   * continued moving in the same direction it was moving when the browser was
+   * narrowing, instead of jumping back the other way before restarting its shift
+   * leftwards.*
+   *
+   * Measured, narrowing from 1440: the column's left edge walks left the whole
+   * way to 1152 and then **leaps 78.6px to the right in one pixel of window**,
+   * while the mark jumps the other way and shrinks 32 → 24px.
+   * `node_modules/.probe/threshold.mjs` is the walk.
+   *
+   * ⚠ **The two clamps beside this are not the cause and the walk proves it.**
+   * The stack's handover at 1240 is continuous by construction and the record's
+   * at 1221 is continuous in position. **The cause was this declaration** — every
+   * `rem` in the app snapping by 0.75 at once — which is to say the cause was
+   * the strength of the one-number design: the boundary is violent in exact
+   * proportion to how much the number moves.
+   *
+   * **So the number stops jumping.** The scale is interpolated from
+   * 57.207rem to `--breakpoint-stack` and pinned at both ends:
+   *
+   *     s(V) = clamp(1, 1 + (V − 57.207rem) × 0.0225339 / 1rem, 4/3)
+   *
+   * At and above `--breakpoint-stack` the scale is at its maximum, so **every
+   * piece of arithmetic already written stays exactly true** — 72rem is still the
+   * same sum measured at the same rem, `--breakpoint-pane` with it, and the desk
+   * is still the same design four-thirds the size. Below 57.207rem nothing
+   * changes at all: the handset, the tablet and the rail are untouched.
+   *
+   * ⚠ **The slope is derived from the two ends, not tuned.** One third of the
+   * root over the 14.793rem between them — `(4/3 − 1) / 14.793 = 0.0225339`. It
+   * is a bare number multiplying a length, so it carries no unit of its own and
+   * scales with the reader's default like everything else here. A tuned slope
+   * would be the constant-waiting-to-be-wrong that *How things get fixed* rules
+   * out; this one cannot be wrong without one of its ends being wrong.
+   *
+   * ⚠ **57.207rem is derived, not chosen: it is the width at which
+   * `--record-measure`'s clamp changes nothing.** Switch that clamp on anywhere
+   * else and it introduces a second jump of its own, of exactly the kind this
+   * removes — so the ramp starts where the clamp is free, and **the two share
+   * this one media query because they are one decision.**
+   *
+   *     V = --page-measure + 2 × --mark-column
+   *       = 42.5rem + 2 × (--bar-gutter + --text-mark-rail × 3.569)
+   *       = 42.5rem + 2 × (2rem + 1.5rem × 3.569)
+   *       = 42.5 + 2 × 7.3535  =  57.207rem  =  915.3px
+   *
+   * ⚠ **If `--bar-gutter`, `--text-mark-rail` or `--wordmark-advance-ratio`
+   * moves, this moves with it, and so does the slope** — it is the face fence's
+   * seventh number spent a second time. It cannot be a `var()` in either place
+   * it appears here, so `threshold.mjs` recomputes the sum from the live tokens
+   * and reads these two literals back out of the stylesheet to check them.
+   *
+   * ⚠ **`100vw` is the window INCLUDING a classic scrollbar; the media query's
+   * width excludes it.** The mismatch is real and it is deliberately spent on the
+   * safe side: `100vw ≥` the query's width, so the ramp reaches its maximum at or
+   * slightly *before* 1152 and never after it. Reaching it late would mean the
+   * type was still growing at `--breakpoint-stack`, and 72rem would no longer be
+   * the sum it claims to be. At the low end the two switch together, because the
+   * query gates the ramp as well as the clamp — the residual is the sub-pixel
+   * 0.3px the walk shows at 915, not a step.
+   *
+   * ⚠ **The `clamp()` is what keeps browser zoom working**, and it is the reason
+   * a `vw`-driven root size is safe here at all: zoom scales the `px` the
+   * viewport is reported in and the endpoints together, so a zoomed page lands on
+   * a legal size rather than a runaway one. Measured, not reasoned —
+   * `node_modules/.probe/threshold.mjs` walks it at 50%, 100% and 200%.
+   *
+   * ⚠ **What this does NOT fix, and both are pre-existing:** the stack still
+   * *appears* at 1152 and the strip still goes — an element arriving, not a
+   * position jumping, and it arrives already parked on the mark's midpoint. And
+   * the rail step at 720px survives, where the mark alone twitches 24 → 20px.
+   */
+  @media (min-width: 57.207rem) {
     html {
-      font-size: 133.3333%;
+      font-size: clamp(
+        100%,
+        calc(100% + (100vw - 57.207rem) * 0.0225339),
+        133.3333%
+      );
+    }
+
+    :root {
+      /**
+       * ⚠ **The record gives up width before it crosses the mark's band.** See
+       * `--mark-column` for the whole argument and for why this is a clamp
+       * rather than a breakpoint.
+       *
+       * ⚠ **It lives here, at the ramp's start, and not at
+       * `--breakpoint-stack` where it was written.** This is the width at which
+       * it changes nothing — that is what 57.207rem IS — so switching it on here
+       * is free, and switching it on anywhere else is a jump. Above about 1221px
+       * the unclamped term wins and it changes nothing again.
+       */
+      --record-measure: min(
+        var(--page-measure),
+        calc(100% - 2 * var(--mark-column))
+      );
     }
   }
 }

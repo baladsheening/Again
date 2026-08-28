@@ -584,22 +584,40 @@ chrome the caret is the chrome.
 face — and adjust everything as a whole so it stays in keeping.*
 
 **Nothing was re-picked.** Every token in `globals.css` is a `rem`, so the whole
-design is scaled by one declaration — `html { font-size: 133.3333% }` at
-`min-width: 72rem`. The record goes 18/28 → 24/37.33 in a column that goes 680 →
-906.67px; the strip goes 44 → 58.67; the wordmark 24 → 32; the glyphs, gutters,
-bars, stack and caret all follow **in exact proportion**. The desk is not a
-second design to keep in step with the first, and it cannot drift, because there
-is nothing to drift from.
+design is scaled by one declaration on `html`. The record goes 18/28 → 24/37.33
+in a column that goes 680 → 906.67px; the strip goes 44 → 58.67; the wordmark
+24 → 32; the glyphs, gutters, bars, stack and caret all follow **in exact
+proportion**. The desk is not a second design to keep in step with the first, and
+it cannot drift, because there is nothing to drift from.
 
-- ⚠ **`133.3333%`, never a `px` or a `rem`.** A percentage is relative to the
-  size the *browser* was told to use, so a reader who set 20px gets 26.67 rather
-  than being overridden back to ours. On the root element `rem` resolves against
-  the initial value, so it would ignore that preference exactly as a px would.
+⚠ **That declaration is a RAMP and was a step for a few hours — 28 August.** It
+is `clamp(100%, calc(100% + (100vw − 57.207rem) × 0.0225339), 133.3333%)` inside
+`@media (min-width: 57.207rem)`: the root grows from the reader's own size at
+915px to 4/3 of it at 1152px, and is pinned at both ends. **At and above
+`--breakpoint-stack` the scale is at its maximum, so every number below is
+untouched** — 72rem is still 54rem measured at the desk's rem. Below 915px
+nothing changes at all.
+
+- ⚠ **`133.3333%`, never a `px` or a fixed `rem`.** A percentage is relative to
+  the size the *browser* was told to use, so a reader who set 20px gets 26.67
+  rather than being overridden back to ours. A `rem` fixed at ours would ignore
+  that preference exactly as a px would.
+- ⚠ **The ramp's two ends ARE `rem`, and that is not a contradiction.** The
+  initial value of `font-size` is `medium`, which **is** the reader's default —
+  so a `rem` measuring the *window* is their size, not ours, and it is the same
+  figure a media query uses. Only the slope, 0.0225339, is unitless.
 - ⚠ **A media query's `rem` is the initial font size, never the root's** — which
-  is the only reason this is expressible. The query stays anchored at 1152px
-  while everything it gates grows, so there is no feedback loop. The scale and
-  `--breakpoint-stack` are deliberately the same figure, so the desk's type and
-  the desk's layout arrive on the same pixel.
+  is the only reason this is expressible. The query stays anchored while
+  everything it gates grows, so there is no feedback loop. The scale **ends** on
+  `--breakpoint-stack`, so the desk's type and the desk's layout arrive on the
+  same pixel and the sum that breakpoint claims stays true.
+- ⚠ **57.207rem is derived, not chosen: it is where `--record-measure`'s clamp
+  changes nothing** — `--page-measure + 2 × --mark-column`. **That clamp moved
+  into the same media query**, down from `--breakpoint-stack`, because switching
+  it on anywhere else is a second jump of exactly the kind the ramp removes. They
+  are one media query because they are one decision. There is deliberately **no
+  `--breakpoint-scale` token**: `@theme` prunes what no class uses, and neither a
+  media query nor the root's own `font-size` can resolve a `var()` anyway.
 - ⚠ **`--breakpoint-stack` moved 54rem → 72rem and the sum did not change.** It
   is still `--page-measure + 2 × (--stack-width + --stack-inset)` = 54rem,
   measured at a bigger rem. `--breakpoint-pane` moved 74.6667 → 99.5556rem by the
@@ -611,22 +629,38 @@ is nothing to drift from.
   not get bigger because a window did.** Two px type values were converted so
   they would not be left behind — `body`'s 15px and `input-text`'s fine 13px. A
   third would silently stay small; there should not be a third.
-- **Below 72rem nothing moves at all.** Verified at 390, 864 and 1151px: root
-  16px, 18/28, 44px rows, 680px column. `node_modules/.probe/scale.mjs`.
+- **Below 915px nothing moves at all.** Verified at 390, 864 and 915: root 16px,
+  18/28, 44px rows, 680px column — and mid-ramp at 1034 every proportion holds,
+  root 18.67, line 21.01 on 32.68, rows 51, mark 28.01.
+  `node_modules/.probe/scale.mjs`. ⚠ **1151 used to carry that claim and cannot
+  any more**; it is inside the scale now.
 
-⚠ **OPEN, reported 28 August and not fixed: the column and the mark jump
-backwards at the desk threshold.** Narrowing the window moves the record column
-left continuously from 1440 down to 1152, and then it **leaps 78.6px to the
-right** in one pixel of window while the mark jumps the other way and shrinks.
-The cause is `html { font-size: 133.3333% }` stepping at `min-width: 72rem` —
-every rem in the app snaps by 0.75 at once, and the strength of one-number
-scaling is exactly what makes its boundary violent. ⚠ **The two clamps below are
-not the cause**; the walk in `node_modules/.probe/threshold.mjs` shows both
-handovers continuous. **The approach that looks right — a fluid root scale ramped
-from ≈915px to 1152px, with the start width derived so the record clamp switches
-on as a no-op — is worked through in `docs/decisions.md`, with the arithmetic,
-what it does not fix, and three things to verify first. Read that before touching
-any of this.**
+⚠ **The column and the mark jumped backwards at the desk threshold, and that is
+fixed — reported and closed 28 August.** Narrowing the window moved the record
+column left continuously from 1440 to 1152, then **leapt 78.6px to the right** in
+one pixel while the mark jumped the other way and shrank. The cause was the step
+above: every rem in the app snapping by 0.75 at once, which is the strength of
+one-number scaling turned into a violent boundary. ⚠ **The two clamps below were
+not the cause** — the walk showed both handovers continuous. **The fix was to
+remove the mechanism, not correct for it:** the number stopped jumping.
+
+- **Measured after, by `node_modules/.probe/threshold.mjs`** — 34 widths from
+  1440 to 390 with no reversal, 156.9 → 156.7 across 1152 where the leap was.
+  It also asserts the two literals against the fence they are derived from, reads
+  them out of the **shipped** stylesheet because the build rewrites the
+  expression, and checks zoom at 50 / 100 / 200%.
+- ⚠ **The scrollbar check needs its own browser and fails if it gets no
+  scrollbar.** Headless Chromium passes `--hide-scrollbars`, so a 0px bar cannot
+  tell a stable `100vw` from an oscillating one. With a real 15px bar, `100vw` is
+  `innerWidth` either way and the root does not move.
+- ⚠ **Two things are deliberately NOT fixed, and both are an element arriving
+  rather than a position jumping:** the stack still appears at 1152 (already
+  parked on the mark's midpoint), and the strip still steps 58.67 → 69px there,
+  because `--sheet-hem` is a hem and a half on a desk and a hem below it.
+- ⚠ **915–1152 is a layout nobody had seen and it has not been on hardware** —
+  desk type part-grown, the record narrowed by the mark's band, the foot's glyph
+  strip still under it. An iPad in landscape lands in it.
+  `node_modules/.probe/scale-ramp-1034.png`.
 
 ⚠ **The mark holds a column on the desk, and nothing may cross into it — 28
 August.** Directed: *the entries column may never overlap the logo's column, and
@@ -638,7 +672,10 @@ anchored to the bar's left gutter, so its band is fixed at every desk width —
   its mirror on the right, whichever is smaller. The column **narrows rather than
   shifting**: nudged right it would be off-centre against the bar's right-hand
   glyphs and the writing strip, which are centred on the window. 838px at 1152,
-  full 906.67 by 1221.
+  full 906.67 by 1221. ⚠ **It switches on at 915px, not at
+  `--breakpoint-stack`** — that is where it is a no-op, which is why the ramp
+  starts there too and why the two share one media query. So the rule holds from
+  916px up, not only where there is a stack to strand.
 - **The stack's `left` has a floor, and it is CENTRED on the mark's midpoint
   there** — the floor is that midpoint plus **half** its own width. It sits a
   fixed 96px left of the column, so it tracked the column outward: 91 against a
@@ -659,7 +696,10 @@ anchored to the bar's left gutter, so its band is fixed at every desk width —
   four sizes to prove it is a ratio: 3.569 in Jost, 2.8875 in the Bebas reserve.
   The band is derived from it, so it follows the mark's size, its tracking and
   the desk's root scale for free. `node_modules/.probe/markwidth.mjs`;
-  `logocol.mjs` checks both rules across six widths.
+  `logocol.mjs` checks both rules across twelve widths from 915 up, and asserts
+  rather than prints. It also treats a `display: none` stack as absent — below
+  `--breakpoint-stack` it is in the DOM at 0×0 on the origin, which would fail
+  the midpoint rule for a stack that is not on screen to break it.
 
 IBM Plex Sans for interface, IBM Plex Mono for return counts and timestamps.
 Avoid Inter.
