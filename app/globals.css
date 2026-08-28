@@ -1641,7 +1641,7 @@
   --sheet-lead: 0px;
 
   /* Directed: the glyphs a tad higher. Same 40px box, 2px of it moved above. */
-  --sheet-foot: calc(var(--sheet-hem) * 1.5);
+  --sheet-foot: calc(var(--sheet-hem) * 1.625);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
