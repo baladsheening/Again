@@ -256,10 +256,33 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   asserts the fence, browser zoom and the scrollbar; `logocol.mjs` now claims
 >   the mark's two rules from 916px up. `docs/decisions.md` carries the argument.
 >
->   ⚠ **Two things are deliberately not fixed**, both an element arriving rather
->   than a position jumping: the stack still appears at 1152, and the strip still
->   steps 58.67 → 69px there. ⚠ **And 915–1152 is a layout nobody has seen on
->   hardware** — an iPad in landscape lands in it.
+>   ⚠ **OPEN — the STRIP still jumps at 1152, reported the same evening.** *There
+>   is still a discontinuity at the point we resize.* ⚠ **Not the type scale and
+>   not the column**: both measure continuous across that pixel, so do not start
+>   there. `node_modules/.probe/stillsteps.mjs` walks 1148 → 1160 a pixel at a
+>   time — `root` 21.31 → 21.33, `colLeft` 156.70 → 156.88, against `stripTop`
+>   **+58.56**, `stripHeight` **+10.74**, `colPadBottom` **+5.39**, and the tool
+>   stack arriving. The strip does not resize at 1152, it **leaves**: below
+>   `--breakpoint-stack` it is on the bottom edge of the glass, above it there is
+>   no foot and the idle strip is translated off. This was written up as *an
+>   element arriving rather than a position jumping* and left; the first look
+>   disagreed, and **that classification is the thing to revisit**.
+>   `docs/decisions.md` has the table, three approaches (none built) and the one
+>   thing that must not be tried.
+>
+>   ⚠ **And 915–1152 is a layout nobody has seen on hardware** — an iPad in
+>   landscape lands in it.
+>
+> - **Raised 28 August and unbuilt: colour-coding an entry by its type** — films
+>   red, sporting events green, or whatever. Recorded in `docs/decisions.md` as an
+>   open question, not scheduled. Three things make it a decision rather than a
+>   task: it is a **third** colour system beside two that are deliberately scarce;
+>   overlap's colour is still unpicked and should come **first**, since a kind
+>   palette raises the floor it has to beat; and **a capture has no kind when it
+>   is written**, so the colour may really be carrying *resolution* — which the
+>   page cannot currently show — with kind only deciding which colour it is. It
+>   must not turn into a categorise-before-saving flow; that is excluded from
+>   Release 1 by name.
 >
 > ⚠ **None of the ten is verified on hardware**, which is now the one thing
 > outstanding on this page — though the gap under the line is the first of them

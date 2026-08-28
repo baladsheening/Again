@@ -569,6 +569,15 @@ fixed*.
 chrome, the chrome stops being chrome and the page loses the only colour a thumb
 can aim at. Everything else on the page is `--color-text` or a fade of it.
 
+⚠ **Colour-coding entries by their type was raised on 28 August** — films red,
+sporting events green, or whatever. **Unbuilt and undecided**, and it is written
+up in `docs/decisions.md` rather than here because it is a product question with
+an engineering cost: it would be a **third** colour system on the largest surface
+of the screen, it should be picked *after* overlap's colour rather than before,
+and its harder half is that **a capture has no kind at the moment it is written**
+— so a kind-colour may really be carrying *resolution*, which the page currently
+cannot show at all. Read that entry before drawing a palette.
+
 **Overlap still needs a different colour in Phase 2, and picking it is Phase 2's
 first visual decision.** Splitting the token did not make that easier — the
 accent's job is to interrupt, and the screen is now louder than it was, so the
@@ -653,10 +662,19 @@ remove the mechanism, not correct for it:** the number stopped jumping.
   scrollbar.** Headless Chromium passes `--hide-scrollbars`, so a 0px bar cannot
   tell a stable `100vw` from an oscillating one. With a real 15px bar, `100vw` is
   `innerWidth` either way and the root does not move.
-- ⚠ **Two things are deliberately NOT fixed, and both are an element arriving
-  rather than a position jumping:** the stack still appears at 1152 (already
-  parked on the mark's midpoint), and the strip still steps 58.67 → 69px there,
-  because `--sheet-hem` is a hem and a half on a desk and a hem below it.
+- ⚠ **OPEN, and reported the same evening: THE STRIP still jumps at 1152.** *There
+  is still a discontinuity at the point we resize.* ⚠ **It is not the type scale
+  and it is not the column** — both are measured continuous across that pixel, so
+  do not start there. `node_modules/.probe/stillsteps.mjs` walks 1148 → 1160 one
+  pixel at a time: `root` 21.31 → 21.33 and `colLeft` 156.70 → 156.88, against
+  **`stripTop` +58.56, `stripHeight` +10.74, `colPadBottom` +5.39** and the tool
+  stack arriving — four things on one pixel. The strip does not resize there, it
+  **leaves**: below `--breakpoint-stack` it sits on the bottom edge of the glass,
+  above it there is no foot and the idle strip is translated off the glass.
+  ⚠ **This was written up as *an element arriving rather than a position jumping*
+  and left, and the first look at it disagreed** — that classification is what to
+  revisit. `docs/decisions.md` holds the table and three approaches, none built,
+  and names the one thing that must NOT be tried (moving `--breakpoint-stack`).
 - ⚠ **915–1152 is a layout nobody had seen and it has not been on hardware** —
   desk type part-grown, the record narrowed by the mark's band, the foot's glyph
   strip still under it. An iPad in landscape lands in it.

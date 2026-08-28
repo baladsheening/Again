@@ -8026,6 +8026,82 @@ are re-checked rather than remembered.
    column may never overlap the logo's column* is claimed at every width from 916
    up. 915 is walked to show what it does **not** claim.
 
+### ⚠ STILL OPEN — the strip jumps at 1152, and it is not the type scale
+
+**Reported the same evening, after the ramp shipped and was looked at:** *there
+is still a discontinuity at the point we resize.* Offered with it, as the idea to
+try: *continuous resizing instead of two discrete font sizes.*
+
+⚠ **That idea is already built — this section IS it — which is exactly why the
+report matters.** The root's scale is continuous from 915 to 1152 and the record
+column no longer reverses; both are asserted in `threshold.mjs`. So what is still
+stepping is a **different mechanism**, and looking for it in the type scale will
+waste the next session. `node_modules/.probe/stillsteps.mjs` walks one pixel at a
+time across 1152 and prints every measurement that moves:
+
+                    1148    1150    1151  │  1152    1153    1160
+    root           21.24   21.29   21.31  │ 21.33   21.33   21.33   smooth
+    colLeft       156.22  156.55  156.70  │156.88  156.88  156.88   smooth (+0.18)
+    colWidth      835.56  836.91  837.58  │838.25  839.25  846.25   smooth (+0.67)
+    rowHeight      58.39   58.53   58.58  │ 58.64   58.64   58.64   smooth
+    stripTop      741.61  741.47  741.44  │   800     800     800   ⚠ +58.56
+    stripHeight    58.39   58.53   58.56  │ 69.30   69.30   69.30   ⚠ +10.74
+    colPadBottom   58.42   58.54   58.61  │    64      64      64   ⚠ +5.39
+    stackMid           —       —       —  │ 99.77   99.77   99.77   ⚠ arrives
+
+**Three tokens and one layout swap, all firing on the same pixel:**
+
+1. **`stripTop` +58.56 — the big one, and the one an eye catches.** Below
+   `--breakpoint-stack` the strip sits **on the bottom edge of the glass**, idle,
+   with the record dissolving under its glyphs. Above it there is no foot bar at
+   all: the strip is the field alone, **translated off the glass when idle**. So
+   the strip does not resize at 1152, it *leaves* — it drops a full row height and
+   goes under the fold in one pixel, while the tool stack appears at the side.
+2. **`stripHeight` +10.74** — `--sheet-hem` is `--line-hem` below and
+   `--line-hem × 1.5` above. The rem ramps; the **multiplier** steps.
+3. **`colPadBottom` +5.39** — `page-hem` reads `--foot-height`, which is
+   re-pointed to `3rem` above `--breakpoint-stack` because there is no foot to
+   clear any more.
+4. **The tool stack arrives** and the foot's glyph row goes with it.
+
+⚠ **This was classified as *an element arriving rather than a position jumping*
+and left alone, and the first look at it disagreed.** That classification is the
+thing to revisit, not the arithmetic. Two of the four *are* just numbers stepping
+and can be ramped exactly as the root was; the other two are a genuine layout
+swap and cannot.
+
+**Three approaches, none built, roughly in order of cost:**
+
+- **Ramp the two multipliers the same way the root was ramped.** `--sheet-hem`'s
+  `1.5` and `--foot-height`'s `3rem` become interpolations over the same window
+  rather than values gated on it. Cheapest, removes 16 of the 75px, and does
+  nothing about the strip leaving. ⚠ **It also needs a reason** — the hem and a
+  half exists because the desk's sheet is roomier; a ramped version means it is
+  roomier *by degrees*, which may be worse than a step in the right place.
+- **Separate the two events so the eye sees one thing at a time.** The type's
+  ramp currently *ends* on the exact pixel the layout swaps, so a drag past 1152
+  delivers a settling type scale, a relocating strip, an arriving stack and two
+  changed hems at once. Ending the ramp **earlier** is free and safe — early is
+  already the direction the scrollbar mismatch errs in, and the invariant only
+  requires the ceiling be reached *at or before* `--breakpoint-stack`. This does
+  not remove the strip's jump; it stops it being compound.
+- **Cross-fade the swap instead of cutting it**, the way the strip's own two
+  states already fade in a one-cell grid rather than unmounting. That is the only
+  one of the three that addresses `stripTop`, and it is the most work: it means
+  the foot strip and the stack both exist through a band of widths.
+
+⚠ **What must NOT be tried: moving `--breakpoint-stack`.** It is already recorded
+twice that this was the one-number fix and was rejected with the cost stated —
+the sum it names is real, and every window under the new figure would lose the
+desk layout. Moving the jump is not removing it.
+
+⚠ **One thing to rule out first, cheaply.** `stripWidth` tracks the viewport
+across this whole range, which means `--sheet-measure` is being capped by
+`gutter` rather than reaching its own 54rem — so the sheet spans the full glass
+at 1151 and is still doing so at 1160. Confirm whether the strip is *supposed* to
+be viewport-wide here before ramping anything about it; if it is not, that is a
+separate bug sitting on the same pixel.
+
 ### What it cost, and what to look at
 
 - ⚠ **915–1152 is a layout nobody had seen.** The desk's type at part of its
@@ -8053,3 +8129,70 @@ are re-checked rather than remembered.
 - **Left-align the column to the mark's band instead of centring it.** Removes
   the jump by removing the centring, and the column would then disagree with the
   bar's right-hand glyphs and the writing strip, which are centred on the window.
+
+## OPEN QUESTION — colour-coding an entry by its type
+
+**Raised 28 August, unbuilt, nobody has decided it.** *The possibility of
+colour-coding each entry based on its type, so movie entries are 'red', for
+example, sporting events 'green', or whatever.*
+
+Recorded as asked. It is a genuine idea and it is **not** free, because this
+page already spends colour under two scarcity rules that a third system would
+break. Whoever picks this up should read the tension before drawing a palette.
+
+### What it collides with
+
+- ⚠ **`--color-accent` marks overlap state and nothing else, and
+  `--color-chrome` means a control and never a state.** Both rules say the same
+  thing from opposite sides: the page has exactly one colour a thumb can aim at
+  and one colour that will mean *convergence*, and each stops meaning anything
+  the moment it is spent on decoration. A per-kind palette is a **third** colour
+  system, sitting on the record's body text, which is the largest surface on the
+  screen. The risk is not that red is wrong; it is that after it, amber on a
+  converged line reads as one more category.
+- ⚠ **Phase 2's first visual decision is still unmade** — the colour overlap gets
+  when there is a convergence to look at. It is already recorded that the screen
+  got louder when the chrome took `#e8b34a`, so the colour to out-shout is the
+  chrome rather than the muted brass. **Kind-colours would raise that floor
+  again**, and they would be chosen before the thing they have to lose to. If
+  both are wanted, overlap's colour should be picked **first**, and the kind
+  palette built to stay under it.
+- **Type is the entire design** (§11), matte black and legible text. That is not
+  a veto — it is the reason a kind-colour has to be small: a tick, a rule, a
+  stamp, the day-stamp's own colour, rather than the capture's words.
+
+### What it needs from the data, which is the harder half
+
+⚠ **A capture does not have a kind at the moment it is written, and that is the
+whole product.** The re-direction makes the capture the private, user-owned
+record — free text, saved without a forced catalogue match — which *may later*
+resolve to a possibility. So:
+
+- **Most lines on the record have no type to colour.** A palette keyed to kind
+  colours the minority and leaves the majority in `--color-text`, which reads as
+  *these ones are special* rather than *these ones are films*.
+- ⚠ **It must not become a categorise-first flow.** Never ask the user to
+  categorise anything is a standing rule, and Release 1 explicitly excludes *a
+  forced search or catalogue match before a person can save a capture*. A colour
+  that appears only after resolution is honest; a colour that asks the writer to
+  pick one is the excluded flow wearing a palette.
+- **So the real question is not which colours.** It is: **what does an unresolved
+  capture look like beside a resolved one, and is a kind-colour the right way to
+  show that a line found its possibility?** That framing may be more useful than
+  the palette — the colour would then be carrying *resolution*, which is
+  information the page currently has no way to show, and kind would just be
+  which colour it happens to be.
+
+### If it is built anyway, the cheap version first
+
+Put it on the **furniture, not the words**: the existing day-stamp row, or a rule
+in the line's own glyph column, both of which already exist and neither of which
+is body text. That keeps §11's *type is the design*, keeps the capture's words in
+one inherited colour, and can be switched off behind one constant if it reads as
+noise — the wall's caption is the precedent for building something and leaving it
+dark rather than deleting it.
+
+⚠ **Accessibility is a hard floor, not a polish pass.** Colour may never be the
+only carrier of a distinction, so whatever the palette says must also be said by
+a word or a shape, and every colour must clear contrast on matte black — the
+brass pair is 10.98:1 and 7.73:1, which is the bar this page has set itself.
