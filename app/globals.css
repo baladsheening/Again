@@ -1448,15 +1448,13 @@
   );
 
   /**
-   * **How tall the field may grow before it scrolls.**
-   *
-   * ⚠ **A product cap, not a device correction.** A capture is a sentence; six
-   * lines is far past one, and a sheet allowed to grow without limit would take
-   * the screen off the record it is supposed to be added to. Past this the field
-   * scrolls vertically, which is a gesture every engine gives a multi-line field
-   * for free — unlike the horizontal one a single-line field does not.
+   * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
+   * lines the field could grow to before it scrolled, six, *a capture is a
+   * sentence and six lines is far past one*. **The cap is one now, and one is
+   * not a cap** — it is the rule the whole page follows, so it is spelled as a
+   * height in `page-input` rather than as a ceiling on a growth this field no
+   * longer does. `grow-field` went with it.
    */
-  --sheet-cap: 6;
 
   /**
    * The sheet's ground.
@@ -2495,20 +2493,54 @@
  * glyph's hit area free — and what would silently take `--line-hem` out of every
  * row of the record if it were set on the words. This is a block and can hold it.
  *
- * ⚠ **The words themselves are `display: inline` and carry no type of their
- * own.** A capture that wraps used to leave its × and pencil out at the right
- * margin, because the row was a flex container and the controls were a flex
- * *item* — flex has no notion of *after the text ends*. Inline layout does and
- * nothing else does.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Flex again, because the line stopped wrapping — 28 August
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **That did not take for a day, because the words were a `<button>` and a
- * button cannot be inline.** Engines compute `inline-block` for it whatever the
- * declaration says, so the box never fragmented, filled the whole column, and
- * the tail landed after the *box* — the flex behaviour again, by another road.
- * The words are a `<span role="button">` since 25 August. Nothing may make them
- * a `<button>` again; `node_modules/.probe/inlinebutton.mjs` is the measurement.
+ * **Directed: every entry is written on one line, never more than one.** So the
+ * words are `truncate` — `white-space: nowrap`, clipped, with an ellipsis — and
+ * the row is a flex container again.
+ *
+ * ⚠ **This is not the 25 August bug returning; the condition it needed is
+ * gone.** That day the row was flex and a capture that wrapped left its × and
+ * pencil out at the right margin, level with the middle of the entry, because
+ * *a flex container has no notion of after the text ends*. It has no such notion
+ * now either — **there is no "after the text ends" left to have**, because the
+ * words are one unbroken line and the box they sit in ends where they do. Inline
+ * flow was the answer to fragments, and there are no fragments.
+ *
+ * ⚠ **And flex is the only thing that can do the new job.** One line means the
+ * words must *give up width* when the tail needs it, or the tail is pushed off
+ * the row and clipped with the overflow that hid it. `flex: 0 1 auto` with
+ * `min-width: 0` is that, exactly: the words hug their own text while there is
+ * room and shrink to an ellipsis when there is not, and the tail is beside them
+ * either way. Inline layout has no notion of *shrink to make room for what
+ * follows*, which is the mirror of the sentence above and the reason the two
+ * decisions do not contradict each other.
+ *
+ * ⚠ **What went with the wrapping:** the last-word split, the `white-space:
+ * nowrap` box binding it to the tail, and the two-halves a11y dance that split
+ * needed (one `role="button"` labelled with the whole capture, one
+ * `aria-hidden`). All of it existed to keep an atomic tail on the same line as
+ * the last character of a *fragmenting* line. `node_modules/.probe/keepwith.mjs`
+ * measured it and the measurement is still true of wrapped text; there is none.
+ *
+ * ⚠ **The words are still a `<span role="button">` and nothing may make them a
+ * `<button>` again.** The reason changed and the rule did not: a button's
+ * computed `inline-block` no longer matters now that the words are a flex item,
+ * but a `<button>` brings a UA font, a centred text alignment and a baseline of
+ * its own to a row built out of one inherited type.
+ * `node_modules/.probe/inlinebutton.mjs` is the old measurement.
+ *
+ * ⚠ **`align-items: center` costs nothing and is not a correction.** Every item
+ * in this row is exactly `--leading-line` tall by construction — the words by
+ * their line box, the furniture by `line-glyph`'s own rule — so centring and
+ * top-aligning put them in the same place. It is there for the year and the `?`,
+ * which are `leading-none` and shorter than the line on purpose.
  */
 @utility page-row {
+  display: flex;
+  align-items: center;
   font-size: var(--text-line);
   line-height: var(--leading-line);
   letter-spacing: -0.01em;
@@ -2669,16 +2701,58 @@
  * puts it in a line box and hangs the strut's descender under it — a few pixels
  * of air that belong to nothing, on the one row whose height has to match a
  * written line exactly.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  One line, and the overflow goes downwards — 28 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Directed: every line on this page is one line, the field included.** So the
+ * field is `--leading-line` tall and stays there, and a capture longer than the
+ * column scrolls **inside it, vertically**.
+ *
+ * ⚠ **That is not the bug of 27 August coming back, and the direction of the
+ * scroll is the whole reason.** What was reported was a single-line `<input>`
+ * whose overflow ran *sideways*, and `node_modules/.probe/panfield.mjs` measured
+ * why it could not be got back: a horizontal drag inside a focused field means
+ * caret-and-selection on every engine, and Chromium already pans one while iOS
+ * does not. **A textarea's vertical overflow has no such argument** — it is an
+ * ordinary scroll box, every engine gives it, and the caret is kept in view by
+ * the engine rather than by us. The words above the caret are one flick away
+ * instead of unreachable.
+ *
+ * ⚠ **The scroll is on the field, not on an ancestor.** A wrapper scrolled by
+ * *scroll-into-view* would be relying on the engine to walk up and find it; a
+ * textarea scrolling its own content to keep its own caret visible is the
+ * behaviour textareas are for. One less thing that can differ by engine.
+ *
+ * ⚠ **`scrollbar-width: none`, and it is not hiding an affordance.** A scrollbar
+ * in a 28px box is not something a thumb or a cursor can use, and on Windows a
+ * classic one would take 15px out of the column the words are being written in.
+ * What scrolls this field is the caret.
+ *
+ * ⚠ **`overscroll-behavior: contain`** so a flick that reaches the end of the
+ * capture does not continue into the record behind the scrim.
  */
 @utility page-input {
   display: block;
   width: 100%;
+  height: var(--leading-line);
+  resize: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
   border: 0;
+  padding: 0;
   background: transparent;
   outline: none;
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
+  line-height: inherit;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /**
@@ -2762,58 +2836,25 @@
 }
 
 /**
- * **A field that is as tall as its own words**, with no measurement in it.
+ * ⚠ **`grow-field` was here and is deleted — 28 August.**
  *
- * ⚠ **The replicated-content grid, and it is chosen over the alternatives.** The
- * wrapper is a one-cell grid holding the `<textarea>` and a `::after` carrying the
- * same text from `data-value`; the pseudo-element is invisible and sizes the
- * cell, and the field stretches to it. **No `scrollHeight` read, no `el.style`
- * write, no resize loop, and no engine feature to wait for.**
+ * It was a one-cell grid holding the `<textarea>` and an invisible `::after`
+ * carrying the same text from `data-value`; the ghost sized the cell and the
+ * field stretched to it, so the sheet grew with the words up to `--sheet-cap`
+ * lines. It was a good mechanism and it is gone because **the thing it measured
+ * is no longer allowed to vary**: every line on this page is one line, the field
+ * included, so a box that computes how many lines there are has nothing to
+ * compute.
+
+ * ⚠ **Deleted rather than pinned at `--sheet-cap: 1`.** Capping it would have
+ * left the ghost re-rendering `attr(data-value)` on every keystroke to reach an
+ * answer that is now a constant. *How things get fixed* asks for the mechanism
+ * to go before it is corrected, and one line is exactly the condition under
+ * which this one has no work to do. `--sheet-cap` went with it.
  *
- * A growing textarea driven by `scrollHeight` shipped on this page in August and
- * was deleted with the band; `field-sizing: content` is the declarative answer
- * and is still not in every engine this ships to. This is the construction that
- * needs neither.
- *
- * ⚠ **The trailing space in the content is load-bearing.** A value ending in a
- * newline measures one line short without it, so the sheet would fail to grow on
- * exactly the keystroke that needed it.
- *
- * ⚠ **Every property that affects line breaking must be identical on both**, or
- * the ghost and the field disagree about how many lines there are. They are set
- * on the wrapper and inherited, which is what makes that true by construction
- * rather than by two lists agreeing.
- *
- * ⚠ **Past `--sheet-cap` lines the field scrolls**, vertically, which every
- * engine gives a multi-line field for free.
+ * What the field does instead is in `page-input`: one line tall, scrolling its
+ * own content vertically, with the caret kept in view by the engine.
  */
-@utility grow-field {
-  display: grid;
-  max-height: calc(var(--leading-line) * var(--sheet-cap));
-  overflow-y: auto;
-
-  &::after {
-    content: attr(data-value) ' ';
-    visibility: hidden;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  & > textarea,
-  &::after {
-    grid-area: 1 / 1;
-    font: inherit;
-    letter-spacing: inherit;
-    line-height: inherit;
-  }
-
-  & > textarea {
-    resize: none;
-    overflow: hidden;
-    /* The hem belongs to the wrapper, or the ghost measures a line short. */
-    padding: 0;
-  }
-}
 
 /**
  * ⚠ **`record-held` was here and is deleted — 27 August**, with `unsent` and for

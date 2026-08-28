@@ -7212,3 +7212,94 @@ Chromium at two viewports, on `next start`. The handset height in particular
 wants a thumb on it: 44px is the tap floor, and the question a screenshot cannot
 answer is whether a 44px sheet still reads as *the place you are writing* once a
 keyboard is under it.
+
+## One line, everywhere — 28 August
+
+**Directed, on seeing the previous change:** *the height of the row was only
+reduced by pushing up the cursor; on the desktop, better, but I want all entries
+to be written on one line, never more than one* — and, immediately after, *the
+one-line rule applies to the handset live row, too.*
+
+So it is a rule about the page rather than a fix to one row: **nothing on this
+screen occupies more than one line.** The record's entries, and the field they
+are written in.
+
+### What it took away, which is the interesting half
+
+The 27 August sheet existed to let a capture **wrap**. That was the answer to a
+single-line `<input>` whose overflow ran sideways and could not be got back —
+`panfield.mjs` measured why: a horizontal drag inside a focused field is
+caret-and-selection on every engine, Chromium already pans one and iOS does not.
+So the obvious reading of this direction is that it reopens that report.
+
+⚠ **It does not, and the reason is the direction of the overflow.** The field is
+still a `<textarea>`, still wrapping internally, and it is now `--leading-line`
+tall with `overflow-y: auto`. The words above the caret are off the **top** of a
+28px box rather than off the right of it — and vertical overflow in a textarea is
+an ordinary scroll box on every engine, with the caret kept in view by the engine
+rather than by us. One flick away instead of unreachable.
+
+⚠ **The scroll is on the field itself, not on an ancestor.** `grow-field`'s
+wrapper could have been capped at one line and left to be scrolled by
+scroll-into-view; that relies on the engine walking up to find a scroll container.
+A textarea scrolling its own content to show its own caret is what textareas are.
+
+⚠ **`grow-field` and `--sheet-cap` are deleted rather than pinned at 1.** Capping
+would have left the ghost `::after` re-rendering `attr(data-value)` on every
+keystroke to compute a constant. The mechanism's condition — *the height varies* —
+is what the rule removed, so the mechanism goes. That is the order in *How things
+get fixed*, and it is the third time this week the same order has applied to this
+page.
+
+### Flex, again, and why that is not a reversal
+
+On 25 August the row was flex, a wrapped capture left its × and pencil at the
+right margin level with the middle of the entry, and the row was made inline flow
+with the note that **a flex container has no notion of *after the text ends***.
+That note is still correct. It is also no longer about anything: with one
+unbroken line there is no "after the text ends" distinct from "after the box",
+because the box ends where the text does.
+
+⚠ **And flex is now the only layout that can do the job.** One line means the
+words have to **give up width** when the tail needs it, or the tail is pushed off
+the row and clipped by the same `overflow: hidden` that draws the ellipsis.
+`flex: 0 1 auto` with `min-width: 0` is exactly that, and inline layout has no
+equivalent — an inline-block capped at `max-width: 100%` cannot know how much
+room the glyphs after it want. The two decisions are mirrors of each other, taken
+under opposite conditions.
+
+⚠ **What went with the wrapping:** the last-word split, the `white-space: nowrap`
+box binding it to the tail, and the two-halves a11y arrangement that split needed
+— one `role="button"` labelled with the whole capture, one `aria-hidden` carrying
+the same click. `keepwith.mjs` is kept: it is still a true measurement of wrapped
+text, and this page has reversed itself twice in four days.
+
+The year and the standing `?` moved **out** of the words span for a new reason,
+not an old one: it is a clipping box now, so anything inside it is the first
+thing an ellipsis eats. They are flex items of their own, `shrink-0`, carrying
+the same silent click so a tap on the year still picks the line.
+
+### What is given up, said plainly
+
+⚠ **A long capture cannot be read in full from the record.** It shows what fits
+and ends in an ellipsis. **Nothing is truncated in storage** — `aria-label` still
+names the whole capture, the rewrite pencil opens all of it in the field, and the
+matching path has never looked at the row. But *reading* a long one now takes a
+gesture where it used to take none.
+
+That is the cost of the density the direction asked for, and it was asked for
+after seeing the alternative. The measurement: 50 rows, one height, 44px, on both
+surfaces — `node_modules/.probe/oneline.mjs`.
+
+### The height floor, which is now reached
+
+⚠ **44px is where a row stops, and it is not a chosen number.** It is
+`--line-hem` + `--leading-line` + `--line-hem`, which is also `--tap-floor`, which
+is also the border box of `line-glyph` — the hit area of every control that rides
+a line. Anything below it either takes the record's rows down with it or drops
+the line's controls under 44px, and the second is a §11 guarantee.
+
+**So the live row cannot be made shorter on its own.** The lever that remains is
+the record's own density — `--text-line` and `--leading-line` together, which
+would shrink every row of the record and the field with it. That is a product
+decision about the page rather than a fix to the sheet, and it has not been taken.

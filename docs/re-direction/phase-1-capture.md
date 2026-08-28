@@ -152,7 +152,23 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   that it wrap in the same places. `node_modules/.probe/sheetdesk.mjs` measures
 >   both surfaces and `sheetcrop.mjs` crops the row on each.
 >
-> ⚠ **None of the four is verified on hardware**, which is now the one thing
+> - ⚠ **One line, everywhere — the 28th, second pass.** Directed after seeing the
+>   first: *all entries written on one line, never more than one*, and the same
+>   for the live row. Entries `truncate` in a flex row, so the words hug their own
+>   text and give up width to the tail; the field is `--leading-line` tall and
+>   scrolls **vertically inside itself**. ⚠ That is not the 27 August report
+>   returning — vertical overflow in a textarea is an ordinary scroll on every
+>   engine, where horizontal overflow in an `<input>` is a selection gesture on
+>   every engine. **Never swap that element for an `<input>`.** Deleted with the
+>   wrapping: the last-word split and its nowrap binding, the two-halves a11y
+>   dance, `grow-field`, and `--sheet-cap`. Given up: a long capture can no longer
+>   be read in full from the record — nothing is truncated in storage, but reading
+>   one takes the pencil. `node_modules/.probe/oneline.mjs` and `onepick.mjs`.
+>   ⚠ **44px is the floor and it is now reached**: hem + line + hem, which is also
+>   `--tap-floor` and the hit area of every control on a row. Going below it means
+>   taking the record's own type down, which nobody has asked for.
+>
+> ⚠ **None of the five is verified on hardware**, which is now the one thing
 > outstanding on this page.
 
 ### The 23 commits this register was missing

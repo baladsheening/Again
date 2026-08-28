@@ -598,10 +598,16 @@ export function PageScreen({
   /**
    * ⚠ **A `<textarea>` since 27 August, and it is mounted at all times.**
    *
-   * Multi-line, because the field is no longer a row of the page: a capture
-   * longer than the column wraps in the sheet instead of scrolling sideways
-   * inside a box it cannot be panned out of. Return still commits — see the key
-   * handler, which has always refused a newline.
+   * ⚠ **A textarea showing exactly one line — and the element still has to be a
+   * textarea, which is the point.** It was chosen so a long capture would wrap
+   * instead of running off the side of an `<input>` that cannot be panned back
+   * on iOS. The sheet shows one line since 28 August, so the words above the
+   * caret are off the top of a 28px box rather than off the right of it — **and
+   * that box scrolls**, because vertical overflow in a textarea is an ordinary
+   * scroll on every engine while horizontal overflow in an input is a selection
+   * gesture on every engine. Swap this for an `<input>` and the 27 August report
+   * comes straight back. Return still commits — see the key handler, which has
+   * always refused a newline.
    *
    * ⚠ **Mounted even while the sheet is closed, and that is load-bearing.** iOS
    * raises a keyboard only for a focus that happens *inside* a user gesture, and
@@ -696,15 +702,19 @@ export function PageScreen({
   }, [])
 
   /*
-    ⚠ **The field grows again since 27 August, and it is not the mechanism that
-    was deleted.** A `scrollHeight`-driven textarea used to live here and went
-    with the pinned band; what replaced it is `grow-field`, a one-cell grid
-    sized by a ghost copy of the same text. **No measurement, no `el.style`
-    write, no resize loop, and no engine feature to wait for.**
+    ⚠ **The field grew for one day and does not grow — 28 August.** A
+    `scrollHeight`-driven textarea went with the pinned band; `grow-field`, a
+    one-cell grid sized by a ghost copy of the same text, replaced it on the 27th
+    and is deleted on the 28th. **Every line on this page is one line, the field
+    included**, so there is no height left to compute. What the field does with a
+    capture too long for the column is scroll it, vertically, inside itself — see
+    `page-input` for why that is not the horizontal scroll of 27 August wearing a
+    different hat.
 
-    What made growing wrong before was where it grew: a row in the page's own
-    flow shoved the record down while somebody was typing. A sheet is not in the
-    flow, so the objection went with the band.
+    Kept because it will be argued again: what made growing wrong *before* the
+    sheet was where it grew — a row in the page's own flow shoved the record down
+    while somebody was typing. That objection died with the band and is not what
+    killed this one.
   */
 
   useEffect(() => () => {
@@ -1905,38 +1915,32 @@ export function PageScreen({
             const isPicked = line.id !== '' && line.id === picked
 
             /*
-              ⚠ **The last word is split off the rest, and it is the only thing
-              that keeps the line's tail on the line.** Everything after the
-              words — the thumbnail, the link, the controls — is an *atomic*
-              inline: it cannot fragment, so when the last line of a capture ends
-              with less room than the tail needs, the whole cluster goes to a line
-              of its own at the left margin, where it reads as a separate entry.
+              ⚠ **The last word used to be split off the rest and bound to the
+              tail, and that is deleted — 28 August.** Everything after the words
+              is an *atomic* inline, so on a line that fragmented it could be left
+              behind at the left margin reading as a separate entry, and the only
+              mechanism that stopped it was a `white-space: nowrap` box holding
+              the last word and the glyphs together. Three cheaper ones were
+              measured and did not work — `padding-inline-end` hangs past the
+              column rather than forcing a break, the same padding on an empty
+              spacer contributes nothing, and `U+2060` does not suppress a break
+              across an element boundary. `node_modules/.probe/keepwith.mjs` is
+              still the measurement and it is still true of wrapped text.
 
-              Four ways to stop that were built and measured, and three do not
-              work. `padding-inline-end` on the words hangs past the column
-              instead of forcing a break (measured: 407px of padding on a 358px
-              column). The same padding on an empty spacer contributes nothing at
-              all. A `U+2060` word joiner does not suppress the break across an
-              element boundary. And a `white-space: nowrap` wrapper is overridden
-              by the `normal` the words need for their own text.
-
-              What works is binding the last word to the tail inside one nowrap
-              box: when the pair will not fit, the **word** comes down with the
-              glyphs and they are still immediately after the last character.
-              `node_modules/.probe/keepwith.mjs` is the measurement.
+              **There is no wrapped text.** A line is one line now, so there are
+              no fragments, nothing can be left behind on one, and the split's
+              whole reason for existing has gone. The a11y dance it needed —
+              two spans, one `role="button"` labelled with the whole capture and
+              one `aria-hidden` carrying the same click — goes with it: the words
+              are one span again, which is one control by being one thing.
             */
-            const cut = line.text.lastIndexOf(' ')
-            const head = cut === -1 ? '' : line.text.slice(0, cut + 1)
-            const lastWord = cut === -1 ? line.text : line.text.slice(cut + 1)
 
             /*
-              **One control per line, and it is named with the whole capture.**
-              The split is a layout device, so it must not reach the a11y tree as
-              two buttons and two tab stops per line. The half that carries the
-              role is labelled with everything the line says — including the year
-              or the standing question, which a reader would otherwise get as a
-              bare `?` — and the other half is `aria-hidden` with the same click,
-              so a thumb sees one target and a reader sees one control.
+              **The label is still the whole capture**, including the year or the
+              standing question a reader would otherwise get as a bare `?`. It is
+              also what an ellipsis takes away on screen and must never take away
+              here: the row shows as much as fits, and the control is named with
+              all of it.
             */
             const label =
               line.year !== null
@@ -1962,19 +1966,29 @@ export function PageScreen({
             const quiet = { 'aria-hidden': true, onClick: () => pick(line) }
 
             /*
-              ⚠ **Both halves of the words wear this, from one place.** They are
-              one line as far as anybody looking at them is concerned, so a
-              strike or a landing that reached only one of them would be the
-              split becoming visible. `cursor-default` and `select-none` are what
-              a `<button>` gave for free and a span does not: an I-beam over a
-              line that cannot be typed into is the same lie as a caret on it.
+              ⚠ **`truncate` and `min-w-0`, and they are the one-line rule — 28
+              August.** `truncate` is nowrap, clipped, with an ellipsis; `min-w-0`
+              is what lets a flex item shrink below its own text, without which
+              the words would push the tail off the row rather than give up width
+              to it. The pair is the whole mechanism — see `page-row` for why
+              flex is the only layout that can do this and why that does not
+              reopen the 25 August bug.
+
+              ⚠ **`inline` is gone with the split.** It was there so the words
+              would fragment and the tail would follow the last character
+              wherever it fell. Nothing fragments now, and a flex item is
+              block-level whatever this said.
+
+              `cursor-default` and `select-none` are what a `<button>` gave for
+              free and a span does not: an I-beam over a line that cannot be
+              typed into is the same lie as a caret on it.
 
               ⚠ **No type here.** It was `page-words` until 26 August; the line's
               size, leading and tracking live on the row now, so the words
               inherit them — and so does every glyph that has to align against
               them, which is what that move was for.
             */
-            const words = `inline cursor-default select-none ${
+            const words = `min-w-0 truncate cursor-default select-none ${
               crossedOff ? 'line-through opacity-50' : ''
             } ${line.landed ? 'landed' : ''}`
 
@@ -2047,39 +2061,25 @@ export function PageScreen({
                     condition removed rather than three corrections applied.
                   */}
                 {/*
-                  ⚠ **A span, because a `<button>` cannot be inline — and that
-                  is the whole of the bug this replaced.** The row was made
-                  inline flow on 25 August so the controls would follow the last
-                  character, and the words kept `display: inline` on a
-                  `<button>`. Engines refuse it: the computed display comes back
-                  `inline-block`, so the words never fragment, the box is as wide
-                  as the whole column, and the tail lands after the *box* —
-                  which is the flex behaviour that change set out to remove,
-                  reached by another road. Measured side by side in
-                  `node_modules/.probe/inlinebutton.mjs`: `<button>` gives one
-                  fragment 358px wide and the glyphs at x=12 on the next line;
-                  `<span>` and `<a>` give two fragments and the glyphs at x=186,
-                  immediately after the last character.
+                  ⚠ **A span and not a `<button>`, still.** The original reason
+                  was that a button cannot be inline — engines compute
+                  `inline-block` for it whatever the declaration says, so on the
+                  inline row of 25 August the words never fragmented, the box
+                  filled the column and the tail landed after the *box*.
+                  `node_modules/.probe/inlinebutton.mjs` measured it: `<button>`
+                  gave one fragment 358px wide with the glyphs at x=12 on the
+                  next line, `<span>` gave two fragments with them at x=186.
 
-                  ⚠ **This is why `text-start` is gone with it.** It was undoing
-                  a `<button>`'s centred UA text — a span has nothing to undo,
-                  and the row already reads its alignment from the page.
+                  ⚠ **That reason expired on 28 August and the rule did not.**
+                  The words are a flex item now, so display is settled by the
+                  container and a button would compute `block` like anything
+                  else. What a `<button>` still brings is a UA font, a centred
+                  text alignment and a baseline of its own, into a row whose
+                  whole design is one inherited type — and `text-start` back to
+                  undo the middle of it. A span with a role costs none of that.
                 */}
-                {head !== '' && (
-                  <span {...pickable} className={words}>
-                    {head}
-                  </span>
-                )}
-
-                {/*
-                  ⚠ **The binding.** The last word and everything after it sit in
-                  one box that cannot break, so the glyphs can never be left
-                  behind on a line of their own — see the note where `lastWord`
-                  is cut for the three mechanisms that do not work.
-                */}
-                <span className="whitespace-nowrap">
                 <span
-                  {...(head === '' ? pickable : quiet)}
+                  {...pickable}
                   /*
                     ⚠ **A line in flight looks exactly like a line that landed,
                     and that is the contract rather than an oversight.** It was
@@ -2102,54 +2102,72 @@ export function PageScreen({
                     have taken in the day stamp and said *this day landed*.
                   */
                   /*
-                    ⚠ **`inline`, which is the whole of this change.** A
-                    block-level box ends its own line, so anything after it
-                    starts a new one or sits beside the *box*; an inline box ends
-                    where its last character does, and the controls follow it
-                    there. It is also what lets `line-through` run across every
-                    fragment of a wrapped capture rather than across a rectangle.
+                    ⚠ **`inline` was here and is gone — 28 August.** It was the
+                    whole of the 25 August change: an inline box ends where its
+                    last character does, so the controls followed the text
+                    wherever it fell, and a strike ran across every fragment of a
+                    wrapped capture rather than across a rectangle. The words are
+                    one unbroken line and a flex item now — there are no
+                    fragments for either argument to be about, and `truncate`
+                    needs a box it can clip. See `words` and `page-row`.
                   */
                   className={words}
                 >
-                  {lastWord}
-                  {/*
-                    ⚠ **`leading-none`, and it is the difference between 44px and
-                    46px.** A 13px span inheriting the line's 28px line-height
-                    gets its own half-leading — (28 − 15.6)/2 against the 18px
-                    strut's (28 − 21.6)/2 — so its inline box hangs ~2px below
-                    the strut and grows the line box under it. **One line is one
-                    line**, whether or not it resolved to something, so the
-                    year's box is made smaller than the strut rather than left to
-                    push it about.
-                  */}
-                  {line.year !== null && (
-                    <span className="text-muted ms-2 text-[0.8125rem] leading-none">
-                      {line.year}
-                    </span>
-                  )}
-
-                  {/*
-                    ⚠ **The standing question, as one character in the year's own
-                    slot.** No glyph, no colour and no new vocabulary: a resolved
-                    line carries a year there and an offered one carries a `?`,
-                    which is exactly the difference between them. The two can
-                    never collide — an offer only exists on a capture that has
-                    not resolved, and a capture that has not resolved has no
-                    year.
-
-                    ⚠ **It stands forever.** No expiry: any number would be a
-                    constant tuned to nothing, and an unanswered question is not
-                    wrong, it is unanswered. Only *No* takes it away.
-                  */}
-                  {line.offer !== null && line.year === null && (
-                    <span
-                      className="text-muted ms-2 text-[0.8125rem] leading-none"
-                      title={`Is this ${line.offer.title}?`}
-                    >
-                      ?
-                    </span>
-                  )}
+                  {line.text}
                 </span>
+
+                {/*
+                  ⚠ **The year is beside the words, not inside them — 28
+                  August.** It lived in the same span, which was right while that
+                  span ended where its text did; it is a clipping box now, so a
+                  year inside it would be the first thing an ellipsis ate. Out
+                  here it is a flex item of its own and survives any truncation,
+                  which is what a resolved line has to say.
+
+                  ⚠ **`quiet`, so the split does not reach a reader.** It is the
+                  same target to a thumb — tapping the year picks the line, as it
+                  did when it was inside the words — and silent to a screen
+                  reader, which already has the year in `label`.
+
+                  ⚠ **`leading-none`, and it is the difference between 44px and
+                  46px.** A 13px span inheriting the line's 28px line-height gets
+                  its own half-leading — (28 − 15.6)/2 against the 18px strut's
+                  (28 − 21.6)/2 — so its box hung ~2px below the strut and grew
+                  the line box under it. **One line is one line**, whether or not
+                  it resolved to something. `page-row`'s `align-items: center` is
+                  what then puts the shorter box on the line's own centre.
+                */}
+                {line.year !== null && (
+                  <span
+                    {...quiet}
+                    className="text-muted ms-2 shrink-0 text-[0.8125rem] leading-none"
+                  >
+                    {line.year}
+                  </span>
+                )}
+
+                {/*
+                  ⚠ **The standing question, as one character in the year's own
+                  slot.** No glyph, no colour and no new vocabulary: a resolved
+                  line carries a year there and an offered one carries a `?`,
+                  which is exactly the difference between them. The two can
+                  never collide — an offer only exists on a capture that has
+                  not resolved, and a capture that has not resolved has no
+                  year.
+
+                  ⚠ **It stands forever.** No expiry: any number would be a
+                  constant tuned to nothing, and an unanswered question is not
+                  wrong, it is unanswered. Only *No* takes it away.
+                */}
+                {line.offer !== null && line.year === null && (
+                  <span
+                    {...quiet}
+                    className="text-muted ms-2 shrink-0 text-[0.8125rem] leading-none"
+                    title={`Is this ${line.offer.title}?`}
+                  >
+                    ?
+                  </span>
+                )}
 
                 {line.hasImage && (
                   <Thumbnail line={line} onOpen={() => setLooking(line)} />
@@ -2205,7 +2223,16 @@ export function PageScreen({
                     */
                     <span
                       aria-hidden
-                      className="text-muted ms-2 inline align-middle line-through opacity-50 [--glyph:var(--glyph-line)] [&>svg]:align-middle"
+                      /*
+                        ⚠ **The outer `inline align-middle` went on 28 August and
+                        the one on the SVG did not.** This is a flex item now, so
+                        both were inert on the box itself — but the box still
+                        carries the line's own type, and `[&>svg]:align-middle`
+                        inside it still puts the glyph on the x-height, which is
+                        where a strikeout is drawn. `shrink-0` because a glyph
+                        that gives up width to the words is a squashed glyph.
+                      */
+                      className="text-muted ms-2 shrink-0 line-through opacity-50 [--glyph:var(--glyph-line)] [&>svg]:align-middle"
                     >
                       <LinkGlyph />
                     </span>
@@ -2230,6 +2257,12 @@ export function PageScreen({
                   shorter capture left them stranded at the margin across a gap
                   of nothing. A line is only as wide as its own words, so its end
                   is where they stop.
+
+                  ⚠ **`min-w-0` on the words is what keeps that true under flex
+                  — 28 August.** A flex item that cannot shrink below its content
+                  would push this off the row and out of the overflow that hides
+                  the ellipsis. With it, the words give up exactly the width the
+                  tail needs and stop where the tail begins, at any length.
                 */}
                 <LineTools
                   undoable={line.id !== '' && line.id === undoable}
@@ -2244,7 +2277,6 @@ export function PageScreen({
                   */
                   onRewrite={editing === null ? () => startEdit(line) : null}
                 />
-                </span>
 
                 {/*
                   ⚠ **The paper is gone, and it was here.** Every row carried
@@ -2479,18 +2511,15 @@ export function PageScreen({
             the record. Put the hem on the field's own wrapper instead and every
             chip sits a hem too high.
           */}
-          <div className="page-line flex items-start">
+          {/*
+            ⚠ **`items-center`, and the growing wrapper is gone — 28 August.**
+            The chips aligned to the field's *first* line while the sheet could
+            be several lines tall; the field is one line and stays one line, so
+            first line and only line are the same line and there is nothing left
+            for `items-start` to mean. See `page-input`.
+          */}
+          <div className="page-line flex items-center">
             <div className="relative min-w-0 flex-1">
-            <div
-              /*
-                ⚠ **The ghost is a copy of the same text, and it is what sizes
-                the box.** It can only measure the same line breaks if every
-                property that affects them is inherited from one place — which is
-                the row, since 27 August. See `grow-field`.
-              */
-              data-value={bandValue}
-              className="grow-field"
-            >
               <textarea
                 ref={input}
                 rows={1}
@@ -2557,14 +2586,13 @@ export function PageScreen({
                   drawnCaret ? 'caret-transparent' : 'caret-chrome'
                 }`}
               />
-            </div>
 
-            {drawnCaret && (
-              <span
-                aria-hidden
-                className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
-              />
-            )}
+              {drawnCaret && (
+                <span
+                  aria-hidden
+                  className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+                />
+              )}
             </div>
 
 {photo && (

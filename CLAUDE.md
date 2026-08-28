@@ -64,24 +64,28 @@ of it reversed two decisions the desk had made:
   tap before it.
 
 ⚠ **The words of a record line are a `<span role="button">`, and nothing may
-make them a `<button>` again.** A button cannot be inline — every engine
-computes `inline-block` for it whatever the declaration says — so the words do
-not fragment, the box fills the column, and the line's controls land after the
-*box* instead of after the last character. That shipped for a day on 25 August
-and every wrapping capture wore it. The measurement is
-`node_modules/.probe/inlinebutton.mjs`.
+make them a `<button>` again.** The original reason was that a button cannot be
+inline — every engine computes `inline-block` for it whatever the declaration
+says — so on the inline row the words did not fragment, the box filled the
+column, and the controls landed after the *box*. That shipped for a day on 25
+August and every wrapping capture wore it; `node_modules/.probe/inlinebutton.mjs`
+is the measurement. ⚠ **That reason expired on 28 August with the wrapping and
+the rule did not** — the words are a flex item now, so display is the container's
+to decide, but a `<button>` still brings a UA font, a centred text alignment and
+a baseline of its own into a row built out of one inherited type.
 
-⚠ **The last word is split off and bound to the tail.** Everything after the
-words is an atomic inline that cannot fragment, so a last line ending with less
-room than the tail needs would put the controls on a line of their own at the
-left margin, reading as a separate entry. The last word and the tail sit in one
-`white-space: nowrap` box, so the **word** comes down with the glyphs instead.
-Three cheaper mechanisms were built and measured and none of them works —
+⚠ **The last word used to be split off and bound to the tail, and that is
+deleted — 28 August.** It existed because everything after the words is an atomic
+inline: on a line that *fragmented*, a last line with less room than the tail
+needed put the controls at the left margin, reading as a separate entry. Three
+cheaper mechanisms were built and measured and none works —
 `padding-inline-end` hangs past the column rather than forcing a break, the same
 padding on an empty spacer contributes nothing, and a word joiner does not
-suppress a break across an element boundary. The split is a layout device only:
-one half carries `role="button"` labelled with the whole capture and the other
-is `aria-hidden`, so a reader still gets one control per line.
+suppress a break across an element boundary; `node_modules/.probe/keepwith.mjs`
+holds all of it and is still true **of wrapped text**. Nothing wraps now, so
+there are no fragments and nothing to keep together — the words are one span
+again, which is one control by being one thing, and the two-halves a11y dance
+went with it.
 
 ⚠ **A row of the record carries the line's type, and nothing else may.** It was
 on the words until 26 August, and `vertical-align: middle` centres a box on its
@@ -126,6 +130,42 @@ caret-and-selection on every engine**, and Chromium already pans one while iOS
 does not, so a hand-written pan would have been a second pan on Android and a
 platform branch everywhere. `node_modules/.probe/panfield.mjs` is the
 measurement.
+
+⚠ **Every line on this page is one line, and nothing may wrap — 28 August.**
+Directed: *all entries written on one line, never more than one*, and the same
+rule for the live row. It holds on every surface, because it is a rule and not a
+device correction.
+
+- **A record entry truncates.** The words are `min-w-0 truncate` in a flex row,
+  so they hug their own text while there is room and give up width to the tail
+  when there is not. `aria-label` still carries the whole capture — an ellipsis
+  takes text off the screen and must never take it off a reader.
+- **The row is `display: flex` again, and that does not reopen the 25 August
+  bug.** That day flex left a wrapped line's × and pencil at the right margin
+  because *flex has no notion of after the text ends*. There is no "after the
+  text ends" any more — the words are one unbroken box that ends where they do.
+  And flex is the only layout that can *shrink the words to make room for what
+  follows*, which is what one line requires. The two decisions are mirrors, not
+  a reversal.
+- ⚠ **The last-word split is deleted**, with the `white-space: nowrap` binding
+  and the two-halves a11y dance it needed. All of it kept an atomic tail on the
+  same line as the last character of a *fragmenting* line.
+  `node_modules/.probe/keepwith.mjs` is still true of wrapped text; there is
+  none. The year and the `?` moved **out** of the words for the same reason —
+  inside a clipping box they would be the first thing an ellipsis ate.
+- **The field is one line and scrolls vertically inside itself.** `grow-field`
+  and `--sheet-cap` are deleted; `page-input` is `--leading-line` tall with
+  `overflow-y: auto`. ⚠ **It stays a `<textarea>`, and that is the whole safety
+  of this.** The 27 August report was a single-line `<input>` whose overflow ran
+  *sideways* and could not be got back, because a horizontal drag in a focused
+  field means caret-and-selection on every engine. Vertical overflow in a
+  textarea is an ordinary scroll on every engine and the caret is kept in view by
+  the engine. Never swap this element for an `<input>`.
+- ⚠ **A capture is still stored whole.** Nothing truncates the text; the row
+  shows what fits. Rewriting opens the full capture in the field.
+
+Measured on both surfaces by `node_modules/.probe/oneline.mjs` — 50 rows, one
+height, 44px — and `onepick.mjs` for a picked line's tools.
 
 ⚠ **The sheet is one row tall and wider than the record — 28 August.** Directed
 after the first look at it: too tall on the handset, too narrow on the desk.
