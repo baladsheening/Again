@@ -614,6 +614,20 @@ is nothing to drift from.
 - **Below 72rem nothing moves at all.** Verified at 390, 864 and 1151px: root
   16px, 18/28, 44px rows, 680px column. `node_modules/.probe/scale.mjs`.
 
+⚠ **OPEN, reported 28 August and not fixed: the column and the mark jump
+backwards at the desk threshold.** Narrowing the window moves the record column
+left continuously from 1440 down to 1152, and then it **leaps 78.6px to the
+right** in one pixel of window while the mark jumps the other way and shrinks.
+The cause is `html { font-size: 133.3333% }` stepping at `min-width: 72rem` —
+every rem in the app snaps by 0.75 at once, and the strength of one-number
+scaling is exactly what makes its boundary violent. ⚠ **The two clamps below are
+not the cause**; the walk in `node_modules/.probe/threshold.mjs` shows both
+handovers continuous. **The approach that looks right — a fluid root scale ramped
+from ≈915px to 1152px, with the start width derived so the record clamp switches
+on as a no-op — is worked through in `docs/decisions.md`, with the arithmetic,
+what it does not fix, and three things to verify first. Read that before touching
+any of this.**
+
 ⚠ **The mark holds a column on the desk, and nothing may cross into it — 28
 August.** Directed: *the entries column may never overlap the logo's column, and
 the vertical glyphs may never go past that column's midpoint.* The mark is

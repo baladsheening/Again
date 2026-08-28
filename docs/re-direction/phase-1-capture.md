@@ -238,6 +238,16 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   Above `--breakpoint-stack` nothing changes — no foot bar exists there.
 >   `node_modules/.probe/strip.mjs` and `striprecede.mjs`.
 >
+> - **The desk was redesigned on the 28th and one thing is left open.** The root
+>   scales by 4/3 above 72rem, so the desk is the same design four-thirds the
+>   size; the mark now holds a column that neither the record nor the tool stack
+>   may cross; the strip on the bottom edge is one object with two states. ⚠ **The
+>   open item is the threshold**: narrowing the window moves the record column
+>   left continuously and then leaps it 78.6px back to the right at 1152, because
+>   the root scale steps rather than ramps. **`docs/decisions.md` holds the
+>   measurement, the worked approach (a fluid ramp from ≈915px to 1152px) and
+>   three things to verify before building it.** Do not start from scratch.
+>
 > ⚠ **None of the ten is verified on hardware**, which is now the one thing
 > outstanding on this page — though the gap under the line is the first of them
 > to have come *from* hardware.

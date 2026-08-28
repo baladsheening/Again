@@ -7871,3 +7871,124 @@ the stack's centre is never left of the mark's midpoint:
     1280        187           907            120      tracking
     1366        230           907            163      tracking
     1440        267           907            200      tracking
+
+## OPEN — the column and the mark jump backwards at the desk threshold
+
+**Reported 28 August, and not yet fixed.** *One particular problem I have is the
+adjustment that happens at the threshold, namely the jump that the logo and the
+entry column make when resizing. I'd rather the entry column continues moving in
+the same direction it was moving when the browser was narrowing, instead of
+jumping back in the other direction before restarting in its previous shift
+leftwards. This has to be designed and managed with the other elements in mind.*
+
+**Nothing in this section is built.** It is the map, the measurement, and the
+approach that looks right, written down while it was fresh.
+
+### What actually happens, measured
+
+`node_modules/.probe/threshold.mjs` walks the viewport across every regime
+boundary and reads the column, the mark and the stack. Narrowing from 1440:
+
+    width   root    column left + width    mark left @ size   stack centre
+    1440    21.33   266.7 + 906.7          42.7 @ 32          200
+    1300    21.33   196.7 + 906.7          42.7 @ 32          130
+    1241    21.33   167.2 + 906.7          42.7 @ 32          100.5
+    1240    21.33   166.7 + 906.7          42.7 @ 32          100    stack parks
+    1221    21.33   157.2 + 906.7          42.7 @ 32           99.8  column clamp on
+    1200    21.33   156.9 + 886.3          42.7 @ 32           99.8
+    1152    21.33   156.9 + 838.3          42.7 @ 32           99.8
+    1151    16      235.5 + 680            32   @ 24          —     ⚠ JUMP
+    1100    16      210   + 680            32   @ 24          —
+     720    16      20    + 680            32   @ 24          —
+     719    16      19.5  + 680            20   @ 20          —     rail step
+
+⚠ **The column's left edge moves left continuously from 1440 down to 1152 — and
+then leaps 78.6px to the RIGHT in one pixel of window.** The mark jumps the other
+way, 42.7 → 32, and shrinks 32px → 24px. That reversal is the whole report.
+
+⚠ **The two clamps added earlier that day are NOT the cause, and the walk proves
+it.** The stack's handover at 1240 is continuous by construction — the terms are
+equal there — and the column clamp at 1221 is continuous in position (157.2 →
+156.9); only the *rate* changes as the column starts narrowing instead of moving.
+Both were designed to be smooth and both are.
+
+### The cause is one declaration
+
+`html { font-size: 133.3333% }` at `min-width: 72rem`. **Every rem in the app
+snaps by a factor of 0.75 in a single pixel of window**, and the column's left
+edge is `(V − measure)/2` with `measure` in rem, so it jumps by half the change
+in measure: `(906.7 − 680)/2 = 113.4`, less the 34.8 the clamp had already taken
+out. The strength of the root-scale approach — one number moves everything — is
+exactly what makes its boundary violent.
+
+### What looks right: make the scale fluid, ending at 72rem
+
+Interpolate the root size over a range instead of stepping it, so nothing snaps:
+
+    html { font-size: clamp(100%, calc(100% + (100vw − Wmin) × k), 133.3333%) }
+
+with the ramp **ending at 1152px**, where the stack appears. Then at and above
+`--breakpoint-stack` the scale is at maximum and every piece of arithmetic
+already written stays exactly true — `--breakpoint-stack: 72rem` is still the
+same sum measured at the same rem, and `--breakpoint-pane` with it.
+
+⚠ **Where the ramp should START is the interesting part, and it is calculable
+rather than a matter of taste.** The `--record-measure` clamp must switch on
+where it changes nothing, or it introduces a second jump of its own. The clamp is
+a no-op where
+
+    V − 2 × --mark-column  =  --page-measure
+    --mark-column = (2 + 1.5 × 3.569) rem = 7.3535rem = 117.66px at s = 1
+    V = 680 + 2 × 117.66 = 915.3px
+
+So **ramp from ≈915px to 1152px**. Below 915 the layout is exactly what ships
+today; at 915 the clamp engages as a no-op and the type begins to grow; by 1152
+the type is at 4/3 and the column is 838 at left 156.9. Checked for monotonicity:
+
+- **915 → 1152**: the clamp binds throughout, so the column's left edge *is*
+  `--mark-column` = 117.66 × s(V), which rises with V — i.e. moves left as the
+  window narrows. ✓
+- **below 915**: left = (V − 680)/2, which also falls as V narrows, and meets
+  117.5 at 915 against the clamp's 117.66. ✓ Continuous to a rounding.
+- **the mark**: left = `--bar-gutter` = 2rem × s, and size = 1.5rem × s. Both
+  continuous through the whole ramp. ✓
+
+### What that leaves, and what it does not fix
+
+- ⚠ **The stack still appears at 1152 and the bottom strip still disappears.**
+  That is an element arriving, not a position jumping, and it arrives already
+  parked on the mark's midpoint. Probably fine; look at it before deciding.
+- ⚠ **The rail step at 720px survives** — the mark goes 24 → 20px and
+  `--bar-gutter` 2rem → 1.25rem. The column is continuous through it (20 → 19.5)
+  because the gutter has taken over by then, so only the mark twitches. Same
+  class of problem, much smaller, pre-existing.
+- **Everything else on the page follows the root**, so the strip, the row
+  rhythm, the glyphs and the caret all become continuous for free — which is the
+  same reason the step is violent today.
+
+### Three things to verify before building it
+
+1. ⚠ **`calc()` mixing a percentage with `vw` for `font-size` on `html`.** The
+   percentage is what preserves the reader's own default — see the note on the
+   `133.3333%` choice — and a `rem` slope would throw that away, because on the
+   root element `rem` resolves against the initial value. Confirm all four
+   engines accept `calc(100% + Nvw)` there and that **browser zoom still scales
+   the page**; a `vw`-driven root size is the classic way to break zoom, and the
+   `clamp()` endpoints are what should stop it. Measure it, do not reason it.
+2. ⚠ **`100vw` includes the classic scrollbar on some engines**, which can
+   oscillate when a vertical scrollbar appears and disappears. If that bites, the
+   ramp wants a container query or `100svw` rather than a fudge.
+3. **Re-run `threshold.mjs` afterwards.** The check is that the column's left
+   edge is monotonic across the whole walk with no `← COLUMN MOVED RIGHT` row,
+   and that `logocol.mjs` still passes both of the mark's rules.
+
+### Alternatives considered and why they are worse
+
+- **Move the step to where the column is continuous.** The two positions coincide
+  at V = 994px, so a threshold there makes the *column* smooth — but the mark,
+  the row heights and the strip all still snap by 0.75. It fixes one element of
+  the report and not the other.
+- **Raise or lower the breakpoint.** Moves the jump; does not remove it.
+- **Left-align the column to the mark's band instead of centring it.** Removes
+  the jump by removing the centring, and the column would then disagree with the
+  bar's right-hand glyphs and the writing strip, which are centred on the window.
