@@ -171,16 +171,24 @@ Measured on both surfaces by `node_modules/.probe/oneline.mjs` — 50 rows, one
 height, 44px — `onepick.mjs` for a picked line's tools, and `slide.mjs` for the
 field.
 
-⚠ **On a handset the writing box is the line and nothing else — 28 August.** 28px,
-not 44. Directed. `--sheet-hem` is `0px` below `--breakpoint-stack` and
-`--line-hem` above it, the sheet's row wears `sheet-row` rather than `page-line`,
-and everything else about the type is identical to a line of the record — a line
-being written and a line already written are the same words in the same face at
-the same size, which is what keeps the page from jumping on Return.
+⚠ **On a handset the writing box is very nearly the line and nothing else — 28
+August.** 36px, where it was 44. Directed. The sheet's row wears `sheet-row`
+rather than `page-line`, and everything else about the type is identical to a
+line of the record — a line being written and a line already written are the same
+words in the same face at the same size, which is what keeps the page from
+jumping on Return. Only the air differs.
+
+⚠ **`--sheet-hem` is half a hem on glass and a hem and a half on a desk**, both
+`--line-hem` scaled and neither typed, so the sheet's air follows the record's if
+that ever moves. It went to `0px` first — the box as literally the line — and
+came up by a quarter of a rem on both surfaces once the notch's dead 34px was out
+of the way and the real spacing could be seen. ⚠ **Above and below, never below
+alone**: air bought only on the keyboard's side is the *gap under the characters
+that is not matched above* all over again, in miniature.
 
 ⚠ **It costs the chips nothing, because a hit area does not have to be inside the
 box it belongs to.** `line-glyph` splits its 44px evenly above and below the
-line; with no hem to land in, the lower half would sit on the keyboard and be
+line; with barely a hem to land in, the lower half would sit on the keyboard and be
 untappable — 44px measured, 36px reachable. `sheet-glyph` hangs the whole
 overhang **upward**, over the scrim, where there is nothing behind it but a
 record under glass. Same 44px, same invisible box, somewhere a thumb can reach
@@ -188,7 +196,9 @@ it. Verified by hit-test, not by arithmetic: `elementFromPoint` returns the chip
 at the very top, the quarter, the middle and the very bottom of its box, and
 `node_modules/.probe/shortbox.mjs` measures 16px of overhang above the row and
 **0px below the sheet**. One rule on every surface — above the breakpoint the
-upward hang is simply harmless.
+upward hang is simply harmless. It stays right now that the hem is 4px rather
+than 0: half a hem does not hold half a target, and `tad.mjs` still measures the
+chip's box ending 4px *inside* the sheet's bottom edge rather than past it.
 
 ⚠ **The record keeps its 44px rows.** This is the sheet's box, not the page's
 density. Both probes assert it.

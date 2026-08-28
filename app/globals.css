@@ -1472,11 +1472,32 @@
    * ⚠ **The desk keeps its hem**, at the user's direction, and this is a width
    * rule rather than a device rule: above `--breakpoint-stack` — where the sheet
    * is already wider than the record and the tools stand beside the column —
-   * `--sheet-hem` goes back to `--line-hem`. See the `@media` in the base layer;
-   * a media query cannot resolve a `var()`, so 54rem is spelled there and this
-   * note is what ties the two together.
+   * `--sheet-hem` is larger. See the `@media` in the base layer; a media query
+   * cannot resolve a `var()`, so 54rem is spelled there and this note is what
+   * ties the two together.
+   *
+   * ─────────────────────────────────────────────────────────────────────────
+   *  A tad more, on both — 28 August
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * ⚠ **Directed, once the notch's dead 34px was out of the way and the real
+   * spacing could be seen: a little more room under the characters, on the desk
+   * as well.** Zero was right for finding the floor and a shade tight to live
+   * with. Both went up by the same quarter of a rem — the handset from nothing
+   * to half a hem, the desk from a hem to a hem and a half.
+   *
+   * ⚠ **Above and below, not below alone.** What was reported before this was
+   * *a gap under the characters that is not matched above*, so air bought only
+   * on the keyboard's side would be that complaint again in miniature. The line
+   * sits in the middle of its own box, which is what every other row on this
+   * page does.
+   *
+   * ⚠ **Both are `--line-hem` scaled, and neither is typed.** The record owns
+   * the one hem this page has; the sheet says how much of it to spend rather
+   * than naming a second number that could drift from the first. Move
+   * `--line-hem` and the sheet's air follows.
    */
-  --sheet-hem: 0px;
+  --sheet-hem: calc(var(--line-hem) / 2);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
@@ -3099,13 +3120,14 @@
       --foot-height: 3rem;
 
       /**
-       * ⚠ **The sheet gets its hem back on the desk**, and only here. The
-       * handset's writing box is the line and nothing else — see `--sheet-hem`
-       * for the argument and for why the chips keep their 44px through it. This
-       * is `--breakpoint-stack` spelled out because a media query cannot resolve
-       * a `var()`; if that token moves, this moves with it.
+       * ⚠ **The sheet is roomier on the desk**, and only here. The handset's
+       * writing box is nearly the line and nothing else — see `--sheet-hem` for
+       * the argument, for why the chips keep their 44px through it, and for why
+       * both surfaces gained the same quarter of a rem on 28 August. This is
+       * `--breakpoint-stack` spelled out because a media query cannot resolve a
+       * `var()`; if that token moves, this moves with it.
        */
-      --sheet-hem: var(--line-hem);
+      --sheet-hem: calc(var(--line-hem) * 1.5);
     }
   }
 }

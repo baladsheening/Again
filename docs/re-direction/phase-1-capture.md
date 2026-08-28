@@ -184,7 +184,7 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >
 > - ⚠ **The handset's writing box is the line — the 28th, fourth pass.**
 >   Directed: *only tall enough to contain the one line.* 28px on glass, 44px on
->   the desk; `--sheet-hem` is zero below `--breakpoint-stack`, the row wears
+>   the desk; `--sheet-hem` was zero below `--breakpoint-stack`, the row wears
 >   `sheet-row`, and the type is otherwise identical to a record line. ⚠ **The
 >   chips keep their 44px** — `sheet-glyph` hangs the whole overhang upward over
 >   the scrim instead of splitting it, because half of `line-glyph`'s split would
@@ -212,9 +212,20 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   one, keyboard up; `notch.mjs` runs all four cells and shows nothing changes
 >   where there is no inset.
 >
-> ⚠ **None of the eight is verified on hardware**, which is now the one thing
-> outstanding on this page — though the gap above is the first of them to have
-> come *from* hardware.
+> - **A tad more air, on both — the 28th, sixth pass.** With the notch's dead
+>   34px gone the real spacing could be judged, and zero was a shade tight.
+>   `--sheet-hem` is `--line-hem / 2` on glass and `--line-hem * 1.5` on the
+>   desk — the same quarter-rem increment on both, both scaled from the record's
+>   one hem rather than typed. Sheet 36px on a handset with the keys up, 52px on
+>   a desk; 4px above the text and 4px below on glass, 12 and 12 on the desk.
+>   ⚠ **Above and below, never below alone** — air on the keyboard's side only
+>   would be the gap that was just fixed, in miniature. The chips keep their 44px
+>   and their box still ends inside the sheet. `node_modules/.probe/tad.mjs`,
+>   with the notch emulated so the keyboard-up case is the real one.
+>
+> ⚠ **None of the nine is verified on hardware**, which is now the one thing
+> outstanding on this page — though the gap under the line is the first of them
+> to have come *from* hardware.
 
 ### The 23 commits this register was missing
 

@@ -7521,3 +7521,39 @@ and across all four cells, `notch.mjs`:
 
 The reported bug was reproduced before it was fixed, which is the first time that
 has been possible for anything on this page that involved a notch.
+
+### A tad more, on both — the same afternoon
+
+**Directed, immediately after the notch fix:** *let's have a tad more space
+between the top of the keyboard and the bottom of the characters* — and, in the
+next breath, *apply a tad more space to the desktop version, too.*
+
+⚠ **This is not the short box being undone; it is the first time the box could
+be judged.** Until the inset came out, 34px of dead padding sat under the line on
+a handset, so *tight* and *roomy* could not be told apart there. With it gone,
+zero read as a shade tight. Both surfaces went up by the same quarter of a rem.
+
+    --sheet-hem   glass   0        →  calc(var(--line-hem) / 2)     4px
+                  desk    8px      →  calc(var(--line-hem) * 1.5)  12px
+
+⚠ **Scaled from `--line-hem`, not typed.** The record owns the one hem this page
+has; the sheet says how much of it to spend. Two literals here would be two
+numbers to keep in step with a third.
+
+⚠ **Above and below, never below alone.** The obvious reading of *space between
+the keyboard and the characters* is to buy it on the keyboard's side — which is
+the complaint that had just been fixed, in miniature: *a gap under the characters
+that is not matched above*. The line sits in the middle of its own box, as every
+other row on this page does.
+
+Measured, with the notch emulated so the handset's keyboard-up case is the real
+one — `node_modules/.probe/tad.mjs`:
+
+    handset, keys up      sheet 36   above 4    below 4     chip 44, ends 4px inside
+    handset, keys down    sheet 70   above 4    below 38    the 34px indicator, cleared
+    desk                  sheet 52   above 12   below 12    chip 44, ends 12px inside
+    record                one 44px row per entry, both surfaces, untouched
+
+⚠ **`sheet-glyph`'s upward hang stays right at 4px.** Half a hem does not hold
+half a 44px target: split evenly, 4px of every chip would still be on the keys.
+The probe checks the chip's box ends *inside* the sheet rather than past it.
