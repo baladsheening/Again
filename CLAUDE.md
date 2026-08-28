@@ -153,19 +153,42 @@ device correction.
   `node_modules/.probe/keepwith.mjs` is still true of wrapped text; there is
   none. The year and the `?` moved **out** of the words for the same reason —
   inside a clipping box they would be the first thing an ellipsis ate.
-- **The field is one line and scrolls vertically inside itself.** `grow-field`
-  and `--sheet-cap` are deleted; `page-input` is `--leading-line` tall with
-  `overflow-y: auto`. ⚠ **It stays a `<textarea>`, and that is the whole safety
-  of this.** The 27 August report was a single-line `<input>` whose overflow ran
-  *sideways* and could not be got back, because a horizontal drag in a focused
-  field means caret-and-selection on every engine. Vertical overflow in a
-  textarea is an ordinary scroll on every engine and the caret is kept in view by
-  the engine. Never swap this element for an `<input>`.
+- **The field is one line and it slides.** `grow-field` and `--sheet-cap` are
+  deleted; `page-input` is `--leading-line` tall and the element is an
+  **`<input>`**. When the caret reaches the end of the row the words already
+  written move out of the far edge — the engine's own behaviour for a one-line
+  field, with nothing in the CSS producing it.
+- ⚠ **`dir="auto"` on the field, which is the whole of *depending on user
+  language*.** Direction comes from the first strong character typed, so the
+  value slides left under English and right under Arabic with no branch and no
+  locale lookup. Measured: `scrollLeft` +508 on a 390px handset in Latin, −85 in
+  Arabic, `direction` computed `rtl`. The drawn caret is `start-0`, never
+  `left-0`, for the same reason.
 - ⚠ **A capture is still stored whole.** Nothing truncates the text; the row
   shows what fits. Rewriting opens the full capture in the field.
 
 Measured on both surfaces by `node_modules/.probe/oneline.mjs` — 50 rows, one
-height, 44px — and `onepick.mjs` for a picked line's tools.
+height, 44px — `onepick.mjs` for a picked line's tools, and `slide.mjs` for the
+field.
+
+⚠ **This element has been swapped twice in two days and both reasons are
+recorded, because the next reader will assume one of them was a mistake.**
+
+- **27 August, `<input>` → `<textarea>`.** Reported: a capture longer than the
+  column ran off the side and could not be got back.
+  `node_modules/.probe/panfield.mjs` measured why — a horizontal drag inside a
+  focused field is caret-and-selection on every engine, and Chromium pans one
+  anyway while iOS does not. Wrapping removed the condition.
+- **28 August, back to `<input>`.** The wrap was replaced by the one-line rule,
+  and the sliding line was then asked for directly **with the consequence stated
+  first**: on a handset the words that have slid off are reachable by caret, by
+  selection and by Home, but *not by swiping the row*. Accepted at that price.
+  The rule saying *never swap this for an `<input>`* was written the same morning
+  under the opposite condition. **The condition is what changed, so the rule
+  went** — see *How things get fixed*.
+- ⚠ **Not a `<textarea>` with `wrap="off"`.** That is a legacy attribute value
+  propping a multi-line element up in a role it was not built for. An `<input>`
+  is the element for a line.
 
 ⚠ **The sheet is one row tall and wider than the record — 28 August.** Directed
 after the first look at it: too tall on the handset, too narrow on the desk.
@@ -198,8 +221,9 @@ the bar, the band and the air between.
 ⚠ **The field is mounted at all times and the `+` focuses it synchronously.**
 That is the one non-negotiable in this design: iOS raises a keyboard only for a
 focus that happens *inside* the gesture that asked for it, and a field mounted
-by a state change is focused a tick too late. Never make the sheet's
-`<textarea>` conditional, and never move its focus into an effect.
+by a state change is focused a tick too late. Never make the sheet's field
+conditional, and never move its focus into an effect. That holds whatever the
+element is — it has been a `<textarea>` and it is an `<input>`.
 
 ⚠ **Deleted with the band, and none of it should come back on its own:**
 `--band-height` and its siblings, `--bar-visible`, `live-band`'s idle layer and

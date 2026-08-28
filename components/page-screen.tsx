@@ -596,18 +596,44 @@ export function PageScreen({
   const previews = useRef(new Set<string>())
 
   /**
-   * ⚠ **A `<textarea>` since 27 August, and it is mounted at all times.**
+   * **An `<input>` again — 28 August, second pass — and it is mounted at all
+   * times.**
    *
-   * ⚠ **A textarea showing exactly one line — and the element still has to be a
-   * textarea, which is the point.** It was chosen so a long capture would wrap
-   * instead of running off the side of an `<input>` that cannot be panned back
-   * on iOS. The sheet shows one line since 28 August, so the words above the
-   * caret are off the top of a 28px box rather than off the right of it — **and
-   * that box scrolls**, because vertical overflow in a textarea is an ordinary
-   * scroll on every engine while horizontal overflow in an input is a selection
-   * gesture on every engine. Swap this for an `<input>` and the 27 August report
-   * comes straight back. Return still commits — see the key handler, which has
-   * always refused a newline.
+   * ⚠ **The line slides; it does not wrap and it does not stack.** Directed:
+   * *when the caret reaches the end of the row, the text already written moves
+   * out of the far edge.* That is what a one-line field does natively — the
+   * engine keeps the caret in view and scrolls the value under it — and it is
+   * the reason this is an `<input>` rather than a `<textarea>` with `wrap="off"`.
+   * A textarea wraps by nature; making one behave like a single line means a
+   * legacy attribute value and `white-space: pre` propping up an element in a
+   * role it was not built for.
+   *
+   * ⚠ **This element has been swapped twice in two days and the reasons are
+   * both written down, because the next reader will assume one of them was a
+   * mistake.**
+   *
+   *   - **27 August, `<input>` → `<textarea>`.** Reported: a capture longer than
+   *     the column ran off the side and could not be got back.
+   *     `node_modules/.probe/panfield.mjs` measured why — a horizontal drag
+   *     inside a focused field is caret-and-selection on every engine, Chromium
+   *     pans one anyway and iOS does not. Wrapping removed the condition.
+   *   - **28 August, back.** The wrap was replaced by the one-line rule for the
+   *     whole page, and then the sliding line was asked for directly, with the
+   *     consequence stated first: on a handset the words that have slid off are
+   *     reachable by caret, selection and Home, but **not by swiping the row**.
+   *     Accepted at that price. The rule that said *never swap this for an
+   *     `<input>`* was written the same morning under the opposite condition,
+   *     and the condition is what changed.
+   *
+   * ⚠ **`dir="auto"`, which is the whole of *depending on user language*.** The
+   * field takes its direction from the first strong character typed into it, so
+   * the value slides left under an English caret and right under an Arabic one
+   * with no branch, no locale lookup and no setting. An empty field falls back
+   * to the page's own direction, which is why the drawn caret is `start-0` and
+   * not `left-0`.
+   *
+   * Return still commits — see the key handler. An `<input>` refuses a newline
+   * by nature, so that handler is now belt as well as braces.
    *
    * ⚠ **Mounted even while the sheet is closed, and that is load-bearing.** iOS
    * raises a keyboard only for a focus that happens *inside* a user gesture, and
@@ -616,7 +642,7 @@ export function PageScreen({
    * `+`'s own click handler focuses it synchronously before anything is asked
    * to render. See `openSheet`.
    */
-  const input = useRef<HTMLTextAreaElement>(null)
+  const input = useRef<HTMLInputElement>(null)
   const host = useRef<HTMLDivElement>(null)
   const floorAnchor = useRef<HTMLDivElement>(null)
   /** The writing sheet, for nothing but a name in the DOM to aim probes at. */
@@ -2498,10 +2524,9 @@ export function PageScreen({
         <div className="gutter mx-auto w-full max-w-[var(--sheet-measure)]">
           {/*
             ⚠ **The chips sit beside the field and the field gives up the
-            width**, exactly as they did on the pinned row. What has changed is
-            that the field may now be several lines tall, so they align to its
-            *first* line rather than to its middle — a photograph belongs beside
-            the words it captions, and the words start at the top.
+            width**, exactly as they did on the pinned row. The field is one line
+            and stays one line, so there is no *first* line to align to any more
+            — it is the line, and `items-center` puts them on it.
           */}
           {/*
             ⚠ **The hem is the row's, exactly as it is on a line of the record.**
@@ -2520,9 +2545,18 @@ export function PageScreen({
           */}
           <div className="page-line flex items-center">
             <div className="relative min-w-0 flex-1">
-              <textarea
+              <input
                 ref={input}
-                rows={1}
+                type="text"
+                /*
+                  ⚠ **`dir="auto"` and not a hardcoded direction.** The value
+                  slides out of the *start* edge as the caret reaches the end,
+                  and which edge that is comes from the first strong character
+                  typed — left under English, right under Arabic or Hebrew. One
+                  standard attribute instead of a locale branch. See the field's
+                  own docblock.
+                */
+                dir="auto"
                 value={bandValue}
                 onChange={(e) => {
                   if (editing !== null) setEditDraft(e.target.value)
@@ -2543,18 +2577,21 @@ export function PageScreen({
                 onKeyDown={(e) => {
                   if (e.nativeEvent.isComposing) return
                   /*
-                    ⚠ **Return commits and never inserts a newline**, which is
-                    the one thing a textarea has to be told. One line is one
+                    ⚠ **Return commits.** It had to be *told* not to insert a
+                    newline while this was a textarea; an `<input>` refuses one
+                    by nature, so the `preventDefault` is belt as well as braces
+                    and the commit is the part that matters. One line is one
                     capture: a capture with a line break in it is two things
                     somebody meant to say separately, and the matching path would
                     treat the pair as one string forever after. `isComposing` is
                     the exception — the Return that closes an IME candidate
                     window is not this Return.
 
-                    ⚠ **The field wraps; it does not break.** Wrapping is the
-                    browser laying one sentence over several lines, which is what
-                    the record does with the same words. A newline would be the
-                    person doing it, and that is what is refused.
+                    ⚠ **The field slides; it does not wrap and it does not
+                    break.** The value scrolls under the caret when it reaches
+                    the end of the row, which is the engine's own behaviour for a
+                    one-line field. See the field's docblock for what that costs
+                    on a handset and why it was accepted.
                   */
                   if (e.key === 'Enter') {
                     e.preventDefault()
@@ -2587,10 +2624,17 @@ export function PageScreen({
                 }`}
               />
 
+              {/*
+                ⚠ **`start-0`, not `left-0` — 28 August.** The field takes its
+                direction from what is typed into it, and an empty one falls back
+                to the page's. A caret pinned to the *left* would be at the wrong
+                end of an empty field on an RTL page; `inset-inline-start` is the
+                end the writing begins at, whichever that is.
+              */}
               {drawnCaret && (
                 <span
                   aria-hidden
-                  className="animate-caret bg-chrome pointer-events-none absolute top-1/2 left-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
+                  className="animate-caret bg-chrome pointer-events-none absolute top-1/2 start-0 h-[var(--caret-height)] w-[var(--caret-width)] -translate-y-1/2"
                 />
               )}
             </div>

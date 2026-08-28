@@ -168,7 +168,21 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   `--tap-floor` and the hit area of every control on a row. Going below it means
 >   taking the record's own type down, which nobody has asked for.
 >
-> ⚠ **None of the five is verified on hardware**, which is now the one thing
+> - ⚠ **The field slides — the 28th, third pass, and the element is an `<input>`
+>   again.** Directed: *when the caret reaches the end of the row, the text
+>   already written moves out of the far edge, leftwards or rightwards depending
+>   on the language.* That is a one-line field's own behaviour, so nothing in the
+>   CSS produces it; `dir="auto"` supplies the direction from the first strong
+>   character typed. Measured on a 390px handset: `scrollLeft` +508 in Latin, −85
+>   with `direction: rtl` in Arabic, the field 28px and the sheet 44px throughout,
+>   the record untouched at one 44px row per entry.
+>   `node_modules/.probe/slide.mjs`. ⚠ **The 27 August cost is back and was
+>   accepted with it stated first**: on a handset the words that have slid off are
+>   reachable by caret, selection and Home but *not by swiping the row* —
+>   `panfield.mjs`. Both swaps of this element are recorded in CLAUDE.md, because
+>   the next reader will assume one was a mistake.
+>
+> ⚠ **None of the six is verified on hardware**, which is now the one thing
 > outstanding on this page.
 
 ### The 23 commits this register was missing

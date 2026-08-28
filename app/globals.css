@@ -2703,44 +2703,41 @@
  * written line exactly.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- *  One line, and the overflow goes downwards — 28 August
+ *  One line, and it slides — 28 August
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * **Directed: every line on this page is one line, the field included.** So the
- * field is `--leading-line` tall and stays there, and a capture longer than the
- * column scrolls **inside it, vertically**.
+ * **Directed: every line on this page is one line, the field included — and when
+ * the caret reaches the end of the row, the words already written move out of
+ * the far edge.** So the field is `--leading-line` tall and it is an `<input>`
+ * again: a one-line field scrolls its own value under the caret, in the writing
+ * direction, with no CSS and no script.
  *
- * ⚠ **That is not the bug of 27 August coming back, and the direction of the
- * scroll is the whole reason.** What was reported was a single-line `<input>`
- * whose overflow ran *sideways*, and `node_modules/.probe/panfield.mjs` measured
- * why it could not be got back: a horizontal drag inside a focused field means
- * caret-and-selection on every engine, and Chromium already pans one while iOS
- * does not. **A textarea's vertical overflow has no such argument** — it is an
- * ordinary scroll box, every engine gives it, and the caret is kept in view by
- * the engine rather than by us. The words above the caret are one flick away
- * instead of unreachable.
+ * ⚠ **There is nothing here that makes it slide, and that is the point.** No
+ * `white-space`, no `overflow-x`, no `text-overflow`. Sliding is what the
+ * element does; every property listed below only takes away chrome the element
+ * came with. A declaration that *produced* this behaviour would be a mechanism
+ * that could be wrong on an engine nobody has tested.
  *
- * ⚠ **The scroll is on the field, not on an ancestor.** A wrapper scrolled by
- * *scroll-into-view* would be relying on the engine to walk up and find it; a
- * textarea scrolling its own content to keep its own caret visible is the
- * behaviour textareas are for. One less thing that can differ by engine.
+ * ⚠ **The vertical scroll that was here for a morning is gone with the
+ * textarea.** `resize`, `overflow-y`, `overscroll-behavior`, `scrollbar-width`
+ * and the `::-webkit-scrollbar` rule all existed to make a *multi-line* element
+ * show one line and scroll downwards. An input has no second line to scroll to.
  *
- * ⚠ **`scrollbar-width: none`, and it is not hiding an affordance.** A scrollbar
- * in a 28px box is not something a thumb or a cursor can use, and on Windows a
- * classic one would take 15px out of the column the words are being written in.
- * What scrolls this field is the caret.
+ * ⚠ **What this costs is written down where the element is chosen** — see the
+ * field's docblock in `page-screen.tsx`. Short version: on a handset the words
+ * that have slid off are reachable by caret and by selection but **not by
+ * swiping the row**, which `node_modules/.probe/panfield.mjs` measured. Directed
+ * with that stated first.
  *
- * ⚠ **`overscroll-behavior: contain`** so a flick that reaches the end of the
- * capture does not continue into the record behind the scrim.
+ * ⚠ **`height`, rather than letting the input size itself.** A UA gives an input
+ * its own font, padding and border box; zeroing the padding and border and then
+ * naming the height makes the field exactly one line of the record, the same
+ * `--leading-line` every row is built on, instead of nearly it.
  */
 @utility page-input {
   display: block;
   width: 100%;
   height: var(--leading-line);
-  resize: none;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
   border: 0;
   padding: 0;
   background: transparent;
@@ -2749,10 +2746,6 @@
   font: inherit;
   letter-spacing: inherit;
   line-height: inherit;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 }
 
 /**
@@ -2852,8 +2845,9 @@
  * to go before it is corrected, and one line is exactly the condition under
  * which this one has no work to do. `--sheet-cap` went with it.
  *
- * What the field does instead is in `page-input`: one line tall, scrolling its
- * own content vertically, with the caret kept in view by the engine.
+ * What the field does instead is in `page-input`: one line tall, and the words
+ * slide out of the start edge as the caret reaches the end — an `<input>`'s own
+ * behaviour, with nothing declared to produce it.
  */
 
 /**

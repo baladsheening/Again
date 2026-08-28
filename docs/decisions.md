@@ -7303,3 +7303,82 @@ the line's controls under 44px, and the second is a §11 guarantee.
 the record's own density — `--text-line` and `--leading-line` together, which
 would shrink every row of the record and the field with it. That is a product
 decision about the page rather than a fix to the sheet, and it has not been taken.
+
+## The line slides — 28 August
+
+**Directed, and confirmed before a line was written:** *when a user is typing an
+entry and reaches the end of the input row, the text already in the row should
+move leftwards/rightwards (depending on user language)* — and, in the same
+breath, *keep every published entry on one line only as is the case now.*
+
+So: the record is untouched, and the field stops stacking and starts sliding.
+
+### The element goes back to `<input>`
+
+A `<textarea>` wraps by nature. Making one behave as a single line means
+`wrap="off"` — a legacy attribute value — plus `white-space: pre`, propping a
+multi-line element up in a role it was not built for. An `<input>` *is* the
+element for a line, and sliding the value under the caret is what it already
+does: the engine keeps the caret in view and scrolls the content, in the writing
+direction, with no CSS and no script.
+
+⚠ **So `page-input` declares nothing that produces the behaviour.** No
+`white-space`, no `overflow-x`, no `text-overflow`. Everything left in it takes
+away chrome the element came with — the UA border, padding, font and background —
+and names the height so the field is exactly `--leading-line`, one row of the
+record, rather than nearly it. A declaration that *caused* the sliding would be a
+mechanism that could be wrong on an engine nobody has tested; there isn't one.
+
+Deleted with the textarea: `resize`, `overflow-y`, `overscroll-behavior`,
+`scrollbar-width` and the `::-webkit-scrollbar` rule. All five existed to make a
+multi-line element show one line and scroll downwards.
+
+### Twice in two days, and both reasons stand
+
+This element was `<input>`, became `<textarea>` on the 27th, and is `<input>`
+again on the 28th. Neither swap was a mistake and the register has to say so, or
+somebody will "fix" it back.
+
+- **27 August.** Reported: a capture longer than the column ran off the side and
+  could not be got back. `panfield.mjs` measured why — a horizontal drag inside a
+  focused field is caret-and-selection on every engine, Chromium pans one anyway
+  and iOS does not, so a hand-written pan would have been a second pan on Android
+  and a platform branch everywhere. Wrapping removed the condition.
+- **28 August.** The wrap was replaced by the one-line rule for the whole page,
+  which left the field showing its *last* line with the earlier words off the
+  top. That was then rejected in favour of the line sliding — **asked for with
+  the cost stated first**, in these terms: the words that have slid off stay
+  reachable by caret, by selection and by Home, but not by swiping the row on a
+  handset. Accepted at that price.
+
+⚠ **The rule that said *never swap this for an `<input>`* was written the same
+morning, under the opposite condition.** It is not being broken; its condition is
+gone. That is the order *How things get fixed* asks for, applied to a rule rather
+than to code, and it is the fourth time this week on this one page.
+
+### `dir="auto"` is the whole of "depending on user language"
+
+The direction is not read from a locale, a setting or `navigator.language`. The
+field carries `dir="auto"`, so it takes its direction from the first strong
+character **typed into it**: the value slides left under an English caret and
+right under an Arabic one, and a person who writes in both gets both without ever
+telling the app which. One standard attribute, no branch.
+
+Measured on a 390px handset, same field, same session:
+
+    Latin   overflow 508px   scrollLeft  +508   direction ltr
+    Arabic  overflow  85px   scrollLeft   −85   direction rtl
+
+A negative `scrollLeft` is how an RTL scroll offset is reported, so that pair is
+the behaviour, not a coincidence. `node_modules/.probe/slide.mjs`.
+
+⚠ **The drawn caret is `start-0` and never `left-0`.** It only appears while the
+field is empty, and an empty `dir="auto"` field falls back to the page's own
+direction — so the caret has to sit at the end the writing *begins* at, whichever
+that is, rather than at the physical left.
+
+⚠ **What is not done: the row itself does not flip.** The chips beside the field
+and the record's own furniture stay on the physical right, because the document
+is `lang="en"` with no `dir`. Making the page RTL is a page-level decision and
+this is not it — what was asked for is that the writing slide the right way, and
+it does.
