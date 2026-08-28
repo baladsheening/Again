@@ -119,13 +119,35 @@ it. It reverses the 26 August decision to leave the row alone, at the user's
 direction, after that decision was measured and found to cost more than it saved.
 
 The reported bug is closed **by construction, not by correction**: a capture
-longer than the column wraps in the sheet exactly as it will in the record, so
-there is nothing off screen to scroll to. That matters because there was no
+longer than the column wraps in the sheet rather than running off the side of
+it, so there is nothing off screen to scroll to. That matters because there was no
 honest way to scroll it — **a drag inside a focused single-line field means
 caret-and-selection on every engine**, and Chromium already pans one while iOS
 does not, so a hand-written pan would have been a second pan on Android and a
 platform branch everywhere. `node_modules/.probe/panfield.mjs` is the
 measurement.
+
+⚠ **The sheet is one row tall and wider than the record — 28 August.** Directed
+after the first look at it: too tall on the handset, too narrow on the desk.
+
+- **44px, not 68.** `--sheet-lead` and `--sheet-tail` are **deleted**, not
+  reduced. The field wears `page-line`, so the row already has a hem above the
+  words and a hem below them; the sheet was adding 12px more on each side and
+  paying for the same gap twice. What is left is exactly one line of the record,
+  which is also `--tap-floor` and also the hit area of the chips beside the
+  field. A number typed smaller would have been the thing *How things get fixed*
+  rules out; the second helping of air being removed is not. `env(safe-area-inset-bottom)`
+  survives, because a notch is clearance rather than spacing.
+- **`--sheet-measure`, and it is not `--page-measure`.** The column plus the tool
+  stack's width and its inset on **both** sides — 54rem, the same sum as
+  `--breakpoint-stack` and for the same reason — so the sheet spans exactly the
+  width the page's furniture already stands across, its left edge on the stack's
+  left edge and the field starting under the `+` that summoned it. Below that
+  width there is no stack, the viewport is narrower, and `gutter` caps the sheet
+  at the glass, so **nothing about a handset changes**.
+- ⚠ **The sheet no longer previews the record's line breaks, and that is
+  accepted.** One measure used to do both jobs. What the report asked for is that
+  a long capture *wrap at all* rather than scroll out of reach, and it still does.
 
 ⚠ **On a handset the `+` costs nothing, which is why this was affordable.** iOS
 raises a keyboard only for a gesture, so starting a capture always took one tap

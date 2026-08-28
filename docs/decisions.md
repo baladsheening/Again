@@ -7021,9 +7021,14 @@ iOS. *How things get fixed* rules out both by name.
 The band was one row because it had to be — the record's top padding read
 `--band-height`, so a band that grew would have pushed the record down under
 somebody's thumb. A **sheet is not in the record's flow**, so its height answers
-to the words in it. A long capture wraps, exactly as it will in the record, and
-there is nothing off screen to reach. The condition is removed rather than
-corrected.
+to the words in it. A long capture wraps and there is nothing off screen to
+reach. The condition is removed rather than corrected.
+
+⚠ **This said "wraps, exactly as it will in the record" until 28 August**, when
+the sheet took a measure of its own and the two columns stopped agreeing. See
+*The sheet's box, on both surfaces at once* below. Nothing about the report is
+reopened by it: what was asked for is that the words wrap rather than run off
+the side, and they do.
 
 ### The `+` costs nothing on a handset, which is what made this affordable
 
@@ -7124,3 +7129,86 @@ Return commits and closes, and a tap on the scrim commits and closes.
 ⚠ **Not seen on hardware**, and three things can only be answered there: whether
 the `+` raises the keyboard, whether the sheet sits on the keys, and whether the
 caret is where it should be while typing.
+
+## The sheet's box, on both surfaces at once — 28 August
+
+**Directed, after the first look at the summoned sheet:** *the height of the row
+needs to be reduced significantly on the handset; on the desktop the row needs
+widening, and it need not match the width of the entries column.*
+
+Two complaints, one object, and they resolve into one subtraction and one new
+token rather than into two device branches. Measured before and after with
+`node_modules/.probe/sheetdesk.mjs`, which reads the sheet's box, the inner
+column and the field on a 390×844 handset and a 1440×900 desk; `sheetcrop.mjs`
+crops the row itself on each.
+
+### 68px was one gap bought twice
+
+The sheet's empty height was `--sheet-lead` + `--line-hem` + `--leading-line` +
+`--line-hem` + `--sheet-tail` — 12 + 8 + 28 + 8 + 12 = 68px of glass for one
+18/28 line. The middle three are the row: the field wears `page-line`, exactly as
+a committed line does, and that is what puts the chips beside it on the right
+arithmetic. The outer two were the sheet's own air, added on top of air that was
+already there.
+
+⚠ **So they are deleted, not reduced.** *How things get fixed* asks for the
+mechanism to be removed before it is corrected, and a smaller number typed into
+`--sheet-lead` would have been the correction — a constant chosen because 44
+looked better than 68 on the screen in front of me, waiting to be wrong on the
+next one. What is left is not a chosen number at all: **the sheet is exactly one
+line of the record**, which is 44px, which is also `--tap-floor`, which is also
+the hit area of the chips already sitting in it. Three things that had to agree
+now agree by construction.
+
+`env(safe-area-inset-bottom)` stays on the sheet. It is clearance for a notch,
+not spacing, and it varies by device — the one thing in that box that should.
+
+⚠ **This applies on the desk too, and was not asked for there.** The height was
+never width-dependent: the sheet was 68px on both surfaces, and it is 44 on both.
+A handset is where a wasted 24px is noticed, not where it is uniquely wrong. A
+height that shrank on one surface and not the other would have been the device
+branch this file rules out.
+
+### The desk's width is a derivation, not a taste
+
+`--sheet-measure` is the record's column plus the tool stack's width and its
+inset **on both sides**, because the column is centred:
+
+    42.5rem  --page-measure
+  +  2.75rem --stack-width
+  +  3rem    --stack-inset
+  ────────── x2
+    54rem
+
+⚠ **That is `--breakpoint-stack`, and not by coincidence** — it is the same sum,
+because that breakpoint exists to guarantee the stack fits beside the column. So
+the sheet is as wide as the page's furniture already stands: measured at 1440px,
+the sheet's inner box starts at x=288, which is the tool stack's own left edge,
+and the field starts at 308 — inside the stack's 44px column, under the `+` that
+summoned it. The number is checkable rather than chosen, and it moves on its own
+if `--stack-inset` moves again, as it did on 25 August.
+
+⚠ **Below `--breakpoint-stack` nothing changes.** The viewport is narrower than
+the cap, so `gutter` puts the field on the glass exactly where it was: measured
+at 390px, the field is at x=20 and 324 wide before and after. The width is a
+desk-only change without a desk-only rule in it.
+
+### What this gives up
+
+⚠ **The sheet no longer previews the record's line breaks.** Both columns were
+`--page-measure`, so a capture wrapped in the sheet exactly where it would wrap
+once committed. That was a pleasant consequence of one number doing two jobs, not
+a guarantee anybody asked for — the report that built the sheet asked that a long
+capture **wrap at all** rather than scroll sideways out of reach, and it still
+does, at six lines' worth of growth before the field scrolls.
+
+The alternative was to widen the record's column to match, which is a change to
+the reading measure of the whole product to protect a preview nobody named. It
+was not taken.
+
+### Not verified on hardware
+
+Chromium at two viewports, on `next start`. The handset height in particular
+wants a thumb on it: 44px is the tap floor, and the question a screenshot cannot
+answer is whether a 44px sheet still reads as *the place you are writing* once a
+keyboard is under it.

@@ -136,8 +136,23 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   summoned instead**: the foot's `+` raises a sheet on the bottom edge of the
 >   glass that grows with the words, so a long capture wraps and there is nothing
 >   off screen to reach. See *The field is summoned* below.
+> - ⚠ **The sheet's box was tweaked on the 28th, on both surfaces at once** —
+>   *too tall on the handset, too narrow on the desk*, directed after the first
+>   look at it. **68px became 44px** by deleting `--sheet-lead` and
+>   `--sheet-tail` rather than shrinking them: the field wears `page-line`, so
+>   the row already carries a hem a side, and the sheet was buying the same gap a
+>   second time. What is left is one line of the record exactly, which is also
+>   `--tap-floor`. **The column became `--sheet-measure`** — `--page-measure`
+>   plus the tool stack's width and inset on both sides, 54rem, which is
+>   `--breakpoint-stack` by construction — so on the desk the sheet spans the
+>   width the page's furniture already stands across and the field starts under
+>   the `+`. On a handset the viewport is narrower than the cap, so the width
+>   changes nothing there. ⚠ The sheet stopped previewing the record's line
+>   breaks, and that is accepted: the report asked that a long capture wrap, not
+>   that it wrap in the same places. `node_modules/.probe/sheetdesk.mjs` measures
+>   both surfaces and `sheetcrop.mjs` crops the row on each.
 >
-> ⚠ **None of the three is verified on hardware**, which is now the one thing
+> ⚠ **None of the four is verified on hardware**, which is now the one thing
 > outstanding on this page.
 
 ### The 23 commits this register was missing

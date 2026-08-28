@@ -2450,7 +2450,20 @@ export function PageScreen({
           writing ? '' : 'pointer-events-none translate-y-full'
         }`}
       >
-        <div className="gutter mx-auto w-full max-w-[var(--page-measure)]">
+        {/*
+          ⚠ **`--sheet-measure`, not `--page-measure` — 28 August.** Directed:
+          on the desk the field is wider than the record it is being added to.
+          The sheet's ground has always run the whole window; what was 680px was
+          the words in it, sitting in the record's column with lit glass either
+          side. It is the column plus the tool stack's width and air on both
+          sides now, which puts its left edge on the stack's and starts the
+          field under the `+` that summoned it. See `--sheet-measure`.
+
+          Below `--breakpoint-stack` the viewport is narrower than this, so the
+          cap is never reached and `gutter` puts the field on the glass exactly
+          where it was.
+        */}
+        <div className="gutter mx-auto w-full max-w-[var(--sheet-measure)]">
           {/*
             ⚠ **The chips sit beside the field and the field gives up the
             width**, exactly as they did on the pinned row. What has changed is

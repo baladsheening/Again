@@ -1397,13 +1397,55 @@
    * with the words and the record is untouched. The reported bug is gone by
    * construction rather than corrected.
    *
-   * The lead and the tail are the sheet's own air, and they are apart for the
-   * reason `--bar-lead` and `--bar-tail` are: the top of the sheet is a gap and
-   * the bottom of it sits on a keyboard, and those two answer to different
-   * things.
+   * ⚠ **`--sheet-lead` and `--sheet-tail` are deleted — 28 August.** Reported
+   * from a handset: the sheet is too tall. They were the sheet's own air, 12px
+   * above and 12px below, **on top of the air the row already has** — the field
+   * wears `page-line`, whose `--line-hem` is 8px a side. 12 + 8 + 28 + 8 + 12 =
+   * 68px of glass for one 28px line, and the two helpings were paying for the
+   * same gap twice.
+   *
+   * What is left is the row's own box and nothing else: **the sheet is exactly
+   * one line of the record, 44px**, which is also `--tap-floor` and also the hit
+   * area of the chips beside the field. Not a smaller number typed until it
+   * looked right — the second helping of air is removed, which is the order
+   * *How things get fixed* asks for, and a row that is one row cannot be wrong
+   * on a screen nobody has tested.
+   *
+   * The notch survives on its own, in `writing-sheet`: it is clearance, not
+   * spacing, and it varies by device.
    */
-  --sheet-lead: 0.75rem;
-  --sheet-tail: 0.75rem;
+
+  /**
+   * **The sheet's reading column, and it is wider than the record's — 28
+   * August.** Directed from the desk, where the field sat in the record's 680px
+   * with a lit ground running the whole window either side of it.
+   *
+   *     42.5rem  --page-measure
+   *   +  2.75rem --stack-width    ┐ the tools' column and its air,
+   *   +  3rem    --stack-inset    ┘ on both sides, because the column is centred
+   *   ────────── x2
+   *     54rem
+   *
+   * ⚠ **It is `--breakpoint-stack`, by construction rather than by coincidence** —
+   * the same sum, because that breakpoint is the width at which the tool stack
+   * fits beside the column. So the sheet reaches exactly as wide as the page's
+   * furniture already stands: its left edge lands on the stack's left edge, and
+   * the field starts under the `+` that summoned it. Below that width there is
+   * no stack, the viewport is narrower than this, and the gutter caps the sheet
+   * at the glass — so on a handset this number is never reached and changes
+   * nothing.
+   *
+   * ⚠ **The sheet no longer previews the record's line breaks, and that is
+   * accepted.** A capture used to wrap in the sheet exactly where it would wrap
+   * in the record, because both were `--page-measure`. What the report that
+   * built this sheet actually asked for is that a long capture *wrap at all*
+   * rather than scroll sideways out of reach, and that is untouched: the field
+   * is still several lines tall when the words need it. The preview was a
+   * pleasant consequence of one number doing two jobs, not the guarantee.
+   */
+  --sheet-measure: calc(
+    var(--page-measure) + 2 * (var(--stack-width) + var(--stack-inset))
+  );
 
   /**
    * **How tall the field may grow before it scrolls.**
@@ -2658,9 +2700,16 @@
  *
  * ⚠ **The fix is not to scroll the row; it is to stop the field being a row.**
  * A sheet is not in the record's flow, so its height answers to the words in it
- * rather than to a constant the page is built on. A long capture wraps, exactly
- * as it will in the record, and there is nothing off screen to reach. That is
- * the condition removed rather than corrected — see *How things get fixed*.
+ * rather than to a constant the page is built on. A long capture wraps, and
+ * there is nothing off screen to reach. That is the condition removed rather
+ * than corrected — see *How things get fixed*.
+ *
+ * ⚠ **This used to say "wraps *exactly as it will in the record*", and since 28
+ * August it does not.** The sheet took a measure of its own — see
+ * `--sheet-measure` — so the two columns are different widths on the desk and
+ * the line breaks no longer agree. Nothing about the report is reopened by
+ * that: what it asked for is that the words wrap rather than scroll out of
+ * reach, and they do.
  *
  * ⚠ **Summoned by the foot's `+`, and on a handset that costs nothing.** iOS will
  * not raise a keyboard without a gesture, so starting a capture *already* took
@@ -2690,8 +2739,17 @@
   position: fixed;
   inset-inline: 0;
   bottom: var(--keyboard-overlap, 0px);
-  padding-top: var(--sheet-lead);
-  padding-bottom: calc(var(--sheet-tail) + env(safe-area-inset-bottom));
+  /*
+    ⚠ **No air of its own — 28 August.** The sheet's box is the row's box: the
+    field wears `page-line`, so there is already a hem above the words and a hem
+    below them, and the 12px this used to add on each side was that gap bought a
+    second time. Reported from a handset as *too tall*, fixed by subtraction —
+    68px became 44px, which is one line of the record exactly. See
+    `--sheet-measure`'s neighbours in the theme block for the arithmetic.
+
+    The notch stays, because it is clearance rather than spacing.
+  */
+  padding-bottom: env(safe-area-inset-bottom);
   background-color: var(--sheet-tint);
 
   &::before {
