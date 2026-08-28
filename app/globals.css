@@ -1638,10 +1638,10 @@
     The strip's TOP hem, which is half its bottom one below the desk. See
     `sheet-row` for why the two are not equal and for what it is bending.
   */
-  --sheet-lead: calc(var(--sheet-hem) / 4);
+  --sheet-lead: 0px;
 
   /* Directed: the glyphs a tad higher. Same 40px box, 2px of it moved above. */
-  --sheet-foot: calc(var(--sheet-hem) * 1.25);
+  --sheet-foot: calc(var(--sheet-hem) * 1.5);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
