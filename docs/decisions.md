@@ -8026,126 +8026,26 @@ are re-checked rather than remembered.
    column may never overlap the logo's column* is claimed at every width from 916
    up. 915 is walked to show what it does **not** claim.
 
-### ⚠ STILL OPEN — read this before the section under it
+### Closed: the residual jump was a stale build
 
-**The report was restated on the evening of 28 August and it does NOT describe
-the strip.** In the user's own words:
+**Reported after the ramp shipped, then withdrawn — 28 August.** *There is still
+a discontinuity at the point we resize*, described as the entry column being
+thrown back rightwards where the logo shrinks. That is the shape of the ORIGINAL
+symptom, and at the time it was reported the ramp existed only on
+`phase-1-capture`: production was two commits behind. Once deployed, the user
+confirmed it fixed.
 
-> *The thing that's discontinuous is the change in font size of different
-> elements at the point the browser reaches the narrow state. When we go from big
-> to small by crossing the narrow state threshold, the entry column that had
-> approached the logo column shifts right. As the window is narrowed again, the
-> entry column approaches the now narrower logo column — narrower because the
-> logo font size has reduced. The jump is the first approach being somewhat
-> undone at the threshold, requiring a re-approach by continuing the narrowing.*
+⚠ **The lesson is cheap and worth keeping: establish which build is on screen
+before measuring anything.** Two rounds of measurement went into a page that did
+not have the fix on it.
 
-⚠ **That is the shape of the ORIGINAL symptom**: a threshold where the mark's
-size drops, the mark's band therefore narrows, and the record column is thrown
-back rightwards and has to re-approach. The strip's jump at 1152 is a different
-object at a different moment, and offering it as the answer to this was wrong.
-**Do not conflate the two.** Both entries stay; this one is the reported one.
-
-**Two candidates, and the first is much the likelier:**
-
-1. ⚠ **A build without the ramp.** At the time this was reported the fix existed
-   only on `phase-1-capture` — `origin/main` was `0739d61`, two commits behind,
-   so **production still had the original 78.6px reversal**, and so would any
-   stale tab. **Establish which build was on screen before measuring anything.**
-   On the fixed build the walk shows 156.9 → 156.7 across 1152 and no reversal
-   anywhere in 34 widths.
-2. **If it was the fixed build, it is the rail step at 720px, not 1152.** That is
-   now the only place left where the mark's size changes discretely, and it
-   changes twice over: `--text-mark` 1.25 → 1.5rem **and** `--bar-gutter`
-   1.25 → 2rem, so `--mark-column` steps 5.711rem (91.4px) → 7.354rem (117.7px)
-   — a 26px jump in the logo's band. ⚠ **It was recorded as *pre-existing, much
-   smaller* and skipped**, on the grounds that the column measured continuous
-   through it (20 → 19.5). That reasoning has a hole worth checking: below 915
-   `--record-measure`'s clamp is off, so the column is gutter-driven and cannot
-   respond to the band at all — which means the *column* is continuous there
-   while the **gap between the column and the logo** is not. The report is about
-   an approach and a re-approach, i.e. about the gap. Measure the gap, not the
-   column.
-
-⚠ **The obvious fix for (2) is the one already ruled out elsewhere and it is
-still ruled out**: do not answer it by moving `--breakpoint-rail`. If the rail's
-two steps are the cause, they want ramping the way the root was ramped, or the
-mark's band wants deriving so the column tracks it below 915 as it does above.
-
-### ⚠ STILL OPEN — the strip jumps at 1152, and it is not the type scale
-
-**Reported the same evening, after the ramp shipped and was looked at:** *there
-is still a discontinuity at the point we resize.* Offered with it, as the idea to
-try: *continuous resizing instead of two discrete font sizes.*
-
-⚠ **That idea is already built — this section IS it — which is exactly why the
-report matters.** The root's scale is continuous from 915 to 1152 and the record
-column no longer reverses; both are asserted in `threshold.mjs`. So what is still
-stepping is a **different mechanism**, and looking for it in the type scale will
-waste the next session. `node_modules/.probe/stillsteps.mjs` walks one pixel at a
-time across 1152 and prints every measurement that moves:
-
-                    1148    1150    1151  │  1152    1153    1160
-    root           21.24   21.29   21.31  │ 21.33   21.33   21.33   smooth
-    colLeft       156.22  156.55  156.70  │156.88  156.88  156.88   smooth (+0.18)
-    colWidth      835.56  836.91  837.58  │838.25  839.25  846.25   smooth (+0.67)
-    rowHeight      58.39   58.53   58.58  │ 58.64   58.64   58.64   smooth
-    stripTop      741.61  741.47  741.44  │   800     800     800   ⚠ +58.56
-    stripHeight    58.39   58.53   58.56  │ 69.30   69.30   69.30   ⚠ +10.74
-    colPadBottom   58.42   58.54   58.61  │    64      64      64   ⚠ +5.39
-    stackMid           —       —       —  │ 99.77   99.77   99.77   ⚠ arrives
-
-**Three tokens and one layout swap, all firing on the same pixel:**
-
-1. **`stripTop` +58.56 — the big one, and the one an eye catches.** Below
-   `--breakpoint-stack` the strip sits **on the bottom edge of the glass**, idle,
-   with the record dissolving under its glyphs. Above it there is no foot bar at
-   all: the strip is the field alone, **translated off the glass when idle**. So
-   the strip does not resize at 1152, it *leaves* — it drops a full row height and
-   goes under the fold in one pixel, while the tool stack appears at the side.
-2. **`stripHeight` +10.74** — `--sheet-hem` is `--line-hem` below and
-   `--line-hem × 1.5` above. The rem ramps; the **multiplier** steps.
-3. **`colPadBottom` +5.39** — `page-hem` reads `--foot-height`, which is
-   re-pointed to `3rem` above `--breakpoint-stack` because there is no foot to
-   clear any more.
-4. **The tool stack arrives** and the foot's glyph row goes with it.
-
-⚠ **This was classified as *an element arriving rather than a position jumping*
-and left alone, and the first look at it disagreed.** That classification is the
-thing to revisit, not the arithmetic. Two of the four *are* just numbers stepping
-and can be ramped exactly as the root was; the other two are a genuine layout
-swap and cannot.
-
-**Three approaches, none built, roughly in order of cost:**
-
-- **Ramp the two multipliers the same way the root was ramped.** `--sheet-hem`'s
-  `1.5` and `--foot-height`'s `3rem` become interpolations over the same window
-  rather than values gated on it. Cheapest, removes 16 of the 75px, and does
-  nothing about the strip leaving. ⚠ **It also needs a reason** — the hem and a
-  half exists because the desk's sheet is roomier; a ramped version means it is
-  roomier *by degrees*, which may be worse than a step in the right place.
-- **Separate the two events so the eye sees one thing at a time.** The type's
-  ramp currently *ends* on the exact pixel the layout swaps, so a drag past 1152
-  delivers a settling type scale, a relocating strip, an arriving stack and two
-  changed hems at once. Ending the ramp **earlier** is free and safe — early is
-  already the direction the scrollbar mismatch errs in, and the invariant only
-  requires the ceiling be reached *at or before* `--breakpoint-stack`. This does
-  not remove the strip's jump; it stops it being compound.
-- **Cross-fade the swap instead of cutting it**, the way the strip's own two
-  states already fade in a one-cell grid rather than unmounting. That is the only
-  one of the three that addresses `stripTop`, and it is the most work: it means
-  the foot strip and the stack both exist through a band of widths.
-
-⚠ **What must NOT be tried: moving `--breakpoint-stack`.** It is already recorded
-twice that this was the one-number fix and was rejected with the cost stated —
-the sum it names is real, and every window under the new figure would lose the
-desk layout. Moving the jump is not removing it.
-
-⚠ **One thing to rule out first, cheaply.** `stripWidth` tracks the viewport
-across this whole range, which means `--sheet-measure` is being capped by
-`gutter` rather than reaching its own 54rem — so the sheet spans the full glass
-at 1151 and is still doing so at 1160. Confirm whether the strip is *supposed* to
-be viewport-wide here before ramping anything about it; if it is not, that is a
-separate bug sitting on the same pixel.
+⚠ **One real finding survives, unreported and NOT a bug anyone has complained
+about:** at 1152 the strip does not resize, it **leaves** — `stripTop` +58.56,
+`stripHeight` +10.74, `colPadBottom` +5.39, and the tool stack arriving, all on
+one pixel. Below `--breakpoint-stack` the strip sits on the bottom edge with its
+glyphs; above it there is no foot and the idle strip is translated off the glass.
+`node_modules/.probe/stillsteps.mjs` walks it. Leave it alone until somebody says
+it reads badly.
 
 ### What it cost, and what to look at
 

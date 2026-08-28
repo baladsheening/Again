@@ -1343,7 +1343,8 @@
    * thumb, not the look**, and 44 is where the thumb put it.
    */
   --foot-height: calc(
-    var(--leading-line) + 2 * var(--sheet-hem) + env(safe-area-inset-bottom)
+    var(--leading-line) + var(--sheet-lead) + var(--sheet-hem) +
+      env(safe-area-inset-bottom)
   );
 
   /**
@@ -1632,6 +1633,12 @@
    * direction.
    */
   --sheet-hem: var(--line-hem);
+
+  /*
+    The strip's TOP hem, which is half its bottom one below the desk. See
+    `sheet-row` for why the two are not equal and for what it is bending.
+  */
+  --sheet-lead: calc(var(--sheet-hem) / 2);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
@@ -2747,7 +2754,26 @@
 @utility sheet-row {
   font-size: var(--text-line);
   line-height: var(--leading-line);
-  padding-block: var(--sheet-hem);
+  /*
+    ⚠ **The top hem is HALF the bottom one — 28 August, directed.** Asked for:
+    a shorter bottom bar with the glyphs left exactly where they are. Those two
+    together can only come out of the top: the strip is pinned to the bottom
+    edge, so the contents sit at `--sheet-hem` above it and shortening that side
+    would move them. Taking it off the top lowers the strip's top edge and
+    leaves the row untouched — 44px to 40 on glass.
+
+    ⚠ **Handset only, at the user's direction.** Above `--breakpoint-stack`
+    `--sheet-lead` goes back to a full `--sheet-hem` and the desk's strip is
+    exactly what it was: up there the strip is the field alone, not a bar of
+    glyphs, and it was the bar that read as too tall.
+
+    ⚠ **This is the one place the air is deliberately not matched**, so the rule
+    it bends is worth restating: air is never bought BELOW alone, because that is
+    the gap under the characters with nothing above it. This is the opposite
+    trade — air given back from ABOVE, with the line's own footing kept — and it
+    was asked for after looking at the bar.
+  */
+  padding-block: var(--sheet-lead) var(--sheet-hem);
   letter-spacing: -0.01em;
 }
 
@@ -3393,6 +3419,9 @@
        * `var()`; if that token moves, this moves with it.
        */
       --sheet-hem: calc(var(--line-hem) * 1.5);
+
+      /* The desk keeps matched air: its strip is the field, not the glyph bar. */
+      --sheet-lead: var(--sheet-hem);
     }
   }
 

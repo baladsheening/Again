@@ -662,30 +662,15 @@ remove the mechanism, not correct for it:** the number stopped jumping.
   scrollbar.** Headless Chromium passes `--hide-scrollbars`, so a 0px bar cannot
   tell a stable `100vw` from an oscillating one. With a real 15px bar, `100vw` is
   `innerWidth` either way and the root does not move.
-- ⚠ **OPEN, and the report is about the MARK'S SIZE STEPPING, not the strip.**
-  Restated: *the entry column that had approached the logo column shifts right at
-  the threshold, then re-approaches the now narrower logo column as you keep
-  narrowing.* That is the original symptom's shape. ⚠ **Establish which build was
-  on screen first** — the ramp was on `phase-1-capture` only, so production and
-  any stale tab still had the 78.6px reversal. If it was the fixed build, the
-  suspect is **720px, not 1152**: `--text-mark` 1.25 → 1.5rem and `--bar-gutter`
-  1.25 → 2rem both step there, so `--mark-column` jumps 91.4 → 117.7px. It was
-  skipped because the *column* measures continuous through it — but below 915
-  `--record-measure`'s clamp is off, so the column cannot track the band, and the
-  report is about the **gap**. Measure the gap. `docs/decisions.md` has it.
-- ⚠ **OPEN, and reported the same evening: THE STRIP still jumps at 1152.** *There
-  is still a discontinuity at the point we resize.* ⚠ **It is not the type scale
-  and it is not the column** — both are measured continuous across that pixel, so
-  do not start there. `node_modules/.probe/stillsteps.mjs` walks 1148 → 1160 one
-  pixel at a time: `root` 21.31 → 21.33 and `colLeft` 156.70 → 156.88, against
-  **`stripTop` +58.56, `stripHeight` +10.74, `colPadBottom` +5.39** and the tool
-  stack arriving — four things on one pixel. The strip does not resize there, it
-  **leaves**: below `--breakpoint-stack` it sits on the bottom edge of the glass,
-  above it there is no foot and the idle strip is translated off the glass.
-  ⚠ **This was written up as *an element arriving rather than a position jumping*
-  and left, and the first look at it disagreed** — that classification is what to
-  revisit. `docs/decisions.md` holds the table and three approaches, none built,
-  and names the one thing that must NOT be tried (moving `--breakpoint-stack`).
+- ⚠ **A residual jump was reported and then withdrawn — it was a stale build.**
+  The fix was on the branch only when it was looked at, so production still had
+  the original reversal. ⚠ **Establish which build is on screen before measuring**
+  — two rounds of measurement went into a page that did not have the fix on it.
+  One measured fact survives and nobody has complained about it: at 1152 the
+  strip does not resize, it **leaves** — `stripTop` +58.56, `stripHeight` +10.74,
+  `colPadBottom` +5.39, and the tool stack arriving, all on one pixel.
+  `node_modules/.probe/stillsteps.mjs` walks it. Leave it until somebody says it
+  reads badly.
 - ⚠ **915–1152 is a layout nobody had seen and it has not been on hardware** —
   desk type part-grown, the record narrowed by the mark's band, the foot's glyph
   strip still under it. An iPad in landscape lands in it.
