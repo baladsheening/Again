@@ -1921,7 +1921,15 @@ export function PageScreen({
           }
           release()
         }}
-        className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+var(--page-lead))]"
+        /*
+          ⚠ **`--record-measure`, not `--page-measure` — 28 August.** Directed:
+          the entries column may never overlap the mark's own band on the desk.
+          It is `--page-measure` everywhere else and at every width where there
+          is room; where there is not, it gives up width rather than crossing —
+          the bar is glass, so a column reaching into that band puts lines behind
+          the letters as they scroll under it. See `--mark-column`.
+        */
+        className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+var(--page-lead))]"
       >
         <h1 className="sr-only">Again</h1>
 

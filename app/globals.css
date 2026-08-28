@@ -580,6 +580,29 @@
   --wordmark-ink-ratio: 0.775;
   --wordmark-drop-ratio: 0;
   --wordmark-slack-ratio: 0.1175;
+  /*
+    ⚠ **The seventh, and the first horizontal one — 28 August.** Every other
+    number in this fence is vertical, because until now nothing needed to know
+    how *wide* the mark sets. The record column and the tool stack do: directed,
+    neither may cross into the mark's own band on the desk. See `--mark-column`.
+
+    **How wide AGAIN sets, per 1px of font-size, in this face at this tracking.**
+    Measured by `node_modules/.probe/markwidth.mjs` at 20, 24, 32 and 64px —
+    3.5695 / 3.5690 / 3.5693 / 3.5691, which is the check that it is a *ratio*
+    and not a size. It has to be: the tracking is in `em`, so the whole advance
+    scales with the type. At the desk's 32px mark that is 114.2px, and the live
+    page measures the mark's box at 114.
+
+    ⚠ **It is the advance, not the ink**, so it includes the trailing 0.08em the
+    tracking adds after the final N — 2.56px at 32px. That is deliberate: a band
+    reserved for the mark should err wide, and the alternative is a second number
+    describing the same word.
+
+    ⚠ **Measured, like its six neighbours, and not reasoned from them.** Jost and
+    Bebas Neue disagree on this as they disagree on the rest: 3.569 against
+    2.8875. Do not scale one face's set into another's.
+  */
+  --wordmark-advance-ratio: 3.569;
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -602,6 +625,12 @@
         --wordmark-ink-ratio: 0.72;
         --wordmark-drop-ratio: 0;
         --wordmark-slack-ratio: 0.19;
+        --wordmark-advance-ratio: 2.8875;
+
+    ⚠ **The ninth is measured at Bebas's own 0.1em tracking**, so it is only
+    right if the tracking above is swapped in with it. It is condensed — 2.8875
+    against Jost's 3.569 — which is nearly a fifth narrower and would give the
+    record column back about 45px of window on the desk.
 
     ⚠ **Seven of those eight are measured; the tracking is not.** 0.1em is a
     starting point rather than a reading — Bebas is condensed, so its caps want
@@ -1675,6 +1704,63 @@
    * window's edges.
    */
   --page-measure: 42.5rem;
+
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The mark's own column, and what may not cross into it — 28 August
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **Directed, for the desk: the entries column may never overlap the logo's
+   * column, and the vertical glyphs may never go past that column's midpoint.**
+   *
+   * The mark is anchored to the bar's left gutter, so it holds a fixed vertical
+   * band down the left of the window at every desk width — measured 43 → 157px,
+   * which this derives rather than repeats. Two things were crossing it:
+   *
+   *   - **The record column, below 1221px.** At 1152 its left edge is 123, which
+   *     is 34px inside the band — and the bar is *glass*, so lines scrolling
+   *     under it pass behind the letters.
+   *   - **The tool stack, below 1299px.** It sits a fixed 96px left of the
+   *     column and therefore tracks it outward; at 1280 its left edge is 91
+   *     against a midpoint of 100.
+   *
+   * ⚠ **Clamped, rather than answered with a breakpoint.** Raising
+   * `--breakpoint-stack` to 1299px was the one-number fix and was rejected: the
+   * type scale is tied to that breakpoint, so every window under 1299 would have
+   * lost the desk layout *and* the larger type — 1280×800 laptops included.
+   * These two hold at **every** width instead of above a line, and above about
+   * 1300px they change nothing at all, because the unclamped term wins.
+   *
+   * ⚠ **Derived from the fence, not typed.** `--wordmark-advance-ratio` is the
+   * seventh measured number for the face; the band follows the mark if its size
+   * or its tracking ever moves, and it follows the desk's root scale for free.
+   */
+  --mark-column: calc(
+    var(--bar-gutter) + var(--text-mark) * var(--wordmark-advance-ratio)
+  );
+  --mark-column-mid: calc(
+    var(--bar-gutter) + var(--text-mark) * var(--wordmark-advance-ratio) / 2
+  );
+
+  /**
+   * **What the record actually gets**, as opposed to what it would like.
+   *
+   * `--page-measure` everywhere but the desk, where it is that or the space
+   * between the mark's band and its mirror on the right, whichever is smaller.
+   * The column stays centred, so the band has to be reserved on *both* sides or
+   * it would not be centred any more.
+   *
+   * ⚠ **It narrows rather than shifting.** A column nudged right to clear the
+   * mark would be off-centre against the bar's right-hand glyphs and against the
+   * writing strip below it, which are both centred on the window. Losing width
+   * is the honest cost of a window too narrow to hold the mark and the measure
+   * at once: 838px at 1152, back to the full 906.67 by 1221.
+   *
+   * ⚠ **The `100%` is deliberate and resolves per element.** Both `main` and the
+   * tool stack read this, and both have the viewport for a containing block, so
+   * the two agree without either being told the window's width.
+   */
+  --record-measure: var(--page-measure);
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -3289,6 +3375,18 @@
        * `var()`; if that token moves, this moves with it.
        */
       --sheet-hem: calc(var(--line-hem) * 1.5);
+
+      /**
+       * ⚠ **The record gives up width before it crosses the mark's band.** See
+       * `--mark-column` for the whole argument and for why this is a clamp
+       * rather than a breakpoint. Only here, because only the desk has a tool
+       * stack to strand and a column narrow enough to reach the mark; below this
+       * the record is viewport-capped and the question does not arise.
+       */
+      --record-measure: min(
+        var(--page-measure),
+        calc(100% - 2 * var(--mark-column))
+      );
     }
   }
 

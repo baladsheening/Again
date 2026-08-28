@@ -614,6 +614,32 @@ is nothing to drift from.
 - **Below 72rem nothing moves at all.** Verified at 390, 864 and 1151px: root
   16px, 18/28, 44px rows, 680px column. `node_modules/.probe/scale.mjs`.
 
+⚠ **The mark holds a column on the desk, and nothing may cross into it — 28
+August.** Directed: *the entries column may never overlap the logo's column, and
+the vertical glyphs may never go past that column's midpoint.* The mark is
+anchored to the bar's left gutter, so its band is fixed at every desk width —
+43 → 157px, midpoint 100.
+
+- **`--record-measure`** is `--page-measure`, or the space between the band and
+  its mirror on the right, whichever is smaller. The column **narrows rather than
+  shifting**: nudged right it would be off-centre against the bar's right-hand
+  glyphs and the writing strip, which are centred on the window. 838px at 1152,
+  full 906.67 by 1221.
+- **The stack's `left` has a floor** at the mark's midpoint plus its own width.
+  It sits a fixed 96px left of the column, so it tracked the column outward — 91
+  against a midpoint of 100 at 1280.
+- ⚠ **Clamped, not answered with a breakpoint.** Raising `--breakpoint-stack` to
+  1299px was the one-number fix and was rejected *with the cost stated*: the type
+  scale is tied to that breakpoint, so every window under 1299 — 1280×800
+  laptops included — would have lost the desk layout and the larger type. These
+  hold at every width, and above ~1300px change nothing.
+- ⚠ **`--wordmark-advance-ratio` is the seventh number in the face fence and the
+  first horizontal one.** How wide AGAIN sets per 1px of font-size, measured at
+  four sizes to prove it is a ratio: 3.569 in Jost, 2.8875 in the Bebas reserve.
+  The band is derived from it, so it follows the mark's size, its tracking and
+  the desk's root scale for free. `node_modules/.probe/markwidth.mjs`;
+  `logocol.mjs` checks both rules across six widths.
+
 IBM Plex Sans for interface, IBM Plex Mono for return counts and timestamps.
 Avoid Inter.
 

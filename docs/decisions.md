@@ -7759,3 +7759,77 @@ still lands on the page — only an edge swipe belongs to the system.
     before   inset 34   strip 78   row 78→34   drawing 69→43   17px high
     after    inset 34   strip 78   row 61→17   drawing 52→26   centred
     after    inset  0   strip 44   row 44→0    drawing 35→9    centred
+
+## The mark's column, and what may not cross into it — 28 August
+
+**Directed, for the desk:** *never allow the entries column to overlap the logo
+'column'. And never allow the vertical glyphs to go past midpoint of the logo
+'column'.*
+
+The mark is anchored to the bar's left gutter, so it holds a fixed vertical band
+down the left of the window at every desk width — measured **43 → 157px**,
+midpoint 100. Two things were crossing it, at two different widths:
+
+- **The record column, below 1221px.** At 1152 its left edge is 123 — 34px inside
+  the band. The bar is *glass*, so lines scrolling under it pass behind the
+  letters.
+- **The tool stack, below 1299px.** It sits a fixed 96px left of the column and
+  therefore tracks the column outward; at 1280 its left edge was 91 against a
+  midpoint of 100, and at 1152 it was 27.
+
+### Clamped, not answered with a breakpoint
+
+⚠ **Raising `--breakpoint-stack` to 1299px was the one-number fix and was put to
+the user against the clamp, with the cost stated.** The type scale is tied to
+that breakpoint, so every window under 1299 would have lost the desk layout *and*
+the larger type — 1280×800 laptops included. The clamps hold at **every** width
+instead of above a line, and above about 1300px they change nothing, because the
+unclamped term wins.
+
+    --mark-column       --bar-gutter + --text-mark × --wordmark-advance-ratio
+    --mark-column-mid   the same, half the advance
+    --record-measure    --page-measure, or the space between the band and its
+                        mirror on the right, whichever is smaller (desk only)
+    stack left          max(mid + stack width, its old column-tracking term)
+
+⚠ **The column narrows rather than shifting.** A column nudged right to clear the
+mark would be off-centre against the bar's right-hand glyphs and against the
+writing strip below it, both of which are centred on the window. Losing width is
+the honest cost of a window too narrow to hold the mark and the measure at once —
+838px at 1152, back to the full 906.67 by 1221.
+
+⚠ **The `100%` in `--record-measure` resolves per element**, which is what lets
+`main` and the tool stack agree without either being told the window's width.
+Both have the viewport for a containing block.
+
+### The seventh number in the fence
+
+⚠ **Every measured number for the mark was vertical until now**, because nothing
+had needed to know how *wide* AGAIN sets. `--wordmark-advance-ratio` is how wide
+it sets per 1px of font-size, measured by `node_modules/.probe/markwidth.mjs` at
+four sizes to prove it is a ratio and not a size — 3.5695 / 3.5690 / 3.5693 /
+3.5691. It has to be constant: the tracking is in `em`.
+
+It is the **advance**, including the trailing 0.08em after the final N, not the
+ink. A band reserved for the mark should err wide, and the alternative is a
+second number describing the same word.
+
+⚠ **Bebas Neue measures 2.8875 and it is written into the reserve block.** Nearly
+a fifth narrower, which would give the record column back about 45px on the desk.
+As with the other six: do not reason one face's set into another's.
+
+### Measured
+
+`node_modules/.probe/logocol.mjs`, before and after:
+
+    width   column left  (was)   stack left  (was)   column width
+    1152        157      (123)       100      ( 27)      838
+    1280        187      (187)       100      ( 91)      907
+    1366        230      (230)       134      (134)      907
+    1440        267      (267)       171      (171)      907
+    1728        411      (411)       315      (315)      907
+
+Both rules hold at every desk width, and at 1152 both land exactly flush — the
+column's left edge on the mark's right, the stack's left edge on the mark's
+midpoint. Below the desk nothing changed: at 800px the column is still 680px at
+x=60.

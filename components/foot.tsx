@@ -264,7 +264,21 @@ export function Foot({
 export function ToolStack(tools: Tools) {
   return (
     <div
-      className="stack:flex fixed top-[calc(var(--bar-height)+var(--page-lead)+var(--stamp-block))] left-[calc(50%-var(--page-measure)/2+var(--gutter-l)-var(--stack-inset))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-[var(--stack-gap)] rounded-2xl bg-[var(--glass-tint)] py-[var(--stack-gap)] backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
+      /*
+        ⚠ **The `left` has a floor, and it is the mark's midpoint — 28 August.**
+        Directed: the vertical glyphs may never go past the middle of the logo's
+        column. This sits a fixed distance left of the reading column, so it
+        tracks the column outward as the window narrows — measured at 1280 its
+        left edge was 91 against a midpoint of 100, and at 1152 it was 27. The
+        `max()` stops it there. Above about 1300px the second term wins and
+        nothing has changed at all; below it the stack parks against the mark
+        instead of drifting past it. See `--mark-column` in globals.css.
+
+        ⚠ **`--record-measure`, so it tracks the column that is actually drawn**
+        rather than the one the page would like. Both terms then agree with
+        `main` at every width, without either being told the window's size.
+      */
+      className="stack:flex fixed top-[calc(var(--bar-height)+var(--page-lead)+var(--stamp-block))] left-[max(calc(var(--mark-column-mid)+var(--stack-width)),calc(50%-var(--record-measure)/2+var(--gutter-l)-var(--stack-inset)))] z-20 hidden w-[var(--stack-width)] -translate-x-full flex-col items-center gap-[var(--stack-gap)] rounded-2xl bg-[var(--glass-tint)] py-[var(--stack-gap)] backdrop-blur-[var(--glass-blur)] [--glyph:var(--glyph-foot)]"
     >
       <ToolSet {...tools} />
     </div>
