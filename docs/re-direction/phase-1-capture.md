@@ -194,8 +194,27 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   the whole 44px. `node_modules/.probe/shortbox.mjs` and `shorthit.mjs`; the
 >   record stays at one 44px row per entry in both.
 >
-> ⚠ **None of the seven is verified on hardware**, which is now the one thing
-> outstanding on this page.
+> - ⚠ **The gap under the writing line — the 28th, fifth pass, and the first
+>   thing on this page reported from hardware and then reproduced on this
+>   machine.** *A significant gap between the bottom of the characters and the
+>   top of the keyboard, not matched above.* It was the sheet's
+>   `padding-bottom: env(safe-area-inset-bottom)` — 34px on a Face-ID iPhone,
+>   taller than the 28px line it padded. Traced by elimination first: every box
+>   from the `<input>` up to the sheet has zero padding and zero margin
+>   (`gapcheck.mjs`), so that declaration was the only candidate. The inset is
+>   right and was spent at the wrong moment — with a keyboard up the sheet sits
+>   at `--keyboard-overlap` and the keys already cover the home indicator, while
+>   iOS goes on reporting 34px. Now
+>   `max(0px, calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)))`.
+>   ⚠ **`Emulation.setSafeAreaInsetsOverride` works over CDP in the Edge build the
+>   probes drive**, so a notch is testable here after all: `notchbefore.mjs`
+>   measures 34px below / 0 above with the old expression and 0 / 0 with the new
+>   one, keyboard up; `notch.mjs` runs all four cells and shows nothing changes
+>   where there is no inset.
+>
+> ⚠ **None of the eight is verified on hardware**, which is now the one thing
+> outstanding on this page — though the gap above is the first of them to have
+> come *from* hardware.
 
 ### The 23 commits this register was missing
 

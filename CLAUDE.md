@@ -193,6 +193,29 @@ upward hang is simply harmless.
 ⚠ **The record keeps its 44px rows.** This is the sheet's box, not the page's
 density. Both probes assert it.
 
+⚠ **The notch's clearance is spent only while the notch is what is underneath —
+28 August.** Reported from a handset: a large gap between the bottom of the
+characters and the top of the keyboard, with nothing matching it above. It was
+`padding-bottom: env(safe-area-inset-bottom)` on the sheet — 34px on a Face-ID
+iPhone in portrait, **taller than the 28px line it was padding**. The inset is
+not wrong; it was being spent at the wrong moment. With a keyboard up the sheet
+is parked at `--keyboard-overlap`, not on the bottom edge, and the keyboard is
+already covering the home indicator — but iOS goes on reporting 34px, because
+the inset describes the display and not what is drawn over it. So the term is
+now `max(0px, calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)))`:
+one expression, no branch, and it states the true thing instead of correcting
+for the false one.
+
+⚠ **CDP can emulate the safe-area insets, and this file has said twice that
+nothing here can.** `Emulation.setSafeAreaInsetsOverride` works in the Edge build
+the probes drive, so a notch is now testable on this machine — not iOS
+*behaviour*, but any arithmetic that reads `env(safe-area-inset-*)`. Measured
+four cells, keyboard up at a 336px overlap: the old expression gives 34px under
+the row and 0 above (the reported bug, reproduced), the new one gives 0 and 0,
+and with no inset nothing changes in either direction — Android, the desk and a
+home-button iPhone all land on zero from both sides.
+`node_modules/.probe/notch.mjs` and `notchbefore.mjs`.
+
 ⚠ **This element has been swapped twice in two days and both reasons are
 recorded, because the next reader will assume one of them was a mistake.**
 

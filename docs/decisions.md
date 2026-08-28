@@ -7442,3 +7442,82 @@ where one does.
     handset   sheet 28   row 28   field 28   chip 44   above 16   below sheet 0
     desk      sheet 44   row 44   field 28   chip 44   above  8   below sheet −8
     record    one 44px row per entry, both surfaces, unchanged
+
+## The notch's clearance, and when it stops being clearance — 28 August
+
+**Reported from a handset**, and the first thing on this page to come back from
+hardware rather than from a screenshot: *why is there a significant gap between
+the top of the keyboard and the bottom of the characters? It's not the same
+distance as between the top of the characters and the top of the row.*
+
+### Traced by elimination before anything was proposed
+
+Every box from the `<input>` up to the sheet's own edge, on a 390px handset:
+
+    input.page-input     pad 0 / 0    margin 0 / 0    28px
+    div.relative         pad 0 / 0    margin 0 / 0    28px
+    div.sheet-row        pad 0 / 0    margin 0 / 0    28px
+    div.gutter           pad 0 / 0    margin 0 / 0    28px
+    div.writing-sheet    pad 0 / 0    margin 0 / 0    28px
+
+Zero everywhere, and every box exactly `--leading-line`. So there was exactly one
+declaration in the chain that could contribute anything — `padding-bottom:
+env(safe-area-inset-bottom)` on the sheet — and it is also why the gap is
+invisible on a desk: Chromium resolves the inset to zero.
+`node_modules/.probe/gapcheck.mjs`.
+
+⚠ **34px, under a 28px line.** The padding was taller than the thing it padded,
+against nothing at all above it since `--sheet-hem` went to zero on glass. The
+asymmetry was the whole complaint and it was arithmetic, not perception.
+
+### The inset was right; the moment was wrong
+
+`env(safe-area-inset-bottom)` keeps content off the home indicator, and that is
+correct while the sheet is on the bottom edge of the glass. **With a keyboard up
+the sheet is not on that edge** — it is parked at `--keyboard-overlap`, and the
+keyboard is already covering the indicator. iOS goes on reporting 34px because
+the inset describes the *display*, not what is drawn over it.
+
+    padding-bottom: max(
+      0px,
+      calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px))
+    );
+
+Keyboard up: the overlap dwarfs the inset, the term is zero, the line sits on the
+keys. Keyboard down: the overlap is zero and the full inset applies. No branch, no
+device check, and it says the true thing — *clear the indicator only while the
+indicator is what you are on top of* — rather than correcting for the false one.
+
+⚠ **`max()` rather than a bare subtraction.** A negative padding is not a thing,
+and the clamp is what makes this safe where the inset is zero to begin with:
+Android, the desk, a home-button iPhone. All of them reach zero from both
+directions.
+
+⚠ **A pleasant side effect worth not breaking.** Mid-animation, while the
+keyboard is rising, `bottom` is the overlap and the padding is `34 − overlap`, so
+the *content's* distance from the bottom of the glass is constant at 34px until
+the keys pass it and then rides them. The line never dips below where it sat at
+rest.
+
+### ⚠ The notch is testable on this machine after all
+
+Two entries in `CLAUDE.md` and one in this file have said that nothing here can
+test an iOS inset. **`Emulation.setSafeAreaInsetsOverride` over CDP works** in the
+Edge build the probes drive. It does not make this machine able to test iOS
+*behaviour* — the keyboard, the pan, the focus rules are all still unanswerable —
+but any arithmetic that reads `env(safe-area-inset-*)` can be driven here now.
+
+Measured, keyboard up at a 336px overlap, inset forced to 34px:
+
+    before — env(safe-area-inset-bottom)              pad 34px   below row 34   above 0
+    after  — max(0, inset − overlap)                  pad  0px   below row  0   above 0
+
+and across all four cells, `notch.mjs`:
+
+    inset 34, keyboard down    pad 34   sheet 62   the indicator cleared, correctly
+    inset 34, keyboard up      pad  0   sheet 28   the reported bug, closed
+    no inset, keyboard up      pad  0   sheet 28   unchanged
+    no inset, keyboard down    pad  0   sheet 28   unchanged
+
+The reported bug was reproduced before it was fixed, which is the first time that
+has been possible for anything on this page that involved a notch.

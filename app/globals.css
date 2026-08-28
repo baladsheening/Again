@@ -2893,16 +2893,56 @@
   inset-inline: 0;
   bottom: var(--keyboard-overlap, 0px);
   /*
-    ⚠ **No air of its own — 28 August.** The sheet's box is the row's box: the
-    field wears `page-line`, so there is already a hem above the words and a hem
-    below them, and the 12px this used to add on each side was that gap bought a
-    second time. Reported from a handset as *too tall*, fixed by subtraction —
-    68px became 44px, which is one line of the record exactly. See
-    `--sheet-measure`'s neighbours in the theme block for the arithmetic.
+    ⚠ **No air of its own — 28 August.** The sheet's box is the row's box. It
+    carried 12px above and 12px below on top of the row's own hem, which was the
+    same gap bought twice; the pair went, then the hem went too on a handset, and
+    what is left is `--sheet-hem` — zero on glass, `--line-hem` on the desk.
 
-    The notch stays, because it is clearance rather than spacing.
+    ─────────────────────────────────────────────────────────────────────────
+     The notch is clearance, and only while the notch is what is underneath
+    ─────────────────────────────────────────────────────────────────────────
+
+    ⚠ **Reported from a handset: a significant gap between the bottom of the
+    characters and the top of the keyboard, with nothing matching it above.**
+    This declaration was the whole of it. `env(safe-area-inset-bottom)` is 34px
+    on a Face-ID iPhone in portrait — **taller than the 28px line it was padding**
+    — and there is nothing above the line at all, so the row read as sitting high
+    in its own box.
+
+    Traced rather than guessed: every box from the `<input>` up to this one has
+    `padding` and `margin` of exactly zero, top and bottom, and each is exactly
+    `--leading-line` tall. `node_modules/.probe/gapcheck.mjs` prints the chain.
+    So this was the only declaration in it that could contribute anything, which
+    is also why the gap is invisible on a desk — Chromium resolves the inset to
+    zero and the sheet measures 28px flat.
+
+    ⚠ **The inset is not wrong; it was being spent at the wrong moment.** It
+    keeps content off the home indicator, which is right while the sheet sits on
+    the bottom edge of the glass. With a keyboard up the sheet is not on that
+    edge — it is parked at `--keyboard-overlap`, and **the keyboard is already
+    covering the home indicator**. iOS goes on reporting 34px because the inset
+    describes the display, not what is currently drawn over it.
+
+    So the clearance is spent only for the part of the indicator this box is
+    actually over. Keyboard up: the overlap is larger than the inset and the term
+    is zero. Keyboard down: the overlap is zero and the full inset applies. One
+    expression, no branch, no device check, and it states the true thing rather
+    than correcting for the false one.
+
+    ⚠ **`max()` and not a subtraction on its own**, because a negative padding is
+    not a thing and the clamp is what makes the expression safe on the surfaces
+    where the inset is zero to begin with — Android, the desk, a home-button
+    iPhone. All three land on zero from both directions.
+
+    ⚠ **This is also how it falsifies itself.** If a handset still shows the gap
+    with this in, the inset was never the cause and the next suspect is
+    `--keyboard-overlap` overshooting the keys — see `useKeyboardHem`, and read
+    the property off the page before changing anything.
   */
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(
+    0px,
+    calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px))
+  );
   background-color: var(--sheet-tint);
 
   &::before {
