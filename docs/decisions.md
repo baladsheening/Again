@@ -7635,3 +7635,98 @@ notch emulated on the handset:
 **The row is 44px in every state on both narrow surfaces, and the field and the
 glyphs occupy the same 28px.** `striprecede.mjs` confirms the strip still leaves
 while the record is read and comes back: 44 → off the glass → 44.
+
+## The desk is the same design, four-thirds the size — 28 August
+
+**Directed:** *now for an overall aesthetic redesign for the desktop version.
+Make the text bigger. I want it in your face, pretty much. Adjust everything as a
+whole, i.e. so everything stays in keeping.*
+
+The last clause is the design. A 680px column of 18px text floating in the middle
+of a 1440px window, with 26px glyphs stranded beside it, does not read as
+restraint — it reads as small. But every proportion on this page has been argued
+into place over three weeks, and a redesign that re-picked fifteen numbers by eye
+would have broken most of them silently and none of them visibly.
+
+### So nothing was re-picked
+
+Every token in `globals.css` is a `rem`. One declaration moves all of them:
+
+    @media (min-width: 72rem) { html { font-size: 133.3333% } }
+
+The record's line goes **18/28 → 24/37.33** in a column that goes **680 →
+906.67px**. The strip on the bottom edge goes 44 → 58.67. The wordmark 24 → 32.
+The glyphs, the gutters, the two bars, the tool stack, the caret and the day
+stamps all follow in exact proportion. **The desk is not a second design to keep
+in step with the first; it is the same design at a different size**, and it
+cannot drift because there is nothing to drift from.
+
+⚠ **This is deliberately a scale and not a re-proportioning.** A redesign that
+made the text grow *faster* than the chrome was the obvious alternative and was
+not taken: the ratios between the line, its hem, its glyphs and its tap targets
+are the accumulated output of a dozen decisions in this file, several of them
+measured on hardware. Multiplying them all by one number preserves every one; a
+new set of ratios would have to earn each of them again.
+
+### Three things that make it safe
+
+⚠ **`133.3333%`, never `21.3333px` and never a `rem`.** A percentage is relative
+to the size the *browser* was told to use, so somebody who has set their default
+to 20px gets 26.67px here instead of being overridden back down to ours. On the
+root element a `rem` resolves against the **initial** value rather than the
+inherited one, so it would ignore that preference exactly as a px would.
+
+⚠ **A media query's `rem` is always the initial font size, never the root's
+computed value.** That is the only reason this is expressible at all: the query
+stays anchored at 1152px while everything it gates grows, so the scale cannot
+feed back into the width that triggers it. The scale and `--breakpoint-stack` are
+set to the same figure so the desk's type and the desk's layout arrive on the
+same pixel.
+
+⚠ **4/3 is a ratio this file already spends** — `--pane-corner` and `--pane-glyph`
+are the same step. It puts the record's line on 24px, a whole step rather than a
+half, and it lands `--breakpoint-stack` on a round 72rem.
+
+### The two breakpoints had to be recomputed by hand
+
+A media query cannot resolve a `var()`, so neither could follow on its own.
+
+- **`--breakpoint-stack` 54 → 72rem.** The sum is unchanged:
+  `--page-measure + 2 × (--stack-width + --stack-inset)` is still 54rem, just
+  measured at a bigger rem. 54 × 4/3 = 72. ⚠ **Between 54 and 72rem the tools go
+  back to the foot** — the same guarantee honestly recomputed, because a 907px
+  column does not leave room for a stack on a 900px window. Those widths get the
+  strip, which is a complete layout and not a degradation.
+- **`--breakpoint-pane` 74.6667 → 99.5556rem.** It exists so that no part of the
+  film screen's `+` can ever be obscured, and the disc it measures grew with
+  everything else. A desk under 1593px now gets the takeover rather than the
+  panel — the guarantee holding, not breaking. It is the sixth time that number
+  has moved and the first that was not about the disc's size.
+
+### What must not scale, and does not
+
+`--tap-floor` stays `44px`: it is a thumb, not a type size.
+`env(safe-area-inset-*)` is the device's own geometry. `--keyboard-overlap` is
+measured in px by `useKeyboardHem`. `input-text`'s coarse `16px` is the threshold
+under which iOS Safari zooms on focus, not a design value. **Hardware does not
+get bigger because a window did.**
+
+⚠ **Two px type values were converted so they would not be left behind** —
+`body`'s 15px and `input-text`'s fine 13px, now `0.9375rem` and `0.8125rem`. Both
+are identical below the breakpoint, where the root is the browser's default. If a
+third px type value ever appears it will silently stay small on the desk; there
+should not be a third.
+
+### Measured
+
+`node_modules/.probe/scale.mjs`, across both boundaries:
+
+    390px    root 16      15 body   18/28    row 44   column 390   mark 20
+    864px    root 16      15 body   18/28    row 44   column 680   mark 24
+    1151px   root 16      15 body   18/28    row 44   column 680   mark 24
+    1152px   root 21.33   20 body   24/37.33 row 59   column 907   mark 32
+    1440px   root 21.33   20 body   24/37.33 row 59   column 907   mark 32
+
+**Below 72rem nothing moves at all**, which is the check that matters most: the
+handset is untouched. At 1152px exactly, the tool stack's left edge measures 27px
+— on screen, so the breakpoint's own guarantee holds at the pixel it is made.

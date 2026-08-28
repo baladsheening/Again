@@ -259,8 +259,30 @@
     this token exists.** At 45rem the margin either side of the column is 20px,
     which does not hold a 44px stack — the tools would be off screen on exactly
     the window that first gets them. Below this the foot keeps them.
+
+    ─────────────────────────────────────────────────────────────────────────
+     54rem became 72rem, and the sum did not change — 28 August
+    ─────────────────────────────────────────────────────────────────────────
+
+    ⚠ **The desk scales the root, so 54rem of columns is no longer 864px.** Every
+    term above is a `rem`, and the desk's root is 4/3 of the browser's default —
+    see the `min-width: 72rem` block at the foot of the base layer. So the sum is
+    still `42.5 + 2 × (2.75 + 3) = 54rem`; it is just measured at a bigger rem,
+    and 54 × 4/3 = **72**.
+
+    ⚠ **A media query's `rem` is always the *initial* font size, never the
+    root's**, which is the only reason this is expressible at all: the media
+    query stays anchored to 16px while everything it gates grows, so there is no
+    feedback loop between the scale and the width that triggers it. Set the scale
+    and the breakpoint to the same figure — 72rem here, 72rem there — and the
+    desk's type and the desk's layout arrive on the same pixel.
+
+    ⚠ **Between 54rem and 72rem the tools go back to the foot.** That is the same
+    guarantee it always was, honestly recomputed: a 906px column does not leave
+    room for a stack on a 900px window. Those widths get the strip, which is a
+    complete layout and not a degradation.
   */
-  --breakpoint-stack: 54rem;
+  --breakpoint-stack: 72rem;
 
   /*
     The width at which the film screen stops covering the app and stands beside
@@ -323,7 +345,26 @@
     cannot resolve a `var()`, so the sum has to be spelled out: if
     `--pane-corner` changes, this is `72rem` plus it.
   */
-  --breakpoint-pane: 74.6667rem;
+  /*
+    ⚠ **74.6667rem became 99.5556rem on 28 August, and by the same 4/3 as
+    everything else.** The desk scales the root — see the `min-width: 72rem`
+    block at the foot of the base layer — so every term this number was derived
+    from is bigger: the band's cap, the panel, the rail, and `--pane-corner`,
+    which is the half-disc this breakpoint exists to keep on screen. A media
+    query cannot resolve a `var()`, so the sum could not follow on its own.
+
+    ⚠ **It is the sixth time this number has moved and the first that was not
+    about the disc.** The note below records five moves in one day, every one of
+    them `72rem` plus a changed `--pane-corner`. This one is the same sum at a
+    different rem — which is why it is a multiplication and not a re-derivation.
+
+    ⚠ **A desk under 1593px now gets the takeover rather than the panel**, and
+    that is the guarantee holding rather than breaking: *no part of the `+` may
+    ever be obscured*, and at 4/3 the disc and the band it hangs off both need
+    the extra room. The film screen is a legacy surface — the wall it was built
+    beside is deleted — so this is the cheapest place the scale could land.
+  */
+  --breakpoint-pane: 99.5556rem;
 
   /*
     The panel's own column, and the space it takes out of the page.
@@ -1801,9 +1842,20 @@
    * Caveat recorded in docs/decisions.md: iOS Safari zooms on focus for any
    * input under 16px, and 15 is still under it.
    */
+  /*
+    ⚠ **`0.9375rem`, not `15px` — 28 August.** It is the same 15px everywhere it
+    was, because the root is the browser's default size on every surface below
+    the desk. What changed is that the desk scales the root — see the
+    `min-width: 72rem` block at the foot of this layer — and a px body would have
+    been the one tier that stayed behind while the record, the chrome and the
+    wordmark all grew around it.
+
+    The iOS caveat in the note above is unaffected: 15px is still under 16 on a
+    handset, which is where that caveat lives.
+  */
   body {
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: 0.9375rem;
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -2256,7 +2308,15 @@
  * utility exists to prevent. `control-box` pins their height either way.
  */
 @utility input-text {
-  font-size: 13px;
+  /*
+    ⚠ **`rem` for the pointer, `px` for the platform — 28 August.** The fine
+    value is a *design* size and rides the desk's root scale with everything
+    else; a 13px field beside 24px text is the inconsistency this utility exists
+    to prevent, one scale up. The coarse value is not a design size at all — it
+    is the threshold under which iOS Safari zooms the page on focus — so it stays
+    a hard 16px and must never become a `rem`.
+  */
+  font-size: 0.8125rem;
 
   @media (pointer: coarse) {
     font-size: 16px;
@@ -3191,7 +3251,7 @@
    * clear. With no foot the record still needs somewhere to end, and a page
    * whose last line sits on the bottom edge of the glass reads as cut off.
    */
-  @media (min-width: 54rem) {
+  @media (min-width: 72rem) {
     :root {
       --foot-height: 3rem;
 
@@ -3204,6 +3264,65 @@
        * `var()`; if that token moves, this moves with it.
        */
       --sheet-hem: calc(var(--line-hem) * 1.5);
+    }
+  }
+
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The desk is the same design, four-thirds the size — 28 August
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **Directed: an overall aesthetic redesign for the desk. Bigger text, in your
+   * face — and adjust everything as a whole so it stays in keeping.**
+   *
+   * The last clause is the whole design. A 680px column of 18px text floating in
+   * the middle of a 1440px window with 26px glyphs stranded beside it does not
+   * read as restraint, it reads as small; but every proportion on this page has
+   * been argued into place over three weeks, and a redesign that re-picked
+   * fifteen numbers by eye would break most of them silently.
+   *
+   * ⚠ **So nothing is re-picked. The root grows and the design comes with it.**
+   * Every token in this file is a `rem`, so one declaration moves the record,
+   * the wordmark, the glyphs, the gutters, the bars, the strip, the measure, the
+   * stack and the caret **in exact proportion**. The desk is not a second design
+   * to keep in step with the first; it is the same design at a different size,
+   * and it cannot drift because there is nothing to drift from.
+   *
+   * The record's line: **18px on 28px becomes 24px on 37.33px**, in a column that
+   * goes 680px → 906.67px. The strip on the bottom edge goes 44 → 58.67. Nothing
+   * about their relationship changes.
+   *
+   * ⚠ **`133.3333%`, not `21.3333px`.** A percentage is relative to the size the
+   * *browser* was told to use, so somebody who has set their default to 20px gets
+   * 26.67px here rather than being overridden back down to ours. A `rem` would be
+   * no better than a px: on the root element `rem` resolves against the initial
+   * value, not the inherited one, so it would ignore the same preference.
+   *
+   * ⚠ **4/3, which is a ratio this file already spends** — `--pane-glyph` and
+   * `--pane-corner` are the same step. It puts the record's line on 24px, a whole
+   * step rather than a half, and it lands `--breakpoint-stack` on a round 72rem.
+   *
+   * ⚠ **The media query is anchored and the layout inside it is not, which is
+   * what makes this safe.** A media query's `rem` is always the *initial* font
+   * size — never the root's computed value — so this test stays at 1152px while
+   * everything it gates grows. There is no feedback loop, and the scale and
+   * `--breakpoint-stack` are deliberately the same figure so the desk's type and
+   * the desk's layout arrive on the same pixel.
+   *
+   * ⚠ **What must NOT scale, and does not:** `--tap-floor` is 44px and stays px,
+   * because it is a thumb rather than a type size; `env(safe-area-inset-*)` is
+   * the device's own geometry; `--keyboard-overlap` is measured in px by
+   * `useKeyboardHem`; and `input-text`'s coarse 16px is the iOS zoom threshold,
+   * not a design value. Every one of those is a fact about hardware, and hardware
+   * does not get bigger because a window did.
+   *
+   * ⚠ **Two px type values were converted so they would not be left behind** —
+   * `body`'s 15px and `input-text`'s fine 13px, both now `rem`. If a third
+   * appears, it will silently stay small here; there should not be a third.
+   */
+  @media (min-width: 72rem) {
+    html {
+      font-size: 133.3333%;
     }
   }
 }

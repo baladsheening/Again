@@ -579,6 +579,41 @@ the palette. Do not pick it before there is a convergence to look at.
 only defensible for a claim the other two could not make, and with a coloured
 chrome the caret is the chrome.
 
+⚠ **The desk is the same design, four-thirds the size — 28 August.** Directed:
+*an overall aesthetic redesign for the desktop; make the text bigger, in your
+face — and adjust everything as a whole so it stays in keeping.*
+
+**Nothing was re-picked.** Every token in `globals.css` is a `rem`, so the whole
+design is scaled by one declaration — `html { font-size: 133.3333% }` at
+`min-width: 72rem`. The record goes 18/28 → 24/37.33 in a column that goes 680 →
+906.67px; the strip goes 44 → 58.67; the wordmark 24 → 32; the glyphs, gutters,
+bars, stack and caret all follow **in exact proportion**. The desk is not a
+second design to keep in step with the first, and it cannot drift, because there
+is nothing to drift from.
+
+- ⚠ **`133.3333%`, never a `px` or a `rem`.** A percentage is relative to the
+  size the *browser* was told to use, so a reader who set 20px gets 26.67 rather
+  than being overridden back to ours. On the root element `rem` resolves against
+  the initial value, so it would ignore that preference exactly as a px would.
+- ⚠ **A media query's `rem` is the initial font size, never the root's** — which
+  is the only reason this is expressible. The query stays anchored at 1152px
+  while everything it gates grows, so there is no feedback loop. The scale and
+  `--breakpoint-stack` are deliberately the same figure, so the desk's type and
+  the desk's layout arrive on the same pixel.
+- ⚠ **`--breakpoint-stack` moved 54rem → 72rem and the sum did not change.** It
+  is still `--page-measure + 2 × (--stack-width + --stack-inset)` = 54rem,
+  measured at a bigger rem. `--breakpoint-pane` moved 74.6667 → 99.5556rem by the
+  same 4/3, for the same reason — it exists to keep the film screen's `+` on
+  screen, and the disc grew.
+- ⚠ **What must NOT scale, and does not:** `--tap-floor` (44px — a thumb, not a
+  type size), `env(safe-area-inset-*)`, `--keyboard-overlap`, and
+  `input-text`'s coarse `16px` (the iOS focus-zoom threshold). **Hardware does
+  not get bigger because a window did.** Two px type values were converted so
+  they would not be left behind — `body`'s 15px and `input-text`'s fine 13px. A
+  third would silently stay small; there should not be a third.
+- **Below 72rem nothing moves at all.** Verified at 390, 864 and 1151px: root
+  16px, 18/28, 44px rows, 680px column. `node_modules/.probe/scale.mjs`.
+
 IBM Plex Sans for interface, IBM Plex Mono for return counts and timestamps.
 Avoid Inter.
 
