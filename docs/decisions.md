@@ -7833,3 +7833,41 @@ Both rules hold at every desk width, and at 1152 both land exactly flush — the
 column's left edge on the mark's right, the stack's left edge on the mark's
 midpoint. Below the desk nothing changed: at 800px the column is still 680px at
 x=60.
+
+### The glyphs sit *on* the midpoint, not beside it
+
+**Directed, an hour later:** *almost what I want, but I want the vertical glyphs
+to be at the midpoint of the logo column at the point the transition happens.*
+
+The floor was `--mark-column-mid + --stack-width`, which put the stack's **left
+edge** on the midpoint. The glyph drawings are `--glyph-foot` centred in a
+`--stack-width` box, so at 1152 they sat 112 → 146.67 — twelve pixels to the
+right of a midpoint of 100. **The box was on the midpoint and the marks were
+not.**
+
+⚠ **`+ --stack-width / 2`, and the half is the whole correction.** It puts the
+box's *centre* on the midpoint, and since the glyphs are centred in the box, what
+lands on the mark's midpoint is the drawing.
+
+⚠ **It also moves the handover, which is the other half of what was asked for.**
+The `max()` switches where its terms are equal:
+
+    (V − 906.67)/2 + 26.67 − 64  =  100 + 58.67/2  =  129.33
+    V = 1240px
+
+Below 1240 the stack is parked with its centre on the mark's midpoint; at 1240
+exactly the parked position *is* the tracking position, so the glyphs are on the
+midpoint at the moment the clamp engages and nothing jumps through it. Above it
+the tracking term wins and nothing has changed at all. It was 1299px while the
+floor was a whole stack-width.
+
+`node_modules/.probe/logocol.mjs`, with the assertion changed to the new rule —
+the stack's centre is never left of the mark's midpoint:
+
+    width   column left   column width   stack centre
+    1152        157           838            100      parked, on the midpoint
+    1200        157           886            100      parked
+    1240        167           907            100      the handover, exact
+    1280        187           907            120      tracking
+    1366        230           907            163      tracking
+    1440        267           907            200      tracking

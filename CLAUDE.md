@@ -625,9 +625,16 @@ anchored to the bar's left gutter, so its band is fixed at every desk width —
   shifting**: nudged right it would be off-centre against the bar's right-hand
   glyphs and the writing strip, which are centred on the window. 838px at 1152,
   full 906.67 by 1221.
-- **The stack's `left` has a floor** at the mark's midpoint plus its own width.
-  It sits a fixed 96px left of the column, so it tracked the column outward — 91
-  against a midpoint of 100 at 1280.
+- **The stack's `left` has a floor, and it is CENTRED on the mark's midpoint
+  there** — the floor is that midpoint plus **half** its own width. It sits a
+  fixed 96px left of the column, so it tracked the column outward: 91 against a
+  midpoint of 100 at 1280. ⚠ **The half is the correction, and it was directed.**
+  With the whole width the stack's *left edge* landed on the midpoint, which put
+  the glyph drawings 12px to the right of it — the box was on the midpoint and
+  the marks were not. Half puts the box's centre there, and the glyphs are
+  centred in the box, so what sits on the midpoint is the drawing. It also moves
+  the handover to **1240px**, where the two terms are equal: at the width the
+  clamp engages the glyphs are exactly on the midpoint and nothing jumps.
 - ⚠ **Clamped, not answered with a breakpoint.** Raising `--breakpoint-stack` to
   1299px was the one-number fix and was rejected *with the cost stated*: the type
   scale is tied to that breakpoint, so every window under 1299 — 1280×800
