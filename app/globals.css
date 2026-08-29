@@ -1055,13 +1055,27 @@
    * edges reads as a slab whatever its value. See `live-band` for the argument
    * in full, including why glass cannot work on a true black page.
    *
-   * 8% of the paper colour, peaking near #131312 across the middle. It can be
+   * 7% of the paper colour, peaking at a measured #10100f across the middle —
+   * `node_modules/.probe/lightpeak.mjs` reads the pixel rather than computing
+   * it, and reads #080808 three quarters of the way out. It can be
    * brighter than either flat fill was and still read subtler, because nothing
    * about it has a boundary.
+   *
+   * ⚠ **It was 8% until 29 August — directed: a little less bright, just a
+   * little.** The point came off the *peak*, which is the only place this light
+   * has a value: the gradient's shape, its radii and its transparent edges are
+   * untouched, so what changed is how bright the middle is and nothing about
+   * where it stops. **Do not answer this by shrinking the ellipse** — a smaller
+   * light is a smaller light, not a dimmer one, and the radii are what keep the
+   * rectangle from ever being drawn.
+   *
+   * ⚠ **One consumer, so the record's rows are not affected.** `--sheet-light`
+   * points at this and nothing else does; the name is kept because the light
+   * belongs to *the live row*, which is what the writing strip is.
    */
   --row-light: radial-gradient(
     50% 50% at 50% 50%,
-    color-mix(in srgb, var(--color-text) 8%, transparent) 0%,
+    color-mix(in srgb, var(--color-text) 7%, transparent) 0%,
     transparent 100%
   );
 
