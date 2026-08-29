@@ -1343,8 +1343,7 @@
    * thumb, not the look**, and 44 is where the thumb put it.
    */
   --foot-height: calc(
-    var(--leading-line) + var(--sheet-lead) + var(--sheet-foot) +
-      env(safe-area-inset-bottom)
+    var(--leading-line) + var(--sheet-air) + env(safe-area-inset-bottom)
   );
 
   /**
@@ -1634,14 +1633,40 @@
    */
   --sheet-hem: var(--line-hem);
 
-  /*
-    The strip's TOP hem, which is half its bottom one below the desk. See
-    `sheet-row` for why the two are not equal and for what it is bending.
-  */
-  --sheet-lead: 0px;
-
-  /* Directed: the glyphs a tad higher. Same 40px box, 2px of it moved above. */
-  --sheet-foot: calc(var(--sheet-hem) * 1.625);
+  /**
+   * **The strip's air — ONE number, spent evenly above and below the row.**
+   *
+   * ⚠ **`--sheet-lead` and `--sheet-foot` are collapsed into this — 29 August.**
+   * They were `0px` above and `1.625 × --sheet-hem` below, which put the glyph
+   * row hard against the top edge of the strip with all 13px of the air under
+   * it. Reported from a handset browser: **the glyphs sit high in the bottom
+   * bar.** They did, by 6.5px — half the air, on every surface.
+   *
+   * ⚠ **The two halves are one token because they can only ever be equal.** Two
+   * names that have to hold the same number are the drift `--recede` was
+   * collapsed to avoid; `sheet-row` halves this, and there is nothing to keep in
+   * step.
+   *
+   * ⚠ **The total is unchanged, so no box moved.** 1.625 hems is what the strip
+   * already spent — the height stays 41px on glass, `--foot-height` reads the
+   * same sum, and `page-hem`'s reserve is untouched. What changed is only which
+   * side of the row it is spent on. The height was the thing the direction
+   * protected: *lower the glyphs without changing the height of the bar.*
+   *
+   * ⚠ **Centred is the only place this could stop.** Any other split is a number
+   * tuned until one screen looks right, which this file rules out by name. The
+   * air is symmetric, so the row is on the strip's centre line at any hem.
+   *
+   * The history it reverses, kept because the next reader will assume one of the
+   * two was a mistake: the top hem went to zero on 28 August for *a shorter
+   * bottom bar with the glyphs left exactly where they are* — 44px to 40, and
+   * the only side that could pay was the top — then the bottom grew a pixel for
+   * *a tad higher*, 40 to 41. Both directions were about the strip's **height**
+   * and took the glyphs' position as the thing to hold still. This one is about
+   * the **position** and takes the height as the thing to hold still. They are
+   * not in conflict; they are the same 41px box, asked about from the other end.
+   */
+  --sheet-air: calc(var(--sheet-hem) * 1.625);
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
@@ -2851,25 +2876,22 @@
   font-size: var(--text-line);
   line-height: var(--leading-line);
   /*
-    ⚠ **The top hem is HALF the bottom one — 28 August, directed.** Asked for:
-    a shorter bottom bar with the glyphs left exactly where they are. Those two
-    together can only come out of the top: the strip is pinned to the bottom
-    edge, so the contents sit at `--sheet-hem` above it and shortening that side
-    would move them. Taking it off the top lowers the strip's top edge and
-    leaves the row untouched — 44px to 40 on glass.
+    ⚠ **The air is matched, and the halving is what makes it one token — 29
+    August.** It was `0px` above and `1.625 × --sheet-hem` below, so the row sat
+    on the strip's top edge and read as high on a handset browser, where the
+    strip is 41px of visible ground and nothing else. Half the same air each
+    side puts the row on the centre line and does not move the box by a pixel.
 
-    ⚠ **Handset only, at the user's direction.** Above `--breakpoint-stack`
-    `--sheet-lead` goes back to a full `--sheet-hem` and the desk's strip is
-    exactly what it was: up there the strip is the field alone, not a bar of
-    glyphs, and it was the bar that read as too tall.
+    ⚠ **This is no longer the one place the air is deliberately not matched**,
+    which is the rule it used to bend: air is never bought BELOW alone, because
+    that is the gap under the characters with nothing above it. The exception
+    went with the asymmetry; see `--sheet-air` for the two directions it
+    reverses and why they are not in conflict.
 
-    ⚠ **This is the one place the air is deliberately not matched**, so the rule
-    it bends is worth restating: air is never bought BELOW alone, because that is
-    the gap under the characters with nothing above it. This is the opposite
-    trade — air given back from ABOVE, with the line's own footing kept — and it
-    was asked for after looking at the bar.
+    ⚠ **A shorthand halved once, not two derived tokens.** `padding-block` with
+    one value is both sides, so there is no second number to keep equal.
   */
-  padding-block: var(--sheet-lead) var(--sheet-foot);
+  padding-block: calc(var(--sheet-air) / 2);
   letter-spacing: -0.01em;
 }
 
@@ -3524,9 +3546,13 @@
        */
       --sheet-hem: calc(var(--line-hem) * 1.5);
 
-      /* The desk keeps matched air: its strip is the field, not the glyph bar. */
-      --sheet-lead: var(--sheet-hem);
-      --sheet-foot: var(--sheet-hem);
+      /*
+        The desk's strip is a hem each side, unchanged — it was two tokens
+        holding the same number and it is now the sum they added up to. Both
+        surfaces halve it, so the desk stays exactly what it was and the glass
+        gains the balance it was missing. See `--sheet-air`.
+      */
+      --sheet-air: calc(var(--sheet-hem) * 2);
 
       /**
        * ⚠ **No light on the desk — directed, 29 August.** See `--sheet-light`.

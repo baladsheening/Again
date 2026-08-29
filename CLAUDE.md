@@ -219,6 +219,34 @@ two states can only have one height. ⚠ **Air goes above and below, never below
 alone**: bought only on the keyboard's side it is the *gap under the characters
 that is not matched above* all over again, in miniature.
 
+⚠ **And on 29 August the strip started obeying that sentence. `--sheet-lead` and
+`--sheet-foot` are collapsed into `--sheet-air`.** They were `0px` above and
+1.625 hems below, so the glyph row sat hard against the strip's top edge with all
+13px of the air under it — reported from a handset browser as *the glyphs sit
+high in the bottom bar*, and they were, by 6.5px on **every** surface. An
+installed app hides it: `writing-sheet` splits the notch's 34px evenly, so the
+same 6.5px is 6.5 of a 75px strip rather than 6.5 of a 41px one. The offset was
+never the browser's; the browser is only where it shows.
+
+- **The total is untouched, which is what the direction protected** — *lower the
+  glyphs without changing the height of the bar*. 1.625 hems is what the strip
+  already spent; `sheet-row` halves it, so the box is still 41px on glass and 69
+  on the desk, `--foot-height` reads the same sum, and `page-hem`'s reserve does
+  not move. Only the side it is spent on changed.
+- ⚠ **One token, not two set equal.** The desk was already `--sheet-hem` on both
+  sides, which is `--sheet-air: 2 × --sheet-hem` written once. Two names that can
+  only ever hold the same number are the drift `--recede` was collapsed to avoid.
+- **Centred is the only place it could stop.** Any other split is a number tuned
+  until one screen looks right. Measured by `glyphsit.mjs` at both insets — the
+  drawing's centre on the strip's centre line at 0 and at 34, strip heights 41 and
+  75, unchanged; `tad.mjs` reads 7px above the text and 7 below.
+- ⚠ **It reverses two directions and neither was a mistake.** The top hem went to
+  zero on 28 August for *a shorter bottom bar with the glyphs left exactly where
+  they are* — 44px to 40, and the only side that could pay was the top — then the
+  bottom grew a pixel for *a tad higher*, 40 to 41. Both held the glyphs still and
+  moved the height. This holds the height still and moves the glyphs. Same 41px
+  box, asked about from the other end.
+
 ⚠ **It costs the chips nothing, because a hit area does not have to be inside the
 box it belongs to.** `line-glyph` splits its 44px evenly above and below the
 line; with barely a hem to land in, the lower half would sit on the keyboard and be
@@ -232,6 +260,12 @@ at the very top, the quarter, the middle and the very bottom of its box, and
 upward hang is simply harmless. It stays right now that the hem is 4px rather
 than 0: half a hem does not hold half a target, and `tad.mjs` still measures the
 chip's box ending 4px *inside* the sheet's bottom edge rather than past it.
+⚠ **That figure is 6px since the air was balanced on 29 August** and the rule is
+unharmed: the target is still exactly 44px, still hangs entirely upward, and
+still ends *inside* the strip. What the 6.5px of matched air costs is 6px of the
+strip's very bottom edge that the chips no longer claim — measured, not derived:
+`shortbox.mjs` reads `clipTargetHeight` 44 and `clipBelowSheet` −6, and the
+record's rows stay 44.
 
 ⚠ **The record keeps its 44px rows.** This is the sheet's box, not the page's
 density. Both probes assert it.
