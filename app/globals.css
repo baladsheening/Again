@@ -1624,10 +1624,45 @@
    * the only side that could pay was the top — then the bottom grew a pixel for
    * *a tad higher*, 40 to 41. Both directions were about the strip's **height**
    * and took the glyphs' position as the thing to hold still. This one is about
-   * the **position** and takes the height as the thing to hold still. They are
-   * not in conflict; they are the same 41px box, asked about from the other end.
+   * the **position** and takes the height as the thing to hold still.
+   *
+   * ─────────────────────────────────────────────────────────────────────────
+   *  And then it went to ZERO on the handset — 30 August
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * ⚠ **Directed, with the alternative stated and rejected.** Reported from the
+   * installed app: *the row that appears above the keyboard is much taller than
+   * it was.* The box was not taller — it had been 41px all along — but the strip
+   * had just become **glass**, and glass has two edges where the old glow had
+   * none. An edgeless ellipse fading out top and bottom showed perhaps 20px of
+   * soft core; the same box drawn as a surface shows all 41. The offer was
+   * *shrink the strip* or *go back to opaque and a glow*, and the strip was
+   * chosen.
+   *
+   * ⚠ **So the handset's strip is exactly its line: 28px, no air at all.** The
+   * field is `--leading-line`, the glyph drawings are 26px inside a 28px line
+   * box, and nothing in either row is taller than the line — so the line is the
+   * height, on both states, and the strip still cannot change shape when
+   * somebody starts writing.
+   *
+   * ⚠ **It costs the glyphs 6.5px MORE of descent, and that was flagged rather
+   * than discovered.** They were 31px above the glass at the start of 29 August,
+   * 24.5px after the air was evened, and **18px now** — 17px of notch clearance
+   * plus the 1px the drawing sits inside its line box. The two cannot be
+   * separated: a glyph sitting higher needs air *under* it, and air under it is
+   * the height that was just removed. **The same box, asked about from two ends
+   * on the same night.**
+   *
+   * ⚠ **The 44px target is untouched and this is the third time that has needed
+   * saying.** `sheet-glyph` hangs the whole overhang upward over the scrim — a
+   * hit area does not have to be inside the box it belongs to — so a 28px strip
+   * carries the same 44px chip a 41px one did. `--tap-floor` is not a height
+   * here and never was.
+   *
+   * ⚠ **The desk keeps its two hems** and is untouched: up there the strip is the
+   * field alone, there is no glyph bar beside it, and nothing was reported.
    */
-  --sheet-air: calc(var(--sheet-hem) * 1.625);
+  --sheet-air: 0px;
 
   /**
    * **The notch's clearance, split — the term `writing-sheet` pads with.**

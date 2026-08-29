@@ -178,10 +178,17 @@ the glyphs for the live row.* They were two objects sharing that edge — a 44px
 foot bar and a 36px sheet — so starting a capture changed the shape of the bottom
 of the screen, and every *a tad more* / *a tad less* was really that.
 
-- **The box never changes; the contents and the ground do.** The strip is
-  `--line-hem` + `--leading-line` + `--line-hem` = **44px** — a row of the
-  record, `--tap-floor`, and exactly what the handset's foot already measured
-  (9 + 26 + 9). Nothing new was chosen. Idle it is the bars' glass with the
+- **The box never changes between the two STATES; the contents and the ground
+  do.** ⚠ **On the handset it is `--leading-line` and nothing else — 28px, the
+  line, `--sheet-air: 0px` — since 30 August.** It was 44px (a hem, the line, a
+  hem), then 41, and it is the line alone because the strip became glass and
+  glass has edges: an opaque black strip on a black page showed only the soft
+  core of the glow inside it, so 41px read as about 20, and the day it was drawn
+  as a surface it was reported as *much taller than it was*. **The box was never
+  taller. It was never visible.** The desk keeps its two hems. ⚠ **28px is under
+  `--tap-floor` and that is fine**: `sheet-glyph` hangs the whole 44px overhang
+  upward, measured — a hit area does not have to be inside the box it belongs to.
+  Idle it is the bars' glass with the
   record dissolving under the glyphs; writing it is `sheet-lit`, **also glass**,
   at a lower tint over a heavier blur.
 - ⚠ **THERE IS NO LIGHT ON THIS PAGE — 29 August, and this reverses four moves
@@ -278,6 +285,15 @@ never the browser's; the browser is only where it shows.
   bottom grew a pixel for *a tad higher*, 40 to 41. Both held the glyphs still and
   moved the height. This holds the height still and moves the glyphs. Same 41px
   box, asked about from the other end.
+- ⚠ **And on 30 August the handset's air went to `0px`, so all of the above is
+  desk-only arithmetic now.** Directed, once the glass made the strip's real
+  height visible for the first time. The handset's strip is 28px — the line, no
+  air — and the glyphs went down another 6.5px with it: **31px above the glass at
+  the start of 29 August, 24.5 after the air was evened, 18 now.** That descent
+  is not a bug and cannot be separated from the height, which is the thing to
+  understand before touching either: **a glyph sitting higher needs air under it,
+  and air under it IS the height.** One box, two questions, opposite answers.
+  Measured by `sessionstart.mjs`, which reads both states at both insets.
 
 ⚠ **It costs the chips nothing, because a hit area does not have to be inside the
 box it belongs to.** `line-glyph` splits its 44px evenly above and below the
