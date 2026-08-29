@@ -1662,7 +1662,16 @@
    * ⚠ **The desk keeps its two hems** and is untouched: up there the strip is the
    * field alone, there is no glyph bar beside it, and nothing was reported.
    */
-  --sheet-air: 0px;
+  /*
+    ⚠ **13px each side — 30 August, and it is the ONLY number that satisfies both
+    directions.** Asked together: space above and below the characters, and the
+    glyphs back where they were at the start of 29 August. A glyph sits 31px above
+    the glass only if there are 13px of air UNDER it; wanting air above it too
+    then fixes the strip at 13 + 28 + 13 = 54px. The 0px of an hour ago made the
+    strip its line alone and cost the glyphs another 6.5px, which is what was
+    reported. Symmetric, so the row is on the strip's centre line.
+  */
+  --sheet-air: calc(var(--sheet-hem) * 3.25);
 
   /**
    * ⚠⚠ **`--sheet-clearance` was here for one evening and is DELETED — it was a
