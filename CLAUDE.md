@@ -620,11 +620,15 @@ nothing changes at all.
   everything it gates grows, so there is no feedback loop. The scale **ends** on
   `--breakpoint-stack`, so the desk's type and the desk's layout arrive on the
   same pixel and the sum that breakpoint claims stays true.
-- ⚠ **57.207rem is derived, not chosen: it is where `--record-measure`'s clamp
-  changes nothing** — `--page-measure + 2 × --mark-column`. **That clamp moved
-  into the same media query**, down from `--breakpoint-stack`, because switching
-  it on anywhere else is a second jump of exactly the kind the ramp removes. They
-  are one media query because they are one decision. There is deliberately **no
+- ⚠ **57.207rem is derived, not chosen: it is where the record first has its
+  whole `--page-measure`** — `--page-measure + 2 × --mark-column`. Below it the
+  column is still giving width up to the mark's band, and type growing into a
+  column that has not finished arriving is type growing against the measure. The
+  ramp starts where the record is whole. ⚠ **That number used to carry a second
+  job and stopped on 29 August**: `--record-measure`'s clamp shared this media
+  query because 57.207rem is also where *it* is a no-op. The clamp is
+  unconditional now, so there is nothing left to switch on — **the number is
+  unchanged and still the same sum**. There is deliberately **no
   `--breakpoint-scale` token**: `@theme` prunes what no class uses, and neither a
   media query nor the root's own `font-size` can resolve a `var()` anyway.
 - ⚠ **`--breakpoint-stack` moved 54rem → 72rem and the sum did not change.** It
@@ -638,11 +642,14 @@ nothing changes at all.
   not get bigger because a window did.** Two px type values were converted so
   they would not be left behind — `body`'s 15px and `input-text`'s fine 13px. A
   third would silently stay small; there should not be a third.
-- **Below 915px nothing moves at all.** Verified at 390, 864 and 915: root 16px,
-  18/28, 44px rows, 680px column — and mid-ramp at 1034 every proportion holds,
-  root 18.67, line 21.01 on 32.68, rows 51, mark 28.01.
-  `node_modules/.probe/scale.mjs`. ⚠ **1151 used to carry that claim and cannot
-  any more**; it is inside the scale now.
+- **Below 915px no TYPE moves at all.** Verified at 390, 864 and 915: root 16px,
+  18/28, 44px rows — and mid-ramp at 1034 every proportion holds, root 18.67,
+  line 21.01 on 32.68, rows 51, mark 28.01. `node_modules/.probe/scale.mjs`.
+  ⚠ **1151 used to carry that claim and cannot any more**; it is inside the
+  scale now. ⚠ **The word TYPE became load bearing on 29 August** — the sentence
+  said *nothing moves* and named a 680px column, and the column moves below 915
+  since the record's clamp was ungated. 864 now reads 629. Nothing about the
+  scale changed; the claim was always about proportion and had a width in it.
 
 ⚠ **The column and the mark jumped backwards at the desk threshold, and that is
 fixed — reported and closed 28 August.** Narrowing the window moved the record
@@ -686,10 +693,39 @@ anchored to the bar's left gutter, so its band is fixed at every desk width —
   its mirror on the right, whichever is smaller. The column **narrows rather than
   shifting**: nudged right it would be off-centre against the bar's right-hand
   glyphs and the writing strip, which are centred on the window. 838px at 1152,
-  full 906.67 by 1221. ⚠ **It switches on at 915px, not at
-  `--breakpoint-stack`** — that is where it is a no-op, which is why the ramp
-  starts there too and why the two share one media query. So the rule holds from
-  916px up, not only where there is a stack to strand.
+  full 906.67 by 1221. ⚠ **It is unconditional since 29 August, floored at
+  `--record-floor`, and the rule holds from 773px up.** Reported: narrow the
+  window past the point where the type stops shrinking and the column comes
+  unstuck from the mark and dives under it. It did — the clamp lived inside the
+  ramp's media query, and 57.207rem is *by construction* the width at which that
+  clamp is a no-op, so the rule was gated on the one width where it stopped
+  costing nothing. Welded to the mark from 1221 down, off at 915, 8px under the
+  letters by 900 and 98px under by 720. **The gate was removed rather than
+  moved** — a clamp right at every width does not need one, and with nothing to
+  switch on there is nothing to jump.
+- ⚠ **`--record-floor` = 33.5775rem = 537.24px, and it is the LOWEST floor that
+  stays continuous.** The mark steps down at `--breakpoint-rail` — `--text-mark`
+  1.5→1.25rem, `--bar-gutter` 2→1.25rem — so its band steps 7.3535→5.71125rem in
+  one pixel, and a column derived from the band alone would step **up 51px at
+  719**: the same violent boundary the desk's ramp exists to remove, moved to a
+  narrower window. The floor is the measure the *narrower* band hands back at the
+  breakpoint itself — `--breakpoint-rail − 2 × (1.25rem + 1.25rem × 3.569)` — so
+  the step is under it on both sides of 720 and can never surface. Any lower
+  floor brings the step back; any higher one protects the mark for less of the
+  range. ⚠ **The two `1.25rem` are written out, not `var()`d** — a `var()` picks
+  up the rail's override and derives the floor from the wrong band.
+- **What it costs, stated:** below 772.55px the column stops giving up width and
+  starts sliding under the mark again, from zero, continuously. Between 773 and
+  537 the record is a fixed 537px measure rather than growing back to 680 — about
+  60 characters at 18px, a better measure than the full 680 and, more to the
+  point, a **stable** one across that whole band. ⚠ **Below 537px nothing
+  changed**: the window is narrower than the floor, so `w-full` wins and the
+  handset is exactly what it was. Verified at 390, 393, 430 and 500.
+- **Measured by `node_modules/.probe/markgap.mjs`** — 44 widths from 1440 to 390,
+  the floor recomputed from the live below-rail tokens, no reversal anywhere, the
+  band held from the derived handover up, and nothing stepping at the rail.
+  `logocol.mjs` walks from 773 instead of 916 and asserts both of the mark's
+  rules there.
 - **The stack's `left` has a floor, and it is CENTRED on the mark's midpoint
   there** — the floor is that midpoint plus **half** its own width. It sits a
   fixed 96px left of the column, so it tracked the column outward: 91 against a

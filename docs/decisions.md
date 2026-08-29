@@ -8075,6 +8075,127 @@ it reads badly.
   the jump by removing the centring, and the column would then disagree with the
   bar's right-hand glyphs and the writing strip, which are centred on the window.
 
+## The record column stopped clearing the mark below 915px — 29 August
+
+**Reported:** *when the desktop browser is narrowed to the point the font size
+reaches its minimum, the entry column stops moving closer to the logo column even
+if the narrowing of the browser continues.* Stated as the behaviour wanted, and
+it was not the behaviour shipped.
+
+### What was actually happening
+
+`--record-measure`'s clamp — the rule *the entries column may never overlap the
+logo's column* — lived inside `@media (min-width: 57.207rem)`, and it was put
+there on 28 August for a good reason: **57.207rem is by construction the width at
+which that clamp is a no-op**, so switching it on there is free and switching it
+on anywhere else is a jump.
+
+The consequence nobody drew at the time is that *the width where a clamp costs
+nothing is the width where it starts to matter*. The gate was on the exact pixel
+the rule began to bite. Measured by `node_modules/.probe/markgap.mjs` on the
+build before the fix:
+
+| window | column's left edge | mark's band ends | gap |
+| --- | --- | --- | --- |
+| 1221 → 916 | tracks the band exactly | 156.8 → 117.8 | **0, welded** |
+| 915 | 117.5 | 117.7 | −0.2 |
+| 900 | 110 | 117.7 | −7.7 |
+| 800 | 60 | 117.7 | −57.7 |
+| 720 | 20 | 117.7 | −97.7 |
+| 660 and below | 0 | 91.4 | −91.4 |
+
+So from 1221 down the column's left edge is welded to the mark's right edge, and
+at 915 it comes off and dives. The bar is glass, so what is under the letters is
+the record scrolling behind them.
+
+### The fix
+
+**The gate was removed, not moved** — *How things get fixed* reaches for removing
+the mechanism before correcting it, and a clamp that is right at every width does
+not need a media query. `--record-measure` is now unconditional:
+
+    min(--page-measure, max(--record-floor, 100% − 2 × --mark-column))
+
+### Why there has to be a floor, and why it is 33.5775rem
+
+Unbounded, the clamp goes on narrowing the column until the record is a ribbon —
+207px on a 390px handset. It also runs into the mark's own step: at
+`--breakpoint-rail` the mark shrinks (`--text-mark` 1.5 → 1.25rem,
+`--bar-gutter` 2 → 1.25rem), so the band it holds steps 7.3535 → 5.71125rem in
+one pixel and a column derived from the band alone would step **up 51px at 719**.
+That is the same violent boundary the desk's ramp had just been built to remove,
+relocated to a narrower window.
+
+`--record-floor` is **the measure the narrower band hands back at the breakpoint
+itself**:
+
+    --breakpoint-rail − 2 × (--bar-gutter + --text-mark × --wordmark-advance-ratio)
+  = 45rem − 2 × (1.25rem + 1.25rem × 3.569)  =  33.5775rem  =  537.24px
+
+At 720 the clamp wants 484.7 and at 719 it wants 536.2; both are under the floor,
+so the floor is what is chosen on both sides and **the step cannot surface**. Any
+lower floor lets it back through; any higher one protects the mark across less of
+the range. It is the lowest floor that stays continuous, which makes it derived
+rather than picked.
+
+⚠ **The two `1.25rem` are written out instead of read through `var()`**, and
+that is deliberate: custom properties resolve at use, so `var(--bar-gutter)`
+inside the floor would pick up the rail's *override* and derive the floor from
+the wrong band — the one that does not apply below the breakpoint the floor is
+measured at. It is the same situation as the ramp's two `57.207rem` literals, and
+it is handled the same way: `markgap.mjs` recomputes the floor from the live
+below-rail tokens and asserts the expression against it.
+
+### What it costs, stated rather than discovered later
+
+- **773 → 1221px: the column's left edge does not move.** It is pinned on the
+  mark's right edge for 448px of window travel. That is what was asked for.
+- **537 → 772px: the record is a fixed 537px measure** rather than growing back
+  to 680. Roughly 60 characters at 18px — a better measure than the full 680, and
+  more usefully a *stable* one across the whole band.
+- **Below 772.55px the column resumes sliding under the mark**, from zero,
+  continuously. The rule is not claimed there and cannot be: something has to
+  give when the window cannot hold the mark's band twice over plus a readable
+  measure, and below the floor the honest answer is the band.
+- ⚠ **Below 537px nothing changed at all.** The window is narrower than the
+  floor, `w-full` wins, and the handset is byte-for-byte what it was. Verified
+  at 390, 393, 430 and 500.
+
+### The ramp kept its number and lost a reason
+
+57.207rem used to be justified twice over — the width at which the record's clamp
+is a no-op, *and* the width at which the record has its full measure. Those were
+the same number, which is why the two shared one media query. With the clamp
+ungated only the second reason survives, and it is still the right one: type that
+grows while the measure is still short is growing into a column that has not
+finished arriving. **The number did not move**, the sum is the same, and
+`threshold.mjs` still derives it from the same fence and reads it back out of the
+shipped stylesheet.
+
+### Alternatives considered and why they were worse
+
+- **Move the gate down to `--breakpoint-rail`.** Corrects rather than removes,
+  and it is worse than doing nothing: the clamp would hand back 484.7px at 720
+  and 680px at 719, a **195px jump** in one pixel.
+- **Extend the clamp with no floor.** A 51px jump at 719 from the mark's own
+  step, and a 207px reading column on a handset. Rejected on both.
+- **Shift the column right to clear the mark instead of narrowing it.** Already
+  ruled out when the rule was written and still ruled out: the column would then
+  be off-centre against the bar's right-hand glyphs and the writing strip, which
+  are centred on the window.
+- **Remove the mark's 720px step so the band is continuous, then floor lower.**
+  Genuinely tempting and deliberately not done — it is a change to the bar on
+  every surface in service of a 235px band of desktop window. If that step is
+  ever removed for its own reasons, the floor can come down with it.
+
+### Not addressed, and visible in the same range
+
+Between 773 and 1152 the writing strip is `--sheet-measure` capped by the
+gutter — the whole glass — while the record is now 537–680px. The strip has been
+wider than the record since 28 August by decision, but this widens the
+difference. Nobody has looked at it on a screen. It is one line of CSS to cap the
+strip at `--record-measure` below `--breakpoint-stack` if it reads badly.
+
 ## OPEN QUESTION — colour-coding an entry by its type
 
 **Raised 28 August, unbuilt, nobody has decided it.** *The possibility of

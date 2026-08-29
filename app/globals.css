@@ -1747,7 +1747,11 @@
    *
    *   - **The record column, below 1221px.** At 1152 its left edge is 123, which
    *     is 34px inside the band — and the bar is *glass*, so lines scrolling
-   *     under it pass behind the letters.
+   *     under it pass behind the letters. ⚠ **This held only down to 915px until
+   *     29 August**, because the clamp was gated on the ramp's media query and
+   *     915 is where that clamp is a no-op — so it switched off at the width it
+   *     started to matter. It is ungated now and holds to 772px, where
+   *     `--record-floor` stops the column giving up any more width.
    *   - **The tool stack, below 1299px.** It sits a fixed 96px left of the
    *     column and therefore tracks it outward; at 1280 its left edge is 91
    *     against a midpoint of 100.
@@ -1771,12 +1775,51 @@
   );
 
   /**
+   * **The narrowest measure the record will give up to protect the mark.**
+   *
+   * `--record-measure` narrows the column rather than letting it cross the
+   * mark's band, and on its own that would go on narrowing until the record was
+   * a ribbon. This is where it stops. Below the width that produces it the
+   * column is a fixed measure again and the band is crossed — which is what a
+   * handset has always done, and is where a window this narrow is heading.
+   *
+   * ⚠ **Derived, and it is the LOWEST floor that stays continuous.** The mark
+   * steps down at `--breakpoint-rail`: `--text-mark` 1.5rem → 1.25rem and
+   * `--bar-gutter` 2rem → 1.25rem, so the band it holds steps 7.3535rem →
+   * 5.71125rem in one pixel. A column derived from that band and nothing else
+   * would step *up* 51px at 719 — the same violent boundary the desk's ramp
+   * exists to remove, moved to a narrower window. Floored at the measure the
+   * *narrower* band hands back at the breakpoint itself, the step is under the
+   * floor on both sides of 720 and can never surface:
+   *
+   *     --breakpoint-rail − 2 × (--bar-gutter + --text-mark × --wordmark-advance-ratio)
+   *   =  45rem − 2 × (1.25rem + 1.25rem × 3.569)
+   *   =  45 − 11.4225  =  33.5775rem  =  537.24px
+   *
+   * ⚠ **The two `1.25rem` are the base values of `--bar-gutter` and
+   * `--text-mark`, written out rather than read.** A `var()` would pick up the
+   * rail's override and derive the floor from the wrong band — the one that does
+   * not apply below the breakpoint this is measured at.
+   * `node_modules/.probe/markgap.mjs` recomputes the floor from the live
+   * below-rail tokens and asserts this expression against it, the same way
+   * `threshold.mjs` checks the ramp's two literals.
+   *
+   * ⚠ **It scales with the root like everything else, and that is harmless** —
+   * the floor only bites below 772px, where the root is pinned at the reader's
+   * own size because the desk's ramp has not started.
+   */
+  --record-floor: calc(
+    var(--breakpoint-rail) - 2 *
+      (1.25rem + 1.25rem * var(--wordmark-advance-ratio))
+  );
+
+  /**
    * **What the record actually gets**, as opposed to what it would like.
    *
-   * `--page-measure` everywhere but the desk, where it is that or the space
-   * between the mark's band and its mirror on the right, whichever is smaller.
-   * The column stays centred, so the band has to be reserved on *both* sides or
-   * it would not be centred any more.
+   * `--page-measure`, or the space between the mark's band and its mirror on
+   * the right, whichever is smaller — and never below `--record-floor`. The
+   * column stays centred, so the band has to be reserved on *both* sides or it
+   * would not be centred any more.
    *
    * ⚠ **It narrows rather than shifting.** A column nudged right to clear the
    * mark would be off-centre against the bar's right-hand glyphs and against the
@@ -1784,11 +1827,28 @@
    * is the honest cost of a window too narrow to hold the mark and the measure
    * at once: 838px at 1152, back to the full 906.67 by 1221.
    *
+   * ⚠ **It is unconditional, and it sat inside the ramp's media query until 29
+   * August.** Reported: narrow the window past the point where the type stops
+   * shrinking and the column comes unstuck from the mark and dives under it. It
+   * did. 57.207rem is *by construction* the width at which this clamp is a
+   * NO-OP — that is the whole reason the ramp starts there — so gating it on
+   * that query switched the rule off at exactly the width it began to bite. The
+   * column's left edge is welded to the mark's right edge from 1221px down; it
+   * used to come off at 915 and now holds to 772, where the floor takes over.
+   *
+   * ⚠ **The gate was removed rather than moved.** A clamp that is right at every
+   * width does not need one, and with no width at which it switches on there is
+   * no width at which it can jump. Moving the gate down would have been the
+   * correction; deleting it is the subtraction — see *How things get fixed*.
+   *
    * ⚠ **The `100%` is deliberate and resolves per element.** Both `main` and the
    * tool stack read this, and both have the viewport for a containing block, so
    * the two agree without either being told the window's width.
    */
-  --record-measure: var(--page-measure);
+  --record-measure: min(
+    var(--page-measure),
+    max(var(--record-floor), calc(100% - 2 * var(--mark-column)))
+  );
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -3532,11 +3592,19 @@
    * would be the constant-waiting-to-be-wrong that *How things get fixed* rules
    * out; this one cannot be wrong without one of its ends being wrong.
    *
-   * ⚠ **57.207rem is derived, not chosen: it is the width at which
-   * `--record-measure`'s clamp changes nothing.** Switch that clamp on anywhere
-   * else and it introduces a second jump of its own, of exactly the kind this
-   * removes — so the ramp starts where the clamp is free, and **the two share
-   * this one media query because they are one decision.**
+   * ⚠ **57.207rem is derived, not chosen: it is the width at which the record
+   * first has its whole `--page-measure`.** Below it the column is still giving
+   * width up to the mark's band, and type that grew while the measure was short
+   * would be growing into a column that had not finished arriving. The ramp
+   * starts where the record is whole.
+   *
+   * ⚠ **The same number used to carry a second job and no longer does — 29
+   * August.** `--record-measure`'s clamp lived in this media query because this
+   * is the width at which *it* is a no-op, so switching it on here was free and
+   * switching it on anywhere else was a jump. That made the two one decision.
+   * The clamp is unconditional now — there is nothing left to switch on — so the
+   * coincidence is spent. **The number is unchanged**, it is still the same sum,
+   * and `threshold.mjs` still derives it from the same fence.
    *
    *     V = --page-measure + 2 × --mark-column
    *       = 42.5rem + 2 × (--bar-gutter + --text-mark-rail × 3.569)
@@ -3554,9 +3622,10 @@
    * safe side: `100vw ≥` the query's width, so the ramp reaches its maximum at or
    * slightly *before* 1152 and never after it. Reaching it late would mean the
    * type was still growing at `--breakpoint-stack`, and 72rem would no longer be
-   * the sum it claims to be. At the low end the two switch together, because the
-   * query gates the ramp as well as the clamp — the residual is the sub-pixel
-   * 0.3px the walk shows at 915, not a step.
+   * the sum it claims to be. At the low end there is nothing to switch with it
+   * any more: the record's measure is continuous through 915 on its own, and the
+   * sub-pixel residual the walk shows there is the scrollbar mismatch rather
+   * than a step in the column.
    *
    * ⚠ **The `clamp()` is what keeps browser zoom working**, and it is the reason
    * a `vw`-driven root size is safe here at all: zoom scales the `px` the
@@ -3567,7 +3636,9 @@
    * ⚠ **What this does NOT fix, and both are pre-existing:** the stack still
    * *appears* at 1152 and the strip still goes — an element arriving, not a
    * position jumping, and it arrives already parked on the mark's midpoint. And
-   * the rail step at 720px survives, where the mark alone twitches 24 → 20px.
+   * the rail step at 720px survives, where the mark **alone** twitches 24 → 20px
+   * — that word is load bearing now rather than incidental: `--record-floor` is
+   * chosen so the column cannot follow the mark through that step.
    */
   @media (min-width: 57.207rem) {
     html {
@@ -3575,24 +3646,6 @@
         100%,
         calc(100% + (100vw - 57.207rem) * 0.0225339),
         133.3333%
-      );
-    }
-
-    :root {
-      /**
-       * ⚠ **The record gives up width before it crosses the mark's band.** See
-       * `--mark-column` for the whole argument and for why this is a clamp
-       * rather than a breakpoint.
-       *
-       * ⚠ **It lives here, at the ramp's start, and not at
-       * `--breakpoint-stack` where it was written.** This is the width at which
-       * it changes nothing — that is what 57.207rem IS — so switching it on here
-       * is free, and switching it on anywhere else is a jump. Above about 1221px
-       * the unclamped term wins and it changes nothing again.
-       */
-      --record-measure: min(
-        var(--page-measure),
-        calc(100% - 2 * var(--mark-column))
       );
     }
   }
