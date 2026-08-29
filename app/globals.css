@@ -3550,8 +3550,17 @@
        * hole rather than glass, and the record scrolling under body text at the
        * record's own size is the thing the opacity was there to stop.
        */
-      --sheet-tint: var(--glass-tint);
-      --sheet-blur: var(--glass-blur);
+      /*
+        ⚠ **Its own tint, not the bars' `--glass-tint` — 29 August.** That was
+        the first attempt and it was reported as not see-through at all: 74% of
+        an already-black ground leaves 26% for a record that is dim text on
+        black, so there is nothing to come through. A bar can afford it because
+        what passes under a bar is a wordmark and four glyphs. **The number is
+        low because the thing behind it is dark**, not because a lighter glass
+        was wanted in the abstract.
+      */
+      --sheet-tint: color-mix(in srgb, var(--color-bg) 38%, transparent);
+      --sheet-blur: 24px;
     }
   }
 
