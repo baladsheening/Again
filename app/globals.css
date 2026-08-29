@@ -1665,27 +1665,45 @@
   --sheet-air: 0px;
 
   /**
-   * **The notch's clearance, split — the term `writing-sheet` pads with.**
+   * ⚠⚠ **`--sheet-clearance` was here for one evening and is DELETED — it was a
+   * BUG, and it is the reason the installed app's writing row would not get
+   * shorter. 30 August.**
    *
-   * ⚠ **The expression is unchanged and its argument lives in `writing-sheet`**:
-   * the inset is spent only for the part of the home indicator this box is
-   * actually over, so with a keyboard up the overlap swallows it and the term is
-   * zero.
+   * It held `writing-sheet`'s notch expression:
+   * `max(0px, calc((env(safe-area-inset-bottom) - var(--keyboard-overlap,0px)) / 2))`.
+   * The expression is right and is back where it was, written on `writing-sheet`
+   * itself. What was wrong is the **place it was written**.
    *
-   * ⚠ **It was named on 29 August so the light could measure from it, and the
-   * light is gone.** One consumer again, and the name stays anyway: the notch's
-   * clearance is a thing this page means, not a term that happened to be shared,
-   * and an expression this particular is better read from a name than from the
-   * middle of a `padding-block`.
+   * ⚠ **A custom property's `var()` is substituted where the property is
+   * DECLARED, not where it is used.** This was declared in `@theme` — on
+   * `:root` — and `--keyboard-overlap` is written by `useKeyboardHem` onto
+   * `#scroll-root`, deep inside `<body>`. So the substitution happened at
+   * `:root`, where that property does not exist, took the `0px` fallback, and
+   * **froze**. The value that inherited down to the sheet was literally
+   * `max(0px, calc((34px - 0px) / 2))` — 17px a side, on a Face-ID iPhone, at
+   * every moment, with the keyboard's overlap unable to reach it.
    *
-   * ⚠ **Halved, so the row rides the strip's centre line at any inset.** All of
-   * the clearance below the row put the glyphs 17px above that line on a Face-ID
-   * iPhone, which is `34 / 2` and was reported from a handset.
+   * ⚠ **On the device that meant the strip stayed 62px with a keyboard up** —
+   * the 28px line plus two 17px bands of clearance for a home indicator the
+   * keyboard was already covering. Reported as *still too tall*, twice, while
+   * every measurement here said 28px.
+   *
+   * ⚠⚠ **And a browser CANNOT SEE IT, which is why it survived a day of
+   * probing.** With no notch `env(safe-area-inset-bottom)` is `0px`, so the
+   * broken expression and the working one both compute zero and every desk and
+   * emulator reading agrees. **Only a notched handset can tell them apart.** An
+   * inset override in CDP reproduces it — `node_modules/.probe/hostvar.mjs`
+   * sets `--keyboard-overlap` the way the hook does, on the element rather than
+   * on `:root`, and watches the padding not move.
+   *
+   * ⚠ **The rule to take away: never lift an expression containing
+   * `var(--keyboard-overlap)` — or any property written by script onto an
+   * element — into `@theme`.** A token there can only ever see `:root`. The
+   * expression has to live on the element that inherits the value. This was
+   * extracted for a light that no longer exists, which is the other half of the
+   * lesson: a name bought for a second consumer, then the consumer was deleted
+   * and the name stayed.
    */
-  --sheet-clearance: max(
-    0px,
-    calc((env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)) / 2)
-  );
 
   /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
@@ -3376,7 +3394,22 @@
     44px hit box, where a *tap* still lands on the page — only an edge swipe is
     the system's.
   */
-  padding-block: var(--sheet-clearance);
+  /*
+    ⚠⚠ **WRITTEN HERE AND NOT IN A TOKEN, and that is load bearing — 30 August.**
+    For one evening this read `var(--sheet-clearance)`, a `@theme` token holding
+    the same expression, and it was **broken on exactly one surface**: a custom
+    property's `var()` is substituted where the property is DECLARED, so a token
+    on `:root` resolved `--keyboard-overlap` against `:root` — where
+    `useKeyboardHem` never writes it — took the `0px` fallback and froze at
+    17px a side. The installed app kept 34px of dead clearance under a keyboard
+    that was already covering the indicator, and no browser could show it,
+    because with no notch both versions compute zero. See the deleted token for
+    the full account. **Do not lift this into a variable again.**
+  */
+  padding-block: max(
+    0px,
+    calc((env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)) / 2)
+  );
 }
 
 /**
@@ -3406,11 +3439,13 @@
  * "too grey" argument the glow was built on — it is the argument *against* a
  * flat fill on a black page, and glass is not a fill.
  *
- * ⚠ **What the light was measuring from went with it, but the token stays.**
- * `top: calc(var(--sheet-clearance) + var(--sheet-air) / 2)` put the glow on the
- * line box; `--sheet-clearance` now has one consumer again, `writing-sheet`'s
- * own padding, and it keeps its name because the notch expression is a thing the
- * page means rather than a term that happened to be shared.
+ * ⚠ **What the light measured from went with it, and took a bug with it.** The
+ * glow sat at `top: calc(var(--sheet-clearance) + var(--sheet-air) / 2)`, and
+ * `--sheet-clearance` existed only to be shared with it. The token is deleted:
+ * a `@theme` variable cannot read a property that script writes onto an
+ * element, so it had frozen the notch's clearance at 17px a side and kept the
+ * installed app's strip 34px taller than it should have been. See
+ * `writing-sheet`'s `padding-block`.
  *
  * ⚠ **The row did NOT move for any of this.** The strip is `--sheet-air` split
  * evenly around one line, anchored on `--keyboard-overlap`, exactly as it was an

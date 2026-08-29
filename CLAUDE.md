@@ -331,6 +331,33 @@ now `max(0px, calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)))`
 one expression, no branch, and it states the true thing instead of correcting
 for the false one.
 
+⚠⚠ **THAT EXPRESSION MUST BE WRITTEN ON `writing-sheet` AND NEVER IN A TOKEN. It
+was lifted into `@theme` as `--sheet-clearance` on 29 August and that was a bug
+— fixed 30 August.** **A custom property's `var()` is substituted where the
+property is DECLARED, not where it is used.** `--keyboard-overlap` is written by
+`useKeyboardHem` onto an element inside `<body>`; a token declared on `:root`
+resolves it against `:root`, where it does not exist, takes the `0px` fallback
+and **freezes**. The value inheriting down was literally
+`max(0px, calc((34px − 0px) / 2))`.
+
+- **On the device: the installed app's strip stayed 62px with a keyboard up** —
+  the 28px line plus two 17px bands of clearance for an indicator the keyboard
+  was already covering. Reported as *still too tall*, twice.
+- ⚠⚠ **A BROWSER CANNOT SEE IT.** With no notch the inset is `0px`, so the broken
+  expression and the working one both compute zero, and every desk reading, every
+  emulator reading and every screenshot agrees. **Only a notched handset can tell
+  them apart**, which is why it survived a day of measurement — and why *right by
+  construction on all four surfaces* is not the same as *measured right here*.
+- **The rule:** never lift an expression containing `var(--keyboard-overlap)` —
+  or any property script writes onto an element — into `@theme`. It has to live
+  on the element that inherits the value.
+- `node_modules/.probe/hostvar.mjs` reproduces the bug by setting the overlap the
+  way the hook does; `notchkeys.mjs` asserts the fix at both insets — 62px with
+  the keyboard down at a 34px inset, **28px with it up**, and 28/28 with no notch.
+- **It was extracted for a light that no longer exists**, which is the other half
+  of the lesson: a name bought for a second consumer, then the consumer deleted
+  and the name kept.
+
 ⚠ **CDP can emulate the safe-area insets, and this file has said twice that
 nothing here can.** `Emulation.setSafeAreaInsetsOverride` works in the Edge build
 the probes drive, so a notch is now testable on this machine — not iOS
