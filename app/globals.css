@@ -1689,6 +1689,16 @@
   --sheet-light: var(--row-light);
 
   /**
+   * **How much the sheet's ground blurs what is behind it.** Zero on glass,
+   * where `--sheet-tint` is opaque and there is nothing behind it to see; the
+   * bars' own `--glass-blur` on the desk, where the tint is see-through. Paired
+   * with `--sheet-tint` and never set alone — a translucent ground without it is
+   * a hole, and a blur behind an opaque ground is a compositing layer painting
+   * nothing.
+   */
+  --sheet-blur: 0px;
+
+  /**
    * ───────────────────────────────────────────────────────────────────────────
    *  Writing is a mode, and the record goes behind glass for it
    * ───────────────────────────────────────────────────────────────────────────
@@ -3344,6 +3354,7 @@
  */
 @utility sheet-lit {
   background-color: var(--sheet-tint);
+  backdrop-filter: blur(var(--sheet-blur));
 
   &::before {
     content: '';
@@ -3523,6 +3534,24 @@
        * the page's own black; what goes is the glow across it.
        */
       --sheet-light: none;
+
+      /**
+       * ⚠ **See-through on the desk, and opaque on glass — directed, 29
+       * August.** `--sheet-tint` is `--color-bg` everywhere else because a
+       * record line dissolving through the words being written reads as a
+       * second line of the capture. **What makes it affordable here is the
+       * scrim**, which is already between the record and this strip while
+       * somebody writes — the sheet was doing that separation twice on a
+       * surface that has something else doing it. It is the bars' own glass,
+       * the same tint and the same blur, so the strip joins a vocabulary the
+       * page already has rather than inventing a third ground.
+       *
+       * ⚠ **The blur is not optional at this tint.** Without it the strip is a
+       * hole rather than glass, and the record scrolling under body text at the
+       * record's own size is the thing the opacity was there to stop.
+       */
+      --sheet-tint: var(--glass-tint);
+      --sheet-blur: var(--glass-blur);
     }
   }
 
