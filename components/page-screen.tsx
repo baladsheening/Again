@@ -2556,19 +2556,22 @@ export function PageScreen({
         }`}
       >
         {/*
-          ⚠ **`--sheet-measure`, not `--page-measure` — 28 August.** Directed:
-          on the desk the field is wider than the record it is being added to.
-          The sheet's ground has always run the whole window; what was 680px was
-          the words in it, sitting in the record's column with lit glass either
-          side. It is the column plus the tool stack's width and air on both
-          sides now, which puts its left edge on the stack's and starts the
-          field under the `+` that summoned it. See `--sheet-measure`.
+          ⚠ **`--record-measure` — the same token, the same `gutter` and the same
+          `mx-auto` as the record's own column in `main` — 29 August.** Directed:
+          *the start of the writing line always aligns with the entry column.*
+          The only way to mean *always* is for there to be one column: two
+          measures agree at the widths somebody checks and part company at the
+          mark's band, where the record narrows and nothing else does.
 
-          Below `--breakpoint-stack` the viewport is narrower than this, so the
-          cap is never reached and `gutter` puts the field on the glass exactly
-          where it was.
+          ⚠ **This is the field's width, never the ground's.** The strip spans
+          the window and always has; what was 54rem was the words in it, starting
+          under the `+` in the tool stack rather than under the first character
+          of the lines they join. See the deleted `--sheet-measure`.
+
+          Below the desk the viewport is narrower than either, so `w-full` and
+          `gutter` decide it exactly as they did.
         */}
-        <div className="gutter mx-auto w-full max-w-[var(--sheet-measure)]">
+        <div className="gutter mx-auto w-full max-w-[var(--record-measure)]">
           {/*
             ⚠ **The chips sit beside the field and the field gives up the
             width**, exactly as they did on the pinned row. The field is one line

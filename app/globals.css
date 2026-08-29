@@ -1528,36 +1528,37 @@
    */
 
   /**
-   * **The sheet's reading column, and it is wider than the record's — 28
-   * August.** Directed from the desk, where the field sat in the record's 680px
-   * with a lit ground running the whole window either side of it.
+   * ⚠ **`--sheet-measure` was here and is deleted — 29 August. The writing line
+   * and the record are ONE COLUMN again.**
    *
-   *     42.5rem  --page-measure
-   *   +  2.75rem --stack-width    ┐ the tools' column and its air,
-   *   +  3rem    --stack-inset    ┘ on both sides, because the column is centred
-   *   ────────── x2
-   *     54rem
+   * Directed: *on the desktop, have it so the start of the writing line always
+   * aligns with the entry column.* It did not. The sheet had a measure of its
+   * own — `--page-measure + 2 × (--stack-width + --stack-inset)` = 54rem, the
+   * same sum as `--breakpoint-stack` — so its left edge landed on the tool
+   * stack's and the field started **under the `+`**, 123px left of the first
+   * character of every line it was being added to. Measured at 1440: field at
+   * x=171, record text at x=294.
    *
-   * ⚠ **It is `--breakpoint-stack`, by construction rather than by coincidence** —
-   * the same sum, because that breakpoint is the width at which the tool stack
-   * fits beside the column. So the sheet reaches exactly as wide as the page's
-   * furniture already stands: its left edge lands on the stack's left edge, and
-   * the field starts under the `+` that summoned it. Below that width there is
-   * no stack, the viewport is narrower than this, and the gutter caps the sheet
-   * at the glass — so on a handset this number is never reached and changes
-   * nothing.
+   * ⚠ **The sheet wears `--record-measure` now, which is what the record wears**,
+   * so the two columns cannot disagree — same token, same `gutter`, same
+   * `mx-auto`. They also narrow together against the mark's band, which two
+   * numbers could never have been made to do. *Always* is the word the direction
+   * used, and one column is the only way to mean it.
    *
-   * ⚠ **The sheet no longer previews the record's line breaks, and that is
-   * accepted.** A capture used to wrap in the sheet exactly where it would wrap
-   * in the record, because both were `--page-measure`. What the report that
-   * built this sheet actually asked for is that a long capture *wrap at all*
-   * rather than scroll sideways out of reach, and that is untouched: the field
-   * is still several lines tall when the words need it. The preview was a
-   * pleasant consequence of one number doing two jobs, not the guarantee.
+   * ⚠ **This reverses the 28 August direction that made the field wider than the
+   * record**, which came from the desk: the field sat in 680px with a lit ground
+   * running the whole window either side of it. **The ground is what that was
+   * about**, and the ground is not the column — the strip still spans the window
+   * and always did. What is dropped is only the extra 123px of *field*.
+   *
+   * ⚠ **Nothing about a handset changes.** Below the desk the viewport is
+   * narrower than either measure, so `w-full` and `gutter` decided it then and
+   * decide it now — verified at 390.
+   *
+   * The sheet still does not preview the record's line breaks and that is still
+   * accepted: it is one line and so is the record, so there are no breaks to
+   * agree about.
    */
-  --sheet-measure: calc(
-    var(--page-measure) + 2 * (var(--stack-width) + var(--stack-inset))
-  );
 
   /**
    * **The sheet's air, and on a handset there is none — 28 August.**
@@ -1669,6 +1670,27 @@
   --sheet-air: calc(var(--sheet-hem) * 1.625);
 
   /**
+   * **The notch's clearance, split — the term `writing-sheet` pads with, named
+   * so a second thing can measure from it.**
+   *
+   * ⚠ **The expression is unchanged and its argument lives in `writing-sheet`**:
+   * the inset is spent only for the part of the home indicator this box is
+   * actually over, so with a keyboard up the overlap swallows it and the term is
+   * zero. What changed on 29 August is only that it has a name, because
+   * `sheet-lit`'s light now has to start below it — and an expression this
+   * particular, written out twice, is two things that would have to be kept in
+   * step by hand.
+   *
+   * ⚠ **Halved, so the row rides the strip's centre line at any inset.** All of
+   * the clearance below the row put the glyphs 17px above that line on a Face-ID
+   * iPhone, which is `34 / 2` and was reported from a handset.
+   */
+  --sheet-clearance: max(
+    0px,
+    calc((env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)) / 2)
+  );
+
+  /**
    * ⚠ **`--sheet-cap` was here and is deleted — 28 August.** It was how many
    * lines the field could grow to before it scrolled, six, *a capture is a
    * sentence and six lines is far past one*. **The cap is one now, and one is
@@ -1691,13 +1713,19 @@
   --sheet-tint: var(--color-bg);
 
   /**
-   * **The light on the sheet's ground — on a handset, and `none` on the desk.**
+   * **The light on the sheet's ground — the HANDSET's, and `none` from `rail`
+   * up.**
    *
-   * ⚠ **Directed, 29 August: get rid of the light in the writing strip on the
-   * desk.** It is the record row's own light, an ellipse inscribed in the strip
-   * and brightest across the middle; see `--row-light` for why it is a gradient
-   * rather than a fill and why *do not answer "too grey" with a flat tone* is
-   * written there.
+   * ⚠ **Directed twice on 29 August, and the second time widened the first.**
+   * *Get rid of the light in the writing strip on the desk* put `none` in the
+   * `--breakpoint-stack` query; *have light only appear on the handset, not
+   * desktop* moved it to `rail`, which is where the handset actually ends. The
+   * first gate left the glow on across 720–1152px.
+   *
+   * It is the record row's own light, an ellipse **inscribed in the line rather
+   * than in the strip** — see `sheet-lit` for the box, `--row-light` for why it
+   * is a gradient rather than a fill and why *do not answer "too grey" with a
+   * flat tone* is written there.
    *
    * ⚠ **A token that differs by surface, not a rule the desk overrides.** It is
    * the same shape as `--sheet-hem`, `--text-mark` and `--bar-gutter`, which is
@@ -1709,7 +1737,7 @@
    * `--sheet-tint`, which is `--color-bg` — fully opaque and exactly the page's
    * own black — so the guarantee the light was sitting on top of is untouched:
    * no record line can dissolve through the words being written. What goes is
-   * only the glow. On the desk the strip is the field on the page's own ground.
+   * only the glow. Above `rail` the strip is the field on the page's own ground.
    */
   --sheet-light: var(--row-light);
 
@@ -3232,12 +3260,13 @@
  * there is nothing off screen to reach. That is the condition removed rather
  * than corrected — see *How things get fixed*.
  *
- * ⚠ **This used to say "wraps *exactly as it will in the record*", and since 28
- * August it does not.** The sheet took a measure of its own — see
- * `--sheet-measure` — so the two columns are different widths on the desk and
- * the line breaks no longer agree. Nothing about the report is reopened by
- * that: what it asked for is that the words wrap rather than scroll out of
- * reach, and they do.
+ * ⚠ **This used to say "wraps *exactly as it will in the record*", and it does
+ * not, for a different reason than it did yesterday.** On 28 August the sheet
+ * took a measure of its own and the two columns stopped agreeing; that measure
+ * is deleted and they are one column again — but nothing wraps on either of
+ * them now, so there are no line breaks to preview. Nothing about the report is
+ * reopened by that: what it asked for is that the words not scroll out of
+ * reach, and they do not.
  *
  * ⚠ **Summoned by the foot's `+`, and on a handset that costs nothing.** iOS will
  * not raise a keyboard without a gesture, so starting a capture *already* took
@@ -3339,10 +3368,7 @@
     44px hit box, where a *tap* still lands on the page — only an edge swipe is
     the system's.
   */
-  padding-block: max(
-    0px,
-    calc((env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)) / 2)
-  );
+  padding-block: var(--sheet-clearance);
 }
 
 /**
@@ -3355,17 +3381,40 @@
  * and a line showing through would read as a second line of the capture. **The
  * box does not change; the ground says which state it is in.**
  *
- * ⚠ **The light is the band's, unchanged.** An ellipse inscribed in the strip,
- * brightest across the middle and transparent by the time it reaches any of the
- * four sides. Two flat fills shipped in August and both came back "too grey" —
- * the value was never the problem, because *a uniform tone inside a rectangle
- * with edges* is what reads as grey at any value. **Do not answer "too grey", or
- * "brighter", with a fill.**
+ * ⚠ **The light is the band's, unchanged.** An ellipse brightest across the
+ * middle and transparent by the time it reaches any of the four sides. Two flat
+ * fills shipped in August and both came back "too grey" — the value was never
+ * the problem, because *a uniform tone inside a rectangle with edges* is what
+ * reads as grey at any value. **Do not answer "too grey", or "brighter", with a
+ * fill.**
  *
- * ⚠ **It is `--sheet-light` rather than `--row-light` since 29 August, and on
- * the desk that is `none`.** Directed. The `::before` still exists up there and
+ * ⚠ **What changed on 29 August is the BOX it is inscribed in: the line, not the
+ * strip.** Directed: *have the light in the writing row be centred without
+ * changing any dimensions or the positions of the glyphs or cursor — maybe make
+ * the light bar thinner so it can sit exactly inline with the characters.* It
+ * was `inset: 0`, so the ellipse was half the height of whatever the strip
+ * happened to be — 41px on glass, **75px on a notched handset**, where a light
+ * meant for one line of text was drawn across a box nearly three lines tall and
+ * bled well above and below the words. Now the box is `--leading-line`, so the
+ * glow is a 14px band on the characters' own line at every inset, on every
+ * surface, with the same gradient and the same 8%.
+ *
+ * ⚠ **Nothing moves to achieve it.** The `::before` is `position: absolute` and
+ * `pointer-events: none` — it takes no space, so no dimension, no glyph, no
+ * caret and no field has anything to respond to. That was the condition on the
+ * direction and it is met by construction, not by measurement.
+ *
+ * ⚠ **`--sheet-clearance` + half `--sheet-air` is the top of the line box, and
+ * it is derived rather than typed.** The containing block is the sheet's padding
+ * box, so `top: 0` is above the notch's clearance; the clearance takes it to the
+ * content box and `sheet-row`'s own hem takes it to the line. Change either and
+ * the light follows — which is the whole reason the clearance stopped being an
+ * expression written inline and became a token.
+ *
+ * ⚠ **It is `--sheet-light` rather than `--row-light` since 29 August, and from
+ * `rail` up that is `none`.** Directed. The `::before` still exists up there and
  * paints nothing, which is cheaper than asking this utility which screen it is
- * on. The ground below it does not change on either surface — the opacity is
+ * on. The ground below it does not change on any surface — the opacity is
  * `--sheet-tint`'s job and always was, so the *record cannot show through the
  * words* guarantee above is untouched by the light going.
  *
@@ -3381,7 +3430,9 @@
   &::before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset-inline: 0;
+    top: calc(var(--sheet-clearance) + var(--sheet-air) / 2);
+    height: var(--leading-line);
     pointer-events: none;
     background-image: var(--sheet-light);
   }
@@ -3520,6 +3571,27 @@
       */
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
+
+      /**
+       * ⚠ **The strip's glow is the handset's, and this is where the handset
+       * ends — 29 August.** Directed: *have light only appear on the handset,
+       * not desktop.* It was gated at `--breakpoint-stack`, which says *not on
+       * the desk* — a narrower claim than the one being made, and it left the
+       * glow on across 720–1152px, which is a browser window on a desktop and
+       * an iPad in landscape.
+       *
+       * ⚠ **`rail` is the line because it is already the line.** This query is
+       * where the page stops being a handset — the mark grows, the gutters
+       * grow, the fifth layout begins. The rule and its gate are now the same
+       * boundary rather than two that happen to agree on the screens somebody
+       * looked at.
+       *
+       * `sheet-lit`'s `::before` still exists above this width and paints
+       * nothing, which is cheaper than asking the utility which screen it is
+       * on. The ground does not change with the glow: that is `--sheet-tint`,
+       * opaque and the page's own black at every width.
+       */
+      --sheet-light: none;
     }
   }
 
@@ -3555,38 +3627,29 @@
       --sheet-air: calc(var(--sheet-hem) * 2);
 
       /**
-       * ⚠ **No light on the desk — directed, 29 August.** See `--sheet-light`.
-       * The ground stays `--sheet-tint`, so the strip is still opaque and still
-       * the page's own black; what goes is the glow across it.
-       */
-      --sheet-light: none;
-
-      /**
-       * ⚠ **See-through on the desk, and opaque on glass — directed, 29
-       * August.** `--sheet-tint` is `--color-bg` everywhere else because a
-       * record line dissolving through the words being written reads as a
-       * second line of the capture. **What makes it affordable here is the
-       * scrim**, which is already between the record and this strip while
-       * somebody writes — the sheet was doing that separation twice on a
-       * surface that has something else doing it. It is the bars' own glass,
-       * the same tint and the same blur, so the strip joins a vocabulary the
-       * page already has rather than inventing a third ground.
+       * ⚠ **`--sheet-light: none` was here and has moved UP to the `rail` query
+       * — 29 August.** Directed: *have light only appear on the handset, not
+       * desktop*, and this gate said *not on the desk*, which is a narrower
+       * claim: between 720px and 1152px the glow was still on. See
+       * `--sheet-light`.
        *
-       * ⚠ **The blur is not optional at this tint.** Without it the strip is a
-       * hole rather than glass, and the record scrolling under body text at the
-       * record's own size is the thing the opacity was there to stop.
+       * ⚠ **`--sheet-tint` and `--sheet-blur` were overridden here to glass and
+       * both are DELETED, which reverses a direction from earlier the same
+       * day.** The strip was made see-through on the desk on the argument that
+       * *the scrim is already between the record and this strip*. The scrim is
+       * there — 45% — and it is not enough: 0.55 × 0.62 leaves about a third of
+       * a record line coming through body text at the record's own size, and a
+       * 24px blur turns that third into a pale haze sitting across the words
+       * being written. **That haze is the light the direction is about.** It was
+       * reported as light on the desktop because that is what it is.
+       *
+       * The two tokens are gone rather than re-valued, so the desk inherits the
+       * base: `--sheet-tint` is `--color-bg` and `--sheet-blur` is `0px`. That
+       * is the guarantee `--sheet-tint` states in its own comment — *no record
+       * line can dissolve through the words being written* — held on every
+       * surface again instead of on all but one. A subtraction cannot be wrong
+       * on a screen nobody has tested.
        */
-      /*
-        ⚠ **Its own tint, not the bars' `--glass-tint` — 29 August.** That was
-        the first attempt and it was reported as not see-through at all: 74% of
-        an already-black ground leaves 26% for a record that is dim text on
-        black, so there is nothing to come through. A bar can afford it because
-        what passes under a bar is a wordmark and four glyphs. **The number is
-        low because the thing behind it is dark**, not because a lighter glass
-        was wanted in the abstract.
-      */
-      --sheet-tint: color-mix(in srgb, var(--color-bg) 38%, transparent);
-      --sheet-blur: 24px;
     }
   }
 

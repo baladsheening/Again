@@ -185,12 +185,40 @@ of the screen, and every *a tad more* / *a tad less* was really that.
   dissolving under the glyphs; writing it is `sheet-lit`, opaque, because it
   holds body text at the record's own size and a line showing through would read
   as a second line of the capture. ⚠ **The light on that ground is a handset's
-  only, and the desk has none — directed 29 August.** `--sheet-light` is
-  `--row-light` on glass and `none` above `--breakpoint-stack`; the opacity is
-  `--sheet-tint`'s job — `--color-bg`, the page's own black — so the guarantee in
-  this sentence is untouched by the glow going. It is a token that differs by
-  surface, the same shape as `--sheet-hem` and `--text-mark`, rather than a rule
-  the desk overrides.
+  only — directed 29 August, twice, and the second time widened the first.**
+  `--sheet-light` is `--row-light` on glass and `none` **from
+  `--breakpoint-rail` up**: the first gate was `--breakpoint-stack`, which says
+  *not on the desk* rather than *only on the handset*, and left the glow on
+  across 720–1152px — a browser window on a desktop, and an iPad in landscape.
+  `rail` is where this page stops being a handset in every other respect, so the
+  rule and its gate are now one boundary. The opacity is `--sheet-tint`'s job —
+  `--color-bg`, the page's own black — so the guarantee in this sentence is
+  untouched by the glow going. It is a token that differs by surface, the same
+  shape as `--sheet-hem` and `--text-mark`, rather than a rule the desk
+  overrides.
+- ⚠ **The writing ground was made GLASS on the desk on 29 August and was opaque
+  again the same evening.** The argument for it was that *the scrim is already
+  between the record and this strip*. The scrim is there and it is not enough:
+  45% over 38% leaves about a third of a record line coming through body text at
+  the record's own size, and the 24px blur turned that third into a pale haze
+  lying across the words being written. **Reported as light on the desktop,
+  because that is what it was.** The `--sheet-tint` and `--sheet-blur` overrides
+  are deleted rather than re-valued, so the desk inherits the base and the
+  *no record line dissolves through the words* guarantee holds on every surface
+  again. Both tokens survive at their base values, so putting the glass back is
+  one declaration — but read this first.
+- ⚠ **The light is inscribed in the LINE, not in the strip — 29 August.**
+  Directed: *centred, without changing any dimensions or the positions of the
+  glyphs or cursor — maybe make the light bar thinner so it sits exactly inline
+  with the characters.* `sheet-lit`'s `::before` was `inset: 0`, so the ellipse
+  was half of whatever the strip happened to be: 41px on glass and **75px on a
+  notched handset**, where a light meant for one line was drawn across a box
+  nearly three lines tall. It is now `top: --sheet-clearance + --sheet-air / 2`
+  and `height: --leading-line` — the line box, derived from the two terms that
+  build it rather than typed. Nothing moves for it: the pseudo-element is
+  absolute and `pointer-events: none`, so no dimension, glyph, caret or field
+  has anything to respond to. ⚠ **`--sheet-clearance` is new and is only the
+  notch expression given a name**, because two places now measure from it.
 - ⚠ **A one-cell grid holds both rows, and neither may be unmounted or set to
   `display: none`.** They fade in place. Unmounting either lets the strip resize,
   which is the whole thing this removed — and a hidden field cannot take the
@@ -323,16 +351,23 @@ after the first look at it: too tall on the handset, too narrow on the desk.
   field. A number typed smaller would have been the thing *How things get fixed*
   rules out; the second helping of air being removed is not. `env(safe-area-inset-bottom)`
   survives, because a notch is clearance rather than spacing.
-- **`--sheet-measure`, and it is not `--page-measure`.** The column plus the tool
-  stack's width and its inset on **both** sides — 54rem, the same sum as
-  `--breakpoint-stack` and for the same reason — so the sheet spans exactly the
-  width the page's furniture already stands across, its left edge on the stack's
-  left edge and the field starting under the `+` that summoned it. Below that
-  width there is no stack, the viewport is narrower, and `gutter` caps the sheet
-  at the glass, so **nothing about a handset changes**.
-- ⚠ **The sheet no longer previews the record's line breaks, and that is
-  accepted.** One measure used to do both jobs. What the report asked for is that
-  a long capture *wrap at all* rather than scroll out of reach, and it still does.
+- ⚠ **`--sheet-measure` was that width and is DELETED — 29 August. The writing
+  line and the record are one column.** It was the column plus the tool stack's
+  width and inset on both sides — 54rem, the same sum as `--breakpoint-stack` —
+  which put the sheet's left edge on the stack's and started the field **under
+  the `+`**, 123px left of the first character of every line it was being added
+  to. Measured at 1440: field at x=171, record text at x=294. Directed: *the
+  start of the writing line always aligns with the entry column.* The sheet wears
+  `--record-measure` now, with the same `gutter` and the same `mx-auto`, so the
+  two cannot disagree and they narrow together against the mark's band — which
+  two numbers could never have been made to do. **This is the field's width,
+  never the ground's**: the strip spans the window and always did. Verified at
+  1440, 1240, 1000, 800, 719 and 390 — the field's left edge on the record
+  column's text edge at every one, and nothing about a handset changed.
+- ⚠ **The sheet does not preview the record's line breaks, and the reason
+  changed.** It was two measures disagreeing; it is now that nothing wraps on
+  either of them. What the report asked for is that a long capture not scroll out
+  of reach, and it does not.
 
 ⚠ **On a handset the `+` costs nothing, which is why this was affordable.** iOS
 raises a keyboard only for a gesture, so starting a capture always took one tap
