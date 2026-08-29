@@ -1038,82 +1038,28 @@
   --gutter-r: max(1.25rem, env(safe-area-inset-right));
 
   /**
-   * **The light the live row is lit by.** Named rather than inlined because it
-   * is a thing the page means — *this row is the one you are writing in* — and a
-   * gradient written into `live-band` would read as that utility's decoration.
+   * ⚠ **`--row-light` and `--row-light-idle` were here and both are DELETED —
+   * 29 August. There is no light on this page.**
    *
-   * ⚠ **One user, and it briefly had two.** A flash of the same light marked
-   * where a capture landed, which was wrong: lighting the paper says *this
-   * area*, and what just happened is a *line*. The blink moved onto the words —
-   * see `landed` — and this went back to meaning one thing.
+   * Directed: *get rid of the light on the handset and desktop/browser.* Not
+   * dimmed and not gated by width — removed, with `--sheet-light` and
+   * `sheet-lit`'s `::before` that painted it. **The mechanism is gone rather
+   * than switched off**, which is the order *How things get fixed* asks for.
    *
-   * ⚠ **An ellipse inscribed in the row, not a fill.** `50% 50%` radii from the
-   * centre reach transparent exactly at all four sides, so the rectangle is
-   * bounded and never drawn — there is no edge anywhere for the eye to find.
-   * That is the whole reason it works: two flat grounds shipped on 23 August and
-   * both came back "too grey", because a uniform tone inside a rectangle with
-   * edges reads as a slab whatever its value. See `live-band` for the argument
-   * in full, including why glass cannot work on a true black page.
+   * What it was, so nobody rebuilds it by accident: an ellipse inscribed in the
+   * live row, `50% 50%` radii from the centre reaching transparent at all four
+   * sides, peaking at 7% of the paper colour — 8% until an hour before it went.
+   * `--row-light-idle` was a second, brighter layer for the row *waiting* to be
+   * written in, and it had already had no consumer for days.
    *
-   * 7% of the paper colour, peaking at a measured #10100f across the middle —
-   * `node_modules/.probe/lightpeak.mjs` reads the pixel rather than computing
-   * it, and reads #080808 three quarters of the way out. It can be
-   * brighter than either flat fill was and still read subtler, because nothing
-   * about it has a boundary.
-   *
-   * ⚠ **It was 8% until 29 August — directed: a little less bright, just a
-   * little.** The point came off the *peak*, which is the only place this light
-   * has a value: the gradient's shape, its radii and its transparent edges are
-   * untouched, so what changed is how bright the middle is and nothing about
-   * where it stops. **Do not answer this by shrinking the ellipse** — a smaller
-   * light is a smaller light, not a dimmer one, and the radii are what keep the
-   * rectangle from ever being drawn.
-   *
-   * ⚠ **One consumer, so the record's rows are not affected.** `--sheet-light`
-   * points at this and nothing else does; the name is kept because the light
-   * belongs to *the live row*, which is what the writing strip is.
+   * ⚠ **The argument it was built on is still true and is now somebody else's
+   * problem.** Two flat grounds shipped on 23 August and both came back "too
+   * grey", because a uniform tone inside a rectangle with edges reads as a slab
+   * at any value; the gradient existed so the row had no boundary anywhere. The
+   * strip has a boundary now on purpose — it is **glass**, see `--sheet-tint` —
+   * so the thing the light was avoiding is the thing that replaced it. If a
+   * glow is ever wanted back, that is the argument to re-read first.
    */
-  --row-light: radial-gradient(
-    50% 50% at 50% 50%,
-    color-mix(in srgb, var(--color-text) 7%, transparent) 0%,
-    transparent 100%
-  );
-
-  /**
-   * **The extra light the row carries while it is waiting**, put out while
-   * somebody is writing in it.
-   *
-   * The row is lit whenever it is the live one, which is always — that is
-   * `--row-light` above and it does not move. This is a **second** light laid
-   * over it, on by default and faded *out* while the keyboard is up.
-   *
-   * ⚠ **It went in the other way round on 24 August and was inverted on sight.**
-   * Brightening on focus is the obvious reading and it is the wrong one: the
-   * light is an **invitation**, and an invitation is for somebody who has not
-   * accepted it yet. While the keyboard is up the row needs no advertising — the
-   * writing pane has already darkened everything else, the caret is in it, and a
-   * lit ground competing with the words is the app talking over the one thing it
-   * asked for. So the waiting row is the bright one and the working row steps
-   * back.
-   *
-   * ⚠ **A second layer rather than a bigger number, so the resting look cannot
-   * drift.** The obvious version raises `--row-light` to the lit value and dims
-   * it back with an opacity for the resting state, which means the row's normal
-   * appearance is a division that has to keep coming out at 8%. Here the
-   * resting declaration is never touched: the extra light is a separate
-   * gradient that starts at zero. Two translucent layers compose to about 16% at
-   * the peak, so writing is roughly twice the light of waiting.
-   *
-   * ⚠ **Still a glow with no boundary**, for the reason the first one is: two
-   * flat fills shipped in August and both came back "too grey", and the value
-   * was never what was wrong — a uniform tone inside a rectangle with edges is
-   * what reads as grey, at any value. Do not answer "brighter" with a fill.
-   */
-  --row-light-idle: radial-gradient(
-    50% 50% at 50% 50%,
-    color-mix(in srgb, var(--color-text) 9%, transparent) 0%,
-    transparent 100%
-  );
 
   /** One capture: 18px on 28px, 8px of padding a side to reach a 44px target. */
   --text-line: 1.125rem;
@@ -1684,16 +1630,18 @@
   --sheet-air: calc(var(--sheet-hem) * 1.625);
 
   /**
-   * **The notch's clearance, split — the term `writing-sheet` pads with, named
-   * so a second thing can measure from it.**
+   * **The notch's clearance, split — the term `writing-sheet` pads with.**
    *
    * ⚠ **The expression is unchanged and its argument lives in `writing-sheet`**:
    * the inset is spent only for the part of the home indicator this box is
    * actually over, so with a keyboard up the overlap swallows it and the term is
-   * zero. What changed on 29 August is only that it has a name, because
-   * `sheet-lit`'s light now has to start below it — and an expression this
-   * particular, written out twice, is two things that would have to be kept in
-   * step by hand.
+   * zero.
+   *
+   * ⚠ **It was named on 29 August so the light could measure from it, and the
+   * light is gone.** One consumer again, and the name stays anyway: the notch's
+   * clearance is a thing this page means, not a term that happened to be shared,
+   * and an expression this particular is better read from a name than from the
+   * middle of a `padding-block`.
    *
    * ⚠ **Halved, so the row rides the strip's centre line at any inset.** All of
    * the clearance below the row put the glyphs 17px above that line on a Face-ID
@@ -1714,56 +1662,67 @@
    */
 
   /**
-   * The sheet's ground.
+   * **The sheet's ground: GLASS, on every surface — 29 August.**
    *
-   * ⚠ **Opaque, unlike the two bars.** A bar is glass because what shows through
-   * it is a wordmark and four glyphs, and nothing behind it can be mistaken for
-   * what is in front. This holds body text at the record's own size, face and
-   * colour — a record line dissolving through it reads as a second line of the
-   * capture, which is exactly what the old pinned band looked like when it
-   * shipped. The scrim already separates the two; the sheet does not have to do
-   * it twice.
+   * Directed: *make the handset writing row have the exact same see-through
+   * glass blur effect as we have on the desktop.* So there is one value and no
+   * surface split — the desk's override is deleted rather than mirrored, which
+   * is the same shape as `--sheet-air`: two names holding one number is a drift
+   * waiting to happen.
+   *
+   * ⚠ **It replaces the light, and that is the trade being made.** The strip is
+   * on a true-black page, so an opaque black ground is invisible and the row had
+   * to be drawn by a glow inscribed in it. Glass draws the row by **being a
+   * surface** — it has an edge, it takes the record's own light through it, and
+   * it needs nothing painted on top. See the `--row-light` tombstone for the
+   * argument the glow was built on, because this is the other side of it.
+   *
+   * ⚠ **38% and not the bars' `--glass-tint`.** 74% of an already-black ground
+   * leaves 26% for a record that is dim text on black, so nothing comes through
+   * and it reads as not see-through at all — reported, on the first attempt at
+   * this. A bar can afford 74% because what passes under a bar is a wordmark and
+   * four glyphs. **The number is low because the thing behind it is dark.**
+   *
+   * ⚠ **This gives up a guarantee this comment used to make, knowingly.** It
+   * said a record line dissolving through the sheet reads as a second line of
+   * the capture, which is what the old pinned band looked like when it shipped.
+   * Two things pay for it now: the scrim is between the record and this strip
+   * whenever somebody is writing, and the 24px blur means what comes through is
+   * a wash rather than legible words. If a record line is ever readable through
+   * the field again, this is the paragraph to come back to — and the fix is the
+   * blur or the percentage, not a return to opaque.
    */
-  --sheet-tint: var(--color-bg);
+  --sheet-tint: color-mix(in srgb, var(--color-bg) 38%, transparent);
 
   /**
-   * **The light on the sheet's ground — the HANDSET's, and `none` from `rail`
-   * up.**
+   * ⚠ **`--sheet-light` was here and is DELETED — 29 August.** Directed: *get
+   * rid of the light on the handset and desktop/browser.* It pointed at
+   * `--row-light`, which is deleted too; see the tombstone up there for what the
+   * glow was and for the "too grey" argument that built it.
    *
-   * ⚠ **Directed twice on 29 August, and the second time widened the first.**
-   * *Get rid of the light in the writing strip on the desk* put `none` in the
-   * `--breakpoint-stack` query; *have light only appear on the handset, not
-   * desktop* moved it to `rail`, which is where the handset actually ends. The
-   * first gate left the glow on across 720–1152px.
-   *
-   * It is the record row's own light, an ellipse **inscribed in the line rather
-   * than in the strip** — see `sheet-lit` for the box, `--row-light` for why it
-   * is a gradient rather than a fill and why *do not answer "too grey" with a
-   * flat tone* is written there.
-   *
-   * ⚠ **A token that differs by surface, not a rule the desk overrides.** It is
-   * the same shape as `--sheet-hem`, `--text-mark` and `--bar-gutter`, which is
-   * what this file does when two surfaces genuinely want different values:
-   * `sheet-lit` paints whatever this says without knowing which screen it is on,
-   * and the difference is stated in one place rather than tested for in two.
-   *
-   * ⚠ **`none` costs the strip nothing it was relying on.** The ground is
-   * `--sheet-tint`, which is `--color-bg` — fully opaque and exactly the page's
-   * own black — so the guarantee the light was sitting on top of is untouched:
-   * no record line can dissolve through the words being written. What goes is
-   * only the glow. Above `rail` the strip is the field on the page's own ground.
+   * The token went through four values in one day — the record's light, then
+   * `none` above `--breakpoint-stack`, then `none` from `rail` up, then a
+   * dimmer peak — and the sequence is the tell: **each step was somebody
+   * answering "less" and the answer was "none".** There is no surface split
+   * left to state, so there is no token.
    */
-  --sheet-light: var(--row-light);
 
   /**
-   * **How much the sheet's ground blurs what is behind it.** Zero on glass,
-   * where `--sheet-tint` is opaque and there is nothing behind it to see; the
-   * bars' own `--glass-blur` on the desk, where the tint is see-through. Paired
-   * with `--sheet-tint` and never set alone — a translucent ground without it is
-   * a hole, and a blur behind an opaque ground is a compositing layer painting
-   * nothing.
+   * **How much the sheet's ground blurs what is behind it. 24px, everywhere.**
+   *
+   * ⚠ **Paired with `--sheet-tint` and never set alone.** A translucent ground
+   * without a blur is a hole — the record scrolls under body text at the
+   * record's own size and the words being written have a moving page behind
+   * them. A blur behind an opaque ground is the opposite waste: a compositing
+   * layer painting nothing. The two move together or neither moves.
+   *
+   * ⚠ **24px and not the bars' `--glass-blur` (18px)**, for the reason the tint
+   * is not the bars' either: what passes under a bar is a wordmark and four
+   * glyphs, and what passes under this is prose at the same size and face as the
+   * prose in front of it. This is the blur that turns a record line into a wash
+   * instead of a second line of the capture.
    */
-  --sheet-blur: 0px;
+  --sheet-blur: 24px;
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -3386,70 +3345,50 @@
 }
 
 /**
- * **The strip's writing ground: opaque, and lit.**
+ * **The strip's writing ground: glass.**
  *
  * ⚠ **Split off `writing-sheet` on 28 August, because the strip has two grounds
- * now.** Idle it is glass — a tint over a blur, with the record dissolving under
- * the glyphs, which is what the foot bar has always been. Writing it is this:
- * opaque, because it holds body text at the record's own size, face and colour
- * and a line showing through would read as a second line of the capture. **The
- * box does not change; the ground says which state it is in.**
+ * — and since 29 August they are the same material.** Idle it is the bars' glass
+ * at `--glass-tint` over `--glass-blur`, with the record dissolving under the
+ * glyphs. Writing it is this: `--sheet-tint` over `--sheet-blur`, a lower
+ * percentage and a heavier blur because what passes behind it is prose rather
+ * than a wordmark. **The box does not change; the ground says which state it is
+ * in.**
  *
- * ⚠ **The light is the band's, unchanged.** An ellipse brightest across the
- * middle and transparent by the time it reaches any of the four sides. Two flat
- * fills shipped in August and both came back "too grey" — the value was never
- * the problem, because *a uniform tone inside a rectangle with edges* is what
- * reads as grey at any value. **Do not answer "too grey", or "brighter", with a
- * fill.**
+ * ⚠ **This was OPAQUE and LIT and now it is neither — 29 August.** Directed, in
+ * one instruction: *get rid of the light on the handset and desktop/browser, and
+ * make the handset writing row have the exact same see-through glass blur effect
+ * as the desktop.* The two halves are one change. The strip sits on a true-black
+ * page, so an opaque black ground is **invisible** — which is why it needed a
+ * glow inscribed in it to be a row at all, and why every question about that
+ * glow for two days was really a question about a surface that was not there.
+ * Glass is a surface. It has an edge, it carries the record's light through it,
+ * and it needs nothing painted on top.
  *
- * ⚠ **What changed on 29 August is the BOX it is inscribed in: the line, not the
- * strip.** Directed: *have the light in the writing row be centred without
- * changing any dimensions or the positions of the glyphs or cursor — maybe make
- * the light bar thinner so it can sit exactly inline with the characters.* It
- * was `inset: 0`, so the ellipse was half the height of whatever the strip
- * happened to be — 41px on glass, **75px on a notched handset**, where a light
- * meant for one line of text was drawn across a box nearly three lines tall and
- * bled well above and below the words. Now the box is `--leading-line`, so the
- * glow is a 14px band on the characters' own line at every inset, on every
- * surface, with the same gradient and the same 8%.
+ * ⚠ **So the `::before` is deleted with `--sheet-light` and `--row-light`.** The
+ * mechanism is gone rather than set to `none`, and there is nothing left in this
+ * utility that could paint a light. See the `--row-light` tombstone for the
+ * "too grey" argument the glow was built on — it is the argument *against* a
+ * flat fill on a black page, and glass is not a fill.
  *
- * ⚠ **Nothing moves to achieve it.** The `::before` is `position: absolute` and
- * `pointer-events: none` — it takes no space, so no dimension, no glyph, no
- * caret and no field has anything to respond to. That was the condition on the
- * direction and it is met by construction, not by measurement.
+ * ⚠ **What the light was measuring from went with it, but the token stays.**
+ * `top: calc(var(--sheet-clearance) + var(--sheet-air) / 2)` put the glow on the
+ * line box; `--sheet-clearance` now has one consumer again, `writing-sheet`'s
+ * own padding, and it keeps its name because the notch expression is a thing the
+ * page means rather than a term that happened to be shared.
  *
- * ⚠ **`--sheet-clearance` + half `--sheet-air` is the top of the line box, and
- * it is derived rather than typed.** The containing block is the sheet's padding
- * box, so `top: 0` is above the notch's clearance; the clearance takes it to the
- * content box and `sheet-row`'s own hem takes it to the line. Change either and
- * the light follows — which is the whole reason the clearance stopped being an
- * expression written inline and became a token.
- *
- * ⚠ **It is `--sheet-light` rather than `--row-light` since 29 August, and from
- * `rail` up that is `none`.** Directed. The `::before` still exists up there and
- * paints nothing, which is cheaper than asking this utility which screen it is
- * on. The ground below it does not change on any surface — the opacity is
- * `--sheet-tint`'s job and always was, so the *record cannot show through the
- * words* guarantee above is untouched by the light going.
- *
- * ⚠ **The idle layer is deleted with the state it described.** `live-band`
- * carried a second, brighter light for the row *waiting* to be written in, put
- * out once somebody started. A summoned field is never waiting: it exists
- * because somebody asked for it, so there is one light and no fade between two.
+ * ⚠ **The row did NOT move for any of this.** The strip is `--sheet-air` split
+ * evenly around one line, anchored on `--keyboard-overlap`, exactly as it was an
+ * hour ago. Reported as *the writing row used to be closer to the keyboard*: it
+ * was the glow that reached the keys, because it filled the whole strip, and
+ * then it stopped when its box became the line. The glass restores that edge by
+ * being the strip — **the bottom of the visible row is the bottom of the strip,
+ * which is the top of the keyboard.** Do not answer that report by moving the
+ * air; the air is what centres the glyphs a thumb has to hit.
  */
 @utility sheet-lit {
   background-color: var(--sheet-tint);
   backdrop-filter: blur(var(--sheet-blur));
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    top: calc(var(--sheet-clearance) + var(--sheet-air) / 2);
-    height: var(--leading-line);
-    pointer-events: none;
-    background-image: var(--sheet-light);
-  }
 }
 
 /**
@@ -3586,26 +3525,14 @@
       --text-mark: var(--text-mark-rail);
       --bar-gutter: 2rem;
 
-      /**
-       * ⚠ **The strip's glow is the handset's, and this is where the handset
-       * ends — 29 August.** Directed: *have light only appear on the handset,
-       * not desktop.* It was gated at `--breakpoint-stack`, which says *not on
-       * the desk* — a narrower claim than the one being made, and it left the
-       * glow on across 720–1152px, which is a browser window on a desktop and
-       * an iPad in landscape.
-       *
-       * ⚠ **`rail` is the line because it is already the line.** This query is
-       * where the page stops being a handset — the mark grows, the gutters
-       * grow, the fifth layout begins. The rule and its gate are now the same
-       * boundary rather than two that happen to agree on the screens somebody
-       * looked at.
-       *
-       * `sheet-lit`'s `::before` still exists above this width and paints
-       * nothing, which is cheaper than asking the utility which screen it is
-       * on. The ground does not change with the glow: that is `--sheet-tint`,
-       * opaque and the page's own black at every width.
-       */
-      --sheet-light: none;
+      /*
+        ⚠ **`--sheet-light: none` was here for about an hour and is deleted with
+        the light itself — 29 August.** It gated the glow at `rail` so it was the
+        handset's alone; the next instruction was *get rid of the light on the
+        handset and desktop/browser*, and a gate on a thing that no longer exists
+        is a line of CSS describing history. There is nothing surface-specific
+        about the strip's ground any more: it is glass at every width.
+      */
     }
   }
 
@@ -3640,30 +3567,25 @@
       */
       --sheet-air: calc(var(--sheet-hem) * 2);
 
-      /**
-       * ⚠ **`--sheet-light: none` was here and has moved UP to the `rail` query
-       * — 29 August.** Directed: *have light only appear on the handset, not
-       * desktop*, and this gate said *not on the desk*, which is a narrower
-       * claim: between 720px and 1152px the glow was still on. See
-       * `--sheet-light`.
-       *
-       * ⚠ **`--sheet-tint` and `--sheet-blur` were overridden here to glass and
-       * both are DELETED, which reverses a direction from earlier the same
-       * day.** The strip was made see-through on the desk on the argument that
-       * *the scrim is already between the record and this strip*. The scrim is
-       * there — 45% — and it is not enough: 0.55 × 0.62 leaves about a third of
-       * a record line coming through body text at the record's own size, and a
-       * 24px blur turns that third into a pale haze sitting across the words
-       * being written. **That haze is the light the direction is about.** It was
-       * reported as light on the desktop because that is what it is.
-       *
-       * The two tokens are gone rather than re-valued, so the desk inherits the
-       * base: `--sheet-tint` is `--color-bg` and `--sheet-blur` is `0px`. That
-       * is the guarantee `--sheet-tint` states in its own comment — *no record
-       * line can dissolve through the words being written* — held on every
-       * surface again instead of on all but one. A subtraction cannot be wrong
-       * on a screen nobody has tested.
-       */
+      /*
+        ⚠ **`--sheet-tint` and `--sheet-blur` were overridden here to glass, and
+        they belong to the BASE now — 29 August, third and last move in a day.**
+
+        The sequence, because it looks like thrashing and is not: the desk was
+        given glass in the morning; the record smearing through it at 38% over a
+        24px blur was then reported as *light on the desktop*, and both overrides
+        were deleted so the desk went back to the opaque black the handset had.
+        The next instruction was *make the handset writing row have the exact
+        same see-through glass blur effect as the desktop* — which is the glass,
+        wanted on both surfaces rather than neither. So it is stated once, at the
+        base, and this query has nothing left to say about the ground.
+
+        ⚠ **What that concedes: the haze is accepted.** It was read as a light
+        because it was the only surface the strip had; with the glow gone it is
+        the surface, which is what it was for. If a record line ever reads as a
+        second line of the capture again, `--sheet-tint` names the two numbers to
+        move and says not to answer it by going opaque.
+      */
     }
   }
 

@@ -181,44 +181,48 @@ of the screen, and every *a tad more* / *a tad less* was really that.
 - **The box never changes; the contents and the ground do.** The strip is
   `--line-hem` + `--leading-line` + `--line-hem` = **44px** — a row of the
   record, `--tap-floor`, and exactly what the handset's foot already measured
-  (9 + 26 + 9). Nothing new was chosen. Idle it is glass with the record
-  dissolving under the glyphs; writing it is `sheet-lit`, opaque, because it
-  holds body text at the record's own size and a line showing through would read
-  as a second line of the capture. ⚠ **The light on that ground is a handset's
-  only — directed 29 August, twice, and the second time widened the first.**
-  `--sheet-light` is `--row-light` on glass and `none` **from
-  `--breakpoint-rail` up**: the first gate was `--breakpoint-stack`, which says
-  *not on the desk* rather than *only on the handset*, and left the glow on
-  across 720–1152px — a browser window on a desktop, and an iPad in landscape.
-  `rail` is where this page stops being a handset in every other respect, so the
-  rule and its gate are now one boundary. The opacity is `--sheet-tint`'s job —
-  `--color-bg`, the page's own black — so the guarantee in this sentence is
-  untouched by the glow going. It is a token that differs by surface, the same
-  shape as `--sheet-hem` and `--text-mark`, rather than a rule the desk
-  overrides.
-- ⚠ **The writing ground was made GLASS on the desk on 29 August and was opaque
-  again the same evening.** The argument for it was that *the scrim is already
-  between the record and this strip*. The scrim is there and it is not enough:
-  45% over 38% leaves about a third of a record line coming through body text at
-  the record's own size, and the 24px blur turned that third into a pale haze
-  lying across the words being written. **Reported as light on the desktop,
-  because that is what it was.** The `--sheet-tint` and `--sheet-blur` overrides
-  are deleted rather than re-valued, so the desk inherits the base and the
-  *no record line dissolves through the words* guarantee holds on every surface
-  again. Both tokens survive at their base values, so putting the glass back is
-  one declaration — but read this first.
-- ⚠ **The light is inscribed in the LINE, not in the strip — 29 August.**
-  Directed: *centred, without changing any dimensions or the positions of the
-  glyphs or cursor — maybe make the light bar thinner so it sits exactly inline
-  with the characters.* `sheet-lit`'s `::before` was `inset: 0`, so the ellipse
-  was half of whatever the strip happened to be: 41px on glass and **75px on a
-  notched handset**, where a light meant for one line was drawn across a box
-  nearly three lines tall. It is now `top: --sheet-clearance + --sheet-air / 2`
-  and `height: --leading-line` — the line box, derived from the two terms that
-  build it rather than typed. Nothing moves for it: the pseudo-element is
-  absolute and `pointer-events: none`, so no dimension, glyph, caret or field
-  has anything to respond to. ⚠ **`--sheet-clearance` is new and is only the
-  notch expression given a name**, because two places now measure from it.
+  (9 + 26 + 9). Nothing new was chosen. Idle it is the bars' glass with the
+  record dissolving under the glyphs; writing it is `sheet-lit`, **also glass**,
+  at a lower tint over a heavier blur.
+- ⚠ **THERE IS NO LIGHT ON THIS PAGE — 29 August, and this reverses four moves
+  made the same day.** Directed: *get rid of the light on the handset and
+  desktop/browser.* `--sheet-light`, `--row-light`, `--row-light-idle` and
+  `sheet-lit`'s `::before` are all **deleted** — the mechanism, not a `none`.
+  The day's sequence is the tell and is worth keeping: the glow went off on the
+  desk, then off from `rail` up, then its box shrank to the line, then its peak
+  went 8% → 7%. **Every step was somebody answering "less", and the answer was
+  "none".** Do not reintroduce a glow without reading the `--row-light`
+  tombstone in `globals.css`, which holds the "too grey" argument it was built
+  on.
+- ⚠ **The writing ground is GLASS on every surface, and that is what replaced
+  the light.** Directed: *make the handset writing row have the exact same
+  see-through glass blur effect as the desktop.* `--sheet-tint` is
+  `color-mix(--color-bg 38%, transparent)` and `--sheet-blur` is 24px, stated
+  once at the base with **no surface override** — the desk's copy is deleted
+  rather than mirrored. It went opaque → glass → opaque → glass in a day; the
+  middle reversal was mine, on the reading that the record smearing through was
+  the "light on the desktop" being reported, and the correction was to want the
+  glass on both rather than on neither.
+- ⚠ **The strip is on a true-black page, so an opaque ground is INVISIBLE.**
+  That one fact explains the whole day. A black strip on a black page has no
+  edge, so the row had to be drawn by a glow inscribed in it, and every question
+  about that glow was really a question about a surface that was not there.
+  Glass is a surface: it has an edge, it carries the record's light through it,
+  and it needs nothing painted on top. **38% and not the bars' `--glass-tint`** —
+  74% of an already-black ground leaves nothing to come through, which was
+  reported on the first attempt; the number is low because what is behind it is
+  dark. 24px and not the bars' 18px, because what passes behind this is prose at
+  the same size and face as the prose in front of it.
+- ⚠ **Reported: *the writing row used to be closer to the keyboard*. The row
+  never moved.** It was the glow that reached the keys — it filled the whole
+  strip, so its bottom edge was the strip's — and it stopped when its box became
+  the line, leaving 6.5px of invisible ground below it. Measured on a notched
+  390: the field's bottom went from 30px to **23.5px** above the strip's bottom,
+  which is 6.5px *closer* to the keys, while the lit band went the other way.
+  **The glass restores that edge by being the strip** — the bottom of the
+  visible row is the bottom of the strip, which is the top of the keyboard. ⚠
+  **Do not answer that report by moving the air**: the air is what puts the
+  glyphs on the strip's centre line, which was itself directed the same day.
 - ⚠ **A one-cell grid holds both rows, and neither may be unmounted or set to
   `display: none`.** They fade in place. Unmounting either lets the strip resize,
   which is the whole thing this removed — and a hidden field cannot take the
