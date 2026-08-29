@@ -1666,6 +1666,29 @@
   --sheet-tint: var(--color-bg);
 
   /**
+   * **The light on the sheet's ground — on a handset, and `none` on the desk.**
+   *
+   * ⚠ **Directed, 29 August: get rid of the light in the writing strip on the
+   * desk.** It is the record row's own light, an ellipse inscribed in the strip
+   * and brightest across the middle; see `--row-light` for why it is a gradient
+   * rather than a fill and why *do not answer "too grey" with a flat tone* is
+   * written there.
+   *
+   * ⚠ **A token that differs by surface, not a rule the desk overrides.** It is
+   * the same shape as `--sheet-hem`, `--text-mark` and `--bar-gutter`, which is
+   * what this file does when two surfaces genuinely want different values:
+   * `sheet-lit` paints whatever this says without knowing which screen it is on,
+   * and the difference is stated in one place rather than tested for in two.
+   *
+   * ⚠ **`none` costs the strip nothing it was relying on.** The ground is
+   * `--sheet-tint`, which is `--color-bg` — fully opaque and exactly the page's
+   * own black — so the guarantee the light was sitting on top of is untouched:
+   * no record line can dissolve through the words being written. What goes is
+   * only the glow. On the desk the strip is the field on the page's own ground.
+   */
+  --sheet-light: var(--row-light);
+
+  /**
    * ───────────────────────────────────────────────────────────────────────────
    *  Writing is a mode, and the record goes behind glass for it
    * ───────────────────────────────────────────────────────────────────────────
@@ -3307,6 +3330,13 @@
  * with edges* is what reads as grey at any value. **Do not answer "too grey", or
  * "brighter", with a fill.**
  *
+ * ⚠ **It is `--sheet-light` rather than `--row-light` since 29 August, and on
+ * the desk that is `none`.** Directed. The `::before` still exists up there and
+ * paints nothing, which is cheaper than asking this utility which screen it is
+ * on. The ground below it does not change on either surface — the opacity is
+ * `--sheet-tint`'s job and always was, so the *record cannot show through the
+ * words* guarantee above is untouched by the light going.
+ *
  * ⚠ **The idle layer is deleted with the state it described.** `live-band`
  * carried a second, brighter light for the row *waiting* to be written in, put
  * out once somebody started. A summoned field is never waiting: it exists
@@ -3320,7 +3350,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: var(--row-light);
+    background-image: var(--sheet-light);
   }
 }
 
@@ -3486,6 +3516,13 @@
       /* The desk keeps matched air: its strip is the field, not the glyph bar. */
       --sheet-lead: var(--sheet-hem);
       --sheet-foot: var(--sheet-hem);
+
+      /**
+       * ⚠ **No light on the desk — directed, 29 August.** See `--sheet-light`.
+       * The ground stays `--sheet-tint`, so the strip is still opaque and still
+       * the page's own black; what goes is the glow across it.
+       */
+      --sheet-light: none;
     }
   }
 

@@ -184,7 +184,13 @@ of the screen, and every *a tad more* / *a tad less* was really that.
   (9 + 26 + 9). Nothing new was chosen. Idle it is glass with the record
   dissolving under the glyphs; writing it is `sheet-lit`, opaque, because it
   holds body text at the record's own size and a line showing through would read
-  as a second line of the capture.
+  as a second line of the capture. ⚠ **The light on that ground is a handset's
+  only, and the desk has none — directed 29 August.** `--sheet-light` is
+  `--row-light` on glass and `none` above `--breakpoint-stack`; the opacity is
+  `--sheet-tint`'s job — `--color-bg`, the page's own black — so the guarantee in
+  this sentence is untouched by the glow going. It is a token that differs by
+  surface, the same shape as `--sheet-hem` and `--text-mark`, rather than a rule
+  the desk overrides.
 - ⚠ **A one-cell grid holds both rows, and neither may be unmounted or set to
   `display: none`.** They fade in place. Unmounting either lets the strip resize,
   which is the whole thing this removed — and a hidden field cannot take the
