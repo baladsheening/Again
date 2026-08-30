@@ -47,7 +47,17 @@
  * so the day Safari implements it this file needs no edit.
  */
 
-/** **A capture landed.** One light tap — 10ms is the conventional one. */
+/**
+ * **A capture landed.** One light tap — 10ms is the conventional one.
+ *
+ * ⚠ **It has a second caller since 30 August and there is still no fourth
+ * pattern.** Putting a crossed-off line back fires this rather than a signal of
+ * its own: *a line is on the live record* is the fact both callers state, and
+ * the rule at the top of this file is about facts rather than about which
+ * gesture caused one. A fourth buzz would have to be tellable from three others
+ * on the one axis `vibrate()` controls, and it would be saying something the
+ * page already says by un-striking the words.
+ */
 export function haptic() {
   navigator.vibrate?.(10)
 }

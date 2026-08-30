@@ -61,23 +61,41 @@ captures converge, and TMDB is the only catalogue** — today two people can
 converge on a film and on nothing else. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
-⚠ **Phase 2 step 2 is built — TAP THINKS, SWIPE DOES, 30 August.** Swipe a line:
-**left crosses off, right asks *Again?*** A tap still opens the console. The two
-verbs used fifty times a week are gestures on the row now, and the console is the
+⚠ **Phase 2 step 2 is built — TAP THINKS, SWIPE DOES, 30 August.** Swipe a line
+**away to cross it off, back to put it back**. A tap still opens the console. The
+verb used fifty times a week is a gesture on the row now, and the console is the
 once-a-week question.
 
-⚠⚠ **AND IT IS REOPENED, the same day, BEFORE THE PORTAL — read this first.**
-Directed after use: **settling must cost ONE beat**, and **both directions must
-afford an undo**. They are one change, not two — the only reason settling asks
-*Again?* is that it has two answers and no undo, so a wrong swipe would put a line
-in the tray with no way back. **An undo removes that objection, and with it the
-question, and with it the second beat.** Removing the question does not remove the
-fact that settling has two answers; the recommendation is a default plus a
-correction in the undo band — *Settled. Undo · Not again.* The full account, the
-options, and what the undo has to be (⚠ **the settled row LEAVES the page, so
-there is nowhere beside the line to put one**) are §3b of
-`docs/re-direction/phase-2-convergence.md`. **This is the next thing to build, not
-the portal.**
+⚠⚠ **IT WAS REOPENED AND REBUILT THE SAME DAY, AND THE ANSWER WAS A SUBTRACTION
+— read this before touching the swipes.** It shipped as *left crosses off, right
+asks* Again?, and the direction after use was: **settling must cost ONE beat**,
+and **both directions must afford an undo**. **The settle swipe is deleted**, and
+that answers both at once.
+
+- **Settling never cost one beat and could not be made to.** The swipe asked
+  *Again?* because settling has two answers — *I would do this again* against
+  *that is dealt with* — and a gesture that asks rather than acts IS the second
+  beat. An undo removes the *safety* argument for the question, but the other
+  answer still has nowhere on a row to live. ⚠ **So settling keeps the console,
+  which has room to state two answers, and the row keeps the one resolution that
+  is its own inverse.**
+- ⚠ **The undo is the opposite direction, and it is unbounded in time.** A
+  crossed-off row stays on the page, so the way back is on the page for as long
+  as the row is. **This is why there is no ten-second window, no held row, no
+  settled-but-reversible third state and no toast** — all of which §3b of
+  `docs/re-direction/phase-2-convergence.md` was going to need. It records what
+  was built and why the second option won.
+- ⚠ **A row affords exactly ONE swipe and its state says which** — live goes
+  away, struck comes back. It is no longer the same direction toggling on a state
+  the hand cannot feel. **The inert direction does not move the row at all**: a
+  row that travelled and clamped where nothing happens would feel armed and then
+  do nothing, and the detent is the only confirmation iOS can give.
+- ⚠ **The record's inline *Again?* is deleted** with the swipe that put it there,
+  along with the `!isOpen` guard that stopped one question being drawn twice.
+  `asking` and `askAgain` survive as the console's alone.
+- ⚠ **The reverse swipe is invisible and the console is what makes that safe** —
+  a crossed-off line's console offers one control and it is *Put it back*. The
+  gesture is a learnt shortcut, never the only door.
 
 - ⚠ **`touch-action: pan-y` on `page-row` IS the scroll question, and it is the
   whole answer.** *Vertical panning is yours, horizontal is mine*, said to the
@@ -92,13 +110,12 @@ the portal.**
   measured 44 and 58.67 from one line with no breakpoint in it. It **clamps**
   there, which makes it a detent rather than a threshold to guess at — the row
   stops dead when the action is armed.
-- ⚠ **A SWIPE CANNOT SETTLE, because settling has two answers.** *Again?* and
-  *done* are different claims and one direction cannot carry both, so the settle
-  swipe puts the question on the row and the answers are a tap each. That is also
-  what makes it safe: **settling has no undo**, and nothing leaves the page until
-  somebody answers. Crossing off needs no question because it is its own inverse.
-  `askAgain` is the one owner of that question, and the record only draws it while
-  no console is open.
+- ⚠ **A SWIPE CANNOT SETTLE, because settling has two answers**, and that is why
+  there is no settle swipe rather than why it asks a question. *Again?* and *done*
+  are different claims and one direction cannot carry both. Crossing off needs no
+  question because it is its own inverse, which is the whole reason it is the
+  resolution the row got. `askAgain` is the one owner of that question and the
+  console is its only door.
 - ⚠⚠ **THE GESTURE IS CONFIRMED BY THE EYE, AND THAT IS FORCED.** iOS Safari
   implements no Vibration API and the installed app is a handset, so a swipe
   designed to be confirmed by the hand would be confirmed by nothing at all on the
@@ -110,16 +127,21 @@ the portal.**
   light tap, settled a firmer double, crossed off a heavier thud. **Three
   patterns, tellable apart** — the same buzz twice is the noise the rule against
   UI haptics exists to prevent. Silent: opening the console, dismissing it, the
-  keyboard, the chrome.
-- ⚠ **Physical, not logical.** Right settles, left crosses off, against the screen
-  rather than the writing direction — a *row* has no `dir="auto"` signal and a
-  record can hold both languages at once, so mirroring per row would have two rows
-  answering one swipe differently. Held deliberately.
+  keyboard, the chrome. ⚠ **Putting a line back borrows the capture's tap and
+  there is deliberately no fourth pattern**: *a line is on the live record* is the
+  fact both callers state, and a fourth buzz would have to be tellable from three
+  others on the one axis `vibrate()` controls.
+- ⚠ **Physical, not logical.** Away from the reader crosses off, back restores,
+  against the screen rather than the writing direction — a *row* has no
+  `dir="auto"` signal and a record can hold both languages at once, so mirroring
+  per row would have two rows answering one swipe differently. Held deliberately.
 - **Measured by `node_modules/.probe/swipe.mjs`**, which drives real CDP touch
   events because the thing under test is the browser's own arbitration. ⚠ **It
   failed on its second run against the state its first run left**, and every
   assertion is now scoped to a row it seeded by text — a probe that is not
-  idempotent will eventually report a bug that is its own.
+  idempotent will eventually report a bug that is its own. ⚠ **It holds the drag
+  at full extension to read the transform**, because the row springs back on
+  release and *did it move* is the question the inert direction turns on.
 
 ⚠ **Phase 2 step 1 is built — the CONSOLE, 30 August.** A tap on a line opens a
 box holding the whole capture, its photograph, its link, its year, its standing

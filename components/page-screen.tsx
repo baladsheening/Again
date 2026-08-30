@@ -1365,9 +1365,15 @@ export function PageScreen({
   }, [editing])
 
   /* ------------------------------------------------------------------ */
-  /*  The two resolutions — from the console, or from a swipe            */
+  /*  The two resolutions — crossing off swipes, settling opens a console */
   /* ------------------------------------------------------------------ */
 
+  /**
+   * **Cross a line off, or put it back.** One function for both, because they
+   * are one fact and its inverse — which is exactly what lets the row carry it
+   * as a swipe and its reverse. See `row-swipe.ts` for why settling does not
+   * get one.
+   */
   function crossOff(line: Line) {
     const crossedOff = line.state === 'dropped'
     const next: EntryState = crossedOff ? 'want' : 'dropped'
@@ -1377,8 +1383,17 @@ export function PageScreen({
       refuses it afterwards. The record is optimistic, so *became true* means
       became true on the page — see `lib/haptics.ts`, which also says why iOS
       feels none of this and why nothing may be designed around it.
+
+      ⚠ **Putting a line back is the CAPTURE's tap, not the cross-off's thud,
+      and there is deliberately no fourth pattern.** The thud means *crossed
+      off*; firing it for the opposite act would teach the hand one buzz for two
+      facts, which is the noise `lib/haptics.ts` exists to prevent. A line
+      returning to the live record is the same fact as a line landing on it, so
+      it borrows the same light tap rather than inventing a signal nobody can
+      tell from the other three.
     */
-    hapticCrossedOff()
+    if (crossedOff) haptic()
+    else hapticCrossedOff()
     mark(line.key, { state: next, failed: null })
     setAsking(null)
 
@@ -1388,25 +1403,24 @@ export function PageScreen({
   }
 
   /**
-   * **Put *Again?* on the line**, which is what a settle swipe does.
+   * **Put *Again?* on the line**, which is what the console's settle glyph does.
    *
-   * ⚠ **A swipe cannot settle, because settling has two answers.** *I would do
-   * this again* and *that is dealt with* are genuinely different claims — it is
-   * the app's own name on one of them — and one direction cannot carry both. So
-   * the gesture asks and the two answers are a tap each, which is exactly what
-   * the console's settle glyph does through a longer door.
+   * ⚠ **This is reachable from the console and from nowhere else since 30
+   * August.** It was the settle swipe's handler as well, and the swipe is
+   * deleted: settling has two answers, one direction cannot carry both, and a
+   * gesture that asks rather than acts costs the second beat the swipe existed
+   * to save. **So settling stays where there is room to state two answers**, and
+   * the row keeps the one resolution that is its own inverse. The full argument
+   * is at the head of `row-swipe.ts`.
    *
-   * ⚠ **That is also what makes the swipe safe.** Nothing leaves the page until
-   * somebody answers, so a swipe made by accident costs a question rather than a
-   * row — and settling has no undo, unlike crossing off, which is its own
-   * inverse. The asymmetry between the two directions is the asymmetry between
-   * the two resolutions.
+   * ⚠ **Which means `asking` is now only ever set while a console is open**, and
+   * the record's own copy of this question is gone with the swipe that needed
+   * it. Do not put it back on the row without putting the swipe back too.
    *
-   * ⚠ **A crossed-off line cannot be settled and the swipe is silently
-   * nothing.** `resolveCapture` guards on `want`, so the settleable set is
-   * exactly the resolvable one; the console does the same thing by not drawing
-   * the glyph, and a gesture cannot be *not drawn*. The way back is the other
-   * direction, which is the × that put it there.
+   * ⚠ **A crossed-off line cannot be settled.** `resolveCapture` guards on
+   * `want`, so the settleable set is exactly the resolvable one, and the console
+   * does the same thing by not drawing the glyph. The guard below is the same
+   * rule stated where the state actually changes.
    *
    * ⚠ **No haptic here.** Nothing became true in the database — a question
    * appeared. `hapticSettled` fires in `settle`, when one is answered.
@@ -2398,11 +2412,17 @@ export function PageScreen({
                     id to name in the mutation, and a failed one wants its retry
                     — which is a *tap*, and is why that check lives in
                     `openConsole` rather than being repeated here.
+
+                    ⚠ **The ROW says which way it swipes, and it is the one thing
+                    the hook cannot work out for itself — 30 August.** A live line
+                    goes away to be crossed off; a struck one comes back to be
+                    restored. One handler serves both, because `crossOff` is
+                    already the toggle — what the direction buys is that each
+                    half is a separate gesture rather than the same swipe meaning
+                    two things depending on a state the hand cannot feel.
                   */
                   {...(line.id !== '' && !line.pending && !line.failed
-                    ? bindSwipe((way) =>
-                        way === 'crossOff' ? crossOff(line) : askAgain(line),
-                      )
+                    ? bindSwipe(crossedOff ? 'restore' : 'crossOff', () => crossOff(line))
                     : {})}
                   className="page-row"
                 >
@@ -2700,26 +2720,22 @@ export function PageScreen({
                 )}
 
                 {/*
-                  ⚠ **The settle swipe's question, on the row it was made on —
-                  30 August.** A swipe cannot settle a line because settling has
-                  two answers, so the gesture puts the question here and the two
-                  answers are a tap each. See `askAgain`.
+                  ⚠ **THE RECORD ASKED *Again?* HERE FOR A DAY AND IT IS DELETED
+                  — 30 August, the same day it was built.** It was the settle
+                  swipe's question, drawn on the row the swipe was made on, and
+                  it went when the swipe did: settling is the console's now, so
+                  `asking` can only be set while a console is open and this branch
+                  was unreachable rather than merely unused. See `askAgain`, and
+                  `row-swipe.ts` for why the gesture went.
 
-                  ⚠ **Never while the console is open**, because the console asks
-                  the same question from the same state. `asking` is one id, so
-                  without this guard one swipe would put *Again?* in two places
-                  at once and answering either would settle the line — the same
-                  fact drawn twice, which is how two surfaces start disagreeing.
-                  The console wins where they meet: it is the surface somebody is
-                  looking at.
+                  **What went with it**, and none of it should come back on its
+                  own: the `!isOpen` guard that kept one question from being drawn
+                  in two places at once, and the record's second reason to own a
+                  copy of the console's `Ask`. The offer above is the only
+                  question a row still asks, and it is the row's own — it arrives
+                  unbidden from the provider, where settling is something somebody
+                  went looking for.
                 */}
-                {asking === line.id && !isOpen && (
-                  <Ask
-                    ask="Again?"
-                    onYes={() => settle(line, true)}
-                    onNo={() => settle(line, false)}
-                  />
-                )}
 
                 {/*
                   ⚠ **The console, inside the `<li>` of the line it belongs to,

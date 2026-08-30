@@ -7,17 +7,61 @@ import { useRef } from 'react'
  *  Tap thinks, swipe does — 30 August, Phase 2 step 2
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * **Swipe a line: cross off one way, settle the other.** The two verbs used
- * fifty times a week become directional gestures on the row itself, and the
- * console becomes what it should be — the once-a-week question. **A gesture that
- * can be made anywhere on a row is the only kind of target that survives being
- * used while walking**, which is the whole argument: no console to open, no
- * glyph to hit, nothing to aim at.
+ * **Swipe a line away to cross it off, and swipe it back to undo.** The verb
+ * used fifty times a week is a gesture on the row itself, and the console
+ * becomes what it should be — the once-a-week question. **A gesture that can be
+ * made anywhere on a row is the only kind of target that survives being used
+ * while walking**, which is the whole argument: no console to open, no glyph to
+ * hit, nothing to aim at.
  *
  * ⚠ **A tap still opens the console and that is untouched.** The two gestures
  * are on the same row and cannot be confused, because one of them has no
  * distance in it. See `onClickCapture` below for the one line that keeps them
  * apart.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  ONE swipe per row, and which one is the row's state to say — 30 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠⚠ **SETTLING IS NOT A SWIPE, and that reverses the first version of this
+ * file, written the same day.** It swiped left to cross off and right to settle,
+ * and settling could not settle — it put *Again?* on the row and took a tap to
+ * answer, because settling has two answers and one direction cannot carry both.
+ * Directed after use: **settling must cost one beat, and both directions must
+ * afford an undo.**
+ *
+ * **Those are one demand, and the cheapest thing that meets it is a
+ * subtraction.** The question was the safety: nothing left the page until
+ * somebody answered, and settling has no inverse to swipe back. Give the swipe
+ * an undo and the question goes — but a swipe that settles in one beat still
+ * owes the *other* answer a home, and it has none on a row. So the settle swipe
+ * is **deleted** rather than made one-beat, and settling keeps the console, the
+ * surface with room to state two answers, which is where it already lives.
+ *
+ * What is left is a resolution that is its own inverse, so the two directions
+ * are the two halves of one act:
+ *
+ * - **Away from the reader crosses off.** The row stays where it is, struck.
+ * - **Back toward the reader restores it.** The same fact, undone.
+ *
+ * ⚠ **A row therefore affords exactly ONE swipe, and its state says which.**
+ * `bind` is told the live direction; the other one does not move the row at all.
+ * That is deliberate, and it is what keeps the detent honest — see *the row
+ * travels its own height* below. A row that travelled and clamped in a direction
+ * that does nothing would feel armed and then do nothing, which is a worse lie
+ * than a row that does not move.
+ *
+ * ⚠ **The undo is unbounded in time, and that is a gain over the ten seconds
+ * the design brief was going to reuse.** A crossed-off row stays on the page, so
+ * the way back is on the page too, for as long as the row is. Nothing is held,
+ * nothing expires, and no clock is trusted on either side.
+ *
+ * ⚠ **The reverse swipe is invisible, and the console is what makes that
+ * safe.** A crossed-off line's console offers exactly one control and it is the
+ * way back — `console.tsx`, *Put it back*. So the gesture is the shortcut for
+ * somebody who has learnt it and never the only door, and nothing is destroyed
+ * either way: §5's *nothing is ever deleted* is what lets a hidden undo be a
+ * convenience rather than a trap.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The scroll question, answered by the browser rather than by a thermostat
@@ -41,6 +85,11 @@ import { useRef } from 'react'
  * swipe. Six pixels and a dominant axis is what separates a drag from a click on
  * a desk; on a handset the browser has already decided by the time it matters.
  *
+ * ⚠ **A drag the wrong way is still a drag, and still suppresses the click.**
+ * The row does not move, but the gesture was not a tap and must not open a
+ * console on release — `swiped` is set for any armed swipe, whichever way it
+ * went.
+ *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The row travels its own height, and stops
  * ─────────────────────────────────────────────────────────────────────────────
@@ -62,40 +111,20 @@ import { useRef } from 'react'
  * nicety.** Safari implements no Vibration API on any version — see
  * `lib/haptics.ts` — and the installed app is a handset. A swipe designed to be
  * confirmed by the hand would be confirmed by nothing at all on the one surface
- * this app is used on. So both outcomes are self-evident *after* the fact as
- * well: crossing off strikes the line where it stands, and settling puts a
- * question on it. Neither is destructive and neither needs an undo.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Why settling ASKS instead of settling
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * ⚠ **A swipe cannot settle a line, because settling has two answers.** *I would
- * do this again* and *that is dealt with* are genuinely different claims — it is
- * the app's own name on one of them — and one direction cannot carry both. So
- * the settle swipe puts *Again?* on the row and the two answers are a tap each,
- * which is exactly what the console's settle glyph does through a longer door.
- *
- * **It is still much cheaper than the console**: one swipe and one tap, against a
- * tap, a read, a glyph and a tap. And it has the safety the console has — nothing
- * leaves the page until somebody answers, so a swipe made by accident costs a
- * question rather than a row.
- *
- * ⚠ **Crossing off needs no question and gets none.** It is a toggle: the row
- * stays where it is, struck through, and the same swipe puts it back. That
- * asymmetry is not an inconsistency — it is the difference between a resolution
- * with two meanings and one with an inverse.
+ * this app is used on. So the outcome is self-evident *after* the fact as well:
+ * crossing off strikes the line where it stands, and restoring un-strikes it.
+ * Neither is destructive and each is the other's undo.
  */
 
-/** Which way, in the reading direction of a left-to-right page. */
-export type SwipeWay = 'settle' | 'crossOff'
+/** Which resolution a row's one swipe carries. */
+export type SwipeWay = 'crossOff' | 'restore'
 
 /**
- * ⚠ **Physical, not logical, and the RTL question is open.** Rightward settles
- * and leftward crosses off, which is the direction every list on every phone
- * already teaches: away from you completes, back toward you removes. It is
- * written against the screen rather than against the writing direction, so on an
- * Arabic page the gestures do not mirror.
+ * ⚠ **Physical, not logical, and the RTL question is open.** Crossing off is a
+ * push away from the reader and restoring is a pull back, which is the direction
+ * every list on every phone already teaches. It is written against the screen
+ * rather than against the writing direction, so on an Arabic page the gestures do
+ * not mirror.
  *
  * **That is a deliberate hold rather than an oversight.** The field mirrors
  * because `dir="auto"` reads the first strong character somebody typed; a *row*
@@ -104,8 +133,7 @@ export type SwipeWay = 'settle' | 'crossOff'
  * which is worse than not mirroring at all. Revisit it when there is somebody
  * reading the record right-to-left to ask.
  */
-const RIGHT: SwipeWay = 'settle'
-const LEFT: SwipeWay = 'crossOff'
+const SIGN: Record<SwipeWay, number> = { crossOff: -1, restore: 1 }
 
 /** A pointer that has moved this far on the dominant axis is dragging. */
 const ACTIVATION = 6
@@ -118,8 +146,11 @@ export function useRowSwipe() {
     y0: number
     /** Null until the axis is settled; false means the browser took it. */
     swiping: boolean | null
-    /** How far the row actually travelled, for the commit decision. */
-    reached: number
+    /**
+     * How far the row travelled **along its live direction**, for the commit
+     * decision. Negative means the finger went the way this row does not go.
+     */
+    along: number
   } | null>(null)
 
   /**
@@ -144,7 +175,12 @@ export function useRowSwipe() {
     el.style.transform = dx === 0 ? '' : `translateX(${dx}px)`
   }
 
-  return function bind(act: (way: SwipeWay) => void) {
+  /**
+   * @param way  The one direction this row affords, which its state decides.
+   * @param act  What that direction does. It is its own undo, so there is one.
+   */
+  return function bind(way: SwipeWay, act: () => void) {
+    const sign = SIGN[way]
     return {
       onPointerDown(e: React.PointerEvent<HTMLElement>) {
         /* A second finger, or a pointer already tracked: leave it alone. */
@@ -155,7 +191,7 @@ export function useRowSwipe() {
           x0: e.clientX,
           y0: e.clientY,
           swiping: null,
-          reached: 0,
+          along: 0,
         }
         swiped.current = false
       },
@@ -188,10 +224,15 @@ export function useRowSwipe() {
           the note at the head of this file: measuring the thing being swiped is
           what makes a handset and a desk right by derivation rather than by two
           numbers agreeing.
+
+          ⚠ **`Math.max(0, …)` is the whole of *the other direction does not move
+          the row*.** A finger going the way this row does not go reads as zero
+          travel, so the row sits still and nothing can arm — rather than sliding
+          to a detent that would then do nothing.
         */
         const stop = s.el.getBoundingClientRect().height
-        s.reached = dx
-        draw(s.el, Math.max(-stop, Math.min(stop, dx)), false)
+        s.along = dx * sign
+        draw(s.el, sign * Math.max(0, Math.min(stop, s.along)), false)
       },
 
       onPointerUp(e: React.PointerEvent<HTMLElement>) {
@@ -204,12 +245,12 @@ export function useRowSwipe() {
         const stop = s.el.getBoundingClientRect().height
         draw(s.el, 0, true)
         /*
-          ⚠ **Both outcomes end with the row back where it was**, because neither
-          of them moves it: crossing off strikes it in place and settling puts a
-          question under it. A row left held open would be a fourth state to
-          dismiss, and this page has one dismissal gesture already.
+          ⚠ **The row ends where it started, because the outcome does not move
+          it**: crossing off strikes it in place and restoring un-strikes it. A
+          row left held open would be a fourth state to dismiss, and this page
+          has one dismissal gesture already.
         */
-        if (Math.abs(s.reached) >= stop) act(s.reached > 0 ? RIGHT : LEFT)
+        if (s.along >= stop) act()
       },
 
       /**

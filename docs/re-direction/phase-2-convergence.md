@@ -29,7 +29,7 @@ wins and this file is wrong.
 | | |
 |---|---|
 | The console | **BUILT — 30 August.** §1 is deleted below; the code and its argument are `components/console.tsx` and `console-sheet` in `globals.css` |
-| Swipe to cross off / settle | **BUILT, then REOPENED the same day** — §3 struck, §3b is the new direction. ⚠ **Settling must cost ONE beat and BOTH directions need an undo.** Not built |
+| Swipe to cross off, swipe back to undo | **BUILT — 30 August, reopened and rebuilt the same day.** §3 and §3b both struck. ⚠ **Settling is NOT a swipe**: the row carries the one resolution that is its own inverse, and the console keeps the question that has two answers |
 | Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
 | The notification portal | designed, not built |
 | The convergence mark on a line | designed, not built |
@@ -119,22 +119,19 @@ never be given a reflex's real estate.
 
 ## ~~3. Tap thinks, swipe does~~ — BUILT, 30 August, and this section is deleted
 
-**Left crosses off, right asks *Again?*, a tap still opens the console.** The
-argument that was here is carried in `components/row-swipe.ts` and in the
+**A row swipes one way and back the other, and a tap still opens the console.**
+The argument that was here is carried in `components/row-swipe.ts` and in the
 `touch-action` note on `page-row` in `globals.css`, beside the code each governs.
 
-Three things the design did not say, decided in the building and recorded in
-`docs/decisions.md`, *Tap thinks, swipe does*:
+⚠ **This section shipped a settle swipe and §3b took it away the same day** —
+what is built is below. Two things decided in the first building survive it
+unchanged, and are recorded in `docs/decisions.md`, *Tap thinks, swipe does*:
 
-1. ⚠ **A swipe cannot SETTLE, because settling has two answers.** *Again?* and
-   *done* are different claims and one direction cannot carry both, so the settle
-   swipe puts the question on the row. That is also what makes it safe — settling
-   has no undo, and nothing leaves the page until somebody answers.
-2. ⚠ **The threshold is the row's own height, read off the row**, so a handset
+1. ⚠ **The threshold is the row's own height, read off the row**, so a handset
    and a desk are both right by derivation: 44 and 58.67 from one line with no
    breakpoint in it. It clamps there, which makes it a **detent** rather than a
    threshold to guess at.
-3. ⚠ **Physical, not logical.** Right settles, left crosses off, against the
+2. ⚠ **Physical, not logical.** Away from the reader crosses off, against the
    screen rather than the writing direction — a *row* has no `dir="auto"` signal
    and a record can hold both languages at once. Held deliberately until there is
    somebody reading the record right-to-left to ask.
@@ -151,73 +148,65 @@ events.
 
 ---
 
-## ⚠⚠ 3b. THE SWIPES ARE REOPENED — directed 30 August, NOT BUILT
+## ~~3b. The swipes are reopened~~ — BUILT, 30 August, by SUBTRACTION
 
-**Two directions, given after using the swipes:**
+**Directed after use: settling must cost one beat, and both directions must
+afford an undo.** What was built is **one swipe, not two**:
 
-1. ⚠ **Settling must cost ONE BEAT.** It costs two today — swipe, then answer
-   *Again?* with a tap — and that is the swipe failing its own argument. The
-   whole case for a gesture is that it is cheaper than the console; one swipe
-   plus one aimed tap is barely cheaper than a tap plus an aimed tap.
-2. ⚠ **Both directions must afford an UNDO.** Left-to-right and right-to-left
-   alike: after a swipe, the person must be able to take the decision back.
+> **Away from the reader crosses a line off. Back toward the reader puts it
+> back. Settling is the console's, and has no gesture.**
 
-**These two are one change, not two.** The only reason settling asks a question
-is that settling has two answers and no undo — *I would do this again* against
-*that is dealt with* — so a wrong swipe would put a line in the tray with no way
-back. **An undo removes that objection**, and with it the question, and with it
-the second beat. Build them together or neither works.
+**The demand was met by deleting the settle swipe rather than by making it
+one-beat**, which is *How things get fixed*'s first reach — remove the mechanism
+— and it answers both halves at once. Settling never cost one beat and could not
+be made to: the swipe put *Again?* on the row because settling has two answers,
+and a gesture that asks rather than acts is the second beat the swipe existed to
+save. Give it an undo and the question goes, but the *other answer* still has
+nowhere on a row to live. **So the row keeps the one resolution that is its own
+inverse, and the two-answer question stays where there is room to state it.**
 
-### What has to be decided when this is built
+**That is the second option this section listed** — *the console keeps the
+distinction* — and the objection recorded against it turned out to be weak:
+settling is the once-a-week act, the console is where it already lives with both
+answers drawn, and it costs a tap and an aimed tap where the swipe cost a swipe
+and an aimed tap.
 
-⚠ **Settling still has two answers, and one swipe cannot carry both.** Removing
-the question does not remove the fact. The options, and none is chosen:
+**What was built, and what each thing answers:**
 
-- **A default plus a correction.** The swipe settles with one answer and the undo
-  band carries both the way back *and* the other answer — *Settled. Undo · Not
-  again.* That gets one beat, keeps both claims reachable, and costs no aiming
-  unless somebody wants the non-default. **This is the recommendation.** Which
-  answer is the default is itself open; *again* is the app's own name and is the
-  likelier reading of a line somebody kept.
-- **The console keeps the distinction** and the swipe always settles the same
-  way. Cheapest to build; loses the second claim for anyone who never opens a
-  console.
-- **Distance decides.** A short swipe means one and a long one the other. Ruled
-  out on sight: it is a modifier gesture, which this page has refused three times
-  — see `pick`'s note in `page-screen.tsx`.
+- **One live direction per row, decided by the row's state.** `bind` is told
+  which; a live line goes away, a struck one comes back. It is no longer the same
+  swipe toggling on a state the hand cannot feel.
+- ⚠ **The inert direction does not move the row at all.** A row that travelled
+  and clamped in a direction that does nothing would feel *armed* and then do
+  nothing — a worse lie than a row that does not move, and it would destroy the
+  detent, which is the only confirmation iOS can give (§4: Safari has no
+  Vibration API). One `Math.max(0, …)` is the whole mechanism.
+- ⚠ **The undo is unbounded in time**, which is better than the ten seconds this
+  section was going to reuse. A crossed-off row stays on the page, so the way
+  back is on the page for as long as the row is: nothing is held, nothing
+  expires, no clock is trusted on either side, and there is no
+  settled-but-reversible third state for the resume gate to learn.
+- ⚠ **The invisible reverse swipe is made safe by the console, not by a
+  toast.** A crossed-off line's console offers exactly one control and it is
+  *Put it back* — already built, before this change. So the gesture is the
+  shortcut for somebody who has learnt it and never the only door. No toast was
+  reached for, as this section asked.
+- ⚠ **The record's inline *Again?* is DELETED**, and with it the `!isOpen` guard
+  that kept one question from being drawn twice. `asking` and `askAgain` survive
+  and are the console's alone — the two surfaces cannot disagree, because there
+  is only one left.
+- ⚠ **No fourth haptic.** Putting a line back fires the capture's light tap:
+  *a line is on the live record* is the fact both state, and a fourth buzz would
+  have to be tellable from three others on the one axis `vibrate()` controls.
 
-### What the undo has to be
+**Measured by `node_modules/.probe/swipe.mjs`** — 30 assertions on a 390 handset
+and 9 on a 1440 desk, rewritten around the half that is not there: a live row
+held still against a restore swipe, a struck row held still against a second
+cross-off, both clamping at their own height in the direction they do go, and
+nothing anywhere saying *Again?* after any swipe.
 
-⚠ **There is already an undo on this page and it is the pattern to follow, not to
-copy.** `LineUndo` gives ten seconds after a capture lands, in the line's own
-slot, and it exists because *the undo belongs beside the line it takes back*.
+---
 
-- **Crossing off is its own inverse and still needs the affordance**, because a
-  gesture nobody knows is reversible reads as destructive. The row stays on the
-  page struck through, so the undo has somewhere to live.
-- ⚠ **Settling is the hard one: the row LEAVES the page.** There is nowhere
-  beside the line to put an undo, because there is no line. Either the row is
-  held in place for the window and removed when it closes, or the undo goes
-  somewhere that is not the row. Holding it in place is more honest and matches
-  `undoCapture`'s own precedent — the delete is bounded in SQL against
-  `created_at`, so the client's clock is never trusted.
-- ⚠ **Do not reach for a toast.** The page has no such surface and §11 spends no
-  colour on one; the existing undo is a glyph on a row, and a second vocabulary
-  for the same act is how a page stops being learnable.
-- ⚠ **The ten-second window is already a decided number** (§5's one exception to
-  *nothing is ever deleted*). Reuse it rather than picking a second one.
-
-### What it costs, stated before it is built
-
-- **`settle` currently removes the row optimistically** and puts it back only on
-  a server failure, by the index it held. An undo window means the row is held
-  deliberately, which is a third state for that row — settled-but-reversible —
-  and the resume gate must treat it as unsettled, exactly as it already treats an
-  open undo window.
-- **`asking` and `askAgain` may be deleted with the question**, and with them the
-  record's inline *Again?*. The console's settle glyph would then settle directly
-  too, or keep the question — **they must not disagree**, which is the rule that
-  put `askAgain` in one place to begin with.
 ## ~~4. Haptics are the eyes-free channel~~ — BUILT, and DEAD ON iOS
 
 **The three patterns are in `lib/haptics.ts` and they run on Android only.** A
@@ -372,10 +361,11 @@ for convergence on a line. Nothing is the correct rendering of nothing.
    view**.
 2. ~~**Swipes**, and delete `picked`.~~ **DONE, 30 August** — the state was
    already gone with the console; the gesture is `components/row-swipe.ts`. ⚠
-   **REOPENED the same day and NOT finished: settling must cost one beat, and
-   both directions must afford an undo. See §3b, which is the next thing to
-   build.**
+   **Reopened and rebuilt the same day**: settling had to cost one beat and both
+   directions had to afford an undo, and the answer was to **delete the settle
+   swipe**. One swipe, its own inverse, unbounded undo. §3b.
 3. **The portal**, reading `notifications` — which also proves the fan-out end to
-   end with two accounts for the first time.
+   end with two accounts for the first time. ⚠ **This is the next thing to
+   build.**
 4. **The mark**, last, once there is a real convergence to look at and it is
    known what one looks like to a person.
