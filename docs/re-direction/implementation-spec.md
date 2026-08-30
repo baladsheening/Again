@@ -1055,10 +1055,12 @@ applied count, then whether the columns the page reads exist — and
 `scripts/prod-check.sh` wraps it for production. The runbook's order stands:
 *migrate production first, deploy second.*
 
-⚠ **Five things are outstanding, and none of them is a screen that does not
+⚠ **Four things are outstanding, and none of them is a screen that does not
 work:** the vocabulary migration (deferred, and the only non-additive one in the
-phase), a `kind` that is not a film, the thing detail view, a Blob store for the
-photographs that are already built, and the binding acceptance criterion below.
+phase), a `kind` that is not a film, a Blob store for the photographs that are
+already built, and the binding acceptance criterion below. ⚠ **The thing detail
+view was the fifth and is closed — 30 August.** Phase 2 step 1 built the console
+(a tap on a line opens the whole capture) and deleted `film-screen.tsx` into it.
 
 ⚠ **The binding criterion was closed at the user's direction on 24 August and
 was never stopwatched.** *Accepted* and *measured* are different claims and only
@@ -1078,8 +1080,10 @@ Deliver:
   lands is an ordinary outcome, not a failure, and costs the capture nothing
 - **[built]** unmatched capture persistence
 - **[built]** optimistic save and undo
-- **[part]** personal list and detail view — the page and the settled tray are
-  built; the detail view is not, and `film-screen.tsx` is kept for it
+- **[built]** personal list and detail view — the page and the settled tray were
+  built in this phase; ⚠ **the detail view landed on 30 August as Phase 2 step
+  1's console**, which is what a tap on a line now opens. `film-screen.tsx` was
+  being kept for it and is deleted into it. See `components/console.tsx`
 - **[built, and dark]** optional image attachment — built end to end and ⚠ **the
   upload path has never run**: there is no Blob store on the project, so the
   camera ships dark and lights the day one exists. Lodged rather than built
@@ -1157,12 +1161,28 @@ the film-first build and re-pointed at captures in Phase 0:
 - `notifications` rows written in the same transaction as the write that caused
   them
 
-⚠ **And the half that makes it a product is entirely unbuilt.** **Nothing in the
+⚠ **And the half that makes it a product is still unbuilt.** **Nothing in the
 tree reads the `notifications` table** — the rows have been accumulating behind a
 surface that does not exist, which also means the fan-out has never been proved
 end to end with two accounts. Neither is there an overlap list or detail, a
 QR/code contact handshake, or a possible-match prompt for unresolved
 normalised-equal captures.
+
+⚠ **Step 1 of the design's sequence is built and deployed to the branch — 30
+August: the CONSOLE.** Tapping a line opens a box holding the whole capture, its
+photograph, its link, its year, its standing question and its three controls —
+cross off, rewrite and settle. **It touches no network and reads no
+`notifications`**, so none of the paragraph above has changed; what it changes is
+that Phase 2 now has the surface every later piece of it hangs on. The portal is
+*a list of things that open consoles*, and the convergence sentence lands in a
+slot this box already leaves empty.
+
+It also closes Phase 1's outstanding **thing detail view**: `film-screen.tsx` was
+kept for a surface nothing opened and is deleted into this. The design and its
+consequences are `docs/re-direction/phase-2-convergence.md`, whose §1 is deleted
+now that the code carries the argument; the build is `components/console.tsx` and
+`console-sheet` in `app/globals.css`, measured by
+`node_modules/.probe/console.mjs` on a handset and a desk.
 
 ⚠ **A constraint to know before planning this: overlap joins on
 `possibility_id`, so only *resolved* captures can converge** — and TMDB is the

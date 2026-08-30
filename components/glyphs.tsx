@@ -19,8 +19,9 @@
  * Two of them are a deliberate pair:
  *
  *   - **`TrayGlyph`** (the bar) is a plain tray: a *place* you go.
- *   - **`SettleGlyph`** (the foot) is the same tray, identical in width and
- *     height, with an arrow dropping into it: an *action*.
+ *   - **`SettleGlyph`** (the console, since 30 August — the foot before it) is
+ *     the same tray, identical in width and height, with an arrow dropping into
+ *     it: an *action*.
  *
  * The arrow is the only difference between the noun and the verb.
  *

@@ -3,10 +3,23 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { SearchGlyph, SettleGlyph, WriteGlyph } from './glyphs'
+import { SearchGlyph, WriteGlyph } from './glyphs'
 
 /**
- * **The tools: write, settle and search.**
+ * **The tools: write and search.**
+ *
+ * ⚠ **Settle left on 30 August, and the note below predicted it in writing.**
+ * It said: *settle is the last asymmetry… if the grouping is revisited, settle
+ * is the thing to move — onto the line, where the other two that act on it
+ * already are, which would leave search alone and this file with nothing to be.*
+ * A tap on a line opens a **console** now, and cross off, rewrite and settle are
+ * all on its bottom edge — so the prediction came true in one move rather than
+ * three, and the answer to *this file with nothing to be* is that it has one job
+ * left and it is a good one: **the `+`.**
+ *
+ * ⚠ **What is left is genuinely not per-line**, which is the test this bar has
+ * been failing since 25 August: one control that starts a capture, and one that
+ * goes somewhere. Nothing here reads what the record has open.
  *
  * ⚠ **Write arrived on 27 August and it is the reason this bar exists now.**
  * The page had a live line pinned under the bar; the field is summoned, and
@@ -17,40 +30,35 @@ import { SearchGlyph, SettleGlyph, WriteGlyph } from './glyphs'
  * the field, which is where what it makes appears; that rule is untouched.
  *
  * ⚠ **It is the middle glyph, and that is a rule rather than a preference.** It
- * is the app's one primary action, and the centre of the foot is the single
- * position equally within reach of either thumb. The other two are line-actions
- * and navigation, and they take the edges.
+ * is the app's one primary action, and the centre of the bar is the single
+ * position equally within reach of either thumb.
+ *
+ * ⚠ **It is central by construction since 30 August, not by arithmetic.** Three
+ * glyphs under `justify-around` put it in the middle *because there were three
+ * of them*; take one away and it drifts to a quarter of the way across, which is
+ * what removing settle would have done silently. The bar is a three-column grid
+ * now and the `+` names its column, so it holds the centre at two glyphs and
+ * would hold it at one.
  *
  * ⚠ **It lights an empty page, which is what attach used to do.** A first run
- * has no record, so settle and search are both off — and *controls go off; they
- * do not disappear* only reads as deliberate if something on the screen is lit.
- * This is that something, and unlike attach it is never off: there is nowhere a
- * capture cannot be started.
+ * has no record, so search is off — and *controls go off; they do not disappear*
+ * only reads as deliberate if something on the screen is lit. This is that
+ * something, and unlike attach it is never off: there is nowhere a capture
+ * cannot be started.
  *
- * ⚠ **It was five on the morning of 25 August, two by that evening, and three
- * again on the 27th** — and every one of those moves went the same way: a
- * control belongs where its effect appears.
+ * ⚠ **It was five on the morning of 25 August, two by that evening, three again
+ * on the 27th, and two since the 30th** — and every one of those moves went the
+ * same way: a control belongs where its effect appears.
  *
- * - **Cross off and rewrite** act on a *picked* line, so they are in that line's
- *   own slot — `LineTools` in `page-screen.tsx`, which also carries the undo for
- *   the ten seconds after a capture lands.
+ * - **Cross off, rewrite and settle** all act on one capture, so they are on the
+ *   **console** — the box that shows the capture they act on. See
+ *   `console.tsx`. The record's own slot keeps only the undo, for the ten
+ *   seconds after a line lands; see `LineUndo` in `page-screen.tsx`.
  * - **Attach** is on the **field**, because it starts a capture rather than
  *   acting on one. This file's own note had been saying so for a day: *the only
  *   control here that does not care what is picked*. The link chip arriving
  *   beside it is what made it unarguable — the control that creates an
  *   attachment was somewhere other than where the attachment appears.
- *
- * What is left is genuinely not per-line: write summons the field, settle sends
- * the picked line to the tray, and search answers *where is that thing I wrote
- * in June*.
- *
- * ⚠ **Settle is the last asymmetry, and it is now the only one.** It acts on the
- * picked line exactly as cross off and rewrite do, and it stayed because it was
- * directed here and because three glyphs on a line is a toolbar rather than a
- * slot. With attach gone that argument is thinner than it was: this bar is one
- * line-action and one navigation. **If the grouping is revisited, settle is the
- * thing to move** — onto the line, where the other two that act on it already
- * are, which would leave search alone and this file with nothing to be.
  *
  * ⚠ **Two placements, one set.** Below `--breakpoint-stack` these are a bar
  * across the foot of the glass; at and above it they stand in a column to the
@@ -79,15 +87,18 @@ import { SearchGlyph, SettleGlyph, WriteGlyph } from './glyphs'
  * them, so a line dissolves into the chrome instead of being cut off by an edge.
  * See `--glass-tint`.
  *
- * Three states, and they are the app's honest answer to what is available:
+ * Two states, and they are the app's honest answer to what is available:
  *
- * | state | write | settle | search |
- * |---|---|---|---|
- * | empty record | **on** | off | off |
- * | a record, nothing picked | **on** | off | **on** |
- * | a saved line picked | **on** | **on** | **on** |
+ * | state | write | search |
+ * |---|---|---|
+ * | empty record | **on** | off |
+ * | a record | **on** | **on** |
  *
- * ⚠ **Write is never off, and it is the only entry here that never is.** Every
+ * ⚠ **Neither depends on what is open any more**, which is what removes the
+ * third row this table used to have. The bar cannot be lit or dark because of a
+ * line; it answers *is there a record* and nothing else.
+ *
+ * ⚠ **Write is never off, and it is the only entry here that never is.** The
  * other control needs something to act on; there is nowhere a capture cannot be
  * started. On a first run it is the one lit thing on the screen, which is the
  * job attach used to do here before it went to the field — and *controls go off;
@@ -95,9 +106,15 @@ import { SearchGlyph, SettleGlyph, WriteGlyph } from './glyphs'
  *
  * ⚠ **The whole bar goes while the sheet is up.** It is not a stacking problem:
  * the sheet rests on `--keyboard-overlap`, which is zero wherever there is no
- * on-screen keyboard, so the two would share the bottom edge. None of these
- * three is wanted while somebody is writing, and the `+` least of all — it
- * would be a second door to the thing already open. See `PageScreen`.
+ * on-screen keyboard, so the two would share the bottom edge. Neither of these
+ * is wanted while somebody is writing, and the `+` least of all — it would be a
+ * second door to the thing already open. See `PageScreen`.
+ *
+ * ⚠ **It does NOT go while a console is open, and that is deliberate.** The
+ * console takes the scrim at `z-5` and the strip stays at `z-20`, so the `+` is
+ * still there and still lit — which makes it a real door from *looking at a
+ * capture* to *writing the next one*, and `openSheet` closes the console on the
+ * way through. One scrim, one occupant, and this is how the occupant changes.
  *
  * ⚠ **Search is the one link here, so it is an `<a>` and not a button.**
  * Everything else acts on the line in hand; this goes somewhere. A button with a
@@ -119,8 +136,6 @@ type Tools = {
    * the field is mounted at all times — see `openSheet` in `page-screen.tsx`.
    */
   write: () => void
-  /** Settle the picked line: it leaves the page for the tray. */
-  settle: (() => void) | null
   /**
    * Whether there is a record to search. `false` on an empty page, where the
    * only answer the surface could give is *Nothing.*
@@ -129,24 +144,20 @@ type Tools = {
 }
 
 /**
- * The three, in order, with nothing said about how they are arranged. Both
+ * The two, in order, with nothing said about how they are arranged. Both
  * placements render this and neither may reorder it.
+ *
+ * ⚠ **`col-start-*` is how the `+` stays in the middle of the bar, and it is
+ * inert in the stack.** The bar used to have three glyphs spread by
+ * `justify-around`, so the `+` was central **by there happening to be three of
+ * them** — take one away and it drifts to a quarter of the way across. The bar
+ * is a three-column grid now and these say which column each lands in, so the
+ * `+` is central by construction and would survive losing search too. Grid
+ * placement has no effect on a flex item, so the vertical stack ignores both.
  */
-function ToolSet({ write, settle, searchable = false }: Tools) {
+function ToolSet({ write, searchable = false }: Tools) {
   return (
     <>
-      <button
-        type="button"
-        disabled={!settle}
-        onClick={() => settle?.()}
-        aria-label="Settle it"
-        className={`tap-target flex items-center transition-colors ${
-          settle ? 'text-chrome' : OFF
-        }`}
-      >
-        <SettleGlyph />
-      </button>
-
       {/*
         ⚠ **The middle one, and the only one that is never off.** See the note at
         the head of this file: the centre is what either thumb reaches, and this
@@ -156,7 +167,7 @@ function ToolSet({ write, settle, searchable = false }: Tools) {
         type="button"
         onClick={write}
         aria-label="Write a capture"
-        className="text-chrome tap-target flex items-center"
+        className="text-chrome tap-target col-start-2 flex items-center"
       >
         <WriteGlyph />
       </button>
@@ -165,7 +176,7 @@ function ToolSet({ write, settle, searchable = false }: Tools) {
         <Link
           href="/search"
           aria-label="Search"
-          className="text-chrome tap-target flex items-center transition-colors"
+          className="text-chrome tap-target col-start-3 flex items-center transition-colors"
         >
           <SearchGlyph />
         </Link>
@@ -177,7 +188,7 @@ function ToolSet({ write, settle, searchable = false }: Tools) {
           with the door rather than staying on something a screen reader would
           announce as reachable.
         */
-        <span aria-hidden className={`tap-target flex items-center ${OFF}`}>
+        <span aria-hidden className={`tap-target col-start-3 flex items-center ${OFF}`}>
           <SearchGlyph />
         </span>
       )}
@@ -223,8 +234,24 @@ export function Foot({
         it reaches 9px past it — 1px of the cell and the strip's 8px hem — and
         stops flush with the strip's own edges. Nothing overhangs onto the record
         above or the keyboard below.
+
+        ⚠ **A three-column grid, where it was `flex justify-around` — 30
+        August.** With three glyphs those two are the same picture: thirds, each
+        centred, at 1/6, 1/2 and 5/6. With **two** they are not — `justify-around`
+        would put the `+` at a quarter and search at three quarters, moving both
+        of them because one left. The columns are the arrangement stated rather
+        than implied, so the `+` holds the centre and search holds the place it
+        already had, and the empty first column is exactly the space settle
+        vacated. `ToolSet` names the columns; see its note for why that is inert
+        in the stack.
+
+        ⚠ **The outer `col-start-1 row-start-1` is the STRIP's grid, not this
+        one.** The footer is a cell of the one-cell grid it shares with the
+        writing row — that is what stops the strip resizing between its two
+        states — and a grid container in its own right. Two grids, one element,
+        and neither reads the other's placement.
       */
-      className={`col-start-1 row-start-1 stack:hidden mx-auto flex w-full max-w-[var(--page-measure)] items-center justify-around transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
+      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] grid-cols-3 items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
         hidden ? 'pointer-events-none opacity-0' : ''
       }`}
     >

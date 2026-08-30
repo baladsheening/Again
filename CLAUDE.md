@@ -61,6 +61,60 @@ captures converge, and TMDB is the only catalogue** — today two people can
 converge on a film and on nothing else. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
+⚠ **Phase 2 step 1 is built — the CONSOLE, 30 August.** A tap on a line opens a
+box holding the whole capture, its photograph, its link, its year, its standing
+question and its three controls. **It reads no network and no `notifications`**,
+so the paragraph above is unchanged — what it gives Phase 2 is the surface
+everything later hangs on, since the portal is *a list of things that open
+consoles* and the convergence sentence lands in a slot this box already leaves
+empty. It also closes Phase 1's thing detail view: **`film-screen.tsx` and the
+unreferenced `capture-provider.tsx` are deleted.**
+
+- ⚠ **A tap on a line no longer picks it, and `picked` is gone as state.** The
+  pick lit the foot's settle glyph and put `×` and `✎` in the row's own slot —
+  three controls for a line whose words the row could not show. All three are on
+  the console now, which is *a control belongs where its effect appears* applied
+  once more. **The record's slot keeps only the undo**, for the ten seconds after
+  a line lands, because that is a window and not a considered act.
+- ⚠ **The foot is `+` and search**, and `foot.tsx` had predicted the move in
+  writing. Its bar is a **three-column grid** so the `+` holds the centre by
+  construction rather than by there happening to be three glyphs.
+- ⚠ **Two surfaces and they are genuinely two — directed.** A fixed rectangle
+  over a blurred record below `--breakpoint-stack`; the row **expanding in place**
+  at and above it. One component, one mount point, the stylesheet deciding.
+- ⚠ **The `picked` utility survives in `globals.css` applied to nothing**,
+  deliberately: §11 reserves `--color-accent` for **convergence**, and the gutter
+  is where a state may live. The mark's next tenant is Phase 2's. Do not put a
+  pick mark back there.
+- ⚠ **One scrim, one occupant.** The console takes the writing sheet's scrim
+  rather than bringing a second — the two can never be open together, because
+  `✎` closes the console and hands the words to the strip, and the `+` closes it
+  the other way. **Tapping the paper is now the one exit gesture in the app.**
+- ⚠ **The console's ground LIFTS toward `--color-surface`; the strip's glass
+  sinks.** It wore `--sheet-tint` for an hour and the card came out **invisible**:
+  a card floating mid-screen has no borrowed edge, and the record behind it is
+  already darkened by the scrim, so a ground mixed toward black has nothing left
+  to be darker than. Same lesson as *the strip is on a true-black page*, with the
+  sign reversed. Read `--console-tint` before touching it.
+- ⚠ **It clears the bar and the strip by `--tap-floor`, not by `--page-lead`.**
+  The paper is the console's only exit on a handset, so the paper has to be a
+  target; 20px bands are not. The positioner is `pointer-events: none` for the
+  same reason — its gutter would otherwise swallow taps meant for the scrim.
+- **Measured by `node_modules/.probe/console.mjs`** on both surfaces, including
+  the rule the whole design rests on: **the same rectangle whichever line was
+  tapped**, so the `×` is somewhere a thumb can learn.
+
+⚠ **The desk's brighter type and mark is an OPEN NOTE, not a task, and nothing is
+blocked on it — raised 30 August.** With the ground lifted off true black to
+`#14140f`, every ratio in the palette dropped by about 12% and the reported
+feeling is that the wordmark and the text may want to come back up. **Nothing has
+been changed and nothing should be until it has been looked at on the real
+desk** — the measurements are in the `--color-bg` override in `globals.css` (text
+16.83 → 14.81, chrome 10.98 → 9.66, the lacquer red 4.26 → **3.75**, which is the
+tightest and the first thing to re-measure). ⚠ **If it is done, lift the INK and
+not the ground**: the ground was picked by looking at three candidates on the
+real page, and two lighter ones were refused. See `docs/decisions.md`.
+
 ⚠ **Production was a 500 for every signed-in request on the morning of 25
 August, and the cause is the rule this file states.** Three commits selecting
 `captures.suggested_possibility_id` were deployed while `0009` and `0010` sat
@@ -87,11 +141,11 @@ of it reversed two decisions the desk had made:
 - **The record is newest-first and the caret sits under the bar.** Nothing
   scrolls on arrival or after a Return, and a keyboard rising from the bottom of
   the glass has no way to cover the line being written.
-- **A line is only as wide as its own words.** Tap the words to pick the line;
-  tap the paper to let it go. ⚠ **A second tap on the words did the rewriting
-  for a day and does nothing since 25 August** — the foot's pencil is the one
-  door, so a tap on a line means *pick* and never two things depending on the
-  tap before it.
+- **A line is only as wide as its own words.** ⚠ **Tap the words to OPEN THE
+  CONSOLE since 30 August; it picked the line before that.** Tap the paper to
+  close it. A second tap on the words did the rewriting for a day and stopped on
+  25 August, and the rule that killed it is the rule that still holds: **a tap on
+  a line means one thing** and never two depending on the tap before it.
 
 ⚠ **The words of a record line are a `<span role="button">`, and nothing may
 make them a `<button>` again.** The original reason was that a button cannot be
@@ -632,8 +686,9 @@ now. See the one-strip entry above.
 capture, or the words of the line being rewritten. **Every instrument on that
 screen is built on this** — the recede, the keyboard hem, the band's own
 correction — and an `<input>` mounted in the record broke all three at once on 24
-August. No line of the record is ever an input. Rewriting is the foot's pencil,
-and only the foot's pencil.
+August. No line of the record is ever an input. ⚠ **Rewriting is the CONSOLE's
+pencil since 30 August, and only that pencil** — it was the foot's until the foot
+stopped carrying line-actions. One door, moved; not two.
 
 ⚠ **The paper does not start a capture.** It did for a day and that was removed:
 the live line is pinned and always on screen, so a second way to reach it was a

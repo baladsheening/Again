@@ -21,8 +21,9 @@ import type { PageLineView } from '@/lib/page-line'
 import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
+import { Ask, Console } from './console'
 import { Foot, ToolStack } from './foot'
-import { AttachGlyph, CrossOffGlyph, LinkGlyph, RewriteGlyph, UndoGlyph } from './glyphs'
+import { AttachGlyph, LinkGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { touchQuery, useMatches } from './pointer'
 
@@ -223,48 +224,18 @@ type Line = PageLineView & {
 }
 
 /**
- * **One question, two answers**, and the page asks exactly two kinds: *Again?*
- * when a line is settled, and *is this what you meant?* when a possibility is
- * offered.
+ * ⚠ **`Question` was here and it lives in `console.tsx` as `Ask` — 30 August.**
+ * The page asks exactly two kinds — *Again?* when a line is settled, and *is
+ * this what you meant?* when a possibility is offered — and both are now asked
+ * inside the console, which is the surface a capture is considered on. It is
+ * imported back for the one place the record still asks: **the offer, at the
+ * moment of capture**, so a question arrives visibly on the line it belongs to
+ * rather than as a mark somebody has to notice.
  *
- * ⚠ **The offer reuses the settle pair rather than inventing an accept
- * control**, which the design asks for by name — and it reuses it by being the
- * same component, so the two cannot drift into looking like different kinds of
- * question. They are not: both are one line of the record asking the person who
- * wrote it to decide something, and both are answerable by ignoring them.
- *
- * `gap-5` on a coarse pointer because Yes and No both carry a 44px hit area and
- * at `gap-4` the two expansions meet in the middle.
+ * ⚠ **Moved rather than copied.** Two components would be two designs waiting to
+ * disagree about what a question looks like, which is the thing its own note
+ * warned against when it was one component serving two questions.
  */
-function Question({
-  ask,
-  onYes,
-  onNo,
-}: {
-  ask: string
-  onYes: () => void
-  onNo: () => void
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-4 pb-3 pointer-coarse:gap-5">
-      <span className="text-sm">{ask}</span>
-      <button
-        type="button"
-        onClick={onYes}
-        className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors"
-      >
-        Yes
-      </button>
-      <button
-        type="button"
-        onClick={onNo}
-        className="text-muted hover:text-text tap-target text-sm transition-colors"
-      >
-        No
-      </button>
-    </div>
-  )
-}
 
 /**
  * **The photograph, riding the line** — in the same slot a resolved capture's
@@ -305,70 +276,51 @@ function Thumbnail({ line, onOpen }: { line: Line; onOpen: () => void }) {
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  The line's own slot — 25 August
+ *  The line's own slot — 25 August, and it holds one thing since the 30th
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Directed: the undo belongs beside the line it takes back, and when its ten
- * seconds pass that same slot carries the two controls that act on a **picked**
- * line — cross off and rewrite. One slot, three states, and never two of them at
- * once.
+ * **The undo belongs beside the line it takes back.** For ten seconds after a
+ * capture lands, that slot is the way to erase it; after them it used to become
+ * cross off and rewrite, for a *picked* line.
  *
- * ⚠ **It answers the confusable moment the bar's undo had written down and left
- * open.** For ten seconds after a line landed, the bar's undo and the foot's ×
- * were both lit and both acted on it, with nothing saying that one erases and
- * the other strikes through. They are the same slot now, in sequence rather than
- * side by side: while the window is open the slot is undo, and it becomes cross
- * off the moment undo stops being possible. The pair can no longer be seen
- * together, which is a stronger answer than the colour the note proposed.
+ * ⚠ **`LineTools` was that component and it is deleted — 30 August.** The pick
+ * is gone: a tap on a line opens the console, and **cross off and rewrite are on
+ * the console's bottom edge**, on the box that shows the capture they act on.
+ * Three states in one slot was the right answer while the record was the only
+ * surface a line had; it has one of its own now.
  *
- * ⚠ **Absent until the line is picked, and this is settled.** They were shown on
- * every line for an hour and taken back off: a record of two hundred lines each
- * carrying two glyphs is the density device inverted, which was the objection
- * before it was tried and the answer after. *Controls go off; they do not
- * disappear* stays the **two bars'** rule; on the line, absent is the off state.
+ * ⚠ **What that argument protected is untouched, and it is why this stayed.**
+ * The undo and the × were both lit on the same line for ten seconds with nothing
+ * saying that one erases and the other strikes through — so they were made one
+ * slot, in sequence, never side by side. They still cannot be seen together, and
+ * now they are not even on the same surface: the undo is on the row, the × is in
+ * the console, and the ten seconds are the only time the row carries anything at
+ * all.
+ *
+ * ⚠ **It must not move into the console with the other two.** The undo is a
+ * *window*, not an action on a considered line — it exists for a typo in
+ * something written half a second ago, and reaching it through a console is two
+ * gestures and a read for the one act on this page that has to cost neither.
+ *
+ * ⚠ **Absent until the window is open, and this is settled.** Controls were
+ * shown on every line for an hour and taken back off: a record of two hundred
+ * lines each carrying glyphs is the density device inverted. *Controls go off;
+ * they do not disappear* stays the **two bars'** rule; on the line, absent is the
+ * off state.
  *
  * ⚠ **Immediately after the words, which is what "the end of the entry" means.**
- * `ms-auto` put them at the end of the *row* for an hour and the report was
- * immediate — a short line left its controls stranded out at the margin with a
+ * `ms-auto` put it at the end of the *row* for an hour and the report was
+ * immediate — a short line left its control stranded out at the margin with a
  * gap of nothing between. A line is only as wide as its own words, so the end of
  * the entry is where the words stop.
- *
- * ⚠ **A crossed-off line offers one control and it is the way back.** Cross off
- * is a resolution, not a delete — the row stays where it is, struck through —
- * and while it is struck the other two would be acting on something somebody has
- * said they are done with. Rewriting words that are crossed out is editing a
- * decision rather than a capture.
- *
- * ⚠ **The rewrite *goes*, rather than going off**, and that is the same rule as
- * the slot itself: on the line, absent is the off state. A dark pencil beside a
- * struck line would be the record explaining what it is refusing; nothing there
- * is the record showing one way back, which is the × that put it there. It
- * returns the moment the strike is undone.
  *
  * ⚠ **It must not set the height of the row.** One line is one line: the glyph
  * is `--glyph-line`, the padding buys a hit area and the negative margin gives
  * the height back, so what the row measures is the drawing and what a thumb gets
  * is bigger than it.
  */
-function LineTools({
-  undoable,
-  picked,
-  crossedOff,
-  onUndo,
-  onCrossOff,
-  onRewrite,
-}: {
-  /** This line is the one inside its ten seconds. */
-  undoable: boolean
-  /** This line is the picked one. */
-  picked: boolean
-  crossedOff: boolean
-  onUndo: () => void
-  onCrossOff: () => void
-  /** `null` while a rewrite is already open — reopening would discard it. */
-  onRewrite: (() => void) | null
-}) {
-  if (!undoable && !picked) return null
+function LineUndo({ undoable, onUndo }: { undoable: boolean; onUndo: () => void }) {
+  if (!undoable) return null
 
   return (
     /*
@@ -379,40 +331,15 @@ function LineTools({
       which puts the glyph on the line's own centre with no number in it. See
       `line-glyph` and `page-row` in globals.css.
     */
-    <div className="line-glyph ms-3 shrink-0 gap-2 [--glyph:var(--glyph-line)]">
-      {undoable ? (
-        <button
-          type="button"
-          onClick={onUndo}
-          aria-label="Undo the last capture"
-          className="text-chrome flex items-center"
-        >
-          <UndoGlyph />
-        </button>
-      ) : (
-        <>
-          <button
-            type="button"
-            onClick={onCrossOff}
-            aria-label={crossedOff ? 'Put it back' : 'Cross it off'}
-            className="text-chrome flex items-center"
-          >
-            <CrossOffGlyph />
-          </button>
-          {/* Gone while the line is struck, not dark — see the note above. */}
-          {!crossedOff && (
-            <button
-              type="button"
-              disabled={!onRewrite}
-              onClick={() => onRewrite?.()}
-              aria-label="Rewrite it"
-              className={`flex items-center ${onRewrite ? 'text-chrome' : OFF}`}
-            >
-              <RewriteGlyph />
-            </button>
-          )}
-        </>
-      )}
+    <div className="line-glyph ms-3 shrink-0 [--glyph:var(--glyph-line)]">
+      <button
+        type="button"
+        onClick={onUndo}
+        aria-label="Undo the last capture"
+        className="text-chrome flex items-center"
+      >
+        <UndoGlyph />
+      </button>
     </div>
   )
 }
@@ -461,7 +388,26 @@ export function PageScreen({
     seed.map((l) => ({ ...l, key: l.id })),
   )
   const [draft, setDraft] = useState('')
-  const [picked, setPicked] = useState<string | null>(null)
+  /**
+   * **The line whose console is open**, by id, or `null`.
+   *
+   * ⚠ **This was `picked` until 30 August, and the rename is the change.** A tap
+   * on a line used to *mark* it: the row grew a brass bar in the gutter, the
+   * foot's settle glyph lit, and `×` and `✎` appeared in the line's own slot —
+   * three controls acting on a capture whose text the row could not show. A tap
+   * now opens the console, which shows the whole capture and carries all three.
+   *
+   * ⚠ **The state is the same shape and every rule it carried still holds.** It
+   * is an id and not a boolean, so *which* line survives a re-render; `asking`
+   * belongs to it and must be cleared with it; and the chrome is held while it
+   * is set, because the bar has to stay where it was when the line was tapped.
+   *
+   * ⚠ **Step 2 of the Phase 2 brief deletes this outright**, when cross off and
+   * settle become swipes on the row. It is still here because the swipes are not
+   * built, and a console that nothing can reach would be worse than a name that
+   * has one more job to lose.
+   */
+  const [opened, setOpened] = useState<string | null>(null)
   /*
     ⚠ **There is no `focused` state on this page any more, and that is the end
     of a long argument.** Four things were keyed to focus and all four had to
@@ -684,8 +630,14 @@ export function PageScreen({
   useKeyboardHem({ writing, host, floorAnchor })
 
   /*
-    ⚠ **A picked line is the hold, and focus deliberately is not.** The foot is
-    the picked line's toolbar, so it cannot be off screen while one is picked.
+    ⚠ **An open console is the hold, and focus deliberately is not.** It was a
+    *picked* line until 30 August, on the reasoning that the foot was that line's
+    toolbar and could not be off screen while one was picked. The console carries
+    those controls now, and the hold matters more rather than less: **the bar
+    must stay visible if it was visible when the line was tapped**, because a
+    console is not navigation and somebody looking at a capture is still visibly
+    on their own page.
+
     Focus was in here for a day and was wrong on the desk, where the live line
     takes focus on arrival and the chrome therefore never receded; the keyboard
     it was standing in for is measured instead. See `chrome-recede.ts`.
@@ -697,13 +649,11 @@ export function PageScreen({
     Both are one rule: *writing does not move the furniture.*
   */
   const receded = useChromeRecede({
-    held: picked !== null,
+    held: opened !== null,
     writing,
     top: topMark,
     end: endMark,
   })
-
-  const pickedLine = lines.find((l) => l.id === picked) ?? null
 
   /*
     The top of the page, instantly — which is where the caret is.
@@ -863,7 +813,7 @@ export function PageScreen({
   const settled =
     draft === '' &&
     !writing &&
-    picked === null &&
+    opened === null &&
     editing === null &&
     asking === null &&
     photo === null &&
@@ -1142,7 +1092,7 @@ export function PageScreen({
       of the person at the moment it has something to show them.
     */
     done()
-    setPicked(null)
+    setOpened(null)
     setAsking(null)
     /*
       The open offer belongs to the line that was just written; another line
@@ -1269,11 +1219,28 @@ export function PageScreen({
    * answer is neither, and nothing navigates. The band is the page's one
    * writing line and always was.
    *
-   * ⚠ **The pick is kept, deliberately.** The band holds the words but the
-   * record holds the line, and the mark stays on the row they came from — so
-   * the foot is still that line's toolbar and `release` still has something to
-   * release. That is why the field's own `onFocus` no longer clears the pick;
-   * see `live`.
+   * ⚠ **The console CLOSES on the way in — 30 August, and it reverses the rule
+   * that stood here.** The pick used to be kept: the band held the words, the
+   * record held the line, and the mark stayed on the row they came from. The
+   * console cannot be kept, and that is the brief's instruction rather than a
+   * convenience: **`✎` closes the console and hands the words to the strip.**
+   * Two reasons, and either is enough.
+   *
+   *   - **One scrim, one occupant.** A console and a sheet up together share the
+   *     scrim, and a tap on it could then mean two things — which is the exact
+   *     shape of every gesture bug this page has fixed.
+   *   - **The console would be showing the saved words** while the strip held
+   *     the words being written. Two versions of one capture on one screen, and
+   *     the page would be showing the stale one.
+   *
+   * ⚠ **The rewrite is therefore the path that already exists, entered through a
+   * different door.** Nothing about `editing`, the strip or `commitEdit` changes
+   * for having been reached from a console.
+   *
+   * ⚠ **The pencil is now this function's only caller in two places at once.**
+   * The record's slot has no pencil any more — see `LineUndo` — so the console's
+   * is the one door, which is what the 25 August rule asked for and finally gets
+   * literally.
    *
    * ⚠ **`focus()` inside the gesture, which is what raises the keyboard.**
    * Picking blurred the field (*the keyboard follows liveness*), so this is a
@@ -1287,7 +1254,8 @@ export function PageScreen({
    *
    * ⚠ **Never a line that is not on the server yet.** A pending line has no id
    * to name in the mutation, and a failed one wants its retry rather than an
-   * edit — `pick` already routes that case.
+   * edit — `openConsole` already routes that case, so a pending line never has a
+   * console to hold a pencil.
    */
   function startEdit(line: Line) {
     if (line.id === '' || line.pending) return
@@ -1299,6 +1267,7 @@ export function PageScreen({
       instant and is about to come up on its own.
     */
     raise()
+    setOpened(null)
     setAsking(null)
     setEditing(line.id)
     setEditDraft(line.text)
@@ -1387,7 +1356,7 @@ export function PageScreen({
 
   function settle(line: Line, again: boolean) {
     setAsking(null)
-    setPicked(null)
+    setOpened(null)
     /* It leaves the page for the tray, so it leaves the list. */
     const at = lines.findIndex((l) => l.key === line.key)
     setLines((all) => all.filter((l) => l.key !== line.key))
@@ -1469,23 +1438,31 @@ export function PageScreen({
   /* ------------------------------------------------------------------ */
 
   /**
-   * **Letting the picked line go.** Always both, because `asking` belongs to the
-   * picked line and outlives it otherwise — every other `setPicked(null)` on
-   * this page already travels with its `setAsking(null)`, and this is that pair
-   * given a name rather than a fifth copy.
+   * **Closing the console.** Always both, because `asking` belongs to the open
+   * line and outlives it otherwise — every other `setOpened(null)` on this page
+   * already travels with its `setAsking(null)`, and this is that pair given a
+   * name rather than a fifth copy.
+   *
+   * ⚠ **It was `release`, and it let a *picked* line go — 30 August.** The
+   * gesture that calls it has not changed by a pixel: **tap the paper.** What
+   * changed is what is on the paper. It is now the app's one exit gesture, used
+   * by the writing strip and the console alike, and the console's only door out
+   * — there is deliberately no close control on the box, because a second door
+   * to the one gesture every surface shares is how a gesture stops being
+   * learnable.
    */
-  function release() {
+  function close() {
     /*
       ⚠ **An open rewrite commits on the way out, and this is a belt.** The
-      writing pane is over the record for as long as a line is open — it takes
-      the touch — so `main` cannot receive a click then and this cannot fire
-      with an open rewrite. It stays because the rule it states is the rule:
-      leaving by the paper must never be the exit that discards. `commitEdit`
-      writes nothing when nothing changed and nothing at all when nothing is
-      open, so it costs a comparison.
+      scrim is over the record for as long as the sheet is up — it takes the
+      touch — so `main` cannot receive a click then and this cannot fire with an
+      open rewrite. It stays because the rule it states is the rule: leaving by
+      the paper must never be the exit that discards. `commitEdit` writes nothing
+      when nothing changed and nothing at all when nothing is open, so it costs a
+      comparison.
     */
     commitEdit()
-    setPicked(null)
+    setOpened(null)
     setAsking(null)
   }
 
@@ -1503,84 +1480,110 @@ export function PageScreen({
    * and it keeps the one exit that discards from also being the one that lets go.
    *
    * ⚠ **Nothing here closes over anything that can go stale**, which is why the
-   * handler is two `setState` calls rather than `release()`. `release` commits an
+   * handler is two `setState` calls rather than `close()`. `close` commits an
    * open edit on its way out, so it holds the draft — and a document listener
    * that mounted a keystroke ago would hold an old one. The listener not existing
-   * while a line is open is what makes that unreachable rather than merely
+   * while a rewrite is open is what makes that unreachable rather than merely
    * unlikely.
+   *
+   * ⚠ **It closes the console, which is what the paper does — 30 August.** The
+   * key and the tap have to mean the same thing on the same surface, and on the
+   * desk the console has no scrim to tap: the paper is `main` itself, and this
+   * is the keyboard's way to reach the same door.
    */
   useEffect(() => {
-    if (picked === null || editing !== null) return
+    if (opened === null || editing !== null) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.isComposing) return
-      setPicked(null)
+      setOpened(null)
       setAsking(null)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [picked, editing])
+  }, [opened, editing])
 
   /**
-   * ⚠ **Tapping the words picks the line, and that is all it ever does.** A
-   * second tap used to open the words for rewriting; it does not any more. The
-   * foot's pencil is the one door to a rewrite, so the gesture and the control
-   * cannot disagree about what a tap on a line means — and a tap that changes
-   * meaning the second time it lands is the modifier gesture this page's header
-   * rules out, wearing a different coat.
+   * ⚠ **Tapping the words opens the line's console, and that is all it ever
+   * does.** It picked the line until 30 August; before that, briefly, a second
+   * tap opened the words for rewriting. Both of those are gone for one reason
+   * this page has now stated three times: **a tap on a line means one thing.**
+   * A gesture that answers *pick* or *rewrite* depending on what the last tap
+   * was is the modifier gesture the header rules out, wearing a coat.
    *
-   * ⚠ **A second tap is therefore a no-op, deliberately, rather than a
-   * release.** Letting go is a tap on the paper (or `Escape`), and it has to
-   * stay the *inverse* of picking rather than a second reading of the same
-   * target — otherwise a thumb that lands twice on a line it meant to settle
-   * un-picks it and darkens the foot it was aiming for.
+   * ⚠ **A second tap is a no-op, deliberately, rather than a close.** Closing is
+   * a tap on the paper (or `Escape`), and it has to stay the *inverse* of
+   * opening rather than a second reading of the same target — otherwise a thumb
+   * that lands twice on a line it meant to open shuts the box it was aiming at.
    *
-   * ⚠ **A line already open is not re-picked.** Tapping the words of the line
-   * you are rewriting is a tap on a row whose words are in the band, and it must
-   * leave both alone.
+   * ⚠ **The row's own y is written onto the host on the way through**, and only
+   * so the console knows where to rise from. `.page-row` is the row's box — the
+   * words are one flex item inside it, so measuring the words would put the
+   * origin on a line's *text* rather than on the line. A miss here costs one
+   * odd-looking slide; the box it lands in is a constant either way.
+   *
+   * ⚠ **A custom property rather than state, and it is the page's own idiom.**
+   * It feeds nothing but a keyframe, so state would re-render the record to
+   * change one property, and an inline `style` attribute is blocked by the
+   * production CSP (§10). `useKeyboardHem` writes `--keyboard-overlap` onto this
+   * same host, which is what makes this a pattern rather than a workaround.
+   *
+   * ⚠ **Written BEFORE the state, so it is on the element the console will
+   * inherit from before the console exists.** A value set after the render could
+   * be a frame late, and a frame late in a 340ms rise is a console that starts
+   * from the wrong place.
+   *
+   * ⚠ **A line already being rewritten is not opened.** Its words are in the
+   * strip, and a console over a line whose text is somewhere else would be
+   * showing the saved words back to somebody in the middle of changing them.
    */
-  function pick(line: Line) {
+  function openConsole(line: Line, target: EventTarget | null) {
     if (line.pending) return
     if (line.failed) {
       retry(line)
       return
     }
     if (editing === line.id) return
-    if (picked === line.id) return
+    if (opened === line.id) return
     /* Moving to another line closes whatever was open, and keeps its words. */
     commitEdit()
-    setPicked(line.id)
+    const row = target instanceof Element ? target.closest('.page-row') : null
+    host.current?.style.setProperty(
+      '--console-from',
+      `${Math.round(row?.getBoundingClientRect().top ?? 0)}px`,
+    )
+    setOpened(line.id)
     setAsking(null)
-    /* The keyboard follows liveness: gone the moment a saved line is picked. */
+    /* The keyboard follows liveness: gone the moment a saved line is opened. */
     input.current?.blur()
   }
 
   const empty = lines.length === 0
 
   /**
-   * **The three tools, built once and handed to both placements.**
+   * **The two tools, built once and handed to both placements.**
    *
    * ⚠ **Built here rather than inline on each**, because `Foot` and `ToolStack`
    * are the same set in two arrangements and the states must be identical. Two
    * inline prop lists is how a bar and a stack start disagreeing about whether
-   * settle is lit.
+   * something is lit.
+   *
+   * ⚠ **It was three, and settle left on 30 August — `foot.tsx` had written down
+   * that it would.** Its docblock said: *settle is the last asymmetry… if the
+   * grouping is revisited, settle is the thing to move — onto the line, where
+   * the other two that act on it already are.* It acted on a picked line; there
+   * are no picked lines, and it now sits on the console beside the × and the ✎,
+   * which is the same rule the other two moved under. What is left here is
+   * genuinely not per-line: **one control that starts a capture, and one that
+   * goes somewhere.**
    */
   const tools = {
     /*
-      ⚠ **Never null.** Every other entry here can be off, because every other
-      entry needs something to act on. There is nowhere a capture cannot be
-      started, so this is the one control on the page that is always lit — and on
-      an empty record it is the only one.
+      ⚠ **Never null.** The other entry here can be off, because it needs
+      something to act on. There is nowhere a capture cannot be started, so this
+      is the one control on the page that is always lit — and on an empty record
+      it is the only one.
     */
     write: openSheet,
-    /*
-      A crossed-off line cannot be settled: `resolveCapture` guards on `want`,
-      which makes the settleable set exactly the resolvable one, and the way back
-      is the × that put it there.
-    */
-    settle:
-      pickedLine && pickedLine.state === 'want'
-        ? () => setAsking((open) => (open === pickedLine.id ? null : pickedLine.id))
-        : null,
     /*
       ⚠ **The page's own list is the test, and it is not the whole record.**
       Search reads across settled captures too, so a person whose every line is
@@ -1640,10 +1643,16 @@ export function PageScreen({
     open.current = true
   }
 
+  /*
+    ⚠ **The console closes here, and that is what *one scrim, one occupant*
+    means.** The `+` stays reachable at `z-20` while a console is open, so it is
+    a real door from one to the other — and the two must never share the screen,
+    because they would share the scrim and a tap on it could not mean one thing.
+  */
   function openSheet() {
     raise()
     setWriting(true)
-    setPicked(null)
+    setOpened(null)
     setAsking(null)
   }
 
@@ -1684,6 +1693,25 @@ export function PageScreen({
       clearPhoto()
     }
     done()
+  }
+
+  /**
+   * **The scrim's tap, whoever is under it — 30 August.**
+   *
+   * ⚠ **One scrim, one occupant, so one handler that asks which.** The console
+   * and the sheet can never be open together, so this is not arbitration; it is
+   * the scrim naming the door it belongs to at the moment it is tapped.
+   *
+   * ⚠ **Both doors commit, which is the rule that made one gesture possible.**
+   * Tapping the paper lands the words on the strip, and on the console it closes
+   * a box that has no unsaved anything in it — so *tap the paper* means the same
+   * thing on both surfaces. A gesture that meant *save* on one and *abandon* on
+   * the other could not be learned by a hand, which is why `✎` hands the words
+   * to the strip rather than opening a field in here.
+   */
+  function dismiss() {
+    if (writing) leave()
+    else close()
   }
 
   function leave() {
@@ -1906,7 +1934,39 @@ export function PageScreen({
   const drawnCaret = bandValue === ''
 
   return (
-    <div ref={host}>
+    /*
+      ⚠ **The paper's tap is on the HOST and not on `main` — 30 August, and a
+      probe is what moved it.** It was on `main` while it was letting a picked
+      line go, which was fine: the record's own column was the only place a pick
+      could be looked at. **On the desk the console is in flow inside that column
+      and the window is not**, so at 1440 the record spans 267–1173 and a click
+      at x=40 landed on nothing at all — the console stayed open with nowhere
+      obvious to close it but `Escape`. Measured, not reasoned about.
+
+      ⚠ **The paper is the page, which is what this element is.** Everything is
+      inside it: the bar, the scrim, the record and the strip. What that costs is
+      that a tap on the *dead space* of the bar or the strip closes the console
+      too — and that is correct rather than tolerated, because the rule is not
+      *tap the record*, it is **tap anything that is not the console**.
+
+      ⚠ **On a handset almost nothing reaches this**, because the scrim is over
+      the whole glass with its own `onClick`. This is the desk's door and the
+      handset's backstop, in one handler.
+    */
+    <div
+      ref={host}
+      onClick={(e) => {
+        if (opened === null) return
+        if (
+          e.target instanceof Element &&
+          (e.target.closest('.console-sheet') ||
+            e.target.closest('button, input, a, [role="button"]'))
+        ) {
+          return
+        }
+        close()
+      }}
+    >
       {/*
         The top of the document, as a thing that can be watched — see
         `useChromeRecede`. It is **before the bar** rather than under it, so the
@@ -1939,22 +1999,56 @@ export function PageScreen({
         thermostat that took five versions to get right at the other edge. And a
         tap on it puts the keyboard away, which is the way back.
 
-        ⚠ **Under the band and under the two bars**, so everything that can act
-        stays sharp and stays tappable: `z-5` against the band's `z-10` and the
-        bars' `z-20`.
+        ⚠ **Under the console and under the two bars**, so everything that can
+        act stays sharp and stays tappable: `z-5` against the console's `z-10`
+        and the bars' `z-20`.
 
         ⚠ **Inert when it is not wanted.** No blur is applied and no pointer is
-        taken unless the line has focus — a full-viewport `backdrop-filter` left
+        taken unless something is open — a full-viewport `backdrop-filter` left
         armed at zero opacity is a compositing layer the scrolling page pays for
         and never sees.
+
+        ─────────────────────────────────────────────────────────────────────
+         ⚠ ONE SCRIM, ONE OCCUPANT — 30 August
+        ─────────────────────────────────────────────────────────────────────
+
+        **This was the writing sheet's and it is the app's.** The console needs
+        exactly what the sheet needs — the record sunk and out of reach, and a
+        tap on it meaning *leave* — so it takes this one rather than bringing a
+        second. Two full-viewport panes would be two things a tap could land on
+        and two z-indices to keep in order, which is how a page ends up with a
+        gesture that means different things depending on which invisible sheet
+        is on top.
+
+        ⚠ **The console and the sheet can never both be open**, which is what
+        makes one scrim honest rather than merely economical: `openSheet` closes
+        the console and `startEdit` closes it too, so the occupant is always
+        exactly one and `dismiss` always knows whose door it is.
+
+        ⚠ **It blurs for the console and not for the sheet, and that is not an
+        inconsistency.** The sheet's blur was deleted on 27 August because a
+        full-viewport `backdrop-filter` is a compositing layer repainted **on
+        every keystroke**, and the strip has its own ground to separate the words
+        in hand from the record under them. Nothing is typed over the console, so
+        there is no keystroke to pay for — and the brief asks for the console to
+        sit *over a blurred record* by name, which is the one job the sheet's
+        blur was doing before its own ground took the work.
+
+        ⚠ **It is a handset object only.** Above `--breakpoint-stack` the console
+        expands the row in place, so there is nothing to blur and nothing to put
+        out of reach — the record around it is exactly what somebody wants to
+        keep seeing. `stack:` turns it off for the console and leaves it on for
+        the sheet, which still wants it at every width.
       */}
       <div
         aria-hidden
-        onClick={leave}
+        onClick={dismiss}
         className={`fixed inset-0 z-5 transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
           writing
             ? 'bg-[var(--scrim-tint)] opacity-100 [touch-action:none]'
-            : 'pointer-events-none opacity-0'
+            : opened !== null
+              ? 'stack:pointer-events-none stack:opacity-0 bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
+              : 'pointer-events-none opacity-0'
         }`}
       />
 
@@ -1993,37 +2087,37 @@ export function PageScreen({
         short record is space.
       */}
       {/*
-        ⚠ **The paper lets the picked line go, and that is the only thing it
-        does.** Picking had no inverse: `pick` is not a toggle, so re-tapping the
-        words re-picks them, and every other exit — Return, crossing off,
-        settling, reaching up to the live line — is somebody deciding something
-        rather than deciding *nothing*. Tapping beside a selection to drop it is
-        the one gesture everybody already has, and the page was ignoring it.
+        ⚠ **The paper closes the console, and that is the only thing it does.**
+        It let a *picked* line go until 30 August; the gesture has not changed by
+        a pixel, only what is on the paper. **Tapping the paper is now the one
+        exit gesture in the whole app** — the writing strip and the console alike
+        — because a gesture that means *leave* on one surface and something else
+        on another cannot be learned by a hand.
+
+        ⚠ **On the desk this is the console's only door**, because up there the
+        console expands the row in place and there is no scrim over the record to
+        tap. The paper is the page itself, exactly as it has been.
+
+        ⚠ **The handler lives on the HOST, not here** — see the note on the host
+        element. It was on `main` and a probe found the hole: `main` is the
+        *column*, and on a desk the window is wider than the column, so a click
+        beside the record reached nothing. One handler on the page, not two on
+        two boxes.
 
         ⚠ **It does not raise the keyboard, and that is deliberate rather than
         unfinished.** Paper as a way to *start writing* was built and removed —
-        see the foot's note above: the live line is pinned, so a second way to
-        reach it was a second way to reach something already in reach. Nothing
-        here reopens that. Picking blurs the field on purpose (*the keyboard
-        follows liveness*), so the gesture that undoes a pick has to land back in
+        the strip's `+` is one tap away wherever the record is scrolled to, so a
+        second way to reach it was a second way to reach something already in
+        reach. Opening a console blurs the field on purpose (*the keyboard
+        follows liveness*), so the gesture that closes one has to land back in
         the browsing state it came from, not overshoot into writing.
 
         ⚠ **A tap that reached a control is that control's.** One rule instead of
-        a `stopPropagation` in every handler — the words, the settle buttons, the
-        input and anything added later are all covered by the same line, and none
-        of them has to remember this exists.
+        a `stopPropagation` in every handler — the words, the console's own
+        buttons, the input and anything added later are all covered by the same
+        line, and none of them has to remember this exists.
       */}
       <main
-        onClick={(e) => {
-          if (picked === null) return
-          if (
-            e.target instanceof Element &&
-            e.target.closest('button, input, a, [role="button"]')
-          ) {
-            return
-          }
-          release()
-        }}
         /*
           ⚠ **`--record-measure`, not `--page-measure` — 28 August.** Directed:
           the entries column may never overlap the mark's own band on the desk.
@@ -2049,7 +2143,7 @@ export function PageScreen({
           {lines.map((line, i) => {
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'
-            const isPicked = line.id !== '' && line.id === picked
+            const isOpen = line.id !== '' && line.id === opened
 
             /*
               ⚠ **The last word used to be split off the rest and bound to the
@@ -2086,21 +2180,37 @@ export function PageScreen({
                   ? `${line.text} — is this ${line.offer.title}?`
                   : line.text
 
+            /*
+              ⚠ **`aria-expanded`, where it was `aria-current` — 30 August.** The
+              tap used to *mark* the line and the mark was a state a reader
+              needed told; it now opens a box that follows this control in the
+              document, which is what `expanded` is for and what `current` never
+              said. The console is inside the same `<li>`, so the relationship is
+              structural and needs no `aria-controls` to state it.
+
+              ⚠ **The whole capture stays in the label**, and the reason is
+              sharper than it was: the row truncates *because* the console holds
+              the rest, so an ellipsis takes text off the screen for a reader who
+              can see the screen — and must never take it off one who cannot.
+            */
             const pickable = {
               role: 'button' as const,
               tabIndex: 0,
               'aria-label': label,
-              'aria-current': isPicked ? ('true' as const) : undefined,
-              onClick: () => pick(line),
+              'aria-expanded': isOpen,
+              onClick: (e: React.MouseEvent) => openConsole(line, e.currentTarget),
               onKeyDown: (e: ReactKeyboardEvent<HTMLSpanElement>) => {
                 if (e.key !== 'Enter' && e.key !== ' ') return
                 /* Space scrolls the page otherwise, which a button never does. */
                 e.preventDefault()
-                pick(line)
+                openConsole(line, e.currentTarget)
               },
             }
             /* The same target to a thumb, silent to a reader. */
-            const quiet = { 'aria-hidden': true, onClick: () => pick(line) }
+            const quiet = {
+              'aria-hidden': true,
+              onClick: (e: React.MouseEvent) => openConsole(line, e.currentTarget),
+            }
 
             /*
               ⚠ **`truncate` and `min-w-0`, and they are the one-line rule — 28
@@ -2155,14 +2265,18 @@ export function PageScreen({
                   them, which puts them after the last character wherever the
                   last character falls.
 
-                  ⚠ **The hem and the picked mark moved up here with it.**
-                  `page-line`'s `padding-block` is what set a row's height while
-                  the words were a block; on an inline box it does not, so this
-                  takes the hem. The mark hangs off `picked`, which is
-                  `position: relative` with an absolutely placed `::before` — on
-                  an inline box that spans two lines it would resolve against the
-                  first fragment, so it belongs to the row, which is what its own
-                  note always said it was measuring.
+                  ⚠ **The hem moved up here with it.** `page-line`'s
+                  `padding-block` is what set a row's height while the words were
+                  a block; on an inline box it does not, so this takes the hem.
+
+                  ⚠ **The gutter mark went with the pick — 30 August.** A tapped
+                  line opens a console that shows the whole capture, so the row
+                  no longer has to say *this one* about a line whose text it
+                  could not show. The `picked` utility survives in globals.css
+                  unapplied, because §11 reserves `--color-accent` for
+                  **convergence** and the gutter is where a state may live: the
+                  mark's next tenant is Phase 2's, not this one's. Do not put a
+                  pick mark back there.
 
                   ⚠ **The line's type is the row's too, since 26 August**, and
                   that is the fix for furniture that read as sitting low. It was
@@ -2182,7 +2296,7 @@ export function PageScreen({
                     goes**, per *How things get fixed* in CLAUDE.md; putting the
                     lift back means the commit has stopped ending the mode.
                   */
-                  className={`page-row ${isPicked ? 'picked' : ''}`}
+                  className="page-row"
                 >
                   {/*
                     ⚠ **A line of the record is never an input, not even
@@ -2401,18 +2515,9 @@ export function PageScreen({
                   the ellipsis. With it, the words give up exactly the width the
                   tail needs and stop where the tail begins, at any length.
                 */}
-                <LineTools
+                <LineUndo
                   undoable={line.id !== '' && line.id === undoable}
-                  picked={isPicked}
-                  crossedOff={crossedOff}
                   onUndo={undo}
-                  onCrossOff={() => crossOff(line)}
-                  /*
-                    Off while a rewrite is already open: reopening the line would
-                    replace what is in the field with what is saved, which is a
-                    discard nobody asked for.
-                  */
-                  onRewrite={editing === null ? () => startEdit(line) : null}
                 />
 
                 {/*
@@ -2451,18 +2556,24 @@ export function PageScreen({
                 )}
 
                 {/*
-                  ⚠ **Shown in full while the line is live or picked**, and as
-                  the `?` above the rest of the time. *Live* is the moment of
-                  capture — so a question arrives visibly rather than as a mark
-                  somebody has to notice — and *picked* is the line being pointed
-                  at, which is when somebody is deciding about it anyway.
+                  ⚠ **The record asks this only at the moment of capture — 30
+                  August.** It used to ask it *live or picked*; the picked half
+                  has moved into the console, where there is room to ask it under
+                  the capture it is about rather than under a truncated line. The
+                  live half stays here and cannot move: a question about the line
+                  somebody just wrote has to arrive **visibly**, on the page they
+                  are looking at, rather than behind a tap on a `?`.
+
+                  ⚠ **`Ask` is the console's component, imported back.** One
+                  question looks like one question wherever it is asked; two
+                  copies would be two designs waiting to disagree.
 
                   ⚠ **Ignoring it is simply not answering**, which is why there
                   is no dismiss. Walking away leaves the `?` standing, and that
                   is the correct outcome for a question nobody wanted asked.
                 */}
-                {line.offer !== null && (isPicked || offering === line.id) && (
-                  <Question
+                {line.offer !== null && offering === line.id && (
+                  <Ask
                     /*
                       The title, and the year when it has one — which is what
                       distinguishes two films of the same name and is the whole
@@ -2480,18 +2591,48 @@ export function PageScreen({
                   />
                 )}
 
-                {asking === line.id && (
-                  /*
-                    ⚠ **One question, and the word is *Again?*** The two outcomes
-                    are genuinely different claims — *I would do this again*
-                    against *that is dealt with* — and nothing about a raw
-                    capture can supply the answer. The word generalises where the
-                    film-first *Go back?* did not, and it is the app's own name.
-                  */
-                  <Question
-                    ask="Again?"
-                    onYes={() => settle(line, true)}
-                    onNo={() => settle(line, false)}
+                {/*
+                  ⚠ **The console, inside the `<li>` of the line it belongs to,
+                  and that is one mount point for two surfaces.** `console-sheet`
+                  is `fixed` below `--breakpoint-stack` — a rectangle in the same
+                  place every time, over the blurred record — and `static` at and
+                  above it, where it expands this row in place. Directed 30
+                  August; see `console.tsx` for the whole argument.
+
+                  ⚠ **It is here rather than at the end of the document**, unlike
+                  the writing strip, and it has to be: on the desk it is in flow
+                  and its place in the record *is* the design. The handset's
+                  `fixed` box does not care where it is mounted, so one position
+                  serves both. Nothing between here and `main` carries a
+                  transform, a filter or a `contain`, which is what would quietly
+                  turn that `fixed` into a box positioned against an ancestor.
+
+                  ⚠ **Mounted only while it is open, unlike the strip's field.**
+                  The strip has to exist before the gesture that focuses it, or
+                  iOS keeps the keyboard down; there is nothing to focus in here,
+                  so a console that is not open is a console that is not there.
+                */}
+                {isOpen && (
+                  <Console
+                    line={line}
+                    asking={asking === line.id}
+                    crossedOff={crossedOff}
+                    onCrossOff={() => crossOff(line)}
+                    /*
+                      Off while a rewrite is already open: reopening the line
+                      would replace what is in the field with what is saved,
+                      which is a discard nobody asked for.
+                    */
+                    onRewrite={editing === null ? () => startEdit(line) : null}
+                    onSettle={() =>
+                      setAsking((open) => (open === line.id ? null : line.id))
+                    }
+                    onAgain={() => settle(line, true)}
+                    onDone={() => settle(line, false)}
+                    onAcceptOffer={() => acceptOffer(line)}
+                    onDeclineOffer={() => declineOffer(line)}
+                    onOpenPhoto={() => setLooking(line)}
+                    linkLabel={linkLabel}
                   />
                 )}
               </li>

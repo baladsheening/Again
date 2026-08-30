@@ -8262,3 +8262,169 @@ dark rather than deleting it.
 only carrier of a distinction, so whatever the palette says must also be said by
 a word or a shape, and every colour must clear contrast on matte black — the
 brass pair is 10.98:1 and 7.73:1, which is the bar this page has set itself.
+
+## OPEN NOTE — the desk's type and mark may want to come back up — 30 August
+
+**Raised by the user, as a note rather than a task: "we changed the background
+colour of the desktop version so it's less oppressive but may need to tweak the
+logo and text colours so they're brighter."** Nothing has been changed. Nothing
+is blocked on it. This exists so the observation is not lost and so whoever picks
+it up starts from the measurements rather than from a colour picker.
+
+### What actually happened to the numbers
+
+Lifting `--color-bg` from `#000000` to `#14140f` above `--breakpoint-stack` cost
+every ratio in the palette about 12%, because contrast is a ratio and the
+denominator moved:
+
+| | on black | on `#14140f` |
+|---|---|---|
+| text `--color-text` | 16.83 | **14.81** |
+| chrome `--color-chrome` (the mark, the glyphs) | 10.98 | **9.66** |
+| the lacquer red | 4.26 | **3.75** |
+| the live red | 5.92 | **5.21** |
+| the listed green | 15.69 | **13.80** |
+
+Every floor in the palette's own notes still holds — the mark is text and clears
+4.5, both reds clear the 3:1 that WCAG 1.4.11 asks of a graphical control — so
+**this is a perception question, not an accessibility failure.** Nothing here is
+out of spec. `node_modules/.probe/deskpalette.mjs` renders the alternatives and
+`deskground.mjs` asserts the ratios.
+
+### If it is done, lift the INK and not the ground
+
+⚠ **The ground was chosen by looking at three candidates on the real page at
+1440, and two lighter ones were refused** — *paper* (the palette inverted, the
+handset's aged-paper ink as the ground) and *newsprint* (the same onto manila).
+That is a record of what was considered, not a ladder to climb later: reopening
+either means re-picking the brass, the lacquer red and the tool stack's glass
+edge, all of which they measured out. So the thing to move is `--color-text` and
+`--color-chrome`, inside the desk's own `@media` block, where the ground already
+lives.
+
+⚠ **It has to stay inside that query.** The handset is untouched *by
+construction* — there is one palette and one override — and the whole point of
+the 30 August change was that the phone keeps its true black. A lift applied at
+the base would reach the one surface it was told not to.
+
+⚠ **The lacquer red is the tightest and is the first thing to re-measure**, at
+3.75 against a 3:1 floor. If the ink is lifted and the red is not, the gap
+between them widens; if the red is lifted too, it stops being the same red as the
+handset's, which is a second palette. That tension is the actual decision here
+and it is why this is a note rather than a one-line change.
+
+### The half nobody has looked at
+
+⚠ **915–1152px is part-grown type on the handset's BLACK ground**, because the
+colour boundary is the layout's (72rem) and the type ramp's is 57.207rem. An iPad
+in landscape lands there. If the desk's ink is lifted, that band gets a third
+combination nobody has seen. `CLAUDE.md` already flags the band as never having
+been on hardware.
+
+## The console, and what a tap on a line means now — 30 August
+
+**Phase 2 step 1.** Tapping a line opens a box holding the whole capture. The
+design is `docs/re-direction/phase-2-convergence.md`, whose §1 is deleted now
+that the code carries it; this entry records the calls the brief did not make.
+
+### The one question the brief left open, and the answer
+
+⚠ **Directed: the console exists on the desk, and it EXPANDS THE ROW IN PLACE.**
+The alternative was one design at four-thirds — the same floating card on both
+surfaces — which is cheaper, cannot drift, and is what *the desk is the same
+design, four-thirds the size* would have predicted. It was refused, and the
+reason is not consistency: **a desk has the width to open the line where it
+lives**, and a takeover up there costs the reader their place in the record to
+show them something that could have appeared beneath it.
+
+So the two surfaces are genuinely two, and this is one of the few places in the
+app where that is true. What keeps it from being two designs is that **one
+component mounts in one place and the stylesheet decides**: `console-sheet` is
+`fixed` below `--breakpoint-stack` and `static` at and above it. The contents and
+their order are identical, which is the part that would actually rot if it were
+duplicated.
+
+### Settle moved, and `foot.tsx` had said it would
+
+The brief puts `×` and `✎` on the console and says nothing about settle. With the
+pick gone, settle had no door left until the swipes land, so it went onto the
+console with the other two. That is not an invention: `foot.tsx`'s own docblock
+read *settle is the last asymmetry… if the grouping is revisited, settle is the
+thing to move — onto the line, where the other two that act on it already are,
+which would leave search alone and this file with nothing to be.*
+
+**The foot is `+` and search.** §3 of the brief has it ending there once the
+swipes arrive; it arrives one step early because the console, not the swipes,
+took the pick's job. ⚠ The bar became a **three-column grid** in the same move,
+because three glyphs under `justify-around` put the `+` in the middle *by there
+happening to be three* — removing one would have drifted it to a quarter, moving
+a control that is supposed to be the one fixed thing on the bottom edge.
+
+### Three things a screenshot caught that the probe did not
+
+⚠ **This is the entry's most useful half.** All three passed a measurement pass
+and were wrong on sight, which is the *look at it before judging it* rule earning
+its keep again.
+
+1. **The card was content-sized, so the `×` was not in a fixed place.** The
+   *positioner* was fixed and identical every time — which is what the probe was
+   asserting — while the visible box was as tall as the capture in it. A
+   three-word line put its controls 500px above where a long one did. **The box a
+   thumb learns is the one it can see.** Fixed with `flex: 1 1 auto`, never
+   `flex: 1`: the shorthand's `0%` basis would let the desk's auto-height
+   container collapse to nothing.
+2. **The glass was invisible.** It wore `--sheet-tint` on the reasoning that the
+   console and the writing strip are the same object — a glass surface holding
+   body text over the record. On a true-black page a card floating mid-screen has
+   **no borrowed edge**, and the record behind it is already darkened by the
+   scrim, so a ground mixed toward black had nothing left to be darker than.
+   `globals.css` had written the lesson down about the strip — *the strip is on a
+   true-black page, so an opaque ground is INVISIBLE* — and glass was the answer
+   there **because the strip has the screen's own edge**. The sign is reversed
+   here: `--console-tint` mixes toward `--color-surface`. Still glass, still
+   see-through, and it re-grounds on the desk for free.
+3. **The paper did not answer.** The positioner spans the glass and its gutter
+   sat over the scrim at `z-10`, swallowing taps on 20px strips that look exactly
+   like blurred record. `pointer-events: none` on the box and `auto` on its child
+   hands them back — removing the collision rather than adding a handler to catch
+   it.
+
+### The clearance is `--tap-floor`, and that is a thumb
+
+It was `--page-lead` for an hour, on the neat reading that the console's top
+should land where the record's first line does. **The paper is the console's only
+exit on a handset**, so the paper has to be a target, and 20px bands are not. The
+clearance is the app's existing hardware constant — which deliberately does not
+scale with the root, correctly here twice over: a thumb does not get bigger
+because a window did, and the desk does not read these tokens at all.
+
+### What was deliberately not built
+
+- ⚠ **No origin memory.** The brief says the console remembers whether it was
+  opened from the record or the portal, so paper-tap returns there. **There is no
+  portal**, and a name bought for a second consumer that does not exist yet is
+  exactly the mistake `--sheet-clearance` was — extracted for a light that was
+  then deleted. The portal adds it.
+- ⚠ **No *who else*, and no empty state for it.** The slot is a comment. *Silence
+  stays silent*: nothing is the correct rendering of nothing, and an absence
+  explained is an absence the copied-provenance suppression rule worked to keep
+  quiet.
+- **No haptics.** §4's rule is that every haptic marks something that became true
+  in the database, and opening a console is a thing the person did.
+- **No network.** Everything in the box is on the `Line` the record was already
+  drawing, which is what lets it render instantly with no spinner.
+
+### The cost, stated
+
+⚠ **On the desk a short capture reads twice** — the row says *A third* and the
+card under it says *A third* again. It is right for a long capture, which is what
+the row truncates and the card completes, and it is what the chosen sketch
+showed. The cheap fix is hiding the row while its console is open, above
+`--breakpoint-stack` only; the cost is that the control carrying `aria-expanded`
+vanishes from under a reader who just used it. Recorded in §7 of the brief,
+unbuilt, and it wants a look on a real desk first.
+
+⚠ **The `picked` utility is still in `globals.css` and nothing applies it.** Kept
+deliberately: §11 reserves `--color-accent` for **convergence**, and the gutter is
+where a state may live rather than a control. The mark's next tenant is Phase 2's
+own. Do not put a pick mark back there.

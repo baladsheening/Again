@@ -17,8 +17,10 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 ## Build status — 30 August
 
 > **Phase 1 is built, deployed, migrated and in daily use on a handset.**
-> Everything on *Still to build* is built. **Five things are outstanding, and
-> none of them is a screen that does not work:**
+> Everything on *Still to build* is built. **FOUR things are outstanding, and
+> none of them is a screen that does not work** — item 3 was the thing detail
+> view and it was closed on 30 August by Phase 2 step 1, which built the console
+> and deleted `film-screen.tsx` into it:
 >
 > 1. **The words, in the schema** — deferred at the user's direction on 24
 >    August, and the only item nothing has touched. It is the **one migration in
@@ -32,8 +34,12 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >    nothing can reach — see *Have is still not reachable*. Blocked on Phase 4's
 >    contributed catalogue or a second provider, **and** on one undesigned thing:
 >    where a person refines an intention after capture.
-> 3. **The thing detail view.** `film-screen.tsx` is kept for it and nothing on
->    the page opens it.
+> 3. ~~**The thing detail view.**~~ ⚠ **CLOSED — 30 August.** It is the
+>    **console**: tapping a line opens a box holding the whole capture, its
+>    photograph, its link, its year and its controls. `film-screen.tsx` was kept
+>    for this and is **deleted into it**, along with the dead
+>    `capture-provider.tsx` beside it. See `components/console.tsx` and
+>    `docs/re-direction/phase-2-convergence.md`.
 > 4. **A Blob store**, for photographs that are built and dark. Money, not code.
 > 5. **The binding acceptance criterion** — *open, typed into, and closed in
 >    under five seconds, one-handed* — closed at the user's direction on 24
@@ -486,9 +492,9 @@ struck line here does not mean *seen working*.
   and not the `offset` this list predicted.
 - ~~*Resolution offers*~~ — **done**, and ⚠ **it is the first Phase 1 deploy to
   carry a migration.** Additive only: two nullable columns, so a revert push is
-  still a rollback. See *Resolution offers* below. `film-screen.tsx` is still
-  kept — it is the media-resolved detail surface and nothing on the page opens
-  it yet.
+  still a rollback. See *Resolution offers* below. ⚠ `film-screen.tsx` was kept
+  here as the media-resolved detail surface; it is **deleted** since 30 August —
+  the console replaced it.
 - ~~*Images*~~ — **built**, and ⚠ **the upload path has never run**: there is no
   Blob store on the project, so the camera ships dark and lights the day one
   exists. See *Photographs* below for what is verified and what is not.
@@ -1712,9 +1718,11 @@ No flag, no dormant surface:
 - `toLegacyEntryCards`, `V1_KINDS`
 - `--color-caret`
 
-Kept: `film-screen.tsx` as the media-resolved detail surface, `entry-row.tsx`'s
-cross-off treatment, the search field and provider, `shell.tsx` reduced to the
-two bars.
+Kept: `entry-row.tsx`'s cross-off treatment, the search field and provider,
+`shell.tsx` reduced to the two bars. ⚠ **`film-screen.tsx` was on this list and
+is deleted — 30 August.** It was kept as the media-resolved detail surface for a
+surface nothing opened; Phase 2 step 1 built the console and deleted it into
+that, with the unreferenced `capture-provider.tsx` that imported it.
 
 ## Not in Phase 1
 

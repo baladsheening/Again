@@ -28,13 +28,41 @@ wins and this file is wrong.
 
 | | |
 |---|---|
-| The console | designed, not built |
-| Swipe to cross off / settle | designed, not built |
+| The console | **BUILT — 30 August.** §1 is deleted below; the code and its argument are `components/console.tsx` and `console-sheet` in `globals.css` |
+| Swipe to cross off / settle | designed, not built — **next** |
 | Haptic vocabulary | designed, not built |
 | The notification portal | designed, not built |
 | The convergence mark on a line | designed, not built |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
+
+⚠ **The open question in §7 is answered: the console exists on BOTH surfaces and
+they are genuinely different.** Directed 30 August — below `--breakpoint-stack` a
+fixed rectangle over a blurred record; at and above it the console **expands the
+row in place**, with no scrim and no floating box. A handset has no room to show a
+capture where it lives; a desk has the width and already stands its tools beside
+the column, so a takeover up there buys nothing and costs the reader their place.
+One component, one mount point, the stylesheet deciding — `console-sheet` is
+`fixed` on one and `static` on the other.
+
+⚠ **Three things were decided in the building that this document did not say, and
+all three are recorded in the code:**
+
+1. **Settle moved onto the console** with `×` and `✎`. §1 names only those two,
+   and with the pick gone settle had no door left until the swipes land.
+   `foot.tsx` had predicted the move in writing. **The foot is now `+` and
+   search**, which is where §3 has it ending up anyway.
+2. **The console clears the bar and the strip by `--tap-floor`, not by the page's
+   lead.** The paper is the only exit on a handset, so the paper has to be a
+   target; 20px bands were not.
+3. **Its ground lifts toward `--color-surface` rather than sinking toward the
+   page.** The strip's glass recipe made the card *invisible* on a true-black
+   page — a floating card has no borrowed edge, and the record behind it is
+   already darkened by the scrim.
+
+**Measured by `node_modules/.probe/console.mjs`** — 33 assertions on a 390
+handset and 21 on a 1440 desk, including the one that matters most: the same
+rectangle whichever line was tapped.
 
 ---
 
@@ -54,87 +82,25 @@ gets wider for free when Phase 4 lands a contributed catalogue.
 
 ---
 
-## 1. The console
+## ~~1. The console~~ — BUILT, 30 August, and this section is deleted
 
-**Tapping a line opens a console: rounded, glass, see-through, no outline, over
-a blurred record.** It holds the capture — the whole text, the photograph, the
-link, the year, its resolution, and who else — with `×` and `✎` on its bottom
-edge.
+**The design that was here is now the thing itself.** Every argument it made —
+the fixed rectangle and why growing from the tapped line is wrong, the edge
+grammar, no outline, read from the top and act at the bottom, one exit gesture,
+`✎` handing the words to the strip rather than opening a second field, and
+rendering instantly with the space for *who else* left empty — is carried
+verbatim in the docblocks of `components/console.tsx` and in `console-sheet`,
+`console-card`, `--console-tint` and `--console-top` in `app/globals.css`, beside
+the code each one governs.
 
-### Why, in the strongest terms
+⚠ **Deleted rather than struck, which is this file's own first option.** *Let the
+code comments and `CLAUDE.md` carry the argument — that is where engineering
+rules live.* A design section left standing after its build reads as current and
+is not.
 
-**The record is an index, not a document.** Every line truncates to one line, so
-everything about a capture past its first forty characters currently has nowhere
-to exist. The row is a spine label; the console is the only place a capture is
-actually *shown*.
-
-⚠ **The console is the thing detail view**, which is item 3 of Phase 1's
-outstanding list. `film-screen.tsx` has been kept for a surface nothing opens.
-**Replace it; do not build the console beside it.**
-
-⚠ **It is not navigation, and that is what the logo-row rule protects.**
-Directed: the console never encroaches on the mark, so the bar stays visible if
-it was visible when the line was tapped. You are always visibly still on your
-page. The same argument the writing sheet won — a sheet is not a route.
-
-### The edge grammar
-
-⚠ **The top edge belongs to the mark. The bottom edge belongs to the writing
-strip. The console lives strictly between them and touches neither.** Reaching
-the bottom edge would put two current objects on the strip's edge, which is the
-collision the one-strip rule of 28 August removed.
-
-### ⚠ It always opens in the same rectangle
-
-**The first instinct was to have it grow from the line you touched. That is
-wrong.** If the box lands in a different place every time, its `×` is in a
-different place every time, and a thumb can never learn it. **Fixed rectangle,
-always.** Let the *animation* carry the spatial link — rise from the tapped
-line's y and settle into the fixed box — so it reads as the line opening while
-resting somewhere the hand already knows.
-
-**Read from the top, act at the bottom.** The entry text at the top; the
-controls along the console's bottom edge, because that is the only part of a
-handset a thumb reaches without a regrip.
-
-### No outline
-
-Directed, and the reason is already in `globals.css`: **glass is a surface and
-has an edge by being one.** An outline would be a second edge drawn over the
-first. See `--sheet-tint` and the `--row-light` tombstone for the whole argument
-against painting an edge onto a surface that has one.
-
-### Dismissal — and what it means
-
-⚠ **It dismisses by tapping the blurred paper, confirmed 30 August.** So there
-is **one exit gesture in the entire app**: tap the paper, on the writing strip
-and on the console alike, with `Escape` as the desk's discard. The scrim stops
-belonging to the writing sheet and becomes the app's one *something is open*
-surface — **one scrim, one occupant, always.**
-
-Three consequences, resolved:
-
-- ⚠ **Tapping the paper COMMITS.** That is what it means on the writing strip, so
-  it must mean the same over the console. The console's edit is not a modal with
-  a cancel. Thumb-tap commits, `Escape` discards. A gesture that means *save* on
-  one surface and *abandon* on another cannot be learned by a hand.
-- ⚠ **`✎` closes the console and hands the words to the strip.** **Not** an
-  editable field inside the console. *The page has exactly one field and it is
-  the strip* is load-bearing and already works: a field in the console would be a
-  second one, would have to dodge the keyboard, and would put two occupants on
-  one scrim. Reached this way, rewriting from the console **is the rewrite path
-  that already exists**, entered through a different door.
-- ⚠ **The console remembers where it opened from.** Paper-tap from a console
-  opened on the record returns to the record; opened from the portal, returns to
-  the portal. It is the only place the console is stack-like, and it has to be,
-  or the portal is a dead end.
-
-### It must render instantly
-
-The console becomes the main interaction, and its social half needs the network.
-**Render the line and its controls immediately from what the page already
-holds**, and let *who else* arrive into a space that is already there. **Never a
-spinner over the whole box.**
+What the build added that the design did not have is in *Status* above: settle
+moving onto the console, the `--tap-floor` clearance, and the ground that lifts
+rather than sinks.
 
 ---
 
@@ -162,11 +128,15 @@ itself; the console is for the once-a-week question. **A gesture that can be mad
 anywhere on a row is the only kind of target that survives being used while
 walking.**
 
-⚠ **It pays for itself: `picked` disappears.** With the console owning
-consideration and the swipes owning action, the pick state goes, and with it the
-gutter mark, the foot's settle glyph, and the twice-defended argument that *a tap
-means pick and never two things depending on the tap before it*. The foot drops
-to `+` and search.
+⚠ **It pays for itself: `picked` disappears — and most of that bill was already
+settled by the console on 30 August.** The pick state is gone (`opened` is the
+line whose console is up), the gutter mark is off the row, the foot's settle
+glyph is on the console, and the foot is already `+` and search. **What the
+swipes still buy is the gesture**, not the clean-up: the two verbs used fifty
+times a week stop costing a tap-and-aim. ⚠ The `picked` **utility** survives
+unapplied in `globals.css`, deliberately — §11 reserves `--color-accent` for
+convergence and the gutter is where a state may live, so the mark's next tenant
+is §5's, not a pick's. Do not put a pick mark back there.
 
 ⚠ **Check `--tap-floor` and the record's 44px rows before drawing this**, and
 check that a horizontal swipe on a row cannot be read as a scroll. Neither is a
@@ -287,12 +257,20 @@ for convergence on a line. Nothing is the correct rendering of nothing.
 
 ## 7. Open, and blocking nothing yet
 
-- ⚠ **Does the console exist on the desk, or is it a handset object?** Above
-  `--breakpoint-stack` the tools stand beside the column and there is room to
-  show a capture in place. One design at four-thirds is cheaper and more
-  consistent with everything else on this page; expanding the line inline on the
-  desk is the alternative. **Undecided — this was the last question asked and it
-  was not answered.**
+- ⚠ **ANSWERED 30 August: it exists on the desk, and it expands the row in
+  place.** The alternative — one design at four-thirds, a floating card on both —
+  was cheaper and was refused: a desk has the width to open the line where it
+  lives, and a takeover up there costs the reader their place in the record for
+  nothing. See *Status*.
+- ⚠ **Raised by the build and not yet answered: on the desk the row's own words
+  stay above the console, so a short capture reads twice** — the row says *A
+  third* and the card underneath says *A third* again. It is correct for a long
+  capture, which is what the row truncates and the card completes, and it is what
+  the chosen sketch showed. The cheap fix is to hide the row while its console is
+  open, above `--breakpoint-stack` only; the cost is that the control carrying
+  `aria-expanded` vanishes from under a reader who just used it. **Not built, not
+  urgent, and it wants a look on a real desk before either.** The same is true of
+  the day stamp, which the console repeats from the group above it.
 - **Seen-state for the portal** needs a column (`notifications.seen_at` or
   equivalent). It is the first schema move since the deferred vocabulary
   migration; **consider batching them**, since that one wants a phase that plans
@@ -305,9 +283,13 @@ for convergence on a line. Nothing is the correct rendering of nothing.
 
 ## 8. Sequence
 
-1. **The console**, page-side only — full text, `×`, `✎`, photo, link. No
-   network. Delete `film-screen.tsx` into it.
-2. **Swipes**, and delete `picked`.
+1. ~~**The console**, page-side only — full text, `×`, `✎`, photo, link. No
+   network. Delete `film-screen.tsx` into it.~~ **DONE, 30 August.**
+   `film-screen.tsx` and the dead `capture-provider.tsx` beside it are deleted,
+   which also closes item 3 of Phase 1's outstanding list — **the thing detail
+   view**.
+2. **Swipes**, and delete `picked`. ⚠ **The state is already gone** — see §3;
+   what is left to build is the gesture itself.
 3. **The portal**, reading `notifications` — which also proves the fan-out end to
    end with two accounts for the first time.
 4. **The mark**, last, once there is a real convergence to look at and it is
