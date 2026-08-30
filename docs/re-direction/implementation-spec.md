@@ -1038,47 +1038,81 @@ and data-safety step: it changes what the records are, not what they say.
 
 ### Phase 1 — capture
 
-⚠ **Status, 23 August: partly built, deployed, and working on a handset.**
-`main` is at `949c698`; no deploy in this phase has carried a migration. The
-design and the build slice are `docs/re-direction/phase-1-capture.md`, which
-carries the full register — what is built, what is not, and what hardware has
-and has not answered. The markers below are that register in one line each; the
-document is the account.
+⚠ **Status, 30 August: built, deployed, migrated, and used on a handset.**
+Everything on the build register's *Still to build* list is built and nothing is
+held back. The design and the build slice are
+`docs/re-direction/phase-1-capture.md`, which carries the full register — what
+is built, what is not, and what hardware has and has not answered. The markers
+below are that register in one line each; the document is the account.
 
-⚠ **The exit criterion is not met yet.** The four-second capture has never been
-stopwatched, and a desk cannot measure it. The first handset session also
-reversed two decisions the design had made — the record is newest-first with the
-caret under the bar, and a line is only as wide as its own words — both recorded
-in the register and in `docs/decisions.md`.
+⚠⚠ **Do not record what state production is in — not here, not anywhere.** This
+block said *no deploy in this phase has carried a migration* while three commits
+selecting `captures.suggested_possibility_id` went out against a production
+database that did not have the column, and **every signed-in request was a 500**
+until the morning of 25 August. Two registers said the migrations were applied
+and neither had asked. **`npm run migration:state` asks** — host first, then the
+applied count, then whether the columns the page reads exist — and
+`scripts/prod-check.sh` wraps it for production. The runbook's order stands:
+*migrate production first, deploy second.*
+
+⚠ **Five things are outstanding, and none of them is a screen that does not
+work:** the vocabulary migration (deferred, and the only non-additive one in the
+phase), a `kind` that is not a film, the thing detail view, a Blob store for the
+photographs that are already built, and the binding acceptance criterion below.
+
+⚠ **The binding criterion was closed at the user's direction on 24 August and
+was never stopwatched.** *Accepted* and *measured* are different claims and only
+the first is true. The first handset session also reversed two decisions the
+design had made — the record is newest-first with the caret under the bar, and a
+line is only as wide as its own words — both recorded in the register and in
+`docs/decisions.md`. ⚠ The second of those was itself reversed on 28 August: the
+one-line rule replaced it, and a record line now truncates rather than wrapping.
 
 Deliver:
 
 - **[built]** Notes-like Home
 - **[built]** raw capture creation
-- **[not started]** optional provider suggestions
+- **[built]** optional provider suggestions — the offer is written onto the row
+  (`suggested_possibility_id`) so that it *stands* rather than being recomputed,
+  and the provider path is deliberately fire-and-forget: an offer that never
+  lands is an ordinary outcome, not a failure, and costs the capture nothing
 - **[built]** unmatched capture persistence
 - **[built]** optimistic save and undo
 - **[part]** personal list and detail view — the page and the settled tray are
   built; the detail view is not, and `film-screen.tsx` is kept for it
-- **[not started]** optional image attachment — a storage layer, not a button;
-  the camera glyph is drawn and dark
-- **[not started]** edit/enrichment after capture — the second tap picks and
-  does not edit, and there is no `setCaptureText`
+- **[built, and dark]** optional image attachment — built end to end and ⚠ **the
+  upload path has never run**: there is no Blob store on the project, so the
+  camera ships dark and lights the day one exists. Lodged rather than built
+  around, at the user's direction of 25 August: do not build what costs money
+- **[built]** edit/enrichment after capture — `setCaptureText` exists and the
+  rewrite happens **in place**, in the page's one field. ⚠ A second tap on a line
+  picks and never edits: the foot's pencil is the one door, so a tap on a line
+  cannot mean two things depending on the tap before it
 - **[part]** canonical vocabulary and status copy: the possibility types and
   intentions in §3, the conversion of existing records onto them, and the
   user-facing words that replace the film-first ones (Amendment 1, from
   Phase 0) — **the words are on screen** (`STATE_WORD`, `WHERE_IT_IS`); the
-  Postgres enum and §3's types and intentions are untouched, because the build
-  instruction was schema-free. ⚠ When that migration runs, `PUBLIC_STATES` is
-  **re-derived** rather than renamed
+  Postgres enum and §3's types and intentions are untouched. ⚠ **Deferred at
+  the user's direction on 24 August, and it is the only item nothing has
+  touched** — because it is the **one migration in this phase that is not
+  additive**. The three that shipped are nullable columns old code ignores, so a
+  revert push is still a rollback; renaming enum values ends that permanently.
+  It wants a phase that plans a down migration. ⚠ When it runs, `PUBLIC_STATES`
+  is **re-derived** rather than renamed
 
 Exit criteria:
 
 - **[met]** a user can save any text without a provider result
-- **[not met]** a user can save and resolve a known film or other supported
-  possibility — saving is built, resolving is the unbuilt suggestion path
-- **[part]** reload, sign-out, and provider failure do not lose saved captures —
-  reload and sign-out hold; there is no provider to fail yet
+- **[met, for film]** a user can save and resolve a known film or other
+  supported possibility. ⚠ **Only film**: a capture acquires a kind by resolving
+  to a possibility, and TMDB is the only catalogue in the product, so every
+  possibility is a film. *Other supported possibility* has no referent until
+  Phase 4's user-contributed catalogue or a second provider — which is also why
+  `fixture` (**Have**) is a word in the tray that nothing can reach
+- **[met]** reload, sign-out, and provider failure do not lose saved captures.
+  There is a provider to fail now, and it cannot take a capture with it: the save
+  completes first and the suggestion is a later, fire-and-forget write against
+  four conditions in its own `WHERE`
 - **[met]** every capture submission from the interface carries a client
   mutation id that is stable across a retry, and a retried submission returns
   the original record rather than a second one. ⚠ Phase 0 does not meet this:
@@ -1088,17 +1122,21 @@ Exit criteria:
   Phase 0 — and `crypto.randomUUID` is unavailable outside a secure context, so
   `lib/mutation-id.ts` falls back to `getRandomValues`
 - **[met]** no film wall or intent modal is required — the wall is deleted
-- **[not met]** an unresolved capture can be offered a possible resolution
-  without being silently converted or matched — the offer is designed and
-  unbuilt
+- **[met]** an unresolved capture can be offered a possible resolution without
+  being silently converted or matched. The offer resolves nothing on its own;
+  accepting is a second, explicit write, and a refusal is recorded
+  (`resolution_declined_at`) so the same question is never asked twice — which
+  is the whole difference between ignoring an offer and refusing one
 - **[part]** no user-visible screen, label, or new write uses film-first
   vocabulary, and every active capture and possibility is represented in the
   vocabulary of §3 — no screen does; the stored values and `VOCABULARY` still
   read `want`, `go_back_to`, `fixture`, `see`, `own`
 - ⚠ **and one criterion this list does not carry, which is the binding one:**
   *open, typed into, and closed in under five seconds, one-handed.* It is
-  measured on a thumb and nothing else, and it is unmeasured — see the design
-  document's *Only hardware can answer this*
+  measured on a thumb and nothing else, and it is **unmeasured** — closed at the
+  user's direction on 24 August, judged good on hardware, never timed. See the
+  design document's *Only hardware can answer this*, which is where anyone
+  reopening Phase 1's acceptance starts
 - ⚠ the read-only legacy comparison surface is exempt: `entries` and
   `captures.legacy_entry_id` are retained historical records kept to verify the
   Phase 0 migration against its own source, and they are retired by their own
@@ -1106,6 +1144,37 @@ Exit criteria:
   them could not be met while they exist, which is deliberate
 
 ### Phase 2 — friend convergence
+
+⚠ **Status, 30 August: the matching engine is deployed and nothing reads it.**
+This section reads as unstarted and is not. What already exists, inherited from
+the film-first build and re-pointed at captures in Phase 0:
+
+- `tracks` with mutuality, and `/u/[handle]` as the shared page
+- `lib/overlap.ts` as the one matching owner — **one set-based SQL statement**
+  joining `captures` to itself, on both triggers: a capture resolving
+  (`lib/db/captures.ts`) and a track becoming mutual (`lib/db/tracks.ts`)
+- the suppression rule for copied and transferred provenance
+- `notifications` rows written in the same transaction as the write that caused
+  them
+
+⚠ **And the half that makes it a product is entirely unbuilt.** **Nothing in the
+tree reads the `notifications` table** — the rows have been accumulating behind a
+surface that does not exist, which also means the fan-out has never been proved
+end to end with two accounts. Neither is there an overlap list or detail, a
+QR/code contact handshake, or a possible-match prompt for unresolved
+normalised-equal captures.
+
+⚠ **A constraint to know before planning this: overlap joins on
+`possibility_id`, so only *resolved* captures can converge** — and TMDB is the
+only catalogue. Today two people can converge on a film and on nothing else. The
+exit criteria below are writable against that; the product they describe is
+narrower than it sounds until Phase 4.
+
+⚠ **Phase 2's first visual decision is the colour that marks overlap**, and §11
+now makes it harder than it was: the accent's job is to interrupt, and splitting
+`--color-chrome` off made the screen louder, so the colour to out-shout is the
+lit brass rather than the muted one beside it in the palette. Do not pick it
+before there is a convergence to look at.
 
 Deliver:
 

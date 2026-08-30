@@ -22,14 +22,36 @@ specification. The re-direction specification is the complete brief for future
 product work. Where both are silent, prefer the simplest thing that works and
 flag the decision rather than inventing scope.
 
-## Where the build stands — 25 August
+## Where the build stands — 30 August
 
 **Phase 0 is done, deployed and verified.**
 
-**Phase 1 is built, deployed, migrated and seen on a handset.** `origin/main` is
-`0942423`. `/` is the capture page in production; the poster wall,
-`components/shell.tsx` and the four collection routes are deleted. Migrations
-`0009` and `0010` are applied to production. Nothing is held back.
+**Phase 1 is built, deployed and in daily use on a handset.** `/` is the capture
+page in production; the poster wall, `components/shell.tsx` and the four
+collection routes are deleted. Nothing is held back. Five things are outstanding
+and none of them is a screen that does not work — the vocabulary migration
+(deferred, and the only non-additive one), a `kind` that is not a film, the thing
+detail view, a Blob store for the photographs already built, and the
+five-second acceptance criterion, which was closed by direction and never
+stopwatched. `docs/re-direction/phase-1-capture.md` is the register.
+
+⚠⚠ **This paragraph used to name which migrations were applied to production,
+and that sentence is deleted rather than corrected — 30 August.** It is exactly
+the class of statement the warning below is about: it was written confidently,
+it was wrong, and it cost roughly eighteen hours of 500s. **Ask instead** —
+`npm run migration:state`, or `scripts/prod-check.sh` for production. A number
+that is right when it is typed and silently wrong an hour later is worse than no
+number, which is also why this section no longer names a commit.
+
+**Phase 2's matching engine is deployed and nothing reads it.** `tracks`,
+`lib/overlap.ts` on both triggers, the suppression rule and `notifications` rows
+written in the same transaction all exist and run — and **no surface in the tree
+reads `notifications`**, so the fan-out has never been proved end to end with two
+accounts. There is no overlap list or detail, no QR handshake, and no
+possible-match prompt. ⚠ **Overlap joins on `possibility_id`, so only *resolved*
+captures converge, and TMDB is the only catalogue** — today two people can
+converge on a film and on nothing else. See §13 of the implementation
+specification, which now carries this as Phase 2's status.
 
 ⚠ **Production was a 500 for every signed-in request on the morning of 25
 August, and the cause is the rule this file states.** Three commits selecting

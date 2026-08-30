@@ -14,13 +14,46 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 
 ---
 
-## Build status — 25 August
+## Build status — 30 August
 
+> **Phase 1 is built, deployed, migrated and in daily use on a handset.**
+> Everything on *Still to build* is built. **Five things are outstanding, and
+> none of them is a screen that does not work:**
+>
+> 1. **The words, in the schema** — deferred at the user's direction on 24
+>    August, and the only item nothing has touched. It is the **one migration in
+>    this phase that is not additive**: the four that shipped are nullable columns
+>    old code ignores, so a revert push is still a rollback, and renaming enum
+>    values ends that permanently. ⚠ When it runs, `PUBLIC_STATES` is
+>    **re-derived** rather than renamed.
+> 2. **A `kind` that is not a film.** `Kind` is `film | book | place | object` in
+>    `lib/domain.ts` and every possibility in the database is a film, because
+>    TMDB is the only catalogue. That is why **Have** is a word in the tray that
+>    nothing can reach — see *Have is still not reachable*. Blocked on Phase 4's
+>    contributed catalogue or a second provider, **and** on one undesigned thing:
+>    where a person refines an intention after capture.
+> 3. **The thing detail view.** `film-screen.tsx` is kept for it and nothing on
+>    the page opens it.
+> 4. **A Blob store**, for photographs that are built and dark. Money, not code.
+> 5. **The binding acceptance criterion** — *open, typed into, and closed in
+>    under five seconds, one-handed* — closed at the user's direction on 24
+>    August and **never stopwatched**.
+>
+> ⚠⚠ **Do not write down what state production is in. Ask it.** The account of
+> why is immediately below, and it cost roughly eighteen hours of 500s.
+> `npm run migration:state` asks; `scripts/prod-check.sh` wraps it for
+> production, which comes from `neonctl` and never from `vercel env pull`.
+>
+> ---
+>
 > **Built, deployed, migrated and seen on a handset — 25 August.**
 >
 > **Everything on *Still to build* is built, and nothing is held back.**
-> `origin/main` is `0942423`. Migrations `0009` and `0010` are applied to
-> production.
+> ⚠ **The two sentences that stood here named a commit and declared which
+> migrations production had. Both are deleted — 30 August.** The commit went
+> stale within the hour; the migration claim was the one that cost the outage
+> described immediately below, and it is still the best example in this
+> repository of a register sounding certain about something it had not asked.
 >
 > ⚠ **They were applied a day late, and production was down for it.** The three
 > commits carrying them — resolution offers, the derived intention, photographs
@@ -284,9 +317,72 @@ this document: `Main` (empty), `LandingTyped` (writing), `LineSelected`
 >   must not turn into a categorise-before-saving flow; that is excluded from
 >   Release 1 by name.
 >
-> ⚠ **None of the ten is verified on hardware**, which is now the one thing
-> outstanding on this page — though the gap under the line is the first of them
-> to have come *from* hardware.
+> ⚠ **None of the ten was verified on hardware when that list was written.**
+> Most of them have been since, and what follows is what hardware said.
+>
+> ### 29 and 30 August — the strip, the exits, and the desk's ground
+>
+> ⚠ **These are recorded in one line each. `CLAUDE.md` carries the argument for
+> every one of them**, and it is the register for engineering rules exactly as
+> this section is the register for build status. Two documents, one fact each;
+> do not copy the reasoning down here where it can drift.
+>
+> - **The light is gone from the page and the writing ground is glass on every
+>   surface.** Four moves were made on 29 August answering *less* and the answer
+>   turned out to be *none* — the mechanism is deleted rather than set to `none`,
+>   and the `--row-light` tombstone holds the "too grey" argument it was built
+>   on. Glass replaced it because **an opaque black strip on a black page is
+>   invisible**, which is what every question about that glow had really been
+>   about.
+> - **The foot bar and the writing line are one strip on the bottom edge**, and
+>   its air has been asked about from both ends on the same night: 13px a side,
+>   then 0, then 13 again. The rule that survived is that *a glyph sitting higher
+>   needs air under it, and air under it IS the height*.
+> - ⚠ **A `@theme` token cannot read a property that script writes onto an
+>   element**, and one did for an evening. `--sheet-clearance` resolved
+>   `--keyboard-overlap` against `:root`, froze at the `0px` fallback, and kept
+>   the installed app's strip 34px taller than it should have been. **No browser
+>   could see it** — with no notch both versions compute zero — so it survived a
+>   full day of measurement. Only a notched handset told them apart.
+> - **The notch's clearance is spent below the row only, less the air the row
+>   already stands off**, so the installed app's idle strip went 88px → 75px and
+>   its glyphs rose 4px. Invisible on every surface with no inset, which is what
+>   made it *the home app only* without a branch.
+> - **The writing row's air is measured to the characters, not to the line box.**
+>   A new **interface-face fence** — three ratios for Fira Sans, measured by
+>   scanning pixels at 10× — puts the gap over the capitals equal to the gap under
+>   the descenders. The row is 40.5px on a handset and **54px on the desk, which
+>   is exactly 4/3 and is not written down anywhere**.
+> - ⚠ **The strip is now shorter writing than idle**, which reverses the 28 August
+>   one-strip rule. It was directed, and the reason it holds is that the two rows
+>   stopped being the same object: a 26px glyph drawing has 1px of slack in the
+>   line box and 16.3px of ink has 7.6 above and 4.1 below, so one air cannot
+>   centre both.
+> - ⚠ **Losing focus is leaving.** Reported on both handset surfaces: the
+>   keyboard's own *Done* dismissed the keys and left the row on the bottom edge
+>   with the caret still blinking. Every exit had been wired to a gesture the page
+>   could see and iOS's dismiss is none of them, so the mode is tied to the field
+>   having focus. **Sharing one exit needed an `open` latch that updates
+>   synchronously**: a tap on the scrim blurs the field and *then* clicks the
+>   scrim, and two exits in one tick is two captures — `commit` mints a fresh
+>   client id each time, so §10's idempotency key protects a retry and not this.
+> - ⚠ **A scrolled page no longer re-enters on resume.** Reported: scroll until
+>   the bars recede, background the app, come back, and the bars drop and then
+>   recede again. **The flash is the reload** — the scroll is restored before the
+>   first frame but the server cannot know the reader is 900px down, so the
+>   document arrives with the bars in it for 257ms. Re-entry was licensed on
+>   costing nothing; where it costs something it does not happen. **What that
+>   costs is stated**: a reader who leaves the app scrolled down gets no re-seed
+>   on that resume, and the next resume at the top does it.
+> - **The desk has its own ground: `#14140f`, a warm charcoal.** Directed — the
+>   desktop was too oppressive. Paper and newsprint were rendered on the real page
+>   and refused, with their measurements kept. The handset is untouched by
+>   construction and the manifest stays black, because the installed app is the
+>   handset.
+>
+> ⚠ **What hardware has NOT answered is still the same one thing**: nobody has
+> timed the capture. Everything else on this page has been used on a phone and
+> judged.
 
 ### The 23 commits this register was missing
 
