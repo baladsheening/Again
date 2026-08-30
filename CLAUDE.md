@@ -632,6 +632,43 @@ that the mount-time `useState` initialiser ignores, and making it work means
 teaching the page to merge two lists. A re-entry re-seeds instead, so there is
 still exactly one list and nothing to reconcile.
 
+⚠ **AND ONLY WHILE THE PAGE IS AT THE TOP — 30 August.** Reported from the
+installed app: scroll down until the bars recede, background it, come back, and
+**the bars drop and then recede again**. They do, and no amount of work on the
+chrome could stop it.
+
+- **The flash IS the reload.** The browser restores the scroll before the first
+  frame — measured, `y=900` on the very frame the bar exists — but the server
+  cannot know the reader is 900px down, so the document arrives with the bars in
+  it. Measured on a 390 handset: **257ms of bars fully down** while it hydrates,
+  then the 340ms recede, still travelling at 452ms.
+  `node_modules/.probe/resumechrome.mjs`.
+- ⚠ **So the licence had a condition in it, and the condition is now in the
+  gate.** The re-entry was affordable because *the page comes back in its resting
+  state and loses no position* — which is false of somebody reading the past. **A
+  scrolled page does not re-enter.** Removing the condition rather than
+  correcting the symptom, in the order *How things get fixed* asks for.
+- ⚠ **What it costs, stated: a reader who leaves the app scrolled down gets no
+  re-seed on that resume.** The record is newest-first, so what a re-seed brings
+  is at the **top** — off the screen of the one person this withholds it from —
+  and the next resume at the top does it. **Silently short is still the harm to
+  beat**, so where this cannot tell, it re-enters: no mark means no measurement,
+  and no measurement takes the old path exactly as before.
+- ⚠ **Measured off the mark, never off `window.scrollY`.** In a Safari tab the
+  address bar collapses and `scrollY` moves backwards while the page is still
+  going down — `chrome-recede.ts` learned that expensively. The gate reads the
+  same mark the chrome reads, so the two can never disagree about whether the
+  page is at the top.
+- ⚠ **Do not answer this inside `useChromeRecede` instead.** `atTop` starts
+  `true` on the premise that *the page opens at the top*, and a scroll-restoring
+  load breaks it — but an initial measurement there fixes nothing, because the
+  **server's HTML is painted before any effect of ours runs**. The bars are on
+  the glass whatever that value says. What stays reachable is a manual reload of
+  a scrolled tab, where what is seen is the browser's own restore.
+- **Asserted by the same probe** — a scrolled resume keeps the token, the scroll
+  and the bars all three; a resume at the top still mints a new document and
+  arrives with the bars where they were; and a draft still holds it off.
+
 ⚠ **This does not cover two screens open at once** — nothing became hidden, so
 nothing becomes visible. Closing that costs a real merge, and a timer is not the
 cheap version of it: a clock fires while somebody is looking, and re-entry is

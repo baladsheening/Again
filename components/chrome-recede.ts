@@ -166,7 +166,24 @@ export function useChromeRecede({
    */
   end: React.RefObject<HTMLElement | null>
 }) {
-  /* Shown on arrival: the page opens at the top, which is this mark's own state. */
+  /*
+    Shown on arrival: the page opens at the top, which is this mark's own state.
+
+    ⚠ **That is an assumption, and it is only true of a document that opens at
+    the top — 30 August.** A load that restores a scroll position does not: the
+    bars arrive in the server's HTML, paint for the length of hydration, and then
+    play the recede. Measured at 260px of visible bar and a 340ms slide by
+    `node_modules/.probe/resumechrome.mjs`, on the one path that could reach it —
+    the resume re-entry in `page-screen.tsx`, which **no longer fires while the
+    page is scrolled**, for exactly this reason.
+
+    ⚠ **Do not answer this with an initial measurement here.** It would be a
+    correction for a condition that has been removed, and it could not work
+    anyway: the server HTML is painted before any effect of ours runs, so the
+    bars are on the glass whatever this value says. What is left reachable is a
+    manual reload of a scrolled tab, where the browser's own restore is the
+    thing being seen.
+  */
   const atTop = useOnScreen(top, true, writing)
   const atEnd = useOnScreen(end, false, writing)
   /** Asked back by a flick, until a push the other way of the same size. */

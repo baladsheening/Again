@@ -804,11 +804,39 @@ export function PageScreen({
     lists, which is the thing the header says it does not do.
 
     ⚠ **Re-entry is cheap here by construction, which is the argument for it.**
-    The live line carries `autoFocus`, so the page comes back in its resting
-    state; the caret is at the top and the record beneath it, so scrolling to
-    the top loses no position. This page was built to be re-entered. It also
-    picks up new code, which is the same stale-document problem wearing its
-    other hat — the force-quit an installed build otherwise needs.
+    The page comes back in its resting state, the record is newest-first, and at
+    the top a re-entry changes nothing anybody can see. This page was built to be
+    re-entered. It also picks up new code, which is the same stale-document
+    problem wearing its other hat — the force-quit an installed build otherwise
+    needs.
+
+    ⚠ **And that argument has a condition in it, which is now in the gate — 30
+    August.** Reported from the installed app: scroll down until the bars recede,
+    background it, come back, and **the bars drop and then recede again**. They
+    do, and it is not the chrome's fault. The browser restores the scroll before
+    the first frame — measured, `node_modules/.probe/resumechrome.mjs` — but the
+    server cannot know the reader is 900px down, so the document arrives with the
+    bars in it, sits like that for **260ms** while it hydrates, and then plays the
+    340ms recede. **Nothing about a reload can fix that: the flash is the reload.**
+
+    ⚠ **So a scrolled page does not re-enter.** The sentence above used to say
+    *scrolling to the top loses no position*, and that is simply false of somebody
+    reading the past. Re-entry was licensed on costing nothing; where it costs
+    something, it does not happen. The condition is removed rather than the
+    symptom corrected, which is the order `CLAUDE.md` asks for.
+
+    ⚠ **What it costs, stated: a reader who leaves the app scrolled down gets no
+    re-seed on that resume.** The record is newest-first, so what a re-seed brings
+    is at the *top* — off the screen of the one person this withholds it from —
+    and the next resume at the top does it. **Silently short is still the harm to
+    avoid**, so if this ever has to choose, it chooses the reload: no mark means
+    no measurement, and no measurement re-enters exactly as before.
+
+    ⚠ **Measured off the mark, never off `window.scrollY`.** In a Safari tab the
+    address bar collapses and `scrollY` moves backwards while the page is still
+    going down — see `chrome-recede.ts`, which learned it the expensive way. The
+    mark is the same instrument the chrome reads, so the gate and the bars can
+    never disagree about whether the page is at the top.
 
     ⚠ **Only when the page is settled, and the list is the strictest term.** A
     `pending` line has not been saved and a `failed` one exists nowhere else;
@@ -852,10 +880,26 @@ export function PageScreen({
     for the life of the page rather than being torn down and rebuilt on every
     keystroke, which is what a dependency array of eleven values would do.
   */
+  /**
+   * **Is the record at the top — measured, this instant.**
+   *
+   * ⚠ **A rendered box, not `window.scrollY`**, and the very mark the chrome
+   * watches. See the re-entry note above.
+   *
+   * ⚠ **No mark, no measurement — and then it re-enters.** A missing ref must
+   * not silently switch the re-entry off; a record that is short without saying
+   * so is the harm this whole mechanism exists to prevent, and a flash of the
+   * bars is not.
+   */
+  const atTopNow = () => {
+    const mark = topMark.current
+    return !mark || mark.getBoundingClientRect().bottom > 0
+  }
+
   const onResume = useRef<() => void>(() => {})
   useEffect(() => {
     onResume.current = () => {
-      if (settled) {
+      if (settled && atTopNow()) {
         window.location.reload()
         return
       }
