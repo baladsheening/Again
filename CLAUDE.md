@@ -1066,6 +1066,35 @@ Notes-like requirements in implementation-spec.md.
 Matte black, legible text, known icons. Text-first. Type is the entire design.
 Tokens are in `app/globals.css`.
 
+⚠⚠ **THERE IS NO SCROLLBAR ON THIS PAGE — directed 30 August, and it OVERRIDES a
+rule this repository used to state.** Reported as *the side scroll bar*; the
+answer asked for was that it go, not that it be restyled.
+
+- **It was a LIGHT bar on a black page, and the cause was a missing fact rather
+  than a missing style.** `color-scheme` computed `normal`, which tells the engine
+  *use the light widgets* whatever colour the page paints itself.
+  **`color-scheme: dark` stays** even now the bar is gone — it also owns the
+  caret, the selection and the form controls, and it is what stops a hidden bar
+  from being a light one the day something else scrolls.
+- **`scrollbar-width: none` and `::-webkit-scrollbar` are both needed**, and
+  neither is a browser sniff: each is the property its own engine reads.
+- ⚠ **The `scrollbar-none` utility is DELETED into the `html` rule.** Its docblock
+  said *do not reach for this anywhere content is primarily navigated by
+  scrolling — the lists — where the bar is the only thing saying how much is
+  left*. That rule was argued directly and overridden; **the cost is stated in
+  the code and stands**: the record gives no sign of its length or where you are
+  in it. ⚠ **If that ever matters, the replacement is a fade at the record's
+  foot, not the bar coming back.**
+- ⚠ **Desk-only, and it hands 15px of window back.** Measured 15px at 1000, 1152
+  and 1440 and **0px on a handset** — iOS and Android use overlay bars that take
+  no layout width. Scrolling itself is untouched on every surface.
+- ⚠ **It SIMPLIFIES the type ramp rather than threatening it.** `100vw` counts a
+  classic bar and `clientWidth` does not; with no bar they are one number, so the
+  mismatch `threshold.mjs` was written around is gone. That probe now proves the
+  browser *could* draw a bar — on a blank page, since ours can no longer answer
+  for it — and that ours draws none. `markgap.mjs`, `logocol.mjs` and `scale.mjs`
+  confirm the column, the mark's band and the stack all followed the 15px.
+
 ⚠ **THE DESK'S GROUND IS NOT BLACK — 30 August, and the sentence above is the
 handset's now.** Directed: *the desktop version is too oppressive because of its
 darkness; it needs an aesthetic related to the handset versions but different.*

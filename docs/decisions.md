@@ -8797,3 +8797,77 @@ a 390 handset, 9 on a 1440 desk. ⚠ **It holds the drag at full extension to re
 the transform**, because the row springs back on release and *did it move* is the
 question the inert direction turns on; a probe that only looked at the outcome
 could not tell a row that refused to move from a row that moved and did nothing.
+
+## No scrollbar — 30 August, and a written rule overridden
+
+**Reported: *any way to get rid of the side scroll bar?* There is, and it is
+gone.** Two findings and a decision.
+
+### It was not a horizontal scrollbar, and there is no overflow
+
+Measured at 390, 1000, 1152 and 1440 before touching anything:
+`scrollWidth === clientWidth` at every width, `canScrollX: false`, and nothing in
+the tree sticking out past the layout viewport. **Nothing runs off the side of
+this page.** What was being seen was the browser's own **vertical** bar at the
+right edge — 15px on the desk, **0px on a handset**, because iOS and Android both
+use overlay bars that take no layout width.
+
+### It was light because the page had never said it was dark
+
+⚠ **`color-scheme` computed `normal`**, which is not *unset*: it tells the engine
+to paint its **light** widget set, whatever colour the document paints itself. So
+a white track and a grey thumb sat against `--color-bg`. **Painting a page black
+is not telling the engine anything** — the fact has to be declared.
+
+`color-scheme: dark` on `html` was the first fix and **it stays**, because the
+scrollbar was the smallest part of what it does: the caret's own default, the
+selection colour, the form controls and the canvas behind the page all become the
+dark set with it, and it is what stops a bar from being a light one anywhere one
+is ever drawn again. It is the same reach as `touch-action: pan-y` — **state the
+truth to the engine rather than draw a replacement for what it does with it.**
+
+### And then it was removed outright, which overrides a rule this repo stated
+
+**Directed, after the dark bar: *I want it gone. I don't want the scrollbar.***
+
+⚠ **The rule that was overridden was mine and is worth recording as overridden
+rather than quietly deleted.** The `scrollbar-none` utility's docblock said, in
+writing: *do not reach for this anywhere content is primarily navigated by
+scrolling — the lists — where the bar is the only thing saying how much is left.*
+The record is exactly that. The argument was put and the direction stands.
+
+**What it costs, stated and unchanged by the direction:** the record gives no
+sign of how long it is or where in it you are. ⚠ **Scrolling itself is untouched
+on every surface** — wheel, trackpad, keyboard and touch all behave exactly as
+before; only the indicator is gone. **If the position ever matters, the honest
+replacement is a fade at the record's foot, not the bar coming back.**
+
+**The utility is deleted into the `html` rule** rather than applied from a class.
+It had one caller, the film screen's synopsis pane, and that screen was deleted
+into the console — so a name for *hide a pane's bar* on a page that has none at
+all is a name for nothing.
+
+⚠ **Both spellings, and neither is a browser sniff.** `scrollbar-width` is the
+standard and WebKit does not implement it; `::-webkit-scrollbar` is WebKit's and
+nothing else honours it. Each is the property its own engine reads, and an engine
+that reads neither simply keeps its bar.
+
+### The 15px, which simplifies rather than threatens
+
+⚠ **A suppressed classic bar hands its width back to the layout**, so the desk
+gains 15px at every width. Nothing needed adjusting: every width on this page is
+derived, so the record's column, the mark's band and the tool stack all followed —
+`markgap.mjs`, `logocol.mjs` and `scale.mjs` re-run unchanged.
+
+**It also closes a mismatch rather than opening one.** `100vw` counts a classic
+scrollbar and `clientWidth` does not, which is the discrepancy the type ramp's
+`clamp()` is written around and `threshold.mjs` exists to prove harmless. With no
+bar the two are one number at every width and there is nothing left to oscillate.
+
+⚠ **That probe's scrollbar check had to be rebuilt, and the reason is a good
+one.** It failed the run when it measured a 0px bar, on the reasoning that *a
+hidden bar proves nothing* — which is still right, and which the app itself now
+causes. So the question *can this browser draw a classic bar* is asked of **a
+tall blank page in the same browser**, where our CSS cannot answer for it, and
+the app's page is then asserted to draw none. Measured: **15px on the blank page,
+0px on ours.**

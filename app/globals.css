@@ -2252,6 +2252,79 @@
   html {
     background-color: var(--color-bg);
     color: var(--color-text);
+
+    /**
+     * ⚠ **The scrollbar was a LIGHT bar on a black page, and this is why — 30
+     * August.** Reported as *the side scroll bar*. It is the browser's own
+     * vertical bar, 15px of white track and grey thumb hard against
+     * `--color-bg`, and it was light because **this page had never told the
+     * engine it was dark**: `color-scheme` computed `normal`, which means *use
+     * the light widgets*, whatever colour the page happens to paint itself.
+     *
+     * **So the bar is not styled, it is INFORMED.** One declaration hands the
+     * engine the fact it was missing and it paints its own dark scrollbar —
+     * platform-native, correctly sized, and right on a surface nobody here has
+     * measured. It is the same reach as `touch-action: pan-y`: state the truth
+     * to the engine rather than draw a replacement for what it does with it.
+     *
+     * ⚠ **It is not `scrollbar-none`, and that is deliberate.** Hiding the bar
+     * is possible — the utility exists — and its own docblock forbids exactly
+     * this use: *do not reach for this anywhere content is primarily navigated
+     * by scrolling, where the bar is the only thing saying how much is left.*
+     * The record is a scroll-navigated list of everything somebody has ever
+     * written. **A handset shows no bar at all** (measured: 0px against the
+     * desk's 15), so this only ever concerned the desk, where there is a mouse
+     * and a bar is how far down you are.
+     *
+     * **It carries more than the scrollbar and all of it is wanted:** the form
+     * controls, the caret's own default, the selection colour and the canvas
+     * behind the page all become the dark set. The drawn caret is unaffected —
+     * the real one is `caret-color: transparent` in `page-input`.
+     *
+     * ⚠ **It stays now that the bar is gone**, and it is not left over: the
+     * caret, the selection and the form controls were always the larger half of
+     * what it does, and it is what stops a *hidden* bar from being a light one on
+     * the day somebody scrolls a pane.
+     */
+    color-scheme: dark;
+
+    /**
+     * ⚠⚠ **THERE IS NO SCROLLBAR ON THIS PAGE — directed 30 August, and it
+     * OVERRIDES a rule this file used to state.** The deleted `scrollbar-none`
+     * utility said, in writing: *do not reach for this anywhere content is
+     * primarily navigated by scrolling — the lists — where the bar is the only
+     * thing saying how much is left.* That rule was mine, it was argued against
+     * directly, and the direction stands: **the bar is gone.**
+     *
+     * **What it costs, stated:** the record gives no sign of how long it is or
+     * where in it you are. Scrolling itself is untouched — wheel, trackpad,
+     * keyboard and touch all work exactly as before; only the indicator is gone.
+     * ⚠ **If that ever matters, the honest replacement is a fade at the record's
+     * foot, not the bar coming back.**
+     *
+     * **Both spellings, and both are needed:** `scrollbar-width` is the standard
+     * and WebKit does not implement it; `::-webkit-scrollbar` is WebKit's and
+     * nothing else honours it. Neither is a browser sniff — each is the property
+     * its own engine reads, and an engine that reads neither keeps its bar.
+     *
+     * ⚠ **This was only ever a desk change.** Measured before it: 15px of bar at
+     * 1000, 1152 and 1440, and **0px on a handset** — iOS and Android both use
+     * overlay bars that take no layout width. So nothing about the phone moves,
+     * and what the desk gains is 15px of window back.
+     *
+     * ⚠ **That 15px is the one consequence worth re-measuring, and it SIMPLIFIES
+     * things.** `100vw` counts a classic scrollbar and `clientWidth` does not,
+     * which is the mismatch the type ramp's note below is written around — with
+     * no bar the two are equal and the residual disappears. Every width on this
+     * page is derived, so the column, the mark's band and the tool stack all
+     * follow; `threshold.mjs`, `markgap.mjs` and `logocol.mjs` assert they did.
+     */
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
     /* Respected throughout (§10, §11). */
     scroll-behavior: smooth;
 
@@ -2689,34 +2762,13 @@
 }
 
 /**
- * Scroll without a scrollbar.
- *
- * **One caller: the synopsis on the film screen** — see `components/film-screen.tsx`.
- * Reported 17 August: with a poster open, an indicator still appeared and moved
- * under a drag, *giving the impression that their scrolls might be having an
- * effect*. They were, on the synopsis pane, which is genuinely scrollable — but on
- * a screen whose whole promise is that the wall behind it is frozen, **a moving
- * bar at the right edge is a claim about the page, not about a pane.** The
- * distinction is obvious in the DOM and invisible to a thumb.
- *
- * Both spellings, and both are needed: `scrollbar-width` is the standard and
- * WebKit does not implement it, `::-webkit-scrollbar` is WebKit's and nothing
- * else honours it. Neither is a browser sniff — each is the property its own
- * engine reads, and an engine that reads neither simply keeps its scrollbar.
- *
- * ⚠ **It hides the affordance along with the bar.** A long synopsis now gives no
- * sign that it continues below the fold, and the honest replacement if that
- * matters is a fade at the pane's foot rather than the bar coming back. Do not
- * reach for this anywhere content is *primarily* navigated by scrolling — the
- * lists, the wall — where the bar is the only thing saying how much is left.
+ * ⚠ **`scrollbar-none` was here and is DELETED into the `html` rule — 30
+ * August.** It was a utility with one caller, the film screen's synopsis pane,
+ * and that screen was deleted into the console. The page has no scrollbar at all
+ * now, so a utility for hiding one on a pane is a name for something the
+ * document already does. The argument it carried — both spellings, and what
+ * hiding a bar costs — is in the `html` rule in the base layer.
  */
-@utility scrollbar-none {
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
 
 /**
  * A 44×44 minimum hit area for small text controls, added *without* changing
