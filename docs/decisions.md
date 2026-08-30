@@ -8428,3 +8428,54 @@ unbuilt, and it wants a look on a real desk first.
 deliberately: §11 reserves `--color-accent` for **convergence**, and the gutter is
 where a state may live rather than a control. The mark's next tenant is Phase 2's
 own. Do not put a pick mark back there.
+
+### The console, seen and corrected — 30 August, the same evening
+
+**Three directions after the first deploy: *too grey*, *too big — it has to adapt
+to the size of the entry*, and *a glass see-through effect with the relevant blur,
+not far from the banner treatment*. Plus: nothing may scroll behind it.**
+
+⚠ **The ground took three attempts and the lesson is that the card was never the
+problem.**
+
+1. `--sheet-tint`, the writing strip's 38% — **invisible**. Diagnosed as a
+   floating card having no borrowed edge, unlike the strip, which has the
+   screen's.
+2. A lifted mix of `--color-surface` at 88% — visible, and **grey**. The
+   diagnosis was right and the prescription was wrong.
+3. `--glass-tint` over `--glass-blur`, the bars' own recipe — **invisible
+   again**, which is what finally located the fault.
+
+**The bars read as glass because the record passes under them at full strength.**
+The scrim had already darkened *and* blurred everything, so by the time the
+card's glass got there, there was nothing left for it to darken and no edge for
+it to make. So the tint came off the **scrim** and the card kept it: bright,
+heavily blurred record behind, a darker pane over it, which is exactly the
+difference the bars have. ⚠ **The writing sheet's branch keeps its tint** — it
+has no blur, so the tint is the only thing sinking the record under a field
+somebody is typing into.
+
+⚠ **`--glass-blur` and not `--scrim-blur` on that scrim** — 18px against 5. Five
+was picked for a photograph opened full size, where the blur backs one picture;
+this has to make a page of prose unreadable while leaving it present, which is
+the job the bars' number was chosen for.
+
+⚠ **The fixed-height card is reversed and the cost is accepted.** It filled the
+rectangle so the `×` could never move — *the box a thumb learns is the one it can
+see* — and the price was a 616px box holding three words. The **bounds** are
+untouched: same top edge, same sides, still never reaching the bar or the strip.
+So the constant is now the gap between the last line of the capture and the
+controls, rather than the controls' position on the glass. That is a different
+constant and a defensible one — the thumb tracks the words instead of the screen
+— but it *is* a reversal and the next person should not rediscover the first
+argument and think it was an oversight.
+
+⚠ **Nothing scrolls behind it.** The scrim already refused a pan; the hole was a
+drag starting on the **card**, because `touch-action` does not inherit across an
+element boundary and the card found no scroll container of its own. `touch-action:
+none` on `console-sheet` closes it at the console's edge, and the body inside
+takes it back as `pan-y` with `overscroll-behavior: contain` so a long capture is
+still readable and reaching its end is not the page's turn. **On the desk this
+does nothing and should not**: the console is in flow inside the record, so there
+is no "behind" — scrolling moves it with the lines it sits between, which is the
+whole point of expanding in place.

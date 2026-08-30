@@ -1935,46 +1935,44 @@
    */
   --console-top: calc(var(--bar-height) + var(--tap-floor));
   --console-foot: calc(var(--foot-height) + var(--tap-floor));
-
   /**
    * ───────────────────────────────────────────────────────────────────────────
-   *  The console's ground — and it LIFTS, where every other glass here sinks
+   *  The console's ground — the BARS' glass, 30 August (later)
    * ───────────────────────────────────────────────────────────────────────────
    *
-   * ⚠ **It wore `--sheet-tint` for an hour, on the reasoning that the console
-   * and the writing strip are the same thing — a glass surface holding body text
-   * over the record — and a screenshot killed it.** The card was **invisible**:
-   * on a 390 handset there was a capture and three glyphs floating on the page
-   * with no box around them at all.
+   * ⚠ **Directed: *a glass see-through effect with the relevant blur, not far
+   * from the banner treatment* — and *too grey* is what it replaced.** So the
+   * console wears `--glass-tint` over `--glass-blur`, which is the two bars'
+   * own recipe, stated by reading their tokens rather than by matching their
+   * numbers. There is no `--console-tint` any more: it was a third glass in a
+   * page that should have two.
    *
-   * ⚠ **This file already had the reason written down, about the strip, and it
-   * points the other way here.** *THE STRIP IS ON A TRUE-BLACK PAGE, SO AN
-   * OPAQUE GROUND IS INVISIBLE* — glass was the answer there because **the strip
-   * has the screen's own edge to be a surface against**. A card floating in the
-   * middle of the glass has no borrowed edge, and it sits over a record that the
-   * scrim has *already* darkened, so a ground mixed **down** toward the page has
-   * nothing left to be darker than.
+   * ⚠ **This reverses the ground I picked an hour earlier, and the reversed
+   * reasoning is kept because it is half right.** That ground mixed toward
+   * `--color-surface` — *upward* — to solve a real thing: the first attempt used
+   * `--sheet-tint`, at 38%, and the card came out **invisible**, a capture and
+   * three glyphs floating on the page with no box round them. The diagnosis was
+   * that a card floating mid-screen has no borrowed edge, unlike the strip,
+   * which has the screen's own. **That diagnosis stands. The prescription was
+   * wrong**: the answer to 38% of a dark ground being too little is not to
+   * change the *direction* of the mix, it is to use the ground the page already
+   * uses for chrome that has to be seen — 74%, which is nearly twice as much.
+   * Lifting made a grey card; the bars are dark and perfectly legible.
    *
-   * ⚠ **So it mixes toward `--color-surface` instead — the palette's card.** It
-   * is still glass and still see-through: the blurred record passes through it,
-   * which is what the brief asks for by name. What changed is the direction. A
-   * surface that is *lighter* than what it covers has an edge on a black page;
-   * one that is darker does not, and no amount of tuning the percentage fixes a
-   * sign error.
+   * ⚠ **What makes it visible is the same thing that makes the bars visible: the
+   * BLUR, not the tint.** A record passing under 18px of blur is unmistakably
+   * behind something even when the tint alone would not say so. That is why this
+   * takes the bars' blur and not the strip's 24 — the strip's is heavier because
+   * prose passes behind prose at the same size, and here what is behind is
+   * already softened by the scrim.
    *
-   * ⚠ **`--color-surface` and not a hex, so the desk gets it for free.** The desk
-   * re-derives that token against its charcoal ground, so the console re-grounds
-   * with everything else and there is no second value to keep in step. It is also
-   * why the desk's own card can be the same token at full strength: **one ground
-   * for the console, two opacities**, rather than two grounds.
-   *
-   * ⚠ **`--sheet-blur` and not a number of its own.** What passes behind this is
-   * prose at the same size and face as the prose in front of it, which is exactly
-   * the argument the strip's 24px was picked on. A second name holding the same
-   * number is the drift `--recede` was collapsed to avoid.
+   * ⚠ **The desk does NOT get this**, and that is not a drift. In flow the
+   * console pushes the record apart; there is nothing behind it to see through,
+   * so glass would be a filter with no picture and a tint with nothing to tint.
+   * A card in flow is what `--color-surface` is for, and the desk re-derives that
+   * token against its own charcoal. Two placements, two grounds, because they are
+   * two situations — not two numbers to keep in step.
    */
-  --console-tint: color-mix(in srgb, var(--color-surface) 88%, transparent);
-
   /**
    * ⚠ **`--record-held` and `--band-tail` were here and are deleted — 27 August.**
    * Both described a page with a pinned live line in it. The recede held the
@@ -3800,19 +3798,19 @@
  * tombstone for the whole argument against painting an edge onto something that
  * has one.
  *
- * - **The handset wears `--console-tint` over `--sheet-blur`** — glass, and
- *   see-through, but mixed **up** toward `--color-surface` rather than down
- *   toward the page. It wore `--sheet-tint` for an hour on the reasoning that
- *   the console and the strip are the same object, and the card came out
- *   **invisible**: a card floating mid-screen has no borrowed edge, and the
- *   record behind it is already darkened by the scrim, so a ground mixed toward
- *   black had nothing left to be darker than. The whole argument is on
- *   `--console-tint`; the short version is that the strip's glass sinks and this
- *   one has to lift.
- * - **The desk wears `--color-surface` at full strength, which is the same token
- *   without the transparency.** In flow the console pushes the rows apart, so
- *   there is nothing behind it to see through and a blur would be a compositing
- *   layer bought for no picture. **One ground, two opacities** — not two grounds.
+ * - **The handset wears the BARS' glass** — `--glass-tint` over `--glass-blur`,
+ *   read from their tokens rather than matched to their numbers. Directed: *a
+ *   glass see-through effect with the relevant blur, not far from the banner
+ *   treatment.* It wore two other grounds first — the strip's 38%, which was
+ *   invisible, and a lifted mix of `--color-surface`, which was **grey**. The
+ *   argument for all three is on the tint's own note above; the short version is
+ *   that what makes a floating card visible is the **blur**, not the tint, and
+ *   the bars had already proved it on this exact page.
+ * - **The desk wears `--color-surface`, and glass would be meaningless there.**
+ *   In flow the console pushes the rows apart, so there is nothing behind it to
+ *   see through: a blur would be a compositing layer bought for no picture and a
+ *   tint would have nothing to tint. Two placements, two grounds, because they
+ *   are two situations.
  *
  * ⚠ **The desk's ground bleeds to the column's edges while its text does not.**
  * `margin-inline` takes back exactly the gutter the padding then spends, so the
@@ -3861,6 +3859,36 @@
   }
 
   /*
+    ─────────────────────────────────────────────────────────────────────────
+     ⚠ NOTHING SCROLLS BEHIND AN OPEN CONSOLE — directed, 30 August
+    ─────────────────────────────────────────────────────────────────────────
+
+    **The scrim already refuses a pan that starts on it** — `touch-action: none`,
+    the same declaration the writing sheet has carried since 27 August, and for
+    the same reason it was chosen there: it removes the scroll rather than
+    correcting for it, and it is one standard property instead of a model of one
+    browser.
+
+    ⚠ **A touch that starts on the CARD was the hole.** `touch-action` is not
+    inherited and does not cross an element boundary, so a drag beginning on the
+    console's own ground found no scroll container of its own and panned the
+    document underneath — the record sliding behind a box that is fixed to the
+    glass. This closes it at the console's own edge.
+
+    ⚠ **The body inside takes it back as `pan-y`**, because a capture longer than
+    the bounds has to be readable, plus `overscroll-behavior: contain` so that
+    reaching the end of that scroll does not chain into the page. Contain rather
+    than `none`: `none` would also kill the platform's own overscroll feel inside
+    the box, which is a correction nobody asked for.
+
+    ⚠ **On the desk this does nothing and should not.** Up there the console is
+    in flow *inside* the record, so there is no "behind" to hold still — scrolling
+    moves the console with the lines it sits between, which is the whole point of
+    expanding in place. Touch is also not how that surface is driven.
+  */
+  touch-action: none;
+
+  /*
     ⚠ **It rises from the line and lands in the box.** `--console-from` is the
     tapped row's own `top` in the viewport, written on the element at the moment
     of the tap; the keyframe travels from there to here. Nothing measures the
@@ -3905,30 +3933,38 @@
   display: flex;
   flex-direction: column;
   /*
-    ⚠ **It FILLS the fixed rectangle, and that is the whole of *the × is always
-    in the same place*.** It was content-sized for an hour and the screenshot is
-    what caught it: the positioner was fixed and identical every time — which is
-    what the probe was measuring — while the **visible** box was as tall as the
-    capture in it, so a three-word line put its controls 500px above where a long
-    one did. The box a thumb learns is the one it can see.
+    ⚠ **IT IS AS TALL AS THE ENTRY IN IT — directed, 30 August, and it reverses
+    the line that stood here.** That line said the card must FILL the rectangle,
+    on the argument that *the box a thumb learns is the one it can see*: with the
+    card content-sized, a three-word capture put its `×` 500px above where a long
+    one did. The direction was *it has to adapt to the size of the entry*, and a
+    616px box holding three words was the thing being answered.
 
-    ⚠ **`1 1 auto` and never `flex: 1`.** The shorthand's `0%` basis is right in
-    a container with a definite height and catastrophic in one without: on the
-    desk this box is `static` with an auto height, so a zero basis would let the
-    container collapse to nothing. With an `auto` basis the item is content-sized
-    where the container is auto and grows to fill where it is not — **one
-    declaration that is correct on both surfaces**, rather than a media query
-    saying the same thing twice.
+    ⚠ **The cost is real and is accepted: the controls move with the length of
+    the capture.** What is kept is everything the fixed rectangle was protecting
+    apart from that — the console still opens **inside the same bounds every
+    time**, still starts at the same top edge, and still cannot reach the bar or
+    the strip. So the `×` is always the same distance below the last line of the
+    capture, which is a different constant and a defensible one: the thumb tracks
+    the words rather than the screen.
+
+    ⚠ **`0 1 auto` — do not grow, may shrink.** `grow: 0` is the whole change:
+    the card takes its content's height inside a positioner that is still the
+    full rectangle. `shrink: 1` with the `auto` basis is what keeps the old
+    guarantee that a very long capture cannot spill past the bounds — it gives up
+    height instead, and the body inside it scrolls. ⚠ **Never `flex: 1`**: the
+    shorthand's `0%` basis would let the desk's auto-height container collapse to
+    nothing.
   */
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
   width: 100%;
   max-width: var(--record-measure);
   margin-inline: auto;
   border-radius: 1rem;
   padding: var(--page-lead);
-  background-color: var(--console-tint);
-  backdrop-filter: blur(var(--sheet-blur));
+  background-color: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur));
 
   @media (min-width: 72rem) {
     background-color: var(--color-surface);

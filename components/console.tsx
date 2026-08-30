@@ -154,7 +154,16 @@ export function Console({
           height to be inside of: the row grows to hold the capture and the page
           scrolls, which is what *expands in place* means.
         */}
-        <div className="stack:overflow-visible min-h-0 flex-1 overflow-y-auto">
+        {/*
+          ⚠ **`touch-action: pan-y` takes back what `console-sheet` refused, and
+          `overscroll-behavior: contain` stops it chaining.** The sheet sets
+          `touch-action: none` so nothing pans the record behind a box fixed to
+          the glass; a capture longer than the bounds still has to be readable,
+          so the one box that legitimately scrolls says so — and says that
+          reaching its end is the end, not the page's turn. See the note on
+          `console-sheet`.
+        */}
+        <div className="stack:overflow-visible min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain">
           {/*
             **The day, in the record's own stamp.** It is the same furniture as
             the row of mono above every group of lines — the console is one line

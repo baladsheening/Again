@@ -90,12 +90,30 @@ unreferenced `capture-provider.tsx` are deleted.**
   rather than bringing a second — the two can never be open together, because
   `✎` closes the console and hands the words to the strip, and the `+` closes it
   the other way. **Tapping the paper is now the one exit gesture in the app.**
-- ⚠ **The console's ground LIFTS toward `--color-surface`; the strip's glass
-  sinks.** It wore `--sheet-tint` for an hour and the card came out **invisible**:
-  a card floating mid-screen has no borrowed edge, and the record behind it is
-  already darkened by the scrim, so a ground mixed toward black has nothing left
-  to be darker than. Same lesson as *the strip is on a true-black page*, with the
-  sign reversed. Read `--console-tint` before touching it.
+- ⚠ **The card is the BARS' glass, and what made it visible was taking the tint
+  off the SCRIM.** Directed: *a glass see-through effect with the relevant blur,
+  not far from the banner treatment.* Three grounds were tried on the card and
+  two of them were invisible and one was grey — because **the card was never the
+  problem**. The bars read as glass because the record passes under them at full
+  strength; the scrim had already darkened everything, so the card's glass had
+  nothing left to darken. The scrim now **blurs at `--glass-blur` and does not
+  tint** while a console is open, and the card is `--glass-tint` over the same
+  blur. ⚠ **The writing sheet's branch keeps its tint** — it has no blur, so the
+  tint is the only thing sinking the record under a field. Two occupants, two
+  needs, written separately rather than reconciled.
+- ⚠ **The card is as tall as the entry in it — directed, and it reverses the
+  fixed-height box built an hour earlier.** That box existed so the `×` could
+  never move; the price was a 616px card holding three words. The **bounds** are
+  still fixed — same top edge, never touching the bar or the strip — so what is
+  constant now is the gap between the last line and the controls rather than
+  their position on the glass. `flex: 0 1 auto`, never `flex: 1`, whose `0%`
+  basis collapses the desk's auto-height container.
+- ⚠ **Nothing scrolls behind an open console.** `touch-action: none` on
+  `console-sheet` — the scrim already had it, and a drag starting on the *card*
+  was the hole, since `touch-action` does not inherit across an element boundary.
+  The body inside takes it back as `pan-y` with `overscroll-behavior: contain`.
+  On the desk this does nothing and should not: the console is in flow *inside*
+  the record, so there is no "behind" to hold still.
 - ⚠ **It clears the bar and the strip by `--tap-floor`, not by `--page-lead`.**
   The paper is the console's only exit on a handset, so the paper has to be a
   target; 20px bands are not. The positioner is `pointer-events: none` for the

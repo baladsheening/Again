@@ -2031,8 +2031,34 @@ export function PageScreen({
         every keystroke**, and the strip has its own ground to separate the words
         in hand from the record under them. Nothing is typed over the console, so
         there is no keystroke to pay for — and the brief asks for the console to
-        sit *over a blurred record* by name, which is the one job the sheet's
-        blur was doing before its own ground took the work.
+        sit *over a blurred record* by name.
+
+        ⚠⚠ **AND IT DOES NOT TINT FOR THE CONSOLE, WHICH IS THE WHOLE REASON THE
+        CARD IS VISIBLE — 30 August, and it took three grounds to find.** The
+        console is meant to look like the bars: *a glass see-through effect with
+        the relevant blur, not far from the banner treatment.* Two attempts at
+        the card's own ground failed — the strip's 38% was invisible, a lifted
+        mix of `--color-surface` was **grey** — and the third, the bars' own
+        `--glass-tint`, was invisible **again**.
+
+        **The card was never the problem.** The bars read as glass because what
+        passes under them is the record at full strength; this scrim had already
+        darkened and blurred everything, so by the time the card's glass got
+        there was nothing left for it to darken and no edge for it to make. So
+        the tint comes off the scrim and the card keeps it. The record behind is
+        **bright and heavily blurred**, the card is a darker pane over it, and
+        the difference between them is exactly the difference the bars have.
+
+        ⚠ **`--glass-blur` and not `--scrim-blur`** — 18px against 5. Five was
+        picked for a photograph opened full size, where the blur is a backdrop
+        for one picture; here it has to make a page of prose unreadable while
+        leaving it *present*, which is the job the bars' number was chosen for.
+
+        ⚠ **The sheet keeps its tint.** It has no blur, so a tint is the only
+        thing sinking the record under a field somebody is typing into. These two
+        branches are not two opinions about one surface — they are two occupants
+        with different needs, which is why they are written separately rather
+        than reconciled into one expression.
 
         ⚠ **It is a handset object only.** Above `--breakpoint-stack` the console
         expands the row in place, so there is nothing to blur and nothing to put
@@ -2047,7 +2073,7 @@ export function PageScreen({
           writing
             ? 'bg-[var(--scrim-tint)] opacity-100 [touch-action:none]'
             : opened !== null
-              ? 'stack:pointer-events-none stack:opacity-0 bg-[var(--scrim-tint)] opacity-100 backdrop-blur-[var(--scrim-blur)] [touch-action:none]'
+              ? 'stack:pointer-events-none stack:opacity-0 opacity-100 backdrop-blur-[var(--glass-blur)] [touch-action:none]'
               : 'pointer-events-none opacity-0'
         }`}
       />
