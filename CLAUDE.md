@@ -292,9 +292,20 @@ and the glyphs have not moved.
   state that order — the trap `--bar-gutter` is a token to avoid. `sheet-row`
   reads `var(--sheet-row-lead, …)`; `sheet-writing` sets it, and `initial` above
   `--breakpoint-stack` hands the fallback back.
-- **The desk is untouched, by direction** — *still on the home app*. Up there the
-  strip is the field alone, so this would be its only box rather than a second one.
-  Measured 69.3px and 16/16 either side of the change.
+- ⚠ **The desk WAS held out of this and is not any more — 30 August, later the
+  same day.** Directed: *the desktop’s writing row a little shorter.* The
+  `@media (min-width: 72rem)` block that handed `sheet-row` its fallback back is
+  **deleted rather than re-tuned** — no desk number was picked, and there is one
+  air on this page again instead of two. Every term is a `rem`, so the desk gets
+  it at 4/3 and nothing else: lead 6px against 4.5, foot 10.667 against 8, the box
+  **54px against 40.5**, the glass above the capitals and below the descenders
+  **16.13 against 12.1**. Four ratios, all exactly 4/3, none of them written down
+  — *the desk is the same design, four-thirds the size*, applied to the one row
+  that had been left out of it. It was 69.33px of symmetric `--sheet-air / 2`, so
+  the desk gains the optical centring with the height. Nothing up there has a
+  second box to disagree with: the strip is the field alone and is translated off
+  the glass when idle, and `--foot-height` is re-pointed to `3rem` and reads none
+  of it.
 - ⚠ **The sheet's notch clearance still subtracts `--sheet-air / 2`, the IDLE
   row's foot**, because a parent cannot read a property declared on its child.
   Keyboard down *and* writing is not a state a handset can be in, so nothing rides

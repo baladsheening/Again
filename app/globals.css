@@ -3077,23 +3077,41 @@
  * hidden field cannot take the synchronous focus iOS requires. They fade in
  * place, and the box they fade inside is now allowed to differ.
  *
- * ⚠ **The desk is untouched, by direction** — *still on the home app*. Above
- * `--breakpoint-stack` there is no glyph row, so the strip is the field alone and
- * this would be its only box rather than a second one; `initial` hands
- * `sheet-row` its own fallback back. `--breakpoint-stack` is spelled out because
- * a media query cannot resolve a `var()`; if that token moves, this moves with
- * it.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  And the desk's exclusion is DELETED, so it is 4/3 of this — 30 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠ **Directed: the desktop's writing row a little shorter.** It was held out of
+ * this for a day, at the direction that came with it — *still on the home app* —
+ * behind a `@media (min-width: 72rem)` block that handed `sheet-row` its
+ * fallback back. **The block is deleted rather than re-tuned**, and that is the
+ * whole change: no desk number was picked, and there is one air on this page
+ * again instead of two.
+ *
+ * ⚠ **Every term is a `rem`, so the desk gets this at 4/3 and nothing else.**
+ * The lead is 6px against the handset's 4.5, the foot 10.667 against 8, the box
+ * **54px against 40.5**, and the glass above the capitals and below the
+ * descenders **16.13px against 12.1** — four ratios, all exactly 4/3, none of
+ * them written down. That is *the desk is the same design, four-thirds the size*
+ * applied to the one row that had been left out of it.
+ *
+ * ⚠ **69.33px → 54px, and the desk gets the optical centring with it.** It was
+ * `--sheet-air / 2` on both sides — 16px of symmetric padding, which is what sets
+ * text low, so the row was both taller than it needed to be and sitting in the
+ * bottom of its own box.
+ *
+ * ⚠ **Nothing up there has a second box to disagree with.** Above
+ * `--breakpoint-stack` the strip is the field alone — no glyph row — and when it
+ * is not being written in it is translated off the glass entirely, so the
+ * idle-versus-writing height that this note argues about below the breakpoint is
+ * not even visible on the desk. `--foot-height` is re-pointed to `3rem` up there
+ * and reads none of this, so `page-hem`'s reserve does not move.
  */
 @utility sheet-writing {
   --sheet-row-lead: calc(
     var(--line-hem) + var(--line-ink-foot) - var(--line-ink-lead)
   );
   --sheet-row-foot: var(--line-hem);
-
-  @media (min-width: 72rem) {
-    --sheet-row-lead: initial;
-    --sheet-row-foot: initial;
-  }
 }
 
 /**
