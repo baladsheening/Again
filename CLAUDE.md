@@ -43,6 +43,14 @@ it was wrong, and it cost roughly eighteen hours of 500s. **Ask instead** —
 that is right when it is typed and silently wrong an hour later is worse than no
 number, which is also why this section no longer names a commit.
 
+⚠ **The design for the surface that will read it is
+`docs/re-direction/phase-2-convergence.md`** — the console, the swipes, the
+haptic vocabulary, the portal and the mark, recorded 30 August. **It is a brief
+and it is meant to die**: delete or strike each section as it is built, and move
+the file to `docs/re-direction/inactive/` when the phase is done. A design
+document that outlives its build reads as current and is not — the same failure
+as a register that records what state production is in.
+
 **Phase 2's matching engine is deployed and nothing reads it.** `tracks`,
 `lib/overlap.ts` on both triggers, the suppression rule and `notifications` rows
 written in the same transaction all exist and run — and **no surface in the tree
