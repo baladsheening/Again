@@ -4288,6 +4288,56 @@ symptom and were never ruled out from here — System Haptics being off in Setti
 and Low Power Mode — so a future attempt should start by confirming a haptic on
 *any* web page on the device before touching this code.
 
+
+#### ⚠⚠ CARRY THIS INTO A NATIVE APP — the vocabulary is designed and waiting
+
+**Directed 30 August: keep the haptic idea somewhere so it can be implemented
+when Again becomes a native app.** This is that place. **Nothing below is
+blocked on design work** — the vocabulary is decided, it is written into
+`lib/haptics.ts`, and the three web patterns already run on Android. What a
+native shell adds is the one surface that matters: **iOS, which is where this app
+is actually used.**
+
+**The vocabulary, from the Phase 2 design brief §4:**
+
+| event | feel | web today |
+|---|---|---|
+| a capture lands | one light tap | `vibrate(10)` — `haptic()` |
+| settled | a firmer double | `vibrate([14, 40, 14])` — `hapticSettled()` |
+| crossed off | one heavier thud | `vibrate(26)` — `hapticCrossedOff()` |
+| a convergence arriving while the app is open | the only pattern unlike the others | **unbuilt — nothing fires it yet** |
+
+**Silent, and this half is as load bearing as the other:** opening the console,
+dismissing it, the keyboard rising, the chrome receding. Those are things the
+person *did*, not things that happened.
+
+> **Every haptic corresponds to something that just became true in the database.
+> Never to a UI transition.**
+
+⚠ **Otherwise the hand learns noise and stops reading it** — which is also why
+the three must be *tellable apart*. The web patterns separate them by length and
+by count, because a `vibrate()` duration is the only axis that API controls. **A
+native shell should re-map them to the platform's own vocabulary rather than
+porting the milliseconds**: on iOS that is `UIImpactFeedbackGenerator` (light for
+a capture, medium or a `.success` notification for settled, heavy for a cross
+off), and the convergence pattern is the one that should be unlike the rest
+because it is the only event the *app* originates rather than the hand.
+
+⚠ **The call site rule survives any shell: synchronously, inside the handler for
+the gesture.** Not after an `await`, not from an effect, not when the server
+answers. Every platform that has a haptic grants it for a live gesture and
+refuses it afterwards. Because every write on this page is optimistic, *became
+true* means *became true on the record* — see the note at the top of
+`lib/haptics.ts`.
+
+⚠ **And the design consequence, which is the thing most worth carrying: NOTHING
+IN THE APP MAY BE DESIGNED TO BE CONFIRMED BY THE HAND ALONE**, for as long as
+iOS has no haptics on the web. The swipes are the case in point — a gesture meant
+to be usable without looking, on the one surface where it would be confirmed by
+nothing. What confirms them instead is the row travelling its own height and
+stopping dead, and both outcomes being visible where they happened. **When a
+native shell lands, the haptic becomes a second channel rather than the first
+one**, and none of that visual work should be taken back out.
 ### ⚠ Open: should there be a synopsis at all?
 
 Raised 17 August, as a question rather than a change. **It is not settled and
@@ -8527,3 +8577,95 @@ same question: it is the bound a long capture stops at.
 unfinished.** Scroll and the bars recede, so the console's top is measured
 against a bar that is not on screen. It stays where it is, which is right; there
 is simply nothing behind it to align to any more.
+
+## Tap thinks, swipe does — 30 August, Phase 2 step 2
+
+**Swipe a line: left crosses off, right asks *Again?*** The two verbs used fifty
+times a week become directional gestures on the row itself, and the console
+becomes what it should be — the once-a-week question. **A gesture that can be
+made anywhere on a row is the only kind of target that survives being used while
+walking.**
+
+### The scroll question, answered by the browser rather than by a thermostat
+
+The brief asked for this to be **checked rather than assumed**. It is checked by
+being impossible: `touch-action: pan-y` on `page-row` tells the engine *vertical
+panning is yours, horizontal is mine* before a single event reaches
+`row-swipe.ts`. The browser separates a scroll from a swipe with its own gesture
+recogniser — the one that already knows what a scroll feels like on that platform
+— and when it decides the gesture is a scroll it sends `pointercancel`, which is
+the signal to let go. **A hand-written axis lock would be the thermostat
+`keyboard-hem.ts` needed five wrong versions to get right, rebuilt on a second
+axis.**
+
+The small activation in the hook (6px, dominant axis) is for a **pointer**, not
+for touch: a mouse has no `touch-action` arbitration, so a click that drifts two
+pixels would otherwise arm a swipe.
+
+### The row travels its own height, and stops
+
+⚠ **The threshold is the row's own height, read off the row** — not a token, not
+a fraction, not a number tuned until one device felt right. A row of the record is
+`--tap-floor` tall on a handset by design and four-thirds of that on the desk, so
+**measuring the thing being swiped gets both surfaces right by derivation** and
+follows the density if it ever changes. Measured: it clamps at 44 on a handset and
+58.67 on a desk, from one line of code with no breakpoint in it.
+
+⚠ **Clamping there makes it a DETENT rather than a threshold you have to guess
+at.** The row tracks the finger, stops dead when the action is armed, and stays
+stopped however much further you push. There is no glyph and no colour to say
+*this is far enough* — §11 spends colour on overlap and chrome and nothing else —
+so the row stopping is the signal.
+
+### ⚠ The gesture is confirmed by the EYE, and that is forced
+
+**iOS Safari implements no Vibration API, and the installed app is a handset.** A
+swipe designed to be confirmed by the hand would be confirmed by nothing at all on
+the one surface this app is used on. So the visual response is the mechanism
+rather than a nicety: the row's travel and detent while it happens, and both
+outcomes visible where they happened afterwards — crossing off strikes the line
+where it stands, settling puts a question on it. See *Haptics*, above, which now
+carries the vocabulary for a native shell.
+
+### Why settling ASKS instead of settling
+
+⚠ **A swipe cannot settle a line, because settling has two answers.** *I would do
+this again* and *that is dealt with* are genuinely different claims — it is the
+app's own name on one of them — and one direction cannot carry both. So the
+settle swipe puts *Again?* on the row and the two answers are a tap each, which is
+exactly what the console's settle glyph does through a longer door.
+
+**It is still much cheaper than the console**: one swipe and one tap, against a
+tap, a read, a glyph and a tap. And it inherits the console's safety — nothing
+leaves the page until somebody answers, so a swipe made by accident costs a
+question rather than a row. That matters because **settling has no undo** and
+crossing off is its own inverse. The asymmetry between the two directions is the
+asymmetry between the two resolutions, not an inconsistency.
+
+⚠ **A struck line refuses the settle swipe, silently.** `resolveCapture` guards on
+`want`, so the settleable set is exactly the resolvable one; the console does the
+same thing by not drawing the glyph, and a gesture cannot be *not drawn*.
+
+⚠ **`askAgain` is the one owner of that question**, called by the swipe and by the
+console's glyph alike — and the record only draws it while no console is open,
+because the console asks it from the same `asking` state. Without that guard one
+swipe would put *Again?* in two places and answering either would settle the line.
+
+### Physical, not logical, and the RTL question is deliberately held
+
+Rightward settles and leftward crosses off, written against the **screen** rather
+than the writing direction, so on an Arabic page the gestures do not mirror. The
+field mirrors because `dir="auto"` reads the first strong character somebody
+typed; **a row has no such signal, and a record can hold both languages at once**
+— so mirroring per row would mean two rows on one screen answering the same swipe
+differently, which is worse than not mirroring at all. Revisit it when there is
+somebody reading the record right-to-left to ask.
+
+### What the probe learned about itself
+
+⚠ **`swipe.mjs` passed once and failed on its second run, against the state its
+own first run had left behind.** It counted struck lines across the whole record;
+a cleanup step used a row index that had shifted when an earlier assertion settled
+a line off the page. **Every assertion is now scoped to a row this run seeded, by
+its text**, and it is run twice to prove it. A probe that is not idempotent will
+eventually report a bug that is its own, and this one nearly did.

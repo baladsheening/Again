@@ -29,9 +29,9 @@ wins and this file is wrong.
 | | |
 |---|---|
 | The console | **BUILT — 30 August.** §1 is deleted below; the code and its argument are `components/console.tsx` and `console-sheet` in `globals.css` |
-| Swipe to cross off / settle | designed, not built — **next** |
-| Haptic vocabulary | designed, not built |
-| The notification portal | designed, not built |
+| Swipe to cross off / settle | **BUILT — 30 August.** §3 is struck below; `components/row-swipe.ts` and `touch-action` in `page-row` |
+| Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
+| The notification portal | designed, not built — **next** |
 | The convergence mark on a line | designed, not built |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
@@ -117,59 +117,71 @@ never be given a reflex's real estate.
 
 ---
 
-## 3. Tap thinks, swipe does
+## ~~3. Tap thinks, swipe does~~ — BUILT, 30 August, and this section is deleted
 
-- **Tap a line → the console.** Deliberate, considered, everything is there.
-- **Swipe a line → cross off one way, settle the other.** No console, no glyph,
-  no aiming, no looking.
+**Left crosses off, right asks *Again?*, a tap still opens the console.** The
+argument that was here is carried in `components/row-swipe.ts` and in the
+`touch-action` note on `page-row` in `globals.css`, beside the code each governs.
 
-The two verbs used fifty times a week become directional gestures on the row
-itself; the console is for the once-a-week question. **A gesture that can be made
-anywhere on a row is the only kind of target that survives being used while
-walking.**
+Three things the design did not say, decided in the building and recorded in
+`docs/decisions.md`, *Tap thinks, swipe does*:
 
-⚠ **It pays for itself: `picked` disappears — and most of that bill was already
-settled by the console on 30 August.** The pick state is gone (`opened` is the
-line whose console is up), the gutter mark is off the row, the foot's settle
-glyph is on the console, and the foot is already `+` and search. **What the
-swipes still buy is the gesture**, not the clean-up: the two verbs used fifty
-times a week stop costing a tap-and-aim. ⚠ The `picked` **utility** survives
-unapplied in `globals.css`, deliberately — §11 reserves `--color-accent` for
-convergence and the gutter is where a state may live, so the mark's next tenant
-is §5's, not a pick's. Do not put a pick mark back there.
+1. ⚠ **A swipe cannot SETTLE, because settling has two answers.** *Again?* and
+   *done* are different claims and one direction cannot carry both, so the settle
+   swipe puts the question on the row. That is also what makes it safe — settling
+   has no undo, and nothing leaves the page until somebody answers.
+2. ⚠ **The threshold is the row's own height, read off the row**, so a handset
+   and a desk are both right by derivation: 44 and 58.67 from one line with no
+   breakpoint in it. It clamps there, which makes it a **detent** rather than a
+   threshold to guess at.
+3. ⚠ **Physical, not logical.** Right settles, left crosses off, against the
+   screen rather than the writing direction — a *row* has no `dir="auto"` signal
+   and a record can hold both languages at once. Held deliberately until there is
+   somebody reading the record right-to-left to ask.
 
-⚠ **Check `--tap-floor` and the record's 44px rows before drawing this**, and
-check that a horizontal swipe on a row cannot be read as a scroll. Neither is a
-new problem on this page, but both are measured facts rather than assumptions.
+**Both things this section asked to be checked were checked.** The record's row
+is `--tap-floor` tall and `--tap-floor` is 44px and does not scale; and a
+horizontal swipe cannot be read as a scroll, because `touch-action: pan-y` hands
+the vertical axis to the browser's own gesture recogniser before an event reaches
+this app. `node_modules/.probe/swipe.mjs` asserts both, with real CDP touch
+events.
 
 ---
 
-## 4. Haptics are the eyes-free channel, and they are barely used
+## ~~4. Haptics are the eyes-free channel~~ — BUILT, and DEAD ON iOS
 
-`lib/haptics.ts` exists. **One rule:**
+**The three patterns are in `lib/haptics.ts` and they run on Android only.** A
+capture landing is one light tap, settled a firmer double, crossed off a heavier
+thud — separable by length and by count, because a `vibrate()` duration is the
+only axis that API controls. Silent, as designed: opening the console, dismissing
+it, the keyboard rising, the chrome receding. The rule survives verbatim at the
+top of that file:
 
 > **Every haptic corresponds to something that just became true in the database.
 > Never to a UI transition.**
 
-Otherwise the hand learns noise and stops reading it.
+⚠ **The fourth pattern — a convergence arriving while the app is open — is
+unbuilt, because nothing fires it yet.** It arrives with the portal.
 
-| event | feel |
-|---|---|
-| a capture lands | one light tap |
-| settled | a firmer double |
-| crossed off | one heavier thud |
-| a convergence arriving while the app is open | the only pattern unlike the others |
+⚠⚠ **iOS Safari implements no Vibration API, and the installed app is a
+handset**, so on the surface this product is actually used the whole vocabulary
+is inert. **The consequence is a design rule, not a shrug: nothing in this app
+may be designed to be confirmed by the hand alone.** The swipes were the first
+thing that would have been, and what confirms them instead is the row travelling
+its own height and stopping dead, plus both outcomes being visible where they
+happened.
 
-**Silent:** opening the console, dismissing it, the keyboard rising, the chrome
-receding. Those are things the person did, not things that happened.
+**The vocabulary is written down for a native shell** — including how to re-map
+it to `UIImpactFeedbackGenerator` rather than porting the milliseconds — in
+`docs/decisions.md`, under *Haptics*, in the section headed **CARRY THIS INTO A
+NATIVE APP**. Directed 30 August: keep the idea somewhere so it can be
+implemented when Again becomes an app.
 
-⚠ **Corollary, and it is the acceptance test for the whole design: the capture
-loop must be completable with the screen dark.** `+`, type, Return — four beats,
-one thumb, one place. **Every feature that adds a beat to that loop is a tax on
-the only thing this app has to be perfect at.** The console adds none, because it
-is off the capture path; the portal must add none either.
-
----
+⚠ **The corollary stands and is untouched by any of this: the capture loop must
+be completable with the screen dark.** `+`, type, Return — four beats, one thumb,
+one place. **Every feature that adds a beat to that loop is a tax on the only
+thing this app has to be perfect at.** The console adds none, the swipes add
+none, and the portal must add none either.
 
 ## 5. The portal AND the mark — different lifetimes
 
@@ -288,8 +300,9 @@ for convergence on a line. Nothing is the correct rendering of nothing.
    `film-screen.tsx` and the dead `capture-provider.tsx` beside it are deleted,
    which also closes item 3 of Phase 1's outstanding list — **the thing detail
    view**.
-2. **Swipes**, and delete `picked`. ⚠ **The state is already gone** — see §3;
-   what is left to build is the gesture itself.
+2. ~~**Swipes**, and delete `picked`.~~ **DONE, 30 August.** The state was
+   already gone with the console; the gesture is `components/row-swipe.ts`. §3
+   and §4 are struck above.
 3. **The portal**, reading `notifications` — which also proves the fan-out end to
    end with two accounts for the first time.
 4. **The mark**, last, once there is a real convergence to look at and it is

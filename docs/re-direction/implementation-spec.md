@@ -1168,8 +1168,12 @@ end to end with two accounts. Neither is there an overlap list or detail, a
 QR/code contact handshake, or a possible-match prompt for unresolved
 normalised-equal captures.
 
-⚠ **Step 1 of the design's sequence is built and deployed to the branch — 30
-August: the CONSOLE.** Tapping a line opens a box holding the whole capture, its
+⚠ **Steps 1 and 2 of the design's sequence are built and deployed — 30 August:
+the CONSOLE and the SWIPES.** A swipe on a row crosses it off one way and asks
+*Again?* the other; the haptic vocabulary is wired and is inert on iOS, which
+Safari gives no Vibration API. Neither touches the network.
+
+**The console.** Tapping a line opens a box holding the whole capture, its
 photograph, its link, its year, its standing question and its three controls —
 cross off, rewrite and settle. **It touches no network and reads no
 `notifications`**, so none of the paragraph above has changed; what it changes is

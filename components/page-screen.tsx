@@ -18,6 +18,7 @@ import {
 } from '@/app/actions/captures'
 import type { EntryState } from '@/lib/domain'
 import type { PageLineView } from '@/lib/page-line'
+import { haptic, hapticCrossedOff, hapticSettled } from '@/lib/haptics'
 import { mutationId as newMutationId } from '@/lib/mutation-id'
 import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
@@ -25,6 +26,7 @@ import { Ask, Console } from './console'
 import { Foot, ToolStack } from './foot'
 import { AttachGlyph, LinkGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
+import { useRowSwipe } from './row-swipe'
 import { touchQuery, useMatches } from './pointer'
 
 /**
@@ -655,6 +657,20 @@ export function PageScreen({
     end: endMark,
   })
 
+  /**
+   * **Tap thinks, swipe does — 30 August.**
+   *
+   * ⚠ **One hook for the whole record, and `bindSwipe` is what a row wears.**
+   * The state it holds is *the one pointer currently dragging*, of which there is
+   * exactly one on any surface, so a hook per row would be fifty copies of a
+   * fact that is singular. It also means a swipe that runs off one row and over
+   * another cannot start a second.
+   *
+   * The gesture, the axis arbitration and why the row travels its own height are
+   * all in `row-swipe.ts`.
+   */
+  const bindSwipe = useRowSwipe()
+
   /*
     The top of the page, instantly — which is where the caret is.
 
@@ -1043,6 +1059,15 @@ export function PageScreen({
     if (text === '') return
 
     /*
+      ⚠ **One light tap, and it is the third of the vocabulary's three.** A
+      capture landing is the fact this whole page exists to produce, and until
+      now nothing marked it but the blink on the words. Synchronous, inside the
+      gesture, before the write — see `lib/haptics.ts`. An empty sheet returns
+      above this line, so closing the field without writing stays silent.
+    */
+    haptic()
+
+    /*
       ⚠ **One id, minted here, held with the line.** It is what makes a
       double-tapped Return or a resumed connection one capture rather than two —
       raw text is never deduplicated, because the same words can mean a
@@ -1340,12 +1365,20 @@ export function PageScreen({
   }, [editing])
 
   /* ------------------------------------------------------------------ */
-  /*  The foot's two live controls                                      */
+  /*  The two resolutions — from the console, or from a swipe            */
   /* ------------------------------------------------------------------ */
 
   function crossOff(line: Line) {
     const crossedOff = line.state === 'dropped'
     const next: EntryState = crossedOff ? 'want' : 'dropped'
+    /*
+      ⚠ **Synchronously, and before the write goes out.** A haptic answers a
+      finger: every platform that has one grants it for a live gesture and
+      refuses it afterwards. The record is optimistic, so *became true* means
+      became true on the page — see `lib/haptics.ts`, which also says why iOS
+      feels none of this and why nothing may be designed around it.
+    */
+    hapticCrossedOff()
     mark(line.key, { state: next, failed: null })
     setAsking(null)
 
@@ -1354,7 +1387,37 @@ export function PageScreen({
     })
   }
 
+  /**
+   * **Put *Again?* on the line**, which is what a settle swipe does.
+   *
+   * ⚠ **A swipe cannot settle, because settling has two answers.** *I would do
+   * this again* and *that is dealt with* are genuinely different claims — it is
+   * the app's own name on one of them — and one direction cannot carry both. So
+   * the gesture asks and the two answers are a tap each, which is exactly what
+   * the console's settle glyph does through a longer door.
+   *
+   * ⚠ **That is also what makes the swipe safe.** Nothing leaves the page until
+   * somebody answers, so a swipe made by accident costs a question rather than a
+   * row — and settling has no undo, unlike crossing off, which is its own
+   * inverse. The asymmetry between the two directions is the asymmetry between
+   * the two resolutions.
+   *
+   * ⚠ **A crossed-off line cannot be settled and the swipe is silently
+   * nothing.** `resolveCapture` guards on `want`, so the settleable set is
+   * exactly the resolvable one; the console does the same thing by not drawing
+   * the glyph, and a gesture cannot be *not drawn*. The way back is the other
+   * direction, which is the × that put it there.
+   *
+   * ⚠ **No haptic here.** Nothing became true in the database — a question
+   * appeared. `hapticSettled` fires in `settle`, when one is answered.
+   */
+  function askAgain(line: Line) {
+    if (line.state !== 'want') return
+    setAsking((open) => (open === line.id ? null : line.id))
+  }
+
   function settle(line: Line, again: boolean) {
+    hapticSettled()
     setAsking(null)
     setOpened(null)
     /* It leaves the page for the tray, so it leaves the list. */
@@ -2322,6 +2385,25 @@ export function PageScreen({
                     goes**, per *How things get fixed* in CLAUDE.md; putting the
                     lift back means the commit has stopped ending the mode.
                   */
+                  /*
+                    ⚠ **The swipe is on the ROW, not on the words — 30 August.**
+                    *A gesture that can be made anywhere on a row is the only
+                    kind of target that survives being used while walking*, and
+                    the words are only as wide as themselves. The space beside
+                    them used to do nothing; it swipes now, and that is the one
+                    thing it has ever been allowed to do — it is still not a way
+                    to start a capture, and tapping it still does nothing at all.
+
+                    ⚠ **A pending or failed line is not swipeable.** There is no
+                    id to name in the mutation, and a failed one wants its retry
+                    — which is a *tap*, and is why that check lives in
+                    `openConsole` rather than being repeated here.
+                  */
+                  {...(line.id !== '' && !line.pending && !line.failed
+                    ? bindSwipe((way) =>
+                        way === 'crossOff' ? crossOff(line) : askAgain(line),
+                      )
+                    : {})}
                   className="page-row"
                 >
                   {/*
@@ -2618,6 +2700,28 @@ export function PageScreen({
                 )}
 
                 {/*
+                  ⚠ **The settle swipe's question, on the row it was made on —
+                  30 August.** A swipe cannot settle a line because settling has
+                  two answers, so the gesture puts the question here and the two
+                  answers are a tap each. See `askAgain`.
+
+                  ⚠ **Never while the console is open**, because the console asks
+                  the same question from the same state. `asking` is one id, so
+                  without this guard one swipe would put *Again?* in two places
+                  at once and answering either would settle the line — the same
+                  fact drawn twice, which is how two surfaces start disagreeing.
+                  The console wins where they meet: it is the surface somebody is
+                  looking at.
+                */}
+                {asking === line.id && !isOpen && (
+                  <Ask
+                    ask="Again?"
+                    onYes={() => settle(line, true)}
+                    onNo={() => settle(line, false)}
+                  />
+                )}
+
+                {/*
                   ⚠ **The console, inside the `<li>` of the line it belongs to,
                   and that is one mount point for two surfaces.** `console-sheet`
                   is `fixed` below `--breakpoint-stack` — a rectangle in the same
@@ -2650,9 +2754,8 @@ export function PageScreen({
                       which is a discard nobody asked for.
                     */
                     onRewrite={editing === null ? () => startEdit(line) : null}
-                    onSettle={() =>
-                      setAsking((open) => (open === line.id ? null : line.id))
-                    }
+                    /* One owner for the question, wherever it is asked from. */
+                    onSettle={() => askAgain(line)}
                     onAgain={() => settle(line, true)}
                     onDone={() => settle(line, false)}
                     onAcceptOffer={() => acceptOffer(line)}

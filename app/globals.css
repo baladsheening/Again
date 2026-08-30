@@ -3291,6 +3291,24 @@
   line-height: var(--leading-line);
   letter-spacing: -0.01em;
   padding-block: var(--line-hem);
+  /*
+    ⚠ **This one declaration is the whole of the swipe's scroll question — 30
+    August.** *Vertical panning is yours, horizontal is mine*, said to the engine
+    before a single event reaches `useRowSwipe`. So the browser separates a
+    scroll from a swipe using its own gesture recogniser — the one that already
+    knows what a scroll feels like on that platform — and when it decides the
+    gesture is a scroll it sends `pointercancel`, which is the signal to let go.
+
+    The design brief asked for this to be **checked rather than assumed**. It is
+    checked by being impossible: a hand-written axis lock would be the thermostat
+    `keyboard-hem.ts` took five wrong versions to get right, rebuilt on a second
+    axis. See `row-swipe.ts`.
+
+    ⚠ **It does not cost the record its scroll.** `pan-y` permits vertical
+    panning; the only thing withheld is horizontal, which this page has never had
+    — the record is one column and a line is one line.
+  */
+  touch-action: pan-y;
 }
 
 /**

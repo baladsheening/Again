@@ -61,6 +61,53 @@ captures converge, and TMDB is the only catalogue** — today two people can
 converge on a film and on nothing else. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
+⚠ **Phase 2 step 2 is built — TAP THINKS, SWIPE DOES, 30 August.** Swipe a line:
+**left crosses off, right asks *Again?*** A tap still opens the console. The two
+verbs used fifty times a week are gestures on the row now, and the console is the
+once-a-week question.
+
+- ⚠ **`touch-action: pan-y` on `page-row` IS the scroll question, and it is the
+  whole answer.** *Vertical panning is yours, horizontal is mine*, said to the
+  engine before a single event reaches `row-swipe.ts`; when the browser decides a
+  gesture is a scroll it sends `pointercancel`, which is the signal to let go. **A
+  hand-written axis lock would be `keyboard-hem.ts`'s five-version thermostat
+  rebuilt on a second axis.** The brief asked for this to be checked rather than
+  assumed; it is checked by being impossible.
+- ⚠ **The threshold is the ROW'S OWN HEIGHT, read off the row** — not a token and
+  not a fraction. A row is `--tap-floor` on a handset and four-thirds of that on
+  the desk, so measuring the thing being swiped is right on both by derivation:
+  measured 44 and 58.67 from one line with no breakpoint in it. It **clamps**
+  there, which makes it a detent rather than a threshold to guess at — the row
+  stops dead when the action is armed.
+- ⚠ **A SWIPE CANNOT SETTLE, because settling has two answers.** *Again?* and
+  *done* are different claims and one direction cannot carry both, so the settle
+  swipe puts the question on the row and the answers are a tap each. That is also
+  what makes it safe: **settling has no undo**, and nothing leaves the page until
+  somebody answers. Crossing off needs no question because it is its own inverse.
+  `askAgain` is the one owner of that question, and the record only draws it while
+  no console is open.
+- ⚠⚠ **THE GESTURE IS CONFIRMED BY THE EYE, AND THAT IS FORCED.** iOS Safari
+  implements no Vibration API and the installed app is a handset, so a swipe
+  designed to be confirmed by the hand would be confirmed by nothing at all on the
+  one surface this app runs on. The travel, the detent and the visible outcome are
+  the mechanism. **Nothing in this app may be designed to be confirmed by the hand
+  alone** until a native shell exists — see `lib/haptics.ts` and the *CARRY THIS
+  INTO A NATIVE APP* note in `docs/decisions.md`, which holds the vocabulary.
+- ⚠ **The haptic vocabulary is wired and Android-only:** a capture lands is one
+  light tap, settled a firmer double, crossed off a heavier thud. **Three
+  patterns, tellable apart** — the same buzz twice is the noise the rule against
+  UI haptics exists to prevent. Silent: opening the console, dismissing it, the
+  keyboard, the chrome.
+- ⚠ **Physical, not logical.** Right settles, left crosses off, against the screen
+  rather than the writing direction — a *row* has no `dir="auto"` signal and a
+  record can hold both languages at once, so mirroring per row would have two rows
+  answering one swipe differently. Held deliberately.
+- **Measured by `node_modules/.probe/swipe.mjs`**, which drives real CDP touch
+  events because the thing under test is the browser's own arbitration. ⚠ **It
+  failed on its second run against the state its first run left**, and every
+  assertion is now scoped to a row it seeded by text — a probe that is not
+  idempotent will eventually report a bug that is its own.
+
 ⚠ **Phase 2 step 1 is built — the CONSOLE, 30 August.** A tap on a line opens a
 box holding the whole capture, its photograph, its link, its year, its standing
 question and its three controls. **It reads no network and no `notifications`**,
