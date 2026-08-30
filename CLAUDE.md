@@ -532,6 +532,54 @@ gestures — the sheet is open or it is not — and every instrument that read
 one that discards, and a thumb never reaches it. There is no unsent draft, which
 is what took `unsent` and `record-held` with it.
 
+⚠ **LOSING FOCUS IS LEAVING, AND THAT IS NOW THE WHOLE OF HOW THE SHEET CLOSES —
+30 August.** Reported on both handset surfaces: tap the field, then *Done* on the
+keyboard's accessory bar — the keys go and the row stays, sitting on the bottom
+edge with the drawn caret still blinking in it.
+
+- **Every exit was wired to a gesture the page could see** — Return to the field's
+  `onKeyDown`, a tap outside to the scrim's `onClick`, `Escape` to the key.
+  **iOS's own dismiss is none of those.** It takes the focus and says nothing
+  else, so `writing` stood with no keyboard under it and the sheet dropped to the
+  bottom edge as `--keyboard-overlap` went to zero. Same wrong state a resume used
+  to leave behind, reached a different way.
+- **So the mode is tied to the one fact true of all four: the field has focus.**
+  `onBlur` calls `leave`, which is what the scrim already called. Three doors, one
+  exit. ⚠ **There is no keyboard detector in this and there must not be** —
+  `--keyboard-overlap` measures a gap that opens and closes while a Safari tab's
+  address bar collapses during a scroll, and reading it as *a keyboard is up* is a
+  bug this page shipped on 24 August. See `useKeyboardHem`, which says so.
+- ⚠ **`relatedTarget` inside the sheet is not leaving.** The chips beside the
+  field take focus on a desk click, and losing the sheet because somebody reached
+  for attach would be worse than the bug this fixes. iOS does not focus a button
+  on tap at all, so there the field never blurs for one. A blur with
+  `relatedTarget` `null` **is** the dismiss.
+- ⚠⚠ **`open` — a ref saying, synchronously, whether the sheet is still open —
+  and every exit returns on it.** Sharing one exit means every exit can now be
+  reached twice in one gesture: a tap on the scrim blurs the field and *then*
+  clicks the scrim, and `done` blurs a field whose `onBlur` is itself an exit.
+  `writing` cannot arbitrate either — it is state, so both halves of the pair read
+  the value they were rendered with. **Two exits in one tick is two captures**:
+  `commit` mints a fresh client id each time, so §10's idempotency key protects a
+  retry and does not protect this.
+- ⚠ **`done` clears the latch on the line ABOVE its `blur()`, and the resume does
+  too — for opposite reasons.** `done` so that its own blur cannot call it again;
+  the resume so that its blur does **not** reach an exit, because the draft is
+  deliberately kept across a resume and closing the sheet is not writing the line.
+  Do not reorder either pair.
+- ⚠ **Both doors into the sheet go through `raise`, which focuses the field and
+  sets the latch in one act.** `startEdit` does not call `openSheet` — it has its
+  own state to set — and it focused the field itself until now. **A door that
+  raises the field without the latch opens a sheet no exit can close**: Return,
+  the scrim and Done all return on their first line. The pencil had exactly that
+  for ten minutes; the probe is what found it.
+- **Measured by `node_modules/.probe/doneexit.mjs`**, at a 34px inset and at 0 —
+  the home app and the handset browser. Done closes the row, leaves nothing
+  focused and lands **exactly one** capture; the scrim lands one and not two;
+  Return lands one; focus moving to a chip does not close the sheet; `Escape`
+  still discards; an empty sheet still writes nothing; and the pencil's rewrite
+  closes on Done, adds no row and keeps its new words.
+
 ⚠ **The foot receded while the sheet was up, and it does not any more — it
 fades in place.** The rule it served is untouched: *none of the foot's three is
 wanted while somebody writes*, and the `+` least of all, since it is a second

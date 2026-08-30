@@ -647,6 +647,24 @@ export function PageScreen({
   const floorAnchor = useRef<HTMLDivElement>(null)
   /** The writing sheet, for nothing but a name in the DOM to aim probes at. */
   const sheet = useRef<HTMLDivElement>(null)
+
+  /**
+   * **Is the sheet open — synchronously, this instant, not next render.**
+   *
+   * ⚠ **It exists because every exit can now be reached twice in one gesture.**
+   * A tap on the scrim blurs the field and *then* clicks the scrim; `done`
+   * blurs a field whose `onBlur` is itself an exit. `writing` cannot arbitrate
+   * either of those — it is state, so a handler reading it inside the same tick
+   * reads the value it was rendered with, which is `true` for both halves of the
+   * pair. Two exits in one tick is **two captures**: `commit` mints a fresh
+   * client id each time, so the idempotency key that protects a retry does not
+   * protect this.
+   *
+   * ⚠ **It is not a second source of truth for the mode.** Nothing renders from
+   * it and nothing outside the exits reads it; `writing` is still the fact the
+   * page is built on. This says only *has the closing already started*.
+   */
+  const open = useRef(false)
   /** The two ends of the record, watched so the bars are there at both. */
   const topMark = useRef<HTMLDivElement>(null)
   const endMark = useRef<HTMLDivElement>(null)
@@ -881,6 +899,13 @@ export function PageScreen({
         away mid-line is still writing and nothing should say otherwise.
       */
       if (!touch) return
+      /*
+        ⚠ **Before the blur, and for a different reason than `done`'s.** The
+        draft is deliberately *kept* across a resume; without this the blur would
+        reach `onBlur`, which is an exit, and an exit commits. Closing the sheet
+        and writing the line are not the same act.
+      */
+      open.current = false
       input.current?.blur()
       setWriting(false)
     }
@@ -1211,6 +1236,11 @@ export function PageScreen({
    * real focus inside a real tap and iOS treats the keyboard as the gesture's
    * own consequence. It is also why nothing here can be done in an effect.
    *
+   * ⚠ **Through `raise`, and not by focusing the field here — 30 August.** The
+   * focus and the `open` latch are one act now that losing focus is an exit; a
+   * pencil that focused the field on its own would open a sheet whose Return and
+   * whose scrim both returned on the first line.
+   *
    * ⚠ **Never a line that is not on the server yet.** A pending line has no id
    * to name in the mutation, and a failed one wants its retry rather than an
    * edit — `pick` already routes that case.
@@ -1224,7 +1254,7 @@ export function PageScreen({
       gesture. `preventScroll` because the sheet is still off the glass at this
       instant and is about to come up on its own.
     */
-    input.current?.focus({ preventScroll: true })
+    raise()
     setAsking(null)
     setEditing(line.id)
     setEditDraft(line.text)
@@ -1550,8 +1580,24 @@ export function PageScreen({
    * it is not, and every instrument that read `writing` now reads a fact instead
    * of an inference. Do not reintroduce a gesture that opens it implicitly.
    */
-  function openSheet() {
+  /**
+   * **Focus the field inside the gesture, and latch the sheet open.**
+   *
+   * ⚠ **Two lines in one function because they must never be written apart.**
+   * The focus has to happen synchronously inside the gesture or iOS keeps the
+   * keys down, and `open` has to be true before that focus can come back as a
+   * blur — which it can, since `onBlur` is an exit. **Both doors into the sheet
+   * call this**: the `+` below and the pencil in `startEdit`. A second door that
+   * focused the field itself would open a sheet no exit could close, and that is
+   * exactly the bug the pencil had for the ten minutes this took to write.
+   */
+  function raise() {
     input.current?.focus({ preventScroll: true })
+    open.current = true
+  }
+
+  function openSheet() {
+    raise()
     setWriting(true)
     setPicked(null)
     setAsking(null)
@@ -1560,8 +1606,12 @@ export function PageScreen({
   /**
    * **Leaving the sheet, which always commits.**
    *
-   * ⚠ **There are two exits and neither discards.** Return and a tap on the
-   * scrim, and both land the words — because the words on screen are the words
+   * ⚠ **There is one exit, reached three ways, and none of them discards —
+   * 30 August.** Return, a tap on the scrim, and the keyboard's own *Done*; what
+   * they have in common is that the field stops being focused, which is what
+   * `onBlur` now watches. It was two doors each wired to its own gesture until
+   * iOS's dismiss turned out to be a third that the page could not see. All of
+   * them land the words — because the words on screen are the words
    * somebody meant, and a page that threw them away on a stray tap would be the
    * page losing something. That is the same rule the old blur-commits behaviour
    * stated; what has gone with the pinned band is the *third* state it needed, a
@@ -1581,6 +1631,7 @@ export function PageScreen({
    * to the capture being abandoned, not to the next one.
    */
   function discard() {
+    if (!open.current) return
     if (editing !== null) {
       abandonEdit()
     } else {
@@ -1592,6 +1643,8 @@ export function PageScreen({
   }
 
   function leave() {
+    /* Already closing — see `open`. The second half of a gesture, or our own blur. */
+    if (!open.current) return
     if (editing !== null) {
       commitEdit()
       done()
@@ -1621,9 +1674,10 @@ export function PageScreen({
    * pair is the only way out of the mode on glass and it is proven; a commit
    * should not invent a second.
    *
-   * ⚠ **`blur()` fires `onBlur` synchronously, which calls `commitEdit`** — a
-   * no-op here, because `commit` is only ever reached while `editing` is
-   * `null` and `commitEdit` returns on that first line.
+   * ⚠ **`blur()` fires `onBlur` synchronously, and `onBlur` is now an exit —
+   * 30 August.** It calls `leave`, which commits. That would be this function
+   * calling itself through the platform, so `open` is cleared on the line above
+   * the blur and `leave` returns on it. **Do not reorder those two lines.**
    *
    * ⚠ **Safe against the hem, because `commit` has already scrolled to the
    * caret.** Dropping `writing` unmounts `useKeyboardHem`, whose cleanup takes
@@ -1633,6 +1687,11 @@ export function PageScreen({
    * the hem is padding at the foot of a page nobody is looking at the foot of.
    */
   function done() {
+    /*
+      ⚠ **First, and before the blur.** `blur()` fires `onBlur` synchronously and
+      `onBlur` is an exit, so this line is what stops the exit calling itself.
+    */
+    open.current = false
     /* The keyboard follows focus, and nothing else can dismiss it. */
     input.current?.blur()
     setWriting(false)
@@ -2651,6 +2710,46 @@ export function PageScreen({
                   if (!lifted) return
                   e.preventDefault()
                   setLink(lifted)
+                }}
+                /*
+                  ────────────────────────────────────────────────────────────
+                   **Losing focus is leaving — 30 August**
+                  ────────────────────────────────────────────────────────────
+
+                  ⚠ **Reported on both handset surfaces: tap the field, then tap
+                  *Done* on the keyboard's accessory bar — the keys go and the
+                  row stays, sitting on the bottom edge with the drawn caret
+                  still blinking in it.** Every other way out was wired to a
+                  gesture the page could see: Return to `onKeyDown`, a tap
+                  outside to the scrim's `onClick`, `Escape` to the key. iOS's
+                  own dismiss is none of those — it takes the focus and says
+                  nothing else — so `writing` stood with no keyboard under it,
+                  which is the same wrong state a resume used to leave behind.
+
+                  ⚠ **So the mode is tied to the one fact that is true of all
+                  four: the field has focus.** The sheet is open exactly while
+                  it does, and anything that takes it away closes the sheet and
+                  lands the words, which is what the two exits already did.
+                  There is no keyboard detector in this and there must not be —
+                  `--keyboard-overlap` measures a gap that opens and closes as a
+                  Safari tab's address bar collapses, and reading it as *a
+                  keyboard is up* is a bug this page has already shipped once.
+                  See `useKeyboardHem`.
+
+                  ⚠ **`relatedTarget` inside the sheet is not leaving.** The
+                  chips beside the field take focus on a desk click, and losing
+                  the sheet because somebody reached for attach would be worse
+                  than the bug this fixes. iOS does not focus a button on tap at
+                  all, so there the field never blurs for one.
+
+                  ⚠ **A blur with nowhere to go is the dismiss**, and that is the
+                  case with `relatedTarget` `null`: the accessory bar's Done, and
+                  the drag-down over the keys.
+                */
+                onBlur={(e) => {
+                  const next = e.relatedTarget as Node | null
+                  if (next && sheet.current?.contains(next)) return
+                  leave()
                 }}
                 onKeyDown={(e) => {
                   if (e.nativeEvent.isComposing) return
