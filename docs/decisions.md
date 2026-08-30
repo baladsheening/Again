@@ -8839,8 +8839,19 @@ The record is exactly that. The argument was put and the direction stands.
 **What it costs, stated and unchanged by the direction:** the record gives no
 sign of how long it is or where in it you are. ⚠ **Scrolling itself is untouched
 on every surface** — wheel, trackpad, keyboard and touch all behave exactly as
-before; only the indicator is gone. **If the position ever matters, the honest
-replacement is a fade at the record's foot, not the bar coming back.**
+before; only the indicator is gone.
+
+### ⚠⚠ The fade at the record's foot — directed 30 August, NOT BUILT
+
+**It is the replacement for what the bar said, and it is wanted possibly on
+every surface**, not only the desk. The handset's case is the same one arrived at
+differently: CSS never removed a bar there — iOS draws the page indicator
+natively and cannot be reached (see below) — but the handset never had a *length*
+cue either, so a foot fade is the first thing that would give it one.
+
+⚠ **Do not answer this by putting a scrollbar back**, on any surface. Nothing is
+designed: no token, no height, no decision on whether it hides once the list
+ends. Deferred at the user's direction, not forgotten.
 
 **The utility is deleted into the `html` rule** rather than applied from a class.
 It had one caller, the film screen's synopsis pane, and that screen was deleted
@@ -8863,6 +8874,29 @@ derived, so the record's column, the mark's band and the tool stack all followed
 scrollbar and `clientWidth` does not, which is the discrepancy the type ramp's
 `clamp()` is written around and `threshold.mjs` exists to prove harmless. With no
 bar the two are one number at every width and there is nothing left to oscillate.
+
+### ⚠⚠ The handset still shows one, and CSS cannot reach it
+
+**Reported after deploying: the indicator is still there in the installed app and
+in the handset browser. It is, and none of the above touches it.** iOS Safari
+draws the *main document's* scroll indicator with the native scroll view;
+`scrollbar-width` and `::-webkit-scrollbar` do not apply to it. They do work on
+scrollable **elements** inside an iOS page — the page itself is the exception.
+
+⚠ **The 0px I measured on a 390 viewport was not evidence of no bar, and reading
+it as such was the mistake.** `innerWidth − clientWidth` measures **layout width
+taken**, which is zero for every *overlay* scrollbar whether it is drawn or not.
+The measurement was structurally incapable of seeing the thing being reported, on
+that surface, before or after the change. **A number that cannot distinguish the
+two states is not a measurement of them** — the same lesson as the safe-area
+expression a browser could not tell apart.
+
+**The only way to remove it is to stop the document scrolling and scroll an inner
+element instead**, where `::-webkit-scrollbar` is honoured on iOS. That is
+expensive here and was not done: `useChromeRecede`, `useKeyboardHem`, the
+browser's scroll restoration and the resume-at-top gate all read the document
+scroller, and an `overflow: hidden` lock on the document was tried and removed
+once already (see the `html` rule). **Left alone at the user's direction.**
 
 ⚠ **That probe's scrollbar check had to be rebuilt, and the reason is a good
 one.** It failed the run when it measured a 0px bar, on the reasoning that *a

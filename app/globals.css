@@ -2299,8 +2299,12 @@
      * **What it costs, stated:** the record gives no sign of how long it is or
      * where in it you are. Scrolling itself is untouched — wheel, trackpad,
      * keyboard and touch all work exactly as before; only the indicator is gone.
-     * ⚠ **If that ever matters, the honest replacement is a fade at the record's
-     * foot, not the bar coming back.**
+     * ⚠⚠ **THE FADE AT THE RECORD'S FOOT IS DIRECTED AND NOT BUILT — 30
+     * August.** It is the replacement for what the bar said, and it is wanted
+     * **possibly on every surface**, not only the desk: the handset never lost a
+     * bar to CSS (see below) but it never had a *length* cue either. **Do not
+     * answer this by putting a scrollbar back.** Not designed; no token, no
+     * height, no decision on whether it hides at the end of the list.
      *
      * **Both spellings, and both are needed:** `scrollbar-width` is the standard
      * and WebKit does not implement it; `::-webkit-scrollbar` is WebKit's and

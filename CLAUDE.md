@@ -1086,8 +1086,18 @@ answer asked for was that it go, not that it be restyled.
   in it. ⚠ **If that ever matters, the replacement is a fade at the record's
   foot, not the bar coming back.**
 - ⚠ **Desk-only, and it hands 15px of window back.** Measured 15px at 1000, 1152
-  and 1440 and **0px on a handset** — iOS and Android use overlay bars that take
-  no layout width. Scrolling itself is untouched on every surface.
+  and 1440. Scrolling itself is untouched on every surface.
+- ⚠⚠ **THE HANDSET STILL SHOWS AN INDICATOR AND CSS CANNOT REACH IT.** iOS draws
+  the *main document's* indicator with the native scroll view; `scrollbar-width`
+  and `::-webkit-scrollbar` reach scrollable **elements** on iOS, never the page.
+  ⚠ **The 0px measured at 390 was not evidence of no bar** — `innerWidth −
+  clientWidth` is layout width taken, which is zero for every *overlay* bar drawn
+  or not, so the number could not tell the two states apart. Removing it means
+  moving the scroll off the document, which four instruments read. **Left alone
+  at the user's direction.**
+- ⚠⚠ **A FADE AT THE RECORD'S FOOT IS DIRECTED AND NOT BUILT — possibly on every
+  surface**, since the handset has no length cue either. Nothing is designed. **Do
+  not answer it by putting a scrollbar back.** See `docs/decisions.md`.
 - ⚠ **It SIMPLIFIES the type ramp rather than threatening it.** `100vw` counts a
   classic bar and `clientWidth` does not; with no bar they are one number, so the
   mismatch `threshold.mjs` was written around is gone. That probe now proves the
