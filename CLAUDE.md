@@ -331,6 +331,44 @@ now `max(0px, calc(env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)))`
 one expression, no branch, and it states the true thing instead of correcting
 for the false one.
 
+⚠ **And the clearance goes BELOW ONLY, less the air the row already stands off —
+30 August.** Directed: *the bottom bar on the home app only reduced in height, and
+the glyphs slightly higher.* Written down those are the same box asked about from
+opposite ends — **a glyph sitting higher needs air under it, and air under it IS
+the height** — and on glass, where the strip is 13 + 28 + 13 and nothing else,
+they cannot both be had. **On a notched handset they can, because there is dead
+height up there to reclaim**, which is why the change is invisible on every other
+surface and why *the home app only* needed no branch, no device check and no
+display-mode query.
+
+- **Nothing above the row, because there is no home indicator above the row.**
+  The even split of 29 August was a correction, not a principle: it answered *the
+  glyphs sit high in the bottom bar* by pushing the row to the strip's centre
+  line, and it paid 17px of a Face-ID iPhone's strip for clearance that keeps
+  nothing off anything.
+- **The row's own air counts toward the clearance, so the gap is not bought
+  twice.** `--sheet-air / 2` is exactly what `sheet-row` already puts under the
+  characters — same gap, same edge — so what the inset is owed is the part of it
+  the row does not already provide. The term is
+  `max(0px, calc(env(safe-area-inset-bottom) − var(--keyboard-overlap,0px) − var(--sheet-air)/2))`,
+  spent as `padding-block: 0 <that>`.
+- **Measured at a 34px inset, keyboard down: the strip 88px → 75px and the glyph
+  35px above the glass where it was 31.** Keyboard up it is the 54px it already
+  was, the term being zero either way. At a 0px inset — a browser, an Android, the
+  desk — **nothing moves at all**: 54px, glyph at 14, `highBy` still 0.
+  `node_modules/.probe/homeappstrip.mjs`; `notchkeys.mjs` is re-numbered and
+  derives its expectations rather than typing them.
+- ⚠ **The price, stated: on a notched handset the row is no longer on the strip's
+  centre line** — 13px of glass above the glyphs and 34 below, `glyphsit.mjs`
+  reading `highBy: 11`. That is the 29 August complaint in miniature (it was
+  6.5:40.5 that day), and it is what *shorter and higher together* costs. If it
+  reads badly the thing to move is this term, **not `--sheet-air`**, which is what
+  the other two surfaces are made of.
+- **`--foot-height` carries the same subtraction** so `page-hem` reserves what the
+  strip occupies. It omits the overlap term, which a `@theme` token cannot read —
+  see below — and does not need to: the reserve is the idle strip, and `page-hem`
+  adds the overlap itself.
+
 ⚠⚠ **THAT EXPRESSION MUST BE WRITTEN ON `writing-sheet` AND NEVER IN A TOKEN. It
 was lifted into `@theme` as `--sheet-clearance` on 29 August and that was a bug
 — fixed 30 August.** **A custom property's `var()` is substituted where the

@@ -1302,8 +1302,20 @@
    * for a row of glyphs — then 48, then 44. **What set the floor was always the
    * thumb, not the look**, and 44 is where the thumb put it.
    */
+  /**
+   * ⚠ **The inset term matches what the strip actually spends — 30 August.** It
+   * was the whole `env(safe-area-inset-bottom)`, which was right while
+   * `writing-sheet` split the full inset above and below the row. It spends the
+   * inset **less the air the row already stands off**, below only, so this
+   * reserves 13px more than the strip occupies if it is left alone. The same
+   * expression, minus the overlap term — a `@theme` token cannot read
+   * `--keyboard-overlap`, which is the bug recorded under `--sheet-clearance`,
+   * and it does not need to: what `page-hem` reserves is the idle strip, and it
+   * adds the overlap itself.
+   */
   --foot-height: calc(
-    var(--leading-line) + var(--sheet-air) + env(safe-area-inset-bottom)
+    var(--leading-line) + var(--sheet-air) +
+      max(0px, env(safe-area-inset-bottom) - var(--sheet-air) / 2)
   );
 
   /**
@@ -3404,6 +3416,50 @@
     the system's.
   */
   /*
+    ─────────────────────────────────────────────────────────────────────────
+     And the clearance is spent BELOW ONLY, less the air already there — 30 Aug
+    ─────────────────────────────────────────────────────────────────────────
+
+    ⚠ **Directed: the bottom bar on the installed app shorter, and the glyphs
+    slightly higher.** Written down those two are the same box asked about from
+    opposite ends — a glyph sitting higher needs air under it, and air under it
+    IS the height — and on glass, where the strip is 13 + 28 + 13 and nothing
+    else, they cannot both be had. **On a notched handset they can, because
+    there is dead height up there to reclaim.** That is the whole of why this
+    change is invisible everywhere else, and why it answers *the home app only*
+    without a branch, a device check or a display-mode query.
+
+    ⚠ **Nothing above the row, because there is no home indicator above the
+    row.** The even split was a correction, not a principle: it answered *the
+    glyphs sit high in the bottom bar* on 29 August by pushing the row down to
+    the strip's centre line, and it bought that with 17px of a Face-ID iPhone's
+    strip that keeps nothing off anything. The clearance goes where the thing
+    it clears is.
+
+    ⚠ **And the row's own air counts toward it, so the two are not paid
+    twice.** `--sheet-air / 2` is exactly what `sheet-row` already puts under
+    the characters — the same gap, measured from the same edge — so what the
+    inset is owed is the part of it the row does not already stand off.
+    `max()`, not a bare subtraction, so a surface with no inset lands on zero
+    from both directions rather than on a negative padding.
+
+    At a 34px inset with the keyboard down: 21px under the row where there were
+    17 above and 17 below. **The strip goes 88px → 75px and the glyph rises
+    31px → 35px above the glass** — reduced and slightly higher, in one term.
+    With the keyboard up the overlap swallows the inset and the term is zero, so
+    the writing state is the 54px it already was. On glass, on Android and on the
+    desk the inset is zero and **nothing moves at all**.
+
+    ⚠ **The visible glass is 13px above the glyphs and 34 below**, and that is
+    the price, stated: the row is no longer on the strip's centre line on a
+    notched handset. It is the 29 August complaint in miniature — 13:34 where
+    that day was 6.5:40.5 — and it is what *shorter and higher* costs. If it
+    reads badly, the thing to move is this term, not `--sheet-air`, which is
+    what both other surfaces are made of.
+
+    ⚠⚠ **STILL WRITTEN HERE AND NOT IN A TOKEN.** See below.
+  */
+  /*
     ⚠⚠ **WRITTEN HERE AND NOT IN A TOKEN, and that is load bearing — 30 August.**
     For one evening this read `var(--sheet-clearance)`, a `@theme` token holding
     the same expression, and it was **broken on exactly one surface**: a custom
@@ -3415,10 +3471,14 @@
     because with no notch both versions compute zero. See the deleted token for
     the full account. **Do not lift this into a variable again.**
   */
-  padding-block: max(
-    0px,
-    calc((env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px)) / 2)
-  );
+  padding-block: 0
+    max(
+      0px,
+      calc(
+        env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px) -
+          var(--sheet-air) / 2
+      )
+    );
 }
 
 /**
