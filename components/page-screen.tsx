@@ -2608,7 +2608,15 @@ export function PageScreen({
             is visible cannot resize anything. Neither may be unmounted or set to
             `display: none`; they fade.
           */}
-          <div className="sheet-row grid">
+          {/*
+            ⚠ **`sheet-writing` lowers the row’s air while the field is up — 30
+            August.** The strip is shorter writing than idle, which the one-strip
+            rule of 28 August forbade; it was directed, and the argument is in the
+            utility. The class is on the ROW and not on the sheet, because what
+            changes is the air around one line, not the sheet’s clearance or its
+            ground.
+          */}
+          <div className={`sheet-row grid ${writing ? 'sheet-writing' : ''}`}>
           <div
             className={`col-start-1 row-start-1 flex items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
               writing ? '' : 'pointer-events-none opacity-0'

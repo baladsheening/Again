@@ -251,6 +251,60 @@ of the screen, and every *a tad more* / *a tad less* was really that.
   the field alone at `--sheet-hem` = a hem and a half, translated off the glass
   when idle, exactly as before.
 
+⚠⚠ **THE STRIP IS SHORTER WRITING THAN IDLE, AND THAT REVERSES THE ONE-STRIP
+RULE ABOVE — 30 August.** Directed: *reduce the height of the writing row, the row
+that appears when we press the plus sign; leave some padding between the top of
+the keyboard and the bottom of the characters, and make the gap between the top of
+the characters and the top of the row the same size as the bottom padding.* The
+handset's writing row is **54px → 40.5px**, with **12.1px of glass above the
+capitals and 12.1px below the descenders**. The idle strip is untouched at 75px
+and the glyphs have not moved.
+
+- ⚠ **The two rows stopped being the same object, which is what the one-cell grid
+  assumed.** The glyph row is a **26px drawing** in a 28px line box — 1px of slack
+  a side. The writing row is **16.3px of ink** in the same box — 7.6px above the
+  capitals, 4.1px below the descenders. One air cannot serve both: the air that
+  centres the characters leaves the glyph drawings 5.5px from the strip's top edge
+  and 9px from its bottom, which is the *glyphs sit high in the bottom bar* report
+  of 29 August rebuilt deliberately. **Two boxes, because there are two objects.**
+- ⚠ **What the 28 August rule protected is untouched: the strip does not change
+  shape ON THE GLASS.** By the time it is the writing row it has *moved* to the top
+  of the keyboard. On a notched handset the two states already measured 75 and 54.
+  ⚠ **On a browser handset they were both 54 and are now 54 and 40.5** — that is a
+  real change to the surface the rule was written for, and it is the price.
+- ⚠ **Equal padding is what put the text low; equal gaps to the INK is what was
+  asked for.** The row's air is `--line-hem` under the descenders and, above, the
+  same optical gap **less the slack the line box already provides over the
+  capitals** — 4.5px of lead against 8px of foot. Two numbers that are deliberately
+  not equal.
+- ⚠ **There is now an INTERFACE-FACE FENCE, and it is separate from the
+  wordmark's seven.** `--face-em` 1.2, `--face-cap-drop` 0.24444, `--face-ink-rise`
+  0.05 — Fira Sans 400, measured by `node_modules/.probe/inkfence.mjs`, which
+  renders at 10× and **scans the pixels** because canvas rounds
+  `actualBoundingBox*` to whole pixels and at 18px that is a 4% error on a cap
+  height. `--line-ink-lead` and `--line-ink-foot` derive the 7.6/4.1 from them and
+  the type, so both follow the desk's root scale for free. **Do not scale one
+  face's set into another's** — the display fence's rule, applied to a second face.
+  Change `--font-sans` and these are wrong until the probe is re-run.
+- ⚠ **The state is carried by two custom properties, not by a second utility
+  declaring `padding-block`.** Two utilities setting one property on one element
+  are resolved by their order in the compiled sheet and a class attribute cannot
+  state that order — the trap `--bar-gutter` is a token to avoid. `sheet-row`
+  reads `var(--sheet-row-lead, …)`; `sheet-writing` sets it, and `initial` above
+  `--breakpoint-stack` hands the fallback back.
+- **The desk is untouched, by direction** — *still on the home app*. Up there the
+  strip is the field alone, so this would be its only box rather than a second one.
+  Measured 69.3px and 16/16 either side of the change.
+- ⚠ **The sheet's notch clearance still subtracts `--sheet-air / 2`, the IDLE
+  row's foot**, because a parent cannot read a property declared on its child.
+  Keyboard down *and* writing is not a state a handset can be in, so nothing rides
+  on it.
+- **Measured by `node_modules/.probe/writingrow.mjs`** — the strip shorter writing
+  than idle, the two ink gaps equal, real padding over the keys, the idle strip and
+  the desk unmoved, and a chip beside the field still answering a tap top to bottom
+  with its 44px ending inside the strip. `notchkeys.mjs` clicks the `+`, so it
+  measures the writing row and is re-pointed at it.
+
 ⚠ **`--sheet-hem` is a hem on glass and a hem and a half on a desk**, both
 `--line-hem` scaled and neither typed. It was `0px` for an hour — the box as
 literally the line — then half a hem, and it is a whole one because a strip with

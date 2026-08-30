@@ -1066,6 +1066,57 @@
   --leading-line: 1.75rem;
   --line-hem: 0.5rem;
 
+  /*
+    ───────────────────────────────────────────────────────────────────────────
+     THE INTERFACE FACE'S FENCE — Fira Sans 400, measured — 30 August
+    ───────────────────────────────────────────────────────────────────────────
+
+    **Where the CHARACTERS sit inside a line box, which is not where the line box
+    sits.** A line box is `--leading-line` tall and the ink in it is not centred:
+    at 18/28 there are **7.6px above the capitals and 4.1px below the
+    descenders**, so a row with equal padding puts its text 3.5px low. That was
+    reported, in those terms — *make the gap between the top of the characters
+    and the top of the row the same size as the bottom padding*.
+
+    ⚠ **Three ratios, measured, not reasoned.** `node_modules/.probe/inkfence.mjs`
+    renders the face at 10× and **scans the pixels**, because canvas rounds
+    `actualBoundingBox*` to whole pixels and at 18px that is a 4% error on a cap
+    height. Fira Sans 400: ascent 16.8, descent 4.8, cap 12.4, descender ink 3.9.
+
+    ⚠ **They are the interface face's, and they are a separate fence from the
+    wordmark's seven.** Those are Jost's. **Do not scale one face's set into
+    another's** — the rule the display fence states, applied to a second face.
+    Change `--font-sans` and these are wrong until the probe is re-run.
+
+    ⚠ **The engine rounds a face's ascent and descent to whole pixels per size**,
+    so a value derived here can sit half a pixel off what the engine lays out,
+    and iOS may round differently again. That is inside the tolerance of a 3.5px
+    optical correction; it would not be inside the tolerance of a hairline.
+  */
+  --face-em: 1.2;
+  --face-cap-drop: 0.24444;
+  --face-ink-rise: 0.05;
+
+  /*
+    **The line box's own slack, above the capitals and below the descenders.**
+    Derived from the fence above and from the type, so they follow the desk's
+    root scale and any change of leading for free:
+
+        (--leading-line − --text-line × --face-em) / 2   the half-leading
+      + --text-line × --face-cap-drop                    ascent over the caps
+
+    7.6px and 4.1px at the handset's 18/28. **Air measured to the characters is
+    the row's air minus these**; see `sheet-writing`.
+  */
+  --line-ink-lead: calc(
+    (var(--leading-line) - var(--text-line) * var(--face-em)) / 2 +
+      var(--text-line) * var(--face-cap-drop)
+  );
+  --line-ink-foot: calc(
+    (var(--leading-line) - var(--text-line) * var(--face-em)) / 2 +
+      var(--text-line) * var(--face-ink-rise)
+  );
+
   /**
    * The caret. It was one object with the mark on a picked line until 23 August,
    * on the reasoning that the mark borrows a vocabulary the page has already
@@ -2966,8 +3017,83 @@
     ⚠ **A shorthand halved once, not two derived tokens.** `padding-block` with
     one value is both sides, so there is no second number to keep equal.
   */
-  padding-block: calc(var(--sheet-air) / 2);
+  /*
+    ⚠ **Two custom properties with fallbacks, and NOT a second utility declaring
+    `padding-block` beside this one — 30 August.** Two utilities setting the same
+    property on one element are resolved by their order in the compiled sheet,
+    and a class attribute has no way to state that order — the same trap
+    `--bar-gutter` is a token to avoid. A variable has one declaration and one
+    reader, so the writing state can lower this without racing it.
+  */
+  padding-block: var(--sheet-row-lead, calc(var(--sheet-air) / 2))
+    var(--sheet-row-foot, calc(var(--sheet-air) / 2));
   letter-spacing: -0.01em;
+}
+
+/**
+ * **The writing state's air, measured to the CHARACTERS — 30 August.**
+ *
+ * Directed: *reduce the height of the writing row, the row that appears when we
+ * press the plus sign; leave some padding between the top of the keyboard and
+ * the bottom of the characters, and make the gap between the top of the
+ * characters and the top of the row the same size as the bottom padding.*
+ *
+ * ⚠ **A hem under the characters' feet, and whatever puts their tops the same
+ * distance from the other edge.** The foot is `--line-hem` — the page's one unit
+ * of air, the same hem a record line already has under it — and the lead is that
+ * same optical gap less the slack the line box already provides above the
+ * capitals. At 18/28: **4.5px above the line box and 8px below it, which is
+ * 12.1px of glass above the capitals and 12.1px below the descenders.** The row
+ * goes **54px → 40.5px**.
+ *
+ * ⚠ **The two numbers are not equal and that is the point.** Equal padding is
+ * what put the text 3.5px low; equal *gaps to the ink* is what was asked for. See
+ * `--line-ink-lead` for the measured slack and why it is fenced.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  ⚠⚠ This makes the strip change height between its two states — 30 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **It reverses *the box never changes between the two states; the contents and
+ * the ground do*, directed 28 August**, and the reversal is directed too. What
+ * has changed underneath it is that the two rows are no longer the same object:
+ *
+ * - the glyph row is a **26px drawing** in a 28px line box — 1px of slack a side
+ * - the writing row is **16.3px of ink** in the same box — 7.6 above, 4.1 below
+ *
+ * The one-cell grid was built on their being interchangeable, so one air could
+ * serve both. It cannot: the air that centres the characters leaves the glyph
+ * drawings 5.5px from the strip's top edge and 9px from its bottom, which is the
+ * *glyphs sit high in the bottom bar* report of 29 August rebuilt on purpose. Two
+ * boxes, because there are two objects.
+ *
+ * ⚠ **What the 28 August rule was protecting is untouched: the strip does not
+ * change shape ON THE GLASS.** Idle it is the glyph row's air plus the notch's
+ * clearance; the moment it is the writing row it has *moved* to the top of the
+ * keyboard, where nothing it used to cover is visible. On a notched handset the
+ * two states already measured 75px and 54px, and have since yesterday.
+ *
+ * ⚠ **The grid still may not unmount either row**, and the reason is unchanged: a
+ * hidden field cannot take the synchronous focus iOS requires. They fade in
+ * place, and the box they fade inside is now allowed to differ.
+ *
+ * ⚠ **The desk is untouched, by direction** — *still on the home app*. Above
+ * `--breakpoint-stack` there is no glyph row, so the strip is the field alone and
+ * this would be its only box rather than a second one; `initial` hands
+ * `sheet-row` its own fallback back. `--breakpoint-stack` is spelled out because
+ * a media query cannot resolve a `var()`; if that token moves, this moves with
+ * it.
+ */
+@utility sheet-writing {
+  --sheet-row-lead: calc(
+    var(--line-hem) + var(--line-ink-foot) - var(--line-ink-lead)
+  );
+  --sheet-row-foot: var(--line-hem);
+
+  @media (min-width: 72rem) {
+    --sheet-row-lead: initial;
+    --sheet-row-foot: initial;
+  }
 }
 
 /**
