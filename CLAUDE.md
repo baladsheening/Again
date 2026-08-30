@@ -851,6 +851,64 @@ Notes-like requirements in implementation-spec.md.
 Matte black, legible text, known icons. Text-first. Type is the entire design.
 Tokens are in `app/globals.css`.
 
+⚠ **THE DESK'S GROUND IS NOT BLACK — 30 August, and the sentence above is the
+handset's now.** Directed: *the desktop version is too oppressive because of its
+darkness; it needs an aesthetic related to the handset versions but different.*
+`--color-bg` is **`#14140f`** above `--breakpoint-stack`, a warm charcoal at the
+hue the palette already runs warm at. Nothing is inverted, nothing moves, no type
+changes: the page reads as a dark **surface** rather than an absence, which is
+what a full-bleed true black does wrong at 27 inches — it is a hole, and a hole is
+what *oppressive* describes.
+
+- ⚠ **Two lighter candidates were rendered on the real page and refused, and that
+  is a record rather than a ladder.** **Paper** — the palette inverted, the
+  handset's aged-paper ink as the ground with warm near-black text and the brass
+  darkened to 4.62:1 — and **newsprint**, the same onto a manila ground.
+  Reopening either means re-picking the brass, the lacquer red and the tool
+  stack's glass edge, all of which they measured out.
+  `node_modules/.probe/deskpalette.mjs` renders all three.
+- ⚠ **The handset is untouched by construction, not by care.** Everything is
+  inside the desk's own query, so there is no second palette and nothing to keep
+  in step. Asserted at 390: ground `#000000`, hairline `#30302b`, surface
+  `#20201d`, brass `#e8b34a`, all byte-identical.
+- ⚠ **`themeColor` and the manifest stay `#000000`, deliberately.** They paint the
+  installed app's splash and the system furniture around it, and **the installed
+  app is the handset**. A desk ground in the phone's status bar would be this
+  override reaching the one surface it was told not to.
+- **Almost nothing needed a value, and that is the palette paying off.**
+  `--color-muted`, `--glass-tint`, `--sheet-tint` and `--scrim-tint` are all
+  `color-mix`es of the ground or the ink, so both bars' glass, the writing strip
+  and the scrim over the record re-ground themselves from one line. Nothing was
+  touched per component.
+- ⚠ **The two that did need one are mixes of the desk's ground, not typed hexes**,
+  and they hold **the ratio** rather than the pigment: the hairline is the ink at
+  17.5% (`#393933`, **1.59:1**, against the base's 1.583 on black) and the card
+  surface at 10.5% (`#2a2a24`, **1.28:1**, against 1.286). A fixed hex would have
+  kept its ink and lost its job — the same rule on a ground 8% off the floor reads
+  as drawn heavier than the one on the phone. Move `--color-bg` again and both
+  follow.
+- ⚠ **The boundary is the LAYOUT's, not the type ramp's.** It could have started
+  at 57.207rem so scale and colour arrive together; it starts at 72rem, where the
+  foot bar becomes a tool stack and the app genuinely stops being a handset, and
+  where the desk already has exactly one block of overrides. **What it costs:
+  915–1152px is part-grown type on the handset's black ground** — the iPad-
+  landscape band this file already flags as never having been on hardware. One
+  query to move if it reads badly there.
+- **Measured, black → charcoal:** text 16.83 → **14.81**, chrome 10.98 → **9.66**
+  (past 4.5 for the mark, which is text), the lacquer red 4.26 → **3.75** and the
+  live red 5.92 → **5.21** (both past the 3:1 WCAG 1.4.11 asks of a graphical
+  control), the listed green 15.69 → **13.80**. Every floor in the palette's notes
+  still holds. ⚠ **The lacquer red is the tightest and is the first thing to
+  re-measure if the ground is lifted again.**
+- **It also answers the OLED note in `--color-bg` for free, on one surface.** That
+  comment names a step toward `#08080a` if black smear ever shows on a fast
+  scroll; this takes the same ladder further, for a different reason, and leaves
+  the question open where it actually applies.
+- **Asserted by `node_modules/.probe/deskground.mjs`** — the desk's ground, both
+  derived mixes and their ratios, the glass following, the handset unchanged, and
+  the boundary walked at 1152 / 1151 / 1000 / 720.
+
+
 **Amber (`--color-accent`) marks overlap state and nothing else.** Not on
 buttons, not on links, not on the active tab. It stops meaning anything the
 second it is used for decoration.

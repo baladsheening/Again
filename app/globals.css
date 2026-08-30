@@ -3812,6 +3812,98 @@
    */
   @media (min-width: 72rem) {
     :root {
+      /**
+       * ─────────────────────────────────────────────────────────────────────
+       *  THE DESK'S GROUND — lifted off the floor, 30 August
+       * ─────────────────────────────────────────────────────────────────────
+       *
+       * ⚠ **Directed: the desk is too oppressive because of its darkness, and
+       * it wants an aesthetic of its own — related to the handset, and
+       * different.** Three candidates were rendered on the real page at 1440 and
+       * looked at: **paper** (the palette inverted — the handset's aged-paper ink
+       * as the ground, warm near-black text, the brass darkened to 4.62:1),
+       * **newsprint** (the same inversion onto a manila ground), and this. The
+       * two light ones are the record of what was considered and refused, not a
+       * ladder to climb later — reopening them means re-picking the brass, the
+       * lacquer red and the stack's glass edge, all of which they measured out.
+       *
+       * **What this is: the ground stops being the floor.** `#000000` →
+       * `#14140f`, a warm charcoal at the same hue the palette already runs
+       * warm at. Nothing is inverted, nothing moves, no type changes. The page
+       * reads as a dark **surface** rather than an absence, which is the whole of
+       * what a full-bleed true black does wrong at 27 inches: it is a hole, and a
+       * hole is what "oppressive" describes.
+       *
+       * ⚠ **The handset is untouched by construction, not by care.** Everything
+       * here is inside the desk's own query, so there is no surface to keep in
+       * step and no second palette to drift. `--breakpoint-stack` is spelled out
+       * because a media query cannot resolve a `var()`; if that token moves, this
+       * moves with it.
+       *
+       * ⚠ **The boundary is the LAYOUT's, not the type ramp's.** The ground could
+       * have started at 57.207rem, where the type begins to grow, so that scale
+       * and colour arrive together — and that was the first instinct. It starts
+       * here instead: 72rem is where the foot bar becomes a tool stack beside the
+       * column, which is the width at which this genuinely stops being a handset,
+       * and the desk already has exactly one block of overrides rather than two.
+       * **What it costs: between 915px and 1152px the type is part-grown on the
+       * handset's black ground** — an iPad in landscape, a layout `CLAUDE.md`
+       * already flags as never having been on hardware. Move this one query if it
+       * reads badly there.
+       *
+       * ⚠ **Almost nothing needed a value, and that is the palette paying off.**
+       * `--color-muted`, `--glass-tint`, `--sheet-tint` and `--scrim-tint` are all
+       * `color-mix`es of `--color-bg` or `--color-text`, so the bars' glass, the
+       * writing strip's glass, the scrim over the record and every fade of the
+       * text re-ground themselves from the two lines below. One declaration
+       * changes the surface; nothing was touched per component.
+       *
+       * ⚠ **The two that DID need one are derived from the ground, not typed.**
+       * A hairline and a card are fixed hexes at the base, mixed against black —
+       * which is the drift `--color-muted`'s own note argues against — so here
+       * they are mixes of the desk's ground, holding **the same contrast against
+       * it that they hold against black**. Move `--color-bg` again and both
+       * follow. The percentages are what land on today's ratios and are measured,
+       * not chosen: `node_modules/.probe/deskpalette.mjs`.
+       *
+       * ⚠ **The lift is bigger than the one `--color-bg` already contemplates,
+       * and for a different reason.** That comment names a step back toward
+       * `#08080a` if OLED black smear ever shows on a fast scroll. This is not
+       * that fix — it is 8% of a ground on a surface with no OLED in it — but it
+       * takes the same ladder, so the smear question is answered on the desk for
+       * free and stays open on the handset.
+       *
+       * ⚠ **The manifest and `themeColor` stay `#000000`, deliberately.** They
+       * paint the installed app's splash and the system furniture around it, and
+       * the installed app is the handset. A desk ground in the phone's status bar
+       * would be this override reaching the one surface it was told not to.
+       *
+       * **Measured, black → charcoal:** text 16.83 → **14.81**, chrome 10.98 →
+       * **9.66** (past 4.5 for the mark, which is text), the lacquer red 4.26 →
+       * **3.75** and the live red 5.92 → **5.21** (both past the 3:1 WCAG 1.4.11
+       * asks of a graphical control), the listed green 15.69 → **13.80**. Every
+       * floor in the palette's own notes still holds; the red is the tightest and
+       * is the first thing to re-measure if the ground is lifted again.
+       */
+      --color-bg: #14140f;
+      /*
+        The hairline: `--color-text` at 17.5% over the desk's ground, which is
+        `#393933` and **1.59:1 against it** — the 1.583:1 the base's `#30302b`
+        holds against black. A fixed hex would have kept its pigment and lost its
+        job: the same ink on a ground 8% off the floor reads as a rule drawn
+        heavier than the one on the phone.
+      */
+      --color-rule: color-mix(in srgb, var(--color-text) 17.5%, var(--color-bg));
+      /*
+        Cards and the capture field: 10.5% over the ground, `#2a2a24`, **1.28:1**
+        against it — the base's 1.286:1. ⚠ **This is the token the base warns
+        about**: it separates by barely a quarter, and it only works at all
+        because warm surfaces read as raised where cool ones read as another shade
+        of the same thing. Holding the ratio rather than the pigment is the only
+        way it survives a ground that moved.
+      */
+      --color-surface: color-mix(in srgb, var(--color-text) 10.5%, var(--color-bg));
+
       --foot-height: 3rem;
 
       /**
