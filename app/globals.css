@@ -2299,12 +2299,14 @@
      * **What it costs, stated:** the record gives no sign of how long it is or
      * where in it you are. Scrolling itself is untouched — wheel, trackpad,
      * keyboard and touch all work exactly as before; only the indicator is gone.
-     * ⚠⚠ **THE FADE AT THE RECORD'S FOOT IS DIRECTED AND NOT BUILT — 30
-     * August.** It is the replacement for what the bar said, and it is wanted
-     * **possibly on every surface**, not only the desk: the handset never lost a
-     * bar to CSS (see below) but it never had a *length* cue either. **Do not
-     * answer this by putting a scrollbar back.** Not designed; no token, no
-     * height, no decision on whether it hides at the end of the list.
+     * ⚠⚠ **THE FADE AT THE RECORD'S FOOT IS THE REPLACEMENT AND IT IS BUILT —
+     * 30 August.** It is what the bar used to say, said by the page: a line
+     * dissolves over its own height as it goes off the foot, so *there is more
+     * below* is visible without an indicator. It is on **every** surface,
+     * because the handset never lost a bar to CSS (see below) and never had a
+     * length cue either. **Do not answer any of this by putting a scrollbar
+     * back.** See `writing-sheet`'s `::before`, which is where it lives and why
+     * it hangs off the strip.
      *
      * **Both spellings, and both are needed:** `scrollbar-width` is the standard
      * and WebKit does not implement it; `::-webkit-scrollbar` is WebKit's and
@@ -3798,6 +3800,75 @@
           var(--sheet-air) / 2
       )
     );
+
+  /*
+    ─────────────────────────────────────────────────────────────────────────
+     THE FADE AT THE RECORD'S FOOT — 30 August
+    ─────────────────────────────────────────────────────────────────────────
+
+    ⚠ **What the scrollbar used to say, said by the page instead.** The bar was
+    removed from `html` the same day and the cost was written down: *the record
+    gives no sign of how long it is or where in it you are.* Directed then, and
+    built now: **a fade at the record's foot, not the bar coming back** — and
+    wanted on **every** surface, because the handset never had a length cue
+    either. Its bar is drawn natively by iOS and CSS cannot reach it, so what
+    looks like two different situations is one: neither surface says *there is
+    more below*.
+
+    ⚠ **It hides at the end BY CONSTRUCTION, and that is the whole reason it is
+    a gradient rather than an instrument.** The ramp ends on `--color-bg`, so
+    over an empty foot it is the ground drawn on the ground — nothing to see.
+    A line passing under it dissolves; when the record runs out there is no line
+    to dissolve and the fade is invisible without being turned off. **No
+    observer, no state, no `atEnd`** — which was the third question the direction
+    left open, answered by removing it rather than by wiring `endMark` to a
+    second reader. Two readers of one mark is how a page starts disagreeing with
+    itself.
+
+    ⚠ **It hangs off the STRIP, and the strip is what makes it right in every
+    state.** `bottom: 100%` glues it to the strip's top edge, so it needs no
+    token, no arithmetic and no notion of where the bottom of the record is:
+
+      - **Handset, strip on the glass** — it sits immediately above the strip,
+        so a line dissolves as it goes under the glyphs instead of sliding under
+        them at full strength.
+      - **Handset, receded** — the strip is `translate-y-full`, so its top edge
+        is the bottom of the glass and the fade lands there with it. **That is
+        the case this exists for**: reading back is exactly when the chrome is
+        gone and there is most to say.
+      - **The desk** — the strip is translated off the glass whenever it is idle,
+        by the same rule, so the fade is on the window's bottom edge at every
+        desk width with no override anywhere.
+      - **Writing** — the strip rides `--keyboard-overlap` and the fade rides
+        with it, above the keys.
+
+    ⚠ **Its height is `--leading-line`: one line of the record.** A line
+    dissolves over exactly its own height, which is the same derivation the
+    swipe's detent uses — measure the thing being acted on, do not pick a number
+    for it. It follows the desk's root scale for free: 28px on a handset, 37.33
+    on the desk, one declaration.
+
+    ⚠ **It ends on the ground and not on `--glass-tint`, and the receded state is
+    why.** Landing on the strip's own tint would be continuous into the glass —
+    but only while the strip is *there*, and the state this is built for is the
+    one where it is not. Ending on the ground is right in every state and leaves
+    one small step in one of them: at the strip's top edge the record goes from
+    fully sunk to the 26% the glass lets through, blurred. **If that step ever
+    reads badly the answer is `--glass-tint` here and a fade of its own on the
+    desk, not a number tuned between the two.**
+
+    ⚠ **`pointer-events: none`.** It lies over the record's last visible rows and
+    a swipe has to reach them.
+  */
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: var(--leading-line);
+    background: linear-gradient(to top, var(--color-bg), transparent);
+    pointer-events: none;
+  }
 }
 
 /**

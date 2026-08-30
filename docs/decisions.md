@@ -8841,17 +8841,58 @@ sign of how long it is or where in it you are. ⚠ **Scrolling itself is untouch
 on every surface** — wheel, trackpad, keyboard and touch all behave exactly as
 before; only the indicator is gone.
 
-### ⚠⚠ The fade at the record's foot — directed 30 August, NOT BUILT
+### ⚠⚠ The fade at the record's foot — directed and BUILT, 30 August
 
-**It is the replacement for what the bar said, and it is wanted possibly on
-every surface**, not only the desk. The handset's case is the same one arrived at
-differently: CSS never removed a bar there — iOS draws the page indicator
-natively and cannot be reached (see below) — but the handset never had a *length*
-cue either, so a foot fade is the first thing that would give it one.
+**It is the replacement for what the bar said, and it is on every surface**, not
+only the desk. The handset's case is the same one arrived at differently: CSS
+never removed a bar there — iOS draws the page indicator natively and cannot be
+reached (see below) — but the handset never had a *length* cue either, so one
+fade answers both.
 
-⚠ **Do not answer this by putting a scrollbar back**, on any surface. Nothing is
-designed: no token, no height, no decision on whether it hides once the list
-ends. Deferred at the user's direction, not forgotten.
+⚠ **Do not answer any of this by putting a scrollbar back**, on any surface.
+
+**What it is:** a gradient one line of the record tall, hanging off the top edge
+of the writing strip, transparent at its head and the ground at its foot. A line
+leaving the page dissolves over exactly its own height instead of being sliced by
+an edge, and that dissolving *is* the statement that there is more below.
+
+The direction left three questions open — which surfaces, what height, and
+whether it hides once the record ends. All three are answered by construction
+rather than by a number:
+
+- **Every surface, with no override anywhere.** It hangs off the strip
+  (`bottom: 100%` on `writing-sheet::before`), and the strip is the one object
+  that is already in the right place on all four: on the glass on a handset,
+  translated off the glass when the chrome recedes *and* whenever the desk is
+  idle, and riding `--keyboard-overlap` while somebody writes. **Its foot is
+  therefore the bottom of the visible record in every state, and there is no
+  token to keep in step and no gap that can open** — measured at a 0px and a 34px
+  inset, where the strip is 54px and 75px and the fade's foot is on both.
+- **Its height is `--leading-line`: one line.** The same derivation as the
+  swipe's detent — *measure the thing being acted on* — so a line dissolves over
+  its own height and the desk gets 37.33px against the handset's 28 for free,
+  from one declaration.
+- ⚠ **It hides at the end BY CONSTRUCTION, which is why it is a gradient and not
+  an instrument.** The ramp ends on `--color-bg`, so over an empty foot it is the
+  ground drawn on the ground and there is nothing to see. **No observer, no
+  state, no second reader of `endMark`** — two readers of one mark is how a page
+  starts disagreeing with itself, and the resume-at-top gate was written the same
+  week to avoid exactly that.
+
+⚠ **It ends on the ground and not on `--glass-tint`, and the receded state is
+why.** Landing on the strip's own tint would be perfectly continuous into the
+glass — but only while the strip is *there*, and the state this exists for is the
+one where it is not: reading back is when the chrome has gone. Ending on the
+ground is right in every state and leaves one small step in one of them, where
+the record goes from fully sunk at the strip's top edge to the 26% the glass lets
+through, blurred. **If that ever reads badly the answer is `--glass-tint` here
+and a fade of its own on the desk, not a number tuned between the two.**
+
+**Measured by `node_modules/.probe/recordfade.mjs`** — 29 assertions across the
+handset at both insets and the desk. `fadelook.mjs` renders the before/after
+pair, switching the pseudo-element off through the CSSOM because the app's
+nonce-based CSP refuses an injected `<style>`; a gradient of the ground over the
+ground is not something an "after" on its own can show anybody.
 
 **The utility is deleted into the `html` rule** rather than applied from a class.
 It had one caller, the film screen's synopsis pane, and that screen was deleted

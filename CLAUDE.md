@@ -1083,8 +1083,9 @@ answer asked for was that it go, not that it be restyled.
   scrolling — the lists — where the bar is the only thing saying how much is
   left*. That rule was argued directly and overridden; **the cost is stated in
   the code and stands**: the record gives no sign of its length or where you are
-  in it. ⚠ **If that ever matters, the replacement is a fade at the record's
-  foot, not the bar coming back.**
+  in it. ⚠ **That cost is now partly paid: the fade at the foot is built** — see
+  below. It says *there is more below*; **how much** and **where you are** are
+  still not said by anything, and the bar is still not the way to say them.
 - ⚠ **Desk-only, and it hands 15px of window back.** Measured 15px at 1000, 1152
   and 1440. Scrolling itself is untouched on every surface.
 - ⚠⚠ **THE HANDSET STILL SHOWS AN INDICATOR AND CSS CANNOT REACH IT.** iOS draws
@@ -1095,9 +1096,33 @@ answer asked for was that it go, not that it be restyled.
   or not, so the number could not tell the two states apart. Removing it means
   moving the scroll off the document, which four instruments read. **Left alone
   at the user's direction.**
-- ⚠⚠ **A FADE AT THE RECORD'S FOOT IS DIRECTED AND NOT BUILT — possibly on every
-  surface**, since the handset has no length cue either. Nothing is designed. **Do
-  not answer it by putting a scrollbar back.** See `docs/decisions.md`.
+- ⚠⚠ **THE FADE AT THE RECORD'S FOOT IS BUILT, AND IT IS ON EVERY SURFACE — 30
+  August.** A gradient one line of the record tall, hanging off the top edge of
+  the writing strip: a line dissolves over its own height as it leaves the page,
+  which is *there is more below* said without an indicator. **Do not answer any
+  of this by putting a scrollbar back.**
+  - ⚠ **It hangs off the STRIP, and that is what makes it right in every state
+    with no token and no override.** `bottom: 100%` on `writing-sheet::before`.
+    The strip is already in the right place on all four surfaces — on the glass
+    on a handset, translated off it when the chrome recedes *and* whenever the
+    desk is idle, riding `--keyboard-overlap` while somebody writes — so the
+    fade's foot is the bottom of the visible record wherever that is. Measured
+    at a 0px and a 34px inset: the strip 54px and 75px, the fade's foot on both.
+  - ⚠ **Height is `--leading-line`, one line** — the swipe detent's derivation
+    (*measure the thing being acted on*), so the desk gets 37.33 against the
+    handset's 28 from one declaration.
+  - ⚠ **It hides at the end BY CONSTRUCTION**, which is why it is a gradient and
+    not an instrument: the ramp ends on `--color-bg`, so over an empty foot it is
+    the ground on the ground. **No observer, no state, and deliberately no second
+    reader of `endMark`.**
+  - ⚠ **It ends on the ground and not on `--glass-tint`** because the state it
+    exists for is the receded one, where there is no glass under it. The price is
+    a small step at the strip's top edge when the strip *is* there — fully sunk
+    against the 26% the glass lets through. If that reads badly the answer is
+    `--glass-tint` here and a fade of its own on the desk, not a number between.
+  - **Measured by `node_modules/.probe/recordfade.mjs`** (29 assertions);
+    `fadelook.mjs` renders the before/after, switching the pseudo-element off
+    through the CSSOM because the nonce CSP refuses an injected `<style>`.
 - ⚠ **It SIMPLIFIES the type ramp rather than threatening it.** `100vw` counts a
   classic bar and `clientWidth` does not; with no bar they are one number, so the
   mismatch `threshold.mjs` was written around is gone. That probe now proves the
