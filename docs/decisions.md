@@ -8479,3 +8479,51 @@ still readable and reaching its end is not the page's turn. **On the desk this
 does nothing and should not**: the console is in flow inside the record, so there
 is no "behind" — scrolling moves it with the lines it sits between, which is the
 whole point of expanding in place.
+
+### The console's text lands on the record's first line — 30 August
+
+**Asked as a choice between two: position the console so its entry overlays the
+record's top entry, or centre the console always.** The first was taken.
+
+⚠ **Centring was argued against and refused.** The card is content-sized, so
+centring would make **both** edges move with the length of the capture, where
+top-anchoring keeps one of them still. It also reads wrong: a short card floating
+in the vertical middle of a black screen is the shape of a **modal**, and this
+page has spent a great deal of effort establishing that *a sheet is not a route*.
+Top-anchored reads as the page lifted; centred reads as something on top of it.
+It fights the rise animation too, which comes up from the tapped line.
+
+⚠ **The reason for the alignment is better than "the top entry".** Aligning the
+console's text to where the record's first line sits means **the words of
+whatever you opened always appear where the eye already reads** — not just for
+the newest line, for every one. The eye never travels to find them. For the top
+line specifically it becomes a true expansion in place: tap it and the words do
+not move at all, a card materialises around them, which is precisely what the
+rise animation has been gesturing at.
+
+**Derived, not offset.** The record's first words sit at `--bar-height` +
+`--page-lead` + `--stamp-block` + `--line-hem`; the card's text sits at
+`--console-top` + `--page-lead`. The two leads cancel, so
+`--console-top = --bar-height + --stamp-block + --line-hem`. Measured **0.00px**
+at 390. Change the stamp, the bar or the row's hem and this follows rather than
+breaking silently — which is the answer to the coupling this introduces between
+two things that used to be independent: the coupling is explicit and it moves.
+
+⚠ **It pays for itself by moving the console's day stamp below the capture.** The
+words must be the first thing in the card or the alignment is off by whatever
+sits over them — and the stamp had been sitting directly on top of the record's
+own, saying *Today* twice, once behind the glass and once in front. One change,
+two problems, and it closes the duplication noted on the desk the same day.
+
+⚠ **The top paper band went from `--tap-floor` to about 32px, and that is only
+affordable because the card is now the size of its entry.** The 44 was chosen
+when the card FILLED the rectangle, so the four thin bands were the whole of the
+paper and one of them had to carry the console's only exit. A content-sized card
+leaves hundreds of pixels of paper below it. **If the card ever fills the box
+again the 44 has to come back.** The foot is still `--tap-floor` and is not the
+same question: it is the bound a long capture stops at.
+
+⚠ **The alignment holds at rest only, and that is understood rather than
+unfinished.** Scroll and the bars recede, so the console's top is measured
+against a bar that is not on screen. It stays where it is, which is right; there
+is simply nothing behind it to align to any more.

@@ -114,10 +114,29 @@ unreferenced `capture-provider.tsx` are deleted.**
   The body inside takes it back as `pan-y` with `overscroll-behavior: contain`.
   On the desk this does nothing and should not: the console is in flow *inside*
   the record, so there is no "behind" to hold still.
-- ⚠ **It clears the bar and the strip by `--tap-floor`, not by `--page-lead`.**
-  The paper is the console's only exit on a handset, so the paper has to be a
-  target; 20px bands are not. The positioner is `pointer-events: none` for the
-  same reason — its gutter would otherwise swallow taps meant for the scrim.
+- ⚠ **THE CONSOLE'S TEXT LANDS ON THE RECORD'S FIRST LINE — directed, and it is
+  exact.** Measured 0.00px on a 390 handset. **The payoff is not the top line, it
+  is every line:** the words of whatever you opened always appear where the eye
+  already reads. For the top line it is a true expansion in place — the words do
+  not move at all and a card materialises around them, which is what the rise
+  animation was gesturing at. `--console-top` is **derived**, not offset:
+  `--bar-height + --stamp-block + --line-hem`, because the two `--page-lead`s —
+  the record's and the card's padding — cancel. Change the stamp, the bar or the
+  row's hem and it follows.
+- ⚠ **Which is why the console's day stamp is BELOW the capture.** The words have
+  to be the first thing in the card or the alignment is off by whatever sits over
+  them — and with the console open on the newest line, its stamp had been sitting
+  directly on top of the record's own, saying *Today* twice through the glass.
+  One change, two things answered.
+- ⚠ **The top clearance went from `--tap-floor` to ~32px and that is affordable
+  ONLY because the card is content-sized.** The 44 was picked when the card
+  filled the box and the four thin bands were the whole of the paper, one of
+  which had to carry the only exit. There are hundreds of pixels of paper below a
+  short card now. **If the card ever fills the box again, put the 44 back.** The
+  FOOT is still `--tap-floor` and is a different question: it is the bound a long
+  capture stops at, keeping the strip clear whatever the record does. The
+  positioner is `pointer-events: none` for the same family of reasons — its
+  gutter would otherwise swallow taps meant for the scrim.
 - **Measured by `node_modules/.probe/console.mjs`** on both surfaces, including
   the rule the whole design rests on: **the same rectangle whichever line was
   tapped**, so the `×` is somewhere a thumb can learn.

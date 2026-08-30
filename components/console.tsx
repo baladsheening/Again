@@ -165,34 +165,32 @@ export function Console({
         */}
         <div className="stack:overflow-visible min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain">
           {/*
-            **The day, in the record's own stamp.** It is the same furniture as
-            the row of mono above every group of lines — the console is one line
-            of that record opened, so it says *when* in the same voice rather
-            than inventing a second one.
+            ⚠ **The capture is the FIRST thing in the box, and that is what makes
+            the alignment possible — 30 August.** The day stamp was here and is
+            below the words now. Directed: the console's text should land on the
+            record's first line, and `--console-top` derives exactly that — but
+            only if what sits at the card's padding edge is the words themselves.
+            Anything above them pushes the alignment out by its own height.
 
-            ⚠ **The year is the resolution, and here it can stand on its own.**
-            On the row it is one number squeezed beside a clipping box; there is
-            room in here, and *this line found its possibility* is exactly what a
-            reader of the record cannot otherwise see.
-          */}
-          <p className="stamp text-muted">
-            {line.dayLabel}
-            {line.year !== null && <span className="ms-2">{line.year}</span>}
-          </p>
+            **It also stopped the record's stamp being said twice.** With the
+            console open on the newest line, its stamp sat directly over the
+            record's own — the same word, in the same mono, one behind the glass
+            and one in front of it. Moving it under the capture removes the
+            duplication and gives the alignment its edge, which is one change
+            answering two things.
 
-          {/*
             ⚠ **The whole capture, wrapping, at the record's own type.** This is
             the one place on the page where the one-line rule does not apply —
             not an exception to it, but the reason for it: the row truncates
             *because* there is somewhere the rest of it lives. Same size, leading
-            and tracking as `page-row`, so these are the same words, larger only
-            by the desk's root scale.
+            and tracking as `page-row`, so these are the same words in the same
+            place, larger only by the desk's root scale.
 
             ⚠ **A struck line is struck here too**, with the identical pair of
             classes the row uses rather than two rules that agree.
           */}
           <p
-            className={`mt-2 text-[length:var(--text-line)]/[var(--leading-line)] tracking-[-0.01em] ${
+            className={`text-[length:var(--text-line)]/[var(--leading-line)] tracking-[-0.01em] ${
               crossedOff ? 'line-through opacity-50' : ''
             }`}
           >
@@ -260,6 +258,31 @@ export function Console({
                 {linkLabel(line.sourceUrl)}
               </a>
             ))}
+
+          {/*
+            **When it was written, and what it resolved to** — in the record's
+            own stamp, which is the same mono that sits above every group of
+            lines. The console is one line of that record opened, so it says
+            *when* in the record's voice rather than inventing a second one.
+
+            ⚠ **Below the capture since 30 August, where it was above it.** Two
+            reasons and either is enough. The words have to be the first thing in
+            the box or the alignment to the record's first line is off by
+            whatever sits over them; and with the console open on the newest line
+            this stamp sat directly on top of the record's own, saying *Today*
+            twice, once behind the glass and once in front of it.
+
+            ⚠ **The year is the resolution, and here it can stand on its own.**
+            On the row it is one number squeezed beside a clipping box; there is
+            room in here, and *this line found its possibility* is exactly what a
+            reader of the record cannot otherwise see. It rides the day because
+            both answer *what is known about this capture* rather than *what it
+            says*.
+          */}
+          <p className="stamp text-muted mt-3">
+            {line.dayLabel}
+            {line.year !== null && <span className="ms-2">{line.year}</span>}
+          </p>
 
           {/*
             ⚠ **The standing question, in full, because there is room.** On the

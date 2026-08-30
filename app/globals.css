@@ -1911,19 +1911,35 @@
    * strip's edge, which is the collision the one-strip rule of 28 August
    * removed.
    *
-   * ⚠ **Both ends clear their edge by `--tap-floor`, and that is a THUMB rather
-   * than a spacing decision.** It was `--page-lead` for an hour, on the neat
-   * reading that the console's top should land where the record's first line
-   * does — and a probe killed it: **the paper is the console's only exit on a
-   * handset**, so the paper has to be a target. `--page-lead` left two 20px
-   * bands and two 20px gutters, all four under the floor, on the one gesture
-   * that closes the box.
+   * ⚠ **THE TOP IS THE RECORD'S FIRST LINE — directed, 30 August.** The
+   * console's capture lands exactly where the record's first line of words sits
+   * at rest, to the pixel. **The payoff is not the top line, it is every line:**
+   * the words of whatever you opened always appear where the eye already reads,
+   * so it never has to travel to find them. For the top line specifically it
+   * becomes a true expansion in place — tap it and the words do not move at all,
+   * a card materialises around them, which is what the rise animation has been
+   * gesturing at all along.
    *
-   * ⚠ **So the clearance is the app's existing hardware constant, not a number
-   * picked until it looked right.** `--tap-floor` is 44px and deliberately does
-   * **not** scale with the root — which is correct here twice over: a thumb does
-   * not get bigger because a window did, and above `--breakpoint-stack` these
-   * two are not read at all, because the console is in flow up there.
+   * ⚠ **Derived, never an offset typed until it looked right.** The record's
+   * first line of words sits at `--bar-height` (`main`'s reserve) + `--page-lead`
+   * (its own) + `--stamp-block` (the day stamp and the air under it, which is
+   * exactly what that token is) + `--line-hem` (the row's own padding). The
+   * card's text sits at `--console-top` + `--page-lead` (the card's padding), so
+   * the two `--page-lead`s cancel and what is left is the three terms below.
+   * **Change the stamp, the bar or the row's hem and this follows.** Measured:
+   * the console's text on the record's words at 390 and at a 34px inset.
+   *
+   * ⚠ **It cost the top paper band, from `--tap-floor` to about 32px, and that
+   * is affordable now in a way it was not this morning.** The 44 was picked when
+   * the card FILLED the rectangle and the only paper was four thin bands, one of
+   * which had to carry the console's only exit. The card is the size of its entry
+   * now, so there are usually hundreds of pixels of paper below it and the top
+   * band carries nothing. ⚠ **If the card ever fills the box again, this number
+   * has to go back.**
+   *
+   * ⚠ **The FOOT is still `--tap-floor`, and it is not the same question.** That
+   * end is not aligned to anything — it is the bound a long capture stops at,
+   * and it keeps the strip clear by a thumb's width whatever the record does.
    *
    * ⚠ **No `--keyboard-overlap` term, and it must never acquire one.** The
    * console and the sheet cannot both be open — `✎` closes the console and hands
@@ -1933,7 +1949,9 @@
    * that script writes onto an element. See the `--sheet-clearance` tombstone in
    * `writing-sheet` for what happens when one does.
    */
-  --console-top: calc(var(--bar-height) + var(--tap-floor));
+  --console-top: calc(
+    var(--bar-height) + var(--stamp-block) + var(--line-hem)
+  );
   --console-foot: calc(var(--foot-height) + var(--tap-floor));
   /**
    * ───────────────────────────────────────────────────────────────────────────
