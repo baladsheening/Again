@@ -133,6 +133,14 @@ export type { PossibilityInput } from './possibilities'
 export { getSwap } from './swaps'
 export type { SwapView } from './swaps'
 
+/*
+  The portal — the first reader `notifications` has ever had. See
+  `./notifications.ts` for why the join to the viewer's own capture is what makes
+  each person's portal theirs.
+*/
+export { listMyPortal, readPortalLine, hasPortalLines, PORTAL_LIMIT } from './notifications'
+export type { PortalLine } from './notifications'
+
 export type {
   Capture,
   CaptureSource,

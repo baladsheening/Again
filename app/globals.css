@@ -4167,6 +4167,118 @@
   }
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  THE PORTAL — 30 August, Phase 2 step 3
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **What happened while you were away.** A list of lines with a sentence on
+ * each, opened from the foot, emptying as they are read.
+ *
+ * ⚠ **It borrows the console's BOUNDS and not its behaviour**, which is the
+ * whole of the difference between the two boxes. `--console-top` and
+ * `--console-foot` are the top and bottom edges of *the space a box may occupy
+ * over the record* — derived from the bar, the stamp and the strip — so a second
+ * box wanting the same clearances reads the same two tokens rather than
+ * arriving at them again. Change the bar and both follow.
+ *
+ * ⚠⚠ **FIXED ON EVERY SURFACE, where the console is `static` above
+ * `--breakpoint-stack`.** The console is *a row of the record expanded*, so on a
+ * desk it can open where the line lives. **The portal is not a line** — it is a
+ * different list, drawn from a different table, and there is no row for it to
+ * expand into. *The desk is the same design, four-thirds the size* is the
+ * default and it applies here unchanged: one box, one arrangement, scaled by the
+ * root.
+ *
+ * ⚠ **So it takes the scrim at every width too**, which is the one place the
+ * page's scrim needed a third branch. The console suppresses the scrim on the
+ * desk because the record around an expanded row is exactly what a reader wants
+ * to keep seeing; a floating card has to sink what is behind it or it reads as
+ * pasted on. See the scrim in `page-screen.tsx`.
+ */
+@utility portal-sheet {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--console-top);
+  bottom: var(--console-foot);
+  display: flex;
+  flex-direction: column;
+  /*
+    ⚠ **The gutter is declared, not worn**, for the reason `console-sheet` gives
+    at length: on a handset it keeps the card off the screen's edges, and this
+    box is fixed at every width, so unlike the console's there is no in-flow
+    column that has already spent it.
+  */
+  padding-inline: var(--gutter-l) var(--gutter-r);
+  /*
+    Nothing behind a box fixed to the glass may pan. The list inside takes
+    `pan-y` back for itself — see `portal-list`.
+  */
+  touch-action: none;
+
+  /*
+    ⚠ **The positioner takes no taps, and the card takes them back.** This box
+    spans the glass, so its gutter and the empty band under a short card are
+    *paper* as far as a reader is concerned — and paper is the one exit gesture in
+    this app. Without this, that whole strip swallows the tap and the box appears
+    not to close. The console learnt exactly this; the portal did not inherit it
+    and a probe found it in one run.
+
+    ⚠ **The child takes them back, and it must be the child rather than the card
+    by name**: `pointer-events: none` inherits, so anything ever added to this
+    box would be inert without it.
+  */
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+}
+
+/**
+ * The card: the bars' glass, exactly as the console's is.
+ *
+ * ⚠ **Glass on the desk too, where the console's card turns opaque.** That
+ * card goes `--color-surface` up there because it is *in flow inside the
+ * record* — a see-through box with the page's own rows behind it at full
+ * strength is a card you can read two things through. This one has a blurred
+ * scrim under it at every width, so the material that works on a handset works
+ * here for the same reason it works on the bars: what passes behind is present
+ * and unreadable.
+ *
+ * ⚠ **`flex: 0 1 auto` and never `flex: 1`.** As tall as the lines in it, capped
+ * by the bounds — the console's rule, learnt there the expensive way: a
+ * fixed-height box holding three words was 616px of glass. `flex: 1`'s `0%`
+ * basis collapses an auto-height container.
+ */
+@utility portal-card {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--record-measure);
+  margin-inline: auto;
+  border-radius: 1rem;
+  padding: var(--page-lead);
+  background-color: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+/**
+ * The list inside, which is the one thing here that legitimately scrolls.
+ *
+ * `overscroll-behavior: contain` so reaching its end is the end rather than the
+ * record's turn, and `touch-action: pan-y` gives back the vertical axis
+ * `portal-sheet` refused for everything else.
+ */
+@utility portal-list {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
 @keyframes console-rise {
   from {
     opacity: 0;

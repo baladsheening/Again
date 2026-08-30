@@ -9030,3 +9030,159 @@ causes. So the question *can this browser draw a classic bar* is asked of **a
 tall blank page in the same browser**, where our CSS cannot answer for it, and
 the app's page is then asserted to draw none. Measured: **15px on the blank page,
 0px on ours.**
+
+## The portal — Phase 2 step 3, 30 August
+
+**The first surface in this app that reads `notifications`.** The engine had been
+deployed and running for a week with no reader; this is what reads it, and
+`tests/portal.test.ts` is the first end-to-end proof of the fan-out with two
+accounts.
+
+### The door is in the bottom bar, and that is against §2
+
+⚠⚠ **Directed, with the conflict stated first, and it stands.** §2 of
+`phase-2-convergence.md` is a law the whole layout falls out of:
+
+> The bottom edge is for what you do without looking. The top edge is for what
+> you go to on purpose. The record is what is in between.
+
+…and it names the portal explicitly: *it is visited once, deliberately, at the
+start of a session, and must never be given a reflex's real estate.* Three doors
+were put — the wordmark (§5's own *interesting option*), a fourth glyph at the
+top, and the tray — and the answer was a fifth: **the foot.**
+
+⚠ **The law is not amended and this is not a precedent.** What it costs, stated
+rather than argued: the portal now sits beside the one control this app has to be
+perfect at, and a thumb reaching for `+` has a neighbour it did not have. **If
+the `+` is ever mis-hit, this is the first suspect, and the answer is the top
+edge — not a bigger gap.**
+
+**It cost no layout, which is the one thing in its favour.** The foot has been a
+three-column grid since settle left on 30 August — the `+` names column two so it
+holds the centre *by construction* rather than by there happening to be three
+glyphs — and column one was empty. The `+` is still on the window's centre line
+to under 2px, asserted.
+
+### A list of lines, and the join that makes it one
+
+⚠ **`listMyPortal` joins each notification to the viewer's own capture for the
+same possibility, and groups by that capture.** So two people converging on one
+line is **one row naming both** — §5's *a list of lines, not a list of events*,
+enforced in the read rather than in a component.
+
+⚠ **The join is `payload->>'itemId'`, and a notification carries no capture id
+because it cannot.** `lib/overlap.ts` writes one row per *match*, and a match is
+about a possibility that two people's captures both point at. The viewer's own
+capture is found at read time — which also means every payload written before the
+portal existed works unchanged, with no backfill.
+
+⚠ **`eq(captures.userId, …)` in that join is the privacy term, not a filter.** A
+notification names a counterpart; it must never be a door to the counterpart's
+row. Both sides get their own notification, so each person's portal is built
+entirely out of their own captures. `tests/portal.test.ts` asserts exactly this,
+because it is the class of thing that is invisible when broken.
+
+### It empties, and the column was already there
+
+⚠ **`notifications.read_at` has been in the schema since the engine landed and is
+exactly the seen-state §7 said the portal would need.** So that item is closed
+**with no migration** — and the deferred vocabulary migration, which §7 suggested
+batching it with, is not waiting on anything.
+
+**Opening a line is the only thing that empties it. There is no *mark all read*,**
+which §5 rules out by name: a portal you can clear in one gesture is a count with
+extra steps.
+
+⚠ **It empties on the NEXT arrival, not under the finger.** The row stays on
+screen while its console is open, because a list that reflowed at the moment of
+the tap would move the thing being opened. The portal re-reads every time it
+opens, so caching would make the emptying a client-side filter — a second place
+that knows what is unread.
+
+### An empty portal has no door
+
+⚠ **Off is the drawing without the door, exactly as search's is.** *An empty
+portal is the resting state and the honest signal that there is nothing to know*
+is not a surface to build; it is a surface that **cannot be opened**. The first
+version rendered a live `<button>` whatever the bit said, and the probe caught
+it — a lit-looking control that opens an empty box is the one thing this bar's
+*controls go off; they do not disappear* device exists to prevent.
+
+⚠ **Never a count, and the probe asserts the absence of digits on the door.**
+`hasPortalLines` returns a boolean rather than a number for the same reason: a
+counting function is one refactor away from displaying one, and a badge is an
+engagement metric under a different name — excluded by `CLAUDE.md` under *Release
+1 exclusions*.
+
+### The console is handed down, not rebuilt
+
+⚠ **A render prop: the portal decides where a console goes, the page decides what
+it does.** Every control on it — cross off, rewrite, settle — is the record's own
+handler acting on the same capture through the same action. A portal that built
+its own set would be a second implementation of every mutation on this screen,
+which is the drift §6 warns about applied to the surface layer.
+
+⚠ **`crossedOff` is read off the portal's own line and never off `lines`.** The
+capture may be from March and outside the fifty this page loaded, so a lookup
+that fell back to `false` would draw a crossed-off capture as live in the one
+place somebody was told to come and look at it.
+
+⚠ **The rewrite closes the portal on the way out.** Its words go to the writing
+strip, which is *behind* this box.
+
+### The scrim's third occupant
+
+⚠ **The portal keeps the scrim on the desk, where the console suppresses it.**
+The console expands a row in place up there, so the record around it is exactly
+what a reader wants to keep seeing. **The portal is not a line** — it is a
+different list from a different table, and there is no row for it to expand into
+— so it is a floating card at every width, and a floating card has to sink what
+is behind it or it reads as pasted on. *The desk is the same design, four-thirds
+the size* is the default, and it applies here unchanged.
+
+⚠ **`dismiss` asks about the portal first**, because a console inside it is the
+innermost thing open; asking about `opened` first would close the console and
+leave the box up, which is a tap that appears to do nothing. `Escape` steps the
+same way — console, then box.
+
+⚠ **`portal-sheet` is `pointer-events: none` with its child taking them back**,
+which the console already knew and this did not inherit. Without it, the gutter
+and the empty band under a short card swallow the tap meant for the scrim, and
+the box appears not to close. Found by the probe in one run.
+
+### Three sentences, not four
+
+⚠⚠ **§5's fourth sentence cannot fire, and it must not be added to complete the
+table.** *Sam has too.* is the both-done case, and `classify` produces **no match
+at all** for `go_back_to × go_back_to` — *both know*. The sentence would be true
+and the event would still not exist. If it is ever wanted it is a row in
+`classify` and a new `NotificationKind`, decided there.
+
+**`lend` has no row in the table and was given one** — *Sam has one.* — flagged in
+the code the way `notificationCopy`'s unspecified lines are. It is the strongest
+notification in the app and the portal cannot be the one surface that stays
+silent about it.
+
+⚠ **`portalSentence` lives beside `notificationCopy` in `lib/overlap.ts`,
+deliberately.** §6 says that module is the single owner of everything about a
+match and warns that the payload is what drifts hardest **because it is what the
+UI reads**. Two registers of one event in two files is the drift; adjacent, a new
+kind fails to compile in both at once.
+
+⚠ **Everyone is named, with no cut-off.** §10's scale note is the reason: the
+mechanic assumes small clusters, so *Sam and Ali too.* is right and *Sam and 4
+others* is a metric. The day a line carries eleven names, the honest reading is
+that the app has grown a shape this design did not predict — not that the
+eleventh person is noise.
+
+### How it is tested, and why in two places
+
+**A browser cannot be driven into a convergence quickly** — it needs two
+accounts, a mutual track and two captures resolved to one possibility — so the
+halves are tested where each can be. `tests/portal.test.ts` proves the chain
+against the database: the seed-time trigger firing, each side's portal built from
+their own capture, two counterparts as one row, emptying that reaches nobody
+else's rows, and **the suppression rule holding, seen from a surface for the first
+time.** `node_modules/.probe/portal.mjs` measures the door and the box on both
+surfaces. `scripts/seed-portal.mjs` writes one locally and carries the tests' own
+production guard.

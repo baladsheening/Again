@@ -51,12 +51,90 @@ the file to `docs/re-direction/inactive/` when the phase is done. A design
 document that outlives its build reads as current and is not — the same failure
 as a register that records what state production is in.
 
-**Phase 2's matching engine is deployed and nothing reads it.** `tracks`,
-`lib/overlap.ts` on both triggers, the suppression rule and `notifications` rows
-written in the same transaction all exist and run — and **no surface in the tree
-reads `notifications`**, so the fan-out has never been proved end to end with two
-accounts. There is no overlap list or detail, no QR handshake, and no
-possible-match prompt. ⚠ **Overlap joins on `possibility_id`, so only *resolved*
+⚠ **Phase 2 step 3 is built — THE PORTAL, 30 August, and the engine finally has
+a reader.** For a week `lib/overlap.ts` has been deployed, running, and writing
+`notifications` rows that **no surface in the tree read**. One does now, and the
+fan-out is proved end to end with two accounts for the first time —
+`tests/portal.test.ts`, five cases including the suppression rule seen from a
+surface at last.
+
+- ⚠⚠ **THE DOOR IS IN THE BOTTOM BAR AND THAT IS AGAINST §2 OF THE BRIEF —
+  directed.** §2 reads: *the bottom edge is for what you do without looking, the
+  top edge is for what you go to on purpose… which is why the notification portal
+  goes at the top: it must never be given a reflex's real estate.* **The
+  direction was given with that stated and it stands; the law is not amended and
+  this is not a precedent.** The cost is written beside the control in
+  `foot.tsx`: the portal now sits next to the one control this app has to be
+  perfect at. ⚠ **If the `+` is ever mis-hit, this is the first suspect, and the
+  answer is the top edge — not a bigger gap.** It cost no layout: the foot's grid
+  has been three columns since settle left, so the `+` holds the centre by
+  construction and column one was empty.
+- ⚠ **A list of LINES, not events, and it is enforced in the READ.** `listMyPortal`
+  joins each notification to *the viewer's own capture for the same possibility*
+  and groups by that capture — so two people converging on one line is **one row
+  naming both**. ⚠ **The join is `payload->>'itemId'`, because a notification
+  carries no capture id and cannot**: a match is about a possibility, and the
+  viewer's own capture is found at read time. Every payload written before the
+  portal existed works unchanged.
+- ⚠ **`eq(captures.userId, …)` in that join is the privacy term.** A notification
+  names a counterpart; it must never be a door to the counterpart's row. Both
+  sides get their own notification, so each person's portal is built entirely out
+  of their own captures. Asserted.
+- ⚠ **It empties, and `notifications.read_at` was already in the schema** — so
+  Phase 2's *seen-state needs a column* is closed **with no migration**, and the
+  deferred vocabulary migration is not waiting to be batched with anything.
+- ⚠ **AN EMPTY PORTAL HAS NO DOOR.** Off is the drawing without the door, exactly
+  as search's is — *an empty portal is the resting state* is not a surface to
+  build, it is a surface that cannot be opened. The first version made it a live
+  `<button>` whatever the bit said and a probe caught it.
+- ⚠ **Never a count, and `portal.mjs` asserts the ABSENCE OF DIGITS on the
+  door.** `hasPortalLines` is an `exists` rather than a count for the same
+  reason: a counting function is one refactor from displaying one, and a badge is
+  an engagement metric under another name.
+- ⚠ **The console is handed down as a RENDER PROP.** The portal decides where a
+  console goes; the page decides what it does. Every control on it is the
+  record's own handler acting on the same capture through the same action — a
+  portal that built its own would be a second implementation of every mutation on
+  this screen. ⚠ **`crossedOff` is read off the portal's line and never off
+  `lines`**: the capture may be from March and outside the fifty this page
+  loaded.
+- ⚠ **The portal is the SCRIM'S THIRD OCCUPANT, and it is the only one that keeps
+  the scrim on the desk.** The console suppresses it up there because the record
+  around an expanded row is what a reader wants to keep seeing; the portal is a
+  floating card at every width — it is not a line, so there is no row for it to
+  expand into — and a floating card must sink what is behind it. `dismiss` asks
+  about the portal **first**, because a console inside it is the innermost thing
+  open.
+- ⚠ **`portal-sheet` is `pointer-events: none` with the card taking them back**,
+  which the console already knew and the portal did not inherit. Without it the
+  gutter and the band under a short card swallow the tap meant for the scrim, and
+  the box appears not to close. Found by the probe in one run.
+- ⚠ **Three sentences, not four.** *Sam too.*, *Sam has.*, *Sam wants to.* — and
+  §5's fourth, *Sam has too.*, **cannot fire**: `go_back_to × go_back_to`
+  produces no match at all, because both know. **Do not add the sentence to
+  complete the table** — it is a row in `classify` and a new `NotificationKind`,
+  decided there. `lend` had no row in the table and was given one, flagged in
+  the code the way `notificationCopy`'s unspecified lines are. `portalSentence`
+  lives beside `notificationCopy` in `lib/overlap.ts` deliberately: §6 warns
+  that the payload is what drifts, *because it is what the UI reads*.
+- **Measured by `node_modules/.probe/portal.mjs` on both surfaces**, and proved
+  by `tests/portal.test.ts` against the database — a browser cannot be driven
+  into a convergence quickly, and the two halves are tested where each can be.
+  `scripts/seed-portal.mjs` writes one locally, with the tests' production guard.
+
+⚠ **The MARK is still unbuilt, and the division that put it after the portal is
+untouched.** *The portal is arrival; the mark is memory.* A convergence can land
+on a line hundreds back, and once the portal has emptied nothing on the record
+says it ever happened. §11 still reserves `--color-accent` and the gutter for
+it. **Phase 2 step 4.**
+
+⚠ **This paragraph said the engine had no reader and is corrected rather than
+deleted — 30 August.** It was true for a week and it is what the portal above
+answers: `tracks`, `lib/overlap.ts` on both triggers, the suppression rule and
+`notifications` rows written in the same transaction all exist, run, **and are
+now read**. The fan-out is proved end to end with two accounts —
+`tests/portal.test.ts`. **What is still not built:** no QR handshake, no
+possible-match prompt, and no convergence mark on the record. ⚠ **Overlap joins on `possibility_id`, so only *resolved*
 captures converge, and TMDB is the only catalogue** — today two people can
 converge on a film and on nothing else. See §13 of the implementation
 specification, which now carries this as Phase 2's status.

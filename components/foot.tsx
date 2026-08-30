@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { SearchGlyph, WriteGlyph } from './glyphs'
+import { PortalGlyph, SearchGlyph, WriteGlyph } from './glyphs'
 
 /**
  * **The tools: write and search.**
@@ -141,6 +141,29 @@ type Tools = {
    * only answer the surface could give is *Nothing.*
    */
   searchable?: boolean
+  /**
+   * **Open the portal: what happened while you were away.** Phase 2 step 3.
+   *
+   * ⚠ **`null` where there is no portal to open** — every route but the capture
+   * page. `/settled`, `/profile` and somebody else's page render `ToolSet` too,
+   * and the portal's rows open consoles, which only the record has.
+   */
+  portal?: (() => void) | null
+  /**
+   * **The one bit, and it is the only thing the door is allowed to say.**
+   *
+   * §5: *never a count. One bit at most — something is there, or nothing is.* A
+   * number is a thing to clear, and `CLAUDE.md` excludes engagement metrics by
+   * name. `hasPortalLines` returns a boolean for this reason rather than as a
+   * convenience — see its note.
+   *
+   * ⚠ **It is drawn with the bar's existing device, not a new one.** *Controls
+   * go off; they do not disappear* — so the portal is lit when there is
+   * something and `OFF` when there is not, which is exactly what search already
+   * does with an empty record. **No dot, no badge, no ring**: the page has one
+   * way of saying a control can act and this is it.
+   */
+  portalLit?: boolean
 }
 
 /**
@@ -155,9 +178,63 @@ type Tools = {
  * `+` is central by construction and would survive losing search too. Grid
  * placement has no effect on a flex item, so the vertical stack ignores both.
  */
-function ToolSet({ write, searchable = false }: Tools) {
+function ToolSet({ write, searchable = false, portal = null, portalLit = false }: Tools) {
   return (
     <>
+      {/*
+        ⚠ **Column one, which the bar has been holding empty since settle left on
+        30 August.** The `+` names column two and search names column three, so
+        this cost no layout and moved nothing: the grid was already three wide
+        because the centre is a rule rather than an average. See the head of this
+        file.
+
+        ⚠⚠ **§2 of `phase-2-convergence.md` puts the portal at the TOP, and this
+        is the bottom — directed 30 August, against that law.** The law reads:
+        *the bottom edge is for what you do without looking, the top edge is for
+        what you go to on purpose… which is also why the notification portal goes
+        at the top: it is visited once, deliberately, at the start of a session,
+        and must never be given a reflex's real estate.* **The direction was
+        given knowing that, and it stands.** What it costs is written here rather
+        than argued: the portal now sits beside the one control this app has to
+        be perfect at, and a thumb reaching for `+` has a neighbour it did not
+        have. **If the `+` is ever mis-hit, this is the first suspect**, and the
+        answer is the top edge and not a bigger gap.
+
+        ⚠ **A `<button>`, not a `<Link>`, because the portal is not a route.** It
+        is a sheet over the record — the same argument the console and the
+        writing strip both won: *a sheet is not a route.* Its rows open consoles,
+        and a console only exists where the record is.
+      */}
+      {/*
+        ⚠ **An EMPTY portal has no door, and that is §5 rather than a nicety.**
+        *An empty portal is the resting state and the honest signal that there is
+        nothing to know* — so a box that would open on nothing is not a smaller
+        version of the portal, it is the surface the brief says must not exist.
+        Off is the drawing without the door, exactly as search's is: a `<span>`,
+        because there is no disabled state for a control that opens something,
+        and the label goes with the door rather than staying on a drawing a
+        reader would be told they can reach.
+      */}
+      {portal && portalLit ? (
+        <button
+          type="button"
+          onClick={portal}
+          aria-label="Who else"
+          className="text-chrome tap-target col-start-1 flex items-center transition-colors"
+        >
+          <PortalGlyph />
+        </button>
+      ) : (
+        /*
+          Off is the drawing without the door, exactly as search's is — see the
+          note on the `<span>` below for why the label goes with the door rather
+          than staying on something a reader would be told it can reach.
+        */
+        <span aria-hidden className={`tap-target col-start-1 flex items-center ${OFF}`}>
+          <PortalGlyph />
+        </span>
+      )}
+
       {/*
         ⚠ **The middle one, and the only one that is never off.** See the note at
         the head of this file: the centre is what either thumb reaches, and this

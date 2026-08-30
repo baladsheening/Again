@@ -31,7 +31,7 @@ wins and this file is wrong.
 | The console | **BUILT — 30 August.** §1 is deleted below; the code and its argument are `components/console.tsx` and `console-sheet` in `globals.css` |
 | Swipe to cross off, swipe back to undo | **BUILT — 30 August, reopened and rebuilt the same day.** §3 and §3b both struck. ⚠ **Settling is NOT a swipe**: the row carries the one resolution that is its own inverse, and the console keeps the question that has two answers |
 | Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
-| The notification portal | designed, not built |
+| The notification portal | **built, 30 August** — door in the FOOT, against §2 |
 | The convergence mark on a line | designed, not built |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
@@ -242,7 +242,59 @@ one place. **Every feature that adds a beat to that loop is a tax on the only
 thing this app has to be perfect at.** The console adds none, the swipes add
 none, and the portal must add none either.
 
-## 5. The portal AND the mark — different lifetimes
+## ~~5a. The portal~~ — BUILT, 30 August. The mark is still ahead of it
+
+⚠ **The portal is built and the sub-section below it is struck; the MARK is
+not.** This section's own division survives the build intact and is the reason
+the two were never one thing:
+
+> **The portal is arrival. The mark is memory.**
+
+⚠⚠ **THE DOOR IS IN THE BOTTOM BAR, WHICH IS AGAINST §2 — directed, 30
+August.** §2 says the portal goes at the top: *the bottom edge is for what you do
+without looking, the top edge is for what you go to on purpose… it must never be
+given a reflex's real estate.* The direction was given knowing that. **The law is
+not amended and the deviation is not a precedent** — the cost is written beside
+the control in `foot.tsx`, and the first symptom to watch for is a mis-hit `+`.
+The three options put were the wordmark (§5's own *interesting option*), a fourth
+glyph at the top, and the tray; a fifth — the foot — was the answer.
+
+**What was built, and what each thing answers:**
+
+- **A list of lines, not events**, enforced in the read: `listMyPortal` joins each
+  notification to *the viewer's own capture for the same possibility* and groups
+  by that capture, so two people on one line is **one row naming both**.
+- ⚠ **The join is `payload->>'itemId'`, because a notification carries no capture
+  id and cannot.** A match is about a *possibility*; the viewer's own capture is
+  found at read time, which also means every payload written before the portal
+  existed works unchanged.
+- **It empties**, and `read_at` was already in the schema — so the *seen-state
+  needs a column* item in §7 is closed without a migration, and the vocabulary
+  migration it suggested batching with is unblocked.
+- ⚠ **An empty portal has no door.** Off is the drawing without the door, as
+  search's is. *An empty portal is the resting state* is not a surface to build;
+  it is a surface that cannot be opened.
+- ⚠ **Never a count, and the probe asserts the absence of digits on the door.** A
+  badge is the most natural thing in the world to add later and it is an
+  engagement metric under another name.
+- **Tapping a row opens the same console** — the brief's own prediction, and it
+  held: the console is handed down as a render prop, so every control on it is
+  the page's own handler acting on the same capture through the same action.
+- ⚠ **The sentences are three, not four.** *Sam has too.* cannot fire:
+  `go_back_to × go_back_to` produces no match at all — *both know* — so the
+  fourth row of the table below is unreachable by `classify` rather than
+  unwritten. **Do not add the sentence to complete the table**; it is a row in
+  `classify` and a new `NotificationKind`, decided there. `lend` had no row and
+  was given one, flagged.
+- **Proved end to end with two accounts for the first time** — `tests/portal.test.ts`,
+  five cases: the seed-time trigger firing, each side's portal built from their
+  own capture, two counterparts as one row, emptying that reaches nobody else's
+  rows, and **the suppression rule holding**, seen from a surface at last.
+  `node_modules/.probe/portal.mjs` measures the door and the box.
+
+---
+
+## ~~5. The portal AND the mark — different lifetimes~~ — the portal half is BUILT
 
 ⚠ **A gutter mark alone fails**, and this is the product owner's objection, which
 is correct: a convergence can land on an entry hundreds of lines back, and
@@ -342,10 +394,11 @@ for convergence on a line. Nothing is the correct rendering of nothing.
   `aria-expanded` vanishes from under a reader who just used it. **Not built, not
   urgent, and it wants a look on a real desk before either.** The same is true of
   the day stamp, which the console repeats from the group above it.
-- **Seen-state for the portal** needs a column (`notifications.seen_at` or
-  equivalent). It is the first schema move since the deferred vocabulary
-  migration; **consider batching them**, since that one wants a phase that plans
-  a down migration anyway.
+- ~~**Seen-state for the portal** needs a column.~~ **CLOSED, and it needed no
+  migration — 30 August.** `notifications.read_at` has been in the schema since
+  the engine landed and is exactly this; the portal writes it and reads
+  `is null`. **The vocabulary migration is therefore not waiting to be batched
+  with anything.**
 - **Where an intention is refined after capture** is still undesigned, and it is
   the other half of why **Have** is unreachable. See *Have is still not
   reachable* in `phase-1-capture.md`.
@@ -364,8 +417,9 @@ for convergence on a line. Nothing is the correct rendering of nothing.
    **Reopened and rebuilt the same day**: settling had to cost one beat and both
    directions had to afford an undo, and the answer was to **delete the settle
    swipe**. One swipe, its own inverse, unbounded undo. §3b.
-3. **The portal**, reading `notifications` — which also proves the fan-out end to
-   end with two accounts for the first time. ⚠ **This is the next thing to
-   build.**
+3. ~~**The portal**, reading `notifications` — which also proves the fan-out end
+   to end with two accounts for the first time.~~ **DONE, 30 August.** The
+   fan-out is proved: `tests/portal.test.ts`. ⚠ **Its door is in the FOOT and
+   not the bar, directed, against §2** — see §5a.
 4. **The mark**, last, once there is a real convergence to look at and it is
    known what one looks like to a person.

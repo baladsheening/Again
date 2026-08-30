@@ -235,3 +235,34 @@ export function SearchGlyph() {
     </Glyph>
   )
 }
+
+/**
+ * Foot. **The portal: who else.**
+ *
+ * ⚠ **It is `YouGlyph` with a second person in it, and that pairing is the
+ * whole drawing.** The bar's *you* is one figure; a convergence is the moment
+ * there are two, which is the one thing this app exists to say. Same
+ * relationship as `TrayGlyph`/`SettleGlyph` — one drawing, one addition, and the
+ * addition is the meaning.
+ *
+ * ⚠ **Redrawn on this grid rather than scaled from `YouGlyph`.** Two figures at
+ * that figure's size do not fit a 20 box, so the front one is smaller and the
+ * one behind smaller again; scaling the existing paths would have kept their
+ * proportions and lost the box. The heads do not overlap — at r 2.9 and 2.35
+ * they span 4.85→10.65 and 11.55→16.25 — because two circles that intersect at
+ * `--glyph-foot`'s 26px read as one shape with a notch in it.
+ *
+ * ⚠ **The figure behind is a partial arc, not a second whole person.** A
+ * complete second body makes the pair read as a *group* — a members list — where
+ * what is meant is *you, and someone*.
+ */
+export function PortalGlyph() {
+  return (
+    <Glyph>
+      <circle cx="7.75" cy="7" r="2.9" />
+      <path d="M2.25 16.75c0-2.75 2.55-4.5 5.5-4.5s5.5 1.75 5.5 4.5" />
+      <circle cx="13.9" cy="6" r="2.35" />
+      <path d="M13.6 12.3c2.55.2 4.15 1.8 4.15 4.45" />
+    </Glyph>
+  )
+}

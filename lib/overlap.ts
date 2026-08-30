@@ -418,6 +418,103 @@ export async function runOverlapForNewMutual(
 /* -------------------------------------------------------------------------- */
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The portal's register — 30 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **The same events, said in two words instead of a sentence.**
+ * `notificationCopy` below writes a standalone line — it has to name the thing,
+ * because nothing else on the screen does. **A portal row already shows the
+ * capture**, so the title is on the row and what is left to say is who, and in
+ * what tense.
+ *
+ * ⚠ **Both registers live here, and that is the point.** §6 says this module is
+ * the single owner of everything about a match and warns that the payload is
+ * what drifts hardest, *because it is what the UI reads*. Two ways of saying one
+ * event kept in two files is the drift; kept adjacent, a kind added to
+ * `NotificationKind` fails to compile in both at once.
+ *
+ * ⚠ **The tense IS the product** — §5 of `phase-2-convergence.md`. Four
+ * sentences, no vocabulary to learn:
+ *
+ * | their state | says |
+ * |---|---|
+ * | both still want it | **Sam too.** |
+ * | they have done it | **Sam has.** |
+ * | you have done it, they want to | **Sam wants to.** |
+ * | both done | **Sam has too.** |
+ *
+ * ⚠⚠ **The fourth row cannot fire, and that is `classify`'s doing rather than an
+ * omission here.** `go_back_to × go_back_to` produces no match at all — *both
+ * know* — so there is no notification to carry *Sam has too.* **Do not add the
+ * sentence to make the table complete**: the sentence would be true and the
+ * event would still not exist. If it is ever wanted, it is a row in `classify`
+ * and a new `NotificationKind`, decided there.
+ *
+ * ⚠ **`lend` has no row in that table and gets one written here**, flagged the
+ * same way `notificationCopy`'s unspecified lines are. It is the strongest
+ * notification in the app and the portal cannot be the one surface that stays
+ * silent about it.
+ *
+ * ⚠ **Everyone is named** — §5, and it follows from §10's scale note: the
+ * mechanic assumes small clusters, so *Sam and Ali too.* is right and *Sam and 4
+ * others* is a metric. **There is no cut-off and there must not be one**; the
+ * day a line has eleven names on it, the honest fix is that the app has grown a
+ * shape this design did not predict, not that the eleventh person is noise.
+ */
+export function portalSentence(
+  kind: NotificationKind,
+  names: readonly string[],
+  guideHolder = false,
+): string {
+  const who = listNames(names)
+  const many = names.length > 1
+
+  switch (kind) {
+    case 'convergence':
+      return `${who} too.`
+    case 'guide':
+      /*
+        The two sides of one event, and they say opposite things. The guide is
+        the one who would go back to it, so the other person is the one who
+        wants to; a reader on the other side of the same row has already done
+        the thing and is being told who has not.
+      */
+      return guideHolder ? `${who} ${many ? 'want' : 'wants'} to.` : `${who} ${many ? 'have' : 'has'}.`
+    /* Not in §5's table — see the note above. */
+    case 'lend':
+      return `${who} ${many ? 'have' : 'has'} one.`
+    /*
+      ⚠ **Three kinds cannot reach a portal row and say so rather than falling
+      through.** The portal is built by joining a notification to *the viewer's
+      own capture for the same possibility*, and these three are not about a
+      possibility at all: two are about a swap and `landed` predates the capture
+      model. They are unreachable by the join rather than filtered out, and this
+      arm exists so that adding a kind which IS about a possibility fails here
+      loudly instead of rendering an empty sentence.
+    */
+    case 'swap_invite':
+    case 'swap_revealed':
+    case 'landed':
+      return `${who}.`
+  }
+}
+
+/**
+ * *Sam*, *Sam and Ali*, *Sam, Ali and Jo*.
+ *
+ * ⚠ **An Oxford-less serial comma and a final *and*, with no `Intl.ListFormat`.**
+ * That API is locale-aware and this copy is not — the sentences around it are
+ * written in English and would have to be translated as sentences, so a
+ * conjunction that localised on its own would be the one word in the line
+ * agreeing with a locale the rest of it ignores.
+ */
+function listNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? 'Someone'
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+}
+
+/**
  * The two lines given verbatim in the brief are `convergence` and the
  * guide-side of `guide`. The counterpart lines marked below were not specified
  * — written to the simplest thing that reads right, and flagged.

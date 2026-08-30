@@ -24,6 +24,8 @@ import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
 import { Ask, Console } from './console'
 import { Foot, ToolStack } from './foot'
+import { Portal } from './portal'
+import { emptyPortalLineAction, portalAction, type PortalLineView } from '@/app/actions/portal'
 import { AttachGlyph, LinkGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { useRowSwipe } from './row-swipe'
@@ -350,6 +352,7 @@ export function PageScreen({
   lines: seed,
   todayKey,
   undoWindowMs,
+  portalWaiting,
   earlier: earlierSeed,
   imagesOn,
 }: {
@@ -385,6 +388,16 @@ export function PageScreen({
    * long the glyph is lit.
    */
   undoWindowMs: number
+  /**
+   * **Is there anything in the portal — one bit, from the server.**
+   *
+   * ⚠ **It comes with the document because the glyph has to be right on the
+   * first paint.** The rows do not: they are fetched when the portal opens, so
+   * a join to `notifications` never stands in front of a capture. See
+   * `hasPortalLines`, which returns a boolean rather than a count so that
+   * nothing downstream can display one — §5: *never a count.*
+   */
+  portalWaiting: boolean
 }) {
   const [lines, setLines] = useState<Line[]>(() =>
     seed.map((l) => ({ ...l, key: l.id })),
@@ -410,6 +423,26 @@ export function PageScreen({
    * has one more job to lose.
    */
   const [opened, setOpened] = useState<string | null>(null)
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   *  The portal — Phase 2 step 3
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * **What happened while you were away**, and the third occupant of the one
+   * scrim. `portal` is whether the box is up; the rows are fetched when it
+   * opens rather than handed down with the page, so nothing about
+   * `notifications` stands in front of a capture landing.
+   *
+   * ⚠ **`waiting` starts as the server's bit and is then the client's.** The
+   * glyph has to be lit correctly on the first paint, which only the server can
+   * know — and it has to go dark the moment the last row is emptied, which only
+   * the client can. One value, two writers, in that order.
+   */
+  const [portal, setPortal] = useState(false)
+  const [portalLines, setPortalLines] = useState<PortalLineView[]>([])
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalFailed, setPortalFailed] = useState<string | null>(null)
+  const [waiting, setWaiting] = useState(portalWaiting)
   /*
     ⚠ **There is no `focused` state on this page any more, and that is the end
     of a long argument.** Four things were keyed to focus and all four had to
@@ -1569,15 +1602,26 @@ export function PageScreen({
    * is the keyboard's way to reach the same door.
    */
   useEffect(() => {
-    if (opened === null || editing !== null) return
+    /*
+      ⚠ **The portal is a second reason to listen, and it steps the same way.**
+      A console open inside the portal closes first and the box stays; a second
+      press closes the box. That is `Escape` meaning *cancel this* rather than
+      *cancel everything*, which is the rule this listener was written around —
+      the portal just gives it one more rung.
+    */
+    if ((opened === null && !portal) || editing !== null) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.isComposing) return
-      setOpened(null)
-      setAsking(null)
+      if (opened !== null) {
+        setOpened(null)
+        setAsking(null)
+        return
+      }
+      setPortal(false)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [opened, editing])
+  }, [opened, editing, portal])
 
   /**
    * ⚠ **Tapping the words opens the line's console, and that is all it ever
@@ -1653,6 +1697,89 @@ export function PageScreen({
    * genuinely not per-line: **one control that starts a capture, and one that
    * goes somewhere.**
    */
+  /**
+   * **Open the portal, and read it.**
+   *
+   * ⚠ **One scrim, one occupant — so this closes the other two on the way in.**
+   * The console and the writing sheet already could not be open together;
+   * `dismiss` names the door it belongs to at the moment the scrim is tapped,
+   * and a third occupant that did not evict the others would make that
+   * arbitration rather than naming.
+   *
+   * ⚠ **It re-reads every time, and that is what *it empties* looks like from
+   * here.** A row opened a minute ago was marked read on the server; the list is
+   * only correct if it is asked again. Caching it would make the emptying a
+   * client-side filter — a second place that knows what is unread.
+   */
+  async function openPortal() {
+    if (writing) leave()
+    setOpened(null)
+    setAsking(null)
+    setPortal(true)
+    setPortalLoading(true)
+    setPortalFailed(null)
+
+    const result = await portalAction()
+    setPortalLoading(false)
+    if (!result.ok) {
+      setPortalFailed(result.message)
+      return
+    }
+    setPortalLines(result.value)
+    /*
+      ⚠ **The bit is corrected by the read, in both directions.** A portal opened
+      on a stale lit glyph shows nothing and turns it off; one that came back
+      full turns it on. The server's answer and this one cannot disagree for
+      longer than the read takes.
+    */
+    setWaiting(result.value.length > 0)
+  }
+
+  /**
+   * **Opening a line empties it, and opens its console.**
+   *
+   * ⚠ **The write is not awaited and nothing waits on it.** §5's *it empties* is
+   * about the next arrival, not this one: the row stays under the finger while
+   * its console is open, because a list that reflowed on the tap would move the
+   * thing being opened. If the write fails the rows stay unread and the portal
+   * shows them again, which is the correct behaviour for a write that did not
+   * land — see `emptyPortalLineAction`, which says why it has no visible
+   * failure.
+   *
+   * ⚠ **The bit goes dark on the LAST row, here rather than on the next read.**
+   * Somebody who opens every row and then closes the portal must not find the
+   * glyph still lit; that would be the one thing §5 forbids the door from
+   * saying, said wrongly.
+   */
+  function openPortalLine(line: PortalLineView) {
+    if (opened === line.id) {
+      setOpened(null)
+      return
+    }
+    setOpened(line.id)
+    setAsking(null)
+    if (line.notificationIds.length > 0) {
+      void emptyPortalLineAction(line.notificationIds)
+      setPortalLines((all) =>
+        all.map((l) => (l.id === line.id ? { ...l, notificationIds: [] } : l)),
+      )
+      setWaiting(
+        portalLines.some((l) => l.id !== line.id && l.notificationIds.length > 0),
+      )
+    }
+  }
+
+  /**
+   * **Leaving the portal, which is the same gesture as leaving everything
+   * else.** A tap on the paper, or `Escape`. The console inside it goes with
+   * it: it belongs to a row that is about to stop being on screen.
+   */
+  function closePortal() {
+    setPortal(false)
+    setOpened(null)
+    setAsking(null)
+  }
+
   const tools = {
     /*
       ⚠ **Never null.** The other entry here can be off, because it needs
@@ -1672,6 +1799,13 @@ export function PageScreen({
       one. Named rather than left to be found.
     */
     searchable: !empty,
+    /*
+      ⚠ **§2 of the Phase 2 brief puts this at the TOP and it is at the bottom —
+      directed, against that law, on 30 August.** The cost is written down in
+      `foot.tsx` beside the control rather than argued here.
+    */
+    portal: openPortal,
+    portalLit: waiting,
   }
 
   /**
@@ -1787,7 +1921,15 @@ export function PageScreen({
    * to the strip rather than opening a field in here.
    */
   function dismiss() {
-    if (writing) leave()
+    /*
+      ⚠ **The portal is asked about first, because it can hold a console.** A
+      row's console inside the portal is the innermost thing open, and a tap on
+      the scrim outside the card means *leave the portal* — the console goes with
+      the row it belongs to. Asking about `opened` first would close the
+      console and leave the box up, which is a tap that appears to do nothing.
+    */
+    if (portal) closePortal()
+    else if (writing) leave()
     else close()
   }
 
@@ -2149,11 +2291,98 @@ export function PageScreen({
         className={`fixed inset-0 z-5 transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
           writing
             ? 'bg-[var(--scrim-tint)] opacity-100 [touch-action:none]'
-            : opened !== null
+            : portal
+              ? /*
+                  ⚠ **The portal's branch has no `stack:` suppression, and that
+                  is the one way it differs from the console's.** The console
+                  expands a row in place on the desk, so the record around it is
+                  exactly what a reader wants to keep seeing; the portal is a
+                  floating card at every width and has to sink what is behind it
+                  or it reads as pasted on. Same tint-free blur — see the
+                  paragraphs above for why taking the tint off is what makes
+                  glass visible at all.
+                */
+                'opacity-100 backdrop-blur-[var(--glass-blur)] [touch-action:none]'
+              : opened !== null
               ? 'stack:pointer-events-none stack:opacity-0 opacity-100 backdrop-blur-[var(--glass-blur)] [touch-action:none]'
               : 'pointer-events-none opacity-0'
         }`}
       />
+
+      {/*
+        ─────────────────────────────────────────────────────────────────────
+         The portal — Phase 2 step 3
+        ─────────────────────────────────────────────────────────────────────
+
+        **The first surface in this app that reads `notifications`.** The
+        fan-out has been deployed and running since Phase 2's engine landed and
+        nothing has ever looked at what it wrote; this is what does.
+
+        ⚠ **Mounted only while it is open**, like the console and unlike the
+        strip's field. There is nothing in here that has to exist before the
+        gesture that reaches it — no field to focus synchronously — so a portal
+        that is not open is a portal that is not there.
+
+        ⚠ **`z-10`: over the scrim, under the two bars.** The console's own
+        rule and for the console's reason — the `+` stays reachable at
+        `z-20`, so the way out of *looking at what happened* into *writing
+        the next thing* is the same one tap it is from everywhere else.
+
+        ⚠ **The console inside it is the PAGE'S console, handed down.** The
+        portal decides where it goes; every control on it — cross off, rewrite,
+        settle — is the same handler the record uses, acting on the same capture
+        through the same action. A portal that built its own would be a second
+        implementation of every mutation on this screen, which is the drift the
+        render prop exists to prevent.
+      */}
+      {portal && (
+        <Portal
+          lines={portalLines}
+          loading={portalLoading}
+          failed={portalFailed}
+          onOpen={openPortalLine}
+        >
+          {(line) =>
+            opened === line.id && (
+              <Console
+                line={line}
+                asking={asking === line.id}
+                /*
+                  ⚠ **Read off the line the portal holds, not off the record.**
+                  The capture may be from March and outside the fifty lines this
+                  page loaded, so `lines` cannot answer for it — and a lookup
+                  that fell back to `false` would draw a crossed-off capture as
+                  live in the one place somebody was told to come and look at it.
+                */
+                crossedOff={line.state === 'dropped'}
+                onCrossOff={() => crossOff({ ...line, key: line.id })}
+                onRewrite={
+                  editing === null
+                    ? () => {
+                        /*
+                          ⚠ **The rewrite closes the portal on the way out.** Its
+                          words go to the writing strip, which is behind this box
+                          — so a rewrite that left the portal up would put the
+                          caret under a card. `startEdit` raises the field; this
+                          is what uncovers it.
+                        */
+                        closePortal()
+                        startEdit({ ...line, key: line.id })
+                      }
+                    : null
+                }
+                onSettle={() => askAgain({ ...line, key: line.id })}
+                onAgain={() => settle({ ...line, key: line.id }, true)}
+                onDone={() => settle({ ...line, key: line.id }, false)}
+                onAcceptOffer={() => acceptOffer({ ...line, key: line.id })}
+                onDeclineOffer={() => declineOffer({ ...line, key: line.id })}
+                onOpenPhoto={() => setLooking({ ...line, key: line.id })}
+                linkLabel={linkLabel}
+              />
+            )
+          }
+        </Portal>
+      )}
 
       {/*
         The floor of the layout viewport, as a thing that can be measured — see
