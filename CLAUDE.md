@@ -223,16 +223,51 @@ unreferenced `capture-provider.tsx` are deleted.**
   the rule the whole design rests on: **the same rectangle whichever line was
   tapped**, so the `×` is somewhere a thumb can learn.
 
-⚠ **The desk's brighter type and mark is an OPEN NOTE, not a task, and nothing is
-blocked on it — raised 30 August.** With the ground lifted off true black to
-`#14140f`, every ratio in the palette dropped by about 12% and the reported
-feeling is that the wordmark and the text may want to come back up. **Nothing has
-been changed and nothing should be until it has been looked at on the real
-desk** — the measurements are in the `--color-bg` override in `globals.css` (text
-16.83 → 14.81, chrome 10.98 → 9.66, the lacquer red 4.26 → **3.75**, which is the
-tightest and the first thing to re-measure). ⚠ **If it is done, lift the INK and
-not the ground**: the ground was picked by looking at three candidates on the
-real page, and two lighter ones were refused. See `docs/decisions.md`.
+⚠ **The desk's ink is LIFTED, and the open note above it is closed — 30 August.**
+It was raised the same day the ground went to `#14140f`: every ratio in the
+palette had dropped by about 12% with no colour changed, the feeling was that the
+type and the mark may want to come back up, and the note said *nothing moves
+until it has been looked at on the real desk*. It was, and it was **reported
+dull**. The note also said what the answer would have to be, and that is what was
+built: **lift the INK, never the ground.**
+
+- ⚠ **`--color-text` `#eae6da` → `#f9f4e8` on the desk, and `--color-chrome`
+  `#e8b34a` → `#f7bf4f` with it.** Same chromaticity, more of it — the linear RGB
+  scaled by one factor, which is the move `--color-chrome` itself made out of
+  `--color-accent`. **Not a mix toward white**: an sRGB mix is a gamma-space lerp
+  and would take the warmth out (R−B from 16 to about 5), and warmth is most of
+  what makes this page read as printed rather than rendered. It measures **17**.
+- ⚠ **The target is the RATIO and never the pigment.** 16.832:1 for the ink
+  against the charcoal, against the base ink's 16.830:1 against black; 11.01
+  against 10.98 for the chrome. **The desk now reads as the handset reads**,
+  which is what *the desk is the same design, four-thirds the size* asks of a
+  colour as much as of a size.
+- ⚠ **The chrome went because a palette moves as a palette.** What was reported
+  was the text; on black the chrome was pitched at 65% of the ink's ratio *by
+  choice*, and lifting only the ink drops it to 57% and quietly re-pitches the one
+  colour a thumb aims at. **If the lit brass now reads too loud, that one line
+  comes out and the ink stays.**
+- ⚠ **`--color-rule` and `--color-surface` are mixes of the ink, so their
+  percentages had to come down** — 17.5% → 16.3% and 10.5% → 10%, holding 1.588
+  and 1.285 against the handset's 1.583 and 1.286. Left alone they would have been
+  drawn heavier than the handset's for no reason but the ink behind them moving.
+  The hairline's hex barely changes (`#393933` → `#393932`), which is what a
+  token that is mostly ground looks like when its ratio is held.
+- **Nothing else moved, and the numbers are stated in the code so nobody
+  re-derives them:** the lacquer red sits at **3.75** on this ground (4.26 on
+  black), the live red **5.21** (5.92), the listed green **13.80** (15.69). All
+  three clear their own floors, and all three are scarce *state* colours whose
+  value was chosen rather than derived — restoring them means picking three
+  colours nobody has looked at. ⚠ **The lacquer red is still the tightest and the
+  first to re-measure if the ground moves again.**
+- **Measured by `node_modules/.probe/deskink.mjs`**, which reads the ratios off
+  the live page — the handset's palette is the reference and is asserted
+  untouched, the boundary is walked at 1152/1151, and `--color-muted` is checked
+  to have followed the ink with nothing declared. ⚠ **It resolves `color-mix()`
+  by painting it**, because a custom property comes back as source text, and it
+  parses **both** `rgb()` and `color(srgb …)` — the first version read only the
+  first form and turned two tokens into eight-digit ratios instead of failing
+  honestly. `deskinklook.mjs` renders the before/after.
 
 ⚠ **Production was a 500 for every signed-in request on the morning of 25
 August, and the cause is the rule this file states.** Three commits selecting

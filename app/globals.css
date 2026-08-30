@@ -4406,25 +4406,99 @@
        * asks of a graphical control), the listed green 15.69 → **13.80**. Every
        * floor in the palette's own notes still holds; the red is the tightest and
        * is the first thing to re-measure if the ground is lifted again.
+       *
+       * ⚠ **The first two of those were reported as dull on the real desk and
+       * are restored below — 30 August.** The ink and the chrome are lifted to
+       * hold their original ratios against this ground; the reds and the green
+       * are not, and the paragraph above is the reason they can be left. **This
+       * list is the record of what the ground COST, not of what the page now
+       * measures.** See `--color-text`.
        */
       --color-bg: #14140f;
+      /**
+       * ⚠ **THE INK IS LIFTED TO MEET THE GROUND — 30 August, and it is the
+       * open note above being closed rather than a new idea.** That note said
+       * the type and the mark *may* want to come back up, that nothing should
+       * move until it had been looked at on the real desk, and that if it were
+       * done the thing to lift is **the ink and not the ground**. It was looked
+       * at on the real desk and reported dull. This is that, and only that.
+       *
+       * **`#eae6da` → `#f9f4e8`: the same ink carried up in luminance with its
+       * chromaticity held.** Not mixed toward white — an sRGB mix with white is
+       * a gamma-space lerp that pulls the warmth out (R−B would fall from 16 to
+       * about 5) — but the linear RGB scaled by one factor, which is the move
+       * `--color-chrome` made out of `--color-accent`: same hue, more of it.
+       * Warmth R−B is **17** against the base's 16.
+       *
+       * ⚠ **The target is the RATIO, never the pigment, and that is the whole
+       * argument.** The palette's floors were picked against black; the ground
+       * moved 8% off it and every one of them dropped by about 12% without a
+       * single colour being changed. **16.832:1 against `#14140f`, against the
+       * base ink's 16.830:1 against `#000000`** — so the desk reads as the
+       * handset reads, which is what *the desk is the same design, four-thirds
+       * the size* asks of a colour as much as of a size.
+       *
+       * ⚠ **Do not solve a dull desk by lifting `--color-bg`.** Three grounds
+       * were rendered on the real page and this one was chosen; lifting it again
+       * re-opens that decision and drops every ratio a second time.
+       *
+       * ⚠ **The two mixes below are of THIS ink, so their percentages had to
+       * come down.** They are unchanged in job and in ratio and changed in
+       * number, which is the derivation working rather than failing: left at
+       * 17.5% and 10.5% the hairline would read 1.644 against its 1.583 and the
+       * card 1.316 against its 1.286 — both drawn heavier than the handset's,
+       * for no reason but the ink behind them having moved.
+       * `node_modules/.probe/deskink.mjs` solves and asserts all three.
+       */
+      --color-text: #f9f4e8;
       /*
-        The hairline: `--color-text` at 17.5% over the desk's ground, which is
-        `#393933` and **1.59:1 against it** — the 1.583:1 the base's `#30302b`
+        The hairline: `--color-text` at 16.3% over the desk's ground, which is
+        `#393932` and **1.588:1 against it** — the 1.583:1 the base's `#30302b`
         holds against black. A fixed hex would have kept its pigment and lost its
         job: the same ink on a ground 8% off the floor reads as a rule drawn
         heavier than the one on the phone.
+
+        ⚠ **17.5% until the ink was lifted, and the hex barely moved** — `#393933`
+        to `#393932`. That is the point: a hairline is mostly ground, so holding
+        its *ratio* through a change to the ink costs a percentage point and
+        changes almost nothing on the glass. Solve it again if either end moves.
       */
-      --color-rule: color-mix(in srgb, var(--color-text) 17.5%, var(--color-bg));
+      --color-rule: color-mix(in srgb, var(--color-text) 16.3%, var(--color-bg));
       /*
-        Cards and the capture field: 10.5% over the ground, `#2a2a24`, **1.28:1**
+        Cards and the capture field: 10% over the ground, `#2b2a25`, **1.285:1**
         against it — the base's 1.286:1. ⚠ **This is the token the base warns
         about**: it separates by barely a quarter, and it only works at all
         because warm surfaces read as raised where cool ones read as another shade
         of the same thing. Holding the ratio rather than the pigment is the only
-        way it survives a ground that moved.
+        way it survives a ground that moved — or an ink that did.
       */
-      --color-surface: color-mix(in srgb, var(--color-text) 10.5%, var(--color-bg));
+      --color-surface: color-mix(in srgb, var(--color-text) 10%, var(--color-bg));
+      /**
+       * ⚠ **The chrome goes up with the ink, and it is the other half of the
+       * same note — 30 August.** The note names *the wordmark and the text*
+       * together, and they are one decision: on black the chrome held 10.98:1
+       * against the ink's 16.83, so it was pitched at 65% of the ink's ratio by
+       * choice. Lifting only the ink drops that to 57% and quietly re-pitches
+       * the one colour a thumb aims at. `#e8b34a` → `#f7bf4f`, the same
+       * chromaticity scaled, **11.01:1 against `#14140f`**.
+       *
+       * ⚠ **What was reported was the TEXT.** This is here because a palette
+       * moves as a palette, not because the mark was complained about — if the
+       * lit brass now reads too loud on the desk, this line is the one to take
+       * out, and the ink above stays.
+       *
+       * ⚠ **Nothing else in the palette is touched, and the numbers are stated
+       * so the next reader does not have to re-derive them.** The lacquer red
+       * sits at **3.75:1** on this ground (4.26 on black), the live red at
+       * **5.21** (5.92) and the listed green at **13.80** (15.69). All three
+       * still clear the floors their own notes name — 3:1 for a graphical
+       * control — and all three are scarce *state* colours whose absolute value
+       * was chosen rather than derived, so restoring their ratios means picking
+       * three colours nobody has looked at on the real desk. ⚠ **The lacquer
+       * red is the tightest and is the first to re-measure if this ground moves
+       * again.**
+       */
+      --color-chrome: #f7bf4f;
 
       --foot-height: 3rem;
 

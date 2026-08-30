@@ -8313,13 +8313,19 @@ only carrier of a distinction, so whatever the palette says must also be said by
 a word or a shape, and every colour must clear contrast on matte black — the
 brass pair is 10.98:1 and 7.73:1, which is the bar this page has set itself.
 
-## OPEN NOTE — the desk's type and mark may want to come back up — 30 August
+## The desk's ink is lifted — raised as a note, CLOSED the same day — 30 August
 
-**Raised by the user, as a note rather than a task: "we changed the background
+**Raised by the user as a note rather than a task: "we changed the background
 colour of the desktop version so it's less oppressive but may need to tweak the
-logo and text colours so they're brighter."** Nothing has been changed. Nothing
-is blocked on it. This exists so the observation is not lost and so whoever picks
-it up starts from the measurements rather than from a colour picker.
+logo and text colours so they're brighter."** It was left alone deliberately,
+with the measurements written down, because the only thing that could settle it
+was the real desk.
+
+**The real desk answered: "the text on the desktop looks dull ever since we
+changed the background colour."** So this section is now the record of a closed
+decision. The note's own instruction — *lift the ink and not the ground* — is
+what was built, and the table below is what the ground cost rather than what the
+page now measures.
 
 ### What actually happened to the numbers
 
@@ -8341,7 +8347,74 @@ Every floor in the palette's own notes still holds — the mark is text and clea
 out of spec. `node_modules/.probe/deskpalette.mjs` renders the alternatives and
 `deskground.mjs` asserts the ratios.
 
-### If it is done, lift the INK and not the ground
+### What was built: the ink and the chrome, holding their ratios
+
+**`--color-text` `#eae6da` → `#f9f4e8`, `--color-chrome` `#e8b34a` → `#f7bf4f`,
+inside the desk's own `@media` block.** Both are the same colour carried up in
+luminance with its chromaticity held — the linear RGB scaled by one factor, which
+is the move `--color-chrome` itself made out of `--color-accent`.
+
+⚠ **Not a mix toward white.** An sRGB `color-mix` is a gamma-space lerp, so
+mixing the ink with white to reach the same luminance would have pulled its
+warmth from R−B 16 down to about 5 — and warmth is most of what makes this page
+read as printed rather than rendered, which is the whole argument in
+`--color-text`'s own note. The scaled ink measures **17**.
+
+⚠ **The target is the ratio the palette was picked at, never the pigment.** The
+ink holds **16.832:1** against `#14140f` where the base ink holds 16.830:1
+against `#000000`; the chrome **11.01** against 10.98. That is what makes this a
+restoration rather than a taste: the desk reads as the handset reads, which is
+what *the desk is the same design, four-thirds the size* asks of a colour exactly
+as it asks it of a size.
+
+⚠ **The chrome went with the text although only the text was reported, and the
+reason is a relationship rather than a preference.** On black the chrome was
+pitched at 65% of the ink's ratio, deliberately — loud enough to aim at, quiet
+enough not to be the page. Lifting the ink alone drops it to 57% and re-pitches
+the one colour a thumb aims at, as a side effect of a change to the text. **If
+the lit brass reads too loud on the desk, that one line comes out and the ink
+stays.**
+
+### The two mixes had to move, and that is the derivation working
+
+`--color-rule` and `--color-surface` on the desk are `color-mix`es **of the
+ink**, so a brighter ink made both heavier: at their old percentages the hairline
+would have read 1.644 against its 1.583 and the card 1.316 against its 1.286.
+They are now **16.3%** and **10%**, holding 1.588 and 1.285.
+
+⚠ **The hairline's hex barely changed — `#393933` → `#393932`.** That is what a
+token that is mostly ground looks like when its ratio is held through a change at
+the other end: a percentage point of arithmetic, and nothing on the glass. It is
+also why this is worth doing rather than eyeballing — the number that moved is
+not the number anybody would have looked at.
+
+### What was NOT lifted, and why the tension resolved
+
+The lacquer red stays at **3.75** on this ground, the live red at **5.21**, the
+listed green at **13.80**. All three clear the floors their own notes name.
+
+The note below framed this as the actual decision: lift the red and it stops
+being the same red as the handset's; leave it and the gap to the ink widens.
+**It resolved by noticing the two groups are different kinds of colour.** The ink
+and the chrome are the page's *materials* — everything is drawn in one or the
+other, and both are pitched against the ground, so when the ground moved they
+were the things that lost. The reds and the green are scarce **state** colours
+whose absolute value was chosen and whose floor is a WCAG threshold, not a
+relationship to the ink. Restoring their ratios means picking three colours
+nobody has looked at on the real desk, to close a gap nobody has reported.
+
+### The ground still does not move
+
+⚠ **The ground was chosen by looking at three candidates on the real page at
+1440, and two lighter ones were refused** — *paper* (the palette inverted, the
+handset's aged-paper ink as the ground) and *newsprint* (the same onto manila).
+That is a record of what was considered, not a ladder to climb later: reopening
+either means re-picking the brass, the lacquer red and the tool stack's glass
+edge, all of which they measured out. **A dull desk is not answered by lifting
+`--color-bg` a second time** — that re-opens the decision and drops every ratio
+again.
+
+### The original note, kept because the rule in it still holds
 
 ⚠ **The ground was chosen by looking at three candidates on the real page at
 1440, and two lighter ones were refused** — *paper* (the palette inverted, the
@@ -8358,18 +8431,29 @@ the 30 August change was that the phone keeps its true black. A lift applied at
 the base would reach the one surface it was told not to.
 
 ⚠ **The lacquer red is the tightest and is the first thing to re-measure**, at
-3.75 against a 3:1 floor. If the ink is lifted and the red is not, the gap
-between them widens; if the red is lifted too, it stops being the same red as the
-handset's, which is a second palette. That tension is the actual decision here
-and it is why this is a note rather than a one-line change.
+3.75 against a 3:1 floor — still true, and still the first thing to look at if
+the ground ever moves again.
 
-### The half nobody has looked at
+⚠ **Measured by `node_modules/.probe/deskink.mjs`.** It reads the ratios off the
+live page rather than recomputing the source: the handset's palette is the
+reference and is asserted untouched, the boundary is walked at 1152 and 1151, and
+`--color-muted` is checked to have followed the ink with nothing declared — which
+is its own note paying off. **It resolves `color-mix()` by painting it**, because
+a custom property comes back from `getPropertyValue` as source text. ⚠ **And it
+parses both `rgb()` and `color(srgb …)`**: the first version read only the first
+form, and the two mixed tokens came back as eight-digit ratios rather than
+failing in a recognisable way. A wrong number that cannot be read as wrong is
+worse than a failure. `deskinklook.mjs` renders the before/after pair.
+
+### The half nobody has looked at, and the lift made it a third thing
 
 ⚠ **915–1152px is part-grown type on the handset's BLACK ground**, because the
 colour boundary is the layout's (72rem) and the type ramp's is 57.207rem. An iPad
-in landscape lands there. If the desk's ink is lifted, that band gets a third
-combination nobody has seen. `CLAUDE.md` already flags the band as never having
-been on hardware.
+in landscape lands there. **The desk's ink is now lifted, so that band is a third
+combination nobody has seen** — handset ground, handset ink, desk-ish type size.
+`CLAUDE.md` already flags the band as never having been on hardware, and this
+does not make it worse than it was: the band was always the handset's palette,
+and it still is, whole.
 
 ## The console, and what a tap on a line means now — 30 August
 
