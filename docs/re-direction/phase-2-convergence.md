@@ -29,9 +29,9 @@ wins and this file is wrong.
 | | |
 |---|---|
 | The console | **BUILT — 30 August.** §1 is deleted below; the code and its argument are `components/console.tsx` and `console-sheet` in `globals.css` |
-| Swipe to cross off / settle | **BUILT — 30 August.** §3 is struck below; `components/row-swipe.ts` and `touch-action` in `page-row` |
+| Swipe to cross off / settle | **BUILT, then REOPENED the same day** — §3 struck, §3b is the new direction. ⚠ **Settling must cost ONE beat and BOTH directions need an undo.** Not built |
 | Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
-| The notification portal | designed, not built — **next** |
+| The notification portal | designed, not built |
 | The convergence mark on a line | designed, not built |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
@@ -148,6 +148,76 @@ events.
 
 ---
 
+
+---
+
+## ⚠⚠ 3b. THE SWIPES ARE REOPENED — directed 30 August, NOT BUILT
+
+**Two directions, given after using the swipes:**
+
+1. ⚠ **Settling must cost ONE BEAT.** It costs two today — swipe, then answer
+   *Again?* with a tap — and that is the swipe failing its own argument. The
+   whole case for a gesture is that it is cheaper than the console; one swipe
+   plus one aimed tap is barely cheaper than a tap plus an aimed tap.
+2. ⚠ **Both directions must afford an UNDO.** Left-to-right and right-to-left
+   alike: after a swipe, the person must be able to take the decision back.
+
+**These two are one change, not two.** The only reason settling asks a question
+is that settling has two answers and no undo — *I would do this again* against
+*that is dealt with* — so a wrong swipe would put a line in the tray with no way
+back. **An undo removes that objection**, and with it the question, and with it
+the second beat. Build them together or neither works.
+
+### What has to be decided when this is built
+
+⚠ **Settling still has two answers, and one swipe cannot carry both.** Removing
+the question does not remove the fact. The options, and none is chosen:
+
+- **A default plus a correction.** The swipe settles with one answer and the undo
+  band carries both the way back *and* the other answer — *Settled. Undo · Not
+  again.* That gets one beat, keeps both claims reachable, and costs no aiming
+  unless somebody wants the non-default. **This is the recommendation.** Which
+  answer is the default is itself open; *again* is the app's own name and is the
+  likelier reading of a line somebody kept.
+- **The console keeps the distinction** and the swipe always settles the same
+  way. Cheapest to build; loses the second claim for anyone who never opens a
+  console.
+- **Distance decides.** A short swipe means one and a long one the other. Ruled
+  out on sight: it is a modifier gesture, which this page has refused three times
+  — see `pick`'s note in `page-screen.tsx`.
+
+### What the undo has to be
+
+⚠ **There is already an undo on this page and it is the pattern to follow, not to
+copy.** `LineUndo` gives ten seconds after a capture lands, in the line's own
+slot, and it exists because *the undo belongs beside the line it takes back*.
+
+- **Crossing off is its own inverse and still needs the affordance**, because a
+  gesture nobody knows is reversible reads as destructive. The row stays on the
+  page struck through, so the undo has somewhere to live.
+- ⚠ **Settling is the hard one: the row LEAVES the page.** There is nowhere
+  beside the line to put an undo, because there is no line. Either the row is
+  held in place for the window and removed when it closes, or the undo goes
+  somewhere that is not the row. Holding it in place is more honest and matches
+  `undoCapture`'s own precedent — the delete is bounded in SQL against
+  `created_at`, so the client's clock is never trusted.
+- ⚠ **Do not reach for a toast.** The page has no such surface and §11 spends no
+  colour on one; the existing undo is a glyph on a row, and a second vocabulary
+  for the same act is how a page stops being learnable.
+- ⚠ **The ten-second window is already a decided number** (§5's one exception to
+  *nothing is ever deleted*). Reuse it rather than picking a second one.
+
+### What it costs, stated before it is built
+
+- **`settle` currently removes the row optimistically** and puts it back only on
+  a server failure, by the index it held. An undo window means the row is held
+  deliberately, which is a third state for that row — settled-but-reversible —
+  and the resume gate must treat it as unsettled, exactly as it already treats an
+  open undo window.
+- **`asking` and `askAgain` may be deleted with the question**, and with them the
+  record's inline *Again?*. The console's settle glyph would then settle directly
+  too, or keep the question — **they must not disagree**, which is the rule that
+  put `askAgain` in one place to begin with.
 ## ~~4. Haptics are the eyes-free channel~~ — BUILT, and DEAD ON iOS
 
 **The three patterns are in `lib/haptics.ts` and they run on Android only.** A
@@ -300,9 +370,11 @@ for convergence on a line. Nothing is the correct rendering of nothing.
    `film-screen.tsx` and the dead `capture-provider.tsx` beside it are deleted,
    which also closes item 3 of Phase 1's outstanding list — **the thing detail
    view**.
-2. ~~**Swipes**, and delete `picked`.~~ **DONE, 30 August.** The state was
-   already gone with the console; the gesture is `components/row-swipe.ts`. §3
-   and §4 are struck above.
+2. ~~**Swipes**, and delete `picked`.~~ **DONE, 30 August** — the state was
+   already gone with the console; the gesture is `components/row-swipe.ts`. ⚠
+   **REOPENED the same day and NOT finished: settling must cost one beat, and
+   both directions must afford an undo. See §3b, which is the next thing to
+   build.**
 3. **The portal**, reading `notifications` — which also proves the fan-out end to
    end with two accounts for the first time.
 4. **The mark**, last, once there is a real convergence to look at and it is

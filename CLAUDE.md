@@ -66,6 +66,19 @@ specification, which now carries this as Phase 2's status.
 verbs used fifty times a week are gestures on the row now, and the console is the
 once-a-week question.
 
+⚠⚠ **AND IT IS REOPENED, the same day, BEFORE THE PORTAL — read this first.**
+Directed after use: **settling must cost ONE beat**, and **both directions must
+afford an undo**. They are one change, not two — the only reason settling asks
+*Again?* is that it has two answers and no undo, so a wrong swipe would put a line
+in the tray with no way back. **An undo removes that objection, and with it the
+question, and with it the second beat.** Removing the question does not remove the
+fact that settling has two answers; the recommendation is a default plus a
+correction in the undo band — *Settled. Undo · Not again.* The full account, the
+options, and what the undo has to be (⚠ **the settled row LEAVES the page, so
+there is nowhere beside the line to put one**) are §3b of
+`docs/re-direction/phase-2-convergence.md`. **This is the next thing to build, not
+the portal.**
+
 - ⚠ **`touch-action: pan-y` on `page-row` IS the scroll question, and it is the
   whole answer.** *Vertical panning is yours, horizontal is mine*, said to the
   engine before a single event reaches `row-swipe.ts`; when the browser decides a

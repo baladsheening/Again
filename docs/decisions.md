@@ -8669,3 +8669,52 @@ a cleanup step used a row index that had shifted when an earlier assertion settl
 a line off the page. **Every assertion is now scoped to a row this run seeded, by
 its text**, and it is run twice to prove it. A probe that is not idempotent will
 eventually report a bug that is its own, and this one nearly did.
+
+### ⚠⚠ Reopened the same day: one beat, and an undo both ways — 30 August
+
+**Directed after using the swipes, and it is not built.** The full design brief is
+§3b of `docs/re-direction/phase-2-convergence.md`; this records the reasoning.
+
+**Two directions, which are one change:**
+
+1. **Settling must cost ONE beat.** It costs two — swipe, then answer *Again?*
+   with a tap — and that is the swipe failing its own argument. The case for a
+   gesture is that it is cheaper than the console; one swipe plus one aimed tap is
+   barely cheaper than a tap plus an aimed tap.
+2. **Both directions must afford an UNDO**, left-to-right and right-to-left.
+
+⚠ **The dependency is the whole point.** The only reason settling asks a question
+is that settling has two answers *and no undo* — so a wrong swipe would put a line
+in the tray with no way back, and the question was the safety. **An undo removes
+that objection, and with it the question, and with it the second beat.** Build them
+together or neither works. This entry exists so nobody later reads "the swipe asks
+a question" as a design preference and removes it on its own.
+
+⚠ **The question was the right answer to the constraint that existed, and the
+direction changed the constraint.** That is the pattern *How things get fixed*
+asks for, arriving from the user rather than from the code: **remove the condition
+rather than correct for it.**
+
+**What removing the question does not remove:** settling still has two answers.
+The recommendation in §3b is a **default plus a correction in the undo band** —
+*Settled. Undo · Not again.* — which costs one beat, keeps both claims reachable,
+and needs no aiming unless somebody wants the non-default. Deciding *which* answer
+is the default is open; *again* is the app's own name and is the likelier reading
+of a line somebody kept.
+
+⚠ **Distance-decides was ruled out on sight.** A short swipe meaning one answer
+and a long one the other is a modifier gesture, which this page has refused three
+times — see `pick`'s note in `page-screen.tsx`. A gesture that means two things
+depending on how far it went cannot be made without looking, which is the entire
+purpose of the swipe.
+
+⚠ **The hard half is that a settled row LEAVES the page**, so there is nowhere
+beside the line to put an undo — unlike the capture undo, which exists precisely
+because *the undo belongs beside the line it takes back*. Holding the row in place
+for the window and removing it when the window closes is the suggested answer, and
+it reuses §5's already-decided ten seconds rather than picking a second number.
+**No toast**: the page has no such surface, and a second vocabulary for an act that
+already has a glyph on a row is how a page stops being learnable.
+
+⚠ **Crossing off is its own inverse and still needs the affordance**, because a
+gesture nobody knows is reversible reads as destructive.
