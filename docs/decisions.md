@@ -9411,3 +9411,75 @@ without changing the drawing by a pixel. Do not make the pill bigger.
 **Measured by `node_modules/.probe/signout.mjs`** at 390, 719, 720, 1152 and
 1440: the bar's door to `/profile`, the control present and visible, in the
 bottom-left corner, and a tap at its centre reaching it.
+
+---
+
+## The first run says something, and a stated decision is reversed — 31 August
+
+**Reported from a second account, on the day there was one to report from.** A
+new account opens on the capture page and there is nothing on it: a bar, a strip
+of glyphs, and the whole of the space between them empty. Directed: it should
+say what to do, *kind of how we have a message in the profile screen about
+adding friends*.
+
+⚠ **The rule it reverses was written down in `page-screen.tsx` and was right when
+it was written.** *Nothing is said about an empty page, deliberately. The caret
+is the instruction, and a line of prose explaining that this is where you type
+would be the app talking over the one gesture it wants.*
+
+⚠ **The caret was ON the page when that was written, and it is not any more.** It
+belonged to the pinned live line — an empty first run showed a brass caret
+blinking in a field, which really was an instruction with no copy in it. **The
+field has been summoned by the `+` since 27 August**, so the instruction the rule
+leaned on was deleted with the band and the rule outlived it. *How things get
+fixed* read backwards, exactly as the rail's `rail:hidden` did on the sign-out
+block eight hours earlier — **the condition went and the correction stayed**, and
+this is the second one of those found in a day.
+
+⚠⚠ **THIS IS NOT §6'S *SILENCE STAYS SILENT*, WHICH IS UNTOUCHED.** That rule
+forbids explaining an **absence** — no *no matches yet*, no empty state for
+convergence on a line — for two reasons that both still hold: nothing is the
+correct rendering of nothing, and an absence there is somebody else's business to
+disclose. **A first run is not an absence.** What this explains is two mechanisms
+a person cannot discover by looking:
+
+1. **Lines are matched against the people you track.** Nothing on the screen says
+   so, and until it fires there is nothing to see. Silence about *a* match costs
+   nothing; silence about *matching* costs the whole app.
+2. **A swipe takes a line out of that pool.** ⚠ **This became something that has
+   to be said on 31 August**, when captures became shareable on write. Before
+   that the default was private and an undiscovered lock cost nobody anything.
+   The scope now moves on write, so the control over it belongs in front of the
+   person **before** the first capture rather than after it.
+
+⚠ **`empty` cannot recur, and that is what makes this a first-run screen rather
+than an empty state.** Nothing is ever deleted (§5) — a crossed-off line stays in
+the record, struck — so `lines.length === 0` means *nothing has ever been written
+on this account*. It goes for good on the first Return, and it goes on the
+**optimistic** line rather than on the write, because the pending row is already
+in `lines`. There is no state to design for it coming back.
+
+**It is not a line of the record and is not set like one.** The record's type is
+`--text-line`; this is the page's body size, muted, at the profile's `max-w-sm`
+measure — the same shape as *Nobody yet* in `components/tracked-people.tsx`,
+which is the precedent that was asked for. **A paragraph in the record's type
+would read as the first capture.** It takes no `bg-surface/40` pill either: that
+container exists to group the People list, and there is nothing here to group.
+
+⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held rather
+than forgotten.** Brass means *a control*; a `+` in a paragraph is a reference to
+one. Painting it puts a second brass `+` on the one screen whose whole
+instruction is *aim at the brass one*, which is the drift the scarcity rule
+exists to prevent. The strip has exactly one and the sentence names it.
+
+**The sr-only *Nothing captured yet.* at the foot of the page is deleted.** It
+was the whole of what a screen reader got from an empty page, because the sighted
+instruction was a caret and a caret says nothing to one. The note is real text at
+the head of the record, read in its place and in the right order; two of them
+would be one fact announced twice, once out of position.
+
+**Recorded, not decided: *buy* is in the copy**, directed. It reads as a kind of
+intent rather than a purchase prompt, so it clears the Release 1 exclusion on
+checkout and price comparison — but it is the closest any user-facing string
+comes to that line, and §13's sourced-offers layer will one day sit beside the
+word. **If the exclusion is ever tested, this is the string to look at.**

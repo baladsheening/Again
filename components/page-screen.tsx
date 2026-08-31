@@ -2587,6 +2587,67 @@ export function PageScreen({
         <h1 className="sr-only">Again</h1>
 
         {/*
+          ───────────────────────────────────────────────────────────────────────
+           ⚠ **THE FIRST RUN SAYS SOMETHING NOW, AND THIS REVERSES A STATED
+           DECISION — 31 August, reported from a second account.**
+          ───────────────────────────────────────────────────────────────────────
+
+          The rule was *nothing is said about an empty page, deliberately: the
+          caret is the instruction, and a line of prose explaining that this is
+          where you type would be the app talking over the one gesture it wants*.
+
+          ⚠ **The caret was on the page when that was written and it is not any
+          more.** It belonged to the pinned live line; the field has been
+          *summoned* by the `+` since 27 August, so a brand-new account opens on
+          a bar, a strip of glyphs and nothing whatever in between. The
+          instruction the rule leaned on was deleted with the band, and the rule
+          outlived it — *How things get fixed*, read backwards, exactly as the
+          rail's `rail:hidden` did on the sign-out block.
+
+          ⚠ **This is NOT §6's *silence stays silent*, which stays in force.**
+          That rule forbids explaining an **absence** — *no matches yet*, an
+          empty state for convergence on a line — because nothing is the correct
+          rendering of nothing, and because an absence there is somebody else's
+          business. This is a **first run**, and what it explains is not an
+          absence but two mechanisms a person cannot discover by looking: that
+          lines are matched against the people you track, and that a swipe takes
+          one out of that. Silence about a match still costs nothing; silence
+          here costs the whole app.
+
+          ⚠ **`empty` cannot recur, which is what makes this a first-run screen
+          rather than an empty state.** Nothing is ever deleted (§5) — a
+          crossed-off line stays in the record, struck — so `lines.length === 0`
+          means *nothing has ever been written on this account*, and it goes for
+          good on the first Return. It goes on the **optimistic** line, not on
+          the write, because the pending row is already in `lines`.
+
+          ⚠ **It is not a line of the record and must not be set like one.** The
+          record's own type is `--text-line`; this is the page's body size, muted
+          and at the profile's measure — the same shape as *Nobody yet* in
+          `tracked-people.tsx`, which is the precedent this was asked for. A
+          paragraph in the record's type would read as the first capture.
+
+          ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held
+          rather than forgotten.** Brass means *a control*, and a `+` in a
+          paragraph is a reference to one — painting it puts a second brass `+`
+          on a screen whose whole instruction is *aim at the brass one*. The
+          strip has exactly one, and the sentence names it.
+        */}
+        {empty && (
+          <div className="text-muted max-w-sm text-sm leading-relaxed">
+            <p>
+              Nothing yet. Tap + to write a line — anything you want to do, try, watch,
+              buy, or even just thoughts. One line, no category, a few seconds.
+            </p>
+            <p className="mt-3">
+              What you write is matched against the people you track: when one of them
+              writes down the same thing, you both hear about it. Swipe a line away to
+              keep it out of that.
+            </p>
+          </div>
+        )}
+
+        {/*
           ⚠ **No recede on the record any more.** It used to sit back while a
           draft was unsent, because a draft could be left in the pinned band with
           the keyboard gone and nothing else said it was not saved. The sheet's
@@ -3733,11 +3794,14 @@ export function PageScreen({
       )}
 
       {/*
-        Nothing is said about an empty page, deliberately. The caret is the
-        instruction, and a line of prose explaining that this is where you type
-        would be the app talking over the one gesture it wants.
+        ⚠ **The sr-only *Nothing captured yet.* that stood here is deleted — 31
+        August.** It was the whole of what a screen reader got from an empty
+        page, because the sighted instruction was a caret and a caret says
+        nothing to one. The first-run note at the top of `<main>` is real text in
+        the document, read in its place and in the right order — at the head of
+        the record rather than after everything on the page. Two of them would be
+        the same fact announced twice, once out of position.
       */}
-      {empty && <span className="sr-only">Nothing captured yet.</span>}
     </div>
   )
 }
