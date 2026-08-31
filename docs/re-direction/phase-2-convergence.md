@@ -32,7 +32,7 @@ wins and this file is wrong.
 | Swipe to cross off, swipe back to undo | **BUILT — 30 August, reopened and rebuilt the same day.** §3 and §3b both struck. ⚠ **Settling is NOT a swipe**: the row carries the one resolution that is its own inverse, and the console keeps the question that has two answers |
 | Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
 | The notification portal | **built, 30 August** — door in the FOOT, against §2 |
-| The convergence mark on a line | designed, not built |
+| The convergence mark on a line | **BUILT — 31 August.** `--color-accent` in the gutter, on every line that has ever converged, and it **does not empty**. §5's mark sub-section is struck. The code is the `converged` utility in `globals.css`, `converged` in `lib/db/captures.ts` and `getConvergence` beside the portal's read |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
 
@@ -68,12 +68,15 @@ rectangle whichever line was tapped.
 
 ## What this inherits
 
-⚠ **Phase 2's matching engine is deployed and nothing reads it.** `tracks` with
-mutuality, `lib/overlap.ts` as the one matching owner on both triggers, the
-suppression rule, and `notifications` rows written in the same transaction as
-the write that caused them — all of it runs. **No surface in the tree reads the
-`notifications` table**, which also means the fan-out has never been proved end
-to end with two accounts.
+⚠ **This paragraph said the engine was deployed and unread, and it is corrected
+rather than deleted — 31 August.** `tracks` with mutuality, `lib/overlap.ts` as
+the one matching owner on both triggers, the suppression rule, and
+`notifications` rows written in the same transaction as the write that caused
+them — all of it runs, and **two surfaces read it now**: the portal since 30
+August, the mark since 31. The fan-out is proved end to end with two accounts —
+`tests/portal.test.ts` and `tests/mark.test.ts`. What every section below was
+designed against is therefore built rather than pending; the sentence is kept
+because it is what §5's whole division was answering.
 
 ⚠ **Overlap joins on `possibility_id`, so only *resolved* captures can
 converge** — and TMDB is the only catalogue. Today two people can converge on a
@@ -242,7 +245,7 @@ one place. **Every feature that adds a beat to that loop is a tax on the only
 thing this app has to be perfect at.** The console adds none, the swipes add
 none, and the portal must add none either.
 
-## ~~5a. The portal~~ — BUILT, 30 August. The mark is still ahead of it
+## ~~5a. The portal~~ — BUILT, 30 August. ~~The mark is still ahead of it~~ — and it is built too, 31 August
 
 ⚠ **The portal is built and the sub-section below it is struck; the MARK is
 not.** This section's own division survives the build intact and is the reason
@@ -294,7 +297,7 @@ glyph at the top, and the tray; a fifth — the foot — was the answer.
 
 ---
 
-## ~~5. The portal AND the mark — different lifetimes~~ — the portal half is BUILT
+## ~~5. The portal AND the mark — different lifetimes~~ — BOTH BUILT, and the different lifetimes are the design that survived
 
 ⚠ **A gutter mark alone fails**, and this is the product owner's objection, which
 is correct: a convergence can land on an entry hundreds of lines back, and
@@ -344,18 +347,54 @@ Four sentences, no vocabulary to learn, and the fourth is the name of the app.
 people in twelve clusters* — so *Sam and Ali too.* is right and *Sam and 4
 others* is a metric.
 
-### The mark, and the colour question §11 left open
+### ~~The mark, and the colour question §11 left open~~ — BUILT, 31 August
 
 ⚠ **`--color-accent` `#b49a62`, unchanged, on the gutter mark only** — the colour
-§11 reserved for overlap and nothing else, which has been used by nothing since
-23 August.
+§11 reserved for overlap and nothing else, and as of 31 August it is spent on it.
 
-⚠ **This answers the worry that the accent now has to out-shout a louder
-chrome.** It does not, because **they never appear in the same place**:
-`--color-chrome` is a control and lives in the bars and the foot;
+⚠ **The worry that the accent would have to out-shout a louder chrome did not
+apply, and the build confirms why**: they never appear in the same place.
+`--color-chrome` is a control and lives in the bars, the foot and the caret;
 `--color-accent` is a state and lives in the gutter, where no control ever goes.
-The two brasses finally mean their two things on one screen. Re-measure it
-against the desk's `#14140f` ground before shipping — it is 7.73:1 on true black.
+The two brasses mean their two things on one screen. ⚠ **Re-measured against the
+desk's `#14140f` before shipping, as this section asked: 6.77:1 there and 7.70:1
+on the handset's true black** — past the 3:1 WCAG 1.4.11 asks of a graphical
+object on both, and it needed no change.
+
+**What was built, beyond the drawing:**
+
+- ⚠ **The read has no `read_at` term, and that absence IS the mark.**
+  `listMyPortal` filters unread because the portal empties; `converged` in
+  `lib/db/captures.ts` does not, because the mark is what is left when it has.
+  **Adding an unread filter there deletes the only durable record that a
+  convergence happened** — asserted in `tests/mark.test.ts` and, from the screen,
+  in `node_modules/.probe/mark.mjs`.
+- ⚠ **A bit rides the record; the sentence is a read behind the tap.** One
+  `exists` per line on the page's own query — the screen whose promise is that
+  Return lands in under a frame — and `getConvergence` for the one line somebody
+  opened. **A record with no convergences in it issues no second read at all**,
+  because the bit is what gates it.
+- ⚠ **The sentence lands in the console, in the slot `console.tsx` was built
+  leaving.** Its docblock predicted it in writing: *when who else arrives it has
+  to arrive into a space that is already there — never a spinner over the whole
+  box.* `portalSentence` is still its one author, so the portal's row and the
+  console's line cannot say the same event two ways.
+- ⚠ **The portal's console is handed `null` deliberately.** The portal already
+  draws the sentence above the box; the mark answers *why is this line special*
+  on a record where nothing else does, and in the portal everything else does.
+- ⚠ **A colour in a gutter is invisible to a reader, so the row says it.** The
+  record's row carries *Also on someone else's page.* in its label and the tray
+  and search carry it as hidden text — the ellipsis rule applied to a drawing.
+  It names nobody, because the record knows *whether* and the console knows
+  *who*.
+- ⚠ **It travels to the tray and to search**, which is one expression in three
+  reads. A settled or crossed-off line keeps its mark: a resolution is not an
+  erasure.
+- **Observed, not changed:** `--mark-width` is `2.5px` like `--caret-width`, so
+  the mark is the same hairline on the desk as on the handset while everything
+  around it is four-thirds the size. That is the caret's own rule and it has not
+  been looked at on a real desk. **If the desk's mark reads thin, that token is
+  the thing to move** — and the caret is what moves with it.
 
 ---
 
@@ -421,5 +460,26 @@ for convergence on a line. Nothing is the correct rendering of nothing.
    to end with two accounts for the first time.~~ **DONE, 30 August.** The
    fan-out is proved: `tests/portal.test.ts`. ⚠ **Its door is in the FOOT and
    not the bar, directed, against §2** — see §5a.
-4. **The mark**, last, once there is a real convergence to look at and it is
-   known what one looks like to a person.
+4. ~~**The mark**, last, once there is a real convergence to look at and it is
+   known what one looks like to a person.~~ **DONE, 31 August**, and the
+   sequencing paid: the portal had already put a real convergence on screen, so
+   what the mark had to be was known rather than guessed. §5's sub-section above
+   is struck.
+
+⚠⚠ **THE SEQUENCE IS COMPLETE AND THIS FILE IS NOT YET FOR THE BIN — read this
+before moving it.** All four steps are built, so the instruction at the head of
+this document points at `docs/re-direction/inactive/`. **What holds it here is
+§7 and §6**, which are not sections about work that has been done:
+
+- §7's *the row's own words stay above the console on the desk* is raised, unanswered
+  and wants a look on real hardware.
+- §7's *where an intention is refined after capture* is undesigned, and is the
+  other half of why **Have** is unreachable.
+- §6 holds three things back on purpose — conversations, other listers, and the
+  silence rule — and those are the notes a Phase 6 reader will need.
+- §13 of `implementation-spec.md` is normative for the phase's exit criteria and
+  still names the possible-match prompt for unresolved normalised-equal captures.
+  **This document has never owned that item and cannot close it.**
+
+**The call is the product owner's**: move this file when those are answered
+elsewhere, not because the sequence ran out.

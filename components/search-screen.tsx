@@ -219,7 +219,25 @@ export function SearchScreen() {
                 head of this file — and a control that cannot act is worse than
                 no control, because it looks like one.
               */}
-              <div className="page-line flex items-baseline gap-3">
+              {/*
+                ⚠ **The mark travels here — 31 August.** A result is a line of
+                the record, and *why is this line special* is exactly the
+                question somebody has when a search hands back something they
+                wrote in June. It draws nothing on a line that has not converged,
+                so a record with no convergences in it looks exactly as it did.
+
+                ⚠ **The mark is the only thing on this surface that is not
+                already text**, so it is the one thing a reader could miss; the
+                row's own words carry it in the label the same way the record's
+                do. There is no console here to say *who* — nothing on this
+                surface acts on a line — so the mark says *there is something*
+                and the record is where it is read.
+              */}
+              <div
+                className={`page-line flex items-baseline gap-3 ${
+                  line.converged ? 'converged' : ''
+                }`}
+              >
                 <span
                   className={`min-w-0 flex-1 ${crossedOff ? 'line-through opacity-50' : ''}`}
                 >
@@ -228,6 +246,15 @@ export function SearchScreen() {
                     <span className="text-muted ms-2 text-[0.8125rem] leading-none">
                       {line.year}
                     </span>
+                  )}
+                  {/*
+                    ⚠ **Hidden text, not an `aria-label`.** There is no control
+                    on this row — an `aria-label` on a generic element is ignored
+                    by most of what would read it — so the mark is said the only
+                    way a plain row can say anything: in the row.
+                  */}
+                  {line.converged && (
+                    <span className="sr-only">. Also on someone else’s page.</span>
                   )}
                 </span>
                 {/*

@@ -92,6 +92,7 @@ import { CrossOffGlyph, LinkGlyph, RewriteGlyph, SettleGlyph } from './glyphs'
  */
 export function Console({
   line,
+  convergence,
   asking,
   crossedOff,
   onCrossOff,
@@ -105,6 +106,20 @@ export function Console({
   linkLabel,
 }: {
   line: PageLineView & { previewUrl?: string }
+  /**
+   * **Why this line carries a mark**, or `null` — Phase 2 step 4.
+   *
+   * ⚠ **A written sentence, not the parts of one.** `portalSentence` in
+   * `lib/overlap.ts` is its single author — §6 keeps one owner for everything
+   * about a match, and a component that assembled *Sam and Ali too.* from a kind
+   * and two names would be a second place that knows what a convergence says.
+   *
+   * ⚠ **`null` is the ordinary case and it draws nothing.** Most lines have not
+   * converged; of those that have, the sentence is a read behind the tap and is
+   * briefly `null` while it is out. Both render the same — §6: *silence stays
+   * silent*, and the interface must never explain an absence.
+   */
+  convergence: string | null
   /** The *Again?* question is standing on this line. */
   asking: boolean
   crossedOff: boolean
@@ -196,6 +211,41 @@ export function Console({
           >
             {line.text}
           </p>
+
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             Who else — Phase 2 step 4, 31 August
+            ─────────────────────────────────────────────────────────────────
+
+            **The sentence behind the mark**, and this is the empty slot the
+            console was built leaving. Its own docblock predicted it in writing:
+            *when who else arrives it has to arrive into a space that is already
+            there — never a spinner over the whole box.* It does.
+
+            ⚠ **Directly under the words, above everything else in the box.** The
+            mark in the gutter says *this line is special* and cannot say why;
+            this is the why, so it belongs against the thing it is about rather
+            than below a photograph that may be 40vh tall. The stamp underneath
+            answers *what is known about this capture*; this answers *what
+            happened to it*, which is a different question and a later one.
+
+            ⚠ **Muted, at the link's size, not in `--color-accent`.** The colour
+            is the mark's and the mark is in the gutter — §11 gives the accent to
+            overlap *state*, and a paragraph of coloured text in the one box that
+            shows a capture whole would make the sentence louder than the
+            capture. **If the tie between the mark and this sentence ever reads
+            weakly, the accent is the thing the rule allows** — but it should be
+            tried on the words *of the sentence* and never on the capture.
+
+            ⚠ **No label, no heading and no empty state.** A line that converged
+            with nobody draws nothing at all, and so does one whose read is still
+            out. §6: *silence stays silent* — the interface must never explain an
+            absence, and a *no matches yet* here would be the most natural thing
+            in the world to add and the exact thing that is forbidden.
+          */}
+          {convergence !== null && (
+            <p className="text-muted mt-3 text-[0.8125rem]">{convergence}</p>
+          )}
 
           {/*
             **The photograph, at a size worth looking at.** On the row it rides

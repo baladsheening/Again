@@ -49,6 +49,20 @@ export type PageLineView = {
    * existed cannot exist: the column and the check shipped together.
    */
   sourceUrl: string | null
+  /**
+   * **Whether this line has ever converged with anybody** — the mark, Phase 2
+   * step 4.
+   *
+   * ⚠ **A bit, and the sentence is not on this shape.** *Who* is fetched when a
+   * console opens, for the one line somebody tapped; this rides every line of
+   * every read, so a record of two hundred lines pays for two hundred `exists`
+   * and no sentences at all. See `converged` in `lib/db/captures.ts`.
+   *
+   * ⚠ **It does not empty when the portal does.** The portal is arrival, the
+   * mark is memory (§5) — a line keeps its mark long after the row that
+   * announced it has gone.
+   */
+  converged: boolean
 }
 
 /** What the mapper needs of a row, and nothing more. */
@@ -61,6 +75,7 @@ type Stampable = {
   offer?: { title: string; year: number | null } | null
   hasImage?: boolean
   sourceUrl?: string | null
+  converged?: boolean
 }
 
 /**
@@ -92,6 +107,14 @@ export function toPageLines(
       offer: row.offer ?? null,
       hasImage: row.hasImage ?? false,
       sourceUrl: row.sourceUrl ?? null,
+      /*
+        `?? false` for the same reason as the two above — optional in, definite
+        out. Every read that draws a line of the record selects it, so the
+        fallback is for a caller that has not been written yet: **no mark is the
+        safe default**, since a mark the page cannot explain is worse than a
+        line that keeps quiet about something the console can still show.
+      */
+      converged: row.converged ?? false,
     }
   })
 }

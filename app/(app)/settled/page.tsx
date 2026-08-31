@@ -44,13 +44,29 @@ export default async function SettledPage() {
         {rows.length === 0 ? (
           <p className="page-line text-muted">Nothing settled yet.</p>
         ) : (
+          /*
+            ⚠ **The mark travels to the tray — 31 August.** A settled line is
+            still a line of the record, and a convergence that happened before it
+            was settled still happened. Nothing here acts on a line, so the mark
+            says *there is something* and the record is where the sentence is
+            read.
+          */
           <ol>
             {rows.map((row) => (
-              <li key={row.id} className="page-line flex items-baseline gap-3">
+              <li
+                key={row.id}
+                className={`page-line flex items-baseline gap-3 ${
+                  row.converged ? 'converged' : ''
+                }`}
+              >
                 <span className="min-w-0 flex-1">
                   {row.text}
                   {row.year !== null && (
                     <span className="text-muted ms-2 text-[0.8125rem] leading-none">{row.year}</span>
+                  )}
+                  {/* Hidden text rather than a label — see `search-screen.tsx`. */}
+                  {row.converged && (
+                    <span className="sr-only">. Also on someone else’s page.</span>
                   )}
                 </span>
                 {/*

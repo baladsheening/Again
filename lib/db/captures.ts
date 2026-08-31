@@ -20,6 +20,7 @@ import { db } from './client'
 import {
   captures,
   normalised,
+  notifications,
   possibilities,
   profiles,
   tracks,
@@ -400,6 +401,56 @@ async function fireOverlap(
 const PAGE_STATES = ['want', 'dropped'] as const satisfies readonly CaptureState[]
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The mark — Phase 2 step 4, 31 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Has this line ever converged with anybody.** One bit, on every read that
+ * draws a line of the record.
+ *
+ * ⚠ **`read_at` is not in it, and that absence IS the mark.** The portal reads
+ * `is null` because the portal empties; this one does not, because the mark is
+ * what is left when it has. §5 of `phase-2-convergence.md`: *the portal is
+ * arrival, the mark is memory* — the portal answers *what happened while I was
+ * away*, the mark answers *why is this line special* when you meet it again in
+ * March. Adding a `read_at` term here would make the mark a second portal with a
+ * longer fuse and delete the only durable record that a convergence happened.
+ *
+ * ⚠ **A bit, not the sentence, and that is what keeps it affordable.** This runs
+ * once per line of every page read — the one screen whose whole promise is that
+ * Return lands in under a frame — so what rides with the record is `exists`,
+ * which the planner can stop at the first row. **The sentence is fetched when a
+ * console opens**, by `getConvergence`, and it is fetched *only* for a line
+ * whose bit is set: a record with no convergences in it never issues that read
+ * at all. See `console.tsx`, which was built expecting exactly this — *when who
+ * else arrives it has to arrive into a space that is already there.*
+ *
+ * ⚠ **The join is `payload->>'itemId'`, the same one `listMyPortal` makes, and
+ * for the same reason: a notification carries no capture id and cannot.** A
+ * match is about a *possibility* that two people's captures both point at, so
+ * the viewer's own capture is found at read time. Every payload written before
+ * any of this existed works unchanged.
+ *
+ * ⚠ **`notifications.user_id = captures.user_id` is the privacy term**, and it
+ * is written against the capture rather than against the session so that it
+ * cannot come adrift of the row it is deciding about. Every caller already
+ * filters `captures.userId = sessionUser.id`; this correlation means the
+ * subquery is right even if one ever stopped. A notification names a
+ * counterpart — it must never be a door to the counterpart's row (§3).
+ *
+ * ⚠ **An unresolved capture is `false` by arithmetic, not by a guard.**
+ * `possibility_id` is null on most lines, the comparison is then null, and `exists`
+ * over no rows is false. Two people can only converge on a possibility (§13), so
+ * a raw capture having no mark is the truth rather than a missing case.
+ */
+const converged = sql<boolean>`exists (
+  select 1
+  from ${notifications}
+  where ${notifications.userId} = ${captures.userId}
+    and ${notifications.payload} ->> 'itemId' = ${captures.possibilityId}::text
+)`
+
+/**
  * One line of the page. Named columns, like everything shared here — a `select`
  * of the whole table is how `note` reaches a client the day somebody adds a
  * column, and this shape crosses into a Client Component.
@@ -448,6 +499,21 @@ export type PageLine = {
    * `SHARED_CAPTURE_COLUMNS` is an allowlist and this is not on it.
    */
   sourceUrl: string | null
+  /**
+   * **Whether this line has ever converged with anybody** — the mark, Phase 2
+   * step 4.
+   *
+   * ⚠ **Whether, never who — and unlike the photograph beside it, that is about
+   * cost rather than privacy.** *Who* is a sentence, and a sentence is names and
+   * tenses aggregated per line; this is an `exists` that rides the record's own
+   * read. The names arrive when a console opens — `getConvergence` — so the
+   * fifty lines nobody has tapped never pay for them.
+   *
+   * ⚠ **It does not empty.** See `converged` above: the portal reads unread and
+   * empties, this reads all of them and does not. Two facts, deliberately not
+   * one column.
+   */
+  converged: boolean
 }
 
 /**
@@ -534,6 +600,8 @@ export async function listMyPage(
       offerYear: suggested.year,
       imagePath: captures.imagePath,
       sourceUrl: captures.sourceUrl,
+      /* The mark — see `converged` above for why `read_at` is not in it. */
+      converged,
     })
     .from(captures)
     /* LEFT, because a capture with nothing canonical behind it is the norm. */
@@ -609,6 +677,13 @@ export async function listMySettled(
         places somebody is looking for one.
       */
       sourceUrl: captures.sourceUrl,
+      /*
+        ⚠ **The mark travels to both of these too, and it is the same bit.** A
+        line that converged is special wherever it is drawn — the tray and
+        search are both places somebody meets a line again in March, which is
+        the case §5 says the mark exists for. One expression, three reads.
+      */
+      converged,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -683,6 +758,13 @@ export async function searchMyCaptures(
         places somebody is looking for one.
       */
       sourceUrl: captures.sourceUrl,
+      /*
+        ⚠ **The mark travels to both of these too, and it is the same bit.** A
+        line that converged is special wherever it is drawn — the tray and
+        search are both places somebody meets a line again in March, which is
+        the case §5 says the mark exists for. One expression, three reads.
+      */
+      converged,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))

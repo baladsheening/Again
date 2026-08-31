@@ -22,18 +22,19 @@ specification. The re-direction specification is the complete brief for future
 product work. Where both are silent, prefer the simplest thing that works and
 flag the decision rather than inventing scope.
 
-## Where the build stands — 30 August
+## Where the build stands — 31 August
 
 **Phase 0 is done, deployed and verified.**
 
 **Phase 1 is built, deployed and in daily use on a handset.** `/` is the capture
 page in production; the poster wall, `components/shell.tsx` and the four
-collection routes are deleted. Nothing is held back. Five things are outstanding
-and none of them is a screen that does not work — the vocabulary migration
-(deferred, and the only non-additive one), a `kind` that is not a film, the thing
-detail view, a Blob store for the photographs already built, and the
-five-second acceptance criterion, which was closed by direction and never
-stopwatched. `docs/re-direction/phase-1-capture.md` is the register.
+collection routes are deleted. Nothing is held back. **Four** things are
+outstanding and none of them is a screen that does not work — the vocabulary
+migration (deferred, and the only non-additive one), a `kind` that is not a film,
+a Blob store for the photographs already built, and the five-second acceptance
+criterion, which was closed by direction and never stopwatched. ⚠ **This said
+five and named the thing detail view; the console closed it on 30 August.**
+`docs/re-direction/phase-1-capture.md` is the register.
 
 ⚠⚠ **This paragraph used to name which migrations were applied to production,
 and that sentence is deleted rather than corrected — 30 August.** It is exactly
@@ -50,6 +51,59 @@ and it is meant to die**: delete or strike each section as it is built, and move
 the file to `docs/re-direction/inactive/` when the phase is done. A design
 document that outlives its build reads as current and is not — the same failure
 as a register that records what state production is in.
+
+⚠ **Phase 2 step 4 is built — THE MARK, 31 August, and the sequence is
+complete.** *The portal is arrival; the mark is memory.* A convergence can land
+on a line hundreds back, and once the portal has emptied **the record now says it
+happened**: a bar in the gutter, `--color-accent`, on every line that has ever
+converged. §11 reserved that colour and that column for this since 23 August and
+it is spent on it at last — `--color-accent` is used by exactly one thing.
+
+- ⚠⚠ **THE READ HAS NO `read_at` TERM, AND THAT ABSENCE IS THE MARK.**
+  `listMyPortal` filters unread because the portal empties; `converged` in
+  `lib/db/captures.ts` does not, because the mark is what is left when it has.
+  **Adding an unread filter there deletes the only durable record that a
+  convergence ever happened** — it is asserted in `tests/mark.test.ts` in the one
+  case named for it, and from the screen by `node_modules/.probe/mark.mjs`.
+- ⚠ **A BIT rides the record; the SENTENCE is a read behind the tap.** One
+  `exists` per line on the page's own query — the screen whose whole promise is
+  that Return lands in under a frame — and `getConvergence` for the one line
+  somebody opened. ⚠ **The bit gates the read**, so a record with no convergences
+  in it issues nothing on any tap. The portal action's own note says why the rows
+  do not ride the page; this is the same argument answered the other way, because
+  a mark has no *until they ask*.
+- ⚠ **The sentence lands in the slot `console.tsx` was built leaving.** Its
+  docblock predicted it in writing — *when who else arrives it has to arrive into
+  a space that is already there, never a spinner over the whole box.* It sits
+  directly under the words and above the day stamp. `portalSentence` is still its
+  one author, so the portal's row and the console's line cannot say one event two
+  ways.
+- ⚠ **The portal's console is handed `null` deliberately.** The portal draws the
+  sentence above the box already; the mark answers *why is this line special* on
+  a record where nothing else does, and in the portal everything else does.
+- ⚠ **A colour in a gutter is invisible to a reader, so the row says it.** The
+  record's row carries *Also on someone else's page.* in its `aria-label`; the
+  tray and search carry it as hidden text, because neither has a control to hang
+  a label on. **It names nobody** — the record knows *whether*, the console knows
+  *who* — and inventing a second sentence beside `portalSentence` is the drift §6
+  warns about.
+- ⚠ **One expression, three reads.** The page, the tray and search all select it,
+  so a settled or crossed-off line keeps its mark: **a resolution is not an
+  erasure**, and nothing about `state` is in that read.
+- ⚠ **It is on the ROW, so it travels with a swipe** — a mark that stayed put
+  while its line slid away would be marking whatever was underneath.
+- ⚠ **`--mark-width` is `2.5px`, like `--caret-width`, so the mark is the same
+  hairline on the desk as on the handset** while everything around it is
+  four-thirds the size. That is the caret's own rule inherited, it is **not** one
+  of the four exceptions the desk's scale names, and it has not been looked at on
+  a real desk. If it reads thin up there, that token is the thing to move — and
+  the caret moves with it.
+- **Measured: 6.77:1 on the desk's `#14140f`, 7.70:1 on the handset's true
+  black**, past the 3:1 WCAG 1.4.11 asks of a graphical object on both. The brief
+  asked for the re-measurement against the charcoal before shipping; it needed no
+  change. ⚠ **`mark.mjs` asserts the mark is `--color-accent` and NOT
+  `--color-chrome`** — the colour it wore for the eight days it was a pick — and
+  that no unconverged line draws anything at all.
 
 ⚠ **Phase 2 step 3 is built — THE PORTAL, 30 August, and the engine finally has
 a reader.** For a week `lib/overlap.ts` has been deployed, running, and writing
@@ -122,19 +176,15 @@ surface at last.
   into a convergence quickly, and the two halves are tested where each can be.
   `scripts/seed-portal.mjs` writes one locally, with the tests' production guard.
 
-⚠ **The MARK is still unbuilt, and the division that put it after the portal is
-untouched.** *The portal is arrival; the mark is memory.* A convergence can land
-on a line hundreds back, and once the portal has emptied nothing on the record
-says it ever happened. §11 still reserves `--color-accent` and the gutter for
-it. **Phase 2 step 4.**
-
 ⚠ **This paragraph said the engine had no reader and is corrected rather than
 deleted — 30 August.** It was true for a week and it is what the portal above
 answers: `tracks`, `lib/overlap.ts` on both triggers, the suppression rule and
 `notifications` rows written in the same transaction all exist, run, **and are
 now read**. The fan-out is proved end to end with two accounts —
-`tests/portal.test.ts`. **What is still not built:** no QR handshake, no
-possible-match prompt, and no convergence mark on the record. ⚠ **Overlap joins on `possibility_id`, so only *resolved*
+`tests/portal.test.ts`, and `tests/mark.test.ts` for the mark's side of it.
+**What is still not built:** no QR handshake and no possible-match prompt. ⚠ **The
+convergence mark was in this list until 31 August and is built** — see Phase 2
+step 4 above. ⚠ **Overlap joins on `possibility_id`, so only *resolved*
 captures converge, and TMDB is the only catalogue** — today two people can
 converge on a film and on nothing else. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
@@ -242,10 +292,12 @@ unreferenced `capture-provider.tsx` are deleted.**
 - ⚠ **Two surfaces and they are genuinely two — directed.** A fixed rectangle
   over a blurred record below `--breakpoint-stack`; the row **expanding in place**
   at and above it. One component, one mount point, the stylesheet deciding.
-- ⚠ **The `picked` utility survives in `globals.css` applied to nothing**,
-  deliberately: §11 reserves `--color-accent` for **convergence**, and the gutter
-  is where a state may live. The mark's next tenant is Phase 2's. Do not put a
-  pick mark back there.
+- ⚠ **The `picked` utility survived in `globals.css` applied to nothing, and on
+  31 August it became the MARK.** It was kept deliberately — §11 reserved
+  `--color-accent` for **convergence** and the gutter is where a state may live —
+  and it is now `@utility converged`, the same drawing in the accent instead of
+  the chrome. **Do not put a pick mark back in that column**: there is something
+  in it, and a second thing there means neither of them says anything.
 - ⚠ **One scrim, one occupant.** The console takes the writing sheet's scrim
   rather than bringing a second — the two can never be open together, because
   `✎` closes the console and hands the words to the strip, and the `+` closes it
@@ -1309,9 +1361,14 @@ second it is used for decoration.
 — bar, foot, caret, and the mark on a picked line — spent `--color-accent` for a
 day. It now has `--color-chrome`, lit brass at `#e8b34a`: the same hue carried up
 in lightness and chroma, 10.98:1 on black against the muted brass’s 7.73:1.
-**`--color-accent` is used by nothing**, which is what this rule always asked of
-it. The collision was removed rather than corrected for — see *How things get
-fixed*.
+**`--color-accent` was then used by nothing**, which is what this rule always
+asked of it. The collision was removed rather than corrected for — see *How
+things get fixed*.
+
+⚠ **And on 31 August it is used, by one thing: the convergence mark in the
+record's gutter.** Eight days reserved and unspent, then spent on exactly what it
+was reserved for. **`--color-accent` now means *this line converged* and nothing
+else** — the scarcity rule is unchanged, it simply has a tenant.
 
 `--color-chrome` inherits the same scarcity rule from the other side: it means
 **a control**, never a state. The moment it appears on something that is not
@@ -1327,11 +1384,15 @@ and its harder half is that **a capture has no kind at the moment it is written*
 — so a kind-colour may really be carrying *resolution*, which the page currently
 cannot show at all. Read that entry before drawing a palette.
 
-**Overlap still needs a different colour in Phase 2, and picking it is Phase 2's
-first visual decision.** Splitting the token did not make that easier — the
-accent's job is to interrupt, and the screen is now louder than it was, so the
-colour to out-shout is `--color-chrome` rather than the muted brass beside it in
-the palette. Do not pick it before there is a convergence to look at.
+⚠ **This said overlap still needed a colour and that picking it was Phase 2's
+first visual decision. ANSWERED 31 August, and the answer was the token that was
+already there.** The worry it recorded — that the accent would have to out-shout
+a louder chrome — **turned out not to apply, because the two never appear in the
+same place**: `--color-chrome` is a *control* and lives in the bars, the foot and
+the caret; `--color-accent` is a *state* and lives in the gutter, where no
+control ever goes. The instruction *do not pick it before there is a convergence
+to look at* is what made that visible: the portal put one on screen first.
+Measured **6.77:1** on the desk's charcoal and **7.70:1** on true black.
 
 ⚠ `--color-caret` is deleted, by its own terms: a third meaningful colour was
 only defensible for a claim the other two could not make, and with a coloured

@@ -25,7 +25,12 @@ import { useChromeRecede } from './chrome-recede'
 import { Ask, Console } from './console'
 import { Foot, ToolStack } from './foot'
 import { Portal } from './portal'
-import { emptyPortalLineAction, portalAction, type PortalLineView } from '@/app/actions/portal'
+import {
+  convergenceAction,
+  emptyPortalLineAction,
+  portalAction,
+  type PortalLineView,
+} from '@/app/actions/portal'
 import { AttachGlyph, LinkGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { useRowSwipe } from './row-swipe'
@@ -423,6 +428,30 @@ export function PageScreen({
    * has one more job to lose.
    */
   const [opened, setOpened] = useState<string | null>(null)
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   *  The mark's sentence — Phase 2 step 4
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * **Why the open line carries a mark**, or `null`. The record knows *whether*
+   * — `line.converged`, one `exists` riding its own read — and *who* is a
+   * sentence fetched for the one line somebody tapped.
+   *
+   * ⚠ **Keyed by the line it belongs to, so a stale answer cannot land on the
+   * wrong console.** Two taps in quick succession are two reads in flight and
+   * they can return in either order; the id is checked on arrival and against
+   * `opened` at render. A boolean here would show one line's convergence under
+   * another line's words.
+   *
+   * ⚠ **Nothing is drawn while it is out, and there is no spinner.** The console
+   * renders instantly from what the page already holds — that is its own rule —
+   * and this arrives into a space that is already there. A box that reserved
+   * room for a sentence it might not get would be explaining an absence, which
+   * §6 forbids.
+   */
+  const [convergence, setConvergence] = useState<{ id: string; sentence: string } | null>(
+    null,
+  )
   /**
    * ─────────────────────────────────────────────────────────────────────────
    *  The portal — Phase 2 step 3
@@ -1133,6 +1162,15 @@ export function PageScreen({
         the one path that exists to not drop anything.
       */
       sourceUrl: link,
+      /*
+        ⚠ **A line cannot arrive marked, and this is not an optimistic gap.** A
+        convergence is about a *possibility* two captures both point at, and a
+        capture typed here has resolved to nothing yet — so `false` is what the
+        server would say too. If the save resolves it and the fan-out fires, the
+        mark comes with the next re-seed, which is exactly when the other person's
+        row exists to be marked against.
+      */
+      converged: false,
       mutationId,
       pending: true,
       failed: null,
@@ -1674,8 +1712,38 @@ export function PageScreen({
     )
     setOpened(line.id)
     setAsking(null)
+    askWhoElse(line)
     /* The keyboard follows liveness: gone the moment a saved line is opened. */
     input.current?.blur()
+  }
+
+  /**
+   * **Who else** — the sentence behind the mark, fetched when a console opens.
+   *
+   * ⚠ **Gated on the line's own bit, so an unmarked record never asks.** The
+   * mark is the reason to read, and it came down with the page: a record with no
+   * convergences in it issues nothing on any tap, and one with three issues a
+   * read on those three. The two facts are one read apart deliberately — see
+   * `converged` in `lib/db/captures.ts` for why the sentence does not ride the
+   * record.
+   *
+   * ⚠ **Cleared first, and it is not awaited.** The console opens now, from what
+   * the page already holds; the sentence appears in it when it arrives. Holding
+   * the box shut on a network read would put a round trip in front of the one
+   * gesture this screen has to answer instantly.
+   *
+   * ⚠ **A failure says nothing and draws nothing.** §6: *silence stays silent*,
+   * and the interface must never explain an absence. A console that said *could
+   * not load who else* would be announcing a convergence it could not describe,
+   * on a line whose mark already says the true thing.
+   */
+  function askWhoElse(line: { id: string; converged: boolean }) {
+    setConvergence(null)
+    if (line.id === '' || !line.converged) return
+    void convergenceAction(line.id).then((result) => {
+      if (!result.ok || result.value === null) return
+      setConvergence({ id: line.id, sentence: result.value })
+    })
   }
 
   const empty = lines.length === 0
@@ -2346,6 +2414,15 @@ export function PageScreen({
             opened === line.id && (
               <Console
                 line={line}
+                /*
+                  ⚠ **`null` here, and it is not an omission.** The portal draws
+                  its own sentence directly above this box — the same sentence,
+                  from the same author — so a console inside the portal would say
+                  it twice, once on the row and once through the glass. The mark
+                  answers *why is this line special* on a record where nothing
+                  else says so; in the portal, everything else says so.
+                */
+                convergence={null}
                 asking={asking === line.id}
                 /*
                   ⚠ **Read off the line the portal holds, not off the record.**
@@ -2505,12 +2582,30 @@ export function PageScreen({
               here: the row shows as much as fits, and the control is named with
               all of it.
             */
-            const label =
+            const base =
               line.year !== null
                 ? `${line.text} ${line.year}`
                 : line.offer !== null
                   ? `${line.text} — is this ${line.offer.title}?`
                   : line.text
+
+            /*
+              ⚠ **The mark is a colour in a gutter, so it has to be said — 31
+              August.** Everything else on this row is text a reader already
+              gets; the convergence mark is drawn and nothing else carries it, so
+              a reader who cannot see it would meet a line the app is treating as
+              special with no way to know. That is the ellipsis rule applied to a
+              drawing: what the screen shows, the label says.
+
+              ⚠ **It does not name anybody, and that is the read's shape rather
+              than a choice about copy.** The record knows *whether* — one
+              `exists` per line — and *who* is a sentence fetched when the
+              console opens. So this points at the console, where
+              `portalSentence` says who in the tense the product is made of, and
+              it deliberately invents no second sentence beside it. See
+              `converged` in `lib/db/captures.ts`.
+            */
+            const label = line.converged ? `${base}. Also on someone else’s page.` : base
 
             /*
               ⚠ **`aria-expanded`, where it was `aria-current` — 30 August.** The
@@ -2653,7 +2748,27 @@ export function PageScreen({
                   {...(line.id !== '' && !line.pending && !line.failed
                     ? bindSwipe(crossedOff ? 'restore' : 'crossOff', () => crossOff(line))
                     : {})}
-                  className="page-row"
+                  /*
+                    ⚠ **THE MARK — Phase 2 step 4, 31 August.** A bar in the
+                    gutter, in `--color-accent`, on every line that has ever
+                    converged with somebody. It is the tenant §11 reserved that
+                    column and that colour for, and it is why the `picked`
+                    utility was kept unapplied on 30 August rather than deleted:
+                    the drawing was already right, and what changed is the claim
+                    it makes.
+
+                    ⚠ **It is on the ROW, so it travels with a swipe.** The
+                    gutter bar is part of the line, not part of the page behind
+                    it — a mark that stayed put while its line slid away would be
+                    marking whatever row happened to be underneath.
+
+                    ⚠ **A struck line keeps its mark.** Crossing off is a
+                    resolution, not an erasure; the convergence still happened,
+                    and the line is still on the record for as long as the record
+                    is. See `converged` in `lib/db/captures.ts` — nothing about
+                    state is in that read.
+                  */
+                  className={`page-row ${line.converged ? 'converged' : ''}`}
                 >
                   {/*
                     ⚠ **A line of the record is never an input, not even
@@ -2990,6 +3105,16 @@ export function PageScreen({
                 {isOpen && (
                   <Console
                     line={line}
+                    /*
+                      ⚠ **Checked against the line it was fetched for.** Two taps
+                      in quick succession are two reads in flight and they can
+                      return in either order; without the id one line's
+                      convergence lands under another line's words. `null` until
+                      it arrives, which draws nothing — see `askWhoElse`.
+                    */
+                    convergence={
+                      convergence?.id === line.id ? convergence.sentence : null
+                    }
                     asking={asking === line.id}
                     crossedOff={crossedOff}
                     onCrossOff={() => crossOff(line)}

@@ -138,7 +138,19 @@ export type { SwapView } from './swaps'
   `./notifications.ts` for why the join to the viewer's own capture is what makes
   each person's portal theirs.
 */
-export { listMyPortal, readPortalLine, hasPortalLines, PORTAL_LIMIT } from './notifications'
+/*
+  `getConvergence` is the mark's half and is deliberately in the same module: it
+  is the same join to the same rows, minus the `read_at` term — the portal
+  empties and the mark remembers. Keeping them apart would be two answers to
+  *who converged on this line* free to drift.
+*/
+export {
+  listMyPortal,
+  readPortalLine,
+  hasPortalLines,
+  getConvergence,
+  PORTAL_LIMIT,
+} from './notifications'
 export type { PortalLine } from './notifications'
 
 export type {

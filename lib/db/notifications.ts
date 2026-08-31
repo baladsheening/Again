@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 
 import { db } from './client'
 import { captures, notifications, possibilities } from './schema'
@@ -165,7 +165,7 @@ export async function listMyPortal(
  * fan-out can produce when a track becomes mutual, is one name.
  */
 function group(rows: Row[]): PortalLine[] {
-  const byCapture = new Map<string, { line: PortalLine; names: Map<string, Set<string>> }>()
+  const byCapture = new Map<string, { line: PortalLine; names: Clauses }>()
 
   for (const row of rows) {
     let entry = byCapture.get(row.captureId)
@@ -186,6 +186,14 @@ function group(rows: Row[]): PortalLine[] {
           offer: null,
           hasImage: row.hasImage,
           sourceUrl: row.sourceUrl,
+          /*
+            ⚠ **True by construction, and it is the one place this bit is not
+            queried for.** A portal row exists because a notification exists for
+            it, so asking the database whether the line converged would be asking
+            it to confirm the row it just returned. See `converged` in
+            `captures.ts`, which is what answers for every other surface.
+          */
+          converged: true,
           sentence: '',
           notificationIds: [],
         },
@@ -194,34 +202,133 @@ function group(rows: Row[]): PortalLine[] {
       byCapture.set(row.captureId, entry)
     }
     entry.line.notificationIds.push(row.notificationId)
-    /*
-      Keyed by the sentence the pair produces, not by `kind` alone: the two sides
-      of a `guide` say opposite things, so they cannot share a clause.
-    */
-    const key = `${row.kind}:${row.guideHolder}`
-    const held = entry.names.get(key)
-    if (held) held.add(row.counterpartName)
-    else entry.names.set(key, new Set([row.counterpartName]))
+    clause(entry.names, row.kind, row.guideHolder, row.counterpartName)
   }
 
   return [...byCapture.values()].map(({ line, names }) => ({
     ...line,
-    sentence: [...names]
-      .map(([key, people]) => {
-        const [kind, holder] = key.split(':')
-        return portalSentence(kind as NotificationKind, [...people], holder === 'true')
-      })
-      .join(' '),
+    sentence: say(names),
   }))
 }
+
+/**
+ * The clauses of one line, in the order they were first said.
+ *
+ * ⚠ **Keyed by the sentence a pair produces, not by `kind` alone** — the two
+ * sides of a `guide` say opposite things, so they cannot share a clause. This is
+ * the one place that assembly happens: the portal groups notifications into
+ * lines and the mark reads one line's whole history, and both end here so that
+ * *Sam and Ali too.* cannot come out two different ways on two surfaces.
+ */
+type Clauses = Map<string, Set<string>>
+
+function clause(into: Clauses, kind: NotificationKind, guideHolder: boolean, name: string) {
+  const key = `${kind}:${guideHolder}`
+  const held = into.get(key)
+  if (held) held.add(name)
+  else into.set(key, new Set([name]))
+}
+
+function say(clauses: Clauses): string {
+  return [...clauses]
+    .map(([key, people]) => {
+      const [kind, holder] = key.split(':')
+      return portalSentence(kind as NotificationKind, [...people], holder === 'true')
+    })
+    .join(' ')
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The mark's sentence — Phase 2 step 4, 31 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Why is this line special.** Everything that has ever converged on one
+ * capture, said in the portal's own words.
+ *
+ * ⚠ **No `read_at` term, and that absence is the whole difference from
+ * `listMyPortal`.** §5: *the portal is arrival, the mark is memory.* The portal
+ * empties as lines are opened; this is what is left afterwards, and it is the
+ * only durable answer to *why does this line carry a mark* once the portal has
+ * gone quiet. **Do not add an unread filter here to make the two agree** — the
+ * disagreement is the design.
+ *
+ * ⚠ **Read when a console opens, never with the record.** The bit that draws the
+ * mark rides the page's own query (`converged` in `captures.ts`); this is one
+ * statement for one capture, issued by the console for the line somebody
+ * actually tapped. Fifty lines cost fifty `exists`; the names cost nothing until
+ * they are looked at.
+ *
+ * ⚠ **`eq(captures.userId, …)` and `eq(captures.id, …)` together are the privacy
+ * term**, and the capture id arrives from a client. Without the user term this
+ * is *tell me who converged on any capture id you can guess* — the counterpart's
+ * row reached through a notification that only ever named them (§3).
+ *
+ * Returns `null` for a line nothing has converged on, which is also what an id
+ * belonging to somebody else returns. **Silence is the correct rendering of
+ * nothing** (§6) — there is no empty state to draw and no absence to explain.
+ */
+export async function getConvergence(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<string | null> {
+  const rows = await db
+    .select({
+      kind: notifications.kind,
+      /* The name at the moment it fired — see `listMyPortal` for why. */
+      counterpartName: sql<string>`coalesce(${notifications.payload} ->> 'counterpartName', 'Someone')`,
+      guideHolder: sql<boolean>`coalesce((${notifications.payload} ->> 'guideHolder')::boolean, false)`,
+    })
+    .from(notifications)
+    .innerJoin(
+      captures,
+      and(
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        sql`${captures.possibilityId}::text = ${notifications.payload} ->> 'itemId'`,
+      ),
+    )
+    .where(eq(notifications.userId, sessionUser.id))
+    /*
+      ⚠ **Oldest first, where the portal is newest first, and the two orders say
+      what each surface is for.** The portal is *what happened while I was away*,
+      so it leads with the most recent thing. The mark is a line's history, so it
+      names people in the order they arrived on it.
+    */
+    .orderBy(asc(notifications.createdAt), asc(notifications.id))
+    .limit(CONVERGENCE_LIMIT)
+
+  if (rows.length === 0) return null
+
+  const clauses: Clauses = new Map()
+  for (const row of rows) clause(clauses, row.kind, row.guideHolder, row.counterpartName)
+  return say(clauses)
+}
+
+/**
+ * §10's bound on this read, and **not** a cut-off on the names.
+ *
+ * `portalSentence` says there is no cut-off and there must not be one — *Sam and
+ * 4 others* is a metric. This is the different thing: the number of rows one
+ * statement will consider, so that a line cannot become an unbounded select. The
+ * day a capture has a hundred convergences on it, the honest reading is that
+ * this app has grown a shape the design did not predict.
+ */
+const CONVERGENCE_LIMIT = 100
 
 /**
  * **Opening a line empties its rows from the portal.**
  *
  * ⚠ **This is the whole of *it empties*, and it is deliberately not a *mark all
  * read*.** §5 rules that out by name: a portal you can clear in one gesture is a
- * count with extra steps, and the thing being cleared is the only durable signal
- * that a convergence happened before the mark exists to remember it.
+ * count with extra steps.
+ *
+ * ⚠ **This said the thing being cleared was the only durable signal a
+ * convergence happened *before the mark exists to remember it* — and the mark
+ * exists, 31 August.** Emptying is no longer destructive of the last record:
+ * `getConvergence` reads these same rows with no `read_at` term and the line
+ * keeps its bar. **The rule is unchanged**, because the argument against a
+ * *clear all* was never that the signal was scarce.
  *
  * ⚠ **`eq(userId)` is in the `where` and is not decoration.** The ids come from
  * a client. Without it this is an endpoint for marking other people's

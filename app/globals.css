@@ -52,33 +52,43 @@
   /* hairlines */
   --color-rule: #30302b;
   /**
-   * Muted brass. Used ONLY for overlap state — and, since 23 August, used by
-   * **nothing**, because the chrome that was borrowing it now has
-   * `--color-chrome` of its own.
+   * Muted brass. Used ONLY for overlap state — **and since 31 August it is
+   * used**, by the convergence mark in the record's gutter and by nothing else.
+   * It was spoken for and unspent from 23 August, when the chrome that had been
+   * borrowing it took `--color-chrome` of its own.
    *
    * Not on buttons, not on links, not on the active tab. It marks the one
    * moment the app exists for, and it stops meaning anything the second it is
    * used for decoration.
    *
-   * ⚠ **It is no longer the loudest brass on the screen, and that is now the
-   * question Phase 2 answers rather than a note about one.** The chrome is
-   * `--color-chrome` at `#e8b34a`, which out-shouts this by half again in
-   * luminance, so an overlap mark in this value would read as quieter chrome.
-   * **Phase 2 picks the convergence colour and this value is a candidate, not
-   * a default** — interrupting a brass screen is a different job from
-   * interrupting a black one.
+   * ⚠ **Phase 2 picked it, and the worry that it would have to out-shout a
+   * louder chrome turned out not to apply — the two never appear in the same
+   * place.** `--color-chrome` is a **control** and lives in the bars, the foot
+   * and the caret; this is a **state** and lives in the gutter, where no control
+   * ever goes. So the mark is not competing with the chrome for a thumb's
+   * attention; it is the only thing in a column the chrome is not allowed into.
+   * Two brasses, finally meaning their two things on one screen.
+   *
+   * **6.77:1 on the desk's `#14140f` ground, 7.70:1 on the handset's true
+   * black** — past the 3:1 WCAG 1.4.11 asks of a graphical object on both, with
+   * the mark's glow on top of that. The brief asked for this to be re-measured
+   * against the charcoal before shipping; it is, and it needed no change.
    *
    * ⚠ Quieter than the `#e0a458` amber it replaces, and that is the one thing
    * this palette gave up. Brass is the better colour and amber was the louder
-   * signal, and this accent's whole job is to interrupt. If overlap ever fails
-   * to catch the eye in Phase 3 — the first time these appear against real
-   * notifications rather than in a palette — this is the value to reconsider,
-   * not the rule around it.
+   * signal, and this accent's whole job is to interrupt. If the mark ever fails
+   * to catch the eye on a real record — which is the first thing to watch for
+   * now that it is on screen — this is the value to reconsider, not the rule
+   * around it.
    */
   --color-accent: #b49a62;
   /**
-   * Lit brass. **The chrome, and only the chrome**: the mark, the live glyphs
-   * in the two bars, the caret, and the mark on a picked line.
+   * Lit brass. **The chrome, and only the chrome**: the wordmark, the live
+   * glyphs in the two bars, and the caret.
+   *
+   * ⚠ **It was also the mark on a picked line until 30 August.** There are no
+   * picked lines; the gutter's mark is the convergence mark now and it is
+   * `--color-accent`, which is the whole point of the two tokens being two.
    *
    * Added 23 August, directed, after the page was seen on a handset: the muted
    * brass read as correct and not as present, and the chrome is what a thumb
@@ -115,9 +125,9 @@
    * position and starts being an alarm.
    *
    * §11's rule is that amber marks overlap state and nothing else, and this does
-   * not touch it — brass is still spoken for, still unused until Phase 3, and
-   * still the only thing that marks a convergence. Two colours, two meanings,
-   * neither borrowed.
+   * not touch it — brass is spoken for, and since 31 August it is spent on the
+   * one thing it was reserved for: the convergence mark in the gutter. Two
+   * colours, two meanings, neither borrowed.
    *
    * 4.3:1 against the true-black ground, comfortably past the 3:1 WCAG 1.4.11
    * asks of a graphical control, and warm enough to sit with `--color-text`'s
@@ -1148,7 +1158,7 @@
   --caret-height: calc(var(--text-line) * 11 / 9);
 
   /**
-   * The mark on a picked line. **Its own width, because it is not a caret.**
+   * The convergence mark. **Its own width, because it is not a caret.**
    *
    * ⚠ **3px against the caret's 2px, and the extra pixel is the whole point.**
    * The mark answers one question — *which line* — and on a handset it was
@@ -3481,31 +3491,67 @@
  */
 
 /**
- * The mark on the picked line: **the caret's own width and colour, in the gutter
- * rather than in the text.** No highlight and no box — it borrows a vocabulary
- * the page has already taught, while sitting outside the line so it never claims
- * a character position.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  THE MARK — Phase 2 step 4, 31 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **This line converged with somebody.** A bar in the record's gutter, in
+ * `--color-accent`, on every line that has ever matched — and it does not go
+ * away.
+ *
+ * ⚠ **It is the tenant §11 reserved this gutter and this colour for, and it is
+ * the reason `picked` was kept unapplied rather than deleted on 30 August.**
+ * The pick mark that used to live here was the same drawing in
+ * `--color-chrome`; what changed is the claim, from *this is the line you
+ * tapped* to *this is a line two people wrote down*. **Nothing else may be put
+ * in this column.** A second thing in the gutter and neither of them means
+ * anything.
+ *
+ * ⚠ **The portal empties, the mark does not — §5 of
+ * `docs/re-direction/phase-2-convergence.md`.** *The portal is arrival; the mark
+ * is memory.* A convergence can land on a line hundreds back, and once the
+ * portal has been read, this is the only thing left on the page that says it
+ * ever happened. See `converged` in `lib/db/captures.ts` for the read that has
+ * no `read_at` term in it, deliberately.
+ *
+ * ⚠ **A mark, never a count and never a badge.** Same rule as the portal's
+ * door: one bit, is there or is there not. *Who* is a sentence and it lives in
+ * the console, which is where the line's words are — a name on a row would be
+ * competing with the capture for the one line's width.
+ *
+ * ⚠ **It marks a line, not a change to a line, so it never animates.** The
+ * landing blink says *this arrived*; this says *this is*, and a mark that
+ * flashed on arrival would be announcing a convergence that may be from March.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **The caret's own width and colour, in the gutter rather than in the text.**
+ * No highlight and no box — it borrows a vocabulary the page has already taught,
+ * while sitting outside the line so it never claims a character position.
  *
  * ⚠ **The height is the line's, not the caret's, and that is the whole of the
  * change made on 23 August.** It was `--caret-height` — a caret lying in the
- * gutter beside the words. On a handset that reads as *something is picked*
+ * gutter beside the words. On a handset that reads as *something is marked*
  * without reading as *this line is*, which is the only question the mark exists
  * to answer. Spanning the line's own text instead makes it a margin bar: the
  * same colour, the same width, the same gutter, and unmistakably attached to one
  * line. **A wrapped line gets a taller mark for free**, because `top`/`bottom`
- * describe the box rather than a fixed height guessing at it.
+ * describe the box rather than a fixed height guessing at it. (Nothing wraps
+ * since 28 August; the derivation is kept because it costs nothing and the rule
+ * it states — *measure the thing being marked* — is the swipe detent's too.)
  *
  * ⚠ **A scrim was the alternative and was rejected.** Dimming the rest of the
- * page to make one line stand out turns picking into a modal state, and it is
- * not one — the next tap can pick another line. It also punishes the record,
- * which is the product, and repeats the mistake `opacity-40` on in-flight lines
- * already made: the app reading as though it doubts what it is showing.
+ * page to make one line stand out turns the mark into a modal state, and it is
+ * not one — a record can have twenty marked lines in it. It also punishes the
+ * record, which is the product, and repeats the mistake `opacity-40` on
+ * in-flight lines already made: the app reading as though it doubts what it is
+ * showing.
  *
  * ⚠ **It hangs into the gutter's padding**, which is why the page's lines are
  * inset by `gutter` rather than by a margin: there has to be something for this
  * to hang into at the narrowest width, or the mark is off the left of the glass.
  */
-@utility picked {
+@utility converged {
   position: relative;
 
   &::before {
@@ -3529,19 +3575,31 @@
       floating bar reading as a bar that got cut off.
     */
     border-radius: var(--mark-width);
-    background-color: var(--color-chrome);
+    /*
+      ⚠ **`--color-accent`, and it was `--color-chrome` while this was a pick —
+      31 August.** §11 reserves the accent for overlap and nothing else, and this
+      is overlap. The two brasses never meet: the chrome is a control and lives
+      in the bars, the foot and the caret; the accent is a state and lives here,
+      in a column no control is allowed into.
+    */
+    background-color: var(--color-accent);
     /*
       **The pop is light, not thickness.** Width was spent once already and the
       note on `--mark-width` rules out spending it again; a box and a scrim are
-      ruled out above; and a second colour is Phase 2's to pick. What is left is
-      the vocabulary this page teaches everywhere else — `--row-light` is an
-      edgeless glow, the landing blink is opacity — so the mark **emits** rather
-      than thickens. Edgeless, so it adds no boundary to a page that has none,
-      and free of layout, so a shorter bar can read brighter than the taller flat
-      one it replaces.
+      ruled out above. What is left is the vocabulary this page teaches
+      everywhere else — the landing blink is opacity — so the mark **emits**
+      rather than thickens. Edgeless, so it adds no boundary to a page that has
+      none, and free of layout, so a shorter bar can read brighter than a taller
+      flat one.
+
+      ⚠ **This is also what buys the quieter brass its legibility.** The accent
+      is a stop under the chrome in luminance — 6.77:1 on the desk's charcoal
+      against the chrome's 9.66 — and the glow is how a 2.5px bar in it still
+      catches an eye scanning fifty lines, without spending the width the note
+      above rules out.
     */
     box-shadow: 0 0 0.5rem
-      color-mix(in srgb, var(--color-chrome) 55%, transparent);
+      color-mix(in srgb, var(--color-accent) 55%, transparent);
   }
 }
 
