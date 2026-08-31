@@ -54,3 +54,5 @@ dev.log
 # design canvas — the .dc.html artboards are the source; the seeded page is a build artifact
 /design/*.html
 !/design/*.dc.html
+/design/zine/*.html
+!/design/zine/*.dc.html

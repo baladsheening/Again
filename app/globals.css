@@ -506,6 +506,28 @@
     the chevron outright for them.
   */
   --animate-caret: caret 1.06s step-end infinite;
+  /**
+   * **The zine treatment's writing rule, breathing — 31 August.**
+   *
+   * The brief asked for a field that is a single `border-bottom` "glowing or
+   * flickering, mimicking a CRT". This is that, with three things pinned:
+   *
+   * ⚠ **`opacity` and nothing else.** Not `box-shadow`, not `filter`. On the
+   * first run this rule sits on the strip, and the strip rides
+   * `--keyboard-overlap` — an animated non-compositor property on a translating
+   * layer is dropped frames on the one surface this app runs on.
+   *
+   * ⚠ **A slow breath, not a flicker.** 2.6s and `ease-in-out` between 1 and
+   * 0.32. A true flicker is in the photosensitivity class, and the thing it
+   * would be nearest on this page is the *drawn caret* already blinking at
+   * 1.06s a few pixels away — two rates in one row read as a fault.
+   *
+   * ⚠ **100% is opacity 1, deliberately.** The `prefers-reduced-motion` block
+   * below runs every animation once at 0.01ms, so the rule lands on its last
+   * keyframe and stays there. A rule that settled at 0.32 would be a field
+   * that looks disabled to the reader who asked for less motion.
+   */
+  --animate-writing-rule: writing-rule 2.6s ease-in-out infinite;
 
   /**
    * The home wall's caption, announcing that it has just become a different
@@ -575,6 +597,28 @@
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   /*
+    ─────────────────────────────────────────────────────────────────────────
+     THE ZINE TREATMENT'S DISPLAY FACE — 31 August
+    ─────────────────────────────────────────────────────────────────────────
+
+    Instrument Serif, and it is spent on exactly two screens: the sign-in wall's
+    mark and the first run's command. Both are *composition* rather than record
+    — no list, no swipe, no density to hold — which is the whole argument for
+    letting a poster face onto them and for keeping it off everything else.
+
+    ⚠ **It is NOT `--font-display`, and the two must not be merged.** That one
+    is the wordmark's and is still Jost, whose set is fenced by seven measured
+    numbers a few lines below; the desk's `--mark-column` derives the record's
+    own width from `--wordmark-advance-ratio`. Pointing the wordmark at this
+    face means re-running `metrics.mjs` and `markwidth.mjs` and re-deriving that
+    column, which is the rename's job.
+
+    **The fallback is Georgia**, not `ui-serif`: the exported PNG and any
+    swap-window paint want a face with roughly this one's proportions, and the
+    system serif on Windows is Times, which is narrower and lighter.
+  */
+  --font-serif: var(--font-serif-face), Georgia, 'Times New Roman', serif;
+  /*
     ═══════════════════════════════════════════════════════════════════════════
      THE WORDMARK'S FACE, AND EVERY NUMBER THAT DEPENDS ON IT — 21 August
     ═══════════════════════════════════════════════════════════════════════════
@@ -582,6 +626,20 @@
     **Jost 500, set in capitals**, directed 21 August after looking at eleven
     faces set as AGAIN. Futura's geometry redrawn: a circular G, a sharp-apex A
     and one stem width.
+
+    ⚠⚠ **EVERY NUMBER BELOW IS MEASURED FOR **KEEP**, NOT FOR AGAIN — the
+    rename, 31 August.** The face did not change and the six vertical numbers
+    still did: they describe the *inked bounds of a particular word*, and AGAIN's
+    were set by the round G's overshoot below the baseline and the A's sharp apex
+    above the cap line. KEEP has neither. **K, E, E and P are flat top and
+    bottom**, so its bounds land on the cap line and the baseline exactly.
+
+    ⚠ **Which is why KEEP's set is SIZE-STABLE and AGAIN's was not.**
+    `actualBoundingBox*` rounds to whole pixels, so AGAIN read 0.775 ink at
+    200px and 0.797 at 1000px — the fence holds the 200px column, and the spread
+    was the rounding of a sub-pixel overshoot. KEEP reads the same numbers at
+    both sizes. Re-measured by `node_modules/.probe/keepmark.mjs`, which prints
+    both words side by side so neither is reasoned into the other.
 
     ─────────────────────────────────────────────────────────────────────────
      Why the eight lines are fenced together
@@ -602,15 +660,16 @@
     descent, and the inked bounds of the actual word. Jost and Ojuju disagree on
     all seven; do not reason one set into another.
 
-    ⚠ **Capitals are why `drop` is zero, and it is a fact about the case rather
-    than a rounding.** `--wordmark-drop` exists to take a descender's tail back
-    off a row, because the eye reads a word between its cap line and its baseline
-    and discounts the tail. AGAIN has no tail. The probe reads 0.035 below the
-    baseline in Jost and 0.01 in Bebas Neue, and both are the round G's
-    overshoot — half a pixel at 28px, which the eye reads as sitting *on* the
-    baseline, not below it. So there is nothing to take back. **If the mark ever
-    returns to a lowercase word this stops being zero**, which is why the token
-    and its subtraction in cinema-wall.tsx stay rather than being deleted.
+    ⚠ **Capitals are why `drop` is zero, and under KEEP it is zero exactly.**
+    `--wordmark-drop` exists to take a descender's tail back off a row, because
+    the eye reads a word between its cap line and its baseline and discounts the
+    tail. Neither word has a tail — but AGAIN still measured 0.035 below the
+    baseline, which was the round G's overshoot, half a pixel at 28px and read by
+    the eye as sitting *on* the baseline. **KEEP measures a true 0**: no round
+    letter reaches the baseline in it. The token was already 0 by judgement and
+    is now 0 by measurement. **If the mark ever returns to a lowercase word this
+    stops being zero**, which is why the token and its subtraction in
+    cinema-wall.tsx stay rather than being deleted.
 
     ⚠ **The slack is POSITIVE now, where Ojuju's was −0.135, and the sign is the
     whole meaning of it.** Ojuju hung `Again`'s g below its own box; capitals stop
@@ -621,23 +680,32 @@
   --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
   --wordmark-track: 0.08em;
   --wordmark-line: 1.445;
-  --wordmark-lead: -0.33em;
-  --wordmark-tail: -0.34em;
-  --wordmark-ink-ratio: 0.775;
+  --wordmark-lead: -0.37em;
+  --wordmark-tail: -0.375em;
+  --wordmark-ink-ratio: 0.7;
   --wordmark-drop-ratio: 0;
-  --wordmark-slack-ratio: 0.1175;
+  --wordmark-slack-ratio: 0.1525;
   /*
     ⚠ **The seventh, and the first horizontal one — 28 August.** Every other
     number in this fence is vertical, because until now nothing needed to know
     how *wide* the mark sets. The record column and the tool stack do: directed,
     neither may cross into the mark's own band on the desk. See `--mark-column`.
 
-    **How wide AGAIN sets, per 1px of font-size, in this face at this tracking.**
-    Measured by `node_modules/.probe/markwidth.mjs` at 20, 24, 32 and 64px —
-    3.5695 / 3.5690 / 3.5693 / 3.5691, which is the check that it is a *ratio*
+    **How wide KEEP sets, per 1px of font-size, in this face at this tracking.**
+    Measured by `node_modules/.probe/keepmark.mjs` at 20, 24, 32 and 64px —
+    2.6594 / 2.6595 / 2.6592 / 2.6592, which is the check that it is a *ratio*
     and not a size. It has to be: the tracking is in `em`, so the whole advance
-    scales with the type. At the desk's 32px mark that is 114.2px, and the live
-    page measures the mark's box at 114.
+    scales with the type. At the desk's 32px mark that is 85.1px, where AGAIN set
+    114.2.
+
+    ⚠⚠ **THE MARK'S BAND IS NOW 74.5% OF ITS OLD WIDTH, AND THAT IS THE ONE
+    CHANGE IN THIS RENAME THAT MOVES LAYOUT.** `--mark-column` derives from this
+    ratio and `--record-measure` derives from that, so the desk's reading column
+    gets **wider** — the band it has to clear shrank. `--record-floor` reads the
+    ratio too, so it follows without being re-typed. **Re-run `markgap.mjs` and
+    `logocol.mjs` after touching this number**: the floor's whole justification
+    is that it is the lowest one that stays continuous across
+    `--breakpoint-rail`, and continuity is a property of the ratio.
 
     ⚠ **It is the advance, not the ink**, so it includes the trailing 0.08em the
     tracking adds after the final N — 2.56px at 32px. That is deliberate: a band
@@ -648,7 +716,7 @@
     Bebas Neue disagree on this as they disagree on the rest: 3.569 against
     2.8875. Do not scale one face's set into another's.
   */
-  --wordmark-advance-ratio: 3.569;
+  --wordmark-advance-ratio: 2.6592;
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -657,8 +725,10 @@
 
     **Held on purpose for a refresh later, directed 21 August.** Bebas Neue has
     no lowercase at all: the family is capitals, so it is the one face that
-    cannot be set in the wrong case, and the `I` in AGAIN carries the same weight
-    as the `N` beside it. Declared with `preload: false` in app/layout.tsx, so it
+    cannot be set in the wrong case. It was chosen against AGAIN, where the `I`
+    carried the same weight as the `N` beside it; **it has not been looked at set
+    as KEEP**, which is a four-letter word with two identical middle letters and
+    a different problem. Declared with `preload: false` in app/layout.tsx, so it
     is declared and not downloaded.
 
     Swap these eight in for the eight above, and flip `preload` there:
@@ -666,17 +736,28 @@
         --font-display: var(--font-bebas-neue), ui-sans-serif, system-ui, sans-serif;
         --wordmark-track: 0.1em;
         --wordmark-line: 1.3;
-        --wordmark-lead: -0.24em;
-        --wordmark-tail: -0.34em;
-        --wordmark-ink-ratio: 0.72;
+        --wordmark-lead: -0.24em;      ← still AGAIN
+        --wordmark-tail: -0.34em;      ← still AGAIN
+        --wordmark-ink-ratio: 0.72;    ← still AGAIN
         --wordmark-drop-ratio: 0;
-        --wordmark-slack-ratio: 0.19;
-        --wordmark-advance-ratio: 2.8875;
+        --wordmark-slack-ratio: 0.19;  ← still AGAIN
+        --wordmark-advance-ratio: 2.447;
 
-    ⚠ **The ninth is measured at Bebas's own 0.1em tracking**, so it is only
-    right if the tracking above is swapped in with it. It is condensed — 2.8875
-    against Jost's 3.569 — which is nearly a fifth narrower and would give the
-    record column back about 45px of window on the desk.
+    ⚠⚠ **FOUR OF THOSE ARE STILL MEASURED FOR AGAIN AND ARE MARKED SO — do not
+    swap this set in without re-running the probe.** The advance is re-measured
+    for KEEP (2.447, against AGAIN's 2.8875) because it was cheap and because a
+    wrong number here would silently re-derive the record column. The four
+    vertical ones are the inked bounds of a word this face is not currently
+    setting, and **guessing them is precisely the failure this fence exists to
+    prevent** — six numbers describing a typeface, or a word, that is no longer
+    there. `node_modules/.probe/keepmark.mjs` prints the set; point it at
+    `--font-bebas-neue` and read them off.
+
+    ⚠ **The advance is measured at Bebas's own 0.1em tracking**, so it is only
+    right if the tracking above is swapped in with it. It is condensed — 2.447
+    against Jost's 2.6592 — which is now only about 8% narrower, where under
+    AGAIN it was nearly a fifth. **The rename took most of that margin already**:
+    a four-letter word closes the gap between a condensed face and a normal one.
 
     ⚠ **Seven of those eight are measured; the tracking is not.** 0.1em is a
     starting point rather than a reading — Bebas is condensed, so its caps want
@@ -4867,5 +4948,305 @@
         133.3333%
       );
     }
+  }
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  THE ZINE TREATMENT — 31 August
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Directed: a redesign toward "digital zine composition" — a grainy darkroom
+ * ground, a high-contrast serif command, typewriter labels, lowercase
+ * interface, raw text instead of icons.
+ *
+ * ⚠⚠ **IT IS SPENT ON TWO SCREENS AND MUST NOT REACH THE RECORD.** The sign-in
+ * wall and the empty first run are *composition*: one dominant element, no
+ * list, no swipe, nothing to scan. The record is the opposite — up to two
+ * hundred one-line captures read with a thumb — and every rule below is wrong
+ * there. Specifically:
+ *
+ * - **The palette stays.** `--color-chrome` means a control and
+ *   `--color-accent` means a line converged; a monochrome record deletes the
+ *   convergence mark, and `--color-muted` is what tells a crossed-off line from
+ *   a live one. Strict black-and-white works on these two only because neither
+ *   has a state to show.
+ * - **Centred text stops here.** A centred column of two hundred lines has no
+ *   edge for the eye to return to.
+ * - **The grain never rides a scroll.** Both screens this is on are
+ *   unscrollable by construction — the wall is one card, and an empty record
+ *   has nothing in it — so the layer is composited once and never again. That
+ *   is not a coincidence to spend casually: a full-bleed noise layer under a
+ *   moving record is the OLED-smear note in `--color-bg` made worse.
+ */
+
+/**
+ * The paper: a fixed, full-bleed noise layer *under* the content.
+ *
+ * `screen` over a black ground lifts the noise into visible speckle without
+ * touching the black itself, so the page reads as a surface with tooth rather
+ * than as an absence — the same complaint the desk's `#14140f` ground answered,
+ * solved a second way for the two screens that keep true black.
+ *
+ * ⚠ **The image is a `data:` URI in a stylesheet, and both halves matter.**
+ * `proxy.ts` sets `img-src 'self' blob: data:`, which admits it — while
+ * `style-src` admits no inline attribute, so this could never have been written
+ * on the element. Tiled at 160px: an `feTurbulence` rasterises at the size of
+ * the box it filters, so a full-bleed one is a viewport-sized filter and a tile
+ * is 160x160 of it, repeated.
+ */
+@utility grain-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: screen;
+
+  /**
+   * ⚠⚠ **THE PAPER IS A PHOTOGRAPH, NOT A FILTER — and three procedural
+   * attempts were thrown away to get here, 31 August.**
+   *
+   * The sequence, because each failure named the next thing to try:
+   *
+   * 1. **One high-frequency `feTurbulence`.** Read as *television static* —
+   *    even, fine, identical everywhere.
+   * 2. **Static plus a soft cloud** at a paragraph-sized wavelength. Better, and
+   *    still wrong: a cloud on its own is a gradient, and a gradient is the one
+   *    thing a scanned print never looks like.
+   * 3. **Both, plus hand-drawn scratches and dust.** Closer again, and still not
+   *    it, because the marks were *placed* — eight lines a person chose, which
+   *    is a drawing of damage rather than damage.
+   *
+   * 4. **The reference image’s own ground, lifted out by
+   *    `node_modules/.probe/paper.mjs`.** Real grain, real scratches, real dust
+   *    — and still wrong, for a reason none of the first three had: it kept
+   *    only the HIGH frequencies. A dense, even field of curly white specks at
+   *    one scale, which reads as lint on a scanner bed. **Measured mean
+   *    4.5/255 — it lifted the page by well under a percent at any opacity
+   *    this layer could plausibly carry.**
+   *
+   * ⚠⚠ **THE CHARACTER OF A PHOTOCOPIED PAGE IS MOSTLY LOW-FREQUENCY, and
+   * that is what every attempt above threw away.** What the eye reads as *a
+   * scanned print* is the soft, paragraph-sized blooms of uneven ink, plus a few
+   * long sparse scratches — not the speckle. The speckle is what you notice
+   * last, and it was the only thing the extraction kept.
+   *
+   * **So the ground is `public/paper-archive.jpg`, a real scan** — Texturelabs
+   * `Paper_337`, *Archive photocopy paper*, free for commercial use with no
+   * attribution required (texturelabs.org/terms). It carries both frequencies
+   * because it is one photograph of one real plate: 1600x1074, cropped off its
+   * white scan surround, **mean 23.5/255.**
+   *
+   * ⚠ **The opacity is 0.32, and it was picked by eye against a live specimen
+   * rather than derived** — 0.5 was the figure the old, near-invisible ground
+   * wore, and a photograph five times its mean does not want the same number.
+   * At 0.32 the field lifts about **2.9%**, which is where the paper reads as
+   * a surface without the handset giving up its black. The ladder either way:
+   * 0.50 is 4.6%, 0.10 is the old ground’s lift exactly.
+   *
+   * ⚠ **The 1920px file is the page’s own preview; 4240 and 6560 sit behind
+   * the download button** if this is ever wanted sharper than a desk.
+   *
+   * ⚠ **THERE IS NO TOOTH LAYER, AND THIS PARAGRAPH USED TO SAY THERE WAS.**
+   * It described a 236x540 photograph with a 160px turbulence tile riding on
+   * top; the rule has carried ONE `background-image` since the procedural
+   * attempts were thrown away, and the tile went with them. Corrected rather
+   * than deleted, because a note claiming a layer that is not there is how the
+   * next reader spends an hour looking for it.
+   *
+   * ⚠ **1600x1074 at `cover` means the handset UPSCALES it** — about 1.2x on a
+   * 390 in portrait, since a landscape plate covering a tall box is cropped to
+   * its middle. The finest grain softens there and nothing puts it back. If the
+   * handset ever reads too smooth, the answer is the 4240px download, not a
+   * synthetic tile over a photograph.
+   *
+   * ⚠ **`cover`, never `repeat`.** A repeated scratch is a wallpaper pattern,
+   * which is worse than no scratch at all — and this image has exactly the
+   * features the eye is best at pairing up.
+   *
+   * ⚠ **`screen`, so it can only lighten** — correct on a true-black ground, and
+   * why the dark patches need nothing drawn for them: they are simply where the
+   * lightening is not. The image’s mean is 23.5/255, so most of the field
+   * lifts by about 2.9% at this opacity while the scratches reach much further.
+   *
+   * ⚠ **`/paper-archive.jpg` is served from our own origin, which `img-src 'self'`
+   * admits** — see `proxy.ts`. It is a file rather than a `data:` URI on
+   * purpose: 170KB of image is 226KB of base64, and it would ride in the
+   * stylesheet on every page in the app, where a file is fetched once and
+   * cached.
+   */
+  background-image: url("/paper-archive.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/**
+ * ⚠⚠ **`grain-ink` WAS HERE AND IS DELETED — built and removed within the hour,
+ * 31 August. Do not build it again without reading this.**
+ *
+ * It was the "ink bleed" half of the brief: the same noise, `multiply`, over a
+ * block of type. On black `multiply` is a no-op, so in theory it bit only the
+ * white letters — a photocopy's bite, with no filter on the type itself, so the
+ * words stayed selectable and hinted.
+ *
+ * **It rendered as a light grey rectangle instead, and the reason is
+ * structural.** `mix-blend-mode` blends with the backdrop *inside the nearest
+ * stacking context*, and both screens put the content in one of their own
+ * (`relative z-[1]`, which is what holds them above `grain-ground`'s fixed
+ * layer). Inside that context the backdrop is **transparent** — the page's black
+ * is painted by `body`, outside it — and grey multiplied by nothing is grey. So
+ * the layer drew itself, as a visible box with the exact bounds of the block it
+ * was supposed to be invisible over. Caught on the first screenshot.
+ *
+ * ⚠ **The fixes are all worse than the absence.** Giving the block an opaque
+ * `bg-bg` to bite into puts a black rectangle over the full-bleed paper, so the
+ * grain stops at the block's edges and the composition gains a seam. Dropping
+ * the `z-[1]` to blend against `body` puts the content *under* `grain-ground`,
+ * which is what the z-index is there to prevent. Both trade a real defect for a
+ * decorative one.
+ *
+ * **`grain-ground` alone carries the texture**, and it is the half that was
+ * doing the work: paper has tooth, and ink bleed at 28% opacity was never going
+ * to read at these sizes anyway. Removing the mechanism rather than correcting
+ * it, in the order *How things get fixed* asks for. If a distressed face is
+ * genuinely wanted later, the answer is a face with the distress drawn into it —
+ * which is a licensed one — not a layer over a clean one.
+ */
+
+/**
+ * The command. The one oversized thing on either screen.
+ *
+ * ⚠ **`text-transform`, never typed capitals.** The markup says *Write it
+ * down.* and the CSS shouts it, so a screen reader is not handed a word in caps
+ * to spell out.
+ *
+ * ⚠⚠ **IT CARRIES NO SIZE, AND THAT IS DELIBERATE.** Two things wear it — the
+ * wall's mark and the first run's command — at different sizes, and each takes
+ * a **pair** of arbitrary classes at the call site: `text-[4.75rem]` with
+ * `stack:text-[7.125rem]` for the command, `text-[6.5rem]` with
+ * `stack:text-[10rem]` for the mark. A size in here plus a `stack:` override on
+ * the element would be two declarations of one property inside the same media
+ * query, resolved by their order in the compiled sheet — the trap
+ * `--bar-gutter` and `sheet-row` are both written to avoid.
+ *
+ * ⚠ **The desk pair is a deliberate SECOND STEP, and the only one in the app.**
+ * The standing rule is *the desk is the same design, four-thirds the size*,
+ * which would give the command 101px. A hero is not body type: it is sized
+ * against the *viewport* rather than against a measure, and 101px on a 1440
+ * desk is a headline that has stopped being one. 7.125rem is 152px at the
+ * desk's rem — the root is already pinned at 4/3 by `--breakpoint-stack`, so
+ * 152 / (16 × 4/3) = 7.125 — which is the drawn figure exactly. Everything else
+ * on both screens takes the 4/3 and nothing else.
+ *
+ * ⚠ **The brief asked for a 120px MINIMUM and a minimum is the one thing this
+ * cannot be**: at 390px "IT DOWN." at 120px is wider than the screen. So it is
+ * a size that scales, with the poster figure taken at the width that holds it.
+ */
+@utility zine-command {
+  font-family: var(--font-serif);
+  line-height: 0.86;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+
+/**
+ * The typewriter label — the "label-maker" half of the brief.
+ *
+ * Mono, lowercase, widely tracked, at `--text-micro`. ⚠ **Not `micro`**, which
+ * is the interface label in the sans and is *uppercase*: two utilities that
+ * differ in face, case and tracking are two things, and merging them would put
+ * this tracking on every `micro` in the app.
+ *
+ * ⚠ **This is mono's third job and it stays scarce.** Timestamps, the handle
+ * field, the day stamps — and now these two screens, neither of which has a day
+ * stamp on it to collide with.
+ */
+@utility zine-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+  line-height: 1.3;
+}
+
+/**
+ * The sign-in wall's three beats — *write*, *match*, *keep?* — 31 August.
+ *
+ * ⚠ **A utility of its own rather than `zine-label` plus a size at the call
+ * site.** Two utilities setting `font-size` on one element are resolved by their
+ * order in the compiled sheet, and a class attribute cannot state that order —
+ * the trap `--bar-gutter` and `sheet-row` are both written to avoid. One
+ * utility declares the property once.
+ *
+ * ⚠ **It cannot be `zine-label` itself made bigger.** That utility also dresses
+ * the form's field labels, its *show*, and its two footer links — four things on
+ * this same screen that were not asked to grow, and one of them (*show*) sits
+ * inside a 44px hit area it would start to crowd.
+ *
+ * **0.8125rem against `--text-micro`'s 0.6875** — directed, *a bit bigger*. The
+ * tracking comes down from 0.2em to 0.16em with it: tracking is set for a size,
+ * and 0.2em on 13px is the same optical gap as 0.24em was on 11.
+ */
+@utility zine-beat {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  line-height: 1.3;
+}
+
+/**
+ * A note *on* something rather than a label *of* it — the lock's sentence above
+ * the writing rule.
+ *
+ * ⚠ **0.14em where `zine-label` is 0.2em, and the difference is measured rather
+ * than felt.** At 45 characters the label's tracking runs the sentence into a
+ * 390px handset's gutters. Tracking is what gives way, because the alternative
+ * is a smaller size on the one line that carries a privacy consequence.
+ */
+@utility zine-caption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  line-height: 1.4;
+}
+
+/**
+ * A field that is a rule, not a box — the brief's "the input field isn't a box".
+ *
+ * ⚠ **`input-text` still comes with it at every call site**, so the coarse-
+ * pointer 16px survives: below that iOS zooms the viewport on focus, and that
+ * is hardware behaviour rather than a style. This utility sets the *ground* and
+ * says nothing about the type.
+ */
+@utility field-rule {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-text);
+  border-radius: 0;
+  padding-inline: 0;
+  outline: none;
+}
+
+/**
+ * The rule under the field somebody is about to write on, breathing. See
+ * `--animate-writing-rule` for why it is opacity, why it is slow, and why it
+ * settles lit.
+ */
+@utility writing-rule {
+  animation: var(--animate-writing-rule);
+}
+
+@keyframes writing-rule {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.32;
   }
 }

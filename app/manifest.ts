@@ -33,8 +33,8 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Again',
-    short_name: 'Again',
+    name: 'Keep',
+    short_name: 'Keep',
     /* The tagline, the same string `app/layout.tsx` sets as the description. */
     description: 'things to try. things to try again.',
     start_url: '/',

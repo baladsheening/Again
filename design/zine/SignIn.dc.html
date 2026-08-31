@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Fira+Sans:wght@400&amp;display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #ffffff; } a:hover { color: #ffffff; }
+    .grain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .grain-under { opacity: 0.16; mix-blend-mode: screen; z-index: 1; }
+    .grain-over { opacity: 0.30; mix-blend-mode: multiply; z-index: 3; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: lowercase; color: #ffffff; }
+    .body { font-family: 'Fira Sans', system-ui, sans-serif; font-size: 13px; line-height: 1.5; color: #ffffff; }
+    .rule { background: #ffffff; height: 1px; }
+    .pulse { animation: pulse 2.6s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.32; } }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse { animation: none; }
+    }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; background: #000000; overflow: hidden;">
+
+  <svg class="grain grain-under" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <filter id="gu"><feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="4" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    <rect width="100%" height="100%" filter="url(#gu)"></rect>
+  </svg>
+
+  <div style="position: relative; z-index: 2; width: 100%; height: 100%;">
+
+    <div style="position: absolute; top: 82px; left: 0; right: 0; text-align: center; font-family: 'Instrument Serif', Georgia, serif; font-size: 104px; line-height: 0.9; letter-spacing: -0.015em; color: #ffffff;">KEEP.</div>
+
+    <div class="rule" style="position: absolute; top: 208px; left: 147px; width: 96px;"></div>
+
+    <div style="position: absolute; top: 244px; left: 30px; right: 30px; display: flex; flex-direction: column; gap: 22px;">
+      <div>
+        <div class="mono" style="margin-bottom: 8px;">write</div>
+        <div class="body">Anything you want to do, try, watch, buy, or remember. No categories. No overthinking. One line is enough.</div>
+      </div>
+      <div>
+        <div class="mono" style="margin-bottom: 8px;">match</div>
+        <div class="body">Your lines are matched with the people you follow. When you both write the same thing, you&rsquo;ll know.</div>
+      </div>
+      <div>
+        <div class="mono" style="margin-bottom: 8px;">again?</div>
+        <div class="body">When something turns out to be worth it, say you&rsquo;d do it again &mdash; or simply mark it done.</div>
+      </div>
+    </div>
+
+    <div style="position: absolute; top: 552px; left: 30px; right: 30px; display: flex; flex-direction: column; gap: 30px;">
+      <div>
+        <div class="mono" style="margin-bottom: 9px;">email</div>
+        <div class="rule"></div>
+      </div>
+      <div>
+        <div class="mono" style="margin-bottom: 9px;">password</div>
+        <div class="rule pulse" style="height: 1.5px;"></div>
+      </div>
+    </div>
+
+    <div style="position: absolute; top: 662px; left: 0; right: 0; display: flex; justify-content: center;">
+      <div style="padding: 12px 16px; font-family: 'Instrument Serif', Georgia, serif; font-size: 30px; color: #ffffff; border-bottom: 1.5px solid #ffffff;">sign in</div>
+    </div>
+
+    <div style="position: absolute; top: 748px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+      <div class="mono" style="padding: 9px 14px;">create an account</div>
+      <div class="mono" style="padding: 9px 14px;">reset password</div>
+    </div>
+
+  </div>
+
+  <svg class="grain grain-over" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <filter id="go"><feTurbulence type="fractalNoise" baseFrequency="0.92" numOctaves="3" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    <rect width="100%" height="100%" filter="url(#go)"></rect>
+  </svg>
+
+</div>
+</x-dc>
+</body>
+</html>

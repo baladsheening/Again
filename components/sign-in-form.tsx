@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { ChevronIcon } from '@/components/icon-chevron'
-import { EyeIcon } from '@/components/icon-eye'
 import { authClient } from '@/lib/auth-client'
 
 type Mode = 'sign-in' | 'sign-up' | 'reset'
@@ -112,23 +110,52 @@ export function SignInForm() {
       )}
 
       {/*
-        No `mt-1`. The submit is one gap-3 from the last field, the same 12px that
-        separates the fields from each other, so the whole form is on one rhythm
-        rather than setting the button slightly apart. The optical centring on
-        /sign-in is derived from these gaps — changing one means recomputing it.
+        ⚠ **This said *no `mt-1`* and it now carries `mt-2` — 31 August, and the
+        rule it broke is deleted rather than broken.** The old note was: the
+        submit sits one `gap-3` from the last field, the same 12px that separates
+        the fields, so the form is on one rhythm rather than setting the button
+        slightly apart. **That was right while the submit was a box the size of a
+        field.** It is a word now, and a word on the fields' own rhythm reads as
+        a third field rather than as the thing you press. The extra 8px is the
+        smallest amount that says so.
+
+        Its second sentence is gone with the layout: /sign-in's optical centring
+        was two measured `pb-` corrections and they are deleted — see the
+        docblock on `app/sign-in/page.tsx` for why the condition went.
+      */}
+      {/*
+        ⚠ **The submit is the serif, underlined — a word rather than a box.** It
+        is `self-start` so the rule under it is as wide as the word and not as
+        wide as the form: a full-width underline beneath two full-width field
+        rules is three identical lines down the page, and the one that is a
+        control has to be the one that looks unlike the others.
+
+        `zine-command` carries the face, the case and the tracking; the size is
+        a call-site pair for the reason its docblock gives. It is deliberately
+        NOT `CONTROL_TEXT` — `control-box`'s coarse-pointer growth would put air
+        between the word and its own underline, and the underline is the control.
+
+        ⚠⚠ **`tap-target`, and it is not optional — `zine.mjs` caught its
+        absence.** Dropping `control-box` dropped the 44px floor with it: this
+        measured **30.8px on a 390 handset**, and the comment that stood here
+        claimed 1.875rem cleared 44 on its own, which was reasoned rather than
+        measured and was wrong. `tap-target` puts the floor back through a
+        pseudo-element, so the hit area is 44px and **the drawing does not move
+        by a pixel** — the same fix `docs/decisions.md` names for the sign-out
+        pill, applied before it could ship rather than a fortnight after.
       */}
       <button
         type="submit"
         disabled={busy}
-        className={`border-rule hover:border-text rounded-md border px-4 transition-colors disabled:opacity-50 ${CONTROL_TEXT}`}
+        className="zine-command border-text hover:text-muted hover:border-muted tap-target mt-2 self-start border-b-[1.5px] pb-1 text-[1.875rem] normal-case transition-colors disabled:opacity-50"
       >
         {busy
-          ? 'One moment…'
+          ? 'one moment…'
           : mode === 'sign-up'
-            ? 'Create account'
+            ? 'create account'
             : mode === 'reset'
-              ? 'Send reset link'
-              : 'Sign in'}
+              ? 'send reset link'
+              : 'sign in'}
       </button>
 
       {/*
@@ -145,25 +172,31 @@ export function SignInForm() {
       {message && <p className="text-sm">{message}</p>}
 
       {/*
-        `mt-4` on top of the form's gap-3 makes 28px, which is `gap-7` — the same
-        distance the tagline sits above the first field. These switches change what
-        the form is, so they are not part of its rhythm; setting them at the gap
-        that separates the header from the form says that. It is the one place in
-        this form that overrides the gap, which is why the number is written as the
-        arithmetic it is rather than as `mt-4` with no explanation.
+        These switches change what the form *is*, so they are deliberately not on
+        its rhythm — `mt-6` on top of the form's `gap-3` is 36px against the 12px
+        between fields, which is what says so.
 
-        Careful: /sign-in's optical centring is derived from what sits below the
-        fields, and this is part of it (docs/decisions.md).
+        ⚠ **It was `mt-4`, whose whole justification was that 16 + 12 = 28 = the
+        `gap-7` the tagline sat above the first field.** There is no tagline and
+        no `gap-7` on this wall any more, so the arithmetic pointed at nothing;
+        the number is now simply large enough to separate a switch from a
+        control, and it is stated as that rather than derived from a gap that
+        left.
+
+        ⚠ **Stacked, not wrapped.** `flex-wrap` in a row was right for three
+        12px phrases; at `zine-label`'s 0.2em tracking they no longer fit a
+        handset's column side by side, and a wrapped row of two-then-one reads as
+        a mistake.
       */}
-      <div className="text-muted mt-4 flex flex-wrap gap-3.5 text-xs">
+      <div className="text-muted mt-6 flex flex-col items-start gap-1">
         {mode !== 'sign-in' && (
-          <Switch onClick={() => setMode('sign-in')}>Sign in with a password</Switch>
+          <Switch onClick={() => setMode('sign-in')}>sign in with a password</Switch>
         )}
         {mode !== 'sign-up' && (
-          <Switch onClick={() => setMode('sign-up')}>Create an account</Switch>
+          <Switch onClick={() => setMode('sign-up')}>create an account</Switch>
         )}
         {mode === 'sign-in' && (
-          <Switch onClick={() => setMode('reset')}>Reset password</Switch>
+          <Switch onClick={() => setMode('reset')}>reset password</Switch>
         )}
       </div>
     </form>
@@ -172,20 +205,21 @@ export function SignInForm() {
 
 function Switch({ onClick, children }: { onClick: () => void; children: string }) {
   return (
-    // A chevron instead of an underline. Three underlined phrases in a row at
-    // 12px is a lot of rule for very little text, and the underline was also the
-    // heaviest thing on a page whose only real content is two boxes. The chevron
-    // carries the affordance and colour carries the hover.
+    // ⚠ **The chevron is gone — 31 August, with the zine treatment's *no icons*
+    // rule.** Its argument was that three *underlined* phrases in a row at 12px
+    // is a lot of rule for very little text, and that argument is untouched:
+    // these are not underlined either. What replaced the rule is the typewriter
+    // label — mono, lowercase, widely tracked — which reads as a switch because
+    // nothing else on the wall is set that way, and colour still carries the
+    // hover. `ChevronIcon` is drawn elsewhere and stays in the tree.
     //
-    // `inline-flex items-center` keeps the glyph on the text's baseline block
-    // rather than the line box's, and `gap-1` is tight on purpose: the chevron is
-    // a marker on the phrase, not a sibling of it.
+    // Stacked rather than wrapped in a row: at this tracking three phrases on
+    // one line run past a handset's column and wrap unevenly.
     <button
       type="button"
       onClick={onClick}
-      className="hover:text-text tap-target inline-flex items-center gap-1 transition-colors"
+      className="zine-label hover:text-text tap-target block text-start transition-colors"
     >
-      <ChevronIcon />
       {children}
     </button>
   )
@@ -217,6 +251,20 @@ function Field({
     // size; the `min-w-0 flex-1` pair that used to be here was for sharing a row
     // with the other fields, and there is no row now.
     <div className="flex flex-col gap-1">
+      {/*
+        ⚠ **The name came OUT of the field and became a real `<label>` — 31
+        August, with the zine treatment.** It was a `placeholder` carrying an
+        `aria-label` beside it, which is the arrangement a box affords: the name
+        sits in the box until you type. **A rule is not a box and has no inside**,
+        so the name has to stand above it — and once it does, the honest element
+        is a `<label>`, which gives the rule a click target and a name that does
+        not vanish the moment somebody types. The `aria-label` that stood in for
+        it is deleted rather than kept beside it: two names on one field is one
+        of them going stale.
+      */}
+      <label htmlFor={id} className="zine-label text-muted mb-1 block">
+        {label}
+      </label>
       <div className="relative">
         <input
           id={id}
@@ -225,39 +273,40 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
           required={required}
-          placeholder={label}
-          // The name lives inside the field, so it goes the instant anything is
-          // typed. `aria-label` carries it for a screen reader independently of
-          // that — a placeholder is decoration that happens to read as a name,
-          // and it is the wrong thing to leave a field's only name resting on.
-          aria-label={label}
           // Mono on passwords, for the same functional reason the handle field
           // gets it (§10 homoglyphs): the moment these characters are visible,
           // telling l from 1 from I is the entire job. Applied whether or not it
           // is currently revealed, so toggling does not reflow the text.
           //
-          // The placeholder is exempt — it is interface text, not a password,
-          // and in mono it read as a different kind of thing to the field beside
-          // it. pr-11 on password fields only, so the text never runs under the
-          // eye.
-          className={`bg-surface border-rule placeholder:text-muted focus:border-muted w-full rounded-md border pl-3 outline-none transition-colors ${
-            isPassword ? 'pr-11 font-mono placeholder:font-sans' : 'pr-3'
-          } ${CONTROL_TEXT}`}
+          // ⚠ **`field-rule` is the zine treatment's field: a border-bottom and
+          // nothing else.** `control-box` still comes with `CONTROL_TEXT`, so
+          // the box keeps its height and the 44px touch floor on a coarse
+          // pointer — what went is the surface, the border and the radius, not
+          // the hit area. `focus:border-muted` is deleted with them: the focus
+          // signal on a rule is the caret and the browser's own ring, and a
+          // hairline that dims on focus reads as the field going away.
+          //
+          // pr-14 on password fields only, so the text never runs under the
+          // reveal.
+          className={`field-rule ${isPassword ? 'pr-14 font-mono' : ''} ${CONTROL_TEXT}`}
         />
         {isPassword && (
-          // inset-y-0 rather than a fixed height: the control matches the input
-          // exactly and keeps doing so if the type scale moves again.
+          // ⚠ **Raw text, not the eye — 31 August.** The brief forbids icons and
+          // this is the one place the app had a control that *was* a picture:
+          // `EyeIcon` is still drawn for nothing else and stays in the tree. A
+          // word also states which way the toggle goes, which an eye with a slash
+          // through it never quite does.
+          //
+          // inset-y-0 gives it the input's full height, so it clears 44px on
+          // touch for free once `control-box` grows. min-w-11 does the same for
+          // width, and only on touch — 44px of it on a desktop would be eating
+          // field width to no purpose.
           <button
             type="button"
             onClick={() => setRevealed((v) => !v)}
-            aria-label={revealed ? 'Hide password' : 'Show password'}
-            // inset-y-0 gives it the input's full height, so it clears 44px on
-            // touch for free once `control-box` grows. min-w-11 does the same
-            // for width, and only on touch — 44px of it on a desktop would be
-            // eating field width to no purpose.
-            className="text-muted hover:text-text absolute inset-y-0 right-0 flex items-center justify-center px-3 transition-colors pointer-coarse:min-w-11"
+            className="zine-label text-muted hover:text-text absolute inset-y-0 right-0 flex items-center justify-center transition-colors pointer-coarse:min-w-11"
           >
-            <EyeIcon off={revealed} />
+            {revealed ? 'hide' : 'show'}
           </button>
         )}
       </div>

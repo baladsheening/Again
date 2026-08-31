@@ -1,0 +1,123 @@
+{
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "The two screens"
+    },
+    {
+      "id": "page-2",
+      "name": "The chrome question"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "title": "first run — handset",
+      "page": "page-1",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "SignIn.dc.html",
+      "title": "sign-in wall — handset",
+      "page": "page-1",
+      "x": 510,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "FirstRunDesk.dc.html",
+      "title": "first run — desk",
+      "page": "page-1",
+      "x": 1020,
+      "y": 0,
+      "w": 1440,
+      "h": 900
+    },
+    {
+      "file": "SignInDesk.dc.html",
+      "title": "sign-in wall — desk",
+      "page": "page-1",
+      "x": 2580,
+      "y": 0,
+      "w": 1440,
+      "h": 900
+    },
+    {
+      "file": "RecordNow.dc.html",
+      "title": "the record — as it is",
+      "page": "page-2",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "RecordCorners.dc.html",
+      "title": "the record — the chosen chrome",
+      "page": "page-2",
+      "x": 510,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "FirstRunInChrome.dc.html",
+      "title": "first run — same chrome",
+      "page": "page-2",
+      "x": 1120,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-brief",
+      "page": "page-1",
+      "x": 0,
+      "y": -230,
+      "w": 460,
+      "text": "Zine treatment — the two screens that are composition, not record.\n\nThe explainer lives in ONE place: the sign-in wall, which every account passes through before its first capture. The first run instructs and nothing else — you cannot swipe a line you have not written. `about` is the third home, for when the swipe means something.\n\nBOTH SIGN-IN BOARDS ARE BUILT AND SHIPPED TO THE TREE. The first-run board is built as its typography only — see page two."
+    },
+    {
+      "id": "note-scale",
+      "page": "page-1",
+      "x": 1120,
+      "y": -230,
+      "w": 460,
+      "text": "120px is a clamp, not a minimum. Desk runs 152px; the handset runs 76px on two lines. Same design, one ramp — a fixed px hero would be the only thing in the app that doesn't scale."
+    },
+    {
+      "id": "note-now",
+      "page": "page-2",
+      "x": 0,
+      "y": -300,
+      "w": 460,
+      "text": "AS IT IS — and this board now shows the GLASS, which it did not before.\n\nThe bars are --glass-tint (the ground at 74%) over an 18px backdrop-filter, and a blur reads only when something passes behind it — so the record runs UNDER both, as it does in the app. Drawn flat, they looked like painted panels, which understated the very thing this comparison is about.\n\nThe brass says one thing: a control. The amber hairline in the gutter says another: this line converged. The padlock says a third: held out of matching.\n\n⚠ NOTHING TO THE RIGHT IS BUILT. The app today is this board. The corner chrome is a drawing."
+    },
+    {
+      "id": "note-corners",
+      "page": "page-2",
+      "x": 510,
+      "y": -300,
+      "w": 470,
+      "text": "THE CHOSEN CHROME — 31 Aug, directed.\n\nTHE APP'S OWN GLASS IS KEPT: --glass-tint (the ground at 74%) over an 18px backdrop-filter, top and bottom, exactly as the bars wear it today. The corner treatment changes what is ON the bars, not what they are made of — and the record runs under both, which is the only thing that makes a blur read as glass.\n\nNO HAIRLINE. The strip carries a 1px top border today; here the blur is the edge. Glass with a rule drawn on it is a panel with a border, which is what this gets away from.\n\nThe mark and the profile sit on the bar's centre line — where they are now — rather than hanging off the top corner.\n\nBottom row, four evenly spaced slots: search, +, convergence, tray. Even spacing and a centred + cannot both be had with four glyphs; the + sits on the second quarter's centre line.\n\nSTILL OPEN: no amber hairline in the gutter for a converged line — the only durable record that a match ever happened — and the padlock is the word \"locked\". Both come back for one colour and one glyph."
+    },
+    {
+      "id": "note-inchrome",
+      "page": "page-2",
+      "x": 1120,
+      "y": -300,
+      "w": 460,
+      "text": "THE FIRST RUN, ON THE SAME CHROME — so the app is one thing throughout.\n\nEvery corner is identical to the record beside it, to the pixel. The poster sits in exactly the gap the record occupies, so when the first line lands NOTHING SWAPS: the poster empties and the record fills the same box, inside furniture that never moved.\n\nTHE LOCK SENTENCE HAS LEFT THIS SCREEN — directed. It appears under the FIRST LINE instead, and only while that line is the only one. On an empty page it was an instruction with no target: you cannot swipe a line you have not written. It needs no seen-flag — nothing is ever deleted, so a record passes through one line exactly once."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-2"
+  }
+}

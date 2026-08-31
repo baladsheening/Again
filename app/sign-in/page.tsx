@@ -3,142 +3,175 @@ import { redirect } from 'next/navigation'
 import { SignInForm } from '@/components/sign-in-form'
 import { getSessionUser } from '@/lib/db'
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The sign-in wall, in the zine treatment — 31 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Directed, and drawn first: a grainy darkroom ground, the mark oversized in a
+ * high-contrast serif, three typewriter-labelled beats explaining the product,
+ * and a form made of rules rather than boxes. See the zine block at the foot of
+ * `app/globals.css` for why the treatment is spent on this screen and the empty
+ * first run, and reaches the record on no account.
+ *
+ * ⚠⚠ **THIS SCREEN IS THE ONLY PLACE THE PRODUCT IS EXPLAINED BEFORE A PERSON
+ * COMMITS, AND ONE OF THE THREE BEATS IS A DISCLOSURE.** *match* says plainly
+ * that what you write is compared against the people you follow — which since
+ * 31 August is true of every capture on write, `SHARED_SCOPES` by default. A
+ * new account that reached the record without passing this sentence would be
+ * writing into a pool it had not been told about. **Do not quietly drop a beat
+ * to shorten the page.**
+ *
+ * ⚠ **What was deleted here, and why it is deletion rather than breakage.** The
+ * old wall carried two measured optical corrections — `pointer-coarse:pb-[10px]`
+ * and `pointer-fine:pb-[20px]` — which centred the *field pair* inside a block
+ * that was not symmetric about it, and a
+ * `gap-[calc(14px_-_var(--wordmark-slack))]` that held 14px of visible air under
+ * a Jost mark whose ink stops short of its box. **Both answered conditions this
+ * layout no longer has**: nothing is optically centred on the fields any more —
+ * the composition is top-down, mark first — and the mark is not `wordmark`, so
+ * `--wordmark-slack` measures a face this screen does not set. Removing the
+ * mechanism rather than re-deriving it, in the order *How things get fixed*
+ * asks for. The numbers survive in git with their workings.
+ *
+ * ⚠ **The two-line tagline is gone with them** — *things to try. things to try
+ * again.* / *the things i want. the things i'd buy again.* It said what the app
+ * felt like and never what it did, and the note asking this wall to explain the
+ * app's usefulness is what the three beats answer. ⚠ **The first line survives
+ * as `metadata.description` in `app/layout.tsx`**, which is where a search
+ * result or a link preview reads it; the note there says the two were one
+ * string, and now there is one string in one place.
+ *
+ * ⚠ **The mark is `Keep.` — the rename landed 31 August**, and the fence at the
+ * top of globals.css was re-measured with it: KEEP is a different word, so the
+ * advance, the trim and the inked bounds all moved even though the face did not.
+ * See `node_modules/.probe/keepmark.mjs`.
+ *
+ * ⚠ **The two-face inconsistency SURVIVES the rename and is still deliberate.**
+ * The bar sets the mark in Jost; this screen sets it in `--font-serif`. A person
+ * never sees both at once — this screen is pre-auth, the bar is post-auth — and
+ * unifying them still costs a re-derived record column. The rename was supposed
+ * to be the moment to do it and was not: the fence had to be re-measured either
+ * way, and doing both at once would have left no way to tell which change moved
+ * the column. **That is the next job, and the measurement is already written.**
+ */
 export default async function SignInPage() {
   if (await getSessionUser()) redirect('/')
 
-  // `max-w-sm` at every width, matching /onboarding and /reset-password. The
-  // container used to widen to 42.5rem at 560px, where the form went inline and
-  // needed the room to divide up; the form is stacked now, and a stacked form in
-  // 680px is a column of very wide, very short boxes.
   return (
-    <main
-      // The top padding carries the *bottom* safe-area inset on purpose, and it
-      // is not a typo. `safe-bottom` adds that inset below for clearance, which
-      // is right, but this element's padding is also what `my-auto` centres
-      // inside — so an inset on one side only moves the content up by half of it,
-      // and the more home indicator a device has, the higher the form floats.
-      // Mirroring the inset on top keeps the centring box symmetric on every
-      // device. It replaces `py-12`, whose only remaining job was this 3rem top;
-      // one declaration per edge now, and no override to reason about.
-      //
-      // The `3rem` base matches /onboarding and /reset-password. It was briefly
-      // 4rem, to lift the fields to the midline; the extra rem worked on a laptop
-      // and overshot on any phone with an indicator, because it was correcting a
-      // fixed imbalance with a device-variable property. The correction moved to
-      // the block below, where it belongs.
-      //
-      // ⚠ An arbitrary *property* class rather than the `style` attribute this
-      // was, and that is not cosmetic: the CSP in proxy.ts allows no inline style
-      // attributes, so this declaration was being dropped in production and
-      // nowhere else. See the note on `wordmark-trim` in globals.css.
-      className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col [--safe-bottom-base:3rem] pt-[calc(3rem+env(safe-area-inset-bottom))]"
-    >
+    <>
       {/*
-        `my-auto`, not `justify-center` on the parent. When a phone keyboard
-        takes half a landscape viewport the content is taller than the container,
-        and centred flex content then overflows in *both* directions — the top
-        goes above the scroll origin and cannot be reached. Auto margins collapse
-        to zero when there is no free space, so this degrades to top-aligned and
-        stays scrollable.
+        The paper. `fixed` and full-bleed, so it does not care what the column
+        above it is doing, and `aria-hidden` because it is a texture with no
+        content in it. Nothing on this screen scrolls, so it composites once.
+
+        ⚠ **There is no second, `multiply` layer over the type, and there was for
+        an hour.** See the `grain-ink` tombstone in globals.css: a blend mode
+        inside its own stacking context has a transparent backdrop, so it drew
+        itself as a grey rectangle with the exact bounds of the block it was
+        meant to be invisible over. The tooth is this layer's job alone.
       */}
+      <div aria-hidden className="grain-ground" />
+
       {/*
-        Optical centring, not spacing — nothing renders in this padding. `my-auto`
-        centres the whole block (mark, tagline, fields, button, switches), but the
-        thing that should look centred is the field pair, and the block is not
-        symmetric about it. Padding the light side makes it symmetric, which moves
-        the pair by half of what you add.
+        ⚠ **`relative z-[1]` is what keeps the content above the grain**, which
+        is `z-index: 0` on a fixed layer. Without a stacking context of its own
+        the column would sit *under* the speckle rather than in front of it, and
+        `screen` over type reads as fog rather than as tooth.
 
-        **Both corrections are on the bottom since 16 August**, when the tagline
-        became two lines and the header grew 20px:
+        The top padding still carries the *bottom* safe-area inset, and it is
+        still not a typo: `safe-bottom` adds that inset below for clearance, and
+        mirroring it on top keeps whatever this centres symmetric on a device
+        with a home indicator.
 
-          mouse  113.76px above the pair, 94px below  → 19.76 → pad bottom 20
-          touch  113.76px above the pair, 104px below →  9.76 → pad bottom 10
-
-        Touch is lighter because `control-box` grows the fields and the button to
-        48px there, which adds 10px below the pair while the header and the 12px
-        switches do not move. Both numbers are the difference itself, and both are
-        **measured in a browser rather than derived** — the .76 is the mark's ink
-        and is rounded away deliberately.
-
-        ⚠ **The touch number changed side, not just size.** It was `pt-1` — 4px on
-        top, because the block used to be heavier *below* on a coarse pointer. One
-        line of tagline was enough to reverse that, which is the argument for
-        measuring these rather than adjusting them.
-
-        Neither depends on the safe-area inset, unlike the `--safe-bottom-base`
-        lever this replaced, so both hold on any screen. A device that reports
-        neither pointer gets no correction and sits about 10px low, which is the
-        right way to fail.
+        Below the desk it is one column at `max-w-sm`, mark first. At and above
+        `--breakpoint-stack` it becomes the drawn two-column spread — the mark,
+        and the three beats on the left, the form on the right — which
+        is the composition a 1440 has room for and a handset does not.
       */}
-      <div className="my-auto flex w-full flex-col gap-7 pointer-coarse:pb-[10px] pointer-fine:pb-[20px]">
+      <main className="gutter safe-bottom relative z-[1] mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
         {/*
-          `text-start`, not `text-left`: the mark and tagline hang off the same
-          edge as the first input, and which edge that is follows the writing
-          direction rather than being pinned to the left. Nothing else in here
-          uses a physical direction, so this stays correct under `dir="rtl"`.
+          `my-auto` rather than `justify-center` on the parent: when a phone
+          keyboard takes half a landscape viewport the content is taller than the
+          container, and centred flex content then overflows in *both* directions
+          with the top above the scroll origin and unreachable. Auto margins
+          collapse to zero with no free space, so this degrades to top-aligned
+          and stays scrollable. On the desk the grid centres the two columns
+          against each other instead, so the auto margins are handed back.
         */}
-        {/*
-          **14px of visible air, expressed as what it is** (15 August).
-
-          The h1's box is `--text-wordmark` tall (`wordmark` sets `line-height:
-          1`), but the ink inside it is not centred on that box — so the gap the
-          eye sees is the box gap plus wherever the ink actually stops, which is
-          `--wordmark-slack`. The box gap is the difference, and 14 is the design
-          constant.
-
-          ⚠ **The slack is positive for this mark, and was negative until
-          21 August** — which is the whole reason this is an expression rather
-          than a number. Ojuju hung `Again`'s `g` below the box, so the
-          subtraction made the gap *bigger* and landed at about 17.8px of box for
-          14px of visible air. Jost sets AGAIN in capitals, which stop short of
-          the box, so the same expression now makes it *smaller* — about 10.7px
-          of box for the same 14px of air. **One expression served both kinds of
-          face without a branch, and the change of face is what proved it.** Do
-          not "simplify" the minus sign away.
-
-          It has been three literals — `gap-4`, then 9px when the mark had no
-          descender, then wrong again when the type size changed hours later.
-          None of them are the number now; the measurement is.
-
-          ⚠ **This follows the mark's *word* and *face*, not its size or case.**
-          Either changes `--wordmark-slack`, `wordmark-trim` and the masthead row
-          together — the table on `wordmark-trim` has the measurements and says to
-          re-measure rather than reason.
-        */}
-        <div className="flex flex-col gap-[calc(14px_-_var(--wordmark-slack))] text-start">
-          <h1 className="wordmark text-wordmark">Again</h1>
+        <div className="my-auto flex flex-col gap-9 stack:my-0">
           {/*
-            Holding a line of this on one line is what set the stacked container
-            to `max-w-sm`. It had been `max-w-xs`, which leaves 280px after the
-            gutter — narrower than the sentence, and narrower than any phone made
-            in years. Shrinking the type to fit 280px was the wrong lever; the
-            container was the thing that was wrong.
+            ⚠ **The mark carries no rule under it, and the wrapper that held the
+            two together is gone with it — directed.** The hairline was the one
+            piece of furniture on this screen that was not type, and it was
+            justified as separating the mark from the beats without spending a
+            heading on them. The beats have their own labels, so it was drawing a
+            division the type already makes. **Do not put it back as a lighter or
+            shorter rule**: the argument against it is that the separation exists,
+            not that the line was too heavy.
 
-            **Two lines since 16 August**, and they are one block rather than two
-            children of the header: the gap above is the mark-to-tagline distance
-            and is far too much between two lines that restate each other. Sitting
-            them in their own wrapper with no gap gives them the leading of a
-            wrapped paragraph, which is what they are.
-
-            ⚠ **The second line is the longer one now** — 43 characters against
-            35 — so it is what the container's width has to hold. Measured at
-            320px, the tightest screen this app targets: it still sets on one
-            line, with the container at 280px after the gutter. It is the line to
-            check against if this copy is ever rewritten longer, and a wrap would
-            put the form a further 10px low.
-
-            ⚠ **Adding this line moved both correction numbers above**, because it
-            grew the block over the field pair by 20px — and it reversed the sign
-            of one of them. They are measured, not reasoned.
+            The outer stack's `gap-9` is now the only thing between the mark and
+            the first beat.
           */}
-          <div>
-            <p className="text-muted text-sm">things to try. things to try again.</p>
-            <p className="text-muted text-sm">the things i want. the things i’d buy again.</p>
+          <h1 className="zine-command text-[6.5rem] stack:text-[10rem]">Keep.</h1>
+
+          {/*
+            **Three beats: write, match, keep?** — the product's whole loop, and
+            the third one is the name, which is the point of it being there. ⚠ **It
+            followed the rename for that reason and not as a copy tweak**: the
+            beat is the name asked as a question, so if the name moves it moves.
+
+            ⚠ **These words are the first run's, MOVED rather than copied.**
+            `components/page-screen.tsx` carried all three; it now carries the
+            command alone, because two of the three describe states a person with
+            an empty record is not in — you cannot swipe a line you have not
+            written, and nothing can match when nothing is written. The
+            explanation lives here, once, before the first capture. **Do not put
+            it back on the first run as well**: two tellings drift, and the one
+            that drifts is the one nobody re-reads.
+          */}
+          <div className="flex flex-col gap-6 stack:max-w-[34rem]">
+            <Beat label="write">
+              The things you want to do, try, watch, buy, or remember. No categories. No
+              overthinking. One line is enough.
+            </Beat>
+            <Beat label="match">
+              Your lines are matched with the people you follow. When you both write the
+              same thing, you&rsquo;ll know.
+            </Beat>
+            <Beat label="keep?">
+              When something turns out to be worth it, say you&rsquo;d do it again — or
+              simply mark it done.
+            </Beat>
           </div>
         </div>
 
-        <SignInForm />
-      </div>
-    </main>
+        {/*
+          The form. On a handset it follows the beats down the page; on the desk
+          it is the right-hand column and the top margin is handed back, because
+          the grid is what puts the two side by side.
+        */}
+        <div className="mt-12 mb-auto stack:mt-0 stack:mb-0">
+          <SignInForm />
+        </div>
+      </main>
+    </>
+  )
+}
+
+/**
+ * One beat: a typewriter label over a sentence.
+ *
+ * ⚠ **The label is a `<p>` and not an `<h2>`.** These read as a caption above
+ * their sentence, not as sections of a document, and three headings under an
+ * `<h1>` on a page whose real content is a login form is structure invented for
+ * a screen reader that nothing else on the page has.
+ */
+function Beat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="zine-beat text-muted mb-2">{label}</p>
+      <p className="text-sm">{children}</p>
+    </div>
   )
 }

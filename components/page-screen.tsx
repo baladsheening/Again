@@ -32,7 +32,7 @@ import {
   portalAction,
   type PortalLineView,
 } from '@/app/actions/portal'
-import { AttachGlyph, LinkGlyph, LockGlyph, UndoGlyph } from './glyphs'
+import { AttachGlyph, LinkGlyph, LockGlyph, UndoGlyph, WriteGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { useRowSwipe } from './row-swipe'
 import { touchQuery, useMatches } from './pointer'
@@ -1796,6 +1796,30 @@ export function PageScreen({
   const empty = lines.length === 0
 
   /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  ⚠ **The lock's sentence waits for a line to exist — 31 August, directed**
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * It was on the first-run screen, above the writing rule, and the direction
+   * was that it should **appear when somebody makes an entry** instead. That is
+   * right for the reason the other two beats left that screen: *you cannot swipe
+   * a line you have not written*. On an empty page it is an instruction with no
+   * target; under the first line it is a caption on the thing itself.
+   *
+   * ⚠ **`=== 1` is a first-run test and not a count, for the same reason `empty`
+   * is.** Nothing is ever deleted (§5) — a crossed-off line stays in the record,
+   * struck — so the record's length only ever climbs, and it passes through 1
+   * exactly once in an account's life. There is no seen-flag, no column and no
+   * state: the sentence is there for as long as the first capture is the only
+   * capture, and the second one retires it for good.
+   *
+   * ⚠ **It says *matching*, never *private*.** The swipe takes a line out of the
+   * pool; it does not change who may read the record. Same rule as everywhere
+   * else this sentence has been.
+   */
+  const justStarted = lines.length === 1
+
+  /**
    * **The two tools, built once and handed to both placements.**
    *
    * ⚠ **Built here rather than inline on each**, because `Foot` and `ToolStack`
@@ -1902,7 +1926,7 @@ export function PageScreen({
       is the one control on the page that is always lit — and on an empty record
       it is the only one.
     */
-    write: openSheet,
+    write: empty ? null : openSheet,
     /*
       ⚠ **The page's own list is the test, and it is not the whole record.**
       Search reads across settled captures too, so a person whose every line is
@@ -2584,7 +2608,7 @@ export function PageScreen({
         */
         className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+var(--page-lead))]"
       >
-        <h1 className="sr-only">Again</h1>
+        <h1 className="sr-only">Keep</h1>
 
         {/*
           ───────────────────────────────────────────────────────────────────────
@@ -2627,25 +2651,35 @@ export function PageScreen({
           `tracked-people.tsx`, which is the precedent this was asked for. A
           paragraph in the record's type would read as the first capture.
 
-          ⚠ **THREE HEADED STEPS, CENTRED ON BOTH AXES — directed, 31 August,
-          after the first look at it.** It began as two muted paragraphs at the
-          head of the record and is now *Write whatever / See what clicks /
-          Choose what gets matched*, which is the product's whole loop in three
-          lines.
+          ⚠⚠ **IT WENT THROUGH THREE HEADED STEPS AND IS NOW ONE COMMAND — the
+          zine treatment, directed and drawn first, 31 August.** The sequence in
+          one line, because the reasoning is the useful part: two muted
+          paragraphs → three numbered steps → three headed steps, cut for
+          verbosity → **the command alone**, because two of the three described
+          states a person with an empty record is not in. **You cannot swipe a
+          line you have not written, and nothing can match when nothing is
+          written.** The explanation moved to `app/sign-in/page.tsx`, which every
+          account passes through *before* its first capture, so nothing is
+          disclosed later than it was.
+
+          ⚠ **What survived the cut, and why exactly one thing did:** the lock's
+          sentence, as a **caption on the writing rule** rather than a step. It
+          is the only one of the three with a consequence attached — a capture is
+          shareable on write since 31 August — and *a control belongs where its
+          effect appears*. Its own note is on the element.
 
           ⚠ **The numbering was there for a round and is gone — directed.** The
-          three are a loop rather than a procedure: nothing is done in that
+          beats are a loop rather than a procedure: nothing is done in that
           order, and *1, 2, 3* on a first run promises a setup flow that does not
-          exist. The headings carry the sequence on their own.
+          exist. That still governs the wall's three, which carry no numbers.
 
-          ⚠ **Step three says *matched*, never *private*, and that is a
+          ⚠ **The copy says *matching*, never *private*, and that is a
           correctness rule rather than a tone one.** The swipe locks a line **out
           of the matching pool**; it does **not** change who may read the record
           — `listCapturesForOtherUser` keeps all four of its terms and browsing
           still goes through sharing. Copy promising privacy here would be the
           first screen a new account sees telling it something untrue about the
-          one guarantee it cares about. *Choose what gets matched* is the whole
-          claim and all of it.
+          one guarantee it cares about.
 
           - **`m-auto` inside `<main>`'s flex column is what centres it, and that
             is the one mechanism — no height is typed anywhere.** `main`'s box is
@@ -2668,60 +2702,115 @@ export function PageScreen({
             the page that is not a record and cannot recur, which is the whole of
             why it may be centred. **Do not take it as a precedent for anything
             that appears more than once.**
-          - **The headings are `micro`** — the interface label, the same utility
-            as *People* in the profile's pill. ⚠ **Deliberately NOT `stamp`**,
-            which would have echoed the day stamps that appear in this column the
-            moment there is a record. Mono is scarce here by the same rule the
-            accent is: timestamps, the handle input and the day stamps, and on
-            every other label it is texture rather than signal.
-          - **Full ink on the heading, muted on the sentence**, which is the only
-            hierarchy in the block — and with the numbering gone it is the only
-            thing separating the three at all. ⚠ **Not an `<ol>`**: the steps are
-            a loop, not an order, and list markers would put back the numbering
-            that was taken out.
-          - ⚠ **NO `leading-*` HERE, AND THAT IS THE FIX FOR *IT READS TOO AIRY*
-            — 31 August.** It shipped as `leading-relaxed`, which is 1.625: at
-            `text-sm` that is a **22.75px line on 14px type, looser than the
-            page's own body at a larger size** (15px on 1.45 = 21.75). The block
-            was set airier than anything around it by a class I typed, and it was
-            read as the *face* being wrong. **The override is deleted rather than
-            replaced with a tighter number**, so the leading is `body`'s 1.45
-            inherited and there is no second opinion about it on this page.
-          - **`gap-5` between the steps is one blank line of this block's own
-            type** — 20px against a 20.3px line — which is what a paragraph break
-            is. It was `gap-7`, a number with nothing behind it.
+          - ⚠ **NO `leading-*` on the sub-line, and that is the fix for *it reads
+            too airy* — 31 August.** It shipped as `leading-relaxed`, which is
+            1.625: at `text-sm` that is a **22.75px line on 14px type, looser
+            than the page's own body at a larger size** (15px on 1.45 = 21.75).
+            It was set airier than anything around it by a class I typed, and it
+            was read as the *face* being wrong. **The override is deleted rather
+            than replaced with a tighter number**, so the leading is `body`'s
+            1.45 inherited and there is no second opinion about it on this page.
 
-          ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held
-          rather than forgotten.** Brass means *a control*, and a `+` in a
-          paragraph is a reference to one — painting it puts a second brass `+`
-          on a screen whose whole instruction is *aim at the brass one*. The
-          strip has exactly one, and the sentence names it.
+          ⚠ **The `+` is not named in the copy any more, and the §11 note that
+          stood here is kept because the rule it states outlived its sentence.**
+          The old sub-line began *Tap + to write…* with the `+` deliberately not
+          in `text-chrome`: brass means **a control**, a `+` in a paragraph is a
+          *reference* to one, and painting it puts a second brass `+` on a screen
+          whose whole instruction is *aim at the brass one*. Nothing on this
+          screen is brass now except the chrome itself. **If a control is ever
+          named in copy here again, it is named in ink.**
         */}
         {empty && (
-          <div className="m-auto flex max-w-sm flex-col gap-5 text-center">
-            <div>
-              <h2 className="micro mb-1.5">Write whatever</h2>
-              <p className="text-muted text-sm">
-                Tap + to write anything you&rsquo;re thinking about — something you want
-                to do, try, watch, buy, or simply remember. No categories, no
-                overthinking. One line is all it takes.
+          <>
+            {/*
+              The paper, and it is here rather than on `<body>` for one reason:
+              **`empty` is the only state on this page that cannot scroll.** A
+              full-bleed noise layer under a moving record is the OLED-smear note
+              in `--color-bg` made worse; under a record with nothing in it, it
+              composites once and never again. It goes the instant a line lands.
+
+              ⚠ **There is no second, `multiply` layer over the type** — see the
+              `grain-ink` tombstone in globals.css. It would also have had to
+              stop short of the bar and the strip, whose brass is at ratios §11
+              measures.
+            */}
+            <div aria-hidden className="grain-ground" />
+
+            {/*
+              ⚠ **`m-auto` is the whole centring mechanism and no height is typed
+              anywhere.** Auto margins take all the free space, and `main`'s
+              content box already *is* the gap between the bar's bottom edge and
+              the strip's top edge — `100svh + env(safe-area-inset-top)` is the
+              whole screen, `--bar-height` carries that inset back out, and
+              `page-hem` reserves the strip. So the block lands in the middle of
+              the space the record would occupy, on all four surfaces, and the
+              desk follows at 4/3 for free.
+
+              ⚠ **It had a sibling below it until the lock's caption moved to the
+              first *line* — 31 August.** If anything is ever put back after this
+              block, the auto margins will centre against it rather than against
+              the column, which is a layout shift with no declaration behind it.
+
+              `relative z-[1]` puts it in front of the grain, which is a fixed
+              layer at `z-index: 0`.
+            */}
+            <div className="relative z-[1] m-auto max-w-sm text-center">
+              {/*
+                ⚠ **Sentence case in the markup, capitals in the CSS.** A screen
+                reader handed WRITE IT DOWN. may spell it out. `zine-command`
+                does the shouting.
+
+                ⚠ **The line break is a `<br>` and it is deliberate on both
+                surfaces.** *Write / it down.* is the drawn break, and left to
+                itself the line would break differently at every width — a
+                command whose shape changes as the window moves is not a poster.
+              */}
+              <h2 className="zine-command text-[4.75rem] stack:text-[7.125rem]">
+                Write
+                <br />
+                it down.
+              </h2>
+
+              <p className="text-muted mt-9 text-sm">
+                the things you want to do, try, watch, buy — or just remember.
               </p>
+
+              {/*
+                ⚠⚠ **A LARGE, TAPPABLE `+` WHERE A HAIRLINE USED TO BE — 31
+                August, directed.** The rule was a full stop: it closed the
+                poster and asked for nothing. The one thing this screen wants is
+                the first capture, so what sits under the command is the control
+                that starts one, at a size no other target in this app will ever
+                have.
+
+                ⚠ **It is the ONLY `+` on this screen.** `tools.write` is `null`
+                while the record is empty, so the strip's slot stands empty and
+                fills the moment a line exists — see the prop's note in
+                `foot.tsx`. Two pluses would be two answers to *where do I
+                start*.
+
+                ⚠⚠ **`openSheet` MUST be called straight from this handler.** iOS
+                raises a keyboard only for a focus that happens inside the
+                gesture that asked for it, and `openSheet` → `raise()` focuses
+                the field synchronously. Wrapping this in an effect, a timeout or
+                a state change first is the one thing that breaks it, and it
+                breaks on the only surface this app is used on.
+
+                It carries `--color-chrome` because it is chrome — §11's rule is
+                that brass means *a control*, and this is the most important one
+                on the page. The zine's monochrome stops at the type.
+              */}
+              <button
+                type="button"
+                onClick={openSheet}
+                aria-label="Write a capture"
+                className="text-chrome mx-auto mt-8 flex items-center justify-center [--glyph:4.75rem]"
+              >
+                <WriteGlyph />
+              </button>
             </div>
-            <div>
-              <h2 className="micro mb-1.5">See what clicks</h2>
-              <p className="text-muted text-sm">
-                Your lines are matched against the people you track. When you both write
-                down the same thing, you both hear about it.
-              </p>
-            </div>
-            <div>
-              <h2 className="micro mb-1.5">Choose what gets matched</h2>
-              <p className="text-muted text-sm">
-                Some things are just for you. Swipe a line away and it stays out of
-                matching.
-              </p>
-            </div>
-          </div>
+
+          </>
         )}
 
         {/*
@@ -3383,6 +3472,30 @@ export function PageScreen({
             )
           })}
         </ol>
+
+        {/*
+          ⚠ **The lock's sentence, under the first line and only under it — 31
+          August, directed.** It sat on the first-run screen and was moved here:
+          on an empty page it is an instruction with no target, and *you cannot
+          swipe a line you have not written*. Under the one line that exists, it
+          is a caption on the thing it governs — the same rule (*a control
+          belongs where its effect appears*) that put cross off and rewrite on
+          the console.
+
+          ⚠ **It needs no seen-state, and `justStarted` says why**: nothing is
+          ever deleted, so the record's length only climbs and passes through 1
+          once in an account's life. The second capture retires this for good.
+
+          It sits after the list rather than inside it, so it is not a row: a
+          `<li>` here would be a line of the record that is not a capture, and
+          every swipe, tap and count on this page assumes those are the same
+          thing.
+        */}
+        {justStarted && (
+          <p className="zine-caption text-muted mt-6 text-center">
+            swipe a line away and it stays out of matching
+          </p>
+        )}
 
         {/*
           ⚠ **The tail was a control, stopped being one, and is one again for a

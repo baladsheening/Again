@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Fira+Sans:wght@400&amp;display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #ffffff; } a:hover { color: #ffffff; }
+    .grain { position: absolute; inset: 0; pointer-events: none; opacity: 0.26; mix-blend-mode: screen; background-image: url("paper-1.jpg"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.18'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23t)'/%3E%3C/svg%3E"); background-size: cover, 160px 160px; background-position: center; background-repeat: no-repeat, repeat; }
+    .caption { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: lowercase; color: #ffffff; opacity: 0.7; }
+    .anchor { position: absolute; padding: 12px; display: flex; align-items: center; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; background: #000000; overflow: hidden;">
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <div style="position: relative; z-index: 1; width: 100%; height: 100%;">
+
+    <!-- The same chrome as the record, to the pixel: the app's own glass, no
+         hairline, and the mark and profile on the bar's centre line. Nothing
+         swaps when the first line lands. -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 2;">
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 36px; line-height: 1; color: #ffffff;">again</div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <circle cx="12" cy="8.5" r="3.6"></circle>
+        <path d="M5 19.5c1.5-3.4 4.2-5 7-5s5.5 1.6 7 5"></path>
+      </svg>
+    </div>
+
+    <!-- The poster, centred in exactly the gap the record would occupy. -->
+    <div style="position: absolute; top: 56px; bottom: 56px; left: 0; right: 0; display: flex; flex-direction: column;">
+      <div style="margin: auto; max-width: 300px; text-align: center; padding: 0 20px;">
+        <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 76px; line-height: 0.86; letter-spacing: -0.015em; text-transform: uppercase; color: #ffffff;">Write<br>it down.</div>
+        <div style="margin-top: 36px; font-family: 'Fira Sans', system-ui, sans-serif; font-size: 13px; line-height: 1.45; color: #ffffff; opacity: 0.7;">the things you want to do, try, watch, buy — or just remember.</div>
+        <!--
+          ⚠ **THE RULE IS REPLACED BY A LARGE, TAPPABLE + — directed.** A 96px
+          hairline was a full stop: it closed the poster and asked for nothing.
+          The one thing this screen wants is the first capture, so the thing
+          under the command is the control that starts one, at a size no other
+          target in the app will ever have.
+
+          ⚠ **It is the ONLY + on this screen** — the bottom bar's slot is empty
+          here and fills the moment a line exists. One screen, one plus; the
+          first tap is enormous and then it retires to the bar for good.
+        -->
+        <div style="margin: 40px auto 0; display: flex; justify-content: center;">
+          <svg width="76" height="76" viewBox="0 0 76 76" fill="none" stroke="#ffffff" stroke-width="2.2" aria-hidden="true">
+            <path d="M38 14v48M14 38h48"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- The record's bottom row, identical: four evenly spaced slots — search,
+         +, convergence, tray. -->
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 56px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; justify-items: center; background: rgba(0,0,0,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 2;">
+      <svg width="25" height="25" viewBox="0 0 25 25" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5"></circle><path d="M15.8 15.8l5 5"></path>
+      </svg>
+      <!-- ⚠ The + slot is deliberately EMPTY on the first run: the big one above
+           is the only one, and this fills the moment a line exists. -->
+      <span></span>
+      <svg width="30" height="26" viewBox="0 0 30 26" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <circle cx="11" cy="13" r="8"></circle>
+        <circle cx="19" cy="13" r="8"></circle>
+      </svg>
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <path d="M3 14.5h5.5l1.6 2.8h5.8l1.6-2.8H23"></path>
+        <path d="M3 14.5L6.2 6h13.6L23 14.5v5.2a1.3 1.3 0 0 1-1.3 1.3H4.3A1.3 1.3 0 0 1 3 19.7z"></path>
+      </svg>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

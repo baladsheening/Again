@@ -239,30 +239,37 @@ export function SearchGlyph() {
 /**
  * Foot. **The portal: who else.**
  *
- * ⚠ **It is `YouGlyph` with a second person in it, and that pairing is the
- * whole drawing.** The bar's *you* is one figure; a convergence is the moment
- * there are two, which is the one thing this app exists to say. Same
- * relationship as `TrayGlyph`/`SettleGlyph` — one drawing, one addition, and the
- * addition is the meaning.
+ * ⚠⚠ **TWO OVERLAPPING CIRCLES SINCE 31 AUGUST, AND IT WAS TWO PEOPLE BEFORE.**
+ * Directed, off the `RecordCorners` artboard, whose note is the argument in one
+ * line: *two circles overlapping, which is what the engine computes.*
+ * `lib/overlap.ts` joins two people's captures and keeps the intersection —
+ * this is that set, drawn. The old glyph named the **parties**; this names the
+ * **operation**, and the operation is the thing the portal is a door to.
  *
- * ⚠ **Redrawn on this grid rather than scaled from `YouGlyph`.** Two figures at
- * that figure's size do not fit a 20 box, so the front one is smaller and the
- * one behind smaller again; scaling the existing paths would have kept their
- * proportions and lost the box. The heads do not overlap — at r 2.9 and 2.35
- * they span 4.85→10.65 and 11.55→16.25 — because two circles that intersect at
- * `--glyph-foot`'s 26px read as one shape with a notch in it.
+ * ⚠ **What was given up, so nobody restores it by halves.** The old drawing was
+ * `YouGlyph` with a second person added, which made a pair with the bar's *you*
+ * exactly as `TrayGlyph`/`SettleGlyph` do — one drawing, one addition, the
+ * addition being the meaning. **That pairing is gone**, and it was real. What
+ * replaces it is a different and better claim: a Venn is not a picture of people
+ * at all, so it cannot be misread as a members list, which is the failure the
+ * old note was already fighting when it made the second figure a partial arc.
  *
- * ⚠ **The figure behind is a partial arc, not a second whole person.** A
- * complete second body makes the pair read as a *group* — a members list — where
- * what is meant is *you, and someone*.
+ * ⚠ **A Venn cannot be square, so this is the one glyph wider than it is tall.**
+ * Height is 2r and width is 2r + d, so the two are equal only when the circles
+ * coincide. The set's ink runs 3.5→16.5 both ways; this runs **2.0→18.0
+ * horizontally and 4.25→15.75 vertically** — the same horizontal extent the old
+ * portal glyph had, so nothing beside it in the strip shifts.
+ *
+ * ⚠ **d/r is 0.78, and the ratio is the drawing.** Push the centres apart and
+ * the lens closes to a slit that disappears at 26px; pull them together and the
+ * pair reads as one blob with a notch. The artboard sets d = r; this is a little
+ * tighter because it is drawn at a third of that size.
  */
 export function PortalGlyph() {
   return (
     <Glyph>
-      <circle cx="7.75" cy="7" r="2.9" />
-      <path d="M2.25 16.75c0-2.75 2.55-4.5 5.5-4.5s5.5 1.75 5.5 4.5" />
-      <circle cx="13.9" cy="6" r="2.35" />
-      <path d="M13.6 12.3c2.55.2 4.15 1.8 4.15 4.45" />
+      <circle cx="7.75" cy="10" r="5.75" />
+      <circle cx="12.25" cy="10" r="5.75" />
     </Glyph>
   )
 }

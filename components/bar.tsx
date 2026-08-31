@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { TrayGlyph, YouGlyph } from './glyphs'
+import { YouGlyph } from './glyphs'
 
 /**
  * **The bar: the page, and where you go.** The wordmark, the settled tray, you.
@@ -124,7 +124,7 @@ export function Bar({
           href="/"
           className="wordmark wordmark-trim text-chrome text-[length:var(--text-mark)]"
         >
-          Again
+          Keep
         </Link>
 
         {/*
@@ -133,27 +133,33 @@ export function Bar({
           hit area, so the areas overlapped and the later one in DOM order took
           the taps. See `--bar-gap`.
         */}
-        <div className="flex items-center gap-[var(--bar-gap)]">
-          {/*
-            A *place* you go, which is why the glyph is a plain tray — see
-            `glyphs.tsx` for the pair it makes with the foot's settle.
-          */}
-          <Link
-            href="/settled"
-            aria-label="Settled"
-            className="text-chrome tap-target flex items-center"
-          >
-            <TrayGlyph />
-          </Link>
+        {/*
+          ⚠⚠ **THE TRAY WENT TO THE FOOT ON 31 AUGUST AND ONLY *YOU* IS LEFT UP
+          HERE.** Directed, off the `RecordCorners` artboard: the bottom edge
+          carries four evenly spaced slots — search, +, convergence, tray — and
+          the top carries the mark and the profile on the bar's centre line.
 
-          <Link
-            href="/profile"
-            aria-label="You"
-            className="text-chrome tap-target flex items-center"
-          >
-            <YouGlyph />
-          </Link>
-        </div>
+          ⚠ **The `--bar-gap` wrapper went with it.** That gap existed to keep
+          two 44px hit areas from overlapping at 20px glyphs; one glyph needs no
+          gap, and a flex row holding a single child is a box saying nothing.
+          **Put both back together if the tray ever returns** — the note on
+          `--bar-gap` has the arithmetic, and it is not a number to re-derive.
+
+          ⚠ **What this costs: *Settled* is now two edges from *You*.** They were
+          neighbours because they are both places you go on purpose, which is §2
+          of the brief, and the tray has been moved to the edge that §2 reserves
+          for reflexes. That is the same trade the portal already made — see
+          `ToolSet` in `foot.tsx`, which states it at length — and this is the
+          second control to make it. **If the foot starts feeling like a drawer,
+          this is the pair to look at first.**
+        */}
+        <Link
+          href="/profile"
+          aria-label="You"
+          className="text-chrome tap-target flex items-center"
+        >
+          <YouGlyph />
+        </Link>
       </div>
     </header>
   )

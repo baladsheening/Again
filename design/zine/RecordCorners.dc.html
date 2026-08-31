@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Serif&amp;display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #ffffff; } a:hover { color: #ffffff; }
+    .grain { position: absolute; inset: 0; pointer-events: none; opacity: 0.26; mix-blend-mode: screen; background-image: url("paper-1.jpg"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.18'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23t)'/%3E%3C/svg%3E"); background-size: cover, 160px 160px; background-position: center; background-repeat: no-repeat, repeat; }
+    .row { position: relative; display: flex; align-items: center; height: 44px; font-family: 'Fira Sans', system-ui, sans-serif; font-size: 18px; line-height: 28px; letter-spacing: -0.01em; color: #ffffff; }
+    .struck { text-decoration: line-through; opacity: 0.5; }
+    .year { margin-left: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; color: #ffffff; opacity: 0.55; }
+    .stamp { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: #ffffff; opacity: 0.55; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: lowercase; color: #ffffff; }
+    .anchor { position: absolute; padding: 12px; display: flex; align-items: center; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; background: #000000; overflow: hidden;">
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <div style="position: relative; z-index: 1; width: 100%; height: 100%;">
+
+    <!--
+      The record. It starts UNDER the top bar and runs UNDER the bottom one,
+      because that is the only thing that makes glass read as glass: a blur with
+      nothing behind it is a painted panel.
+    -->
+    <div style="position: absolute; top: 22px; left: 22px; right: 22px;">
+      <div class="row">the late showing at the Rio</div>
+      <div class="row">a proper camera bag</div>
+      <div class="row">the Sicilian place on Green Lanes</div>
+      <div class="row">Dune: Part Two<span class="year">2024</span></div>
+      <div class="row">learn to actually swim front crawl</div>
+      <div class="row">that ceramics class in Hackney</div>
+      <div class="row">re-read Piranesi <span class="mono" style="margin-left: 8px;">locked</span></div>
+      <div class="row struck">book the dentist</div>
+      <div class="row">Perfect Days<span class="year">2023</span></div>
+      <div class="row">a decent chef&rsquo;s knife</div>
+      <div class="row">walk the Ridgeway in spring</div>
+      <div class="row">try the natural wine bar</div>
+      <div class="row">rewatch Chungking Express</div>
+      <div class="row">the print shop on Bethnal Green Rd</div>
+      <div class="row">a week with no phone</div>
+      <div class="row">that Georgian place in Peckham</div>
+      <div class="row"><span class="year" style="margin: 0 8px 0 0;">2019</span>Parasite</div>
+      <div class="row">learn to develop film at home</div>
+      <div class="row">the long way round to Brighton</div>
+      <div class="row">a proper winter coat</div>
+    </div>
+
+    <!--
+      ⚠ **THE APP'S OWN GLASS, kept — directed.** `--glass-tint` is the ground at
+      74% over an 18px `backdrop-filter`, which is exactly what the two bars wear
+      today. The corner chrome changes what is ON the bars, not what they are
+      made of.
+
+      ⚠ **No hairline under it — directed.** The strip carries a
+      `1px rgba(234,230,218,0.07)` top border today; here the blur is the edge.
+      Glass with a rule drawn on it reads as a panel with a border, which is the
+      thing the treatment is getting away from.
+
+      The mark and the profile sit on the bar's centre line — the same place they
+      occupy now — rather than hanging off the very top corner.
+    -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 2;">
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 36px; line-height: 1; color: #ffffff;">again</div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <circle cx="12" cy="8.5" r="3.6"></circle>
+        <path d="M5 19.5c1.5-3.4 4.2-5 7-5s5.5 1.6 7 5"></path>
+      </svg>
+    </div>
+
+    <!--
+      The bottom row: FOUR EVENLY SPACED SLOTS — search, +, convergence, tray.
+      A four-column grid puts each glyph on its own quarter's centre line, so
+      the spacing is a division rather than four hand-set insets.
+
+      ⚠ The + is no longer on the screen's centre line — it sits on the second
+      quarter's. Even spacing and a centred + cannot both be had with four
+      glyphs; even spacing was directed.
+    -->
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 56px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; justify-items: center; background: rgba(0,0,0,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 2;">
+      <svg width="25" height="25" viewBox="0 0 25 25" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5"></circle><path d="M15.8 15.8l5 5"></path>
+      </svg>
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#ffffff" stroke-width="1.7" aria-hidden="true">
+        <path d="M16 6v20M6 16h20"></path>
+      </svg>
+      <!-- Convergence: two circles overlapping, which is what the engine
+           computes. -->
+      <svg width="30" height="26" viewBox="0 0 30 26" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <circle cx="11" cy="13" r="8"></circle>
+        <circle cx="19" cy="13" r="8"></circle>
+      </svg>
+      <!-- The tray, down from the old top bar. -->
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#ffffff" stroke-width="1.4" aria-hidden="true">
+        <path d="M3 14.5h5.5l1.6 2.8h5.8l1.6-2.8H23"></path>
+        <path d="M3 14.5L6.2 6h13.6L23 14.5v5.2a1.3 1.3 0 0 1-1.3 1.3H4.3A1.3 1.3 0 0 1 3 19.7z"></path>
+      </svg>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

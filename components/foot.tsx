@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { PortalGlyph, SearchGlyph, WriteGlyph } from './glyphs'
+import { PortalGlyph, SearchGlyph, TrayGlyph, WriteGlyph } from './glyphs'
 
 /**
  * **The tools: write and search.**
@@ -135,7 +135,20 @@ type Tools = {
    * or iOS will not raise a keyboard. That is the caller's job and it is why
    * the field is mounted at all times — see `openSheet` in `page-screen.tsx`.
    */
-  write: () => void
+  /**
+   * ⚠ **`null` in exactly one place: the first run — 31 August, directed.** The
+   * empty page carries a **large tappable `+` under the command**, and two
+   * pluses on one screen is two answers to *where do I start*. So the bar's slot
+   * stands empty for the life of the first capture and fills the moment a line
+   * exists — the app's one primary control is enormous once and then retires to
+   * where a thumb will find it forever after.
+   *
+   * ⚠ **This does not weaken the rule above it.** *A capture can always be
+   * started* still holds: `null` here means the control is somewhere else on
+   * this screen, never that there is none. Do not pass `null` from any surface
+   * that has no `+` of its own.
+   */
+  write: (() => void) | null
   /**
    * Whether there is a record to search. `false` on an empty page, where the
    * only answer the surface could give is *Nothing.*
@@ -179,33 +192,108 @@ type Tools = {
  * placement has no effect on a flex item, so the vertical stack ignores both.
  */
 function ToolSet({ write, searchable = false, portal = null, portalLit = false }: Tools) {
+  /*
+    ⚠ **The explicit columns are dropped when there is no  — 31 August.**
+     in a two-column grid creates an implicit THIRD column, which
+    puts search back at the far edge and undoes the even spacing the two-column
+    footer exists for. With the names gone the grid auto-places what is left, one
+    per column, which is exactly what is wanted. The names matter only when the
+    centre is a rule rather than an average — see the head of this file.
+  */
+  /* ⚠ A lookup of LITERAL class names, never `col-start-${n}`. Tailwind scans
+     source text: a class assembled at runtime is a class it never generates, so
+     the interpolated form compiles to nothing at all and fails silently. */
+  const COL = {
+    1: 'col-start-1',
+    2: 'col-start-2',
+    3: 'col-start-3',
+    4: 'col-start-4',
+  } as const
+  const at = (n: 1 | 2 | 3 | 4) => (write ? COL[n] : '')
   return (
     <>
       {/*
-        ⚠ **Column one, which the bar has been holding empty since settle left on
-        30 August.** The `+` names column two and search names column three, so
-        this cost no layout and moved nothing: the grid was already three wide
-        because the centre is a rule rather than an average. See the head of this
-        file.
+        ⚠ **Search leads the row since 31 August**, where the portal used to. The
+        four slots are search, `+`, convergence, tray — see the head of this file
+        for why the count moved and what the `+` gave up for it.
+      */}
+      {searchable ? (
+        <Link
+          href="/search"
+          aria-label="Search"
+          className={`text-chrome tap-target ${at(1)} flex items-center transition-colors`}
+        >
+          <SearchGlyph />
+        </Link>
+      ) : (
+        /*
+          ⚠ **A `<span>`, not a disabled `<a>`.** There is no disabled state for
+          a link — an `<a>` without an `href` is not a control at all — so the
+          off state is the drawing without the door, and the `aria-label` goes
+          with the door rather than staying on something a screen reader would
+          announce as reachable.
+        */
+        <span aria-hidden className={`tap-target ${at(1)} flex items-center ${OFF}`}>
+          <SearchGlyph />
+        </span>
+      )}
 
+      {/*
+        ⚠⚠ **THE `+` IS NO LONGER ON THE SCREEN'S CENTRE LINE — 31 August,
+        directed.** It sits on the **second quarter's** centre line now. With four
+        glyphs, even spacing and a centred `+` cannot both be had, and even
+        spacing was what was asked for.
+
+        **The rule it breaks was load bearing and is written here rather than
+        quietly dropped.** The head of this file argued the centre is what either
+        thumb reaches, and that this is the app's one primary action — both still
+        true. What changed is that the row is a *division* now rather than an
+        arrangement around a centre, and a fifth glyph would have broken the
+        centre anyway. ⚠ **If the `+` starts being missed, this is the change to
+        undo**, and the way back is three slots plus the tray somewhere else —
+        not a wider `+`.
+      */}
+      {/*
+        ⚠ **Nothing is rendered in its place — 31 August, directed.** A spacer
+        stood here for ten minutes so the grid kept three columns, and it was
+        wrong: the ask was that the remaining glyphs be **equidistant**, and a
+        held-open centre gives them a hole to sit either side of. The footer
+        drops from four columns to three when `write` is null and the explicit
+        `col-start-*` names go with it, so what is left auto-places one per
+        column.
+      */}
+      {write && (
+        <button
+          type="button"
+          onClick={write}
+          aria-label="Write a capture"
+          className={`text-chrome tap-target ${at(2)} flex items-center`}
+        >
+          <WriteGlyph />
+        </button>
+      )}
+
+      {/*
         ⚠⚠ **§2 of `phase-2-convergence.md` puts the portal at the TOP, and this
         is the bottom — directed 30 August, against that law.** The law reads:
         *the bottom edge is for what you do without looking, the top edge is for
         what you go to on purpose… which is also why the notification portal goes
         at the top: it is visited once, deliberately, at the start of a session,
         and must never be given a reflex's real estate.* **The direction was
-        given knowing that, and it stands.** What it costs is written here rather
-        than argued: the portal now sits beside the one control this app has to
-        be perfect at, and a thumb reaching for `+` has a neighbour it did not
-        have. **If the `+` is ever mis-hit, this is the first suspect**, and the
-        answer is the top edge and not a bigger gap.
+        given knowing that, and it stands.**
+
+        ⚠ **31 August moved it AGAIN, from slot one to slot three, and made it a
+        neighbour of the `+` where it was two slots away.** The old note here
+        warned that the portal *sits beside the one control this app has to be
+        perfect at*; it now sits beside it on the other side, with the tray
+        beyond. **If the `+` is ever mis-hit, this is still the first suspect**,
+        and the answer is the top edge and not a bigger gap.
 
         ⚠ **A `<button>`, not a `<Link>`, because the portal is not a route.** It
         is a sheet over the record — the same argument the console and the
         writing strip both won: *a sheet is not a route.* Its rows open consoles,
         and a console only exists where the record is.
-      */}
-      {/*
+
         ⚠ **An EMPTY portal has no door, and that is §5 rather than a nicety.**
         *An empty portal is the resting state and the honest signal that there is
         nothing to know* — so a box that would open on nothing is not a smaller
@@ -220,55 +308,39 @@ function ToolSet({ write, searchable = false, portal = null, portalLit = false }
           type="button"
           onClick={portal}
           aria-label="Who else"
-          className="text-chrome tap-target col-start-1 flex items-center transition-colors"
+          className={`text-chrome tap-target ${at(3)} flex items-center transition-colors`}
         >
           <PortalGlyph />
         </button>
       ) : (
         /*
           Off is the drawing without the door, exactly as search's is — see the
-          note on the `<span>` below for why the label goes with the door rather
+          note on search's `<span>` for why the label goes with the door rather
           than staying on something a reader would be told it can reach.
         */
-        <span aria-hidden className={`tap-target col-start-1 flex items-center ${OFF}`}>
+        <span aria-hidden className={`tap-target ${at(3)} flex items-center ${OFF}`}>
           <PortalGlyph />
         </span>
       )}
 
       {/*
-        ⚠ **The middle one, and the only one that is never off.** See the note at
-        the head of this file: the centre is what either thumb reaches, and this
-        is the app's one primary action.
-      */}
-      <button
-        type="button"
-        onClick={write}
-        aria-label="Write a capture"
-        className="text-chrome tap-target col-start-2 flex items-center"
-      >
-        <WriteGlyph />
-      </button>
+        ⚠ **The tray, down from the top bar on 31 August.** A *place* you go, which
+        is why the glyph is a plain tray — see `glyphs.tsx` for the pair it makes
+        with the console's settle, which is the same drawing with an arrow in it.
 
-      {searchable ? (
-        <Link
-          href="/search"
-          aria-label="Search"
-          className="text-chrome tap-target col-start-3 flex items-center transition-colors"
-        >
-          <SearchGlyph />
-        </Link>
-      ) : (
-        /*
-          ⚠ **A `<span>`, not a disabled `<a>`.** There is no disabled state for
-          a link — an `<a>` without an `href` is not a control at all — so the
-          off state is the drawing without the door, and the `aria-label` goes
-          with the door rather than staying on something a screen reader would
-          announce as reachable.
-        */
-        <span aria-hidden className={`tap-target col-start-3 flex items-center ${OFF}`}>
-          <SearchGlyph />
-        </span>
-      )}
+        ⚠ **Never off, and it has no lit state to be off from.** Search dims on an
+        empty record because the only answer it could give is *Nothing*; the portal
+        dims because an empty portal must not be openable. `/settled` is a page
+        that is meaningful empty — it says *nothing is settled yet*, which is a
+        true thing about the record and not a dead end.
+      */}
+      <Link
+        href="/settled"
+        aria-label="Settled"
+        className={`text-chrome tap-target ${at(4)} flex items-center transition-colors`}
+      >
+        <TrayGlyph />
+      </Link>
     </>
   )
 }
@@ -328,7 +400,24 @@ export function Foot({
         states — and a grid container in its own right. Two grids, one element,
         and neither reads the other's placement.
       */
-      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] grid-cols-3 items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
+      /*
+        ⚠ **THREE COLUMNS ON THE FIRST RUN, FOUR EVER AFTER — 31 August,
+        directed.** The row is search, `+`, convergence, tray. With `write` null
+        the `+`'s slot is empty, and holding it open would leave the other three
+        with a hole in the middle of them; dropping to three columns divides the
+        strip in thirds and puts each on its own centre line, so what is left is
+        evenly spaced rather than merely symmetric. Same mechanism as the two/three
+        it replaces — the count moved, the argument did not.
+
+        ⚠ **The price, stated: the glyphs MOVE when the first line lands** — from
+        the sixth marks to the eighth marks — because the `+` returns and takes
+        its slot. That is one shift, once, in an account's life, at the moment the
+        person is looking at the line they just wrote rather than at the strip.
+        The alternative is a permanent hole where the plus will be.
+      */
+      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] ${
+        tools.write ? 'grid-cols-4' : 'grid-cols-3'
+      } items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
         hidden ? 'pointer-events-none opacity-0' : ''
       }`}
     >

@@ -33,7 +33,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
             short of it. Full argument in app/sign-in/page.tsx — and the two must
             stay equal, since this block reads the same on both pages. */}
         <div className="flex flex-col gap-[calc(14px_-_var(--wordmark-slack))] text-start">
-          <h1 className="wordmark text-wordmark">Again</h1>
+          <h1 className="wordmark text-wordmark">Keep</h1>
           {/* Same tier as the sign-in tagline — this block has to read the same
               way on both pages, and an expired link is not a footnote. */}
           <p className="text-muted text-sm">

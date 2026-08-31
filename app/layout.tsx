@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Bebas_Neue, Fira_Sans, IBM_Plex_Mono, Jost } from 'next/font/google'
+import { Bebas_Neue, Fira_Sans, IBM_Plex_Mono, Instrument_Serif, Jost } from 'next/font/google'
 
 import './globals.css'
 
@@ -115,6 +115,34 @@ const firaSansItalic = Fira_Sans({
 })
 
 /**
+ * **The zine treatment's display face — 31 August.**
+ *
+ * A high-contrast serif for the two screens that are composition rather than
+ * record: the sign-in wall's mark and the first run's command. It is the free
+ * face nearest the direction that was briefed (`Ogg`, which is licensed and not
+ * on this machine) — narrow, sharply cut, and it holds together at the poster
+ * sizes those two screens set it at.
+ *
+ * ⚠ **It is NOT the wordmark's face.** `--font-display` is still Jost and the
+ * bar's mark is still set in it, because `--wordmark-slack`, `wordmark-trim`
+ * and `--wordmark-advance-ratio` are all *measured* for Jost — and the desk's
+ * `--mark-column` derives the record's own width from the last of them. Moving
+ * the mark to this face means re-running `node_modules/.probe/metrics.mjs` and
+ * `markwidth.mjs` and re-deriving that column. **That is the same job as the
+ * rename, and it wants doing with it rather than before it.**
+ *
+ * **Preloaded, unlike the two reserve faces.** The sign-in wall is the first
+ * page a new account ever sees and this face is the largest thing on it, so a
+ * swap here is the swap a stranger watches.
+ */
+const instrumentSerif = Instrument_Serif({
+  variable: '--font-serif-face',
+  subsets: ['latin'],
+  weight: '400',
+  display: 'swap',
+})
+
+/**
  * §11: IBM Plex Mono for return counts and timestamps. The mono is not
  * ornament — counts are data, and they're the one number in the product that
  * can't be inflated.
@@ -127,7 +155,7 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Again',
+  title: 'Keep',
   /*
     The tagline, and it is the tagline that lives here rather than a description
     written for this slot — see `app/sign-in/page.tsx`, where the same line sits
@@ -150,7 +178,7 @@ export const metadata: Metadata = {
   */
   appleWebApp: {
     capable: true,
-    title: 'Again',
+    title: 'Keep',
     /*
       The web view extends under the status bar rather than being pushed below a
       black strip, which is the same arrangement `viewportFit: 'cover'` already
@@ -201,7 +229,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${firaSans.variable} ${firaSansItalic.variable} ${plexMono.variable} ${jost.variable} ${bebasNeue.variable} h-full`}
+      className={`${firaSans.variable} ${firaSansItalic.variable} ${plexMono.variable} ${jost.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Jost:wght@500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #eae6da; } a:hover { color: #eae6da; }
+    .row { position: relative; display: flex; align-items: center; height: 44px; font-family: 'Fira Sans', system-ui, sans-serif; font-size: 18px; line-height: 28px; letter-spacing: -0.01em; color: #eae6da; }
+    .mark { position: absolute; left: -20px; top: 8px; width: 2.5px; height: 28px; background: #c8912f; }
+    .struck { text-decoration: line-through; opacity: 0.5; }
+    .year { margin-left: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; color: #8c8a80; }
+    .stamp { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: #8c8a80; }
+    .brass { color: #e8b34a; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; background: #000000; overflow: hidden;">
+
+  <!--
+    ⚠ **The bars are GLASS, and this board did not show it until now.** They
+    were drawn as a flat panel and a bare row — which understated the thing the
+    comparison is about, since `--glass-tint` is the ground at 74% over an 18px
+    `backdrop-filter`.
+
+    ⚠ **And a blur reads only when something passes BEHIND it.** The record used
+    to stop above the strip and start below the bar, so even a correct
+    declaration would have looked like a painted panel. It runs under both now,
+    which is what it does in the app.
+  -->
+  <div style="position: absolute; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 2;">
+    <div style="font-family: 'Jost', sans-serif; font-weight: 500; font-size: 24px; letter-spacing: 0.08em; color: #e8b34a;">AGAIN</div>
+    <div style="display: flex; gap: 24px;">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#e8b34a" stroke-width="1.4" aria-hidden="true">
+        <path d="M3 6h16v11H3z"></path><path d="M3 6l8 6 8-6"></path>
+      </svg>
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#e8b34a" stroke-width="1.4" aria-hidden="true">
+        <circle cx="11" cy="8" r="3.4"></circle><path d="M4.5 18c1.4-3.2 4-4.6 6.5-4.6s5.1 1.4 6.5 4.6"></path>
+      </svg>
+    </div>
+  </div>
+
+  <div style="position: absolute; top: 22px; left: 40px; right: 20px;">
+    <div class="row">the late showing at the Rio</div>
+    <div class="row">a proper camera bag</div>
+    <div class="row">the Sicilian place on Green Lanes</div>
+    <div class="row"><span class="mark"></span>Dune: Part Two<span class="year">2024</span></div>
+    <div class="row">learn to actually swim front crawl</div>
+    <div class="row">that ceramics class in Hackney</div>
+    <div class="row">
+      re-read Piranesi
+      <svg width="13" height="15" viewBox="0 0 13 15" fill="none" stroke="#c8912f" stroke-width="1.3" style="margin-left: 8px;" aria-hidden="true">
+        <rect x="1.5" y="6.5" width="10" height="7.5" rx="1.2"></rect><path d="M4 6.5V4.6a2.5 2.5 0 0 1 5 0v1.9"></path>
+      </svg>
+    </div>
+    <div class="row struck">book the dentist</div>
+    <div class="row"><span class="mark"></span>Perfect Days<span class="year">2023</span></div>
+    <div class="row">a decent chef&rsquo;s knife</div>
+    <div class="row">walk the Ridgeway in spring</div>
+    <div class="row">try the natural wine bar</div>
+    <div class="row">rewatch Chungking Express</div>
+    <div class="row"><span class="mark"></span>Aftersun<span class="year">2022</span></div>
+    <div class="row">the print shop on Bethnal Green Rd</div>
+  </div>
+
+  <!-- The strip: three brass glyphs, the + on the centre line by construction. -->
+  <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 56px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; justify-items: center; background: rgba(0,0,0,0.74); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid rgba(234,230,218,0.07); z-index: 2;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e8b34a" stroke-width="1.4" aria-hidden="true">
+      <circle cx="9" cy="9" r="3.2"></circle><circle cx="16.5" cy="10" r="2.4"></circle>
+      <path d="M3 18c1.2-2.6 3.6-3.8 6-3.8s4.8 1.2 6 3.8"></path>
+    </svg>
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#e8b34a" stroke-width="1.7" aria-hidden="true">
+      <path d="M15 6.5v17M6.5 15h17"></path>
+    </svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e8b34a" stroke-width="1.4" aria-hidden="true">
+      <circle cx="10.5" cy="10.5" r="6"></circle><path d="M15 15l5 5"></path>
+    </svg>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
