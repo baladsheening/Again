@@ -9466,10 +9466,39 @@ the precedent that was asked for. **A paragraph in the record's type would read
 as the first capture.** It takes no `bg-surface/40` pill either: that container
 exists to group the People list, and there is nothing here to group.
 
-⚠ **Three numbered steps, and centred on both axes — directed after the first
-look at it.** It shipped as two muted paragraphs at the head of the record and is
-now *Write a line / Find a match / Keep it private*, which is the product's whole
-loop in three lines.
+⚠ **Three headed steps, centred on both axes — directed after the first look at
+it.** It shipped as two muted paragraphs at the head of the record and is now
+*Write whatever / See what clicks / Choose what gets matched*, which is the
+product's whole loop in three lines.
+
+⚠ **They were numbered for a round and are not — directed.** The three are a
+**loop, not a procedure**: nothing is done in that order, and *1, 2, 3* on a
+first run promises a setup flow that does not exist.
+
+⚠⚠ **STEP THREE SAYS *MATCHED* AND NEVER *PRIVATE*, AND THAT IS CORRECTNESS
+RATHER THAN TONE.** Two drafts of this copy said *keep it private*, and it
+overstates what the swipe does. **The lock takes a line out of the matching
+pool; it does not change who may read the record** —
+`listCapturesForOtherUser` keeps all four of its terms and browsing still goes
+through sharing, which the 31 August visibility entry above says in those words.
+Copy promising privacy would be the **first screen a new account ever sees**
+telling it something untrue about the one guarantee it cares about, and the
+person would find out by discovering a locked line on their own page in front of
+a mutual. *Choose what gets matched* is the whole claim and all of it.
+
+**Two other things were weighed and not taken**, from a draft written in a
+warmer register:
+
+- **"We'll match your lines."** The product has never said *we*. The precedent
+  this note was asked to follow is impersonal — *You reach someone by their
+  handle; there is no directory* — and a *we* puts a company behind the screen
+  that sets the tone for everything after it.
+- **An emoji (👀) in step two.** It would be the first in the app, on a page
+  governed by *one accent colour, one chrome colour, mono stays scarce* — and of
+  all of them that one connotes being watched, on the screen whose job is to
+  explain matching to somebody who has not yet decided to trust it. What was
+  kept from that draft is its fragments: *No categories, no overthinking*, which
+  carry the four-second promise better than a sentence does.
 
 - **`m-auto` in `<main>`'s flex column is the whole centring mechanism, and no
   height is typed anywhere.** That box is already exactly the space the record
@@ -9493,8 +9522,10 @@ loop in three lines.
   column the moment there is a record, and mono is scarce here for the reason the
   accent is: timestamps, the handle input and the day stamps, and on every other
   label it is texture rather than signal. Full ink on the heading, muted on the
-  sentence, is the only hierarchy in the block; the numbers are in the text rather
-  than an `<ol>`'s markers so a reader hears each one once.
+  sentence, is the only hierarchy in the block — and with the numbering gone it is
+  the only thing separating the three at all. ⚠ **Not an `<ol>`**: the steps are a
+  loop rather than an order, and list markers would put back the numbering that
+  was taken out.
 
 ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held rather
 than forgotten.** Brass means *a control*; a `+` in a paragraph is a reference to

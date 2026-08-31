@@ -2627,10 +2627,25 @@ export function PageScreen({
           `tracked-people.tsx`, which is the precedent this was asked for. A
           paragraph in the record's type would read as the first capture.
 
-          ⚠ **THREE NUMBERED STEPS, AND IT IS CENTRED ON BOTH AXES — directed, 31
-          August, after the first look at it.** It began as two muted paragraphs
-          at the head of the record and is now *Write a line / Find a match /
-          Keep it private*, which is the product's whole loop in three lines.
+          ⚠ **THREE HEADED STEPS, CENTRED ON BOTH AXES — directed, 31 August,
+          after the first look at it.** It began as two muted paragraphs at the
+          head of the record and is now *Write whatever / See what clicks /
+          Choose what gets matched*, which is the product's whole loop in three
+          lines.
+
+          ⚠ **The numbering was there for a round and is gone — directed.** The
+          three are a loop rather than a procedure: nothing is done in that
+          order, and *1, 2, 3* on a first run promises a setup flow that does not
+          exist. The headings carry the sequence on their own.
+
+          ⚠ **Step three says *matched*, never *private*, and that is a
+          correctness rule rather than a tone one.** The swipe locks a line **out
+          of the matching pool**; it does **not** change who may read the record
+          — `listCapturesForOtherUser` keeps all four of its terms and browsing
+          still goes through sharing. Copy promising privacy here would be the
+          first screen a new account sees telling it something untrue about the
+          one guarantee it cares about. *Choose what gets matched* is the whole
+          claim and all of it.
 
           - **`m-auto` inside `<main>`'s flex column is what centres it, and that
             is the one mechanism — no height is typed anywhere.** `main`'s box is
@@ -2660,8 +2675,10 @@ export function PageScreen({
             accent is: timestamps, the handle input and the day stamps, and on
             every other label it is texture rather than signal.
           - **Full ink on the heading, muted on the sentence**, which is the only
-            hierarchy in the block. The numbers are in the text rather than an
-            `<ol>`'s markers, so a reader hears each one once.
+            hierarchy in the block — and with the numbering gone it is the only
+            thing separating the three at all. ⚠ **Not an `<ol>`**: the steps are
+            a loop, not an order, and list markers would put back the numbering
+            that was taken out.
 
           ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held
           rather than forgotten.** Brass means *a control*, and a `+` in a
@@ -2672,24 +2689,25 @@ export function PageScreen({
         {empty && (
           <div className="m-auto flex max-w-sm flex-col gap-7 text-center">
             <div>
-              <h2 className="micro mb-2">1. Write a line</h2>
+              <h2 className="micro mb-2">Write whatever</h2>
               <p className="text-muted text-sm leading-relaxed">
-                Nothing yet. Tap + to write a line — anything you want to do, try,
-                watch, buy, or even just a thought. One line, no category, a few
-                seconds.
+                Tap + to write anything you&rsquo;re thinking about — something you want
+                to do, try, watch, buy, or simply remember. No categories, no
+                overthinking. One line is all it takes.
               </p>
             </div>
             <div>
-              <h2 className="micro mb-2">2. Find a match</h2>
+              <h2 className="micro mb-2">See what clicks</h2>
               <p className="text-muted text-sm leading-relaxed">
-                What you write is matched against the people you track. When one of them
-                writes down the same thing, you both hear about it.
+                Your lines are matched against the people you track. When you both write
+                down the same thing, you both hear about it.
               </p>
             </div>
             <div>
-              <h2 className="micro mb-2">3. Keep it private</h2>
+              <h2 className="micro mb-2">Choose what gets matched</h2>
               <p className="text-muted text-sm leading-relaxed">
-                Swipe a line away to keep it out of matching.
+                Some things are just for you. Swipe a line away and it stays out of
+                matching.
               </p>
             </div>
           </div>
