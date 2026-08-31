@@ -24,6 +24,90 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **A CAPTURE IS SHAREABLE WHEN IT IS WRITTEN, AND THE SWIPE IS THE LOCK — 31
+August, directed. This overrules the specification's private-by-default and it
+was directed with that stated.** Until this, **the entire social half of the
+product was inert**: `captures.visibility` defaulted to `private`, `runOverlap`
+requires `SHARED_SCOPES`, and **nothing anywhere called
+`setCaptureVisibility`** — the scope existed, *share visibility* was a named
+Phase 2 deliverable in §13 of the implementation specification, and the control
+was never built. Production on 31 August: **79 captures, all private, 0
+notifications, 0 tracks.** The engine, the portal and the mark were all correct
+and all downstream of a gate that was shut.
+
+- ⚠ **The argument that won is the four-second capture.** A per-capture share act
+  is a beat *after* the capture, one you have to remember to come back for, and
+  its failure is **silent** — you never converge with anybody and never learn
+  why. **The consent is the mutual track**, which is deliberate, two-directional
+  and given by handle to somebody you chose. What a convergence discloses is one
+  overlap on one possibility, to one such person.
+- ⚠ **It is NOT a change to who can read a record.** `listCapturesForOtherUser`
+  keeps all four of its terms. Browsing still needs sharing; only *matching*
+  moved.
+- ⚠⚠ **A CAPTURE THAT CAME FROM SOMEBODY ELSE STAYS PRIVATE**, and that is now a
+  guarantee rather than a leftover default — `tests/guarantees.test.ts` names it.
+  Same reasoning as §6's suppression rule: **a received list is not an
+  independent common intention.** If a copy is not independent enough to notify
+  the person it was taken from, it is not independent enough to be republished to
+  *my* mutuals without my touching it. `writeCapture` branches on
+  `provenance.source`.
+- ⚠ **The revive path does not touch the scope.** A crossed-off capture written
+  again keeps whatever its owner last chose; re-sharing on revive would be a
+  control changing under somebody who did not touch it.
+- ⚠⚠ **THE SWIPE CARRIES THE LOCK AND CROSSING OFF IS THE CONSOLE'S — directed,
+  and it reverses `row-swipe.ts`'s own founding argument.** That file said the
+  swipe belonged to cross off because it was *the verb used fifty times a week*.
+  **That was an assumption about usage and it was wrong** — told by the person
+  using the app daily that lines are rarely crossed off. The rule did not change;
+  the frequencies did, and the gesture followed them. **`SwipeWay` is
+  `'lock' | 'unlock'`, the signs and the detent are untouched**, because the
+  mechanism was always right and the verb was not.
+- ⚠ **Lock fits the hook better than cross off did.** Cross off and restore share
+  one gesture between two *states of the record*; lock and unlock are one
+  property with two values. Away from the reader is out of the pool, back is in —
+  the same physical metaphor, fitting more exactly than before.
+- ⚠⚠ **THE PADLOCK IS NOT DECORATION AND MUST NOT BE REMOVED.** It was going to
+  show nothing, on the reasoning that locking is rare and an invisible state
+  fails safe. **That died the moment locking became the row's own gesture**:
+  crossing off confirmed itself by striking the line, iOS has no Vibration API,
+  and a swipe whose outcome is invisible is confirmed by nothing at all. It is in
+  the row's **tail** and not the gutter — `--color-accent` and that column belong
+  to the convergence mark, one thing per column — so it costs width on locked
+  lines only.
+- ⚠ **A padlock is right as a STATE and would have been wrong as a control
+  label.** On a button it says *security*; this is scope, and nothing about a
+  lock stops anybody reading a record they can already reach. As a mark on a line
+  it is the known icon for *held back*, which is what §11 permits known icons
+  for. It is the eleventh glyph on the one grid, drawn shorter than the rest
+  because it rides a line rather than standing in a bar.
+- ⚠ **No fourth haptic.** Locking borrows the crossed-off thud, unlocking borrows
+  the capture's tap — the precedent `lib/haptics.ts` already set for putting a
+  line back.
+- ⚠ **Unlocking is a fan-out trigger and locking is not.** `setCaptureVisibility`
+  runs overlap on the private→shared transition only, so **a line locked in March
+  converges the day it comes back**, and the same swipe twice writes nothing
+  twice. ⚠ **A line that already converged keeps its mark after it is locked** —
+  the mark is memory, the event happened, and a notification already sent cannot
+  be recalled.
+- ⚠ **`shared` is derived from `SHARED_SCOPES`, never compared to `'private'`.**
+  The question is *can this converge*, which is the same predicate `runOverlap`
+  applies; `= 'private'` would be a second definition, right today and wrong the
+  day a third scope exists. One expression, three reads — the page, the tray and
+  search — so the padlock travels with the line.
+- ⚠ **The action takes a boolean and names the scope itself.** A `Visibility` at
+  that boundary would let a client pick one, and the day a third exists that is a
+  way to publish a capture from a request body.
+- **Measured by `node_modules/.probe/swipe.mjs`** — rewritten for the lock, and
+  every mechanism assertion is the one it always was. It asserts the padlock is
+  **drawn** on the swipe, that crossing off does not touch the scope, and that
+  the console's × is the only door to crossing off. `tests/mark.test.ts` proves
+  the data half, including the case this design now leans on: **a crossed-off
+  line converges with nobody**, which falls out of `classify` being an allowlist
+  of three pairs and had never been asserted before.
+- ⚠ **Production's existing 79 captures were backfilled to `mutuals`** — a
+  default only touches new rows, so without it the record would have stayed
+  inert. Directed. Nothing else was touched, and no schema changed.
+
 **Phase 0 is done, deployed and verified.**
 
 **Phase 1 is built, deployed and in daily use on a handset.** `/` is the capture
@@ -190,9 +274,17 @@ converge on a film and on nothing else. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
 ⚠ **Phase 2 step 2 is built — TAP THINKS, SWIPE DOES, 30 August.** Swipe a line
-**away to cross it off, back to put it back**. A tap still opens the console. The
-verb used fifty times a week is a gesture on the row now, and the console is the
-once-a-week question.
+**away, and back**. A tap still opens the console.
+
+⚠⚠ **THE SWIPE'S VERB CHANGED ON 31 AUGUST AND THIS SECTION IS THE OLD ONE.**
+It read *away to cross it off, back to put it back — the verb used fifty times a
+week is a gesture on the row now*. **The swipe carries the LOCK**; crossing off
+is the console's; and *fifty times a week* was an assumption about usage that the
+person using the app corrected. **The section is kept because every mechanical
+argument in it is unchanged and still governs** — the detent, the inert
+direction, `touch-action`, the physical rather than logical direction, the
+haptics. Read it as being about the gesture, not about the verb. The verb's own
+entry is at the top of this file.
 
 ⚠⚠ **IT WAS REOPENED AND REBUILT THE SAME DAY, AND THE ANSWER WAS A SUBTRACTION
 — read this before touching the swipes.** It shipped as *left crosses off, right

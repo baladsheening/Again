@@ -63,6 +63,18 @@ export type PageLineView = {
    * announced it has gone.
    */
   converged: boolean
+  /**
+   * **Whether this line is in the convergence pool** — the inverse of the lock.
+   *
+   * ⚠ **`true` is the ordinary case**, since captures are written shareable.
+   * `false` is a line its owner swiped out of the pool: it draws a padlock and
+   * matches nobody. The row's swipe toggles exactly this.
+   *
+   * ⚠ **It is not about who can read the line.** Browsing somebody's record
+   * needs all four terms of `listCapturesForOtherUser`; this only decides
+   * whether the fan-out may see it.
+   */
+  shared: boolean
 }
 
 /** What the mapper needs of a row, and nothing more. */
@@ -76,6 +88,7 @@ type Stampable = {
   hasImage?: boolean
   sourceUrl?: string | null
   converged?: boolean
+  shared?: boolean
 }
 
 /**
@@ -115,6 +128,15 @@ export function toPageLines(
         line that keeps quiet about something the console can still show.
       */
       converged: row.converged ?? false,
+      /*
+        ⚠ **`?? true`, unlike the two above, and the asymmetry is deliberate.**
+        A capture is written shareable, so the ordinary case is `true` and the
+        padlock is the exception's mark — a fallback of `false` would draw a
+        lock on every line a future caller forgot to select it for, which is
+        the app claiming a state nobody chose. It is display only: whether a
+        line actually converges is decided in `lib/db/`, never here.
+      */
+      shared: row.shared ?? true,
     }
   })
 }

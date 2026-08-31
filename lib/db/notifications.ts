@@ -194,6 +194,13 @@ function group(rows: Row[]): PortalLine[] {
             `captures.ts`, which is what answers for every other surface.
           */
           converged: true,
+          /*
+            ⚠ **True by construction, for the same reason.** A locked capture is
+            out of the pool and cannot have produced the notification that put
+            this row here — so asking the database would be asking it to confirm
+            a row it just returned. See `shared` in `captures.ts`.
+          */
+          shared: true,
           sentence: '',
           notificationIds: [],
         },

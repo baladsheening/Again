@@ -5,14 +5,30 @@ import { useRef } from 'react'
 /**
  * ─────────────────────────────────────────────────────────────────────────────
  *  Tap thinks, swipe does — 30 August, Phase 2 step 2
+ *  THE SWIPE IS THE LOCK — 31 August, and it replaces the cross-off entirely
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * **Swipe a line away to cross it off, and swipe it back to undo.** The verb
- * used fifty times a week is a gesture on the row itself, and the console
- * becomes what it should be — the once-a-week question. **A gesture that can be
- * made anywhere on a row is the only kind of target that survives being used
- * while walking**, which is the whole argument: no console to open, no glyph to
- * hit, nothing to aim at.
+ * **Swipe a line away to lock it out of the convergence pool, and swipe it back
+ * to put it in.** **A gesture that can be made anywhere on a row is the only
+ * kind of target that survives being used while walking**, which is the whole
+ * argument for a swipe: no console to open, no glyph to hit, nothing to aim at.
+ * What changed is *which verb deserves it*.
+ *
+ * ⚠⚠ **THE CROSS-OFF SWIPE IS DELETED AND CROSSING OFF IS THE CONSOLE'S — 31
+ * August, directed.** This file argued that the swipe belonged to cross off
+ * because it was *the verb used fifty times a week*. **That was an assumption
+ * about usage and it was wrong**: told by the person using the app daily on a
+ * handset that lines are rarely crossed off, and that locking is the more
+ * valuable act. So the frequencies swap and the gesture follows them — the
+ * reflex carries the frequent verb, and the console carries the considered one,
+ * which is the same rule applied to better information.
+ *
+ * ⚠ **Lock fits this hook better than cross off ever did.** Cross off and
+ * restore share one gesture between two *states of the record*; lock and unlock
+ * are one property with two values, so the two directions are the property's own
+ * halves. Nothing about the mechanism changed — the same `SwipeWay`, the same
+ * signs, the same detent — because it was always the right shape and the wrong
+ * verb.
  *
  * ⚠ **A tap still opens the console and that is untouched.** The two gestures
  * are on the same row and cannot be confused, because one of them has no
@@ -23,8 +39,8 @@ import { useRef } from 'react'
  *  ONE swipe per row, and which one is the row's state to say — 30 August
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠⚠ **SETTLING IS NOT A SWIPE, and that reverses the first version of this
- * file, written the same day.** It swiped left to cross off and right to settle,
+ * ⚠⚠ **SETTLING IS NOT A SWIPE, and that reversed the first version of this
+ * file, written on 30 August.** It swiped left to cross off and right to settle,
  * and settling could not settle — it put *Again?* on the row and took a tap to
  * answer, because settling has two answers and one direction cannot carry both.
  * Directed after use: **settling must cost one beat, and both directions must
@@ -34,15 +50,21 @@ import { useRef } from 'react'
  * subtraction.** The question was the safety: nothing left the page until
  * somebody answered, and settling has no inverse to swipe back. Give the swipe
  * an undo and the question goes — but a swipe that settles in one beat still
- * owes the *other* answer a home, and it has none on a row. So the settle swipe
- * is **deleted** rather than made one-beat, and settling keeps the console, the
- * surface with room to state two answers, which is where it already lives.
+ * owes the *other* answer a home, and it has none on a row. **That argument is
+ * unchanged and now applies to cross off as well**: neither settling nor
+ * crossing off is on this row, and both are on the console.
  *
- * What is left is a resolution that is its own inverse, so the two directions
- * are the two halves of one act:
+ * The property left on the row is its own inverse, so the two directions are the
+ * two halves of one act:
  *
- * - **Away from the reader crosses off.** The row stays where it is, struck.
- * - **Back toward the reader restores it.** The same fact, undone.
+ * - **Away from the reader locks it.** Out of the pool; a padlock appears.
+ * - **Back toward the reader unlocks it.** The same fact, undone — and it fires
+ *   the fan-out, so a line locked in March can converge the day it comes back.
+ *
+ * ⚠ **The physical metaphor is the one that was already here.** Push it away and
+ * it is out; pull it back and it is in. It fits *out of the pool* more exactly
+ * than it fitted *dealt with*, which is why the direction constants below did
+ * not move when the verb did.
  *
  * ⚠ **A row therefore affords exactly ONE swipe, and its state says which.**
  * `bind` is told the live direction; the other one does not move the row at all.
@@ -52,16 +74,28 @@ import { useRef } from 'react'
  * than a row that does not move.
  *
  * ⚠ **The undo is unbounded in time, and that is a gain over the ten seconds
- * the design brief was going to reuse.** A crossed-off row stays on the page, so
- * the way back is on the page too, for as long as the row is. Nothing is held,
+ * the design brief was going to reuse.** A locked row stays on the page, so the
+ * way back is on the page too, for as long as the row is. Nothing is held,
  * nothing expires, and no clock is trusted on either side.
  *
- * ⚠ **The reverse swipe is invisible, and the console is what makes that
- * safe.** A crossed-off line's console offers exactly one control and it is the
- * way back — `console.tsx`, *Put it back*. So the gesture is the shortcut for
- * somebody who has learnt it and never the only door, and nothing is destroyed
- * either way: §5's *nothing is ever deleted* is what lets a hidden undo be a
- * convenience rather than a trap.
+ * ⚠⚠ **THE LOCKED STATE IS DRAWN ON THE ROW, AND THAT IS NOT OPTIONAL — 31
+ * August.** It was going to show nothing, on the reasoning that locking is rare
+ * and an invisible state fails safe. **That reasoning died the moment locking
+ * became the row's own gesture.** Crossing off confirmed itself — the line
+ * struck through where it stood — and iOS has no haptics, so a swipe whose
+ * outcome is invisible is a gesture confirmed by nothing at all. A padlock in
+ * the row's tail is the confirmation, and it is what makes this hook honest on
+ * the one surface the app is used on. **Do not remove it while the swipe carries
+ * the lock.**
+ *
+ * ⚠ **The gutter could not carry it**: `--color-accent` and that column belong
+ * to the convergence mark since 31 August, and one thing per column is the rule
+ * that makes either of them mean anything. The tail costs width on locked lines
+ * only, so the ordinary line pays nothing.
+ *
+ * ⚠ **The console is still a door and nothing is destroyed.** Locking changes a
+ * scope; §5's *nothing is ever deleted* holds, and the reverse swipe is a
+ * shortcut for somebody who has learnt it rather than the only way back.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The scroll question, answered by the browser rather than by a thermostat
@@ -112,16 +146,16 @@ import { useRef } from 'react'
  * `lib/haptics.ts` — and the installed app is a handset. A swipe designed to be
  * confirmed by the hand would be confirmed by nothing at all on the one surface
  * this app is used on. So the outcome is self-evident *after* the fact as well:
- * crossing off strikes the line where it stands, and restoring un-strikes it.
- * Neither is destructive and each is the other's undo.
+ * locking puts a padlock in the row's tail and unlocking takes it away. Neither
+ * is destructive and each is the other's undo.
  */
 
-/** Which resolution a row's one swipe carries. */
-export type SwipeWay = 'crossOff' | 'restore'
+/** Which half of the lock a row's one swipe carries. */
+export type SwipeWay = 'lock' | 'unlock'
 
 /**
- * ⚠ **Physical, not logical, and the RTL question is open.** Crossing off is a
- * push away from the reader and restoring is a pull back, which is the direction
+ * ⚠ **Physical, not logical, and the RTL question is open.** Locking is a push
+ * away from the reader and unlocking is a pull back, which is the direction
  * every list on every phone already teaches. It is written against the screen
  * rather than against the writing direction, so on an Arabic page the gestures do
  * not mirror.
@@ -133,7 +167,7 @@ export type SwipeWay = 'crossOff' | 'restore'
  * which is worse than not mirroring at all. Revisit it when there is somebody
  * reading the record right-to-left to ask.
  */
-const SIGN: Record<SwipeWay, number> = { crossOff: -1, restore: 1 }
+const SIGN: Record<SwipeWay, number> = { lock: -1, unlock: 1 }
 
 /** A pointer that has moved this far on the dominant axis is dragging. */
 const ACTIVATION = 6
@@ -246,7 +280,7 @@ export function useRowSwipe() {
         draw(s.el, 0, true)
         /*
           ⚠ **The row ends where it started, because the outcome does not move
-          it**: crossing off strikes it in place and restoring un-strikes it. A
+          it**: locking puts a padlock in its tail and unlocking takes it away. A
           row left held open would be a fourth state to dismiss, and this page
           has one dismissal gesture already.
         */

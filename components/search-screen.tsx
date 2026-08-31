@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { searchAction } from '@/app/actions/captures'
+import { LockGlyph } from './glyphs'
 import type { PageLineView } from '@/lib/page-line'
 import { STATE_WORD } from '@/lib/vocabulary'
 
@@ -256,7 +257,24 @@ export function SearchScreen() {
                   {line.converged && (
                     <span className="sr-only">. Also on someone else’s page.</span>
                   )}
+                  {/* The lock travels here too — it is a property of the line. */}
+                  {!line.shared && <span className="sr-only">. Locked.</span>}
                 </span>
+                {/*
+                  ⚠ **`self-center`, because this row is `items-baseline`.** A
+                  drawing has no baseline worth aligning to, and the flex item
+                  says so for itself rather than the row being re-aligned around
+                  it. See `line-glyph` on the record, which solves the same thing
+                  the other way because a record row is a line box.
+                */}
+                {!line.shared && (
+                  <span
+                    aria-hidden
+                    className="text-muted ms-2 inline-flex shrink-0 self-center [--glyph:0.875rem]"
+                  >
+                    <LockGlyph />
+                  </span>
+                )}
                 {/*
                   The word the state is called on screen, as the tray sets it.
                   `null` is a word too: a live want says nothing, because a result

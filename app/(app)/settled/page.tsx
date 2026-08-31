@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { LockGlyph } from '@/components/glyphs'
 import { Screen } from '@/components/screen'
 import { getMyProfile, getSessionUser, listMySettled } from '@/lib/db'
 import { STATE_WORD } from '@/lib/vocabulary'
@@ -68,7 +69,17 @@ export default async function SettledPage() {
                   {row.converged && (
                     <span className="sr-only">. Also on someone else’s page.</span>
                   )}
+                  {!row.shared && <span className="sr-only">. Locked.</span>}
                 </span>
+                {/* `self-center`: this row is `items-baseline` — see `search-screen.tsx`. */}
+                {!row.shared && (
+                  <span
+                    aria-hidden
+                    className="text-muted ms-2 inline-flex shrink-0 self-center [--glyph:0.875rem]"
+                  >
+                    <LockGlyph />
+                  </span>
+                )}
                 {/*
                   The word the state is called on screen, and `null` is a word
                   too — the two states that say nothing are not in the tray, so

@@ -29,7 +29,9 @@ wins and this file is wrong.
 | | |
 |---|---|
 | The console | **BUILT — 30 August.** §1 is deleted below; the code and its argument are `components/console.tsx` and `console-sheet` in `globals.css` |
-| Swipe to cross off, swipe back to undo | **BUILT — 30 August, reopened and rebuilt the same day.** §3 and §3b both struck. ⚠ **Settling is NOT a swipe**: the row carries the one resolution that is its own inverse, and the console keeps the question that has two answers |
+| The swipe carries the LOCK; crossing off is the console's | **BUILT — 31 August, directed.** `SwipeWay` is `'lock' | 'unlock'`; the mechanism, detent and signs are untouched. *Fifty times a week* was an assumption about cross-off and was corrected by use. A padlock in the row's tail is the gesture's only confirmation — iOS has no haptics |
+| Captures are shareable on write; a lock takes one out of the pool | **BUILT — 31 August, directed**, overruling the specification's private-by-default. A copied or transferred capture stays private. Without it the whole social half was inert |
+| ~~Swipe to cross off, swipe back to undo~~ — **SUPERSEDED 31 August by the row above**; every mechanical argument in §3 and §3b still governs, only the verb changed | **BUILT — 30 August, reopened and rebuilt the same day.** §3 and §3b both struck. ⚠ **Settling is NOT a swipe**: the row carries the one resolution that is its own inverse, and the console keeps the question that has two answers |
 | Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
 | The notification portal | **built, 30 August** — door in the FOOT, against §2 |
 | The convergence mark on a line | **BUILT — 31 August.** `--color-accent` in the gutter, on every line that has ever converged, and it **does not empty**. §5's mark sub-section is struck. The code is the `converged` utility in `globals.css`, `converged` in `lib/db/captures.ts` and `getConvergence` beside the portal's read |

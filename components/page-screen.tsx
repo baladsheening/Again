@@ -13,6 +13,7 @@ import {
   earlierAction,
   editCaptureAction,
   offerAction,
+  setCaptureSharedAction,
   settleCaptureAction,
   undoCaptureAction,
 } from '@/app/actions/captures'
@@ -31,7 +32,7 @@ import {
   portalAction,
   type PortalLineView,
 } from '@/app/actions/portal'
-import { AttachGlyph, LinkGlyph, UndoGlyph } from './glyphs'
+import { AttachGlyph, LinkGlyph, LockGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { useRowSwipe } from './row-swipe'
 import { touchQuery, useMatches } from './pointer'
@@ -1171,6 +1172,13 @@ export function PageScreen({
         row exists to be marked against.
       */
       converged: false,
+      /*
+        ⚠ **A new capture is shareable, which is what the server writes** — see
+        the note on `visibility` in `writeCapture`. The optimistic line has to
+        agree with it or the row would draw a padlock for the second before the
+        save returns, on a line nobody locked.
+      */
+      shared: true,
       mutationId,
       pending: true,
       failed: null,
@@ -1436,14 +1444,18 @@ export function PageScreen({
   }, [editing])
 
   /* ------------------------------------------------------------------ */
-  /*  The two resolutions — crossing off swipes, settling opens a console */
+  /*  The two resolutions — both on the console; the swipe carries the lock */
   /* ------------------------------------------------------------------ */
 
   /**
    * **Cross a line off, or put it back.** One function for both, because they
-   * are one fact and its inverse — which is exactly what lets the row carry it
-   * as a swipe and its reverse. See `row-swipe.ts` for why settling does not
-   * get one.
+   * are one fact and its inverse.
+   *
+   * ⚠ **This was the swipe's until 31 August and it is the console's now.** The
+   * swipe went to the lock, directed, because crossing off turned out to be rare
+   * and locking is the valuable act — the full argument is at the head of
+   * `row-swipe.ts`. Nothing about the function changed: one fact and its
+   * inverse, reached through one control instead of two directions.
    */
   function crossOff(line: Line) {
     const crossedOff = line.state === 'dropped'
@@ -1470,6 +1482,41 @@ export function PageScreen({
 
     void crossOffCaptureAction(line.id, !crossedOff).then((result) => {
       if (!result.ok) mark(line.key, { state: line.state, failed: result.message })
+    })
+  }
+
+  /**
+   * **Lock a line out of the convergence pool, or put it back** — the row's
+   * swipe, 31 August.
+   *
+   * ⚠ **The only control over what converges, and it is per capture.** Captures
+   * are written shareable since 31 August — the consent is the mutual track, not
+   * a second act on every line — so this is the exception, and the exception is
+   * the thing that gets a gesture. See the note on `visibility` in
+   * `writeCapture`.
+   *
+   * ⚠ **Unlocking is a fan-out trigger and locking is not.** `setCaptureVisibility`
+   * runs overlap on the private→shared transition, so a line locked in March can
+   * converge the day it comes back; going the other way announces nothing,
+   * because a notification already sent cannot be recalled and §5 does not delete
+   * things. **A line that already converged keeps its mark after it is locked** —
+   * the mark is memory, and the event happened.
+   *
+   * ⚠ **Two patterns, not a fourth.** Locking borrows the crossed-off thud —
+   * *something left* — and unlocking borrows the capture's tap, *this is on the
+   * live record*. `lib/haptics.ts` says why a fourth buzz nobody can tell from
+   * three others is worse than reusing two that are already learnt.
+   */
+  function toggleLock(line: Line) {
+    if (line.id === '') return
+    const locked = !line.shared
+
+    if (locked) haptic()
+    else hapticCrossedOff()
+    mark(line.key, { shared: locked, failed: null })
+
+    void setCaptureSharedAction(line.id, locked).then((result) => {
+      if (!result.ok) mark(line.key, { shared: line.shared, failed: result.message })
     })
   }
 
@@ -2605,7 +2652,28 @@ export function PageScreen({
               it deliberately invents no second sentence beside it. See
               `converged` in `lib/db/captures.ts`.
             */
-            const label = line.converged ? `${base}. Also on someone else’s page.` : base
+            /*
+              ⚠ **The lock is said too, for the padlock's own reason.** It is a
+              drawing and nothing else on the row carries it, so a reader who
+              cannot see it would have no way to know a line is out of the pool —
+              which is the state the row's one gesture sets. Same rule as the
+              mark above and the ellipsis before it: what the screen shows, the
+              label says.
+            */
+            const notes = [
+              line.converged ? 'Also on someone else’s page.' : null,
+              line.shared ? null : 'Locked.',
+            ].filter((n) => n !== null)
+
+            /*
+              The capture's own words end however they end — an offer's line
+              finishes with `?` — so the stop is added only when there is not one
+              already, rather than every note being glued on after a full stop
+              that may not be there.
+            */
+            const label = notes.length
+              ? `${base}${/[.?!]$/.test(base) ? '' : '.'} ${notes.join(' ')}`
+              : base
 
             /*
               ⚠ **`aria-expanded`, where it was `aria-current` — 30 August.** The
@@ -2738,15 +2806,21 @@ export function PageScreen({
                     `openConsole` rather than being repeated here.
 
                     ⚠ **The ROW says which way it swipes, and it is the one thing
-                    the hook cannot work out for itself — 30 August.** A live line
-                    goes away to be crossed off; a struck one comes back to be
-                    restored. One handler serves both, because `crossOff` is
+                    the hook cannot work out for itself — 30 August.** A shared
+                    line goes away to be locked; a locked one comes back to be
+                    let in. One handler serves both, because `toggleLock` is
                     already the toggle — what the direction buys is that each
                     half is a separate gesture rather than the same swipe meaning
                     two things depending on a state the hand cannot feel.
+
+                    ⚠ **It carried CROSS OFF until 31 August, directed.**
+                    Crossing off turned out to be rare and locking is the
+                    valuable act, so the reflex gesture follows the frequency.
+                    The × is the console's alone now, and this row has exactly
+                    one verb again.
                   */
                   {...(line.id !== '' && !line.pending && !line.failed
-                    ? bindSwipe(crossedOff ? 'restore' : 'crossOff', () => crossOff(line))
+                    ? bindSwipe(line.shared ? 'lock' : 'unlock', () => toggleLock(line))
                     : {})}
                   /*
                     ⚠ **THE MARK — Phase 2 step 4, 31 August.** A bar in the
@@ -2889,6 +2963,39 @@ export function PageScreen({
                     title={`Is this ${line.offer.title}?`}
                   >
                     ?
+                  </span>
+                )}
+
+                {/*
+                  ⚠ **THE LOCK'S MARK — 31 August, and it is the swipe's only
+                  confirmation.** A padlock says this line is out of the
+                  convergence pool. It is drawn *because* iOS has no Vibration
+                  API: crossing off used to confirm itself by striking the line,
+                  and locking changes nothing else on screen at all — so without
+                  this the row's one gesture would land in silence. See the head
+                  of `row-swipe.ts`; **do not remove it while the swipe carries
+                  the lock.**
+
+                  ⚠ **The tail and not the gutter.** `--color-accent` and the
+                  gutter belong to the convergence mark, and one thing per column
+                  is what makes either of them mean anything. Here it costs width
+                  on locked lines only — the ordinary line pays nothing, which is
+                  the same economy the year and the `?` are drawn under.
+
+                  ⚠ **`text-muted`, never the chrome and never the accent.** It
+                  is furniture stating a fact, not a control and not overlap. A
+                  locked line is a deliberate choice, not a warning.
+
+                  ⚠ **`quiet`, so the mark does not reach a reader twice** — the
+                  words' own label already carries it, the same arrangement the
+                  year is drawn under.
+                */}
+                {!line.shared && (
+                  <span
+                    {...quiet}
+                    className="line-glyph text-muted ms-2 shrink-0 [--glyph:var(--glyph-line)]"
+                  >
+                    <LockGlyph />
                   </span>
                 )}
 

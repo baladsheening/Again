@@ -44,6 +44,33 @@ requirement dropped:
 The Phase 0 migration is unaffected. It is a compatibility and data-safety
 step, and it is complete on its own terms.
 
+**Amendment 2 — 31 August 2026, §2 *Private by default*, §7 *Visibility*, §13
+Phase 2.** A self-written capture is **shareable when it is written**, and a
+per-capture **lock** — a swipe on the row — takes it out of the convergence pool.
+
+The reason is a delivery failure rather than a change of mind. *Share visibility*
+was a Phase 2 deliverable that was never built; with private-by-default and no
+control, **the entire social half of the product was inert** — production held 79
+captures, all private, and no notification had ever been written. A per-capture
+share act is also a beat *after* the capture, which the four-second criterion
+cannot afford, and its failure is silent: a person never converges with anybody
+and never learns why.
+
+**What is unchanged, and is the reason this is safe:**
+
+- The consent is the **mutual track** — deliberate, two-directional, given by
+  handle to a person the user chose. A convergence discloses one overlap on one
+  possibility, to one such person.
+- **Reading is untouched.** Another person's record still requires all four
+  terms. This changes what may *match*, never what may be *read*.
+- **A capture whose provenance is another person stays private.** A received list
+  is not an independent common intention, so a copy or transfer becomes shareable
+  only by a deliberate act — the same reasoning as the suppression rule.
+- The data layer still enforces all of it.
+
+Directed by the product owner with the conflict stated. Update `docs/decisions.md`
+before revisiting it.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -99,9 +126,16 @@ canonical possibility. A missing result is not a failed capture.
 
 ### Private by default
 
-An individual capture is private until the user chooses to contribute it to the
-shared catalogue or share it for social matching. A user's precise location is
-never stored by default.
+⚠ **Amended 31 August — see Amendment 2 and the *Visibility* section.** A record
+is private: nobody can read another person's captures without a mutual track and
+the owner's sharing. **What a self-written capture is not private from is
+matching** — the mutual track is the consent, and a per-capture lock withdraws
+any line from it. A capture that came from another person, by copy or transfer,
+stays private until its owner says otherwise.
+
+An individual capture is private from *readers* until the user chooses to
+contribute it to the shared catalogue or share it for social matching. A user's
+precise location is never stored by default.
 
 ### Social without a feed
 
@@ -598,9 +632,33 @@ worker concern and must not run inside the capture mutation or undo window.
 
 ### Visibility
 
+⚠⚠ **AMENDED 31 AUGUST BY DIRECTION: a capture a person writes is SHAREABLE when
+it is written, and a per-capture lock takes it out of the pool.** The first
+required default below is superseded and is kept struck rather than deleted,
+because the reasoning it was overruled by is the reasoning that must not be
+re-overruled by accident.
+
+**Why.** *Share visibility* was a Phase 2 deliverable that was never built, and
+the effect of private-by-default without it was that the entire social half of
+the product was inert — on 31 August production held 79 captures, all private,
+and no notification had ever been written. A per-capture share act is also a beat
+*after* the capture, which the four-second criterion cannot afford, and its
+failure is silent. **The consent is the mutual track**: deliberate,
+two-directional, given by handle to a person the user chose. What a convergence
+discloses is one overlap on one possibility, to one such person.
+
+**What did not change.** Browsing another person's record still requires all four
+terms — shared scope, mutual track, published state, not the owner — so this is
+a change to what may *match*, never to what may be *read*. The data layer still
+enforces it. And **a capture whose provenance is another person stays private**:
+a received list is not an independent common intention, so a copy or a transfer
+is shareable only by a deliberate act.
+
 Required default:
 
-- captures are private
+- ~~captures are private~~ — **superseded 31 August**: a self-written capture is
+  shareable on write; a copied or transferred one is private; a per-capture lock
+  is the control, and it is a swipe on the row
 - Release 1 supports one social visibility scope: shared with mutual tracks
 - selected-person sharing is deferred until a dedicated access-control table
   and management surface exist
@@ -1204,7 +1262,11 @@ Deliver:
 
 - mutual tracks
 - QR/code contact handshake that creates mutual tracks; no list import yet
-- share visibility
+- ~~share visibility~~ — **DELIVERED 31 August, and not in the shape this line
+  meant.** It was never built as a per-capture share act, and the effect was an
+  inert product. What shipped is the inverse: a self-written capture is
+  shareable on write and a **lock** takes one out of the pool, on a swipe. See
+  the amendment under *Visibility*.
 - exact canonical overlap
 - possible-match prompts for unresolved, normalised-equal captures; no
   notification until each user confirms the resolution

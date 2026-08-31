@@ -17,6 +17,7 @@ import {
   getMyCaptureText,
   restoreCapture,
   searchMyCaptures,
+  setCaptureVisibility,
   suggestForCapture,
   upsertPossibility,
   setCaptureText,
@@ -29,6 +30,7 @@ import { dayStamper } from '@/lib/day'
  import { removeImage, storeImage } from '@/lib/media'
  import { searchFilms } from '@/lib/tmdb'
 import { toPageLines, type PageLineView } from '@/lib/page-line'
+import { SHARED_SCOPES } from '@/lib/domain'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { viewerTimeZone } from '@/lib/region'
 import type { ActionResult } from './entries'
@@ -160,6 +162,46 @@ export async function crossOffCaptureAction(
   const result = crossedOff
     ? await dropCapture(sessionUser, captureId)
     : await restoreCapture(sessionUser, captureId)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  return { ok: true, value: null }
+}
+
+/**
+ * **The lock: take a line out of the convergence pool, or put it back** — the
+ * row's swipe, 31 August.
+ *
+ * ⚠ **A boolean here and a `Visibility` underneath, deliberately.** The row has
+ * one bit to give — the swipe went one way or the other — and
+ * `setCaptureVisibility` takes a scope "because the scopes will grow". Naming
+ * the scope at this boundary would let a client pick one, and the day a third
+ * exists that becomes a way to publish a capture from a request body. **The
+ * client says which direction; this file says what that means.**
+ *
+ * ⚠ **Unlocking is a fan-out trigger and the data layer already knows.**
+ * `setCaptureVisibility` runs overlap on the private→shared transition and on
+ * that transition only, so a line locked in March can converge the day it comes
+ * back, and tapping the same direction twice writes nothing twice (§10).
+ *
+ * ⚠ **No rate limit and no mutation id.** It is idempotent by construction —
+ * setting a scope a capture already holds changes nothing and announces nothing
+ * — which is the property §10 asks of a retry, satisfied without a key.
+ */
+export async function setCaptureSharedAction(
+  captureId: string,
+  locked: boolean,
+): Promise<ActionResult> {
+  const sessionUser = await requireSessionUser()
+
+  if (!captureIdSchema.safeParse(captureId).success) {
+    return { ok: false, message: 'Unknown capture.' }
+  }
+
+  const result = await setCaptureVisibility(
+    sessionUser,
+    captureId,
+    locked ? 'private' : SHARED_SCOPES[0],
+  )
   if (!result.ok) return { ok: false, message: result.message }
 
   return { ok: true, value: null }

@@ -1,8 +1,8 @@
 /**
- * The eight glyphs of the capture page — Phase 1.
+ * The eleven glyphs of the capture page — Phase 1, and two of Phase 2.
  *
  * **One grid: `viewBox="0 0 20 20"`, `stroke-width="1.25"`, rendered at
- * `--glyph`.** One number sizes all eight, and the stroke rides with it: the
+ * `--glyph`.** One number sizes them all, and the stroke rides with it: the
  * viewBox is fixed, so a bigger box is the same drawing larger rather than the
  * same drawing stretched thinner. See `--glyph` in globals.css for why the size
  * became a token on 24 August, and why 20px stopped being a constraint.
@@ -263,6 +263,39 @@ export function PortalGlyph() {
       <path d="M2.25 16.75c0-2.75 2.55-4.5 5.5-4.5s5.5 1.75 5.5 4.5" />
       <circle cx="13.9" cy="6" r="2.35" />
       <path d="M13.6 12.3c2.55.2 4.15 1.8 4.15 4.45" />
+    </Glyph>
+  )
+}
+
+/**
+ * **The lock, on a line of the record — 31 August.** *This capture is out of the
+ * convergence pool.* The row's swipe puts it there and takes it away, and this
+ * is what says so.
+ *
+ * ⚠ **It is a STATE, not a control, and that is why a padlock is right here
+ * when it would have been wrong on a button.** As a label a padlock says
+ * *security*, and this is scope rather than secrecy — nothing about a lock stops
+ * anybody reading a record they can already reach. As a mark on a line it is the
+ * one drawing every reader on earth already knows for *held back*, and §11
+ * permits known icons for exactly that reason.
+ *
+ * ⚠ **It exists because a swipe on iOS has no other confirmation.** There is no
+ * Vibration API on Safari, so the only thing that can tell a hand its gesture
+ * landed is the eye. Crossing off struck the line where it stood; locking would
+ * have changed nothing visible at all. See the note at the head of
+ * `row-swipe.ts` — **do not remove this while the swipe carries the lock.**
+ *
+ * ⚠ **Drawn shorter than the other ten, deliberately.** The ink spans y 4.6 →
+ * 15.4 rather than the set's usual 3.5 → 16.5: it rides a line of the record
+ * beside 13px furniture — the year, the `?` — rather than standing in a bar, and
+ * a full-height padlock beside a year reads as a control somebody could press.
+ * The width is centred on 10 like the rest, so it sits on the grid.
+ */
+export function LockGlyph() {
+  return (
+    <Glyph>
+      <rect x="5.25" y="9.25" width="9.5" height="6.15" rx="1.35" />
+      <path d="M7.6 9.25V7.4a2.4 2.4 0 0 1 4.8 0v1.85" />
     </Glyph>
   )
 }

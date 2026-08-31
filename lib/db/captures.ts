@@ -451,6 +451,23 @@ const converged = sql<boolean>`exists (
 )`
 
 /**
+ * **Whether this line is in the convergence pool** — the lock, 31 August.
+ *
+ * ⚠ **Derived from the SCOPE, never compared to `'private'`.** The question the
+ * row asks is *can this converge*, and the answer is *is its visibility one of
+ * `SHARED_SCOPES`* — which is the same predicate `runOverlap` and
+ * `listCapturesForOtherUser` apply. Written as `= 'private'` it would be a
+ * second definition of the pool, right today and wrong the day a third scope
+ * exists. That is the reason `setCaptureVisibility` takes a `Visibility` rather
+ * than a boolean, stated once more at the read end.
+ *
+ * ⚠ **A bit crossing to a client, not the scope itself.** The record draws one
+ * thing — a padlock or nothing — and a page holding the enum would be a page
+ * able to invent a second reading of it. Same rule as `offer` and `hasImage`.
+ */
+const shared = sql<boolean>`${inArray(captures.visibility, SHARED_SCOPES)}`
+
+/**
  * One line of the page. Named columns, like everything shared here — a `select`
  * of the whole table is how `note` reaches a client the day somebody adds a
  * column, and this shape crosses into a Client Component.
@@ -514,6 +531,20 @@ export type PageLine = {
    * one column.
    */
   converged: boolean
+  /**
+   * **Whether this line is in the convergence pool** — the inverse of the lock.
+   *
+   * ⚠ **The scope, reduced to the one bit a row can draw.** `true` is the
+   * ordinary case since 31 August, when captures started being written
+   * shareable; `false` is a line its owner locked, which draws a padlock and
+   * matches nobody. See `shared` above for why it is derived from
+   * `SHARED_SCOPES` rather than compared to `'private'`.
+   *
+   * ⚠ **It says nothing about who can read the line.** Browsing somebody's
+   * record needs all four terms of `listCapturesForOtherUser`; this is only
+   * about whether the fan-out may see it.
+   */
+  shared: boolean
 }
 
 /**
@@ -602,6 +633,8 @@ export async function listMyPage(
       sourceUrl: captures.sourceUrl,
       /* The mark — see `converged` above for why `read_at` is not in it. */
       converged,
+      /* The lock — see `shared` above for why it is the scope and not `private`. */
+      shared,
     })
     .from(captures)
     /* LEFT, because a capture with nothing canonical behind it is the norm. */
@@ -684,6 +717,8 @@ export async function listMySettled(
         the case §5 says the mark exists for. One expression, three reads.
       */
       converged,
+      /* The lock, on the same terms: one predicate, three reads. */
+      shared,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -765,6 +800,8 @@ export async function searchMyCaptures(
         the case §5 says the mark exists for. One expression, three reads.
       */
       converged,
+      /* The lock, on the same terms: one predicate, three reads. */
+      shared,
     })
     .from(captures)
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
@@ -981,6 +1018,51 @@ async function writeCapture(
         */
         sourceUrl: cleanSourceUrl(input.sourceUrl),
         state: 'want',
+        /*
+          ─────────────────────────────────────────────────────────────────────
+           A capture is SHAREABLE when it is written — directed 31 August
+          ─────────────────────────────────────────────────────────────────────
+
+          ⚠⚠ **THIS OVERRULES THE SPECIFICATION'S `captures are private`
+          DEFAULT, AND IT WAS DIRECTED WITH THAT STATED.** §7 of
+          `implementation-spec.md` requires private-by-default with one scope a
+          capture can be moved into, and §13 lists *share visibility* as a Phase
+          2 deliverable. The scope existed, the control never got built, and the
+          effect was that **the entire social half of the product was inert**:
+          the column defaulted to `private`, `runOverlap` requires
+          `SHARED_SCOPES`, and nothing anywhere called `setCaptureVisibility`. On
+          31 August production held 79 captures, all private, 0 notifications.
+
+          ⚠ **The argument that won is the four-second capture.** A per-capture
+          share act is a beat *after* the capture — one you have to remember to
+          come back for — and its failure is silent: you simply never converge
+          with anybody and never learn why. **The consent is the mutual track**,
+          which is deliberate, two-directional, and given by handle to someone
+          you chose. What a convergence discloses is one overlap on one
+          possibility, to one such person. It is not a way to read your list —
+          `listCapturesForOtherUser` keeps every one of its four terms, and this
+          changes nothing about who can *browse* a record.
+
+          ⚠ **What replaces it is the LOCK**, which is the same column pointed
+          the other way: a swipe on a row sets `private` and takes that line out
+          of the pool. So the scope is still per-capture and still enforced in
+          this layer — the default moved, the mechanism did not.
+
+          ⚠ **Deliberately NOT in the `onConflictDoUpdate` below.** A revive is a
+          crossed-off capture being written again, and its scope is whatever its
+          owner last chose: re-locking on every revive would be a control the
+          person did not touch changing under them.
+
+          ⚠⚠ **A CAPTURE THAT CAME FROM SOMEBODY ELSE STAYS PRIVATE, and that is
+          a guarantee rather than a leftover default.** It is the same reasoning
+          §6 already applies to suppression: **a received list is not an
+          independent common intention.** If a copy is not independent enough to
+          notify the person it was taken from, it is not independent enough to be
+          republished onward to *my* mutuals without my touching it. The lock's
+          swipe is what makes it shareable — one gesture, deliberately taken.
+          `tests/guarantees.test.ts` names this in its own case.
+        */
+        visibility: provenance.source === 'self' ? SHARED_SCOPES[0] : 'private',
         clientMutationId: input.clientMutationId ?? null,
         ...provenance,
       })

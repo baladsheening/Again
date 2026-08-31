@@ -291,3 +291,131 @@ describe('the mark (Phase 2 step 4)', () => {
     expect(await dal.getConvergence(viewer(adaId, A), line!.id)).toBeNull()
   })
 })
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The lock — 31 August
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **A capture is written shareable and a lock takes it out of the pool.**
+ * Directed 31 August, overruling the specification's private-by-default: the
+ * consent is the mutual track, not a second act on every line, and the whole
+ * social half of the product was inert without it — 79 captures on production,
+ * all private, no control anywhere that could change one.
+ *
+ * ⚠ **The first case here is the one the product now leans on and nothing
+ * asserted before:** a crossed-off line converges with nobody. It falls out of
+ * `classify` being an allowlist of three pairs rather than out of any rule
+ * written down, which is the robust shape — but an allowlist that grows a fourth
+ * pair would put crossed-off lines back in the pool silently, and this is what
+ * would go red.
+ */
+describe('the lock, and what is in the pool (31 August)', () => {
+  it('writes a capture SHAREABLE, so a line converges with no second act', async () => {
+    const { rows } = await pool.query(
+      `select visibility from captures where user_id = $1 order by created_at desc limit 1`,
+      [adaId],
+    )
+    /*
+      Every fixture above went in through the raw driver with an explicit
+      `'mutuals'`, so this asks the writer itself. `addCapture` is §3's one
+      writer of a capture, and the default it applies is the whole of the
+      direction.
+    */
+    const written = await dal.addCapture(viewer(adaId, A), { text: 'ada wrote this by hand' })
+    expect(written.ok).toBe(true)
+    if (!written.ok) return
+
+    expect(written.value.capture.visibility).toBe('mutuals')
+    expect(rows.length).toBeGreaterThan(0)
+
+    /* And the record says so, in the bit the row draws its padlock from. */
+    const line = await lineOn(adaId, A, 'ada wrote this by hand')
+    expect(line?.shared).toBe(true)
+  })
+
+  it('⚠ a CROSSED-OFF line converges with nobody — the allowlist, asserted', async () => {
+    const { classify } = await import('@/lib/overlap')
+    const live = {
+      userId: adaId,
+      intent: 'see' as const,
+      state: 'want' as const,
+      source: 'self' as const,
+      sourceUserId: null,
+    }
+    const struck = { ...live, userId: boId, state: 'dropped' as const }
+
+    /* Two live wants are a convergence — the control for the case below. */
+    expect(classify(live, { ...live, userId: boId })).toHaveLength(2)
+    /* One of them crossed off, and there is nothing to say. */
+    expect(classify(live, struck)).toHaveLength(0)
+    expect(classify(struck, { ...struck, userId: adaId })).toHaveLength(0)
+  })
+
+  it('locking takes a line out of the pool and unlocking puts it back', async () => {
+    const line = await lineOn(adaId, A, 'ada wrote this by hand')
+    expect(line?.shared).toBe(true)
+
+    const locked = await dal.setCaptureVisibility(viewer(adaId, A), line!.id, 'private')
+    expect(locked.ok).toBe(true)
+    expect((await lineOn(adaId, A, 'ada wrote this by hand'))?.shared).toBe(false)
+
+    const back = await dal.setCaptureVisibility(viewer(adaId, A), line!.id, 'mutuals')
+    expect(back.ok).toBe(true)
+    expect((await lineOn(adaId, A, 'ada wrote this by hand'))?.shared).toBe(true)
+  })
+
+  it('⚠ UNLOCKING is a fan-out trigger, so a line locked in March converges today', async () => {
+    /*
+      Both people hold the same possibility and already track each other; the
+      only thing keeping them apart is the scope. Putting it back is what makes
+      the capture a signal it was not already — `setCaptureVisibility` runs
+      overlap on that transition and on no other.
+    */
+    const film = await pool.query(
+      `insert into items (kind, external_source, external_id, title, year)
+       values ('film', 'tmdb', 'mark-fixture-locked', 'A Locked Convergence', 2001)
+       on conflict (kind, external_id) do update set title = excluded.title returning id`,
+    )
+    const lockedFilm = film.rows[0].id as string
+
+    const mine = await capture(adaId, lockedFilm, 'ada locked this one', {})
+    await pool.query(`update captures set visibility = 'private' where id = $1`, [mine])
+    await capture(boId, lockedFilm, 'bo wants the locked one')
+
+    /* Bo's capture landing announces nothing, because Ada's is out of the pool. */
+    expect((await lineOn(adaId, A, 'ada locked this one'))?.converged).toBe(false)
+
+    await dal.setCaptureVisibility(viewer(adaId, A), mine, 'mutuals')
+
+    const line = await lineOn(adaId, A, 'ada locked this one')
+    expect(line?.shared).toBe(true)
+    expect(line?.converged).toBe(true)
+    expect(await dal.getConvergence(viewer(adaId, A), mine)).toContain(B)
+  })
+
+  it('a line that already converged KEEPS ITS MARK after it is locked', async () => {
+    const line = await lineOn(adaId, A, 'ada locked this one')
+    expect(line?.converged).toBe(true)
+
+    await dal.setCaptureVisibility(viewer(adaId, A), line!.id, 'private')
+
+    /*
+      ⚠ **The mark is memory and the event happened.** Locking is prospective —
+      it stops the line matching again — and a notification already sent cannot
+      be recalled. A mark that vanished here would be the app rewriting what it
+      told somebody.
+    */
+    const after = await lineOn(adaId, A, 'ada locked this one')
+    expect(after?.shared).toBe(false)
+    expect(after?.converged).toBe(true)
+  })
+
+  it('will not change the scope of somebody else’s capture', async () => {
+    const bo = await lineOn(boId, B, 'bo wants the locked one')
+    const result = await dal.setCaptureVisibility(viewer(adaId, A), bo!.id, 'private')
+
+    expect(result.ok).toBe(false)
+    expect((await lineOn(boId, B, 'bo wants the locked one'))?.shared).toBe(true)
+  })
+})
