@@ -2623,9 +2623,45 @@ export function PageScreen({
 
           ⚠ **It is not a line of the record and must not be set like one.** The
           record's own type is `--text-line`; this is the page's body size, muted
-          and at the profile's measure — the same shape as *Nobody yet* in
+          and at the profile's measure — the shape of *Nobody yet* in
           `tracked-people.tsx`, which is the precedent this was asked for. A
           paragraph in the record's type would read as the first capture.
+
+          ⚠ **THREE NUMBERED STEPS, AND IT IS CENTRED ON BOTH AXES — directed, 31
+          August, after the first look at it.** It began as two muted paragraphs
+          at the head of the record and is now *Write a line / Find a match /
+          Keep it private*, which is the product's whole loop in three lines.
+
+          - **`m-auto` inside `<main>`'s flex column is what centres it, and that
+            is the one mechanism — no height is typed anywhere.** `main`'s box is
+            already exactly the space the record lives in: `100svh +
+            env(safe-area-inset-top)` is the whole screen (`svh` in an installed
+            app is the screen *less* the status band — see the note on the box
+            below), `--bar-height` carries that same inset back out, and
+            `page-hem` reserves the strip. So its **content** box is the gap
+            between the bar's bottom edge and the strip's top edge, on all four
+            surfaces, and auto margins on the only child centre the block in it.
+            The desk follows for free.
+          - ⚠ **It works because nothing else in the column has height when the
+            record is empty.** *Earlier* renders only when there is more,
+            `readFailed` only on a failure, `endMark` is `h-0`, and the `<h1>` is
+            `sr-only`, which is out of flow. The moment a line exists the block
+            is gone, so the two can never compete for the space.
+          - ⚠ **Centred text, and it stops here.** The record is left-aligned and
+            must stay so — a capture is prose and a centred column of two hundred
+            lines has no edge for the eye to return to. This is the one block on
+            the page that is not a record and cannot recur, which is the whole of
+            why it may be centred. **Do not take it as a precedent for anything
+            that appears more than once.**
+          - **The headings are `micro`** — the interface label, the same utility
+            as *People* in the profile's pill. ⚠ **Deliberately NOT `stamp`**,
+            which would have echoed the day stamps that appear in this column the
+            moment there is a record. Mono is scarce here by the same rule the
+            accent is: timestamps, the handle input and the day stamps, and on
+            every other label it is texture rather than signal.
+          - **Full ink on the heading, muted on the sentence**, which is the only
+            hierarchy in the block. The numbers are in the text rather than an
+            `<ol>`'s markers, so a reader hears each one once.
 
           ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held
           rather than forgotten.** Brass means *a control*, and a `+` in a
@@ -2634,16 +2670,28 @@ export function PageScreen({
           strip has exactly one, and the sentence names it.
         */}
         {empty && (
-          <div className="text-muted max-w-sm text-sm leading-relaxed">
-            <p>
-              Nothing yet. Tap + to write a line — anything you want to do, try, watch,
-              buy, or even just thoughts. One line, no category, a few seconds.
-            </p>
-            <p className="mt-3">
-              What you write is matched against the people you track: when one of them
-              writes down the same thing, you both hear about it. Swipe a line away to
-              keep it out of that.
-            </p>
+          <div className="m-auto flex max-w-sm flex-col gap-7 text-center">
+            <div>
+              <h2 className="micro mb-2">1. Write a line</h2>
+              <p className="text-muted text-sm leading-relaxed">
+                Nothing yet. Tap + to write a line — anything you want to do, try,
+                watch, buy, or even just a thought. One line, no category, a few
+                seconds.
+              </p>
+            </div>
+            <div>
+              <h2 className="micro mb-2">2. Find a match</h2>
+              <p className="text-muted text-sm leading-relaxed">
+                What you write is matched against the people you track. When one of them
+                writes down the same thing, you both hear about it.
+              </p>
+            </div>
+            <div>
+              <h2 className="micro mb-2">3. Keep it private</h2>
+              <p className="text-muted text-sm leading-relaxed">
+                Swipe a line away to keep it out of matching.
+              </p>
+            </div>
           </div>
         )}
 

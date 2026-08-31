@@ -9461,10 +9461,40 @@ in `lines`. There is no state to design for it coming back.
 
 **It is not a line of the record and is not set like one.** The record's type is
 `--text-line`; this is the page's body size, muted, at the profile's `max-w-sm`
-measure — the same shape as *Nobody yet* in `components/tracked-people.tsx`,
-which is the precedent that was asked for. **A paragraph in the record's type
-would read as the first capture.** It takes no `bg-surface/40` pill either: that
-container exists to group the People list, and there is nothing here to group.
+measure — the shape of *Nobody yet* in `components/tracked-people.tsx`, which is
+the precedent that was asked for. **A paragraph in the record's type would read
+as the first capture.** It takes no `bg-surface/40` pill either: that container
+exists to group the People list, and there is nothing here to group.
+
+⚠ **Three numbered steps, and centred on both axes — directed after the first
+look at it.** It shipped as two muted paragraphs at the head of the record and is
+now *Write a line / Find a match / Keep it private*, which is the product's whole
+loop in three lines.
+
+- **`m-auto` in `<main>`'s flex column is the whole centring mechanism, and no
+  height is typed anywhere.** That box is already exactly the space the record
+  lives in: `100svh + env(safe-area-inset-top)` is the full screen, `--bar-height`
+  carries the same inset back out, `page-hem` reserves the strip. Its **content**
+  box is therefore the gap between the bar's bottom edge and the strip's top edge
+  on all four surfaces, and auto margins centre the block in it. The desk follows
+  for free, which a typed height could not have done.
+- ⚠ **It works because nothing else in that column has height when the record is
+  empty** — *Earlier* renders only when there is more, `readFailed` only on a
+  failure, `endMark` is `h-0`, and the `<h1>` is `sr-only` and out of flow. The
+  moment a line exists the block is gone, so the two can never compete for the
+  space.
+- ⚠ **Centred text, and it stops here.** The record is left-aligned and must stay
+  so: a capture is prose, and a centred column of two hundred lines has no edge
+  for the eye to return to. **This is the one block on the page that is not a
+  record and cannot recur**, which is the whole of why it may be centred. Not a
+  precedent for anything that appears more than once.
+- ⚠ **The step headings are `micro` — the interface label — and deliberately NOT
+  `stamp`.** Mono would have echoed the day stamps that appear in this very
+  column the moment there is a record, and mono is scarce here for the reason the
+  accent is: timestamps, the handle input and the day stamps, and on every other
+  label it is texture rather than signal. Full ink on the heading, muted on the
+  sentence, is the only hierarchy in the block; the numbers are in the text rather
+  than an `<ol>`'s markers so a reader hears each one once.
 
 ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held rather
 than forgotten.** Brass means *a control*; a `+` in a paragraph is a reference to
