@@ -2679,6 +2679,17 @@ export function PageScreen({
             thing separating the three at all. ⚠ **Not an `<ol>`**: the steps are
             a loop, not an order, and list markers would put back the numbering
             that was taken out.
+          - ⚠ **NO `leading-*` HERE, AND THAT IS THE FIX FOR *IT READS TOO AIRY*
+            — 31 August.** It shipped as `leading-relaxed`, which is 1.625: at
+            `text-sm` that is a **22.75px line on 14px type, looser than the
+            page's own body at a larger size** (15px on 1.45 = 21.75). The block
+            was set airier than anything around it by a class I typed, and it was
+            read as the *face* being wrong. **The override is deleted rather than
+            replaced with a tighter number**, so the leading is `body`'s 1.45
+            inherited and there is no second opinion about it on this page.
+          - **`gap-5` between the steps is one blank line of this block's own
+            type** — 20px against a 20.3px line — which is what a paragraph break
+            is. It was `gap-7`, a number with nothing behind it.
 
           ⚠ **The `+` in the sentence is NOT `text-chrome`, and that is §11 held
           rather than forgotten.** Brass means *a control*, and a `+` in a
@@ -2687,25 +2698,25 @@ export function PageScreen({
           strip has exactly one, and the sentence names it.
         */}
         {empty && (
-          <div className="m-auto flex max-w-sm flex-col gap-7 text-center">
+          <div className="m-auto flex max-w-sm flex-col gap-5 text-center">
             <div>
-              <h2 className="micro mb-2">Write whatever</h2>
-              <p className="text-muted text-sm leading-relaxed">
+              <h2 className="micro mb-1.5">Write whatever</h2>
+              <p className="text-muted text-sm">
                 Tap + to write anything you&rsquo;re thinking about — something you want
                 to do, try, watch, buy, or simply remember. No categories, no
                 overthinking. One line is all it takes.
               </p>
             </div>
             <div>
-              <h2 className="micro mb-2">See what clicks</h2>
-              <p className="text-muted text-sm leading-relaxed">
+              <h2 className="micro mb-1.5">See what clicks</h2>
+              <p className="text-muted text-sm">
                 Your lines are matched against the people you track. When you both write
                 down the same thing, you both hear about it.
               </p>
             </div>
             <div>
-              <h2 className="micro mb-2">Choose what gets matched</h2>
-              <p className="text-muted text-sm leading-relaxed">
+              <h2 className="micro mb-1.5">Choose what gets matched</h2>
+              <p className="text-muted text-sm">
                 Some things are just for you. Swipe a line away and it stays out of
                 matching.
               </p>
