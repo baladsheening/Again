@@ -126,7 +126,44 @@
    * past the 3:1 WCAG 1.4.11 asks of a graphical control, and past 4.5:1 for
    * the mark, which is text.
    */
-  --color-chrome: #e8b34a;
+  /*
+    ⚠⚠ **THE CHROME IS THE INK SINCE 31 AUGUST. IT WAS LIT BRASS `#e8b34a` FOR
+    EIGHT DAYS AND THE BRASS IS RETIRED — directed, off the zine artboards.**
+    `RecordCorners` and `FirstRunInChrome` carry **23 colour declarations and
+    every one is `#ffffff`**: the mark, the profile, search, the `+`, the
+    convergence glyph and the tray. There is no brass anywhere in the redesign.
+
+    ⚠ **The TOKEN moved, not the call sites, and that is the whole implementation.**
+    Sixteen `text-chrome` usages across four files all became ink by one
+    declaration. **Never repaint them individually** — the name is what carries
+    §11's rule, and a class list that says `text-text` on a control has thrown
+    the rule away to save a token.
+
+    ⚠ **§11's rule SURVIVES and is re-read rather than repealed.** It says *the
+    chrome colour means a control, never a state*. That is still true; the colour
+    it names is no longer brass. What the rule actually protects is the pairing —
+    one colour for controls, one for state — and the pairing is now **ink for a
+    control, `--color-accent` for a state**.
+
+    ⚠⚠ **AND THAT IS THE POINT: `--color-accent` IS NOW THE ONLY COLOUR ON THE
+    PAGE.** The record is ink on black with exactly one chromatic thing in it —
+    the amber hairline in the gutter saying *this line converged*. Under the
+    brass it had to compete with a coloured control in every corner. **If the
+    mark ever reads too quiet, look at the accent before touching this**: it just
+    stopped having a rival and has not been re-measured against an ink chrome.
+
+    ⚠ **`var(--color-text)`, never a typed `#ffffff`.** The artboards say white
+    because they were drawn quickly; this page's ink is *warm* — `#eae6da` here
+    and `#f9f4e8` on the desk — and a pure white beside it reads cold and blue.
+    Pointing at the token also means the desk's lifted ink is inherited for free
+    rather than mirrored, which is the whole reason that lift was done as a
+    ratio. **One declaration, both surfaces, no second opinion.**
+
+    ⚠ **The caret follows, and it should.** `--color-caret` was deleted on the
+    argument that *with a coloured chrome the caret is the chrome*; the caret is
+    now the ink, which is what a caret is in every text field ever made.
+  */
+  --color-chrome: var(--color-text);
   /**
    * Lacquer red. **"You are here", on the two header glyphs and nowhere else.**
    *
@@ -4745,7 +4782,13 @@
        * red is the tightest and is the first to re-measure if this ground moves
        * again.**
        */
-      --color-chrome: #f7bf4f;
+      /*
+        ⚠ **Deleted in spirit on 31 August: the chrome is `var(--color-text)` at
+        the base now, so it follows the desk's lifted ink on its own.** This line
+        is kept as a tombstone rather than a value — `#f7bf4f` was the brass
+        carried up to hold its 65% pitch against the lifted ink, and re-deriving
+        that pitch is the job if the brass ever comes back. See the base token.
+      */
 
       --foot-height: 3rem;
 

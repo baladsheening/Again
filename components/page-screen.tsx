@@ -3915,7 +3915,31 @@ export function PageScreen({
         </div>
       </div>
 
-      <ToolStack {...tools} />
+      {/*
+        ⚠ **NOT ON THE FIRST RUN — 31 August, directed.** The stack stands beside
+        the reading column, and on an empty page there is no column for it to
+        stand beside: it was a strip of glyphs down the side of nothing, pointing
+        at a record that does not exist yet.
+
+        ⚠ **It costs nothing, because the first run already has its own `+`** —
+        the large one under the command, which is the whole argument for the bar's
+        slot standing empty up there too. Search and the portal have nothing to
+        answer on an empty record either, so what is withheld is three controls
+        that could each only say *nothing*.
+
+        ⚠ **`empty`, not `!searchable`.** They are the same value today and they
+        are not the same claim: one is *this record has no lines*, the other is
+        *there is nothing to search*. The stack's absence is about the column not
+        being there.
+
+        ⚠ **The handset's foot is deliberately NOT gated with it.** Down there the
+        strip is the bottom edge of the screen and it holds the writing row in the
+        same one-cell grid — removing it on the first run would let that box
+        resize when the first line lands, which is the exact fault the one-strip
+        rule of 28 August exists to prevent. The desk's stack has no such
+        partner: it is a free-standing column and can simply not be there.
+      */}
+      {!empty && <ToolStack {...tools} />}
 
       {/*
         ⚠ **A file input, hidden, driven by the foot's glyph.** The camera is a
