@@ -1726,13 +1726,32 @@ that, with the unreferenced `capture-provider.tsx` that imported it.
 
 ## Not in Phase 1
 
-Mutual tracks, sharing, overlap and the QR handshake are Phase 2. The page is
-built private: a capture's visibility is whatever the migration left it, and
-nothing in this phase changes it or exposes a control that does.
+Mutual tracks, sharing, overlap and the QR handshake are Phase 2. The page was
+built private: a capture's visibility was whatever the migration left it, and
+nothing in this phase changed it or exposed a control that did.
 
-⚠ Every capture in production today is private, and that was contingent on the
-population being the author plus test accounts — not a principle. Phase 1 does
-not get to rely on it.
+⚠⚠ **BOTH PARAGRAPHS BELOW ARE OUT OF DATE AND ARE CORRECTED RATHER THAN DELETED
+— 31 August.** *Every capture in production today is private* was true, and it
+was the bug: **the page shipped with no control that could change a visibility,
+and Phase 2 never built one either**, so the convergence engine could not fire on
+anything anybody wrote. Production held 79 captures, all private, and no
+notification had ever been written.
+
+**What is true now:** a self-written capture is **shareable when it is written**,
+a copied or transferred one stays private, and a **lock** — the row's swipe —
+takes a line out of the pool. It is Amendment 2 to the specification. The 79 were
+backfilled.
+
+⚠ **The lesson this leaves for Phase 1 is the one the second paragraph was
+reaching for.** It said the all-private population was *contingent, not a
+principle* — right, and it did not go far enough: **a state every row is in
+because nothing can leave it is not a default, it is a missing feature.** When a
+phase declines to build a control, say which later phase owns it and check that
+it was built.
+
+⚠ **The swipe on a row carries that lock since 31 August**, and crossing off is
+the console's ×. Nothing in this document's own foot-and-tools tables above
+describes that; they are Phase 1's arrangement and Phase 2 moved it twice.
 
 ## Reading back
 

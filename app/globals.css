@@ -5,6 +5,24 @@
  * small poster thumbnails. Type is therefore the entire design.
  *
  * There is no light theme. The palette is the design, and it is one palette.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠⚠ **`components/shell.tsx` AND THE RAIL ARE DELETED — Phase 1. Every mention
+ * of either below this line is HISTORY, not a description of the tree.** They
+ * are kept where they record *why a number is what it is*, which does not stop
+ * being true when the consumer goes; they are not kept as claims about what is
+ * on screen. The masthead, the collections bar, the four collection routes and
+ * the desk rail all went with that file, and `components/screen.tsx` is what
+ * replaced it.
+ *
+ * ⚠ **This warning exists because one of those leftovers was a live bug for a
+ * fortnight.** `rail:hidden` on `/profile`'s identity block was correct while
+ * the rail carried a duplicate of it; the rail went, the variant stayed, and so
+ * **there was no way to sign out on a desktop at all** until it was reported on
+ * 31 August. Its orphaned partners `foot-collections` and `foot-bare` are
+ * deleted with it. **Before trusting a `rail:` variant anywhere, check what is
+ * meant to be on the other side of it.**
  */
 @theme {
   /*
@@ -2625,55 +2643,33 @@
 }
 
 /**
- * What `main` reserves at its foot, as two named states rather than four
- * arbitrary properties in a class string.
+ * ⚠⚠ **`foot-collections` and `foot-bare` WERE HERE AND ARE DELETED — 31
+ * August.** Both set `--safe-bottom-base` for the shell's layout: one cleared
+ * the collections bar at the foot, one reserved room for `/profile`'s fixed
+ * identity block and handed the corner to the rail above `--breakpoint-rail`.
  *
- * ⚠ **It is written here because the ordering is a property of the stylesheet,
- * not of the class attribute.** The first attempt was a pair in one class string —
- * `[--safe-bottom-base:…] rail:[--safe-bottom-base:2.5rem]` — and it measured
- * wrong at desk width: the rail rule was absent from the served CSS and the desk
- * layout silently took the phone's value. On a later compile it was present, so
- * the likeliest cause is a stale build rather than a Tailwind fault, and no claim
- * is made here that it cannot work.
+ * **Phase 1 deleted the collections bar, the four routes and the rail**, and
+ * `Screen` — which replaced the shell — never wore either utility. So they were
+ * two orphans describing a layout no route has had since, and the `@variant rail`
+ * inside one of them was the same stale correction that hid *Sign out* on every
+ * desktop until 31 August. See `components/profile-panel.tsx`.
  *
- * The reason to keep it in CSS anyway: two declarations of the *same* custom
- * property at equal specificity are resolved by their order in the compiled
- * output, and a class attribute has no way to state that order. `@variant` nested
- * inside `@utility` does, in one place, visibly. The failure mode being guarded
- * against is a layout that is right on the width you measured — which is the
- * standing rule in CLAUDE.md.
+ * **What holds the foot of `/profile` clear now is `Screen`'s own `pb-16`.** If
+ * that block grows past it, derive the padding from the block rather than raising
+ * a number here.
  *
- * `foot-collections` clears the bar at the foot. `foot-bare` is for `/profile`,
- * the one route with no bar: below `rail` its total comes out at exactly
- * `--collections-inset`, because `safe-bottom` adds the whole home-indicator
- * inset and the bar deliberately clears only the indicator inside it — so the
- * base is whatever cancels the difference, and *Sign out* lands on the line the
- * collections vacate. Above `rail` the answer is the rail's own `py-10`, since
- * the thing in that corner is the rail.
+ * `safe-bottom` itself is untouched and still used — the three auth screens set
+ * `--safe-bottom-base` inline.
+ *
+ * ⚠ **The rule they were written to demonstrate is worth keeping and is stated
+ * here rather than lost with them:** two declarations of the *same* custom
+ * property at equal specificity are resolved by their **order in the compiled
+ * stylesheet**, and a class attribute has no way to state that order. So a pair
+ * like `[--x:a] rail:[--x:b]` in one class string is a layout that is right on
+ * the width you happened to measure. **Write the responsive half of a custom
+ * property in CSS, in one place, visibly** — the same trap `--sheet-row-lead`
+ * and `--bar-gutter` are each documented against.
  */
-@utility foot-collections {
-  --safe-bottom-base: 6rem;
-}
-
-@utility foot-bare {
-  /*
-    The collections' inset, plus the height of /profile's own fixed foot. Below
-    `rail` that foot is out of the flow, so this reservation is the only thing
-    keeping the end of a long People list from sitting behind it.
-  */
-  --safe-bottom-base: calc(
-    var(--collections-inset) - env(safe-area-inset-bottom) + var(--profile-foot)
-  );
-
-  /*
-    Above `rail` the block is back in the flow — the rail owns that corner and a
-    viewport-fixed foot would sit under the content column instead of in it — so
-    the reservation is the rail's own `py-10` and nothing more.
-  */
-  @variant rail {
-    --safe-bottom-base: 2.5rem;
-  }
-}
 
 /**
  * The height contract for form controls. Inputs and the submit button both wear

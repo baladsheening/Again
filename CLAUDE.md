@@ -313,9 +313,13 @@ that answers both at once.
 - ⚠ **The record's inline *Again?* is deleted** with the swipe that put it there,
   along with the `!isOpen` guard that stopped one question being drawn twice.
   `asking` and `askAgain` survive as the console's alone.
-- ⚠ **The reverse swipe is invisible and the console is what makes that safe** —
-  a crossed-off line's console offers one control and it is *Put it back*. The
-  gesture is a learnt shortcut, never the only door.
+- ⚠ **The reverse swipe was invisible and the console was what made that safe** —
+  a crossed-off line's console offers one control and it is *Put it back*, and
+  the gesture was a learnt shortcut rather than the only door. ⚠ **31 August
+  changed which half of that still applies:** the console is now the *only* door
+  to crossing off, and the reverse swipe unlocks instead — **which is not
+  invisible any more**, because a padlock leaves the row's tail. That was
+  forced: a gesture nothing confirms is a gesture on a surface with no haptics.
 
 - ⚠ **`touch-action: pan-y` on `page-row` IS the scroll question, and it is the
   whole answer.** *Vertical panning is yours, horizontal is mine*, said to the
@@ -376,8 +380,10 @@ unreferenced `capture-provider.tsx` are deleted.**
   pick lit the foot's settle glyph and put `×` and `✎` in the row's own slot —
   three controls for a line whose words the row could not show. All three are on
   the console now, which is *a control belongs where its effect appears* applied
-  once more. **The record's slot keeps only the undo**, for the ten seconds after
-  a line lands, because that is a window and not a considered act.
+  once more. **The record's slot keeps the undo** — for the ten seconds after a
+  line lands, because that is a window and not a considered act — **and, since 31
+  August, the lock's padlock**, which is a *state* rather than a control and is
+  the only thing that confirms the row's swipe.
 - ⚠ **The foot is `+` and search**, and `foot.tsx` had predicted the move in
   writing. Its bar is a **three-column grid** so the `+` holds the centre by
   construction rather than by there happening to be three glyphs.

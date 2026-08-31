@@ -9186,3 +9186,228 @@ else's rows, and **the suppression rule holding, seen from a surface for the fir
 time.** `node_modules/.probe/portal.mjs` measures the door and the box on both
 surfaces. `scripts/seed-portal.mjs` writes one locally and carries the tests' own
 production guard.
+
+## The mark — Phase 2 step 4, 31 August
+
+**A bar in the record's gutter, `--color-accent`, on every line that has ever
+converged with somebody — and it does not go away.** §11 reserved that colour and
+that column for overlap on 23 August and nothing had spent it since.
+
+**The division that decides everything else** is §5 of
+`docs/re-direction/phase-2-convergence.md`: *the portal is arrival, the mark is
+memory.* The portal answers *what happened while I was away* and **empties**; the
+mark answers *why is this line special* when you meet it again in March.
+
+⚠⚠ **So the mark's read has no `read_at` term, and that absence IS the mark.**
+`listMyPortal` filters unread because the portal empties; `converged` in
+`lib/db/captures.ts` does not, because the mark is what is left when it has.
+**Adding an unread filter there deletes the only durable record that a
+convergence ever happened.** `tests/mark.test.ts` has a case named for exactly
+that, and it is the one assertion in the file that could not be made from a
+browser.
+
+**A bit rides the record; the sentence is a read behind the tap.** One `exists`
+per line on the page's own query — the screen whose whole promise is that Return
+lands in under a frame — and `getConvergence` for the one line somebody opened.
+The bit gates the read, so a record with no convergences in it issues nothing on
+any tap. The portal action's own note argues the rows must *not* ride the page
+because nobody is looking at them until they ask; this is the same argument
+answered the other way, because a mark has no *until they ask*.
+
+**The sentence lands in the slot `console.tsx` was built leaving.** Its docblock
+predicted it in writing: *when who else arrives it has to arrive into a space
+that is already there — never a spinner over the whole box.* It sits under the
+words and above the day stamp. `portalSentence` remains its one author, so the
+portal's row and the console's line cannot say one event two ways. The portal's
+own console is handed `null` — the portal already draws the sentence above the
+box, and the mark exists for a record where nothing else says so.
+
+⚠ **A colour in a gutter is invisible to a reader, so the row says it.** The
+record's row carries *Also on someone else's page.* in its label; the tray and
+search carry it as hidden text, because neither has a control to hang a label on.
+**It names nobody** — the record knows *whether*, the console knows *who* — and
+inventing a second sentence beside `portalSentence` is the drift §6 warns about.
+
+**The colour question §11 left open is answered, and the worry did not apply.**
+The fear was that the accent would now have to out-shout a louder chrome. It does
+not, because **they never appear in the same place**: `--color-chrome` is a
+*control* and lives in the bars, the foot and the caret; `--color-accent` is a
+*state* and lives in the gutter, where no control ever goes. Measured **6.77:1**
+on the desk's `#14140f` and **7.70:1** on the handset's true black — past the 3:1
+WCAG 1.4.11 asks of a graphical object on both, with the glow on top of that.
+
+⚠ **Recorded and not changed: `--mark-width` is `2.5px`, like `--caret-width`.**
+So the mark is the same hairline on the desk as on the handset while everything
+around it is four-thirds the size. That is the caret's rule inherited; it is
+**not** one of the four exceptions the desk's scale names, and it has not been
+looked at on a real desk. If it reads thin up there, that token is the thing to
+move — and the caret moves with it.
+
+## The gate nobody could see — captures were private, nothing could converge — 31 August
+
+**The whole social half of the product was inert, and had been since Phase 0.**
+Found while trying to see the mark on a real handset.
+
+`addCapture` never set `visibility`; the column defaults to `private`;
+`runOverlap` requires `SHARED_SCOPES`; and **`setCaptureVisibility` had no caller
+outside `tests/`**. *Share visibility* is a named Phase 2 deliverable in §13 of
+the implementation specification and was simply never built — the surfaces that
+carried sharing went with the poster wall and the four collection routes in Phase
+1, and nothing replaced them. Production on 31 August: **79 captures, all
+private, 0 tracks, 0 notifications.**
+
+⚠ **The engine, the portal and the mark were all correct.** They were downstream
+of a gate that was shut. **Do not diagnose an empty portal as a bug in any of
+them.**
+
+### What was directed
+
+**A self-written capture is shareable when it is written; a per-capture lock
+takes it out of the pool.** This overrules the specification's private-by-default
+and is recorded there as **Amendment 2**, in the open, because that document is
+normative.
+
+Three readings were put and the third was chosen:
+
+1. **Keep the per-capture share act and build the control.** Rejected: a beat
+   *after* the capture, which the four-second criterion cannot afford, and its
+   failure is **silent** — you never converge with anybody and never learn why.
+   On a 79-line record it is 79 taps of admin, and nobody does that.
+2. **An opt-in default at onboarding, with a per-capture exception.** Offered and
+   not taken; it costs a migration and a screen.
+3. **Shareable on write, lock as the only control.** Directed. One line in
+   `writeCapture`, no migration, and the consent is the mutual track.
+
+⚠ **The consent is the MUTUAL TRACK.** Deliberate, two-directional, given by
+handle to somebody the user chose. What a convergence discloses is one overlap on
+one possibility, to one such person — never a list.
+
+⚠ **Reading is untouched.** `listCapturesForOtherUser` keeps all four of its
+terms. This changed what may *match*, never what may be *read*.
+
+⚠⚠ **A capture that came from somebody else stays private**, and that is now a
+guarantee rather than a leftover default — `tests/guarantees.test.ts` names it,
+and it went red when the default was first made uniform, which is what turned it
+into a decision. **Same reasoning as §6's suppression rule: a received list is
+not an independent common intention.** If a copy is not independent enough to
+notify the person it was taken from, it is not independent enough to be
+republished onward to *my* mutuals without my touching it.
+
+**The cost, stated plainly and accepted.** After this, writing something down
+does tell a mutual you wrote it — *if they wrote the same thing too*. That is the
+product. It is also **asymmetric in time**: you write a thing in March, a friend
+writes it in August and learns you have it. ⚠ **Ask-before-telling is illusory**
+and was rejected on that ground: to ask you, the app must first tell you about
+them, so one side always learns first.
+
+**The existing 79 captures were backfilled to `mutuals`** — a default only
+touches new rows, so without it the record would have stayed inert. Self-written
+only, and the script refused to run if any tracks existed, because a plain UPDATE
+would skip the fan-out `setCaptureVisibility` performs.
+
+## The swipe changes its verb: tap thinks, swipe LOCKS — 31 August
+
+⚠⚠ **The swipe carries the lock and crossing off is the console's ×.** Directed:
+*people will rarely cross off items; locking is far more valuable a function.*
+
+**`row-swipe.ts` had argued the swipe belonged to cross off because it was "the
+verb used fifty times a week".** That was an assumption about usage written into
+a docblock, and it was wrong — corrected by the person using the app daily on a
+handset. ⚠ **The rule did not change; the frequencies did, and the gesture
+followed them.** The reflex gesture carries the frequent verb and the console
+carries the considered one, which is the same rule applied to better information.
+
+**Four earlier proposals were refused before this one, and the record of why is
+the useful part:**
+
+- **A lock on right-to-left.** That is already the cross-off direction —
+  `SIGN.crossOff` was `-1` — so it collided with the verb used most.
+- **A lock on left-to-right, keeping cross off.** On a struck row that is
+  *restore*, so one direction would have meant *lock* and *bring back*:
+  semantically opposite, which is worse than a plain collision.
+- **A lock on the console only.** Right while locking was rare, and it is where
+  the control began; it lost when the frequencies were corrected.
+- **An in-line `×` on every row, freeing the swipe.** Refused: a permanent glyph
+  costs ~26px of text width on **every** line in a column that already truncates,
+  and *a row of dark glyphs beside every line of the record would be the density
+  device inverted* is a rule this project had already written down. Withdrawn by
+  the product owner in the same message that settled the rest.
+
+⚠ **Lock fits the hook better than cross off ever did.** Cross off and restore
+share one gesture between two *states of the record*; lock and unlock are one
+property with two values, so the two directions are the property's own halves.
+**Nothing about the mechanism changed** — the same `SwipeWay`, the same signs,
+the same detent at the row's own height, the same `touch-action: pan-y`, the same
+physical-not-logical direction. Away from the reader is out of the pool, back is
+in, which fits *out of the pool* more exactly than it ever fitted *dealt with*.
+
+⚠⚠ **The locked state is drawn on the row, and that reverses a call made an hour
+earlier.** The argument for showing nothing was that locking is rare and an
+invisible state fails safe — true while it was a console act. **It died the
+moment locking became the row's own gesture:** crossing off confirmed itself by
+striking the line, iOS implements no Vibration API, and a swipe whose outcome is
+invisible is confirmed by nothing at all. **The padlock is the gesture's only
+confirmation and must not be removed while the swipe carries the lock.**
+
+- **The tail, not the gutter.** `--color-accent` and that column belong to the
+  convergence mark, and one thing per column is what makes either of them mean
+  anything. In the tail it costs width on locked lines only.
+- **A padlock is right as a *state* and would have been wrong as a control
+  label.** On a button it says *security*; this is *scope*, and nothing about a
+  lock stops anybody reading a record they can already reach. As a mark on a line
+  it is the known icon for *held back*, which is what §11 permits known icons
+  for. Eleventh glyph on the one 20-grid, drawn shorter than the rest because it
+  rides a line rather than standing in a bar.
+- **No fourth haptic.** Locking borrows the crossed-off thud, unlocking borrows
+  the capture's tap — the precedent already set for putting a line back.
+
+⚠ **Unlocking is a fan-out trigger and locking is not.** `setCaptureVisibility`
+runs overlap on the private→shared transition only, so **a line locked in March
+converges the day it comes back**, and the same swipe twice writes nothing twice.
+⚠ **A line that already converged keeps its mark after it is locked** — the mark
+is memory, the event happened, and a notification already sent cannot be
+recalled.
+
+**Asserted for the first time, and the design now leans on it:** a crossed-off
+line converges with nobody. It falls out of `classify` being an allowlist of
+three pairs rather than out of any rule written down, so a fourth pair added one
+day would put struck lines back in the pool silently. `tests/mark.test.ts`.
+
+## There was no way to sign out on a desktop — 31 August
+
+**Reported from a desktop, and it was true.** `components/profile-panel.tsx`
+carried `rail:hidden` on the block holding `@handle` and *Sign out*. The variant
+was correct when written: above `--breakpoint-rail` the rail in
+`components/shell.tsx` carried the same two things in the same corner, fixed,
+while this copy scrolled — measured at 184px of travel on a 1440×600.
+
+⚠ **Phase 1 deleted the rail and the correction stayed.** Nothing replaced it,
+`authClient.signOut()` is called from that file and nowhere else, and so at 720px
+and up there was no way out of the account for a fortnight.
+
+**This is *How things get fixed* read backwards: the condition went, so the
+correction had to go with it, and it did not.** The fix is the deletion of one
+variant — nothing was added and no second layout exists.
+
+Deleted with it: **`foot-collections` and `foot-bare`** in `globals.css`, two
+orphans of the same rail that `Screen` never wore. The rule they existed to
+demonstrate is kept in prose where they were: **two declarations of one custom
+property at equal specificity are resolved by their order in the compiled
+stylesheet, and a class attribute cannot state that order** — so the responsive
+half of a custom property belongs in CSS, in one place.
+
+⚠ **A warning now stands at the top of `globals.css`** saying every mention of
+`shell.tsx` or the rail below it is history. That file is full of them, they are
+kept because they record why numbers are what they are, and **one of them was a
+live bug for a fortnight.**
+
+**Recorded, not fixed: the sign-out pill is ~30px against `--tap-floor`'s 44** —
+40px on the desk, where the root scale reaches it. It has been that since 18
+August, when the pill was directed and squared to the People pill, so it is a
+pre-existing gap rather than a regression. It is the only way out of an account.
+**The fix, if it is wanted, is `tap-target`'s pseudo-element**, which buys the 44
+without changing the drawing by a pixel. Do not make the pill bigger.
+
+**Measured by `node_modules/.probe/signout.mjs`** at 390, 719, 720, 1152 and
+1440: the bar's door to `/profile`, the control present and visible, in the
+bottom-left corner, and a tap at its centre reaching it.

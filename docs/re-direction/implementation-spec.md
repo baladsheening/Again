@@ -2,7 +2,7 @@
 
 Status: normative product and build specification  
 Date: 22 August 2026  
-Amended: 22 August 2026 — Amendment 1, §13 (see *Amendments* below)
+Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 / §13 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -1207,9 +1207,31 @@ Exit criteria:
 
 ### Phase 2 — friend convergence
 
-⚠ **Status, 30 August: the matching engine is deployed and nothing reads it.**
-This section reads as unstarted and is not. What already exists, inherited from
-the film-first build and re-pointed at captures in Phase 0:
+⚠⚠ **Status, 31 August: Phase 2's design sequence is COMPLETE, and the gate that
+made all of it inert is open.** The four steps of
+`docs/re-direction/phase-2-convergence.md` §8 are built and deployed — the
+console, the swipes, the portal and the mark — and the fan-out is proved end to
+end with two accounts in `tests/portal.test.ts` and `tests/mark.test.ts`.
+
+⚠⚠ **The gate: until 31 August nothing could converge at all.** `addCapture`
+never set `visibility`, the column defaults to `private`, `runOverlap` requires
+`SHARED_SCOPES`, and *share visibility* — a deliverable named below — had no
+implementation anywhere. Production held 79 captures, all private, and no
+notification had ever been written. **See Amendment 2**: a self-written capture
+is now shareable on write and a per-capture lock takes it out of the pool.
+
+⚠ **What is still not built** is at the end of this section, and the two that
+matter are the **QR/code contact handshake** and **possible-match prompts for
+unresolved, normalised-equal captures**.
+
+⚠ **And what no test can supply: Phase 2 has never fired for a real person.**
+Production holds **one account and no tracks**, so every convergence this phase
+has ever produced was produced by a fixture. The exit criteria below are met in
+the layer they are written about; the product claim behind them is not yet
+observed.
+
+What already existed before any of it, inherited from the film-first build and
+re-pointed at captures in Phase 0:
 
 - `tracks` with mutuality, and `/u/[handle]` as the shared page
 - `lib/overlap.ts` as the one matching owner — **one set-based SQL statement**
@@ -1219,12 +1241,12 @@ the film-first build and re-pointed at captures in Phase 0:
 - `notifications` rows written in the same transaction as the write that caused
   them
 
-⚠ **And the half that makes it a product is still unbuilt.** **Nothing in the
-tree reads the `notifications` table** — the rows have been accumulating behind a
-surface that does not exist, which also means the fan-out has never been proved
-end to end with two accounts. Neither is there an overlap list or detail, a
-QR/code contact handshake, or a possible-match prompt for unresolved
-normalised-equal captures.
+⚠ **This paragraph said nothing in the tree read `notifications` and is corrected
+rather than deleted — 31 August.** Two surfaces read it now: **the portal**,
+which is the overlap list, and **the console**, which is its detail and which
+also carries the mark's sentence. What remains unbuilt from the list below is the
+**QR/code contact handshake** and the **possible-match prompt for unresolved,
+normalised-equal captures**.
 
 ⚠ **Steps 1 and 2 of the design's sequence are built and deployed — 30 August:
 the CONSOLE and the SWIPES.** A swipe on a row crosses it off one way and asks
