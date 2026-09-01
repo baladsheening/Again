@@ -1537,13 +1537,25 @@
     has nothing left in the bar to say it about. **Put the two numbers back if a
     second control ever returns to the bar**, and `--bar-gap` with them.
 
-    ⚠ **`--bar-row` follows, so the bar is 4px taller and the record's top
-    padding grows with it.** That is the derivation working rather than a side
-    effect to correct: a bar's height is a property of the bar, and the bar's
-    contents got bigger. `--console-top` reads `--bar-height`, so the console
-    still lands on the record's first line with nothing else touched.
+    ⚠ **`--bar-row` follows, so the bar's height is a property of its contents.**
+    That is the derivation working rather than a side effect to correct, and
+    `--console-top` reads `--bar-height`, so the console goes on landing on the
+    record's first line with nothing else touched.
+
+    ⚠⚠ **AND THE SAME DAY IT WENT BACK TO ITS OWN NUMBER, 1.375rem — directed,
+    *make the logo smaller and the profile icon smaller accordingly*.** The two
+    bars are two sizes again. **The reason is not the one the note above
+    reserved** — no second control came back to the bar; the bar was simply
+    judged too loud at the foot's size, which is the argument the two numbers
+    were set by eye on in the first place.
+
+    ⚠ **One number still moves both, and that is what "accordingly" costs
+    nothing.** `--text-mark` is `--glyph-bar / --wordmark-ink-ratio`, so the
+    mark's ink is the glyph's box by construction: 22px of ink beside a 22px
+    drawing, from this line alone. **Do not shrink the mark separately** — that
+    is the pair of numbers this derivation exists to prevent.
   */
-  --glyph-bar: var(--glyph-foot);
+  --glyph-bar: 1.375rem;
   --glyph-foot: 1.625rem;
   --glyph: var(--glyph-bar);
 
