@@ -2683,6 +2683,7 @@
   --mark-glow-c: color-mix(in srgb, var(--color-text) 3%, transparent);
   --mark-glow-d: color-mix(in srgb, var(--color-text) 2.4%, transparent);
   --mark-glow-e: color-mix(in srgb, var(--color-text) 3.8%, transparent);
+  --mark-glow-f: color-mix(in srgb, var(--color-text) 5%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5789,12 +5790,36 @@
       the left of the screen. The tail sweeps out instead of pooling under the
       mark, which is what separates it from the arrangement before.
 
-      ⚠ **Every lobe now closes at `transparent 73%`.** The old set had five
+      ⚠ **Every lobe closes at `transparent 73%`.** The set before this had five
       different stops, which was one more axis than the shape needs — the
       irregularity is carried by the positions and the aspect ratios, and it
-      survives them being read at one falloff. **This is what was rendered and
-      judged**, so it is what is written here: a set that was tuned after being
-      looked at is not the set that was looked at.
+      survives them being read at one falloff.
+
+      ⚠ **A SIXTH LOBE IS THE UPWARD SMUDGE — directed, *add a smudge
+      upwards*.** The five are a drift across the bar: their centres measure
+      (36.4, 67.8), (73.9, 76.1), (111.6, 91.5), (144.9, 82) and (11.3, 89.2)
+      against letters whose ink starts at 59.7, so **not one of them sits above
+      the letters** and what reached up there was falloff. The sixth is centred
+      at (59.3, 57.2) — above the letters' tops — so what is over the mark is a
+      lobe rather than an edge.
+
+      ⚠ **It has to be WIDER THAN THE WORD or it cannot be seen.** At 26% of the
+      box it was 54px across against letters that span 66, so almost all of it
+      was behind ink and the strip above the mark did not move: measured 49.5 →
+      47.5 at one column and nothing anywhere else. At 38% it is 79px and reads.
+      **The mark occupies the middle of this box, so any lobe narrower than the
+      word is mostly invisible by construction** — that is true of a seventh too.
+
+      **Measured, on the strip above the letters and clear of their ink:** y
+      48–58 across x 20–86 reads **14.59 sRGB against 3.24** at the same height
+      on the far right. Eight pixels higher, y 40–48, it is **4.4** — the smudge
+      is spent before the clock. `node_modules/.probe/glowabove.mjs`.
+
+      ⚠ **Its centre is at 19% of the box, which is just inside the mask's opaque
+      stop.** It is at full strength there and only its top feathers. **A lobe
+      placed higher does not go higher** — the mask takes the core instead of
+      the edge, which is the light being dimmed rather than raised, and it is
+      the mistake `--mark-glow-bleed` exists because of.
 
       ⚠ **The fifth was added because the first four all sat right of and below
       the mark's ink centre — 1 September, reported as *right and down
@@ -5838,7 +5863,8 @@
       radial-gradient(30% 40% at 44% 33%, var(--mark-glow-b), transparent 73%),
       radial-gradient(62% 26% at 62% 46%, var(--mark-glow-c), transparent 73%),
       radial-gradient(22% 30% at 78% 38%, var(--mark-glow-d), transparent 73%),
-      radial-gradient(52% 24% at 14% 44%, var(--mark-glow-e), transparent 73%);
+      radial-gradient(52% 24% at 14% 44%, var(--mark-glow-e), transparent 73%),
+      radial-gradient(38% 33% at 37% 17%, var(--mark-glow-f), transparent 73%);
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
       whose falloff still has alpha where the box ends draws a straight line
