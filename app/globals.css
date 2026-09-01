@@ -1456,7 +1456,24 @@
     `--record-measure` narrows by 0.544. That is the mark's column rule working,
     not a side effect to correct: `logocol.mjs` and `markgap.mjs` assert it.
   */
-  --text-mark: 1.375rem;
+  /*
+    ⚠ **1.375 → 1.625rem on 1 September — directed, *the logo bigger*.** It lands
+    on the bar glyph's own size, which is where it has always been: the mark's
+    font-size and the glyph beside it have been one number through every bump,
+    and the mark inks 0.72 of it, so the cap keeps exactly the proportion of the
+    row it held at 22px. See `--glyph-bar`, which went to the foot's size in the
+    same instruction.
+
+    ⚠ **`--text-mark-rail` is NOT moved with it, and the 0.25rem lead the desk's
+    mark had is spent.** The two are equal now, so the rail's override is a
+    no-op — and that is what keeps this a handset change: `--mark-column` above
+    the rail, the ramp's 57.207rem and its slope, and `--breakpoint-stack`'s sum
+    all read `--text-mark-rail` and see the number they saw yesterday. Matching
+    the step up there would move the fence at the top of the desk's ramp from a
+    handset instruction. **If the desk wants its mark larger again,
+    `--text-mark-rail` moves and those three literals move with it.**
+  */
+  --text-mark: 1.625rem;
   --text-mark-rail: 1.625rem;
 
   /**
@@ -1490,7 +1507,25 @@
    * declaration per placement rather than a prop threaded through seven
    * components.
    */
-  --glyph-bar: 1.375rem;
+  /*
+    ⚠ **ONE SIZE SINCE 1 SEPTEMBER — directed, *the profile icon the size of the
+    icons in the bottom bar*.** `--glyph-bar` **reads** `--glyph-foot` rather
+    than restating 1.625rem, so the two cannot drift back into the pair of
+    numbers they were.
+
+    ⚠ **The argument above is kept and it is not wrong** — it was written about a
+    bar holding four glyphs a thumb visits. The tray left for the foot on 31
+    August and there is **one** glyph up here now, so *the bar is not the foot*
+    has nothing left in the bar to say it about. **Put the two numbers back if a
+    second control ever returns to the bar**, and `--bar-gap` with them.
+
+    ⚠ **`--bar-row` follows, so the bar is 4px taller and the record's top
+    padding grows with it.** That is the derivation working rather than a side
+    effect to correct: a bar's height is a property of the bar, and the bar's
+    contents got bigger. `--console-top` reads `--bar-height`, so the console
+    still lands on the record's first line with nothing else touched.
+  */
+  --glyph-bar: var(--glyph-foot);
   --glyph-foot: 1.625rem;
   --glyph: var(--glyph-bar);
 
@@ -2458,9 +2493,21 @@
    * the floor only bites below 772px, where the root is pinned at the reader's
    * own size because the desk's ramp has not started.
    */
+  /*
+    ⚠ **The second literal is 1.625rem since 1 September, and it was stale at
+    1.25 before that.** It is `--text-mark`'s below-rail value written out, and
+    it stopped tracking the token when the mark went to 1.375 that morning —
+    `markgap.mjs` asserts the floor against the live below-rail tokens and had
+    been failing on it. The floor is 566.85px now where it was 592.96, so the
+    fixed measure between the floor and 720px is ~26px narrower: **the mark's
+    band grew and the record gives up the width**, which is the rule this floor
+    exists to bound rather than to escape. Continuity is unharmed — both sides of
+    720 are floored either way, and the handover lands exactly on the rail by
+    construction.
+  */
   --record-floor: calc(
     var(--breakpoint-rail) - 2 *
-      (1.25rem + 1.25rem * var(--wordmark-advance-ratio))
+      (1.25rem + 1.625rem * var(--wordmark-advance-ratio))
   );
 
   /**
