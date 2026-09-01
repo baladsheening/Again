@@ -2677,13 +2677,16 @@
   --mark-glow-lift: calc(
     var(--bar-air) + var(--bar-row) + var(--mark-glow-bleed)
   );
-  --mark-glow-drop: calc(var(--mark-column) * 0.7);
-  --mark-glow-a: color-mix(in srgb, var(--color-text) 6.5%, transparent);
-  --mark-glow-b: color-mix(in srgb, var(--color-text) 4.2%, transparent);
+  --mark-glow-drop: var(--mark-column);
+  --mark-glow-a: color-mix(in srgb, var(--color-text) 5.8%, transparent);
+  --mark-glow-b: color-mix(in srgb, var(--color-text) 3.6%, transparent);
   --mark-glow-c: color-mix(in srgb, var(--color-text) 3%, transparent);
   --mark-glow-d: color-mix(in srgb, var(--color-text) 2.4%, transparent);
   --mark-glow-e: color-mix(in srgb, var(--color-text) 3.8%, transparent);
-  --mark-glow-f: color-mix(in srgb, var(--color-text) 5%, transparent);
+  --mark-glow-f: color-mix(in srgb, var(--color-text) 4.4%, transparent);
+  --mark-glow-g: color-mix(in srgb, var(--color-text) 2%, transparent);
+  --mark-glow-h: color-mix(in srgb, var(--color-text) 2.8%, transparent);
+  --mark-glow-i: color-mix(in srgb, var(--color-text) 2.4%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5815,10 +5818,37 @@
       the left of the screen. The tail sweeps out instead of pooling under the
       mark, which is what separates it from the arrangement before.
 
-      ⚠ **Every lobe closes at `transparent 73%`.** The set before this had five
-      different stops, which was one more axis than the shape needs — the
-      irregularity is carried by the positions and the aspect ratios, and it
-      survives them being read at one falloff.
+      ⚠⚠ **NINE LOBES WITH NINE FALLOFFS — 2 September, directed *make it less
+      regular*, for the third time.** The set before this closed every lobe at
+      `transparent 73%`, on the argument that the shape did not need that axis
+      and that a uniform stop is what was rendered and judged. **Both were true
+      and neither survives being asked for irregularity three times**: six
+      ellipses sharing one falloff read as one soft object however their centres
+      are placed, because the *rate* they die at is what the eye reads as their
+      edge. The stops run 66% to 82% now and are deliberately unrelated.
+
+      ⚠ **Three of the nine are there to break the outline rather than to light
+      anything** — a small one tucked over the letters' right, a thin flat
+      sliver low and left, and the wide faint one below the bar. At 2–2.8% none
+      of them registers as a source; what they do is stop the boundary being
+      the union of five smooth curves.
+
+      ⚠⚠ **THE DROP IS A WHOLE BAND NOW, AND THAT IS THE BLEED BELOW THE BANNER
+      — directed, *have some faint bleed over in the area below the banner*.**
+      `--mark-glow-drop` goes 0.7 → 1.0 of `--mark-column`, so the box reaches
+      86.5px under the bar instead of 60.5, and the ninth lobe sits low in it at
+      2%. **Measured on the band between the bar's edge and the first line of the
+      record — y 98–118 reads 8.63 sRGB against 6.33 unlit at the same height.**
+      Faint is the whole of it: the record has to stay the brightest thing under
+      there.
+
+      ⚠ **The box grew DOWNWARD, so every lobe and both mask layers were
+      re-expressed again** — same absolute centres and radii, new percentages
+      against a box that went 118.5 → 144.5. The mask's stops are unchanged
+      because they are fractions of a radius that did not move in pixels. **This
+      is the third time the box has been resized and the lobes carried through
+      it; if it happens again, the arithmetic is (y − 37) / height and
+      radius / height.**
 
       ⚠ **A SIXTH LOBE IS THE UPWARD SMUDGE — directed, *add a smudge
       upwards*.** The five are a drift across the bar: their centres measure
@@ -5884,12 +5914,15 @@
       mask, it did not add mass.
     */
     background:
-      radial-gradient(46% 34% at 26% 26%, var(--mark-glow-a), transparent 73%),
-      radial-gradient(30% 40% at 44% 33%, var(--mark-glow-b), transparent 73%),
-      radial-gradient(62% 26% at 62% 46%, var(--mark-glow-c), transparent 73%),
-      radial-gradient(22% 30% at 78% 38%, var(--mark-glow-d), transparent 73%),
-      radial-gradient(52% 24% at 14% 44%, var(--mark-glow-e), transparent 73%),
-      radial-gradient(38% 33% at 37% 17%, var(--mark-glow-f), transparent 73%);
+      radial-gradient(46% 27.9% at 26% 21.4%, var(--mark-glow-a), transparent 71%),
+      radial-gradient(30% 32.8% at 44% 27.1%, var(--mark-glow-b), transparent 75%),
+      radial-gradient(62% 21.3% at 62% 37.7%, var(--mark-glow-c), transparent 79%),
+      radial-gradient(22% 24.6% at 78% 31.2%, var(--mark-glow-d), transparent 68%),
+      radial-gradient(52% 19.7% at 14% 36.1%, var(--mark-glow-e), transparent 73%),
+      radial-gradient(38% 27.1% at 37% 13.9%, var(--mark-glow-f), transparent 76%),
+      radial-gradient(58% 26% at 42% 64.4%, var(--mark-glow-g), transparent 82%),
+      radial-gradient(14% 20% at 52% 24%, var(--mark-glow-h), transparent 66%),
+      radial-gradient(20% 12% at 8% 33%, var(--mark-glow-i), transparent 70%);
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
       whose falloff still has alpha where the box ends draws a straight line
@@ -5943,11 +5976,11 @@
       measures the letters and reports a flat cap that is not there.
     */
     -webkit-mask-image:
-      radial-gradient(80% 116% at 36% 118%, #000 88.6%, transparent 98.8%),
-      radial-gradient(58% 116% at 70% 124%, #000 89.5%, transparent 99.7%);
+      radial-gradient(80% 95.2% at 36% 96.8%, #000 88.6%, transparent 98.8%),
+      radial-gradient(58% 95.2% at 70% 101.7%, #000 89.5%, transparent 99.7%);
     mask-image:
-      radial-gradient(80% 116% at 36% 118%, #000 88.6%, transparent 98.8%),
-      radial-gradient(58% 116% at 70% 124%, #000 89.5%, transparent 99.7%);
+      radial-gradient(80% 95.2% at 36% 96.8%, #000 88.6%, transparent 98.8%),
+      radial-gradient(58% 95.2% at 70% 101.7%, #000 89.5%, transparent 99.7%);
   }
 }
 
