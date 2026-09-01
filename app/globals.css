@@ -2631,12 +2631,20 @@
    * ⚠ **The box is wider than it is tall**, because the thing it sits behind is
    * a word. It was square when the light was a circle.
    *
-   * ⚠ **The four alphas COMPOUND and the peak is not any one of them.** Alpha
-   * compositing multiplies what is left: 6%, 4%, 2.2% and 3.6% leave
-   * `1 − 0.94 × 0.96 × 0.978 × 0.964 = 0.149`, so the centre peaks near 15% of
-   * the ink where the old single lobe peaked at 7%. **Do not read one of these
-   * as the brightness** — raising one raises the core more than it raises its
-   * own edge.
+   * ⚠ **The five alphas COMPOUND and the peak is not any one of them.** Alpha
+   * compositing multiplies what is left: 10.5%, 6.5%, 3.5%, 5.2% and 3.8% leave
+   * `1 − 0.895 × 0.935 × 0.965 × 0.948 × 0.962 = 0.264`, so the centre peaks
+   * near 26% of the ink. **Do not read one of these as the brightness** —
+   * raising one raises the core more than it raises its own edge, and **the mask
+   * takes about half of it back over the letters** (see `mark-glow`), which is
+   * why these are higher than they look.
+   *
+   * ⚠ **A FIFTH LOBE IS THE TRAIL TO THE LEFT — reported: *there is no trail to
+   * the left*.** Four lobes clustered on the band ended where the band ended, so
+   * the light had a shape on its right and a stop on its left. The fifth is
+   * wide, flat and faint, centred at 13% of the box — off the screen's left edge
+   * — so what is on screen is the inner part of something that carries on past
+   * it. The box widened 2.1 → 2.6 of the reach to carry it.
    *
    * ⚠ **The footprint was tightened the same day** — reach 1.5 → 1.15 of the
    * band, the box 2.4 → 2.1 by 2 → 1.9 of it. At the first size the light spread
@@ -2647,7 +2655,7 @@
    * far right.
    */
   --mark-glow-reach: calc(var(--mark-column) * 1.15);
-  --mark-glow-width: calc(var(--mark-glow-reach) * 2.1);
+  --mark-glow-width: calc(var(--mark-glow-reach) * 2.6);
   /**
    * ⚠ **How far the light reaches up, and how far down — two terms, because it
    * is not symmetric.** The lift is the exact distance from the bar's bottom
@@ -2657,10 +2665,11 @@
    */
   --mark-glow-lift: calc(var(--bar-air) + var(--bar-row));
   --mark-glow-drop: calc(var(--mark-column) * 0.7);
-  --mark-glow-a: color-mix(in srgb, var(--color-text) 6%, transparent);
-  --mark-glow-b: color-mix(in srgb, var(--color-text) 4%, transparent);
-  --mark-glow-c: color-mix(in srgb, var(--color-text) 2.2%, transparent);
-  --mark-glow-d: color-mix(in srgb, var(--color-text) 3.6%, transparent);
+  --mark-glow-a: color-mix(in srgb, var(--color-text) 10.5%, transparent);
+  --mark-glow-b: color-mix(in srgb, var(--color-text) 6.5%, transparent);
+  --mark-glow-c: color-mix(in srgb, var(--color-text) 3.5%, transparent);
+  --mark-glow-d: color-mix(in srgb, var(--color-text) 5.2%, transparent);
+  --mark-glow-e: color-mix(in srgb, var(--color-text) 3.8%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5754,41 +5763,70 @@
     width: var(--mark-glow-width);
     height: calc(var(--mark-glow-lift) + var(--mark-glow-drop));
     /*
-      Four ellipses, none concentric with the box and no two the same shape: the
-      core behind the letters and a little left of the box's middle, a taller one
-      leaning right, a wide flat one spreading across the bar's edge, and a small
-      one low and left to keep the bottom outline from closing into an arc.
+      Five ellipses, none concentric with the box and no two the same shape: the
+      core behind the letters, a taller one leaning right, a wide flat one across
+      the bar's edge, a small one low and left to keep the bottom outline from
+      closing into an arc, and the trail — wide, flat and faint, with its centre
+      off the screen so its far side is never on it.
     */
     background:
       radial-gradient(
-        54% 42% at 40% 26%,
+        44% 42% at 48% 30%,
         var(--mark-glow-a),
         transparent 71%
       ),
       radial-gradient(
-        32% 47% at 57% 22%,
+        26% 47% at 60% 24%,
         var(--mark-glow-b),
         transparent 74%
       ),
       radial-gradient(
-        66% 32% at 48% 44%,
+        54% 32% at 52% 46%,
         var(--mark-glow-c),
         transparent 78%
       ),
       radial-gradient(
-        24% 26% at 29% 47%,
+        20% 26% at 34% 50%,
         var(--mark-glow-d),
         transparent 69%
+      ),
+      radial-gradient(
+        42% 21% at 13% 39%,
+        var(--mark-glow-e),
+        transparent 76%
       );
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
       whose falloff still has alpha where the box ends draws a straight line
-      across the screen — the one thing a diffuse light must never have. The mask
-      takes the top eighth to nothing, so whatever the lobes do up there the edge
-      is a fade. It is a fraction of the box, so it scales with everything else.
+      across the screen — the one thing a diffuse light must never have.
+
+      ⚠⚠ **THE RAMP IS LONG AND SHAPED, AND A SHORT ONE READ AS A CAP.** It went
+      transparent → opaque over the top 13% of the box, which on a notched
+      handset put full opacity at 61px — **within a pixel or two of the top of
+      the letters** — and it was reported in those terms: *unnaturally capped at
+      the height of the logo*. **A mask edge that lands on a hard feature of the
+      page reads as belonging to that feature.** The ramp runs to 38% now with a
+      mid stop at 17%, so what crosses the letters is a gradient rather than an
+      arrival.
+
+      ⚠ **55% was tried first and was too far the other way** — it halved the
+      light through the whole of the mark, 14.4 sRGB behind it down to 6.6. The
+      lobes were raised to pay for what the ramp costs, so **the mask and the
+      alphas are one setting and must be moved together.** All of it is a
+      fraction of the box, so it scales with everything else.
     */
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 13%);
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 13%);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, #000 55%, transparent) 17%,
+      #000 38%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, #000 55%, transparent) 17%,
+      #000 38%
+    );
   }
 }
 
