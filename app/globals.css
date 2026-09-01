@@ -1928,16 +1928,45 @@
    *
    * ⚠ **The tint is most of the legibility, not the blur.** Blur alone leaves a
    * bright smear where a line passes, and `--color-chrome` on a smear is a
-   * glyph that changes contrast as you scroll. 74% of the paper colour holds the
-   * ground dark enough that the brass never drops below the ratio it has on
-   * black — the blur is what makes what remains read as depth rather than as
-   * dirt.
+   * glyph that changes contrast as you scroll. The tint holds the ground dark
+   * enough that the chrome never drops below the ratio it has on black — the
+   * blur is what makes what remains read as depth rather than as dirt.
+   *
+   * ⚠⚠ **74% → 38% ON 1 SEPTEMBER, AND THE CONSTRAINT IT WAS PITCHED FOR NO
+   * LONGER EXISTS.** Reported: *make the background more obvious through the
+   * bars.* The paper **was** there — full-bleed, unclipped, under both bars —
+   * and 74% of an already-black ground left 26% of a texture already at 0.32
+   * opacity, which is about 8% and reads as flat black.
+   *
+   * ⚠ **The 74 was the BRASS's number.** This paragraph used to name it: the
+   * ground had to stay dark enough that `--color-chrome` at 10.98:1 held its
+   * ratio when a line passed under it. The brass was retired on 31 August and
+   * the chrome is the ink now. **Measured on the live page with three record
+   * lines pinned under a bar that could not recede:** 15.68:1 at 74%, 12.73 at
+   * 40%, and 11.19 at 30% — against the 4.5 the mark needs as text. The bound
+   * this number was set by is nowhere near it any more.
+   *
+   * ⚠ **38% is the STRIP's number, not a new one.** `--sheet-tint` was directed
+   * to exactly this on 29 August for exactly this complaint, in those words:
+   * *74% of an already-black ground leaves nothing to come through.* The bars
+   * were the other half of that sentence and did not get it.
+   *
+   * ⚠⚠ **THE BLUR IS UNTOUCHED, AND IT IS WHAT STILL HIDES THE GRAIN.** Measured
+   * at the same tint: the bar's mean lifts 1.68 → 3.68 sRGB against the record's
+   * own 6.34, but its **range** stays 3–4 where the record's paper is 2–19. An
+   * 18px blur averages over 54 device pixels, so the specks that make paper read
+   * as paper do not survive it — and **they do not survive 8px or 4px either**.
+   * Only `0` brings them back: 38/0 measures a range of 0–21 and an sd of 0.73
+   * against the record's 1.399. **The cost of that is the whole glass argument
+   * above** — with no blur a line under the bar is legible rather than dissolved,
+   * so it is a design decision and not a tuning. Lowering the blur short of zero
+   * buys nothing: it costs the dissolve and returns no grain.
    *
    * ⚠ **Mixed from `--color-bg`, not written as `#000c`.** A fixed hex is the
    * shade it was mixed against one ground, which is the same argument that keeps
    * `--color-muted` a mix — and this one is a tint of the paper by definition.
    */
-  --glass-tint: color-mix(in srgb, var(--color-bg) 74%, transparent);
+  --glass-tint: color-mix(in srgb, var(--color-bg) 38%, transparent);
   --glass-blur: 18px;
 
   /**
