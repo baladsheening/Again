@@ -5774,6 +5774,31 @@
     */
     left: calc(var(--mark-column) - var(--mark-glow-width) / 2);
     bottom: calc(-1 * var(--mark-glow-drop));
+    /*
+      ⚠ **A TRANSLATION, NOT SIX MOVED LOBES — directed, *translate it north-west
+      a bit*.** Every lobe, the mask and the box travel together, so the shape
+      that was judged is the shape that moves; re-aiming six gradients and two
+      mask layers by hand would have produced a different smudge that happened to
+      sit further north-west.
+
+      ⚠ **A hem and a half west, a hem north**, so it scales with the type like
+      everything else here rather than being two pixel counts.
+
+      ⚠ **What bounds the north is the CLOCK, not the inset.** The status bar's
+      own ink measures y 18.3–31.0 on this handset — read off the user's
+      screenshots, `node_modules/.probe/toprows.mjs` — so the light may reach
+      into the lower part of that band without going anywhere near what is
+      written in it. **Measured after: the topmost readable row is 43.5, which
+      leaves 12.5px between the light and the clock's lower edge.** The strip
+      above the letters goes 14.59 → 19.88 sRGB against an unlit 3.24, and the
+      band eight pixels higher 4.4 → 8.92.
+
+      ⚠ **The clock's lower edge at 31 is the real ceiling, not the inset at
+      47** — that is what `--mark-glow-bleed` and this translation spend, and
+      there is about a hem of it left. **Anything further north is into the
+      clock**, and the answer then is to stop rather than to feather harder.
+    */
+    translate: calc(var(--line-hem) * -1.5) calc(var(--line-hem) * -1);
     width: var(--mark-glow-width);
     height: calc(var(--mark-glow-lift) + var(--mark-glow-drop));
     /*
