@@ -2573,6 +2573,43 @@
   --mark-column-mid: calc(
     var(--bar-gutter) + var(--text-mark) * var(--wordmark-advance-ratio) / 2
   );
+  /**
+   * ───────────────────────────────────────────────────────────────────────────
+   *  The one light on this page — 1 September
+   * ───────────────────────────────────────────────────────────────────────────
+   *
+   * **A diffuse white glow behind the mark, spilling out from under the bar.**
+   * Directed, in those words. Permanent, not a state: it does not answer scroll,
+   * focus or anything else, and it rides the bar's recede because the bar draws
+   * it.
+   *
+   * ⚠⚠ **THIS PAGE SAYS THERE IS NO LIGHT ON IT, AND THE `--row-light` TOMBSTONE
+   * SAYS TO RE-READ ITS ARGUMENT BEFORE BUILDING ONE. Read, and it does not
+   * bind.** That light was a **ground** — an ellipse inscribed in the live row,
+   * transparent at all four sides, whose whole job was to leave the row *no
+   * boundary*, because two flat grounds had come back "too grey". Glass gave the
+   * strip a boundary on purpose, so the thing that light was avoiding became the
+   * thing that replaced it. **This is not a ground and it hides no edge**: it is
+   * a light with a place, behind one object, and the bar keeps its glass under
+   * it. The rule the tombstone protects — *no ground on this page is painted as
+   * a gradient to disguise its own rectangle* — is untouched.
+   *
+   * ⚠ **Every term is derived from the mark's own band, so the light follows the
+   * mark.** `--mark-column-mid` centres it — the same token the desk's tool
+   * stack sits on — and the reach is a multiple of `--mark-column`, which is
+   * `--bar-gutter + --text-mark × --wordmark-advance-ratio`. Change the mark's
+   * size, its face, its tracking or the gutter and the light moves and resizes
+   * with it. **There is no x, y or radius typed anywhere in it.**
+   *
+   * ⚠ **7% is the tombstone's own peak**, and it is the one number here taken
+   * from precedent rather than derived: the deleted light peaked at 7% of the
+   * paper colour, 8% until an hour before it went. It is a mix of
+   * `--color-text` and not a `#fff`, so it re-grounds on the desk's charcoal
+   * with everything else.
+   */
+  --mark-glow-reach: calc(var(--mark-column) * 1.5);
+  --mark-glow-core: color-mix(in srgb, var(--color-text) 7%, transparent);
+  --mark-glow-mid: color-mix(in srgb, var(--color-text) 2.5%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5608,6 +5645,55 @@
  * the box it filters, so a full-bleed one is a viewport-sized filter and a tile
  * is 160x160 of it, repeated.
  */
+/**
+ * **The glow behind the mark.** See `--mark-glow-reach` for why this is not the
+ * light the `--row-light` tombstone forbids.
+ *
+ * ⚠ **`z-index: -1` is what puts it BEHIND THE LETTERS AND IN FRONT OF THE
+ * GLASS**, and it is exact rather than approximate: a negative-z child paints
+ * after its parent's own background and before the parent's inline content. The
+ * bar's tint is that background and the mark is that inline content. At `0` or
+ * `auto` it would paint over the letters — a positioned descendant outranks
+ * inline text — and there is no third value that lands between the two.
+ *
+ * ⚠ **It is measured from the bar's BOTTOM edge, so it carries no
+ * `env(safe-area-inset-top)`.** The row's centre is `--bar-air / 2 + --bar-row
+ * / 2` above that edge whatever the notch is doing, where measuring down from
+ * the top would have to restate the header's whole padding expression and drift
+ * the day that changes. The `bottom` goes negative by construction — **that
+ * overhang is the light coming out from under the bar.**
+ *
+ * ⚠ **Nothing clips it and nothing may.** The header has no `overflow`, so the
+ * part below its box paints inside the bar's own stacking context and lands
+ * over the record rather than under it. **Do not put `overflow: hidden` on the
+ * bar** — it would cut the light off at exactly the edge it is meant to be
+ * coming from.
+ *
+ * ⚠ **`pointer-events: none`.** It reaches a long way down over the record, and
+ * a light that swallowed a tap on a line would be the gutter-and-scrim bug of
+ * 30 August rebuilt somewhere new.
+ */
+@utility mark-glow {
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    left: calc(var(--mark-column-mid) - var(--mark-glow-reach));
+    bottom: calc(
+      var(--bar-air) / 2 + var(--bar-row) / 2 - var(--mark-glow-reach)
+    );
+    width: calc(var(--mark-glow-reach) * 2);
+    height: calc(var(--mark-glow-reach) * 2);
+    background: radial-gradient(
+      closest-side circle,
+      var(--mark-glow-core),
+      var(--mark-glow-mid) 40%,
+      transparent 72%
+    );
+  }
+}
+
 @utility grain-ground {
   position: fixed;
 
