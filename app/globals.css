@@ -2655,7 +2655,28 @@
    * `mark-glow` for why that needs no `env()`. The drop is a fraction of the
    * mark's band, like every other reach here.
    */
-  --mark-glow-lift: calc(var(--bar-air) + var(--bar-row));
+  /**
+   * ⚠ **The bleed above the status bar's lower edge — 1 September, directed
+   * *smudge up a bit*, twice.** Everything else had run out: the mask already
+   * zeroed 5px under that edge and the box ended on it, so **no lobe could reach
+   * higher whatever it was told to do** — the ceiling was the box, and raising a
+   * lobe into it only had the mask dim the lobe.
+   *
+   * ⚠ **Two hems, and it is the one number here chosen rather than derived.**
+   * There is nothing to derive it from: it is how far into a status bar a light
+   * may go before it is reading over the clock, which is a judgement. It is
+   * written in `--line-hem` so it at least scales with the type.
+   *
+   * ⚠ **What lands up there is the tail of a falloff, not the light.** The mask
+   * fades to nothing by 41px and is not solid until 55, so the 10px above the
+   * status bar's edge carry the faintest part of the smudge. **If it ever reads
+   * as covering the clock, this token is the thing to take to zero** — and at
+   * zero the geometry is exactly what it was before this line existed.
+   */
+  --mark-glow-bleed: calc(var(--line-hem) * 2);
+  --mark-glow-lift: calc(
+    var(--bar-air) + var(--bar-row) + var(--mark-glow-bleed)
+  );
   --mark-glow-drop: calc(var(--mark-column) * 0.7);
   --mark-glow-a: color-mix(in srgb, var(--color-text) 6%, transparent);
   --mark-glow-b: color-mix(in srgb, var(--color-text) 4%, transparent);
@@ -5789,34 +5810,38 @@
 
       **Measured after, against the before above: the left column 6.46 → 7.88 and
       the upper row 5.72 → 6.98, with the right and lower unchanged at 10.62 and
-      8.42** — which is what an addition rather than a re-aim looks like. The
-      top boundary left of the mark rose with it, 68.5 / 64.5 / 61.5 to 62 /
-      59.5 / 58.5, so the light now clears the letters on that side too.
+      8.42** — which is what an addition rather than a re-aim looks like.
       `node_modules/.probe/glowbalance.mjs`.
+
+      ⚠ **`--mark-glow-bleed` then moved those numbers again and it is the same
+      probe that says so** — the upper row 6.98 → 13.30 against a lower row still
+      at 8.44, so the light reads above the mark where it read below it. **The
+      lobe positions are identical through both**: the second change opened the
+      mask, it did not add mass.
     */
     background:
       radial-gradient(
-        54% 42% at 40% 26%,
+        54% 38.5% at 40% 32.2%,
         var(--mark-glow-a),
         transparent 71%
       ),
       radial-gradient(
-        32% 47% at 57% 22%,
+        32% 43% at 57% 28.6%,
         var(--mark-glow-b),
         transparent 74%
       ),
       radial-gradient(
-        66% 32% at 48% 44%,
+        66% 29.3% at 48% 48.7%,
         var(--mark-glow-c),
         transparent 78%
       ),
       radial-gradient(
-        24% 26% at 29% 47%,
+        24% 23.8% at 29% 51.5%,
         var(--mark-glow-d),
         transparent 69%
       ),
       radial-gradient(
-        42% 34% at 21% 18%,
+        42% 31.1% at 21% 24.9%,
         var(--mark-glow-e),
         transparent 73%
       );
@@ -5849,25 +5874,35 @@
       and the whole lower half sits inside the opaque stop.
 
       ⚠ **Neither layer reaches the box's top, so the cut is never exposed.**
-      Their transparent stops land at 4.4% and 14% of the box — 5px and 15px
-      below the status bar on a notched handset. **Check that when changing a
-      stop**: a layer whose falloff survives to 0% puts the straight line back,
-      and it will be at the status bar rather than at the letters.
+      Their transparent stops land at 3.4% and 8.4% of the box — 41px and 47px
+      down the screen on a notched handset, against a box that now starts at 37.
+      **Check that when changing a stop**: a layer whose falloff survives to 0%
+      puts the straight line back, and it will be at the box's top rather than at
+      the letters.
+
+      ⚠ **The stops were reopened when `--mark-glow-bleed` raised the box's top
+      by 10px**, and they had to be: a percentage stop in a box that grew means a
+      different pixel. The lobes were re-expressed the same way — same absolute
+      centres and radii, new percentages — so **the only thing that moved was how
+      much of their upper falloff survives the mask.**
 
       ⚠ **Measured, column by column, in the columns the letters do not occupy**
-      — the topmost lit row runs 68.5, 64.5, 61.5 to the left of the mark and
-      56.5, 58, 61, 64.5, 70.5, 78.5, 83.5, 95 to its right. **The light clears
-      the top of the letters at 59.7 and there is no equal pair anywhere in it.**
+      — the topmost lit row runs 54.5, 51.5, 50.5 to the left of the mark and
+      48.5, 49.5, 51, 53.5, 58.5, 78.5, 83.5, 95 to its right. **The light clears
+      the top of the letters at 59.7 by around ten pixels and there is no equal
+      pair anywhere in it** — and its highest point, 48.5, is still under the
+      status bar's lower edge at 47, so the bleed above that edge carries only
+      what falls below the eye's threshold.
       `node_modules/.probe/glowtop.mjs`, which reads the boundary off a
       screenshot; the threshold has to sit under the mark's own ink or it
       measures the letters and reports a flat cap that is not there.
     */
     -webkit-mask-image:
-      radial-gradient(80% 120% at 36% 122%, #000 88%, transparent 98%),
-      radial-gradient(58% 118% at 70% 126%, #000 84%, transparent 95%);
+      radial-gradient(80% 116% at 36% 118%, #000 88.6%, transparent 98.8%),
+      radial-gradient(58% 116% at 70% 124%, #000 89.5%, transparent 99.7%);
     mask-image:
-      radial-gradient(80% 120% at 36% 122%, #000 88%, transparent 98%),
-      radial-gradient(58% 118% at 70% 126%, #000 84%, transparent 95%);
+      radial-gradient(80% 116% at 36% 118%, #000 88.6%, transparent 98.8%),
+      radial-gradient(58% 116% at 70% 124%, #000 89.5%, transparent 99.7%);
   }
 }
 
