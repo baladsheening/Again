@@ -5414,21 +5414,21 @@
   position: fixed;
 
   /**
-   * ⚠⚠ **IT BLEEDS PAST THE VIEWPORT, AND `inset: 0` WAS A 46px STRIP OF NAKED
-   * GROUND AT THE FOOT OF THE INSTALLED APP — measured 1 September.**
+   * ⚠⚠ **IT BLEEDS A QUARTER OF THE VIEWPORT AT EACH END, AND `inset: 0` WAS A
+   * 47px STRIP OF NAKED GROUND AT THE FOOT OF THE INSTALLED APP — measured 1
+   * September, off the handset's own screenshots.**
    *
    * Reported from the home app: *the background doesn't fill the screen*, and
-   * swiping the page made it fill. Both are true. Row-by-row luminance on the
-   * handset's own screenshot: **exactly 0.000 from 798 CSS px to 844**, and the
-   * whole 844 covered in the shot taken after a drag.
+   * swiping the page made it fill. Both true. Row-by-row luminance: **exactly
+   * 0.000 from 797 CSS px to 844** on two shots, and no black row at all on the
+   * two taken after iOS had re-laid the app out.
    *
-   * ⚠ **The cause is not this layer. It is that iOS lays a `black-translucent`
-   * standalone app out at `screen − safe-area-inset-top` until something forces
-   * a re-layout** — 798 against 844 on a 47px inset, to the pixel. Every length
-   * in CSS is short at that moment: `inset: 0`, `100vh`, `100dvh`, `100lvh` and
-   * `100%` alike, because it is the layout viewport itself that is wrong. **There
-   * is nothing a stylesheet can ask that would give the real number**, which is
-   * why this is answered by not needing it.
+   * ⚠ **The cause is not this layer.** iOS lays a `black-translucent` standalone
+   * app out at `screen − status bar` until something forces a re-layout — 797
+   * against 844, to the pixel. **Every length in CSS is short at that moment**:
+   * `inset: 0`, `100vh`, `100dvh`, `100lvh` and `100%` alike, because it is the
+   * layout viewport itself that is wrong. There is nothing a stylesheet can ask
+   * that returns the real number.
    *
    * ⚠ **So the fix is to remove the EDGE, not to correct the measurement** — the
    * order *How things get fixed* asks for. A texture behind everything at
@@ -5436,25 +5436,37 @@
    * that lands anywhere but off-screen is a seam waiting for the next engine to
    * put it somewhere visible.
    *
-   * ⚠ **The bleed is the missing inset itself, spent at BOTH ends.** What iOS
-   * withholds is exactly `env(safe-area-inset-top)`, so that is what this gives
-   * back — doubled by symmetry, since `background-position: center` means the
-   * drawing should stay centred rather than be slid down. 47 each way covers a
-   * 46px shortfall with 48 to spare. ⚠ **It is a no-op on every surface without a
-   * notch**: a browser, an Android, the desk and a home-button iPhone all
-   * resolve it to `inset: 0`, byte for byte what shipped before.
+   * ⚠⚠ **THE FIRST ATTEMPT BLED BY `env(safe-area-inset-top)` AND CHANGED
+   * NOTHING. Read this before reaching for an `env()` here again.** The
+   * reasoning was that the shortfall *is* the top inset, so hand that back. It
+   * is worse than wrong, it is **circular**: iOS is short precisely because it
+   * has shrunk the viewport INSTEAD of reporting an inset, so in the one state
+   * that needs the bleed the term is `0`, and in every state where the term is
+   * 47 the viewport is already right and nothing was needed. **A correction
+   * derived from a quantity that is only non-zero when the fault is absent is
+   * not a correction.**
+   *
+   * ⚠ **So the bleed is a PROPORTION of the viewport and never a device
+   * quantity.** A quarter at each end — the layer is 150% of whatever height the
+   * engine claims, centred on it. It cannot be short by a status bar, a notch, a
+   * dynamic island or any future furniture, because it does not encode one:
+   * against a 797px claim it reaches 199px past each edge where 47 was needed.
+   * **Do not replace this with a measured number, however well measured.**
    *
    * ⚠ **A fixed element contributes no scrollable overflow**, so hanging it off
-   * all four... two edges costs no scroll range and cannot produce a bar. The
-   * only thing it changes is the `cover` crop, by about 5%.
+   * both edges costs no scroll range and can produce no bar. What it does cost
+   * is the `cover` crop: the plate is landscape, so a box half again as tall
+   * upscales it about 1.1x on a handset and shows about 22% of its width rather
+   * than 29%. The grain softens slightly. If that ever reads too smooth the
+   * answer is the 4240px download named below, not a smaller bleed.
    *
    * ⚠ **Do not answer this by putting the paper on `html` instead.** The canvas
-   * would fill by definition — that was the first idea — but the root's
-   * background positioning area is the root's own box, so on the record it would
-   * scroll away and leave colour below; `background-attachment: fixed` is what
-   * fixes that and is the property iOS has never implemented properly.
+   * fills by definition — that was the first idea — but the root's background
+   * positioning area is the root's own box, so on the record it would scroll
+   * away and leave colour below; `background-attachment: fixed` is what fixes
+   * that, and it is the property iOS has never implemented properly.
    */
-  inset: calc(-1 * env(safe-area-inset-top)) 0;
+  inset: -25vh 0;
   /**
    * ⚠⚠ **`-1`, NOT `0` — 1 September, and it is what lets this be mounted ONCE
    * for the whole app instead of per screen.**

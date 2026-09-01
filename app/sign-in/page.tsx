@@ -120,22 +120,44 @@ export default async function SignInPage() {
       */}
       <main className="gutter safe-bottom wall-frame relative z-[1] mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
         {/*
-          `my-auto` rather than `justify-center` on the parent: when a phone
-          keyboard takes half a landscape viewport the content is taller than the
-          container, and centred flex content then overflows in *both* directions
-          with the top above the scroll origin and unreachable. Auto margins
-          collapse to zero with no free space, so this degrades to top-aligned
-          and stays scrollable. On the desk the grid centres the two columns
-          against each other instead, so the auto margins are handed back.
-        */}
-        {/*
+          ⚠⚠ **THERE ARE NO AUTO MARGINS ON THIS COLUMN ANY MORE, AND THAT IS
+          THE WHOLE OF *THE TEXT SHIFTS UPWARDS* — 1 September.** It was
+          `my-auto` here and `mb-auto` on the form: three auto margins sharing
+          whatever space was left over — above the mark, between, and under the
+          switches. So a field arriving or leaving changed **all three at once**
+          and the mark drifted with it.
+
+          ⚠ **A composition that floats in its leftover space moves whenever the
+          content changes, and there is no split that fixes that.** Measured on
+          the handset's own state — a 797px box, which is what iOS gives the
+          installed app before it re-lays out — sign-in against reset: three
+          autos drifted the mark **4.9px**, one auto above the form drifted it 0
+          but threw the switches **60px**. Both were built and both were thrown
+          away. **The mechanism is the free space being distributed at all.**
+
+          ⚠ **So it is packed from the top on every phone, and nothing floats.**
+          The mark is at the page lead on an SE and on a Pro Max, in all three
+          modes; what moves when the password field leaves is what was under it,
+          by exactly one field. That is the field leaving, which is legible, and
+          not the page shifting, which is not.
+
+          ⚠ **What this costs, stated: the leftover space is all at the foot**,
+          so a tall phone shows more ground under the switches than a short one.
+          That is the poster being laid out from the top rather than hung in the
+          middle, and it is the only arrangement that is the same on every
+          screen. **Do not answer a tall phone's foot by putting `my-auto` back.**
+
+          The landscape-keyboard case the old note worried about is answered by
+          construction rather than by an auto margin collapsing: nothing centres,
+          so nothing can overflow upward past the scroll origin.
+
           `min-h-0` so this column can be shrunk under its own content — the
           default `min-height: auto` on a flex item is what would otherwise
           refuse, and the shrink is what stops the form pushing the switches off
           the bottom. The mark does not pay for it (`shrink-0` below); the beats
           do, which is the one box on this screen that can be scrolled.
         */}
-        <div className="my-auto flex min-h-0 flex-col gap-9 stack:my-0">
+        <div className="flex min-h-0 flex-col gap-9">
           {/*
             ⚠ **The mark carries no rule under it, and the wrapper that held the
             two together is gone with it — directed.** The hairline was the one
@@ -198,10 +220,14 @@ export default async function SignInPage() {
           ⚠ **`shrink-0` — the form never gives up height, which is the point of
           the whole arrangement.** Everything a person is here to fill in stays
           at full size and stays on the screen; what moves is the explanation
-          above it. `mb-auto` still holds it where it is whenever there IS free
-          space, so a screen with room looks exactly as it did.
+          above it.
+
+          ⚠ **`mb-auto` is gone from here, and it is not coming back** — it was
+          one of the three auto margins the column's note above says caused the
+          drift. `mt-12` is now the whole of what separates this from the beats,
+          on every phone and in every mode.
         */}
-        <div className="mt-12 mb-auto shrink-0 stack:mt-0 stack:mb-0">
+        <div className="mt-12 shrink-0 stack:mt-0">
           <SignInForm />
         </div>
       </main>
