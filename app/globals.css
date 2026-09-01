@@ -5827,6 +5827,31 @@
       are placed, because the *rate* they die at is what the eye reads as their
       edge. The stops run 66% to 82% now and are deliberately unrelated.
 
+      ⚠⚠ **IT READ AS HORIZONTAL, AND THE CAUSE WAS THE ARRANGEMENT RATHER THAN
+      THE SHAPES — 2 September, reported.** The lobes were all wider than tall
+      (2.4, 1.32, 4.2, 1.29, 2.0, 3.8, 3.2, 1.01, 2.4 in pixels, mean 2.4:1) and
+      **re-proportioning them changed nothing measurable** — the light's spread
+      went 1.76 to 1.76. What carried it was where the centres sat: their x
+      standard deviation was 44px against 19.4 in y, **2.3:1**. Spreading the
+      centres vertically and pulling the outermost ones in took the measured
+      spread 1.54 → **1.21**.
+
+      ⚠ **A percentage pair is still not an aspect ratio here** — the box is
+      208.86 × 144.5, so `40% 40%` is already 1.45:1 wider than tall. Read a
+      lobe in pixels before judging it. But the shapes were the second-order
+      term: **the set is as horizontal as its centres are.**
+
+      ⚠⚠ **AND THE FIRST TWO MEASUREMENTS OF THIS WERE THE PROBE MEASURING
+      ITSELF.** `glowspread.mjs` weighted every pixel by its excess over a flat
+      floor; the paper's grain runs 2–19, so a floor low enough to catch the
+      faint halo also admitted paper across the whole window — and what came
+      back was the **window's** aspect, 1.68:1, sitting almost exactly where the
+      readings were. It is a per-row baseline now, read off the unlit right-hand
+      side at the same height. **A flat floor cannot separate a faint light from
+      a textured ground**, and this is the second time on this page that a
+      threshold has measured the wrong thing: the other was the mark's own ink
+      being read as a flat cap.
+
       ⚠ **Three of the nine are there to break the outline rather than to light
       anything** — a small one tucked over the letters' right, a thin flat
       sliver low and left, and the wide faint one below the bar. At 2–2.8% none
@@ -5914,15 +5939,15 @@
       mask, it did not add mass.
     */
     background:
-      radial-gradient(46% 27.9% at 26% 21.4%, var(--mark-glow-a), transparent 71%),
-      radial-gradient(30% 32.8% at 44% 27.1%, var(--mark-glow-b), transparent 75%),
-      radial-gradient(62% 21.3% at 62% 37.7%, var(--mark-glow-c), transparent 79%),
-      radial-gradient(22% 24.6% at 78% 31.2%, var(--mark-glow-d), transparent 68%),
-      radial-gradient(52% 19.7% at 14% 36.1%, var(--mark-glow-e), transparent 73%),
-      radial-gradient(38% 27.1% at 37% 13.9%, var(--mark-glow-f), transparent 76%),
-      radial-gradient(58% 26% at 42% 64.4%, var(--mark-glow-g), transparent 82%),
-      radial-gradient(14% 20% at 52% 24%, var(--mark-glow-h), transparent 66%),
-      radial-gradient(20% 12% at 8% 33%, var(--mark-glow-i), transparent 70%);
+      radial-gradient(29% 37% at 30% 19%, var(--mark-glow-a), transparent 71%),
+      radial-gradient(23% 40.1% at 44% 30%, var(--mark-glow-b), transparent 75%),
+      radial-gradient(34% 34% at 52% 41%, var(--mark-glow-c), transparent 79%),
+      radial-gradient(14% 31% at 62% 26%, var(--mark-glow-d), transparent 68%),
+      radial-gradient(28% 28% at 19% 34%, var(--mark-glow-e), transparent 73%),
+      radial-gradient(26% 38% at 38% 13%, var(--mark-glow-f), transparent 76%),
+      radial-gradient(33% 40% at 43% 73%, var(--mark-glow-g), transparent 82%),
+      radial-gradient(11.5% 23.5% at 49% 55%, var(--mark-glow-h), transparent 66%),
+      radial-gradient(17% 16% at 13% 47%, var(--mark-glow-i), transparent 70%);
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
       whose falloff still has alpha where the box ends draws a straight line
