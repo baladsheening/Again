@@ -1443,8 +1443,21 @@
    * in the fence at the top of this file. Two sizes are fine; two ratios would
    * be two measurements of one typeface, free to disagree.
    */
-  --text-mark: 1.25rem;
-  --text-mark-rail: 1.5rem;
+  /*
+    ⚠ **Both went up 2px on 1 September — directed, *slightly bigger*.** 1.25 →
+    1.375rem and 1.5 → 1.625: **the same absolute step on both**, so the 0.25rem
+    that makes the rail's mark the larger of the two is preserved. Bumping them
+    by a *ratio* would have widened that difference for no reason but the
+    arithmetic.
+
+    ⚠ **The mark's band on the desk follows for free and the record gives up the
+    width** — `--mark-column` is `--bar-gutter + --text-mark ×
+    --wordmark-advance-ratio`, so at 2.176 the band grows 0.272rem a side and
+    `--record-measure` narrows by 0.544. That is the mark's column rule working,
+    not a side effect to correct: `logocol.mjs` and `markgap.mjs` assert it.
+  */
+  --text-mark: 1.375rem;
+  --text-mark-rail: 1.625rem;
 
   /**
    * **The seven glyphs, at both ends of the page.** One number for the whole

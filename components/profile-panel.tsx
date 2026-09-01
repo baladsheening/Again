@@ -86,17 +86,37 @@ export function ProfilePanel({ handle }: { handle: string }) {
         does on the inside — one number, stated once, rather than a second
         spacing decision beside a control that already made one.
 
-        ⚠ **The row is still `--collections-row`, and that is the whole reason it
-        survives.** The rule is *whatever is last lands on the line the
-        collections vacate*; with the two side by side there is one last line
-        instead of two, and it is this one. The pill is ~30px of ink and box, so
-        it centres inside the 42 with room for its own hit area.
+        ⚠⚠ **THE BAR IS TALLER AND ITS AIR IS EQUAL — 1 September, directed.**
+        It was `--collections-row` of height with `--collections-inset` hung
+        under it, and on a notched handset that reads exactly as reported: the
+        pill sat 6px off the top of the block and **24px off the bottom**,
+        because the clearance was all on one side. `--collections-row` no longer
+        governs this block, and nothing else reads it.
+
+        ⚠ **`max((--bar-lead + --bar-tail) / 2, --collections-inset)`, spent as
+        one `py`.** Two terms, both real:
+
+        — **The air is the top bar's own, split evenly.** That bar spends
+          `--bar-lead` above its row and `--bar-tail` below, asymmetric because
+          it hangs under a notch; this one has no notch to clear and no mark to
+          sit beneath, so it spends the same total centred. 13px against the
+          bar's 16/10.
+        — **Floored by the home-indicator clearance**, so the bottom half can
+          never come in under it. On a device with an inset the floor wins and
+          the top half grows to match, which is what keeps the contents centred
+          instead of buying the clearance on one side only.
+
+        ⚠ **It is one expression and not a branch.** No device check, no
+        display-mode query, no `rail:` variant: at a 0px inset the halved air
+        wins and the bar is 56px, at 34px the clearance wins and it is 66 — and
+        the pill is on the centre line of both. **Do not answer a tall bar by
+        subtracting from one side**; that is the arrangement this replaced.
 
         There is no `rail:` variant on any of the spacing here, and there must not
         be one: it is the same block at every width, which is the whole of what
         was wrong when it was not.
       */}
-      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex min-h-[var(--collections-row)] items-center gap-4 pb-[var(--collections-inset)]">
+      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex items-center gap-4 py-[max(calc((var(--bar-lead)+var(--bar-tail))/2),var(--collections-inset))]">
         {/*
           ⚠ **The display name was here and is gone (17 August).** It was set at
           `title` size as the page's heading, with the handle beside it — and the
@@ -197,10 +217,10 @@ export function ProfilePanel({ handle }: { handle: string }) {
           second left edge to agree with, and an indent here would be 16px of
           air on top of the row's `gap-4` — the same 16 spent twice.
 
-          ⚠ **The row's own `min-h` is gone too**, for the same reason: the
-          block above carries `--collections-row` now, because there is one row
-          and it is that one. Two boxes claiming the same height is how they
-          drift apart.
+          ⚠ **The row's own `min-h` is gone too**, for the same reason: there is
+          one row and the block above is it. Two boxes claiming the same height
+          is how they drift apart — and the block's height is now its air plus
+          the pill inside it, so there is no second number to claim.
         */}
         <span className="text-muted text-sm leading-none">@{handle}</span>
       </div>
