@@ -2607,9 +2607,52 @@
    * `--color-text` and not a `#fff`, so it re-grounds on the desk's charcoal
    * with everything else.
    */
-  --mark-glow-reach: calc(var(--mark-column) * 1.5);
-  --mark-glow-core: color-mix(in srgb, var(--color-text) 7%, transparent);
-  --mark-glow-mid: color-mix(in srgb, var(--color-text) 2.5%, transparent);
+  /**
+   * ⚠ **FOUR LOBES, NOT ONE CIRCLE — 1 September, directed: *less regular, and
+   * diffuse but focused in the area of the logo*.** It shipped an hour earlier
+   * as a single `closest-side circle`, which is a light with no shape: a
+   * perfectly even falloff reads as a lens flare or a rendered vignette rather
+   * than as something behind the bar.
+   *
+   * ⚠ **The irregularity is the SUM of overlapping ellipses, not noise.** Four
+   * gradients at off-centre positions with different aspect ratios, layered in
+   * one `background`; where they overlap they compound toward the peak and where
+   * only one reaches, the edge is that one's alone — so the outline is uneven at
+   * every radius without a texture, a filter, an SVG or a second element. **The
+   * focus is the same mechanism**: the lobes are clustered on the mark, so the
+   * compounding happens there and the reach falls off unevenly around it.
+   *
+   * ⚠ **Every position and radius is a PERCENTAGE of the box**, and the box is
+   * derived from `--mark-column` — so the whole shape scales with the mark and
+   * with the desk's root ramp, and none of the four is a pixel that has to be
+   * re-picked. That is the same rule the single circle held; there are simply
+   * four of it now.
+   *
+   * ⚠ **The box is wider than it is tall**, because the thing it sits behind is
+   * a word. It was square when the light was a circle.
+   *
+   * ⚠ **The four alphas COMPOUND and the peak is not any one of them.** Alpha
+   * compositing multiplies what is left: 6%, 4%, 2.2% and 3.6% leave
+   * `1 − 0.94 × 0.96 × 0.978 × 0.964 = 0.149`, so the centre peaks near 15% of
+   * the ink where the old single lobe peaked at 7%. **Do not read one of these
+   * as the brightness** — raising one raises the core more than it raises its
+   * own edge.
+   *
+   * ⚠ **The footprint was tightened the same day** — reach 1.5 → 1.15 of the
+   * band, the box 2.4 → 2.1 by 2 → 1.9 of it. At the first size the light spread
+   * most of the way across a handset, which is diffuse without being *focused in
+   * the area of the logo*, and the two halves of that instruction pull opposite
+   * ways: **the falloff is what makes it diffuse and the footprint is what makes
+   * it focused.** Measured behind the mark: 19.9 sRGB against 3.7 at the bar's
+   * far right.
+   */
+  --mark-glow-reach: calc(var(--mark-column) * 1.15);
+  --mark-glow-width: calc(var(--mark-glow-reach) * 2.1);
+  --mark-glow-height: calc(var(--mark-glow-reach) * 1.9);
+  --mark-glow-a: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --mark-glow-b: color-mix(in srgb, var(--color-text) 4%, transparent);
+  --mark-glow-c: color-mix(in srgb, var(--color-text) 2.2%, transparent);
+  --mark-glow-d: color-mix(in srgb, var(--color-text) 3.6%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5679,18 +5722,40 @@
     position: absolute;
     z-index: -1;
     pointer-events: none;
-    left: calc(var(--mark-column-mid) - var(--mark-glow-reach));
+    left: calc(var(--mark-column-mid) - var(--mark-glow-width) / 2);
     bottom: calc(
-      var(--bar-air) / 2 + var(--bar-row) / 2 - var(--mark-glow-reach)
+      var(--bar-air) / 2 + var(--bar-row) / 2 - var(--mark-glow-height) / 2
     );
-    width: calc(var(--mark-glow-reach) * 2);
-    height: calc(var(--mark-glow-reach) * 2);
-    background: radial-gradient(
-      closest-side circle,
-      var(--mark-glow-core),
-      var(--mark-glow-mid) 40%,
-      transparent 72%
-    );
+    width: var(--mark-glow-width);
+    height: var(--mark-glow-height);
+    /*
+      Four ellipses, none of them concentric with the box and no two the same
+      shape. Read them as: the core a little left of and above the middle, a
+      taller one leaning right, a wide flat one spreading below the bar's edge,
+      and a small one low and left that keeps the bottom outline from closing
+      into an arc.
+    */
+    background:
+      radial-gradient(
+        52% 44% at 41% 43%,
+        var(--mark-glow-a),
+        transparent 71%
+      ),
+      radial-gradient(
+        31% 55% at 57% 37%,
+        var(--mark-glow-b),
+        transparent 74%
+      ),
+      radial-gradient(
+        67% 29% at 47% 61%,
+        var(--mark-glow-c),
+        transparent 78%
+      ),
+      radial-gradient(
+        23% 26% at 29% 63%,
+        var(--mark-glow-d),
+        transparent 69%
+      );
   }
 }
 
