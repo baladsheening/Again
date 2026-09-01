@@ -1473,7 +1473,25 @@
     handset instruction. **If the desk wants its mark larger again,
     `--text-mark-rail` moves and those three literals move with it.**
   */
-  --text-mark: 1.625rem;
+  /*
+    ⚠ **AND ON THE SAME DAY IT STOPPED BEING A SIZE AND BECAME AN INK — directed,
+    *make the logo's ink match the icons at 26px*.** A font-size and a glyph box
+    are not comparable quantities: the mark inks `--wordmark-ink-ratio` of its
+    em and a glyph fills its box, so 26px of type stood 18.72px of ink beside a
+    26px drawing. **The two numbers were equal and the two marks were not.**
+
+    ⚠ **Derived, never typed.** `--glyph-bar / --wordmark-ink-ratio` — 36.11px
+    at the bar's 26px glyph. It follows the glyph, so the mark can no longer be
+    left behind when the icons move, and it follows the face fence, so changing
+    the mark's face re-derives it. **A typed 2.2569rem would be right today and
+    silently wrong at the next of either.**
+
+    ⚠ **The row does not grow with it.** `--bar-row` is the glyph, and
+    `wordmark-trim` makes the element its own letters — so what lands in the row
+    is the 26px of ink, not the 46.9px line box the type would otherwise bring.
+    That utility stopped being a nicety here and became load bearing.
+  */
+  --text-mark: calc(var(--glyph-bar) / var(--wordmark-ink-ratio));
   --text-mark-rail: 1.625rem;
 
   /**
@@ -2494,20 +2512,42 @@
    * own size because the desk's ramp has not started.
    */
   /*
-    ⚠ **The second literal is 1.625rem since 1 September, and it was stale at
-    1.25 before that.** It is `--text-mark`'s below-rail value written out, and
-    it stopped tracking the token when the mark went to 1.375 that morning —
-    `markgap.mjs` asserts the floor against the live below-rail tokens and had
-    been failing on it. The floor is 566.85px now where it was 592.96, so the
-    fixed measure between the floor and 720px is ~26px narrower: **the mark's
-    band grew and the record gives up the width**, which is the rule this floor
-    exists to bound rather than to escape. Continuity is unharmed — both sides of
-    720 are floored either way, and the handover lands exactly on the rail by
-    construction.
+    ⚠⚠ **IT IS A `min()` OF BOTH BANDS SINCE 1 SEPTEMBER, AND THE ASSUMPTION IT
+    REPLACES HAD GONE SILENTLY FALSE.** The prose above says *the measure the
+    narrower band hands back*, and the expression used to say *the below-rail
+    band*, because for as long as the desk's mark was the larger of the two those
+    were the same sentence. **The mark's ink now derives from the bar's glyph,
+    which has no rail override, so below the rail it is 36.11px against the
+    rail's 26** — the below-rail band is the WIDER one, and deriving the floor
+    from it puts the floor under the measure the rail hands back. That is a 20px
+    step UP at 720px: the violent boundary this floor exists to prevent,
+    reintroduced by the line that prevents it.
+
+    `min()` says the thing the prose always said and is right under either
+    ordering. **Do not simplify it back to one band the day they agree again.**
+
+    ⚠ **Only the two gutters are literals now, and that is the same rule as
+    before, not a weakening of it.** `--bar-gutter` is the one term here with a
+    rail override, so it is the one term a `var()` would read at the wrong width.
+    `--glyph-bar`, `--wordmark-ink-ratio`, `--wordmark-advance-ratio` and
+    `--text-mark-rail` have no override, so reading them is safe and keeps the
+    floor tracking the fence — which is what stopped the old literal from rotting
+    twice in one day.
+
+    ⚠ **What it costs, stated: the floor is 542.85px where it was 566.84**, so
+    the fixed measure between it and 740px is 24px narrower. The mark's band grew
+    and the record gives up the width, which is the rule this bounds rather than
+    escapes. **The handover lands exactly on the rail by construction** — the
+    floor IS the measure 720px hands back — and nothing below 542.85px moves,
+    because there the window is narrower than the floor and `w-full` wins.
   */
   --record-floor: calc(
     var(--breakpoint-rail) - 2 *
-      (1.25rem + 1.625rem * var(--wordmark-advance-ratio))
+      min(
+        1.25rem + var(--glyph-bar) / var(--wordmark-ink-ratio) *
+          var(--wordmark-advance-ratio),
+        2rem + var(--text-mark-rail) * var(--wordmark-advance-ratio)
+      )
   );
 
   /**
