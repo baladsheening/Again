@@ -72,11 +72,24 @@ import { useEffect, useState } from 'react'
  */
 
 /**
- * How far the record has to come back before the bars do.
+ * How far the record has to travel before the bars answer — **in either
+ * direction, since 1 September.**
  *
  * **A gesture, not a device measurement** — the same pull on all four surfaces,
  * which is the test `CLAUDE.md` sets. Big enough that settling a thumb is not a
  * request, small enough that one flick is.
+ *
+ * ⚠⚠ **IT USED TO GOVERN THE RETURN ALONE, AND THE BARS LEFT ON THE FIRST
+ * PIXEL.** That was deliberate — *the least travel there is, which is what was
+ * asked for* — and it was reported back as **too eager**. One pixel is not
+ * evidence that anybody is reading; a thumb resting on a moving list produces
+ * it, and so does the tail of a momentum scroll.
+ *
+ * ⚠ **So the machine is symmetric and there is still exactly one number.** The
+ * chrome answers a pull, and it is the same pull whichever way it goes: 40px
+ * down and it leaves, 40px back and it returns. **Do not give the two
+ * directions separate constants** — that is the split `--recede` was collapsed
+ * to avoid, and it would need a hardware reason stated in the token.
  *
  * ⚠ **This number is not what went wrong twice.** The signal was; see the head
  * of this file. Changing it is a matter of feel and nothing else, and it can be
@@ -149,8 +162,14 @@ export function useChromeRecede({
    *
    * **On screen means the record has not been scrolled**, and the chrome stays.
    * It is the first thing in the document rather than the first thing under the
-   * bar, so the bars answer the first pixel of a scroll — the least travel there
-   * is, which is what was asked for.
+   * bar, so what it measures is the record's own travel from the very top.
+   *
+   * ⚠ **That placement used to be the whole recede trigger, and is not any
+   * more.** The note here read *so the bars answer the first pixel of a scroll —
+   * the least travel there is, which is what was asked for*, and the first pixel
+   * was reported back as too eager. Leaving now costs a pull of `FLICK`, like
+   * returning. **The mark stays exactly where it is**: its job was always two
+   * jobs, and the one that survives is the measurement.
    *
    * **Its distance above the glass is also the scroll position**, measured off a
    * rendered box instead of taken from `window.scrollY`. That is what the flick
@@ -186,8 +205,17 @@ export function useChromeRecede({
   */
   const atTop = useOnScreen(top, true, writing)
   const atEnd = useOnScreen(end, false, writing)
-  /** Asked back by a flick, until a push the other way of the same size. */
-  const [recalled, setRecalled] = useState(false)
+  /**
+   * Whether the chrome is currently asked for.
+   *
+   * ⚠ **It starts TRUE, and that one word is the whole of *too eager*.** It was
+   * `recalled`, starting false, meaning *asked back by a flick* — so leaving the
+   * top was enough to hide the bars and only their return cost a pull. Now the
+   * state means *wanted*, arrival grants it, and it takes a pull of `FLICK`
+   * either way to change it. Same machine, same constant, opposite initial
+   * value.
+   */
+  const [wanted, setWanted] = useState(true)
 
   useEffect(() => {
     const mark = top.current
@@ -200,7 +228,7 @@ export function useChromeRecede({
     /** The furthest point reached in the direction that currently governs. */
     let extreme = travel()
     /** A local mirror, so a frame never has to wait for a render to know. */
-    let shown = false
+    let shown = true
     let frame = 0
 
     const read = () => {
@@ -208,33 +236,36 @@ export function useChromeRecede({
       const y = travel()
 
       /*
-        The top is not a flick, it is arrival — and it resets the machine, so
-        that leaving the top hides the chrome on the first pixel again rather
-        than asking for a whole pull.
+        The top is not a flick, it is arrival — and it resets the machine to
+        *wanted*, so that a reader who scrolls back up to the beginning and sets
+        off again gets the same pull's worth of chrome the first descent had.
+
+        ⚠ **It used to reset to hidden**, which is what made leaving the top cost
+        nothing at all. See `FLICK`.
       */
       if (y <= 0) {
         extreme = 0
-        if (shown) {
-          shown = false
-          setRecalled(false)
+        if (!shown) {
+          shown = true
+          setWanted(true)
         }
         return
       }
 
       if (shown) {
-        /* Watching for a push back down of the same size. */
+        /* Watching for a push down of a whole pull before the chrome goes. */
         if (y < extreme) extreme = y
         else if (y - extreme > FLICK) {
           extreme = y
           shown = false
-          setRecalled(false)
+          setWanted(false)
         }
       } else {
         if (y > extreme) extreme = y
         else if (extreme - y > FLICK) {
           extreme = y
           shown = true
-          setRecalled(true)
+          setWanted(true)
         }
       }
     }
@@ -256,5 +287,5 @@ export function useChromeRecede({
     }
   }, [top, writing])
 
-  return !held && !atTop && !atEnd && !recalled
+  return !held && !atTop && !atEnd && !wanted
 }

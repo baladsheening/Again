@@ -2327,8 +2327,13 @@ export function PageScreen({
     >
       {/*
         The top of the document, as a thing that can be watched — see
-        `useChromeRecede`. It is **before the bar** rather than under it, so the
-        chrome answers the first pixel of a scroll.
+        `useChromeRecede`. It is **before the bar** rather than under it, so what
+        it measures is the record's travel from the very top.
+
+        ⚠ **This said *so the chrome answers the first pixel of a scroll*, and it
+        no longer does — 1 September, reported as too eager.** Leaving costs a
+        pull of `FLICK` now, the same one that brings the bars back. The mark did
+        not move; only what is done with its number changed.
 
         `h-px -mb-px` costs no layout and takes no space: an element with no box
         at all sits exactly on the viewport's edge at rest, which is the one
