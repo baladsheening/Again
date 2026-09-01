@@ -70,19 +70,33 @@ export function ProfilePanel({ handle }: { handle: string }) {
         this** — `Screen` never wore either, so both were orphans of the same
         deleted rail, describing a layout no route has had since Phase 1.
 
-        **No gap between the two lines below `rail`, and the handle is
-        `leading-none`.** The sign-out row carries `--collections-row` of height and
-        centres inside it, so the air below the handle is already inside that box:
-        the ink gap comes to 14px, down from 21 when the handle had a 20px line box
-        and the column a `gap-1` on top of it. Asked for as *a bit closer*, and this
-        is the version that gets there without moving *Sign out* off the
-        collections' line.
+        ⚠⚠ **IT IS ONE ROW SINCE 1 SEPTEMBER — directed: put the handle in line
+        with *Sign out*.** It was a column of two: the pill, then the handle on
+        its own `--collections-row` beneath, with a `pl-4` matching the pill's
+        padding so the two sets of ink shared a left edge.
+
+        **The alignment argument is answered rather than abandoned.** It was
+        *three things on one line rather than three lines each nearly aligned* —
+        the People pill's heading, the pill's word and the handle all at x=36.
+        Two of those are now literally on one line, so the handle needs no indent
+        at all: it takes the gutter through the pill beside it.
+
+        ⚠ **The gap is `gap-4`, which is the pill's own `px-4`.** The handle then
+        stands the same distance off the pill's edge on the outside as the word
+        does on the inside — one number, stated once, rather than a second
+        spacing decision beside a control that already made one.
+
+        ⚠ **The row is still `--collections-row`, and that is the whole reason it
+        survives.** The rule is *whatever is last lands on the line the
+        collections vacate*; with the two side by side there is one last line
+        instead of two, and it is this one. The pill is ~30px of ink and box, so
+        it centres inside the 42 with room for its own hit area.
 
         There is no `rail:` variant on any of the spacing here, and there must not
         be one: it is the same block at every width, which is the whole of what
         was wrong when it was not.
       */}
-      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex flex-col items-start pb-[var(--collections-inset)]">
+      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex min-h-[var(--collections-row)] items-center gap-4 pb-[var(--collections-inset)]">
         {/*
           ⚠ **The display name was here and is gone (17 August).** It was set at
           `title` size as the page's heading, with the handle beside it — and the
@@ -151,9 +165,13 @@ export function ProfilePanel({ handle }: { handle: string }) {
           against the box it turns, and 16 on something this short would close the
           ends into a lozenge.
 
-          ⚠ **`py-2` is a term in `--profile-foot`.** That reservation is what
-          keeps the last person in a People list from ending up behind this block,
-          and it cannot read a class from here.
+          ⚠ **This note said `py-2` was a term in `--profile-foot`, and that
+          token is DELETED — 1 September.** Its only consumer was `foot-bare`,
+          which Phase 1 deleted with the rail; it has been declared and read by
+          nothing since, and a token nobody reads is a number the next person
+          keeps in step with a layout for no reason. What actually keeps a long
+          People list off this block is `Screen`'s own `pb-16`, which the
+          docblock above already names. Same rule that took Jost.
         */}
         <button
           type="button"
@@ -168,22 +186,23 @@ export function ProfilePanel({ handle }: { handle: string }) {
         </button>
 
         {/*
-          ⚠ **The handle moved BELOW *Sign out* on 18 August**, and the row it now
-          sits in is the one *Sign out* used to hold. The rule that row exists for
-          is *whatever is last lands on the line the collections vacate* — it was
-          never about which of the two it was. `--profile-foot` in globals.css is
-          written as the new stack.
+          ⚠ **The handle moved BELOW *Sign out* on 18 August and BESIDE it on 1
+          September** — directed both times, and the order has not changed: the
+          pill is still first, still on the gutter, and it is the handle that
+          moved to it.
 
-          ⚠ **`pl-4` is the pill's own padding, so the two lines share a left
-          edge.** Asked for as *indented by the same amount* — the pill's box
-          starts at the gutter and its words 16px in, so the handle takes the same
-          16 and both sets of ink land at x=36, which is also where the People
-          pill's heading sits. Three things on one line rather than three lines
-          each nearly aligned.
+          ⚠ **`pl-4` is gone with the stack it existed for.** It was the pill's
+          own padding, borrowed so that a handle on its own line would start
+          where the pill's word does. On the same line as the pill there is no
+          second left edge to agree with, and an indent here would be 16px of
+          air on top of the row's `gap-4` — the same 16 spent twice.
+
+          ⚠ **The row's own `min-h` is gone too**, for the same reason: the
+          block above carries `--collections-row` now, because there is one row
+          and it is that one. Two boxes claiming the same height is how they
+          drift apart.
         */}
-        <div className="flex min-h-[var(--collections-row)] items-center">
-          <span className="text-muted pl-4 text-sm leading-none">@{handle}</span>
-        </div>
+        <span className="text-muted text-sm leading-none">@{handle}</span>
       </div>
     </div>
   )

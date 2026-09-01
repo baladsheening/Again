@@ -1141,34 +1141,21 @@
   --collections-row: 2.625rem;
 
   /**
-   * What `/profile`'s own foot occupies: the sign-out pill above the handle's
-   * row.
+   * ⚠⚠ **`--profile-foot` WAS HERE AND IS DELETED — 1 September.** It was the
+   * height of `/profile`'s fixed identity block: the sign-out pill's ink, its
+   * `py-2`, and `--collections-row` for the handle's line beneath it.
    *
-   * ⚠ **The two swapped on 18 August and this sum swapped with them.** It used to
-   * be the handle's line above the sign-out row; *Sign out* was asked to go on
-   * top, so the **handle** is now the bottom-most ink and it is the handle that
-   * takes `--collections-row` — the reason for that row is that whatever is last
-   * lands on the line the collections vacate, not that *Sign out* in particular
-   * does.
+   * **Its only consumer was `foot-bare`, which went with the rail in Phase 1**,
+   * so it had been declared and read by nothing for a fortnight — and the block
+   * it described is one row since the handle moved beside the pill, so the sum
+   * was wrong as well as unread. What actually reserves that corner is
+   * `Screen`'s own `pb-16`.
    *
-   * Below `rail` that block is `position: fixed` — identity does not scroll away,
-   * the way the collections bar does not scroll away on every other screen — so
-   * `main` has to reserve its height or the last person in the list ends up
-   * behind it. `foot-bare` adds this to the inset for exactly that.
-   *
-   * ⚠ **Derived, not measured, and every term names something real.** The pill is
-   * its own ink — `--text-micro` at the `micro` utility's 1.3 line — plus the
-   * `py-2` it wears, and the row below is `--collections-row` because that is what
-   * puts the last line on the collections'. Change the type scale, the utility's
-   * line height or the row and this follows; write it as 72px and it stops
-   * following anything.
-   *
-   * ⚠ **The `1rem` is the pill's padding and is the one term that lives in two
-   * files.** It is `py-2` in `components/profile-panel.tsx`. If that padding
-   * moves, this moves with it — there is no way to read a Tailwind class from
-   * here, and the alternative was a third custom property for eight pixels.
+   * Deleted rather than corrected, which is this file's own rule: a token nobody
+   * reads is a number the next person keeps in step with a layout for no reason.
+   * The sum is in git with its workings.
    */
-  --profile-foot: calc(var(--text-micro) * 1.3 + 1rem + var(--collections-row));
+
 
   /**
    * The mark's inked height, the depth of its descender, and the dead space
