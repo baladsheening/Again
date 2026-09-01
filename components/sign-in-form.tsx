@@ -272,11 +272,30 @@ function Switch({ onClick, children }: { onClick: () => void; children: string }
     // full-width box would be a wider thumb target, and it would also be the
     // thing `control-lift` scales: 8% of the whole column pushes the right edge
     // past it, and this app has never had a horizontal scrollbar. The word is
-    // the control, so the word plus a 44px height is the target.
+    // the control, so the word plus its height is the target.
+    //
+    // ⚠⚠ **TWO FLOORS, BECAUSE THERE ARE TWO POINTERS — 1 September.** Directed
+    // for the desk: *make the switch stack as short as possible without
+    // impacting the usability and the hover lift.* A 44px box is a THUMB's
+    // floor; a mouse's is 24 (WCAG 2.5.8), so on a fine pointer the stack keeps
+    // every guarantee at **24px a row instead of 44** — 20px back per switch,
+    // 60 across three, on the one surface that was told to get shorter.
+    //
+    // ⚠ **`--click-floor` is not a smaller `--tap-floor`; it is a different
+    // measurement of a different input device**, which is why it is its own
+    // token and why neither scales with the root.
+    //
+    // ⚠⚠ **AND THE 4px GAP IS WHAT PROTECTS THE HOVER LIFT — do not close it.**
+    // `control-lift` scales the box 8% about its vertical centre, so a 24px row
+    // grows 0.96px each way. Boxes that touched would overlap on hover, and a
+    // transform DOES move hit-testing: the grown row would sit under the cursor
+    // where its neighbour was, and crossing the boundary would flicker between
+    // the two. 4px is comfortably more than the 0.96 it has to clear, and it is
+    // the reason "as short as possible" stops here rather than at zero.
     <button
       type="button"
       onClick={onClick}
-      className="zine-label hover:text-text control-lift flex min-h-[var(--tap-floor)] items-center text-start transition-colors"
+      className="zine-label hover:text-text control-lift flex min-h-[var(--tap-floor)] items-center text-start transition-colors pointer-fine:my-0.5 pointer-fine:min-h-[var(--click-floor)]"
     >
       {children}
     </button>
@@ -305,10 +324,18 @@ function Field({
   const [revealed, setRevealed] = useState(false)
 
   return (
-    // gap-1 holds the hint under the input. The field is full width at every
-    // size; the `min-w-0 flex-1` pair that used to be here was for sharing a row
-    // with the other fields, and there is no row now.
-    <div className="flex flex-col gap-1">
+    // ⚠ **`gap-1` IS GONE FROM THE STACK AND EACH JOINT NOW STATES ITS OWN — 1
+    // September.** One gap was serving two joints that want different things:
+    // label-to-field, which the direction asked to close to almost nothing, and
+    // input-to-hint, which is a sentence under a control and wants normal air.
+    // With both on one declaration the label's spacing could not be touched
+    // without moving the hint, and the label's `mb-1` was quietly adding to it —
+    // 4 + 4 = 8px where the markup read like 4.
+    //
+    // The field is full width at every size; the `min-w-0 flex-1` pair that used
+    // to be here was for sharing a row with the other fields, and there is no
+    // row now.
+    <div className="flex flex-col">
       {/*
         ⚠ **The name came OUT of the field and became a real `<label>` — 31
         August, with the zine treatment.** It was a `placeholder` carrying an
@@ -320,7 +347,24 @@ function Field({
         it is deleted rather than kept beside it: two names on one field is one
         of them going stale.
       */}
-      <label htmlFor={id} className="zine-label text-muted mb-1 block">
+      {/*
+        ⚠ **The margin is DERIVED, and it is the gap under the INK rather than
+        under the box — 1 September.** Directed: the label as close to the top of
+        its field as possible, keeping a tiny space beneath any descender. It was
+        `mb-1` on top of the stack's `gap-1`, which put **8.6px between the `p` of
+        *password* and the top of the field**; it is `--label-ink-gap` now, which
+        is 2px, because the margin subtracts the slack the line box already holds
+        under the descender. See the two tokens in globals.css.
+
+        The subtraction is what makes this hold on both surfaces without a
+        second number: both terms are `em` of the label's own type, so the desk
+        gets the same optical gap at 4/3 and nothing here knows about a
+        breakpoint.
+      */}
+      <label
+        htmlFor={id}
+        className="zine-label text-muted mb-[calc(var(--label-ink-gap)-var(--label-ink-foot))] block"
+      >
         {label}
       </label>
       <div className="relative">
@@ -368,7 +412,10 @@ function Field({
           </button>
         )}
       </div>
-      {hint && <p className="text-muted text-xs">{hint}</p>}
+      {/* ⚠ Its own `mt-1`, which is the `gap-1` the stack used to give it. The
+          gap left so the label could be closed up; this joint did not change and
+          says so itself now. */}
+      {hint && <p className="text-muted mt-1 text-xs">{hint}</p>}
     </div>
   )
 }

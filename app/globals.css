@@ -1721,6 +1721,65 @@
   --control-hover-scale: 1.08;
 
   /**
+   * ─────────────────────────────────────────────────────────────────────────
+   *  THE FIELD LABEL'S FOOT — IBM Plex Mono in `zine-label`, measured — 1 Sep
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * Directed: *`email` and `password` as close to the top of their field as
+   * possible, keeping just enough of a gap that a descender has a tiny bit of
+   * space.* The word that makes this a measurement rather than a number is
+   * **descender** — the eye is looking at the ink, and the box is not the ink.
+   *
+   * ⚠ **`--label-ink-foot` is the slack the LINE BOX holds under the descender's
+   * ink**, as a ratio of the label's font size: half-leading plus the face's own
+   * descent below where `p` and `q` actually stop. Measured by
+   * `node_modules/.probe/labelgap.mjs`, which scans pixels at 10x — at 11px a
+   * canvas bounding box rounds to a 9% error on a descender.
+   *
+   * **0.055 — 0.6px at the handset's 11px and 0.83px at the desk's 14.67px.**
+   * Plex Mono at `zine-label`'s 1.3 line-height sits tight in its box, so this is
+   * small; it is here anyway, because the day `--font-mono` changes it will not
+   * be, and a gap measured to a box is the bug this whole token exists to avoid.
+   *
+   * ⚠ **It is the MONO's, and the interface fence a few blocks up is the SANS's.
+   * Do not reach for `--face-ink-rise` here** — that is Schibsted Grotesk's, and
+   * it also excludes the half-leading this one includes. Two faces, two sets,
+   * which is the rule the wordmark's fence states and this is the third face to
+   * obey it.
+   */
+  --label-ink-foot: 0.055em;
+
+  /**
+   * **The tiny bit of space itself**, and the only number here chosen by eye
+   * rather than measured. `em` so it follows the label's type and therefore the
+   * desk's 4/3 for free: **2px on a handset, 2.6px on the desk.**
+   *
+   * ⚠ **The gap the markup used to declare was 8px and the gap the eye saw was
+   * 8.6px** — `flex-col gap-1` on the field and `mb-1` on the label, both
+   * applying to the same joint. That is what this replaces.
+   *
+   * **This is the line to move if the label reads too tight or too loose.** The
+   * one below it is a measurement and is not.
+   */
+  --label-ink-gap: 0.18em;
+
+  /**
+   * **The floor for a target a MOUSE has to hit — 1 September.**
+   *
+   * WCAG 2.5.8 (Target Size, Minimum) asks 24x24 CSS px for pointer inputs;
+   * `--tap-floor`'s 44 is the coarse-pointer figure. Directed, for the sign-in
+   * wall's switch stack: *as short as possible without impacting the usability
+   * and the hover lift.* 24 is what "without impacting the usability" resolves
+   * to when it is looked up rather than guessed.
+   *
+   * ⚠ **A `px`, and it does not scale — for `--tap-floor`'s own reason.** A
+   * pointer is hardware and does not get more accurate because a window got
+   * bigger. It is in CLAUDE.md's list of what must never follow the root scale,
+   * and this is the second member of that list rather than an exception to it.
+   */
+  --click-floor: 24px;
+
+  /**
    * The curve the chrome moves on: **over half the distance in the first third,
    * then a long settle.**
    *
