@@ -116,7 +116,32 @@ export function ProfilePanel({ handle }: { handle: string }) {
         be one: it is the same block at every width, which is the whole of what
         was wrong when it was not.
       */}
-      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex items-center gap-4 py-[max(calc(var(--bar-air)/2),var(--collections-inset))]">
+      {/*
+        ⚠⚠ **IT IS GLASS SINCE 2 SEPTEMBER, AND IT WAS THE LAST OPAQUE BAR IN
+        THE APP.** `bg-bg` painted a solid black slab across the bottom of the
+        one screen whose ground is a photograph — so the paper ran the height of
+        the window and then stopped dead at this edge, while the top bar, the
+        writing strip and the console all let it through. It takes
+        `--glass-tint` over `--glass-blur`, the two bars' own glass, so there is
+        no third treatment to keep in step. **Do not put `bg-bg` back**: it is
+        the same mistake as the body's, in a smaller box — see the note on
+        `grain-ground` in `app/layout.tsx`.
+
+        ⚠ **`justify-between`, so the two sit at opposite gutters.** They were
+        `gap-4` at the left with 270px of empty bar to the right of them, which
+        is two things huddled in a corner rather than a bar. Spread, the block
+        states the same structure the top bar does — **identity on the gutter,
+        the control in the far corner** — and the handle takes the left edge the
+        mark takes upstairs.
+
+        ⚠ **The handle is FIRST in the document now**, which reverses the order
+        of 18 August without reversing its argument. That order existed because
+        the pill held the gutter and the handle was hung off it; with the two at
+        opposite ends nothing is hung off anything, and the identity is what the
+        screen is about. **`gap-4` stays as the floor** so the two can never
+        touch on a narrow window or a long handle.
+      */}
+      <div className="gutter fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-4 bg-[var(--glass-tint)] py-[max(calc(var(--bar-air)/2),var(--collections-inset))] backdrop-blur-[var(--glass-blur)]">
         {/*
           ⚠ **The display name was here and is gone (17 August).** It was set at
           `title` size as the page's heading, with the handle beside it — and the
@@ -193,17 +218,18 @@ export function ProfilePanel({ handle }: { handle: string }) {
           People list off this block is `Screen`'s own `pb-16`, which the
           docblock above already names. Same rule that took Jost.
         */}
-        <button
-          type="button"
-          onClick={async () => {
-            await authClient.signOut()
-            router.push('/sign-in')
-            router.refresh()
-          }}
-          className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target cursor-pointer rounded-[10px] px-4 py-2 transition-colors"
-        >
-          Sign out
-        </button>
+        {/*
+          ⚠ **The handle carries `--color-text` now, where it was `--color-muted`
+          beside a muted pill.** Two muted things at opposite ends of a bar give
+          it no subject; this screen's subject is who you are, and the way out is
+          the quiet thing beside it. The pill keeps the muted ink and still comes
+          up to full on hover, so **the control is the thing that changes and the
+          identity is the thing that does not** — which is the same reading the
+          record's rows get.
+
+          Sans, not mono: a displayed handle is a name, not data (§11).
+        */}
+        <span className="text-text text-sm leading-none">@{handle}</span>
 
         {/*
           ⚠ **The handle moved BELOW *Sign out* on 18 August and BESIDE it on 1
@@ -222,7 +248,17 @@ export function ProfilePanel({ handle }: { handle: string }) {
           is how they drift apart — and the block's height is now its air plus
           the pill inside it, so there is no second number to claim.
         */}
-        <span className="text-muted text-sm leading-none">@{handle}</span>
+        <button
+          type="button"
+          onClick={async () => {
+            await authClient.signOut()
+            router.push('/sign-in')
+            router.refresh()
+          }}
+          className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target cursor-pointer rounded-[10px] px-4 py-2 transition-colors"
+        >
+          Sign out
+        </button>
       </div>
     </div>
   )

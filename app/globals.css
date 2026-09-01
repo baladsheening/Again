@@ -2249,7 +2249,7 @@
    * exactly as the subtraction it joins. `--foot-height` carries it too, or the
    * record would reserve a strip 5px taller than the one on screen.
    */
-  --sheet-drop: var(--sheet-hem);
+  --sheet-drop: calc(var(--sheet-hem) * 1.5);
 
   /**
    * ⚠⚠ **`--sheet-clearance` was here for one evening and is DELETED — it was a
