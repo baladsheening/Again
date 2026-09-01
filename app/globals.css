@@ -5783,12 +5783,51 @@
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
       whose falloff still has alpha where the box ends draws a straight line
-      across the screen — the one thing a diffuse light must never have. The mask
-      takes the top eighth to nothing, so whatever the lobes do up there the edge
-      is a fade. It is a fraction of the box, so it scales with everything else.
+      across the screen — the one thing a diffuse light must never have.
+
+      ⚠⚠ **TWO RADIAL LAYERS, BECAUSE A LINEAR RAMP REACHES FULL OPACITY AT ONE
+      `y` AND THAT IS ITSELF A LINE.** It was `transparent → #000` over the top
+      13%, and on a notched handset that put full opacity at 61px — **within a
+      pixel or two of the top of the letters** — so the light appeared to stop at
+      the height of the mark. Reported twice, in those words. **A mask edge that
+      is a constant `y` reads as a cap wherever it lands**; moving it up or down
+      only moves the cap, which is what the first two attempts did.
+
+      ⚠ **So the boundary varies with x instead.** Two ellipses centred low in the
+      box, unioned by `mask-composite`'s default `add`, reaching different
+      heights: the light bleeds up further under the middle of the mark than
+      under its ends, and the top of it is a lumpy curve with no straight
+      section anywhere.
+
+      ⚠ **The centres are BELOW the box, and they have to be.** The mask must be
+      opaque through the whole bottom of the box — that is the spill under the
+      bar — and zero within about 15px of the top. An ellipse centred *inside*
+      the box cannot do both: sized to fade that steeply at the top it also fades
+      out at the bottom, which is what the first attempt did (the light behind
+      the mark fell 14.4 sRGB to 7.5). Centred at 122% and 126% with radii of
+      120% and 118%, the rings are wide and near-flat where they cross the top
+      and the whole lower half sits inside the opaque stop.
+
+      ⚠ **Neither layer reaches the box's top, so the cut is never exposed.**
+      Their transparent stops land at 4.4% and 14% of the box — 5px and 15px
+      below the status bar on a notched handset. **Check that when changing a
+      stop**: a layer whose falloff survives to 0% puts the straight line back,
+      and it will be at the status bar rather than at the letters.
+
+      ⚠ **Measured, column by column, in the columns the letters do not occupy**
+      — the topmost lit row runs 68.5, 64.5, 61.5 to the left of the mark and
+      56.5, 58, 61, 64.5, 70.5, 78.5, 83.5, 95 to its right. **The light clears
+      the top of the letters at 59.7 and there is no equal pair anywhere in it.**
+      `node_modules/.probe/glowtop.mjs`, which reads the boundary off a
+      screenshot; the threshold has to sit under the mark's own ink or it
+      measures the letters and reports a flat cap that is not there.
     */
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 13%);
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 13%);
+    -webkit-mask-image:
+      radial-gradient(80% 120% at 36% 122%, #000 88%, transparent 98%),
+      radial-gradient(58% 118% at 70% 126%, #000 84%, transparent 95%);
+    mask-image:
+      radial-gradient(80% 120% at 36% 122%, #000 88%, transparent 98%),
+      radial-gradient(58% 118% at 70% 126%, #000 84%, transparent 95%);
   }
 }
 
