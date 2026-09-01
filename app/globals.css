@@ -2678,11 +2678,11 @@
     var(--bar-air) + var(--bar-row) + var(--mark-glow-bleed)
   );
   --mark-glow-drop: calc(var(--mark-column) * 0.7);
-  --mark-glow-a: color-mix(in srgb, var(--color-text) 6%, transparent);
-  --mark-glow-b: color-mix(in srgb, var(--color-text) 4%, transparent);
-  --mark-glow-c: color-mix(in srgb, var(--color-text) 2.2%, transparent);
-  --mark-glow-d: color-mix(in srgb, var(--color-text) 3.6%, transparent);
-  --mark-glow-e: color-mix(in srgb, var(--color-text) 5%, transparent);
+  --mark-glow-a: color-mix(in srgb, var(--color-text) 6.5%, transparent);
+  --mark-glow-b: color-mix(in srgb, var(--color-text) 4.2%, transparent);
+  --mark-glow-c: color-mix(in srgb, var(--color-text) 3%, transparent);
+  --mark-glow-d: color-mix(in srgb, var(--color-text) 2.4%, transparent);
+  --mark-glow-e: color-mix(in srgb, var(--color-text) 3.8%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5776,11 +5776,25 @@
     width: var(--mark-glow-width);
     height: calc(var(--mark-glow-lift) + var(--mark-glow-drop));
     /*
-      Five ellipses, none concentric with the box and no two the same shape: the
-      core behind the letters and a little left of the box's middle, a taller one
-      leaning right, a wide flat one spreading across the bar's edge, a small one
-      low and left to keep the bottom outline from closing into an arc, and the
-      fifth up and to the left.
+      ⚠⚠ **REMIXED — 2 September, directed, and this is arrangement B of four
+      that were rendered on the real page.** The others were the arrangement this
+      replaces, one low and broad hugging the bar's edge, and one with twin cores
+      and a faint bridge between them; `node_modules/.probe/glowremix.mjs` draws
+      all four into a single image and is the way to ask this question again
+      without a round of guessing.
+
+      **It is a drift**: the core high and left of the mark, a second just under
+      the letters' middle, a long flat one sweeping down and right across the
+      bar's edge, a small one out at the right, and a wide faint one running off
+      the left of the screen. The tail sweeps out instead of pooling under the
+      mark, which is what separates it from the arrangement before.
+
+      ⚠ **Every lobe now closes at `transparent 73%`.** The old set had five
+      different stops, which was one more axis than the shape needs — the
+      irregularity is carried by the positions and the aspect ratios, and it
+      survives them being read at one falloff. **This is what was rendered and
+      judged**, so it is what is written here: a set that was tuned after being
+      looked at is not the set that was looked at.
 
       ⚠ **The fifth was added because the first four all sat right of and below
       the mark's ink centre — 1 September, reported as *right and down
@@ -5820,31 +5834,11 @@
       mask, it did not add mass.
     */
     background:
-      radial-gradient(
-        54% 38.5% at 40% 32.2%,
-        var(--mark-glow-a),
-        transparent 71%
-      ),
-      radial-gradient(
-        32% 43% at 57% 28.6%,
-        var(--mark-glow-b),
-        transparent 74%
-      ),
-      radial-gradient(
-        66% 29.3% at 48% 48.7%,
-        var(--mark-glow-c),
-        transparent 78%
-      ),
-      radial-gradient(
-        24% 23.8% at 29% 51.5%,
-        var(--mark-glow-d),
-        transparent 69%
-      ),
-      radial-gradient(
-        42% 31.1% at 21% 24.9%,
-        var(--mark-glow-e),
-        transparent 73%
-      );
+      radial-gradient(46% 34% at 26% 26%, var(--mark-glow-a), transparent 73%),
+      radial-gradient(30% 40% at 44% 33%, var(--mark-glow-b), transparent 73%),
+      radial-gradient(62% 26% at 62% 46%, var(--mark-glow-c), transparent 73%),
+      radial-gradient(22% 30% at 78% 38%, var(--mark-glow-d), transparent 73%),
+      radial-gradient(52% 24% at 14% 44%, var(--mark-glow-e), transparent 73%);
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
       whose falloff still has alpha where the box ends draws a straight line
