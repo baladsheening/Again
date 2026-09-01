@@ -625,12 +625,18 @@
   --animate-band: band-swap 330ms ease-out;
 
   /*
-    The interface and body face. **Fira Sans since 21 August**, replacing IBM
-    Plex Sans — a deviation from §11, taken deliberately and written up in
-    app/layout.tsx and docs/decisions.md. Humanist where the mark is geometric,
-    which is the contrast the pairing was missing.
+    The interface and body face. **Schibsted Grotesk since 1 September**,
+    replacing Fira Sans, which replaced IBM Plex Sans — still the deviation from
+    §11, written up in app/layout.tsx and docs/decisions.md.
+
+    ⚠ **It was swapped for its VERTICAL SET, not its shape.** Directed: readable,
+    distinctive, and *lets the lines sit closer together than Fira Sans does*.
+    Fira's `--face-em` is 1.2 — 21.6px of ascent and descent at the record's 18px,
+    inside a 28px line box. Every number in the fence below is re-measured, and
+    what the change buys is stated there. **The fence is what changed; the face
+    is only why.**
   */
-  --font-sans: var(--font-fira-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body-sans), ui-sans-serif, system-ui, sans-serif;
   /* timestamps, and the handle field where l/1/I must be told apart (§10) */
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   /*
@@ -1272,33 +1278,49 @@
 
   /*
     ───────────────────────────────────────────────────────────────────────────
-     THE INTERFACE FACE'S FENCE — Fira Sans 400, measured — 30 August
+     THE INTERFACE FACE'S FENCE — Schibsted Grotesk 400, measured — 1 September
     ───────────────────────────────────────────────────────────────────────────
 
     **Where the CHARACTERS sit inside a line box, which is not where the line box
     sits.** A line box is `--leading-line` tall and the ink in it is not centred:
-    at 18/28 there are **7.6px above the capitals and 4.1px below the
-    descenders**, so a row with equal padding puts its text 3.5px low. That was
+    at 18/28 there are **7.8px above the capitals and 3.8px below the
+    descenders**, so a row with equal padding puts its text 2px low. That was
     reported, in those terms — *make the gap between the top of the characters
     and the top of the row the same size as the bottom padding*.
 
     ⚠ **Three ratios, measured, not reasoned.** `node_modules/.probe/inkfence.mjs`
     renders the face at 10× and **scans the pixels**, because canvas rounds
     `actualBoundingBox*` to whole pixels and at 18px that is a 4% error on a cap
-    height. Fira Sans 400: ascent 16.8, descent 4.8, cap 12.4, descender ink 3.9.
+    height. Schibsted Grotesk 400: ascent 17.6, descent 4.6, cap 12.7, descender
+    ink 3.7. Fira Sans 400 read 16.8 / 4.8 / 12.4 / 3.9.
+
+    ⚠⚠ **THE SWAP DID NOT BUY TIGHTER LEADING, AND THAT IS THE MEASUREMENT
+    TALKING.** The face was changed to let the record's lines sit closer
+    together, and the numbers say it does not: Schibsted's declared box is
+    **larger** than Fira's — 1.2333em against 1.2, 22.2px against 21.6 at 18px —
+    and what actually collides is the ink, where the two are a wash. Cap plus
+    descender ink is **16.4px against Fira's 16.3**, so at 28px of leading the
+    clear air between one line's descenders and the next line's capitals is 11.6
+    against 11.7. **A tenth of a pixel, in the wrong direction.**
+
+    ⚠ **So the room to tighten was never in the face.** It is in `--leading-line`
+    and `--line-hem`, which are 28px and 8px a side by choice — 16 of the 44px
+    between two lines is padding, and the 44 is `--tap-floor`. Both are one-token
+    changes and neither needs a face to permit it. **Do not swap the interface
+    face again in the belief that it will close a gap; measure the ink first.**
 
     ⚠ **They are the interface face's, and they are a separate fence from the
-    wordmark's seven.** Those are Jost's. **Do not scale one face's set into
-    another's** — the rule the display fence states, applied to a second face.
-    Change `--font-sans` and these are wrong until the probe is re-run.
+    wordmark's nine.** Those are Instrument Serif's. **Do not scale one face's set
+    into another's** — the rule the display fence states, applied to a second
+    face. Change `--font-sans` and these are wrong until the probe is re-run.
 
     ⚠ **The engine rounds a face's ascent and descent to whole pixels per size**,
     so a value derived here can sit half a pixel off what the engine lays out,
-    and iOS may round differently again. That is inside the tolerance of a 3.5px
+    and iOS may round differently again. That is inside the tolerance of a 2px
     optical correction; it would not be inside the tolerance of a hairline.
   */
-  --face-em: 1.2;
-  --face-cap-drop: 0.24444;
+  --face-em: 1.23333;
+  --face-cap-drop: 0.27222;
   --face-ink-rise: 0.05;
 
   /*
@@ -1336,11 +1358,23 @@
    * size, which is why the drawn caret and the real one were never the same
    * object and the first keystroke stepped 26px down to 22px.
    *
-   * Fira Sans at `--text-line` measures ascent 17 + descent 5 = 22px, read off
-   * the live face with `TextMetrics` by `node_modules/.probe/caretsize.mjs` —
-   * the same instruction the wordmark's numbers carry: **measure the face, never
-   * scale the previous set.** 22/18 is the 11/9 below. Change the interface face
-   * and this is wrong until it is measured again.
+   * Schibsted Grotesk at `--text-line` measures ascent 18 + descent 5 = **23px**,
+   * read off the live face with `TextMetrics` — the same instruction the
+   * wordmark's numbers carry: **measure the face, never scale the previous set.**
+   * 23/18 is the fraction below; Fira Sans read 22px and 11/9. Change the
+   * interface face and this is wrong until it is measured again.
+   *
+   * ⚠ **Measured by `node_modules/.probe/caretsize-local.mjs`, not by
+   * `caretsize.mjs`, which drives PRODUCTION** — that one went on reporting Fira
+   * Sans for a face that had already been swapped here, which is a probe
+   * answering about a build nobody is looking at. Read the local one when the
+   * question is *what does this branch do*.
+   *
+   * ⚠ **The ratio is read at 18px because that is the size the caret is drawn
+   * at**, and the engine rounds ascent and descent per size: the same face reads
+   * 29/24 = 1.2083 on the desk against 23/18 = 1.2778 here. Neither is more
+   * correct; the handset's is the one the token is derived from, as it was under
+   * Fira.
    *
    * ⚠ **It cannot be checked against a screenshot, and that is not a gap in the
    * probe.** A native caret is composited outside the captured surface — headed
@@ -1349,7 +1383,7 @@
    * by eye or by pixel on any one engine; deriving both from the same face
    * metric is the only way they agree on four surfaces at once.
    */
-  --caret-height: calc(var(--text-line) * 11 / 9);
+  --caret-height: calc(var(--text-line) * 23 / 18);
 
   /**
    * The convergence mark. **Its own width, because it is not a caret.**

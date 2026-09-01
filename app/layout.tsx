@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Bebas_Neue, Fira_Sans, IBM_Plex_Mono, Instrument_Serif } from 'next/font/google'
+import { Bebas_Neue, IBM_Plex_Mono, Instrument_Serif, Schibsted_Grotesk } from 'next/font/google'
 
 import './globals.css'
 
@@ -58,29 +58,39 @@ const bebasNeue = Bebas_Neue({
 })
 
 /**
- * The interface and body face — **Fira Sans since 21 August, and a deviation
- * from §11, which names IBM Plex Sans.**
+ * The interface and body face — **Schibsted Grotesk since 1 September**, and
+ * still a deviation from §11, which names IBM Plex Sans.
  *
- * Directed: the menus and the collection rows should go with Jost, and be
- * readable without getting boring or overwhelming. Plex Sans is neither of the
- * last two, but it is *engineered* in the same rational way Jost is, and two
- * rational faces beside each other read as one slightly inconsistent voice
- * rather than as a pairing.
+ * ⚠ **It replaces Fira Sans, which held this since 21 August, and the reason is
+ * LEADING rather than taste.** Directed: a face that is readable and distinctive
+ * and *lets the lines sit closer together than Fira Sans does*. Fira's box is
+ * 1.2em of ascent and descent at any size, which is what a line box has to hold
+ * before any leading is added; a grotesque drawn for news setting carries less,
+ * so the same 18px type can be set on less than 28px without the descenders of
+ * one line reaching the capitals of the next.
  *
- * Fira Sans is humanist where Jost is geometric, which is the contrast the
- * pairing was missing, and it was drawn for small text on screens — the one
- * thing this app asks of it, in the rail's 12px uppercase labels and in a list
- * of film titles. See docs/decisions.md.
+ * ⚠ **The face is not the whole of that gap and must not be sold as if it were.**
+ * A record row is `--line-hem` + `--leading-line` + `--line-hem` = 8 + 28 + 8,
+ * so 16 of the 44px between two lines is padding that was chosen, and the 44
+ * itself is `--tap-floor`. This change makes tightening *possible*; it does not
+ * tighten anything on its own. See `--leading-line`.
+ *
+ * Schibsted Grotesk is a Norwegian newspaper commission — drawn for small sizes,
+ * for density, and with the narrow apertures and short extenders that go with
+ * it. It is a grotesque where the mark is now a high-contrast serif, which is a
+ * sharper pairing than Fira's humanist warmth made against Jost.
  *
  * ⚠ **It breaks the Plex superfamily, and the cost lands on the mono.** Plex Sans
  * and Plex Mono share skeletons, so a return count sat inside a sentence
  * invisibly. Plex Mono stays — §11 names it and nothing asked for it to move —
- * but it is now a *contrast* against the text rather than a sibling of it. If
- * that ever reads as a mismatch the answer is Fira Mono, which is Fira Sans's
- * actual sibling, and it is one line here plus `--font-mono`.
+ * but it is now a *contrast* against the text rather than a sibling of it. That
+ * argument survives the change of face unaltered; what does not survive is its
+ * escape hatch. **Fira Mono is no longer the answer**, because Fira Sans is no
+ * longer the body. Schibsted has no mono, so if the pairing ever reads as a
+ * mismatch it is a fresh choice rather than a sibling to reach for.
  */
-const firaSans = Fira_Sans({
-  variable: '--font-fira-sans',
+const bodySans = Schibsted_Grotesk({
+  variable: '--font-body-sans',
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
@@ -88,13 +98,24 @@ const firaSans = Fira_Sans({
 
 /**
  * **The same face, slanted — for one thing: a capture that is not in the record
- * yet.** See `unsent` in globals.css, which is the only rule that names it.
+ * yet.**
+ *
+ * ⚠⚠ **`unsent` NO LONGER EXISTS, so nothing in the app names this — found 1
+ * September, while swapping the face.** That utility was deleted with the
+ * writing band, and this docblock went on citing it as "the only rule that names
+ * it" for a week. **It is kept anyway, and the reason is not inertia:** the
+ * guarantee below is that a slant on this page is drawn and never synthesised,
+ * and the day a draft state comes back the alternative is a sheared roman that
+ * nobody notices is wrong. `preload: false` means it costs a declaration and no
+ * bytes. **If it is still unused when something else forces a look at this file,
+ * delete it** — the rule that took Jost applies here too, only without the
+ * preload that made Jost urgent.
  *
  * ⚠ **A real italic, because the alternative is a fake one.** `font-style:
  * italic` against a family loaded upright-only does not fail — the browser
  * *synthesises* a slant by shearing the roman, which on a page whose §11 rule is
  * *type is the entire design* is the one outcome worth spending a request to
- * avoid. Fira Sans has a drawn italic; this is it.
+ * avoid. Schibsted Grotesk has a drawn italic, as Fira Sans did; this is it.
  *
  * ⚠ **400 alone.** The body is the only thing that can be unsent, and it is the
  * only weight on the page that this can reach. A `style` array on the loader
@@ -106,8 +127,8 @@ const firaSans = Fira_Sans({
  * never on a page that has none. What would fetch it regardless is next/font's
  * default preload hint, so that is the thing turned off.
  */
-const firaSansItalic = Fira_Sans({
-  variable: '--font-fira-italic',
+const bodySansItalic = Schibsted_Grotesk({
+  variable: '--font-body-italic',
   subsets: ['latin'],
   weight: '400',
   style: 'italic',
@@ -235,7 +256,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${firaSans.variable} ${firaSansItalic.variable} ${plexMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
+      className={`${bodySans.variable} ${bodySansItalic.variable} ${plexMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>
