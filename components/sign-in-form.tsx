@@ -222,7 +222,7 @@ export function SignInForm() {
         the rhythm; 44px of box against 4px of gap would be 48px of pitch and
         the extra 4 says nothing.
       */}
-      <div className="text-muted mt-6 flex flex-col items-start">
+      <div className="text-muted mt-6 flex flex-col items-start pointer-coarse:gap-1">
         {mode !== 'sign-in' && (
           <Switch onClick={() => setMode('sign-in')}>sign in with a password</Switch>
         )}
@@ -274,28 +274,46 @@ function Switch({ onClick, children }: { onClick: () => void; children: string }
     // past it, and this app has never had a horizontal scrollbar. The word is
     // the control, so the word plus its height is the target.
     //
-    // ⚠⚠ **TWO FLOORS, BECAUSE THERE ARE TWO POINTERS — 1 September.** Directed
-    // for the desk: *make the switch stack as short as possible without
-    // impacting the usability and the hover lift.* A 44px box is a THUMB's
-    // floor; a mouse's is 24 (WCAG 2.5.8), so on a fine pointer the stack keeps
-    // every guarantee at **24px a row instead of 44** — 20px back per switch,
-    // 60 across three, on the one surface that was told to get shorter.
+    // ⚠⚠ **THE DESK HAS A FLOOR HERE AND THE HANDSET DELIBERATELY DOES NOT — 1
+    // September, directed, and the two halves were decided separately.**
     //
-    // ⚠ **`--click-floor` is not a smaller `--tap-floor`; it is a different
-    // measurement of a different input device**, which is why it is its own
-    // token and why neither scales with the root.
+    // **Desk:** *as short as possible without impacting the usability and the
+    // hover lift.* A mouse's target floor is 24px (WCAG 2.5.8) where a thumb's
+    // is 44, so `--click-floor` is what a fine pointer gets. ⚠ **It is not a
+    // smaller `--tap-floor`; it is a different measurement of a different input
+    // device**, which is why it is its own token and why neither scales.
     //
-    // ⚠⚠ **AND THE 4px GAP IS WHAT PROTECTS THE HOVER LIFT — do not close it.**
-    // `control-lift` scales the box 8% about its vertical centre, so a 24px row
-    // grows 0.96px each way. Boxes that touched would overlap on hover, and a
-    // transform DOES move hit-testing: the grown row would sit under the cursor
-    // where its neighbour was, and crossing the boundary would flicker between
-    // the two. 4px is comfortably more than the 0.96 it has to clear, and it is
-    // the reason "as short as possible" stops here rather than at zero.
+    // ⚠ **The 4px between desk rows protects the hover lift and must not
+    // close.** `control-lift` scales the box 8% about its vertical centre, so a
+    // 24px row grows 0.96px each way — and a transform DOES move hit-testing, so
+    // touching boxes would overlap on hover and flicker as the cursor crossed
+    // between them. That is where "as short as possible" stops.
+    //
+    // ⚠⚠ **HANDSET: NO MINIMUM AT ALL, AND THE 44px BOX I PUT HERE IS REVERTED —
+    // directed.** For a few hours these were `min-h-[var(--tap-floor)]`, which
+    // took the stack from 32.6px to 88 on a phone. **That height was never
+    // asked for**; it arrived as my fix for the overlap below and was bundled
+    // into a commit about something else. The stack is back to what it was.
+    //
+    // ⚠ **What does NOT come back is the overlap, and that is the whole point of
+    // reverting this way.** The bug was never the tight spacing — it was
+    // `tap-target` painting a 44px pseudo-element on a 14.3px box, so three of
+    // them on an 18.3px pitch overlapped by 26px and the later one in DOM order
+    // took the taps: `elementFromPoint` at the centre of *create an account*
+    // returned *reset password*. **With no pseudo-element the hit area is the
+    // box, and boxes in a column cannot overlap.** Same height as before, and
+    // every control answers its own taps.
+    //
+    // ⚠ **The price, stated: a handset target here is 14.3px, well under
+    // `--tap-floor`.** That is a deliberate choice made with the number in front
+    // of it — 44px targets need 44px of pitch and there is no construction that
+    // avoids it, because unlike the foot's chips these have a neighbour above
+    // and below to hang into. **If these ever read as hard to hit, the fix is
+    // `pointer-coarse:min-h-*` here, and the cost is the stack's height.**
     <button
       type="button"
       onClick={onClick}
-      className="zine-label hover:text-text control-lift flex min-h-[var(--tap-floor)] items-center text-start transition-colors pointer-fine:my-0.5 pointer-fine:min-h-[var(--click-floor)]"
+      className="zine-label hover:text-text control-lift flex items-center text-start transition-colors pointer-fine:my-0.5 pointer-fine:min-h-[var(--click-floor)]"
     >
       {children}
     </button>
