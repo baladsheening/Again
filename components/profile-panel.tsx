@@ -93,14 +93,14 @@ export function ProfilePanel({ handle }: { handle: string }) {
         because the clearance was all on one side. `--collections-row` no longer
         governs this block, and nothing else reads it.
 
-        ⚠ **`max((--bar-lead + --bar-tail) / 2, --collections-inset)`, spent as
-        one `py`.** Two terms, both real:
+        ⚠ **`max(--bar-air / 2, --collections-inset)`, spent as one `py`.** Two
+        terms, both real:
 
-        — **The air is the top bar's own, split evenly.** That bar spends
-          `--bar-lead` above its row and `--bar-tail` below, asymmetric because
-          it hangs under a notch; this one has no notch to clear and no mark to
-          sit beneath, so it spends the same total centred. 13px against the
-          bar's 16/10.
+        — **The air is the top bar's own, split evenly.** ⚠ **It was
+          `(--bar-lead + --bar-tail) / 2` until 1 September**, when that pair
+          collapsed into one `--bar-air` spent evenly at both ends of the page —
+          this block had written the mean by hand, and the mean is now the token.
+          13px, and the bar's own row is on the same centre line since.
         — **Floored by the home-indicator clearance**, so the bottom half can
           never come in under it. On a device with an inset the floor wins and
           the top half grows to match, which is what keeps the contents centred
@@ -116,7 +116,7 @@ export function ProfilePanel({ handle }: { handle: string }) {
         be one: it is the same block at every width, which is the whole of what
         was wrong when it was not.
       */}
-      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex items-center gap-4 py-[max(calc((var(--bar-lead)+var(--bar-tail))/2),var(--collections-inset))]">
+      <div className="bg-bg gutter fixed inset-x-0 bottom-0 z-20 flex items-center gap-4 py-[max(calc(var(--bar-air)/2),var(--collections-inset))]">
         {/*
           ⚠ **The display name was here and is gone (17 August).** It was set at
           `title` size as the page's heading, with the handle beside it — and the

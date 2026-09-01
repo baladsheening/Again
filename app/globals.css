@@ -1598,8 +1598,34 @@
    * `--foot-height`.
    */
   --bar-row: var(--glyph-bar);
-  --bar-lead: 1rem;
-  --bar-tail: 0.625rem;
+  /**
+   * **The bar's air — ONE number, spent evenly above and below the row.**
+   *
+   * ⚠ **`--bar-lead` and `--bar-tail` are collapsed into this — 1 September,
+   * directed, *move the logo and profile icon higher up in the top bar*.** They
+   * were 16px above and 10px below, so the row sat 3px under the centre line of
+   * its own air. The total is untouched — 26px, so `--bar-height` is the number
+   * it was and the record's first line does not move by a pixel. Only the side
+   * it is spent on changed.
+   *
+   * ⚠ **This is `--sheet-lead`/`--sheet-foot`'s collapse of 29 August, applied
+   * to the other bar**, and the argument is the same one: two names that can only
+   * ever hold one number are a drift waiting to happen, and **centred is the only
+   * place a split can stop** — any other is a number tuned until one screen looks
+   * right.
+   *
+   * ⚠ **The reason recorded for the asymmetry was already spent.** It was that
+   * the bar *hangs under a notch* — but the inset is added beside this term in
+   * `--bar-height` and in the header's own `padding-top`, so the notch was
+   * cleared by `env(safe-area-inset-top)` and never by the lead. The lead was
+   * air below the notch, and there was no argument for it being the larger half.
+   *
+   * ⚠ **`profile-panel.tsx` had already written the mean by hand** —
+   * `(--bar-lead + --bar-tail) / 2`, because that block has no notch to clear
+   * and wanted the same total centred. It reads `--bar-air / 2` now, which is
+   * the same number with the arithmetic removed.
+   */
+  --bar-air: 1.625rem;
   /**
    * ⚠ **The bar spans the window; the foot holds the measure.** They are not the
    * same piece of furniture and the artboards draw the difference: the bar is
@@ -1615,7 +1641,7 @@
    */
   --bar-gutter: max(1.25rem, env(safe-area-inset-left));
   --bar-height: calc(
-    env(safe-area-inset-top) + var(--bar-lead) + var(--bar-row) + var(--bar-tail)
+    env(safe-area-inset-top) + var(--bar-air) + var(--bar-row)
   );
 
   /**
@@ -1701,7 +1727,10 @@
    */
   --foot-height: calc(
     max(var(--leading-line), var(--foot-row)) + var(--sheet-air) +
-      max(0px, env(safe-area-inset-bottom) - var(--sheet-air) / 2)
+      max(
+        0px,
+        env(safe-area-inset-bottom) - var(--sheet-air) / 2 - var(--sheet-drop)
+      )
   );
 
   /**
@@ -2146,6 +2175,40 @@
     reported. Symmetric, so the row is on the strip's centre line.
   */
   --sheet-air: calc(var(--sheet-hem) * 3.25);
+
+  /**
+   * **How far the glyph row comes down into the indicator's inset — one hem, and
+   * it exists on ONE surface.** Directed 1 September, *move the glyphs in the
+   * bottom bar a tad lower*, said of the installed app.
+   *
+   * ⚠⚠ **IT IS THE ONLY LEVER THERE IS, and that is worth knowing before
+   * reaching for another.** On a surface with a bottom inset the drawing sits
+   * exactly `env(safe-area-inset-bottom)` above the screen's edge **by
+   * construction**: the clearance is the inset less the row's own foot, so the
+   * foot cancels and re-splitting `--sheet-air` moves the glyph **not at all**.
+   * Measured before this was written. What is left is to spend less of the inset
+   * below the row, which is what this subtracts.
+   *
+   * ⚠ **It reverses part of 30 August, which spent the whole inset below**, and
+   * the reason that was right is unchanged: a glyph under the home indicator is
+   * a control that cannot be pressed. **This does not put one there.** The
+   * drawing lands 29px above the edge where it was 34, and `sheet-glyph` hangs
+   * its whole 44px overhang upward, so the tap target's bottom edge is the row's
+   * — 20.9px above the screen, against a pill that occupies the bottom ~13.
+   * **If a mis-tap is ever reported at the bottom edge, this is the first
+   * suspect and one hem is the thing to give back.**
+   *
+   * ⚠ **A hem, not a typed number.** It is the unit the strip is already built
+   * out of, so it follows the type and the desk's root scale rather than being a
+   * pixel picked on one handset.
+   *
+   * ⚠ **Nothing without an inset can see it.** The clearance is wrapped in
+   * `max(0px, …)`, so on glass, on Android and on the desk the term was already
+   * zero and stays zero — **no branch, no device check, no display-mode query**,
+   * exactly as the subtraction it joins. `--foot-height` carries it too, or the
+   * record would reserve a strip 5px taller than the one on screen.
+   */
+  --sheet-drop: var(--sheet-hem);
 
   /**
    * ⚠⚠ **`--sheet-clearance` was here for one evening and is DELETED — it was a
@@ -4396,6 +4459,13 @@
     reads badly, the thing to move is this term, not `--sheet-air`, which is
     what both other surfaces are made of.
 
+    ⚠ **It did read badly, and `--sheet-drop` is that term being moved — 1
+    September.** *A tad lower*, said of the installed app. One hem comes off this
+    subtraction, so the row drops 5px and the strip goes 68 → 63; the paragraph
+    above stands unamended because it named this line as the place to answer it.
+    **The lever is here and nowhere else** — see `--sheet-drop` for why
+    re-splitting the row's air cannot move a glyph on a surface with an inset.
+
     ⚠⚠ **STILL WRITTEN HERE AND NOT IN A TOKEN.** See below.
   */
   /*
@@ -4415,7 +4485,7 @@
       0px,
       calc(
         env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px) -
-          var(--sheet-air) / 2
+          var(--sheet-air) / 2 - var(--sheet-drop)
       )
     );
 
