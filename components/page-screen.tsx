@@ -2723,18 +2723,27 @@ export function PageScreen({
         {empty && (
           <>
             {/*
-              The paper, and it is here rather than on `<body>` for one reason:
-              **`empty` is the only state on this page that cannot scroll.** A
-              full-bleed noise layer under a moving record is the OLED-smear note
-              in `--color-bg` made worse; under a record with nothing in it, it
-              composites once and never again. It goes the instant a line lands.
+              ⚠⚠ **THE PAPER'S MOUNT IS DELETED FROM HERE AND LIVES IN
+              `app/layout.tsx` — 1 September, directed: put it on all the
+              screens.**
+
+              The note that stood here said it was mounted on `empty` rather than
+              on the body because *`empty` is the only state on this page that
+              cannot scroll*, and that a full-bleed noise layer under a moving
+              record was the OLED-smear note in `--color-bg` made worse. **That
+              condition is exactly what made the paper invisible in practice** —
+              it went the instant the first line landed, so anybody with a record
+              only ever saw it on the sign-in wall.
+
+              The scroll argument did not survive being measured either: the
+              layer is at `z-index: -1`, so its blend backdrop is `html`'s flat
+              ground and the record scrolls *in front* of it without entering the
+              blend. See `node_modules/.probe/paperscroll.mjs`.
 
               ⚠ **There is no second, `multiply` layer over the type** — see the
               `grain-ink` tombstone in globals.css. It would also have had to
-              stop short of the bar and the strip, whose brass is at ratios §11
-              measures.
+              stop short of the bar and the strip.
             */}
-            <div aria-hidden className="grain-ground" />
 
             {/*
               ⚠ **`m-auto` is the whole centring mechanism and no height is typed

@@ -5217,24 +5217,37 @@
  * ground, a high-contrast serif command, typewriter labels, lowercase
  * interface, raw text instead of icons.
  *
- * ⚠⚠ **IT IS SPENT ON TWO SCREENS AND MUST NOT REACH THE RECORD.** The sign-in
- * wall and the empty first run are *composition*: one dominant element, no
- * list, no swipe, nothing to scan. The record is the opposite — up to two
- * hundred one-line captures read with a thumb — and every rule below is wrong
- * there. Specifically:
+ * ⚠⚠ **THE TREATMENT IS STILL SPENT ON TWO SCREENS. THE PAPER IS NOT, SINCE 1
+ * SEPTEMBER — directed: put it on all of them.** The sign-in wall and the empty
+ * first run are *composition*: one dominant element, no list, no swipe, nothing
+ * to scan. The record is the opposite — up to two hundred one-line captures read
+ * with a thumb — and most of the rules below are still wrong there:
  *
  * - **The palette stays.** `--color-chrome` means a control and
  *   `--color-accent` means a line converged; a monochrome record deletes the
  *   convergence mark, and `--color-muted` is what tells a crossed-off line from
- *   a live one. Strict black-and-white works on these two only because neither
+ *   a live one. Strict black-and-white works on those two only because neither
  *   has a state to show.
- * - **Centred text stops here.** A centred column of two hundred lines has no
+ * - **Centred text stops there.** A centred column of two hundred lines has no
  *   edge for the eye to return to.
- * - **The grain never rides a scroll.** Both screens this is on are
- *   unscrollable by construction — the wall is one card, and an empty record
- *   has nothing in it — so the layer is composited once and never again. That
- *   is not a coincidence to spend casually: a full-bleed noise layer under a
- *   moving record is the OLED-smear note in `--color-bg` made worse.
+ *
+ * ⚠⚠ **AND THE THIRD RULE — *the grain never rides a scroll* — IS REPEALED, WITH
+ * THE ARGUMENT THAT KILLED IT WRITTEN DOWN.** It read: both screens this is on
+ * are unscrollable by construction, so the layer composites once and never
+ * again, and a full-bleed noise layer under a moving record is the OLED-smear
+ * note in `--color-bg` made worse. Two things were wrong with it.
+ *
+ * 1. **What the paper was protecting the record from, the record never saw.**
+ *    The layer is mounted on the empty state only, so it goes the instant the
+ *    first line lands. With a hundred captures on the handset it appeared on the
+ *    sign-in wall and nowhere else — **a ground nobody had seen in daily use**,
+ *    which is what prompted the direction.
+ * 2. **The blend does not re-composite against the scroll.** `mix-blend-mode`
+ *    blends an element with the backdrop *behind* it in its stacking context.
+ *    This layer sits at `z-index: -1` under everything, so its backdrop is
+ *    `html`'s flat `--color-bg` — which does not move. The record scrolls **in
+ *    front** of it and never enters the blend. The cost was assumed, not
+ *    measured; `node_modules/.probe/paperscroll.mjs` measures it.
  */
 
 /**
@@ -5255,9 +5268,45 @@
 @utility grain-ground {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  /**
+   * ⚠⚠ **`-1`, NOT `0` — 1 September, and it is what lets this be mounted ONCE
+   * for the whole app instead of per screen.**
+   *
+   * At `z-index: 0` a positioned element paints in the stacking context's
+   * *positioned* layer, which is **above** static block content and inline text.
+   * That is why the two screens that carried this each needed a `relative z-[1]`
+   * wrapper to climb back over it — and why mounting it globally at 0 would have
+   * put a full-bleed layer over the record's words, which have no z-index and no
+   * reason to acquire one.
+   *
+   * At `-1` it paints below every in-flow descendant, so **no screen has to opt
+   * in.** The two `relative z-[1]` wrappers are now belt and braces rather than
+   * the mechanism, and are left where they are: they cost nothing and they are
+   * what keeps `grain-ink`'s tombstone honest.
+   *
+   * ⚠ **It works only because `--color-bg` is painted on `html` and `body` paints
+   * nothing.** A negative-z child paints above its parent's background, so the
+   * ground has to be on the grandparent. **If a background is ever put on `body`,
+   * this layer disappears** — and it disappears silently, which is the failure
+   * worth naming here.
+   */
+  z-index: -1;
   pointer-events: none;
   opacity: 0.32;
+  /**
+   * ⚠ **`screen` is NOT a no-op on the desk, and the arithmetic was got wrong
+   * once before this shipped.** On a backdrop `b` with source `s` at alpha `a`,
+   * screen beats normal by exactly `a · b · (1 − s)`. On the handset's true black
+   * `b = 0`, so the two are **identical** — the blend mode does nothing at all
+   * there and never has. On the desk's `#14140f`, `b ≈ 0.078`, which at this
+   * alpha and this image's mean is about **2.3 points of extra lift**, roughly
+   * doubling what the paper shows up there.
+   *
+   * It stays, because the desk is the surface that was called *oppressive* and
+   * a ground with more tooth is the answer that was already being reached for.
+   * **If the desk ever reads too milky, this line is the first thing to try** —
+   * dropping it costs the handset nothing whatsoever.
+   */
   mix-blend-mode: screen;
 
   /**

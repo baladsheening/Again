@@ -69,17 +69,18 @@ export default async function SignInPage() {
   return (
     <>
       {/*
-        The paper. `fixed` and full-bleed, so it does not care what the column
-        above it is doing, and `aria-hidden` because it is a texture with no
-        content in it. Nothing on this screen scrolls, so it composites once.
+        ⚠ **THE PAPER'S MOUNT MOVED TO `app/layout.tsx` — 1 September, directed:
+        put it on all the screens.** This screen had one of the app's two, and
+        the other was on the record's *empty* state, which meant a person with a
+        real record never saw it. There is one mount now, for every route, and
+        deleting it from here is what stops the wall carrying two.
 
         ⚠ **There is no second, `multiply` layer over the type, and there was for
         an hour.** See the `grain-ink` tombstone in globals.css: a blend mode
         inside its own stacking context has a transparent backdrop, so it drew
         itself as a grey rectangle with the exact bounds of the block it was
-        meant to be invisible over. The tooth is this layer's job alone.
+        meant to be invisible over. The tooth is the ground layer's job alone.
       */}
-      <div aria-hidden className="grain-ground" />
 
       {/*
         ⚠ **`relative z-[1]` is what keeps the content above the grain**, which

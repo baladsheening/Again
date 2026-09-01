@@ -258,7 +258,39 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       data-scroll-behavior="smooth"
       className={`${bodySans.variable} ${bodySansItalic.variable} ${plexMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
     >
-      <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
+      {/*
+        ⚠⚠ **`bg-bg` CAME OFF THE BODY ON 1 SEPTEMBER AND MUST NOT GO BACK.** It
+        was a second, redundant coat of `--color-bg`: `html` already paints it in
+        globals.css, and an html background *is* the canvas background, so the
+        page looked identical with or without this class.
+
+        It is not harmless now. `grain-ground` below sits at `z-index: -1` so that
+        every screen gets the paper without having to opt in, and **a negative-z
+        child paints above its parent's background and below its grandparent's**.
+        With a background on the body the paper is painted over and vanishes — on
+        every screen at once, with nothing in the console to say so.
+      */}
+      <body className="text-text flex min-h-full flex-col">
+        {/*
+          **The paper, mounted once for the whole app — 1 September, directed.**
+
+          It was on two screens: the sign-in wall, and the record *while empty*.
+          The second is the one that mattered — it goes the instant a line lands,
+          so with a real record it was never on screen at all, and the ground had
+          never been seen in daily use. Here it is on every route, signed in or
+          out, and there is one mount rather than one per screen.
+
+          ⚠ **It is outside `{children}` on purpose.** Route content re-renders;
+          this must not, or a client navigation re-rasterises a full-bleed
+          photograph. Sitting in the root layout it is painted once per document.
+
+          ⚠ **`aria-hidden` because it is a texture with no content in it**, and
+          `pointer-events: none` in the utility so it can never take a tap meant
+          for the record it sits under.
+        */}
+        <div aria-hidden className="grain-ground" />
+        {children}
+      </body>
     </html>
   )
 }
