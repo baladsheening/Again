@@ -1704,6 +1704,23 @@
   --recede: 340ms;
 
   /**
+   * **How much a control grows under a cursor — 1 September.** Directed for the
+   * sign-in wall's three controls; the mechanism and its gate are on the
+   * `control-lift` utility, which is where the reasoning lives.
+   *
+   * ⚠ **8%, and it is one number for controls of two very different sizes.**
+   * +2.4px on the 30px submit and +0.9px on the 11px switches — a *proportion*
+   * rather than an absolute, which is the same rule the desk's 4/3 scale is
+   * built on. A single absolute growth would be a shove on the small control and
+   * invisible on the large one.
+   *
+   * It is a token rather than a literal in the utility because it is the one
+   * thing here anybody will want to tune by eye, and tuning it should not mean
+   * reading a paragraph about `hover: hover` first.
+   */
+  --control-hover-scale: 1.08;
+
+  /**
    * The curve the chrome moves on: **over half the distance in the first third,
    * then a long settle.**
    *
@@ -3069,6 +3086,75 @@
       min-width: var(--tap-floor);
       min-height: var(--tap-floor);
     }
+  }
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A control grows under a cursor — 1 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Directed, for the sign-in wall's three controls: *whenever a user's cursor is
+ * over them, the buttons slightly enlarge.*
+ *
+ * ⚠⚠ **GATED ON `hover: hover`, NEVER ON A WIDTH.** The direction said *for the
+ * desktop*, and a viewport width is the wrong way to say that: a touchscreen
+ * laptop is wide and has no cursor, and — the part that actually bites — **`:hover`
+ * on a touch device STICKS after a tap** on several engines, so a width gate
+ * would leave a control sitting enlarged with nothing hovering it. `hover: hover`
+ * asks the question the direction actually asked. `pointer: fine` is there with
+ * it so a hybrid answers as the device it is being used as.
+ *
+ * ⚠ **`scale`, never `font-size`.** A font-size hover reflows the column and
+ * every control below it moves; a transform is composited and touches no layout
+ * at all. It is the standalone `scale` property rather than `transform`, so it
+ * cannot collide with a transform something else puts on the same element.
+ *
+ * ⚠ **`transform-origin: left`, because every control on this wall is
+ * start-aligned.** Scaled from the centre, a word grows leftward into the gutter
+ * as much as rightward, which reads as the control *sliding* rather than
+ * growing. Pinning the left edge means the thing that moves is the far end, and
+ * the eye keeps its anchor. ⚠ **If this is ever used on a centred control, that
+ * origin is the line to change.**
+ *
+ * ⚠ **`:focus-visible` is deliberately OUTSIDE the hover gate.** A keyboard has
+ * no cursor and gets no `:hover`; a control that only answers a mouse is worse
+ * than one that answers neither. So the same affordance fires on keyboard focus
+ * on every device, including a handset with a keyboard attached.
+ *
+ * ⚠ **One scale for controls of two very different sizes, which is a choice.**
+ * The submit is 30px serif and the switches are 11px mono, so 8% is +2.4px on
+ * one and +0.9px on the other. A single *absolute* growth would have been the
+ * other option and is wrong: it would be a large gesture on the small control
+ * and an invisible one on the large. **The same proportion everywhere is the
+ * rule the desk's whole 4/3 scale is built on**, applied once more.
+ *
+ * **Reduced motion needs nothing here** — the global `prefers-reduced-motion`
+ * block cuts every `transition-duration` to 0.01ms, so the size still changes
+ * and the animation does not. That is the correct split: the state is
+ * information, the travel is decoration.
+ */
+@utility control-lift {
+  transform-origin: left center;
+  transition: scale 160ms var(--ease-recede);
+
+  &:focus-visible {
+    scale: var(--control-hover-scale);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      scale: var(--control-hover-scale);
+    }
+  }
+
+  /*
+    A disabled submit must not answer a cursor. `sign in` carries `disabled:` for
+    its opacity already; without this it would still grow while busy, which says
+    *press me* about a control that is refusing presses.
+  */
+  &:disabled {
+    scale: 1;
   }
 }
 

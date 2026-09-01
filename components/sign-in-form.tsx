@@ -144,10 +144,23 @@ export function SignInForm() {
         by a pixel** — the same fix `docs/decisions.md` names for the sign-out
         pill, applied before it could ship rather than a fortnight after.
       */}
+      {/*
+        ⚠⚠ **THE HOVER DIM IS DELETED AND THE GROWTH REPLACES IT — 1 September.**
+        It was `hover:text-muted hover:border-muted`, and it was the only
+        direction available when colour was the whole hover vocabulary: this
+        control is already full-strength ink on a full-strength rule, so the one
+        thing it could do on hover was *recede*.
+
+        **Grow and dim are contradictory signals** — one advances, one retreats —
+        and shipping both would have made the cursor say two things at once. The
+        growth is the better of the two because it is the one that means *this is
+        the control*, so the dim goes rather than being kept alongside. See
+        `control-lift`, which also states why a disabled submit does not grow.
+      */}
       <button
         type="submit"
         disabled={busy}
-        className="zine-command border-text hover:text-muted hover:border-muted tap-target mt-2 self-start border-b-[1.5px] pb-1 text-[1.875rem] normal-case transition-colors disabled:opacity-50"
+        className="zine-command border-text control-lift tap-target mt-2 self-start border-b-[1.5px] pb-1 text-[1.875rem] normal-case transition-colors disabled:opacity-50"
       >
         {busy
           ? 'one moment…'
@@ -188,7 +201,28 @@ export function SignInForm() {
         handset's column side by side, and a wrapped row of two-then-one reads as
         a mistake.
       */}
-      <div className="text-muted mt-6 flex flex-col items-start gap-1">
+      {/*
+        ⚠⚠ **`gap-1` IS GONE BECAUSE THE SWITCHES WERE OVERLAPPING EACH OTHER'S
+        HIT AREAS — 1 September, and one of them did not work.** Measured on a
+        390 handset: `zine-label` is a 14.3px line, the gap was 4px, so the
+        centres sat **18.3px apart while each wore a 44px `tap-target`**. Two
+        44px areas 18px apart overlap by 26px and the later one in DOM order
+        takes the tap — so `elementFromPoint` at the centre of *create an
+        account* returned **reset password**. Tapping one control activated the
+        other, on the pre-auth screen a new account meets first.
+
+        It is the failure `--bar-gap` was written to prevent, and it was live.
+
+        ⚠ **The fix is to remove the invisible box, not to space it out.**
+        `tap-target` exists for controls whose drawn box must stay small — a
+        glyph in a bar, where there is no room to grow into. These are three
+        words in open space: they can simply BE 44px tall. A real box cannot
+        overlap its neighbour, so the bug becomes unexpressible rather than
+        corrected for. See `Switch`. The gap goes because the boxes now carry
+        the rhythm; 44px of box against 4px of gap would be 48px of pitch and
+        the extra 4 says nothing.
+      */}
+      <div className="text-muted mt-6 flex flex-col items-start">
         {mode !== 'sign-in' && (
           <Switch onClick={() => setMode('sign-in')}>sign in with a password</Switch>
         )}
@@ -215,10 +249,34 @@ function Switch({ onClick, children }: { onClick: () => void; children: string }
     //
     // Stacked rather than wrapped in a row: at this tracking three phrases on
     // one line run past a handset's column and wrap unevenly.
+    // ⚠ **The colour hover STAYS here, where the submit's went — 1 September.**
+    // These sit at `text-muted`, so they have somewhere to brighten *to*, and
+    // brightening and growing are the same signal pointing the same way. The
+    // submit had neither: already full strength, its only colour move was to
+    // dim, which fights a growth. Two controls, two answers, and the difference
+    // is which end of the palette each one starts at.
+    //
+    // ⚠⚠ **`min-h-[--tap-floor]` REPLACES `tap-target`, and it fixed a control
+    // that did not work** — see the stack above for the measurement. The
+    // pseudo-element gave a 44px hit area on a 14px box, so three of them in a
+    // 4px-gapped stack overlapped and one switch answered for its neighbour.
+    // **A real box is the fix**: it is exactly as tall, it cannot overlap
+    // anything, and there is nothing invisible left to collide.
+    //
+    // ⚠ **`items-center` and NOT `py-*`.** Padding would need the line's height
+    // to be known here to land on 44, which is a face measurement written in a
+    // component; a minimum height with the text centred in it needs no number
+    // and follows `zine-label` wherever it goes.
+    //
+    // ⚠ **The box hugs the word — it is deliberately NOT `w-full`.** A
+    // full-width box would be a wider thumb target, and it would also be the
+    // thing `control-lift` scales: 8% of the whole column pushes the right edge
+    // past it, and this app has never had a horizontal scrollbar. The word is
+    // the control, so the word plus a 44px height is the target.
     <button
       type="button"
       onClick={onClick}
-      className="zine-label hover:text-text tap-target block text-start transition-colors"
+      className="zine-label hover:text-text control-lift flex min-h-[var(--tap-floor)] items-center text-start transition-colors"
     >
       {children}
     </button>
