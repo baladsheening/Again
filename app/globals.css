@@ -1271,10 +1271,39 @@
    * glow is ever wanted back, that is the argument to re-read first.
    */
 
-  /** One capture: 18px on 28px, 8px of padding a side to reach a 44px target. */
+  /*
+    **One capture: 18px on 24px, 5px of padding a side — a 34px row.**
+
+    ⚠⚠ **IT WAS 18/28 WITH 8px OF HEM, REACHING A 44px TARGET, UNTIL 1 SEPTEMBER.
+    Directed, off five rendered densities, and it is the tightest of them.** The
+    ask was for the lines to sit closer together; it arrived as a question about
+    the *face*, and the face turned out not to own it — see the interface fence,
+    which measures Schibsted Grotesk's ink as a wash against Fira Sans's. **Two
+    tokens own it, and these are they.**
+
+    ⚠⚠ **THE ROW IS NO LONGER `--tap-floor`, AND THAT IS THE PRICE — 34px against
+    44.** It is the one thing this change costs and it was accepted with the
+    number stated. **A row cannot buy its target back the way the strip's chips
+    do**: `sheet-glyph` hangs a 44px hit area upward over the scrim because there
+    is nothing above it but paper, and a row's neighbour is another row. So the
+    swipe and the console tap really are working with 34px, and there is no
+    construction that gives the density and the target at once.
+
+    ⚠ **What is NOT under the floor: everything a thumb aims at that is not a
+    row.** `--tap-floor` is untouched at 44px, the foot's chips still hang their
+    full 44 upward, and the bar's controls are unmoved. The record is a *reading*
+    surface whose rows happen to be tappable; the controls are controls.
+
+    ⚠ **The ink gap is what to watch, not the row.** At 24px of leading and this
+    face's 16.4px of cap-plus-descender, there are **17.6px of clear air** between
+    one line's descenders and the next line's capitals, against 27.6 before. That
+    is the number that decides whether the record reads as a list or as a block,
+    and it is the first thing to move if it reads tight on hardware — `--line-hem`
+    before `--leading-line`, because the hem is padding and the leading is type.
+  */
   --text-line: 1.125rem;
-  --leading-line: 1.75rem;
-  --line-hem: 0.5rem;
+  --leading-line: 1.5rem;
+  --line-hem: 0.3125rem;
 
   /*
     ───────────────────────────────────────────────────────────────────────────
@@ -1571,17 +1600,32 @@
    * question instead of answering it again.
    *
    * ⚠ **The strip is a row of the record, which is where all three numbers meet.**
-   * `--line-hem` + `--leading-line` + `--line-hem` = 44px, which is `--tap-floor`,
-   * which is also **exactly what the handset's foot already was** — 9 + 26 + 9.
-   * Nothing new was chosen; the two boxes were brought onto the number the page
-   * already uses everywhere.
+   * `--line-hem` + `--leading-line` + `--line-hem` was 44px, which was
+   * `--tap-floor`, which was also **exactly what the handset's foot already was**
+   * — 9 + 26 + 9. Nothing new was chosen; the two boxes were brought onto the
+   * number the page already used everywhere.
    *
-   * ⚠ **The glyphs still reach 44px and now do it without overhanging anything.**
-   * `--glyph-foot` is 26px, centred in a 28px content box, so `tap-target`'s
-   * 44px pseudo-element extends 9px each way — 1px of the content box and the
-   * 8px hem — and lands **flush with the strip's own edges**. The note this
-   * replaces said the next pixel would push that hit area out over the record;
-   * it is now bounded by construction rather than by an arithmetic warning.
+   * ⚠⚠ **THAT COINCIDENCE IS GONE — 1 September.** The record went to 18/24 on a
+   * 5px hem, so the row is 34px and none of those three sums is 44 any more. The
+   * *rule* is untouched — the strip is still a row of the record, and it still
+   * follows both tokens — but every sentence on this page that read a 44 out of
+   * it was reading a coincidence.
+   *
+   * ⚠⚠ **AND THE GLYPH ROW IS NOW TALLER THAN THE LINE, WHICH THIS SUM DID NOT
+   * ALLOW FOR.** `--foot-row` is `--glyph-foot`, a typed 26px that does not
+   * scale with the density; `--leading-line` is 24. The strip's one-cell grid
+   * takes the taller of the two, so the strip measured **42.25px while this token
+   * said 40.25** and `page-hem` under-reserved the difference. The term is
+   * `max()` now, so it states which box actually sets the height instead of
+   * assuming the line always does. ⚠ **If `--glyph-foot` is ever made to follow
+   * the density, this `max()` becomes a no-op and should stay anyway** — it is
+   * the honest expression either way.
+   *
+   * ⚠ **`tap-target`'s 44px pseudo-element no longer lands flush with the strip's
+   * edges**, because the strip is shorter than 44. It overhangs, which is what
+   * `sheet-glyph` was rebuilt to do deliberately — upward, over paper. The note
+   * this replaces warned that the next pixel would push that hit area out over
+   * the record; that pixel has been spent, on purpose, and the direction is up.
    *
    * ⚠ **The 45rem override went with them.** 48px between `rail` and `stack` was
    * a third box for the same strip. There is one.
@@ -1603,7 +1647,7 @@
    * adds the overlap itself.
    */
   --foot-height: calc(
-    var(--leading-line) + var(--sheet-air) +
+    max(var(--leading-line), var(--foot-row)) + var(--sheet-air) +
       max(0px, env(safe-area-inset-bottom) - var(--sheet-air) / 2)
   );
 
@@ -3665,12 +3709,26 @@
  *
  * ⚠ **`content-box`, which is what buys the hit area for nothing.** The height is
  * the *content* box, so the hem adds outside it and the border box comes to
- * `--leading-line` plus two hems — 44px, which is `--tap-floor`. The negative
- * margin takes the same hem straight back, so the margin box is the line box
- * again and the row is not one pixel taller for it. That is `--glyph-line`'s own
- * rule — *larger than the drawing without being larger than the row* — met
- * exactly rather than approximately, and the overhang lands inside the row's own
+ * `--leading-line` plus two hems — **the row's own height**. The negative margin
+ * takes the same hem straight back, so the margin box is the line box again and
+ * the row is not one pixel taller for it. That is `--glyph-line`'s own rule —
+ * *larger than the drawing without being larger than the row* — met exactly
+ * rather than approximately, and the overhang lands inside the row's own
  * `--line-hem`, so two rows' hit areas meet and never overlap.
+ *
+ * ⚠⚠ **THAT BORDER BOX WAS 44px AND IS NOW 34, AND THIS NOTE USED TO CALL IT
+ * `--tap-floor` — 1 September.** It was never derived from the floor; it was
+ * `--leading-line` plus two hems, and 28 + 8 + 8 happened to equal 44. The
+ * density direction moved both terms and the coincidence went with them.
+ *
+ * ⚠ **It cannot be bought back here, and the reason is arithmetic rather than
+ * effort.** The rule above is that two rows' targets **meet and never overlap**,
+ * which bounds this box at the row's pitch. The pitch is 34px. A 44px target on
+ * a 34px pitch is 5px of overlap onto each neighbour, and the later element in
+ * DOM order takes the taps — the exact bug `--bar-gap` exists to prevent. **So
+ * the record's furniture is 34px and the floor is not reachable from inside a
+ * row.** `sheet-glyph` below is the case where it still is, because it hangs
+ * over paper rather than over another row.
  *
  * ⚠ **The struck line's link deliberately does not wear this.** Its glyph stays
  * on `middle` so the strike runs *through* it rather than under it: a strikeout
@@ -3699,15 +3757,31 @@
  * as 36.
  *
  * ⚠ **So the whole hem goes on top, and nothing is given up.** The border box is
- * still `--leading-line` plus two hems — 44px, still `--tap-floor` — and the
- * negative margin still takes all of it back, so the row is not one pixel
- * taller. What changed is only *which side the invisible half hangs off*: it
- * reaches up over the scrim, where there is nothing behind it but a record under
- * glass, instead of down onto the keys.
+ * `--tap-floor` and the negative margin takes all of it back, so the row is not
+ * one pixel taller. What changed is only *which side the invisible half hangs
+ * off*: it reaches up over the scrim, where there is nothing behind it but a
+ * record under glass, instead of down onto the keys.
+ *
+ * ⚠⚠ **THE OVERHANG IS DERIVED FROM `--tap-floor` SINCE 1 SEPTEMBER, WHERE IT
+ * WAS TWO `--line-hem`s — and that is the whole of why this survived the density
+ * change when `line-glyph` did not.** It read `padding-block: calc(2 *
+ * var(--line-hem)) 0`, which came to 44px only because 28 + 16 did. The record
+ * went to 18/24 on a 5px hem, that sum became 34, and **the `+` — the one
+ * control this app has to be perfect at — silently lost 10px of target.**
+ * Measured, not noticed: nothing about a 34px invisible box looks different from
+ * a 44px one.
+ *
+ * ⚠ **It is `--tap-floor` minus the line, floored at zero.** One expression,
+ * every surface: the desk's larger line asks for less overhang and gets it, and
+ * a line taller than a thumb would ask for none rather than for a negative
+ * padding. **This must never be re-expressed in hems** — a hem is spacing and a
+ * thumb is hardware, and CLAUDE.md's list of what may not scale names the floor
+ * for exactly this reason.
  *
  * ⚠ **A hit area does not have to be inside the box it belongs to.** That is the
  * whole of this, and it is why *the box is only as tall as the line* and *the
- * controls stay thumb-sized* are not in tension.
+ * controls stay thumb-sized* are not in tension. **`line-glyph` cannot do this**
+ * — it has a neighbouring row where this has paper.
  *
  * ⚠ **This holds on every surface, not only where the hem is zero.** Above
  * `--breakpoint-stack` the sheet has a hem again and the upward hang is simply
@@ -3718,8 +3792,8 @@
   display: inline-flex;
   align-items: center;
   height: var(--leading-line);
-  padding-block: calc(2 * var(--line-hem)) 0;
-  margin-block: calc(-2 * var(--line-hem)) 0;
+  padding-block: max(0px, calc(var(--tap-floor) - var(--leading-line))) 0;
+  margin-block: calc(-1 * max(0px, calc(var(--tap-floor) - var(--leading-line)))) 0;
 }
 
 /**
