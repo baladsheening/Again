@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { SignInForm } from '@/components/sign-in-form'
+import { WallBeats } from '@/components/wall-beats'
 import { getSessionUser } from '@/lib/db'
 
 /**
@@ -98,7 +99,30 @@ export default async function SignInPage() {
         and the three beats on the left, the form on the right — which
         is the composition a 1440 has room for and a handset does not.
       */}
-      <main className="gutter safe-bottom relative z-[1] mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
+      {/*
+        ⚠ **`max-h-dvh` IS WHAT LETS THE FORM PUSH UP — 1 September, and it is
+        the load-bearing half of that change.** Reported: *create an account*
+        adds a field and slides *sign in with a password* under the fold.
+
+        The answer is flex shrink — the beats give the height back — and **flex
+        shrink cannot happen against a container with no definite height.**
+        `body` is `min-h-full`, so it sizes to its content: laid out that way
+        there is never negative free space, every item gets its hypothetical
+        size, and the document simply grows. That is exactly what was reported.
+        Capping this box at the viewport is what makes the free space negative,
+        and the shrink follows with no measurement anywhere.
+
+        ⚠ **`dvh`, not `vh` or `%`.** A percentage resolves against a container
+        whose height is auto and computes to `none`; `100vh` is the *large*
+        viewport, so in a Safari tab with the toolbars showing it is taller than
+        the screen and the fold comes back. `dvh` is the one that tracks what is
+        actually visible.
+
+        ⚠ **Off above `--breakpoint-stack`.** Up there the wall is a grid and the
+        form grows into its own column, so there is nothing to push and a short
+        desk window should go on scrolling the way it does today.
+      */}
+      <main className="gutter safe-bottom relative z-[1] mx-auto flex max-h-dvh w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-h-none stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
         {/*
           `my-auto` rather than `justify-center` on the parent: when a phone
           keyboard takes half a landscape viewport the content is taller than the
@@ -108,7 +132,14 @@ export default async function SignInPage() {
           and stays scrollable. On the desk the grid centres the two columns
           against each other instead, so the auto margins are handed back.
         */}
-        <div className="my-auto flex flex-col gap-9 stack:my-0">
+        {/*
+          `min-h-0` so this column can be shrunk under its own content — the
+          default `min-height: auto` on a flex item is what would otherwise
+          refuse, and the shrink is what stops the form pushing the switches off
+          the bottom. The mark does not pay for it (`shrink-0` below); the beats
+          do, which is the one box on this screen that can be scrolled.
+        */}
+        <div className="my-auto flex min-h-0 flex-col gap-9 stack:my-0">
           {/*
             ⚠ **The mark carries no rule under it, and the wrapper that held the
             two together is gone with it — directed.** The hairline was the one
@@ -122,7 +153,14 @@ export default async function SignInPage() {
             The outer stack's `gap-9` is now the only thing between the mark and
             the first beat.
           */}
-          <h1 className="zine-command text-[6.5rem] stack:text-[10rem]">Keep.</h1>
+          {/*
+            ⚠ **`shrink-0`, and the mark is the thing that does NOT give way.**
+            It is the identity, it is the poster, and at `line-height: 0.86` its
+            capitals stand outside their own line box — so a box that clipped it
+            would take 2px off the tops of the letters before it took anything
+            off a sentence. The beats absorb instead; see `WallBeats`.
+          */}
+          <h1 className="zine-command shrink-0 text-[6.5rem] stack:text-[10rem]">Keep.</h1>
 
           {/*
             **Three beats: write, match, keep?** — the product's whole loop, and
@@ -139,7 +177,7 @@ export default async function SignInPage() {
             it back on the first run as well**: two tellings drift, and the one
             that drifts is the one nobody re-reads.
           */}
-          <div className="flex flex-col gap-6 stack:max-w-[34rem]">
+          <WallBeats>
             <Beat label="write">
               The things you want to do, try, watch, buy, or remember. No categories. No
               overthinking. One line is enough.
@@ -152,7 +190,7 @@ export default async function SignInPage() {
               When something turns out to be worth it, say you&rsquo;d do it again — or
               simply mark it done.
             </Beat>
-          </div>
+          </WallBeats>
         </div>
 
         {/*
@@ -160,7 +198,14 @@ export default async function SignInPage() {
           it is the right-hand column and the top margin is handed back, because
           the grid is what puts the two side by side.
         */}
-        <div className="mt-12 mb-auto stack:mt-0 stack:mb-0">
+        {/*
+          ⚠ **`shrink-0` — the form never gives up height, which is the point of
+          the whole arrangement.** Everything a person is here to fill in stays
+          at full size and stays on the screen; what moves is the explanation
+          above it. `mb-auto` still holds it where it is whenever there IS free
+          space, so a screen with room looks exactly as it did.
+        */}
+        <div className="mt-12 mb-auto shrink-0 stack:mt-0 stack:mb-0">
           <SignInForm />
         </div>
       </main>

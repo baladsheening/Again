@@ -5666,6 +5666,78 @@
 }
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The beats give way, and the cut edge fades — 1 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The sign-in wall's three beats, in the one box on that screen that is allowed
+ * to lose height. Reported from the handset: *create an account* adds a third
+ * field and pushes *sign in with a password* under the fold. Directed: the
+ * fields push **up**, and the text they cover fades.
+ *
+ * ⚠ **The pushing up is flex shrink and it is written in three places, none of
+ * them here** — `main` capped at `100dvh`, the mark and the form `shrink-0`, and
+ * the `min-height: 0` below. A flex item cannot shrink under its own content
+ * without that zero, which is why it is the first line of this rule.
+ *
+ * ⚠ **`overflow-y: auto`, so nothing is unreachable.** One of the beats is the
+ * disclosure that captures are matched against the people you follow, and a
+ * screen short enough to cut it must not be a screen that hides it. The fade
+ * says *there is more* and a finger gets it — the record's own arrangement,
+ * where the same sentence is said by `writing-sheet`'s `::before`.
+ *
+ * ⚠ **The bar is hidden, which is the page's own rule rather than an exception
+ * to it.** `html` hides the document's; a nested scroller is a second one, and
+ * two answers on one screen would be worse than either. What the deleted
+ * `scrollbar-none` utility warned about — hiding the only cue to how much is
+ * left — is answered by the fade being that cue.
+ *
+ * ⚠ **The mask is on `[data-cut]` and never unconditional.** A fade that is
+ * always drawn dims the last line of *keep?* on a screen where nothing has been
+ * cut. `components/wall-beats.tsx` sets the attribute from a reading of the box,
+ * and says there why the reading cannot be a selector.
+ *
+ * ⚠ **1.25rem is one line of the sentence being cut** — `text-sm`, 0.875rem at
+ * Tailwind's 1.25/0.875 — which is the record fade's own derivation: *a line
+ * dissolves over its own height as it leaves the page.* It is a `rem`, so the
+ * desk would take it at 4/3; the desk never reaches it, because up there the
+ * wall is a two-column grid and the form grows into its own column.
+ *
+ * ⚠ **Both spellings of the mask.** `mask-image` is the standard and is Safari
+ * 15.4 and up; `-webkit-mask-image` is what everything older reads. Neither is a
+ * browser sniff — each is the property its own engine takes.
+ */
+@utility wall-beats {
+  --wall-fade: 1.25rem;
+
+  /*
+    ⚠ **A floor of two fades, and it is not `0`.** `min-height: auto` is what
+    refuses to shrink under the content and is the thing being overridden; a flat
+    zero overrides too much. Measured at 740x320 — a phone in landscape — the box
+    collapsed to **0px**, which takes the beats off the screen AND out of the
+    scroller that was supposed to keep them reachable. Two lines is one to read
+    and one to dissolve; under that the fade is the whole box and there is
+    nothing left for it to say *there is more* about. Past the floor `main`
+    overflows its own cap and the document scrolls again, which is what puts
+    every control back in reach.
+  */
+  min-height: calc(2 * var(--wall-fade));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &[data-cut] {
+    --wall-cut: linear-gradient(to bottom, #000 calc(100% - var(--wall-fade)), transparent 100%);
+    -webkit-mask-image: var(--wall-cut);
+    mask-image: var(--wall-cut);
+  }
+}
+
+/**
  * A field that is a rule, not a box — the brief's "the input field isn't a box".
  *
  * ⚠ **`input-text` still comes with it at every call site**, so the coarse-
