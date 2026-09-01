@@ -1,32 +1,31 @@
 import type { Metadata, Viewport } from 'next'
-import { Bebas_Neue, Fira_Sans, IBM_Plex_Mono, Instrument_Serif, Jost } from 'next/font/google'
+import { Bebas_Neue, Fira_Sans, IBM_Plex_Mono, Instrument_Serif } from 'next/font/google'
 
 import './globals.css'
 
-/**
+/*
  * ─────────────────────────────────────────────────────────────────────────────
- *  The wordmark is Jost, in capitals — 21 August
+ *  Jost is DELETED — 1 September
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Directed, after looking at eleven faces set as AGAIN. Futura's geometry
- * redrawn: a circular G, a sharp-apex A and one stem width, which is the oldest
- * reliable wordmark there is once the caps are tracked apart.
+ * It set the mark from 21 August, in capitals, chosen after looking at eleven
+ * faces set as AGAIN. The mark is Instrument Serif now — directed, *the font is
+ * meant to be the one we used for the logo on the log in screen* — so nothing
+ * points at `--font-jost` and the declaration goes with it.
  *
- * **Only the mark uses this.** Static 500, because the variable range is payload
- * spent on weights nothing asks for.
+ * ⚠ **Deleted rather than left declared, which is this file's own rule**, applied
+ * to Ojuju and Space Grotesk before it: a font declared and pointed at by nothing
+ * is a font the next person reapplies without knowing why it was there. The
+ * reserve below is one slot, deliberately, and it is Bebas Neue's.
  *
- * ⚠ **Ojuju and Space Grotesk are DELETED rather than left declared.** They set
- * the mark before this — Space Grotesk to 9 August, Ojuju from 15 — and both are
- * in git with their measurements. The reserve below is one slot, deliberately: a
- * font declared and pointed at by nothing is a font the next person reapplies
- * without knowing why it was there.
+ * ⚠ **It was not free to leave in.** next/font preloads by default, so a face no
+ * rule named was still a `<link rel=preload>` on every page in the app. That is
+ * what `preload: false` exists for on the two faces that keep it — and a face
+ * with no consumer at all does not need the flag, it needs deleting.
+ *
+ * Jost's complete fence — 1.445 / −0.37 / −0.375 / 0.7 / 0 / 0.1525, advance
+ * 2.6592 setting KEEP at 0.08em — is in git and in globals.css's history.
  */
-const jost = Jost({
-  variable: '--font-jost',
-  subsets: ['latin'],
-  weight: '500',
-  display: 'swap',
-})
 
 /**
  * The reserve. **Held on purpose, for a refresh later — directed 21 August.**
@@ -42,11 +41,13 @@ const jost = Jost({
  * stays, the download does not happen.
  *
  * ⚠ **This flag and `--font-display` are one decision written in two files**, and
- * switching is more than those two lines: `wordmark-trim` and the three
- * `--wordmark-*` tokens in globals.css are measurements of a *specific face in a
- * specific case*, and Bebas Neue's complete set is written down beside Jost's
- * there, already measured, ready to swap. Read that note before switching; do
- * not switch this flag alone.
+ * switching is more than those two lines: `wordmark-trim` and the `--wordmark-*`
+ * tokens in globals.css are measurements of a *specific face in a specific
+ * case*, and Bebas Neue's complete set is written down beside the live one
+ * there, ready to swap. Read that note before switching; do not switch this flag
+ * alone. ⚠ **Four of its numbers are still measured for AGAIN and are marked so
+ * in that block** — point `serifmark.mjs` at `--font-bebas-neue` and read them
+ * off before believing them.
  */
 const bebasNeue = Bebas_Neue({
   variable: '--font-bebas-neue',
@@ -115,7 +116,8 @@ const firaSansItalic = Fira_Sans({
 })
 
 /**
- * **The zine treatment's display face — 31 August.**
+ * **The zine treatment's display face — 31 August. THE WORDMARK'S FACE TOO,
+ * since 1 September.**
  *
  * A high-contrast serif for the two screens that are composition rather than
  * record: the sign-in wall's mark and the first run's command. It is the free
@@ -123,17 +125,21 @@ const firaSansItalic = Fira_Sans({
  * on this machine) — narrow, sharply cut, and it holds together at the poster
  * sizes those two screens set it at.
  *
- * ⚠ **It is NOT the wordmark's face.** `--font-display` is still Jost and the
- * bar's mark is still set in it, because `--wordmark-slack`, `wordmark-trim`
- * and `--wordmark-advance-ratio` are all *measured* for Jost — and the desk's
- * `--mark-column` derives the record's own width from the last of them. Moving
- * the mark to this face means re-running `node_modules/.probe/metrics.mjs` and
- * `markwidth.mjs` and re-deriving that column. **That is the same job as the
- * rename, and it wants doing with it rather than before it.**
+ * ⚠ **It is now the wordmark's face as well, and this note used to say the
+ * opposite.** It read *it is NOT the wordmark's face… that is the same job as
+ * the rename, and it wants doing with it rather than before it.* The rename went
+ * first and this followed a day later, directed — which is the order that let the
+ * record column's two moves be told apart. `--font-display` and `--font-serif`
+ * both resolve here now; the fence at the top of globals.css is re-measured for
+ * it, and the two tokens deliberately stay two.
+ *
+ * ⚠ **One weight — 400 — and the fence carries it.** `--wordmark-weight` exists
+ * because this family has no 500 and the `wordmark` utility used to ask for one.
  *
  * **Preloaded, unlike the two reserve faces.** The sign-in wall is the first
  * page a new account ever sees and this face is the largest thing on it, so a
- * swap here is the swap a stranger watches.
+ * swap here is the swap a stranger watches — and it is now on the bar of every
+ * signed-in screen as well, which is a second reason not to let it flash.
  */
 const instrumentSerif = Instrument_Serif({
   variable: '--font-serif-face',
@@ -229,7 +235,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${firaSans.variable} ${firaSansItalic.variable} ${plexMono.variable} ${jost.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
+      className={`${firaSans.variable} ${firaSansItalic.variable} ${plexMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
     >
       <body className="bg-bg text-text flex min-h-full flex-col">{children}</body>
     </html>

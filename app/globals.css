@@ -638,17 +638,25 @@
      THE ZINE TREATMENT'S DISPLAY FACE — 31 August
     ─────────────────────────────────────────────────────────────────────────
 
-    Instrument Serif, and it is spent on exactly two screens: the sign-in wall's
-    mark and the first run's command. Both are *composition* rather than record
-    — no list, no swipe, no density to hold — which is the whole argument for
-    letting a poster face onto them and for keeping it off everything else.
+    Instrument Serif, on the two screens that are *composition* rather than
+    record — the sign-in wall's mark and the first run's command. No list, no
+    swipe, no density to hold, which is the whole argument for letting a poster
+    face onto them and for keeping it off everything else.
 
-    ⚠ **It is NOT `--font-display`, and the two must not be merged.** That one
-    is the wordmark's and is still Jost, whose set is fenced by seven measured
-    numbers a few lines below; the desk's `--mark-column` derives the record's
-    own width from `--wordmark-advance-ratio`. Pointing the wordmark at this
-    face means re-running `metrics.mjs` and `markwidth.mjs` and re-deriving that
-    column, which is the rename's job.
+    ⚠ **`--font-display` is this same face since 1 September, and the two tokens
+    still must not be merged.** The note here used to say the wordmark was Jost
+    and that pointing it at this face was "the rename's job". It was done a day
+    late instead: directed, *the font is meant to be the one we used for the logo
+    on the log in screen*. Both names now resolve to Instrument Serif and the
+    inconsistency the sign-in wall's docblock complained about is gone.
+
+    ⚠ **One face, two tokens, and that is deliberate.** `--font-display` carries
+    a fence of eight measured numbers — the mark's inked bounds, its trim, its
+    advance — and `--font-serif` carries none, because a poster set at 6.5rem is
+    trimmed by eye and not by token. Merging them would attach the wordmark's
+    measurements to a screen that does not use them, and would make *the poster
+    wants a different serif* a change that silently re-derives the desk's reading
+    column. They agree today; they are allowed to stop.
 
     **The fallback is Georgia**, not `ui-serif`: the exported PNG and any
     swap-window paint want a face with roughly this one's proportions, and the
@@ -660,23 +668,51 @@
      THE WORDMARK'S FACE, AND EVERY NUMBER THAT DEPENDS ON IT — 21 August
     ═══════════════════════════════════════════════════════════════════════════
 
-    **Jost 500, set in capitals**, directed 21 August after looking at eleven
-    faces set as AGAIN. Futura's geometry redrawn: a circular G, a sharp-apex A
-    and one stem width.
+    ⚠⚠ **INSTRUMENT SERIF 400, SET IN CAPITALS — 1 September, and it replaces
+    Jost 500.** Directed: *the font is meant to be the one we used for the logo
+    on the log in screen.* That face was already on two screens; the bar and the
+    reset page were the last things still setting the mark in something else, so
+    the app now has **one mark in one face** rather than a pre-auth one and a
+    post-auth one nobody sees together.
 
-    ⚠⚠ **EVERY NUMBER BELOW IS MEASURED FOR **KEEP**, NOT FOR AGAIN — the
-    rename, 31 August.** The face did not change and the six vertical numbers
-    still did: they describe the *inked bounds of a particular word*, and AGAIN's
-    were set by the round G's overshoot below the baseline and the A's sharp apex
-    above the cap line. KEEP has neither. **K, E, E and P are flat top and
-    bottom**, so its bounds land on the cap line and the baseline exactly.
+    ⚠ **Jost is DELETED from app/layout.tsx, not left declared.** That file's own
+    rule, applied twice before to Ojuju and Space Grotesk: a face pointed at by
+    nothing is a face the next person reapplies without knowing why it was there
+    — and next/font would have gone on *preloading* it on every page. The reserve
+    below is one slot and it is Bebas Neue's. Jost is in git.
 
-    ⚠ **Which is why KEEP's set is SIZE-STABLE and AGAIN's was not.**
-    `actualBoundingBox*` rounds to whole pixels, so AGAIN read 0.775 ink at
-    200px and 0.797 at 1000px — the fence holds the 200px column, and the spread
-    was the rounding of a sub-pixel overshoot. KEEP reads the same numbers at
-    both sizes. Re-measured by `node_modules/.probe/keepmark.mjs`, which prints
-    both words side by side so neither is reasoned into the other.
+    ⚠⚠ **EVERY NUMBER BELOW IS MEASURED FOR INSTRUMENT SERIF SETTING **KEEP**,
+    and not one of them survived the change of face.** Six of the eight moved;
+    the two that did not are `--wordmark-track`, which is a look and not a
+    reading, and `--wordmark-drop-ratio`, which is zero for the reason below.
+    Jost against Instrument Serif, KEEP in caps at 0.08em:
+
+        line   1.445  →  1.3        lead   −0.37    →  −0.27
+        tail  −0.375  →  −0.31      ink     0.7     →   0.72
+        drop   0      →   0         slack   0.1525  →   0.16
+        advance  2.6592  →  2.176
+
+    **Measured by `node_modules/.probe/serifmark.mjs`**, which prints both faces
+    in three cases side by side so neither is reasoned into the other. It
+    supersedes `keepmark.mjs` for this job — that one hardcodes `--font-jost`,
+    which no longer resolves.
+
+    ⚠ **KEEP is size-stable in this face too, which is the check that these are
+    real.** `actualBoundingBox*` rounds to whole pixels, so a number that moves
+    between 200px and 1000px is a rounding rather than a reading — AGAIN read
+    0.775 ink at 200 and 0.797 at 1000, on the round G's sub-pixel overshoot.
+    Instrument Serif setting KEEP reads **drop, slack, tail and line identically
+    at both sizes**; lead and ink differ in the fourth decimal (−0.27 / −0.27125
+    and 0.72 / 0.71875), which is a whole pixel at 200px. **The fence holds the
+    200px column**, as it has since AGAIN, and the discrepancy is 0.04px at the
+    bar's own mark size.
+
+    ⚠ **A serif in caps is not the risk it sounds like, but it is thinner.**
+    Instrument Serif has one weight — 400 — where Jost was set at 500, and it is
+    a high-contrast display face whose hairlines are hairlines. It inks *more*
+    of the em than Jost did (0.72 against 0.70), so the mark is not smaller; it
+    is lighter. **If it reads weak in the bar the answer is `--text-mark`, never
+    a synthesised weight** — see `--wordmark-weight`.
 
     ─────────────────────────────────────────────────────────────────────────
      Why the eight lines are fenced together
@@ -689,13 +725,21 @@
     one of them and left six describing a typeface that was no longer there.
 
     They are all here now, and the reserve's complete set is written out below,
-    already measured. **Switching the mark is: replace these eight lines with
-    those eight, and move `preload` in app/layout.tsx.** Nothing else.
+    already measured. **Switching the mark is: replace these nine lines with
+    those nine, and move `preload` in app/layout.tsx.** Nothing else.
 
-    ⚠ **Every number is measured, never scaled.** `node_modules/.probe/metrics.mjs`
+    ⚠ **`--wordmark-weight` is the ninth, added 1 September with the serif.** It
+    was `font-weight: 500` written into the `wordmark` utility, with a docblock
+    warning that only the 500 cut was loaded. **Instrument Serif has one weight
+    and it is 400**, so that literal would have asked for a cut the family does
+    not have — which fails *silently*, by matching down, and would have failed
+    loudly the day somebody loaded a heavier one. It is a property of the face,
+    so it belongs in the face's fence. The reserve carries its own.
+
+    ⚠ **Every number is measured, never scaled.** `node_modules/.probe/serifmark.mjs`
     loads the real self-hosted face and reads `TextMetrics` — declared ascent and
-    descent, and the inked bounds of the actual word. Jost and Ojuju disagree on
-    all seven; do not reason one set into another.
+    descent, and the inked bounds of the actual word. Jost, Ojuju and Instrument
+    Serif disagree on all seven; do not reason one set into another.
 
     ⚠ **Capitals are why `drop` is zero, and under KEEP it is zero exactly.**
     `--wordmark-drop` exists to take a descender's tail back off a row, because
@@ -704,24 +748,30 @@
     baseline, which was the round G's overshoot, half a pixel at 28px and read by
     the eye as sitting *on* the baseline. **KEEP measures a true 0**: no round
     letter reaches the baseline in it. The token was already 0 by judgement and
-    is now 0 by measurement. **If the mark ever returns to a lowercase word this
-    stops being zero**, which is why the token and its subtraction in
-    cinema-wall.tsx stay rather than being deleted.
+    is now 0 by measurement, and it stayed 0 through the change of face — a
+    serif's K, E and P sit on the baseline as squarely as a geometric sans's do.
+    **If the mark ever returns to a lowercase word this stops being zero**, which
+    is why the token stays rather than being deleted: `serifmark.mjs` reads 0.205
+    for `Keep` in this face against 0 for `KEEP`, so the case is worth a fifth of
+    the em and the token would earn its keep the day it changed.
 
-    ⚠ **The slack is POSITIVE now, where Ojuju's was −0.135, and the sign is the
+    ⚠ **The slack is POSITIVE, where Ojuju's was −0.135, and the sign is the
     whole meaning of it.** Ojuju hung `Again`'s g below its own box; capitals stop
     short of it. Everything that reads this adds it, so the sign carries the case
     without anyone branching on it — see the token's own note at the foot of this
-    block.
+    block. Instrument Serif's capitals stop a little further short than Jost's:
+    0.16 against 0.1525, which is 0.12px at the bar's mark and moves the gap
+    under the mark on both auth pages by exactly that.
   */
-  --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-serif-face), Georgia, 'Times New Roman', serif;
+  --wordmark-weight: 400;
   --wordmark-track: 0.08em;
-  --wordmark-line: 1.445;
-  --wordmark-lead: -0.37em;
-  --wordmark-tail: -0.375em;
-  --wordmark-ink-ratio: 0.7;
+  --wordmark-line: 1.3;
+  --wordmark-lead: -0.27em;
+  --wordmark-tail: -0.31em;
+  --wordmark-ink-ratio: 0.72;
   --wordmark-drop-ratio: 0;
-  --wordmark-slack-ratio: 0.1525;
+  --wordmark-slack-ratio: 0.16;
   /*
     ⚠ **The seventh, and the first horizontal one — 28 August.** Every other
     number in this fence is vertical, because until now nothing needed to know
@@ -729,31 +779,38 @@
     neither may cross into the mark's own band on the desk. See `--mark-column`.
 
     **How wide KEEP sets, per 1px of font-size, in this face at this tracking.**
-    Measured by `node_modules/.probe/keepmark.mjs` at 20, 24, 32 and 64px —
-    2.6594 / 2.6595 / 2.6592 / 2.6592, which is the check that it is a *ratio*
-    and not a size. It has to be: the tracking is in `em`, so the whole advance
-    scales with the type. At the desk's 32px mark that is 85.1px, where AGAIN set
-    114.2.
+    Measured by `node_modules/.probe/serifmark.mjs` at 20, 24, 32 and 64px —
+    2.1766 / 2.1764 / 2.1763 / 2.176, which is the check that it is a *ratio* and
+    not a size. It has to be: the tracking is in `em`, so the whole advance
+    scales with the type. At the desk's 32px mark that is 69.6px, where Jost set
+    85.1 and AGAIN in Jost set 114.2.
 
-    ⚠⚠ **THE MARK'S BAND IS NOW 74.5% OF ITS OLD WIDTH, AND THAT IS THE ONE
-    CHANGE IN THIS RENAME THAT MOVES LAYOUT.** `--mark-column` derives from this
+    ⚠⚠ **THE MARK'S BAND IS 81.8% OF ITS WIDTH UNDER JOST, AND THAT IS THE ONE
+    CHANGE IN THIS SWAP THAT MOVES LAYOUT.** `--mark-column` derives from this
     ratio and `--record-measure` derives from that, so the desk's reading column
-    gets **wider** — the band it has to clear shrank. `--record-floor` reads the
-    ratio too, so it follows without being re-typed. **Re-run `markgap.mjs` and
-    `logocol.mjs` after touching this number**: the floor's whole justification
-    is that it is the lowest one that stays continuous across
+    gets **wider again** — the band it has to clear shrank for the second time in
+    two days. `--record-floor` reads the ratio too, so it follows without being
+    re-typed. **Re-run `keepcolumn.mjs` after touching this number**: the floor's
+    whole justification is that it is the lowest one that stays continuous across
     `--breakpoint-rail`, and continuity is a property of the ratio.
 
     ⚠ **It is the advance, not the ink**, so it includes the trailing 0.08em the
-    tracking adds after the final N — 2.56px at 32px. That is deliberate: a band
+    tracking adds after the final P — 2.56px at 32px. That is deliberate: a band
     reserved for the mark should err wide, and the alternative is a second number
     describing the same word.
 
-    ⚠ **Measured, like its six neighbours, and not reasoned from them.** Jost and
-    Bebas Neue disagree on this as they disagree on the rest: 3.569 against
-    2.8875. Do not scale one face's set into another's.
+    ⚠ **A serif narrows the band twice over, and both halves are the face.**
+    Instrument Serif's caps are drawn on a narrower body than Jost's geometric
+    ones, and it carries no extra sidebearing to compensate. That is a fifth off
+    the band on top of the fifth the rename took, which is why the desk's column
+    has moved twice — and why neither move is a bug to chase.
+
+    ⚠ **Measured, like its seven neighbours, and not reasoned from them.** The
+    three faces this fence has held disagree on it as they disagree on the rest:
+    2.176 against Jost's 2.6592 against Bebas Neue's 2.447. Do not scale one
+    face's set into another's.
   */
-  --wordmark-advance-ratio: 2.6592;
+  --wordmark-advance-ratio: 2.176;
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -768,9 +825,10 @@
     a different problem. Declared with `preload: false` in app/layout.tsx, so it
     is declared and not downloaded.
 
-    Swap these eight in for the eight above, and flip `preload` there:
+    Swap these nine in for the nine above, and flip `preload` there:
 
         --font-display: var(--font-bebas-neue), ui-sans-serif, system-ui, sans-serif;
+        --wordmark-weight: 400;
         --wordmark-track: 0.1em;
         --wordmark-line: 1.3;
         --wordmark-lead: -0.24em;      ← still AGAIN
@@ -2216,16 +2274,23 @@
    *
    * ⚠ **Derived, and it is the LOWEST floor that stays continuous.** The mark
    * steps down at `--breakpoint-rail`: `--text-mark` 1.5rem → 1.25rem and
-   * `--bar-gutter` 2rem → 1.25rem, so the band it holds steps 7.3535rem →
-   * 5.71125rem in one pixel. A column derived from that band and nothing else
-   * would step *up* 51px at 719 — the same violent boundary the desk's ramp
+   * `--bar-gutter` 2rem → 1.25rem, so the band it holds steps 5.264rem →
+   * 3.97rem in one pixel. A column derived from that band and nothing else
+   * would step *up* 41px at 719 — the same violent boundary the desk's ramp
    * exists to remove, moved to a narrower window. Floored at the measure the
    * *narrower* band hands back at the breakpoint itself, the step is under the
    * floor on both sides of 720 and can never surface:
    *
    *     --breakpoint-rail − 2 × (--bar-gutter + --text-mark × --wordmark-advance-ratio)
-   *   =  45rem − 2 × (1.25rem + 1.25rem × 3.569)
-   *   =  45 − 11.4225  =  33.5775rem  =  537.24px
+   *   =  45rem − 2 × (1.25rem + 1.25rem × 2.176)
+   *   =  45 − 7.94  =  37.06rem  =  592.96px
+   *
+   * ⚠ **That arithmetic is worked for the face the fence currently holds, and
+   * the worked line has been stale twice.** It read 3.569 (Jost setting AGAIN)
+   * through the rename and again through the change of face, because the
+   * *expression* reads `var(--wordmark-advance-ratio)` and goes on being right
+   * while the prose beside it rots. The expression is the truth; if these two
+   * disagree, re-run `keepcolumn.mjs` and fix the prose.
    *
    * ⚠ **The two `1.25rem` are the base values of `--bar-gutter` and
    * `--text-mark`, written out rather than read.** A `var()` would pick up the
@@ -3071,14 +3136,21 @@
  *
  * ⚠ **The face is named in the fence at the top of this file, not here.** This
  * utility says what the mark *is* — a display face, in caps, tracked, on one
- * line — and reads which face and how much tracking from there.
+ * line — and reads which face, which weight and how much tracking from there.
  *
- * Only the 500 cut is loaded, so a stray `font-bold` here would synthesise a
- * fake bold rather than fail visibly. Keep the weight in this utility.
+ * ⚠ **The weight left this file on 1 September and must not come back.** It was
+ * the literal `500`, with a note saying only the 500 cut was loaded — which was
+ * a fact about Jost written into the utility rather than into the fence, and it
+ * went stale the moment the mark became Instrument Serif, whose family has one
+ * weight and it is 400. Asking a one-weight family for 500 does not fail; the
+ * browser matches down and nobody sees anything. **A number that can be wrong
+ * without showing it belongs in the fence**, which is the whole argument the
+ * fence was built on. A stray `font-bold` here is still the thing to avoid, and
+ * it is still avoided by this declaration existing.
  */
 @utility wordmark {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: var(--wordmark-weight);
   /*
     **Full capitals, 21 August**, directed with the change of face: the mark
     reads AGAIN, set in Jost. It was capitalised lower case in Ojuju from
@@ -3131,7 +3203,30 @@
     centred, that is the thing that will look half a space off.
   */
   letter-spacing: var(--wordmark-track);
-  line-height: 1;
+  /*
+    ⚠⚠ **A CUSTOM PROPERTY WITH A FALLBACK, NEVER THE LITERAL `1` — fixed 1
+    September, and it had been silently broken.** `wordmark-trim` also declares
+    `line-height`, and in the compiled sheet **this rule wins**, so the trim's
+    `var(--wordmark-line)` never applied: the bar's mark computed `line-height:
+    1` while the two negative margins went on being subtracted from a line box a
+    third shorter than the one they were measured against. The element was
+    **over-trimmed to 0.42em against 0.72em of ink** — the letters overflowed
+    their own box, which is the exact condition `wordmark-trim` exists to remove.
+
+    ⚠ **Nothing showed it, which is why it survived.** The mark is a flex item
+    centred in a fixed-height bar, so an outer box smaller than its ink shifts
+    the letters off the bar's optical centre and clips nothing. It was found by
+    swapping the face — the new `--wordmark-line` was inert, and a fence number
+    with no consumer is worse than the bug, because the next person trusts it.
+
+    ⚠ **The fix is the one this file already names: remove the collision, do not
+    order around it.** *Two utilities setting one property on one element are
+    resolved by their order in the compiled sheet and a class attribute cannot
+    state that order* — see `--sheet-row-lead`, which carries `sheet-writing`'s
+    air for the same reason. One declaration, one property, and `wordmark-trim`
+    sets the variable instead of re-declaring the property.
+  */
+  line-height: var(--wordmark-box, 1);
 }
 
 /**
@@ -3234,13 +3329,24 @@
     margin is the dead space at that end — `-(ascent − inkAbove)` and
     `-(descent − inkBelow)`.
 
-    Jost 500 setting `AGAIN` reads 1.445 / −0.33 / −0.34, against Ojuju setting
-    `Again` at 1.41 / −0.42 / −0.07 and Space Grotesk setting `need` at
-    1.2778 / −0.25 / −0.0833. **Not one number has ever survived a change of
-    face**, which is three faces' worth of evidence for never scaling one set
-    into another.
+    Instrument Serif 400 setting `KEEP` reads 1.3 / −0.27 / −0.31, against Jost
+    500 setting the same word at 1.445 / −0.37 / −0.375, Jost setting `AGAIN` at
+    1.445 / −0.33 / −0.34, Ojuju setting `Again` at 1.41 / −0.42 / −0.07 and
+    Space Grotesk setting `need` at 1.2778 / −0.25 / −0.0833. **Not one number
+    has ever survived a change of face**, which is four faces' worth of evidence
+    for never scaling one set into another.
+
+    ⚠⚠ **THE LINE-HEIGHT IS SET THROUGH A VARIABLE AND MUST NOT GO BACK TO BEING
+    A PROPERTY HERE — 1 September.** This rule declared `line-height:
+    var(--wordmark-line)` directly and **lost**: `wordmark` declares the same
+    property and wins in the compiled sheet, so the trim was two negative margins
+    subtracted from a line box that was never widened to hold them, and the mark
+    was over-trimmed to 0.42em against 0.72em of ink on every screen that used
+    it. A class attribute cannot state which of two utilities comes first. See
+    the note on `line-height` in `wordmark`, and `--sheet-row-lead`, which is the
+    same mechanism for the same reason.
   */
-  line-height: var(--wordmark-line);
+  --wordmark-box: var(--wordmark-line);
   margin-top: var(--wordmark-lead);
   margin-bottom: var(--wordmark-tail);
 }

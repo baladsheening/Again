@@ -47,13 +47,21 @@ import { getSessionUser } from '@/lib/db'
  * advance, the trim and the inked bounds all moved even though the face did not.
  * See `node_modules/.probe/keepmark.mjs`.
  *
- * ⚠ **The two-face inconsistency SURVIVES the rename and is still deliberate.**
- * The bar sets the mark in Jost; this screen sets it in `--font-serif`. A person
- * never sees both at once — this screen is pre-auth, the bar is post-auth — and
- * unifying them still costs a re-derived record column. The rename was supposed
- * to be the moment to do it and was not: the fence had to be re-measured either
- * way, and doing both at once would have left no way to tell which change moved
- * the column. **That is the next job, and the measurement is already written.**
+ * ⚠ **The two-face inconsistency IS CLOSED — 1 September.** This note used to
+ * say the bar set the mark in Jost while this screen set it in `--font-serif`,
+ * that a person never saw both at once, and that unifying them was the next job.
+ * It was directed the next day and it is done: `--font-display` resolves to
+ * Instrument Serif, so the mark is one face everywhere it appears. Splitting the
+ * rename from the face swap is what let the record column's two moves be told
+ * apart — 2.6592 was the rename's, 2.176 is this one's.
+ *
+ * ⚠ **The two screens still differ in CASE, and that is not an oversight.** This
+ * one sets `Keep.` at 6.5rem with a full stop, in `zine-command`; the bar sets
+ * `KEEP` in caps through `wordmark`, whose fence is measured for capitals. The
+ * poster is a sentence and the bar is a mark. **Making them agree would move
+ * every vertical number in the fence** — `serifmark.mjs` reads drop 0.205 and
+ * slack −0.045 for `Keep` against 0 and 0.16 for `KEEP` — so it is a measured
+ * job and not a string edit.
  */
 export default async function SignInPage() {
   if (await getSessionUser()) redirect('/')
