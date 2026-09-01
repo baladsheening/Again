@@ -2631,12 +2631,12 @@
    * ⚠ **The box is wider than it is tall**, because the thing it sits behind is
    * a word. It was square when the light was a circle.
    *
-   * ⚠ **The four alphas COMPOUND and the peak is not any one of them.** Alpha
-   * compositing multiplies what is left: 6%, 4%, 2.2% and 3.6% leave
-   * `1 − 0.94 × 0.96 × 0.978 × 0.964 = 0.149`, so the centre peaks near 15% of
-   * the ink where the old single lobe peaked at 7%. **Do not read one of these
-   * as the brightness** — raising one raises the core more than it raises its
-   * own edge.
+   * ⚠ **The five alphas COMPOUND and the peak is not any one of them.** Alpha
+   * compositing multiplies what is left: 6%, 4%, 2.2%, 3.6% and 5% leave
+   * `1 − 0.94 × 0.96 × 0.978 × 0.964 × 0.95 = 0.192`, so the centre peaks near
+   * 19% of the ink where the old single lobe peaked at 7%. **Do not read one of
+   * these as the brightness** — raising one raises the core more than it raises
+   * its own edge, and the mask takes some of it back over the letters.
    *
    * ⚠ **The footprint was tightened the same day** — reach 1.5 → 1.15 of the
    * band, the box 2.4 → 2.1 by 2 → 1.9 of it. At the first size the light spread
@@ -2661,6 +2661,7 @@
   --mark-glow-b: color-mix(in srgb, var(--color-text) 4%, transparent);
   --mark-glow-c: color-mix(in srgb, var(--color-text) 2.2%, transparent);
   --mark-glow-d: color-mix(in srgb, var(--color-text) 3.6%, transparent);
+  --mark-glow-e: color-mix(in srgb, var(--color-text) 5%, transparent);
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -5754,10 +5755,44 @@
     width: var(--mark-glow-width);
     height: calc(var(--mark-glow-lift) + var(--mark-glow-drop));
     /*
-      Four ellipses, none concentric with the box and no two the same shape: the
+      Five ellipses, none concentric with the box and no two the same shape: the
       core behind the letters and a little left of the box's middle, a taller one
-      leaning right, a wide flat one spreading across the bar's edge, and a small
-      one low and left to keep the bottom outline from closing into an arc.
+      leaning right, a wide flat one spreading across the bar's edge, a small one
+      low and left to keep the bottom outline from closing into an arc, and the
+      fifth up and to the left.
+
+      ⚠ **The fifth was added because the first four all sat right of and below
+      the mark's ink centre — 1 September, reported as *right and down
+      leaning*.** Their centres measure (65.6, 75.2), (101, 70.9), (82.3, 94.8)
+      and (42.6, 98) against ink whose centre is (53, 71): three of the four are
+      at or right of where the letters end, and every one of them is at or below
+      the letters' middle. **Measured before: the right column read 10.62 sRGB
+      against the left's 6.46, and the lower row 8.42 against the upper's 5.72.**
+
+      ⚠ **It is an ADDITION, not a re-aim.** The right and downward spill is
+      wanted — that is the light coming out from under the bar — so nothing was
+      moved and no alpha was changed. **Four things were changed at once in an
+      earlier pass and the result was reported worse with no way to tell which**;
+      one lobe at a time is the way this file gets tuned now.
+
+      ⚠ **Its centre sits just below the mask's opaque stop, deliberately.** At
+      `18%` it is at full opacity and only its top feathers into the mask's own
+      falloff; a few points higher and the mask takes the core instead of the
+      edge, which is the light being dimmed rather than shaped.
+
+      ⚠ **It is wide enough to be CLIPPED by the box, and that is the point.**
+      At 42% of the width it reaches to −55px where the box stops at −18, so the
+      cut happens **off the left of the screen** and what is on screen is the
+      inner part of something carrying on past the edge. A lobe that closed
+      inside the viewport would read as a second blob rather than as a smudge.
+      It was 30% wide first and measured almost nothing at the edge.
+
+      **Measured after, against the before above: the left column 6.46 → 7.88 and
+      the upper row 5.72 → 6.98, with the right and lower unchanged at 10.62 and
+      8.42** — which is what an addition rather than a re-aim looks like. The
+      top boundary left of the mark rose with it, 68.5 / 64.5 / 61.5 to 62 /
+      59.5 / 58.5, so the light now clears the letters on that side too.
+      `node_modules/.probe/glowbalance.mjs`.
     */
     background:
       radial-gradient(
@@ -5779,6 +5814,11 @@
         24% 26% at 29% 47%,
         var(--mark-glow-d),
         transparent 69%
+      ),
+      radial-gradient(
+        42% 34% at 21% 18%,
+        var(--mark-glow-e),
+        transparent 73%
       );
     /*
       ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
