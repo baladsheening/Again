@@ -2648,7 +2648,15 @@
    */
   --mark-glow-reach: calc(var(--mark-column) * 1.15);
   --mark-glow-width: calc(var(--mark-glow-reach) * 2.1);
-  --mark-glow-height: calc(var(--mark-glow-reach) * 1.9);
+  /**
+   * ⚠ **How far the light reaches up, and how far down — two terms, because it
+   * is not symmetric.** The lift is the exact distance from the bar's bottom
+   * edge to the status bar, so the light stops there by construction; see
+   * `mark-glow` for why that needs no `env()`. The drop is a fraction of the
+   * mark's band, like every other reach here.
+   */
+  --mark-glow-lift: calc(var(--bar-air) + var(--bar-row));
+  --mark-glow-drop: calc(var(--mark-column) * 0.7);
   --mark-glow-a: color-mix(in srgb, var(--color-text) 6%, transparent);
   --mark-glow-b: color-mix(in srgb, var(--color-text) 4%, transparent);
   --mark-glow-c: color-mix(in srgb, var(--color-text) 2.2%, transparent);
@@ -5722,40 +5730,65 @@
     position: absolute;
     z-index: -1;
     pointer-events: none;
-    left: calc(var(--mark-column-mid) - var(--mark-glow-width) / 2);
-    bottom: calc(
-      var(--bar-air) / 2 + var(--bar-row) / 2 - var(--mark-glow-height) / 2
-    );
-    width: var(--mark-glow-width);
-    height: var(--mark-glow-height);
     /*
-      Four ellipses, none of them concentric with the box and no two the same
-      shape. Read them as: the core a little left of and above the middle, a
-      taller one leaning right, a wide flat one spreading below the bar's edge,
-      and a small one low and left that keeps the bottom outline from closing
-      into an arc.
+      ⚠⚠ **THE TOP EDGE IS THE STATUS BAR'S, AND IT IS DERIVED WITHOUT AN
+      `env()` — 1 September.** Reported: it should not go so high as to cover the
+      area of the status bar. It did: the box was centred on the glyph row with
+      half its height above, which put light 23px past the top of the screen.
+
+      **The distance from the bar's bottom edge up to the status bar IS
+      `--bar-air + --bar-row`** — the header's padding-top is that inset plus
+      `--bar-air / 2`, so the inset cancels out of the difference. `--mark-glow-
+      lift` is that distance, and the box is `lift + drop` tall hung `drop` below
+      the bar. **The top edge therefore lands on the status bar's lower edge at
+      every inset, on a notch and without one, with no `env()` in the
+      expression** — and it follows the bar the day the bar's air or row changes.
+
+      ⚠ **The light is now ASYMMETRIC about the mark, and that is the point.**
+      Up it stops at the status bar; down it spills `--mark-glow-drop`. A glow
+      that emanates from under a bar was never symmetric — the first version was,
+      which is why it climbed.
+    */
+    left: calc(var(--mark-column) - var(--mark-glow-width) / 2);
+    bottom: calc(-1 * var(--mark-glow-drop));
+    width: var(--mark-glow-width);
+    height: calc(var(--mark-glow-lift) + var(--mark-glow-drop));
+    /*
+      Four ellipses, none concentric with the box and no two the same shape: the
+      core behind the letters and a little left of the box's middle, a taller one
+      leaning right, a wide flat one spreading across the bar's edge, and a small
+      one low and left to keep the bottom outline from closing into an arc.
     */
     background:
       radial-gradient(
-        52% 44% at 41% 43%,
+        54% 42% at 40% 26%,
         var(--mark-glow-a),
         transparent 71%
       ),
       radial-gradient(
-        31% 55% at 57% 37%,
+        32% 47% at 57% 22%,
         var(--mark-glow-b),
         transparent 74%
       ),
       radial-gradient(
-        67% 29% at 47% 61%,
+        66% 32% at 48% 44%,
         var(--mark-glow-c),
         transparent 78%
       ),
       radial-gradient(
-        23% 26% at 29% 63%,
+        24% 26% at 29% 47%,
         var(--mark-glow-d),
         transparent 69%
       );
+    /*
+      ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
+      whose falloff still has alpha where the box ends draws a straight line
+      across the screen — the one thing a diffuse light must never have. The mask
+      takes the top eighth to nothing, so whatever the lobes do up there the edge
+      is a fade. It is a fraction of the box, so it scales with everything else.
+    */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 13%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 13%);
   }
 }
 
