@@ -5412,7 +5412,49 @@
  */
 @utility grain-ground {
   position: fixed;
-  inset: 0;
+
+  /**
+   * ⚠⚠ **IT BLEEDS PAST THE VIEWPORT, AND `inset: 0` WAS A 46px STRIP OF NAKED
+   * GROUND AT THE FOOT OF THE INSTALLED APP — measured 1 September.**
+   *
+   * Reported from the home app: *the background doesn't fill the screen*, and
+   * swiping the page made it fill. Both are true. Row-by-row luminance on the
+   * handset's own screenshot: **exactly 0.000 from 798 CSS px to 844**, and the
+   * whole 844 covered in the shot taken after a drag.
+   *
+   * ⚠ **The cause is not this layer. It is that iOS lays a `black-translucent`
+   * standalone app out at `screen − safe-area-inset-top` until something forces
+   * a re-layout** — 798 against 844 on a 47px inset, to the pixel. Every length
+   * in CSS is short at that moment: `inset: 0`, `100vh`, `100dvh`, `100lvh` and
+   * `100%` alike, because it is the layout viewport itself that is wrong. **There
+   * is nothing a stylesheet can ask that would give the real number**, which is
+   * why this is answered by not needing it.
+   *
+   * ⚠ **So the fix is to remove the EDGE, not to correct the measurement** — the
+   * order *How things get fixed* asks for. A texture behind everything at
+   * `z-index: -1` has no business having a boundary on the screen at all; one
+   * that lands anywhere but off-screen is a seam waiting for the next engine to
+   * put it somewhere visible.
+   *
+   * ⚠ **The bleed is the missing inset itself, spent at BOTH ends.** What iOS
+   * withholds is exactly `env(safe-area-inset-top)`, so that is what this gives
+   * back — doubled by symmetry, since `background-position: center` means the
+   * drawing should stay centred rather than be slid down. 47 each way covers a
+   * 46px shortfall with 48 to spare. ⚠ **It is a no-op on every surface without a
+   * notch**: a browser, an Android, the desk and a home-button iPhone all
+   * resolve it to `inset: 0`, byte for byte what shipped before.
+   *
+   * ⚠ **A fixed element contributes no scrollable overflow**, so hanging it off
+   * all four... two edges costs no scroll range and cannot produce a bar. The
+   * only thing it changes is the `cover` crop, by about 5%.
+   *
+   * ⚠ **Do not answer this by putting the paper on `html` instead.** The canvas
+   * would fill by definition — that was the first idea — but the root's
+   * background positioning area is the root's own box, so on the record it would
+   * scroll away and leave colour below; `background-attachment: fixed` is what
+   * fixes that and is the property iOS has never implemented properly.
+   */
+  inset: calc(-1 * env(safe-area-inset-top)) 0;
   /**
    * ⚠⚠ **`-1`, NOT `0` — 1 September, and it is what lets this be mounted ONCE
    * for the whole app instead of per screen.**
@@ -5663,6 +5705,63 @@
   letter-spacing: 0.14em;
   text-transform: lowercase;
   line-height: 1.4;
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Only the create-account form may compress the explanation — 1 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The cap that makes `wall-beats` shrinkable, on the sign-in wall's `main`.
+ *
+ * ⚠⚠ **IT SHIPPED UNGATED FOR AN HOUR AND ATE THE BEATS ON THE OPENING SCREEN.**
+ * Reported: *now the write / match / keep part is obscured from the get go. i
+ * didn't ask for that.* Correct — the direction was about the third field, and
+ * an unconditional cap turned it into a rule about every mode.
+ *
+ * ⚠ **The handset made it much worse than the desk could see.** iOS lays a
+ * `black-translucent` standalone app out at `screen − safe-area-inset-top` until
+ * something forces a re-layout, so `100dvh` read **798 where the screen is 844**
+ * — measured off the handset's own screenshot, and the same 46px that left a
+ * strip of naked ground under the paper. The sign-in wall wants 857 at that
+ * width, so what was a 13px trim on the desk's emulation was a 59px bite on the
+ * phone, and `keep?` went with it.
+ *
+ * ⚠ **The gate is the MODE, and that is deliberate where the fade's is not.**
+ * `wall-beats` reads its own overflow, because *is anything cut* is a question
+ * about space and must be measured. **This is a different question** — *which
+ * screen is allowed to trade the explanation for the fields* — and that is a
+ * product decision, answered here once. A screen 46px short must not silently
+ * start spending the disclosure to pay for it.
+ *
+ * ⚠ **So sign-in and reset are byte-for-byte what they were**: no cap, the
+ * document scrolls the few pixels it always scrolled, and nothing is ever cut.
+ * Only the third field buys the compression.
+ *
+ * ⚠ **Written here rather than as a `has-` variant at the call site**, because
+ * the desk's override has to beat it: `:has()` carries the attribute's
+ * specificity, so a plain `stack:max-h-none` (0,1,0) loses to it (0,2,0) inside
+ * the media query and the cap would survive onto the desk. Two selectors of
+ * equal weight, the later one winning, is a thing a class attribute cannot
+ * state — the trap `--bar-gutter` and `sheet-row` are both written to avoid.
+ *
+ * ⚠ **`dvh` and not `vh`.** `100vh` is the *large* viewport, so in a Safari tab
+ * with the toolbars showing it is taller than the screen and the fold comes
+ * straight back.
+ */
+@utility wall-frame {
+  &:has(form[data-mode='sign-up']) {
+    max-height: 100dvh;
+  }
+
+  @variant stack {
+    /* No cap up here at all: the wall is a two-column grid and the form grows
+       into its own column, so there is nothing to push and a short desk window
+       should go on scrolling exactly as it does today. */
+    &:has(form[data-mode='sign-up']) {
+      max-height: none;
+    }
+  }
 }
 
 /**

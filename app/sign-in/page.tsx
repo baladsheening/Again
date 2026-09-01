@@ -100,9 +100,9 @@ export default async function SignInPage() {
         is the composition a 1440 has room for and a handset does not.
       */}
       {/*
-        ⚠ **`max-h-dvh` IS WHAT LETS THE FORM PUSH UP — 1 September, and it is
-        the load-bearing half of that change.** Reported: *create an account*
-        adds a field and slides *sign in with a password* under the fold.
+        ⚠ **`wall-frame` IS WHAT LETS THE FORM PUSH UP, and it fires on the
+        create-account form alone.** Reported: *create an account* adds a field
+        and slides *sign in with a password* under the fold.
 
         The answer is flex shrink — the beats give the height back — and **flex
         shrink cannot happen against a container with no definite height.**
@@ -112,17 +112,13 @@ export default async function SignInPage() {
         Capping this box at the viewport is what makes the free space negative,
         and the shrink follows with no measurement anywhere.
 
-        ⚠ **`dvh`, not `vh` or `%`.** A percentage resolves against a container
-        whose height is auto and computes to `none`; `100vh` is the *large*
-        viewport, so in a Safari tab with the toolbars showing it is taller than
-        the screen and the fold comes back. `dvh` is the one that tracks what is
-        actually visible.
-
-        ⚠ **Off above `--breakpoint-stack`.** Up there the wall is a grid and the
-        form grows into its own column, so there is nothing to push and a short
-        desk window should go on scrolling the way it does today.
+        ⚠⚠ **The cap shipped UNGATED for an hour and ate the beats on the opening
+        screen** — reported, *i didn't ask for that*, and correctly. The whole
+        argument for the gate, and the 46px of iOS the handset added to it, is in
+        `wall-frame`'s docblock. Sign-in and reset are untouched by this screen's
+        arrangement; only the third field buys the compression.
       */}
-      <main className="gutter safe-bottom relative z-[1] mx-auto flex max-h-dvh w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-h-none stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
+      <main className="gutter safe-bottom wall-frame relative z-[1] mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
         {/*
           `my-auto` rather than `justify-center` on the parent: when a phone
           keyboard takes half a landscape viewport the content is taller than the

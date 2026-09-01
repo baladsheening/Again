@@ -76,7 +76,7 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3">
+    <form onSubmit={submit} data-mode={mode} className="flex flex-col gap-3">
       {/*
         Stacked at every width. The fields and the button are direct children of
         the form, which is the same `flex flex-col gap-3` the wrapper around them
