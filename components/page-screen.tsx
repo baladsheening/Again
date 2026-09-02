@@ -713,7 +713,7 @@ export function PageScreen({
     back — and somebody who was at the top and tapped it should not lose them.
     Both are one rule: *writing does not move the furniture.*
   */
-  const receded = useChromeRecede({
+  const chrome = useChromeRecede({
     held: opened !== null,
     writing,
     top: topMark,
@@ -2346,7 +2346,7 @@ export function PageScreen({
         back — see `LineTools` — so the bar is the wordmark, the tray and you,
         and every screen in the app now renders the same three.
       */}
-      <Bar receded={receded} />
+      <Bar receded={chrome.bar} />
 
       {/*
         **The record, behind glass while a line is being written.**
@@ -3666,7 +3666,7 @@ export function PageScreen({
           writing
             ? 'sheet-lit'
             : `stack:pointer-events-none stack:translate-y-full bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] ${
-                receded ? 'pointer-events-none translate-y-full' : ''
+                chrome.strip ? 'pointer-events-none translate-y-full' : ''
               }`
         }`}
       >

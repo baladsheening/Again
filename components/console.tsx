@@ -404,8 +404,35 @@ export function Console({
           dark pencil beside a struck line is the page explaining what it is
           refusing, and nothing there is the page showing one way back.
         */}
-        <div className="mt-4 flex items-center justify-between [--glyph:var(--glyph-foot)]">
-          <div className="flex items-center gap-5">
+        {/*
+          ⚠⚠ **THE ROW IS THE FOOT'S OWN FOUR-COLUMN GRID — 2 September,
+          directed: the tray in the console should line up exactly with the tray
+          in the bottom row.** It did not: `justify-between` put the settle
+          glyph against the card's text edge, centred at 337, while the foot's
+          tray sits centred in its fourth column at **326.25** — 10.75px apart,
+          and both on screen together whenever the strip is down.
+
+          ⚠ **The two boxes coincide by construction, which is the only reason
+          this can be an alignment rather than an offset.** The card is
+          `--record-measure` wide with `margin-inline: auto` inside a sheet
+          wearing the gutter; the strip is `--record-measure` with the same
+          gutter and the same `mx-auto`. **Same width, same origin, at every
+          width** — so four equal columns over the card's border box are the
+          foot's four columns.
+
+          ⚠ **`-mx-[var(--page-lead)]` cancels the card's padding**, because the
+          grid has to span the card's border box and the padding is what makes
+          the content box narrower than the strip. The left group takes the
+          padding back as `ps-` so its ink still starts on the card's text edge
+          — the record's own column — where the capture's words start.
+
+          ⚠ **The foot is four columns whenever a console can be open.** It drops
+          to three only when `write` is null, and `write` is null only on an
+          empty record — which has no line to tap. The alignment cannot be caught
+          out by the three-column case.
+        */}
+        <div className="-mx-[var(--page-lead)] mt-4 grid grid-cols-4 items-center [--glyph:var(--glyph-foot)]">
+          <div className="col-span-3 flex items-center gap-5 ps-[var(--page-lead)]">
             <button
               type="button"
               onClick={onCrossOff}
@@ -446,7 +473,7 @@ export function Console({
               onClick={onSettle}
               aria-label="Settle it"
               aria-expanded={asking}
-              className="text-chrome tap-target flex items-center"
+              className="text-chrome tap-target col-start-4 flex items-center justify-self-center"
             >
               <SettleGlyph />
             </button>

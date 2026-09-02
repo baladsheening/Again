@@ -203,8 +203,23 @@ export function useChromeRecede({
     manual reload of a scrolled tab, where the browser's own restore is the
     thing being seen.
   */
-  const atTop = useOnScreen(top, true, writing)
-  const atEnd = useOnScreen(end, false, writing)
+  /*
+    ⚠⚠ **A CONSOLE FREEZES THIS HOOK, THE SAME WAY `writing` DOES — 2 September.**
+    `held` used to be spent only in the return, and that was not enough: opening
+    a console scrolls the record a little, the listener below was still running,
+    and a scroll back up of more than `FLICK` sets `wanted` — so the strip came
+    back **as a consequence of the tap** rather than as anything the reader
+    asked for. The first attempt at the split fixed the boolean and left the
+    machine running, and the probe caught the strip returning anyway.
+
+    **Freezing by disconnection rather than by latching**, which is the choice
+    this file already made for `writing`: the observers stop observing and the
+    flick loop stops listening, so every input keeps the value it had at the tap
+    and there is no copy of the answer to go stale.
+  */
+  const frozen = writing || held
+  const atTop = useOnScreen(top, true, frozen)
+  const atEnd = useOnScreen(end, false, frozen)
   /**
    * Whether the chrome is currently asked for.
    *
@@ -220,7 +235,7 @@ export function useChromeRecede({
   useEffect(() => {
     const mark = top.current
     /* Writing does not move the furniture — see `writing`. */
-    if (!mark || writing) return
+    if (!mark || frozen) return
 
     /** How far the record has travelled up the glass. A fact, not a viewport. */
     const travel = () => -mark.getBoundingClientRect().top
@@ -285,7 +300,30 @@ export function useChromeRecede({
       window.removeEventListener('scroll', schedule)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [top, writing])
+  }, [top, frozen])
 
-  return !held && !atTop && !atEnd && !wanted
+  /*
+    ⚠⚠ **TWO ANSWERS, BECAUSE THE TWO EDGES ARE NOT ASKING THE SAME QUESTION —
+    2 September, reported: *why does the bottom bar return when a console
+    opens?*** It did, and it should not have: `held` was ANDed into one boolean
+    that both edges read, so opening a console did not hold the chrome where it
+    stood — **it pulled both bars back down whatever the reader had done.** The
+    prose beside the call site said *the bar must stay visible if it was visible
+    when the line was tapped*, which is a hold; the code was a restore.
+
+    ⚠ **The top edge keeps `held` and that is deliberate.** A console is a
+    surface you opened on purpose, and the mark and the way to your profile
+    belong on screen while one is up — directed. **The bottom edge is the
+    reflex edge** (§2), and the strip's `+` starts a *new* capture, which is
+    the one thing somebody reading an old one is not doing.
+
+    ⚠ **The strip needs no latch and must not grow one.** `held` freezes the
+    whole hook — see `frozen` below — so `atTop`, `atEnd` and `wanted` all keep
+    the values they had at the tap, and `raw` is *the answer at the moment the
+    line was tapped* without anything copying it. **Do not add a latch here**:
+    a stored copy is a second source of truth that has to be cleared on the way
+    out, and the disconnection has nothing to clear.
+  */
+  const raw = !atTop && !atEnd && !wanted
+  return { bar: !held && raw, strip: raw }
 }
