@@ -104,7 +104,23 @@ export function ProfileIdentity({ handle }: { handle: string }) {
  * and comes up to full only under a cursor, so it is findable without being
  * inviting.
  *
- * ⚠ **The gap above it is two lines of the record, derived rather than picked.**
+ * ⚠⚠ **`mt-auto` ON A WRAPPER, SO IT SITS AT THE END OF THE COLUMN AND NOT
+ * WHEREVER THE CONTENT RAN OUT — 2 September.** Reported: with an empty People
+ * card it stranded a third of the way down the screen. **That is not the pinned
+ * bar coming back.** The bar was `position: fixed`: it occupied the bottom edge
+ * permanently, on every scroll position, which is what §2 forbids. This is in
+ * flow and last in the document — it reaches the bottom only while the page is
+ * short enough to have spare column, and a long People list pushes it off the
+ * screen like any other content.
+ *
+ * ⚠ **The auto margin and the minimum gap are on DIFFERENT elements, and they
+ * have to be.** They are both `margin-top`, and two classes setting one property
+ * are resolved by their order in the compiled sheet — the trap `--bar-gutter` is
+ * a token to avoid and `--sheet-row-lead` is two properties to avoid. The
+ * wrapper takes the `auto`; the gap is the wrapper's `padding-top`, so on a page
+ * with no spare column the two lines still separate it.
+ *
+ * ⚠ **The gap is two lines of the record, derived rather than picked.**
  * `--leading-line` is the app's unit of separation everywhere else on this
  * screen's ground, and two of them say *this is not part of what is above it*
  * without a rule, which §11 does not allow anyway.
@@ -119,16 +135,18 @@ export function SignOut() {
   const router = useRouter()
 
   return (
-    <button
-      type="button"
-      onClick={async () => {
-        await authClient.signOut()
-        router.push('/sign-in')
-        router.refresh()
-      }}
-      className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target mt-[calc(var(--leading-line)*2)] w-fit cursor-pointer rounded-[10px] px-4 py-2 transition-colors"
-    >
-      Sign out
-    </button>
+    <div className="mt-auto pt-[calc(var(--leading-line)*2)]">
+      <button
+        type="button"
+        onClick={async () => {
+          await authClient.signOut()
+          router.push('/sign-in')
+          router.refresh()
+        }}
+        className="text-muted hover:text-text bg-surface/40 hover:bg-surface/60 micro tap-target cursor-pointer rounded-[10px] px-4 py-2 transition-colors"
+      >
+        Sign out
+      </button>
+    </div>
   )
 }

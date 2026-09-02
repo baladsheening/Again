@@ -16,12 +16,29 @@ import { Bar } from './bar'
  * `/profile` and somebody else's page are the same column of text at a different
  * moment, and a second set of numbers would be a second thing to keep true.
  *
- * ⚠ **The minimum height's stated job is spent — 2 September.** It was here so
- * `/profile` could pin its identity block to the foot with `mt-auto`, and that
- * block is deleted: the profile is three things down a column now, with nothing
- * pinned. It is kept because a short route still wants a full column under the
- * bar rather than a stub of one, **but nothing depends on it any more** — if it
- * ever gets in the way, it goes, and no layout has to be kept in step with it.
+ * ⚠⚠ **THE MINIMUM HEIGHT IS `svh`, AND THE `+ env(safe-area-inset-top)` IT
+ * CARRIED FOR A FORTNIGHT WAS A NOTCH-SIZED BUG — measured 2 September.** The
+ * column was a viewport **plus** the top inset, so on a notched handset every
+ * route using this frame was 891px of column in an 844px window: the document
+ * scrolled on pages that fit, and `/profile`'s last element landed **17px above
+ * the fold** where it should have had the frame's own 64px of foot air. At a 0px
+ * inset — a browser, an Android, the desk — both expressions compute the same
+ * thing, **which is why it survived every measurement taken on this machine**.
+ * Same shape as the `--sheet-clearance` bug: right by construction everywhere
+ * except the one surface the app is installed on.
+ *
+ * ⚠ **The inset was never needed here.** The bar is fixed and overlaps this
+ * column; what clears it is the `pt`, which reads `--bar-height` and has the
+ * inset inside it already. Adding it a second time to the *height* only made the
+ * box taller than the screen. **Do not put it back**: if a route ever needs to
+ * reach under the status bar, that is a job for the thing that paints there —
+ * `grain-ground`, which bleeds a quarter of the viewport past both edges.
+ *
+ * ⚠ **What the minimum height is still for:** a short route wants a full column
+ * under the bar rather than a stub of one, and `/profile` puts its last element
+ * at the end of that column with `mt-auto`. **In flow, not pinned** — a long
+ * People list pushes it off the screen like any other content, which is the
+ * difference between this and the fixed bar it replaced.
  *
  * ⚠ **`pb-16` was a RESERVATION and is now just the column's foot air.** It
  * kept a long People list off the fixed block that used to cross the bottom of
@@ -32,7 +49,7 @@ export function Screen({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Bar />
-      <main className="gutter mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-16">
+      <main className="gutter mx-auto flex min-h-svh w-full max-w-[var(--page-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-16">
         {children}
       </main>
     </>
