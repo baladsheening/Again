@@ -1117,28 +1117,25 @@
   --type-indent: 0.375rem;
 
   /**
-   * The foot's geometry, below `rail`. Two numbers, and they exist as tokens for
-   * the same reason `--masthead-hem` does: more than one screen has to land on
-   * this line, and a number restated is a number that drifts.
+   * ⚠⚠ **`--collections-inset` AND `--collections-row` WERE HERE AND BOTH ARE
+   * DELETED — 2 September.** They were the collections bar's geometry: how far
+   * it sat off the bottom of the screen, and the height of the row its labels
+   * centred in. **Phase 1 deleted that bar**, and the two numbers survived it by
+   * a fortnight because `/profile` had borrowed them for a fixed block of its
+   * own — the one screen with no collections, standing its *Sign out* on the
+   * line they vacated.
    *
-   * `--collections-inset` is how far the bar sits off the bottom of the screen.
-   * ⚠ **It is the home-indicator inset LESS a centimetre, floored at zero**, and
-   * that is not an approximation — the whole inset is right in a Safari tab and
+   * **That block is deleted too** (see `components/profile-panel.tsx`: a
+   * sign-out control on the bottom edge fails §2 of the brief), so the last
+   * reader of both is gone. Same rule that took `--profile-foot` and Jost.
+   *
+   * What is worth carrying if a bottom bar is ever wanted again: the inset was
+   * the home-indicator inset **less a centimetre**, floored at zero, and that
+   * was not an approximation — the whole inset is right in a Safari tab and
    * wrong installed, where there is no toolbar occupying the band and the bar
-   * rose 34px overnight. The indicator needs clearing, not the band it is quoted
-   * in. The full account is at the `<nav>` in `components/shell.tsx`.
-   *
-   * `--collections-row` is the height of the row the labels centre in. It is
-   * fixed rather than content-driven because the four labels wrap to two lines at
-   * 320px, and a bar that changes height under a thumb is worse than one with
-   * slack in it.
-   *
-   * **`/profile` reads both**, because it is the one screen with no collections
-   * and its *Sign out* stands on the line they vacate. Without that the foot
-   * jumped every time you opened your own profile — see `components/profile-panel.tsx`.
+   * rose 34px overnight. **The indicator needs clearing, not the band it is
+   * quoted in.** `--sheet-drop` is the live expression of the same problem.
    */
-  --collections-inset: max(0px, calc(env(safe-area-inset-bottom) - 1rem));
-  --collections-row: 2.625rem;
 
   /**
    * ⚠⚠ **`--profile-foot` WAS HERE AND IS DELETED — 1 September.** It was the
@@ -1666,11 +1663,11 @@
    */
 
   /**
-   * ⚠ **The foot's own inset is the whole home-indicator inset**, unlike
-   * `--collections-inset`, which subtracts a centimetre from it. The collections
-   * bar this replaces was a band of labels sitting off the bottom edge; the foot
-   * is a row of glyphs on it, and a glyph under the indicator is a control that
-   * cannot be pressed. See the `<nav>` note in the shell for the account of why
+   * ⚠ **The foot's own inset is the whole home-indicator inset**, unlike the
+   * deleted `--collections-inset`, which subtracted a centimetre from it. The
+   * collections bar this replaces was a band of labels sitting off the bottom
+   * edge; the foot is a row of glyphs on it, and a glyph under the indicator is
+   * a control that cannot be pressed. See the `<nav>` note in the shell for the account of why
    * that inset is quoted against a toolbar that is not there when installed.
    */
   --foot-row: var(--glyph-foot);

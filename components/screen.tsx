@@ -16,9 +16,17 @@ import { Bar } from './bar'
  * `/profile` and somebody else's page are the same column of text at a different
  * moment, and a second set of numbers would be a second thing to keep true.
  *
- * The minimum height is what lets `/profile` pin its identity block to the foot
- * of the screen with `mt-auto` — see `ProfilePanel`, which is anchored to that
- * corner at every width on purpose.
+ * ⚠ **The minimum height's stated job is spent — 2 September.** It was here so
+ * `/profile` could pin its identity block to the foot with `mt-auto`, and that
+ * block is deleted: the profile is three things down a column now, with nothing
+ * pinned. It is kept because a short route still wants a full column under the
+ * bar rather than a stub of one, **but nothing depends on it any more** — if it
+ * ever gets in the way, it goes, and no layout has to be kept in step with it.
+ *
+ * ⚠ **`pb-16` was a RESERVATION and is now just the column's foot air.** It
+ * kept a long People list off the fixed block that used to cross the bottom of
+ * `/profile`. There is nothing down there to clear on any route, so what it does
+ * now is stop the last line sitting on the edge of the glass.
  */
 export function Screen({ children }: { children: React.ReactNode }) {
   return (
