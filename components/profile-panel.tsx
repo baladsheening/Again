@@ -120,6 +120,21 @@ export function ProfileIdentity({ handle }: { handle: string }) {
  * wrapper takes the `auto`; the gap is the wrapper's `padding-top`, so on a page
  * with no spare column the two lines still separate it.
  *
+ * ⚠ **It eats one line of the frame's foot air, and that is what *a tad lower*
+ * cost.** `Screen` reserves `pb-16` under every route it frames, which is the
+ * right amount under a column of prose and too much under the page's terminal
+ * control: this is the last thing on the screen and wants to sit nearer the edge
+ * than a paragraph would. The negative margin is local to this element, so
+ * `/settled` and `/u/[handle]` keep the frame's number — **the alternative was
+ * lowering `pb-16` for three routes to move one control.**
+ *
+ * ⚠ **40px above the fold is the floor, not a starting point.** The button's box
+ * clears a 34px home-indicator inset by 6px, and `tap-target`'s 44px hit area
+ * hangs about 7px below the box — so the area's edge lands at 33px, above the
+ * pill but inside the inset. **One more line down and a thumb is aiming into the
+ * system gesture area**, which is the argument `--sheet-drop` is bounded by at
+ * the other end of the app.
+ *
  * ⚠ **The gap is two lines of the record, derived rather than picked.**
  * `--leading-line` is the app's unit of separation everywhere else on this
  * screen's ground, and two of them say *this is not part of what is above it*
@@ -135,7 +150,7 @@ export function SignOut() {
   const router = useRouter()
 
   return (
-    <div className="mt-auto pt-[calc(var(--leading-line)*2)]">
+    <div className="mt-auto -mb-[var(--leading-line)] pt-[calc(var(--leading-line)*2)]">
       <button
         type="button"
         onClick={async () => {

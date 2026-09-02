@@ -334,6 +334,17 @@ function ToolSet({ write, searchable = false, portal = null, portalLit = false }
         that is meaningful empty — it says *nothing is settled yet*, which is a
         true thing about the record and not a dead end.
       */}
+      {/*
+        ⚠⚠ **THE CONSOLE'S SETTLE GLYPH IS ALIGNED TO THIS ONE, AND SOMETHING
+        WILL DEPEND ON IT — 2 September.** Settling from a console is meant to
+        make this tray react: the line going somewhere the eye can follow. The
+        reaction is not built and has not been chosen; **the alignment is the
+        half that had to be true first**, and it is exact — both centres measure
+        326.25 at 390. See the row in `components/console.tsx`, which is the
+        foot's own four-column grid for this reason. **Moving this glyph out of
+        column four breaks something that is not written yet**, so move the
+        console's with it.
+      */}
       <Link
         href="/settled"
         aria-label="Settled"

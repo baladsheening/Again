@@ -430,6 +430,21 @@ export function Console({
           to three only when `write` is null, and `write` is null only on an
           empty record — which has no line to tap. The alignment cannot be caught
           out by the three-column case.
+
+          ⚠⚠ **IT IS A SIGHT LINE FOR AN INTERACTION THAT IS NOT BUILT, AND THAT
+          IS WHY IT MUST NOT BE TIDIED AWAY.** Stated when it was asked for:
+          **settling from this console is meant to make the foot's tray react** —
+          the line going somewhere you can watch it go. What the reaction is has
+          not been decided and nothing here implements one. **The alignment is
+          the half that has to be true first**: a thing cannot appear to travel
+          to a target it is not pointing at, and the two glyphs are on screen
+          together whenever the strip is down.
+
+          **So this row is not `justify-between` with the spacing improved.** If
+          a later change makes the settle glyph sit anywhere but the foot's
+          fourth column, the reaction it exists for is dead before it is written.
+          `node_modules/.probe/trayalign.mjs` measures both in one run — 326.25
+          against 326.25 at 390.
         */}
         <div className="-mx-[var(--page-lead)] mt-4 grid grid-cols-4 items-center [--glyph:var(--glyph-foot)]">
           <div className="col-span-3 flex items-center gap-5 ps-[var(--page-lead)]">
