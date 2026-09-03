@@ -129,6 +129,40 @@ export type CaptureStatus = 'active' | 'completed' | 'dropped'
 export type CaptureVerdict = 'again' | 'have'
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  `PUBLIC_STATES`, RE-DERIVED — the one edit in this migration that can leak
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * `PUBLIC_STATES` is `['want', 'go_back_to', 'fixture']`. Under the two-axis
+ * vocabulary that is **not one list**, because the three do not share an axis:
+ * `want` is a status and the other two are verdicts. So it becomes two positive
+ * lists, and a row is public when **either** matches.
+ *
+ * ⚠⚠ **TWO ALLOWLISTS AND NEVER A DENYLIST, which is the whole point.** The
+ * temptation is `status !== 'dropped' && verdict !== null`, which is shorter and
+ * is the exact shape `listEntriesForOtherUser` had before `dropped` was added —
+ * correct only until the next value exists, and its failure is somebody's
+ * private rows on their page. A value added and not listed here is **invisible**:
+ * the mistake produces a missing row, not a leak. That is the direction it has
+ * to fail in, and it is why this is not derived from the other two.
+ *
+ * ⚠ **A `completed` capture can be public.** `again` and `have` are verdicts on
+ * a finished thing and they are on somebody's page; `completed` with a null
+ * verdict is today's `done`, which §5.3 makes owner-only. So a reader that
+ * checked `status` alone would hide every *Again* and *Have* — wrong, but wrong
+ * in the safe direction, which is the test worth having.
+ *
+ * ⚠ **Asserted against the old list in SQL, in BOTH directions**, by
+ * `scripts/verify-status-backfill.mjs`: every old-public row is new-public and
+ * every new-public row was old-public. A one-way check passes on a conversion
+ * that also published rows it should not have.
+ */
+export const PUBLIC_STATUSES = ['active'] as const satisfies readonly CaptureStatus[]
+
+/** The other half of the pair above. Read them together or not at all. */
+export const PUBLIC_VERDICTS = ['again', 'have'] as const satisfies readonly CaptureVerdict[]
+
+/**
  * How a capture got here. **Server-owned, and immutable once written.**
  *
  * This is the provenance the §6 suppression rule reads: a capture copied from

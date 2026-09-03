@@ -123,9 +123,30 @@ one guarantee that must fail closed.
 | # | What | Why it is safe alone |
 |---|---|---|
 | **A** | Migration `0012`: add `status`, `verdict`, backfill from `state` — ⚠ **then** deploy A's code | Additive. Once the columns exist, old and new code both work |
-| **B** | Deploy: write **both** vocabularies; read `status`/`verdict`, falling back to `state` when null | `state` is still written, so rolling back to pre-B works |
-| **C** | Deploy: stop writing `state`; drop the fallback | Nothing reads `state`; a rollback re-reads a column still present |
-| **D** | Deploy first, **then** migration: re-backfill stragglers, `status` → `NOT NULL`, drop `state` | Nothing has read or written it for a whole deploy |
+| **B** | Re-run the backfill, then deploy: **write both** vocabularies, **read the new one** | `state` is still written, so a rollback to pre-B reads a column that is still current |
+| **C** | Later, once B has run for a while: deploy that stops writing `state`, **then** the migration that tightens `status` and drops it | Nothing has read or written `state` for a whole deploy |
+
+### ⚠ Three steps, not four — the dual-write is what buys the reduction
+
+An earlier draft had four, with B reading the new columns *through a fallback*
+(`status`, or derive it from `state` when null) and C removing the fallback.
+
+**The fallback is scaffolding that exists for one window and is then deleted,**
+and it would have put a second definition of the mapping into TypeScript beside
+the one in SQL — two things to keep true, which is what `lib/domain.ts` says
+about the visibility conjunction and for the same reason.
+
+**Removing the condition instead:** the only rows that can have a null `status`
+are ones written by old code between A's migration and B's deploy. That window
+is *minutes* if the two are done together, and the backfill is **re-runnable by
+construction** (`WHERE status IS NULL`). So re-run it immediately before B and
+there is nothing for a fallback to catch. A re-runnable statement we already
+have beats a code path we would have to write, test and then delete.
+
+⚠ **The dual-write stays all the way to C, and it is what protects rollback.**
+Two extra assignments on each write is a small price for *every deploy in the
+sequence being revertible*. Do not remove it early to tidy up: the moment
+`state` stops being written, a rollback reads stale rows.
 
 ### ⚠⚠ THE RULE, STATED PROPERLY: ADDITIVE MIGRATIONS GO FIRST, SUBTRACTIVE ONES GO LAST
 
@@ -210,6 +231,32 @@ With `process.exit()` it died on a libuv assertion during Neon's teardown and
 returned **127 on a run where every check passed**. A verifier that reports
 failure on success is worse than none — it is the thing somebody runs before a
 production migration.
+
+### ⚠ Step B's scope was cut in half, and the cut is what makes it verifiable
+
+The first scoping had B converting the data layer **and** the components in one
+deploy — `CaptureCard.state` becoming `status`/`verdict`, and `STATE_WORD`,
+`WHERE_IT_IS`, `person-row`, `search-screen`, `settled` and the console all
+following it. That is one change with two audiences and no way to tell which
+half broke something.
+
+**B stops at the data layer.** `lib/db/` reads and writes `status`/`verdict`,
+and the projections keep exposing a `state` field **derived from them**. Not one
+component changes.
+
+- **The acceptance test becomes trivially true.** *No user-visible copy changes*
+  stops being a claim to check and becomes a property of the diff: no file under
+  `components/` or `app/` is touched, so a screenshot cannot differ.
+- **It is independently deployable and independently revertible**, which is the
+  whole reason the sequence is stepped at all.
+- **B2** then moves the UI onto the two axes and deletes the derivation. It has
+  no database work in it, so it can be judged on screen alone — which is the
+  only way this app judges an interface.
+
+⚠ **`PUBLIC_STATUSES` and `PUBLIC_VERDICTS` are already written** (`lib/domain.ts`)
+and are read by nothing yet. They are B's, not A's, and they are there because
+the re-derivation is the part worth getting right before there is any pressure
+to hurry it.
 
 ### Step B — what changes, and the two that need care
 
