@@ -445,7 +445,16 @@ export const captures = pgTable(
      * idempotency check. **`schema.ts` is not a description of the database; it
      * is the source of the column list every query is built from.**
      */
-    status: text('status').$type<CaptureStatus>(),
+    /**
+     * ⚠ **`NOT NULL` since step C1.** It was nullable for exactly as long as it
+     * had to be — step A added it to a populated table, which cannot be done
+     * with a constraint. Step B made every writer set it; this is the database
+     * saying so permanently, and it is what lets `lifecycleOf`'s null branch go.
+     *
+     * ⚠ **`state` is still here and still written.** Tightening this is not the
+     * same act as dropping that — see the note on `state` above.
+     */
+    status: text('status').$type<CaptureStatus>().notNull(),
     /**
      * ⚠ **Null is a value here, not an absence** — a capture completed with no
      * opinion attached. See `CaptureVerdict`, and the check constraint below

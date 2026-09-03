@@ -105,35 +105,26 @@ function lifecycle(status: CaptureStatus, verdict: CaptureVerdict | null) {
   return { status, verdict, state: legacyState(status, verdict) }
 }
 
-/**
- * A row's lifecycle, read back. **The inverse of `lifecycle` above, and the one
- * place that copes with `status` being nullable.**
- *
- * ⚠⚠ **THE COMPILER FOUND THIS, AND IT IS A REAL GAP RATHER THAN A TYPE
- * NUISANCE.** `status` is nullable until step D, and it is nullable because step
- * A had to add it to a populated table. So a capture written by a **pre-step-B
- * build** — anything created between A's migration and B's deploy — carries a
- * correct `state` and no `status` at all. `fireOverlap` would have read `null`
- * and classified it as nothing.
- *
- * ⚠ **This is NOT the fallback the runbook rejected.** That one was a *read path
- * for display*, threaded through every projection, holding a second copy of the
- * mapping in TypeScript — scaffolding built for one window and then deleted. This
- * is **one expression at one boundary**, and it reads through `STATE_SPLIT`,
- * which is the same table the backfill used. There is one mapping, not two.
- *
- * ⚠ **`state` is `NOT NULL` and is dual-written, so this is TOTAL** — it has a
- * right answer for a legacy row and for a new one, and the two agree by
- * construction. It disappears at step C with `state` itself.
- */
-function lifecycleOf(capture: {
-  state: CaptureState
-  status: CaptureStatus | null
-  verdict: CaptureVerdict | null
-}): { status: CaptureStatus; verdict: CaptureVerdict | null } {
-  if (capture.status) return { status: capture.status, verdict: capture.verdict }
-  return STATE_SPLIT[capture.state]
-}
+/*
+  ⚠⚠ **`lifecycleOf` WAS HERE AND IS DELETED — step C1, and the constraint is
+  what replaced it.**
+
+  It existed for one reason: `status` was nullable, so a capture written by a
+  **pre-step-B build** carried a correct `state` and no status, and
+  `fireOverlap` would have read null and classified it as nothing. The compiler
+  found that, not a test.
+
+  `0013` heals any such row and then makes the column `NOT NULL`, so the case
+  it handled **cannot occur** — removing the condition rather than correcting
+  for it, in the order *How things get fixed* asks for. A function that copes
+  with an impossible value is a function the next reader keeps alive by
+  assuming it must still be needed.
+
+  ⚠ **This is why C1 tightens the column BEFORE C2 deletes `state`.** With
+  `state` gone there would be nothing left to derive a null status from, so the
+  order is forced: constrain, then delete.
+*/
+
 
 /**
  * The capture layer. **From Phase 0 on this is the only thing that writes a
@@ -490,7 +481,8 @@ async function fireOverlap(
       handle: me.handle,
       displayName: me.displayName,
       intent: capture.intent,
-      ...lifecycleOf(capture),
+      status: capture.status,
+      verdict: capture.verdict,
       source: capture.source,
       sourceUserId: capture.sourceUserId,
     },
