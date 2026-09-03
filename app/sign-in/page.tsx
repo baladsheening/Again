@@ -118,7 +118,7 @@ export default async function SignInPage() {
         `wall-frame`'s docblock. Sign-in and reset are untouched by this screen's
         arrangement; only the third field buys the compression.
       */}
-      <main className="gutter safe-bottom wall-frame relative z-[1] mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
+      <main data-ground="paper" className="gutter safe-bottom wall-frame relative z-[1] mx-auto flex w-full max-w-sm flex-1 flex-col pt-[calc(3rem+env(safe-area-inset-bottom))] [--safe-bottom-base:3rem] stack:grid stack:max-w-[76rem] stack:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] stack:items-center stack:gap-x-24">
         {/*
           ⚠⚠ **THERE ARE NO AUTO MARGINS ON THIS COLUMN ANY MORE, AND THAT IS
           THE WHOLE OF *THE TEXT SHIFTS UPWARDS* — 1 September.** It was

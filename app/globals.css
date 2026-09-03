@@ -6181,6 +6181,62 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   *  THE PAPER IS THE SIGN-IN SCREENS' ALONE. EVERY OTHER SCREEN IS BLACK.
+   *  3 September, directed.
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * *Plain black, no texture. Not the sign in screens though.*
+   *
+   * ⚠ **This reverses the 1 September direction that put the paper on every
+   * screen, and it reverses it deliberately rather than by drift.** That day's
+   * reasoning was sound and is worth keeping: the paper was on two screens, one
+   * of which was the record *while empty*, so a person with a real record never
+   * saw it and the ground had never been judged in daily use. **It has been now
+   * — and the answer, once it was in daily use, is that the record does not want
+   * a ground.** The record is the product and the type is the design; the poster
+   * screens are composition and can carry a surface.
+   *
+   * ⚠ **A television-static ground was built here first and thrown away the same
+   * hour.** Directed, then *looks awful*, and reverted whole — the tile, the
+   * measurements and the sweep are in git if anybody reaches for a texture on
+   * the record again. **They should read this line first: the record has now
+   * refused two grounds, a photograph and a noise field.** That is a fact about
+   * the screen rather than about either image.
+   *
+   * ⚠ **`display: none`, not `background-image: none`.** The layer has no job on
+   * these screens, so it should not exist: nothing to composite, nothing to
+   * blend, no `mix-blend-mode: screen` running over the whole viewport on the
+   * one page that scrolls. Turning the image off would leave a full-bleed
+   * blending layer doing arithmetic on black to reach black.
+   *
+   * ⚠ **ONE MOUNT STILL SERVES EVERY SCREEN, which is the 1 September structure
+   * kept while its decision is reversed.** The ground stays a single mount in
+   * `app/layout.tsx`, and the page under it decides. Moving it into the two
+   * screens instead would mean two mount points and a bug the day somebody adds
+   * a route and forgets — and it would put back exactly the per-screen opt-in
+   * that day removed.
+   *
+   * ⚠ **`:has()` and not a server-rendered attribute**, because a root layout
+   * does not re-render when you navigate inside it: an attribute set there would
+   * freeze at whatever the first paint decided, and sign-in → record is a client
+   * navigation (`router.push('/')`). `:has()` reads the DOM as it is now.
+   *
+   * ⚠ **The marker is `data-ground="paper"` — an attribute, not a class.**
+   * Tailwind settled that when an empty `@utility` was tried and refused
+   * outright: *utilities should include at least one property*. Correct, and
+   * better than a filler property — this is not a style, it is a screen stating
+   * which ground it wants, and it reads at the call site.
+   *
+   * ⚠ **Adding the attribute to a third screen gives that screen the paper**,
+   * which is a product decision rather than a styling one. `zine.mjs` drives
+   * whatever wears it.
+   */
+  html:not(:has([data-ground='paper'])) & {
+    display: none;
+  }
 }
 
 /**
