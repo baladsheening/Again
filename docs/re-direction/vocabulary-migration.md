@@ -123,7 +123,7 @@ one guarantee that must fail closed.
 | # | What | Why it is safe alone |
 |---|---|---|
 | **A** | Migration `0012`: add `status`, `verdict`, backfill from `state` — ⚠ **then** deploy A's code | Additive. Once the columns exist, old and new code both work |
-| **B** | Re-run the backfill, then deploy: **write both** vocabularies, **read the new one** | `state` is still written, so a rollback to pre-B reads a column that is still current |
+| **B** | Deploy: **write both** vocabularies, **read the new one** — ⚠ then re-run the backfill | `state` is still written, so a rollback to pre-B reads a column that is still current |
 | **C** | Later, once B has run for a while: deploy that stops writing `state`, **then** the migration that tightens `status` and drops it | Nothing has read or written `state` for a whole deploy |
 
 ### ⚠ Three steps, not four — the dual-write is what buys the reduction
@@ -137,11 +137,22 @@ the one in SQL — two things to keep true, which is what `lib/domain.ts` says
 about the visibility conjunction and for the same reason.
 
 **Removing the condition instead:** the only rows that can have a null `status`
-are ones written by old code between A's migration and B's deploy. That window
-is *minutes* if the two are done together, and the backfill is **re-runnable by
-construction** (`WHERE status IS NULL`). So re-run it immediately before B and
+are ones written by code that does not write it yet, and the backfill is
+**re-runnable by construction** (`WHERE status IS NULL`). So run it again and
 there is nothing for a fallback to catch. A re-runnable statement we already
 have beats a code path we would have to write, test and then delete.
+
+⚠⚠ **THE RE-RUN GOES AFTER B'S DEPLOY, NOT BEFORE — this was written the wrong
+way round first.** The window does not close when the migration lands; it closes
+when **something starts writing `status`**, which is B. Re-running before B heals
+everything up to that moment and then leaves the deploy itself — thirty-five
+seconds of a rollout during which the old build is still serving — able to
+create another straggler. Re-running *after* closes it permanently, because by
+then every writer writes both columns and none can be made.
+
+**The general form, worth keeping:** a heal runs after the change that stops the
+damage, never before it. Running it first is treating the symptom on a mechanism
+that is still live.
 
 ⚠ **The dual-write stays all the way to C, and it is what protects rollback.**
 Two extra assignments on each write is a small price for *every deploy in the

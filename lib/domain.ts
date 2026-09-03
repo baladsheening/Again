@@ -163,6 +163,60 @@ export const PUBLIC_STATUSES = ['active'] as const satisfies readonly CaptureSta
 export const PUBLIC_VERDICTS = ['again', 'have'] as const satisfies readonly CaptureVerdict[]
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The two vocabularies, in one table — the dual-write and its mirror
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Step B writes **both** vocabularies on every mutation, so a rollback to a
+ * build that reads `state` finds it current. This is the mapping, written once,
+ * in the same order the migration states it.
+ *
+ * ⚠ **The new columns are the source and `state` is the MIRROR, not the other
+ * way round.** `lib/db/` decides a status and a verdict, and `legacyState`
+ * derives the old word from them. Written the other way — deciding a `state` and
+ * splitting it — the code would still think in film vocabulary and step C would
+ * be a second refactor rather than a deletion.
+ *
+ * ⚠ **This is a TypeScript copy of the migration's SQL `CASE`, and that is not
+ * the duplication the fallback was rejected for.** The migration runs once and
+ * is then history; this runs on every write. They are not two implementations of
+ * one live rule — they are a backfill and a writer that must agree at one moment,
+ * and `scripts/verify-status-backfill.mjs` is what checks that they did.
+ *
+ * ⚠ **Both die at step C.** When `state` is dropped, `legacyState` and this
+ * table go with it and nothing else changes — which is the test of whether the
+ * direction above was chosen correctly.
+ */
+export const STATE_SPLIT = {
+  want: { status: 'active', verdict: null },
+  done: { status: 'completed', verdict: null },
+  go_back_to: { status: 'completed', verdict: 'again' },
+  fixture: { status: 'completed', verdict: 'have' },
+  dropped: { status: 'dropped', verdict: null },
+} as const satisfies Record<
+  CaptureState,
+  { status: CaptureStatus; verdict: CaptureVerdict | null }
+>
+
+/**
+ * The legacy word for a status and verdict. **The mirror `state` is written
+ * from, and the derivation every projection still exposes `state` through.**
+ *
+ * ⚠ **Total, and it must stay total.** Every (status, verdict) pair this product
+ * can produce has a legacy word, because `STATE_SPLIT` is a bijection onto the
+ * five. **The day a pair exists that has no old word — a verdict on something
+ * that was never a film — this function cannot be written, and that is the
+ * signal that step C is due rather than a reason to invent a sixth `state`.**
+ */
+export function legacyState(status: CaptureStatus, verdict: CaptureVerdict | null): CaptureState {
+  if (verdict === 'again') return 'go_back_to'
+  if (verdict === 'have') return 'fixture'
+  if (status === 'active') return 'want'
+  if (status === 'dropped') return 'dropped'
+  return 'done'
+}
+
+/**
  * How a capture got here. **Server-owned, and immutable once written.**
  *
  * This is the provenance the §6 suppression rule reads: a capture copied from
