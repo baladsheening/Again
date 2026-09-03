@@ -169,8 +169,8 @@ describe('another user’s private entries are never visible (§5.3)', () => {
   */
   it('refuses to copy a dropped capture', async () => {
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
-       values ($1, 'a lapsed want', $2, 'see', 'dropped', 'mutuals') returning id`,
+      `insert into captures (user_id, text, possibility_id, intent, state, status, verdict, visibility)
+       values ($1, 'a lapsed want', $2, 'see', 'dropped', 'dropped', null, 'mutuals') returning id`,
       [ownerId, droppedItemId],
     )
     for (const pair of [
@@ -223,8 +223,8 @@ describe('the private note never leaves its owner', () => {
   */
   const ownedCapture = async () => {
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, state, note)
-       values ($1, 'noted', 'want', 'the private part')
+      `insert into captures (user_id, text, state, status, verdict, note)
+       values ($1, 'noted', 'want', 'active', null, 'the private part')
        on conflict do nothing returning id`,
       [ownerId],
     )
@@ -305,8 +305,8 @@ describe('another user’s captures need all four positive terms', () => {
     fields: { state?: string; visibility?: string; note?: string | null } = {},
   ) => {
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, state, visibility, note)
-       values ($1, 'try pottery', $2, $3, $4) returning id`,
+      `insert into captures (user_id, text, state, status, verdict, visibility, note)
+       values ($1, 'try pottery', $2, (case $2 when 'want' then 'active' when 'dropped' then 'dropped' else 'completed' end), (case $2 when 'go_back_to' then 'again' when 'fixture' then 'have' end), $3, $4) returning id`,
       [ownerId, fields.state ?? 'want', fields.visibility ?? 'mutuals', fields.note ?? null],
     )
     return rows[0].id as string
@@ -412,8 +412,8 @@ describe('another user’s captures need all four positive terms', () => {
 
   it('does not rewrite provenance when a dropped copy is added again', async () => {
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, possibility_id, intent, state, source, source_user_id)
-       values ($1, 'a lapsed copy', $2, 'see', 'dropped', 'copy', $3) returning id`,
+      `insert into captures (user_id, text, possibility_id, intent, state, status, verdict, source, source_user_id)
+       values ($1, 'a lapsed copy', $2, 'see', 'dropped', 'dropped', null, 'copy', $3) returning id`,
       [viewerId, itemId, ownerId],
     )
 
@@ -439,14 +439,14 @@ describe('another user’s captures need all four positive terms', () => {
     await mutual()
 
     await pool.query(
-      `insert into captures (user_id, text, possibility_id, intent, state, source)
-       values ($1, 'mine first', $2, 'see', 'dropped', 'self')`,
+      `insert into captures (user_id, text, possibility_id, intent, state, status, verdict, source)
+       values ($1, 'mine first', $2, 'see', 'dropped', 'dropped', null, 'self')`,
       [viewerId, itemId],
     )
 
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
-       values ($1, 'mine first', $2, 'see', 'want', 'mutuals') returning id`,
+      `insert into captures (user_id, text, possibility_id, intent, state, status, verdict, visibility)
+       values ($1, 'mine first', $2, 'see', 'want', 'active', null, 'mutuals') returning id`,
       [ownerId, itemId],
     )
 
@@ -523,14 +523,14 @@ describe('convergence needs both sides to have shared', () => {
     }
 
     await pool.query(
-      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
-       values ($1, 'A Fixture', $2, 'see', 'want', $3)`,
+      `insert into captures (user_id, text, possibility_id, intent, state, status, verdict, visibility)
+       values ($1, 'A Fixture', $2, 'see', 'want', 'active', null, $3)`,
       [ownerId, itemId, counterpartVisibility],
     )
 
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, possibility_id, intent, state, visibility)
-       values ($1, 'A Fixture', $2, 'see', 'want', 'private') returning id`,
+      `insert into captures (user_id, text, possibility_id, intent, state, status, verdict, visibility)
+       values ($1, 'A Fixture', $2, 'see', 'want', 'active', null, 'private') returning id`,
       [viewerId, itemId],
     )
     return rows[0].id as string
@@ -754,8 +754,8 @@ describe('EXIF and every other metadata block is stripped', () => {
 describe('the source URL never leaves its owner', () => {
   const linked = async () => {
     const { rows } = await pool.query(
-      `insert into captures (user_id, text, state, source_url, visibility)
-       values ($1, 'linked', 'want', 'https://example.com/private', 'friends')
+      `insert into captures (user_id, text, state, status, verdict, source_url, visibility)
+       values ($1, 'linked', 'want', 'active', null, 'https://example.com/private', 'friends')
        on conflict do nothing returning id`,
       [ownerId],
     )

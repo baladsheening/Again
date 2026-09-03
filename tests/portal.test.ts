@@ -101,8 +101,8 @@ const capture = async (
   }: { state?: string; intent?: string; source?: string; sourceUserId?: string | null } = {},
 ) => {
   const { rows } = await pool.query(
-    `insert into captures (user_id, text, state, intent, visibility, source, source_user_id, possibility_id)
-     values ($1, $2, $3, $4, 'mutuals', $5, $6, $7) returning id`,
+    `insert into captures (user_id, text, state, status, verdict, intent, visibility, source, source_user_id, possibility_id)
+     values ($1, $2, $3, (case $3 when 'want' then 'active' when 'dropped' then 'dropped' else 'completed' end), (case $3 when 'go_back_to' then 'again' when 'fixture' then 'have' end), $4, 'mutuals', $5, $6, $7) returning id`,
     [userId, text, state, intent, source, sourceUserId, possibilityId],
   )
   return rows[0].id as string

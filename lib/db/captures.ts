@@ -32,8 +32,108 @@ import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { runOverlap } from '@/lib/overlap'
 import { DEFAULT_INTENT, specFor } from '@/lib/vocabulary'
-import { PUBLIC_STATES, SHARED_SCOPES } from '@/lib/domain'
-import type { CaptureSource, Intent, Kind, Visibility } from '@/lib/domain'
+import {
+  legacyState,
+  PUBLIC_STATUSES,
+  PUBLIC_VERDICTS,
+  SHARED_SCOPES,
+  STATE_SPLIT,
+} from '@/lib/domain'
+import type {
+  CaptureSource,
+  CaptureStatus,
+  CaptureVerdict,
+  Intent,
+  Kind,
+  Visibility,
+} from '@/lib/domain'
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The vocabulary migration, stage 1 — STEP B. Read the new, write both.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * `docs/re-direction/vocabulary-migration.md` is the runbook. In short: the
+ * columns exist and are backfilled (step A, applied to production), this deploy
+ * starts **reading** `status`/`verdict` and **writing both** vocabularies, and
+ * step C drops `state` once nothing has touched it for a deploy.
+ *
+ * ⚠ **The dual-write is what keeps every step revertible and it must not be
+ * tidied away early.** The moment `state` stops being written, a rollback to a
+ * build that reads it finds stale rows.
+ */
+
+/**
+ * *Can another person see this capture?* — `PUBLIC_STATES` re-derived onto the
+ * two axes, in **one place**, because it had two call sites and a privacy
+ * predicate with two copies is a privacy predicate with one of them wrong.
+ *
+ * ⚠⚠ **TWO POSITIVE ALLOWLISTS, JOINED BY `or`. NEVER A DENYLIST.** The short
+ * form is `status <> 'dropped' and verdict is not null`, and it is the exact
+ * shape `listEntriesForOtherUser` carried before `dropped` existed — correct
+ * until the next value is added, and its failure is somebody's private rows on
+ * their page. Listed-or-invisible fails the other way.
+ *
+ * ⚠ **A `completed` capture can be public**, which is the half that surprises:
+ * `again` and `have` are verdicts on a finished thing and they belong on
+ * somebody's page, while `completed` with a null verdict is today's `done`,
+ * which §5.3 makes owner-only. A reader that checked `status` alone would hide
+ * every *Again* and *Have* — wrong, but wrong in the safe direction.
+ *
+ * Asserted on both sides: `tests/state-split.test.ts` for the shape,
+ * `scripts/verify-status-backfill.mjs` for the rows.
+ */
+function isPublicCapture() {
+  return or(
+    inArray(captures.status, PUBLIC_STATUSES),
+    inArray(captures.verdict, PUBLIC_VERDICTS),
+  )
+}
+
+/**
+ * The dual-write, in one expression. **Every write of a capture's lifecycle
+ * goes through this** — there is no other way to set `state`, `status` or
+ * `verdict` in this file, which is what stops the two vocabularies drifting
+ * between five call sites.
+ *
+ * ⚠ **It takes the NEW vocabulary and derives the old one**, never the reverse.
+ * The callers below decide a status and a verdict; `legacyState` writes the
+ * mirror. At step C the `state` line is deleted and every caller is already
+ * correct — which is the test of whether this direction was chosen right.
+ */
+function lifecycle(status: CaptureStatus, verdict: CaptureVerdict | null) {
+  return { status, verdict, state: legacyState(status, verdict) }
+}
+
+/**
+ * A row's lifecycle, read back. **The inverse of `lifecycle` above, and the one
+ * place that copes with `status` being nullable.**
+ *
+ * ⚠⚠ **THE COMPILER FOUND THIS, AND IT IS A REAL GAP RATHER THAN A TYPE
+ * NUISANCE.** `status` is nullable until step D, and it is nullable because step
+ * A had to add it to a populated table. So a capture written by a **pre-step-B
+ * build** — anything created between A's migration and B's deploy — carries a
+ * correct `state` and no `status` at all. `fireOverlap` would have read `null`
+ * and classified it as nothing.
+ *
+ * ⚠ **This is NOT the fallback the runbook rejected.** That one was a *read path
+ * for display*, threaded through every projection, holding a second copy of the
+ * mapping in TypeScript — scaffolding built for one window and then deleted. This
+ * is **one expression at one boundary**, and it reads through `STATE_SPLIT`,
+ * which is the same table the backfill used. There is one mapping, not two.
+ *
+ * ⚠ **`state` is `NOT NULL` and is dual-written, so this is TOTAL** — it has a
+ * right answer for a legacy row and for a new one, and the two agree by
+ * construction. It disappears at step C with `state` itself.
+ */
+function lifecycleOf(capture: {
+  state: CaptureState
+  status: CaptureStatus | null
+  verdict: CaptureVerdict | null
+}): { status: CaptureStatus; verdict: CaptureVerdict | null } {
+  if (capture.status) return { status: capture.status, verdict: capture.verdict }
+  return STATE_SPLIT[capture.state]
+}
 
 /**
  * The capture layer. **From Phase 0 on this is the only thing that writes a
@@ -139,22 +239,40 @@ export const PAGE_SIZE = 50
 /** §10: paginate every list. */
 export type Page = { limit?: number; offset?: number }
 
+/**
+ * The four owner views, on the two axes — step B.
+ *
+ * ⚠ **`live` is the one that changed shape rather than vocabulary.** It was a
+ * list of three states; it is now *active, or crossed off, or worth repeating*,
+ * which is two axes and cannot be one `inArray`. The membership is identical —
+ * `want`, `dropped`, `go_back_to` — and `tests/state-split.test.ts` is what
+ * says so.
+ *
+ * ⚠ **The comment this replaces is still true and is kept:** a go-back-to is
+ * still a want (§5.2), and a crossed-off want stays on the page struck through.
+ * That is safe here only because the shared read applies `isPublicCapture()` as
+ * well — see `listEntriesForOtherUser` for the full note; the inversion it
+ * describes is what makes widening this view safe.
+ *
+ * ⚠ **`fixtures` and `archive` are now the same column read two ways**, which
+ * makes visible something the old vocabulary hid: *Have* and *Done* differ only
+ * in whether a verdict was recorded. `archive` is `completed` with **no**
+ * verdict, and that `isNull` is load bearing — without it the archive would
+ * swallow every Again and Have.
+ */
 function stateFilter(view: OwnerView) {
   switch (view) {
-    /*
-      A go-back-to is still a want (§5.2), and a crossed-off want stays on the
-      page struck through — safe here only because the shared read filters on
-      `PUBLIC_STATES` as well. See `listEntriesForOtherUser` for the full note;
-      the inversion it describes is what makes widening this view safe.
-    */
     case 'live':
-      return inArray(captures.state, ['want', 'go_back_to', 'dropped'] as const)
+      return or(
+        inArray(captures.status, ['active', 'dropped'] as const),
+        eq(captures.verdict, 'again' as const),
+      )
     case 'go_back_tos':
-      return eq(captures.state, 'go_back_to' as const)
+      return eq(captures.verdict, 'again' as const)
     case 'fixtures':
-      return eq(captures.state, 'fixture' as const)
+      return eq(captures.verdict, 'have' as const)
     case 'archive':
-      return eq(captures.state, 'done' as const)
+      return and(eq(captures.status, 'completed' as const), isNull(captures.verdict))
   }
 }
 
@@ -169,7 +287,7 @@ function orderFor(view: OwnerView) {
   */
   if (view === 'live') {
     return [
-      asc(sql`case when ${captures.state} = 'go_back_to' then 1 else 0 end`),
+      asc(sql`case when ${captures.verdict} = 'again' then 1 else 0 end`),
       desc(captures.createdAt),
     ]
   }
@@ -272,7 +390,7 @@ export async function listCapturesForOtherUser(
         ne(captures.userId, viewer.id),
         /* Unconditional, all of them. None is derived from `view`. */
         inArray(captures.visibility, SHARED_SCOPES),
-        inArray(captures.state, PUBLIC_STATES),
+        isPublicCapture(),
         stateFilter(view),
       ),
     )
@@ -372,7 +490,7 @@ async function fireOverlap(
       handle: me.handle,
       displayName: me.displayName,
       intent: capture.intent,
-      state: capture.state,
+      ...lifecycleOf(capture),
       source: capture.source,
       sourceUserId: capture.sourceUserId,
     },
@@ -398,7 +516,7 @@ async function fireOverlap(
  * the whole design of the ×, and it is the reason `dropped` is here beside
  * `want` rather than in the tray with the resolutions.
  */
-const PAGE_STATES = ['want', 'dropped'] as const satisfies readonly CaptureState[]
+const PAGE_STATUSES = ['active', 'dropped'] as const satisfies readonly CaptureStatus[]
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -643,7 +761,7 @@ export async function listMyPage(
     .where(
       and(
         eq(captures.userId, sessionUser.id),
-        inArray(captures.state, PAGE_STATES),
+        inArray(captures.status, PAGE_STATUSES),
         /*
           Strictly past the cursor, in the same order the sort uses: an earlier
           instant, or the same instant and a lower id. `and()` drops the
@@ -725,7 +843,14 @@ export async function listMySettled(
     .where(
       and(
         eq(captures.userId, sessionUser.id),
-        inArray(captures.state, ['go_back_to', 'fixture', 'done'] as const),
+        /*
+          ⚠ **Three states became ONE predicate, and that is the two-axis model
+          paying for itself.** `go_back_to`, `fixture` and `done` were a list
+          because the old vocabulary had no word for what they share. They share
+          `completed` — the tray IS the settled captures — so the day a fourth
+          verdict exists it is in the tray already, with nothing added here.
+        */
+        eq(captures.status, 'completed' as const),
       ),
     )
     .orderBy(desc(captures.resolvedAt), desc(captures.id))
@@ -1017,7 +1142,7 @@ async function writeCapture(
           bad link must not cost somebody their sentence.
         */
         sourceUrl: cleanSourceUrl(input.sourceUrl),
-        state: 'want',
+        ...lifecycle('active', null),
         /*
           ─────────────────────────────────────────────────────────────────────
            A capture is SHAREABLE when it is written — directed 31 August
@@ -1068,7 +1193,7 @@ async function writeCapture(
       })
       .onConflictDoUpdate({
         target: [captures.userId, captures.possibilityId, captures.intent],
-        setWhere: eq(captures.state, 'dropped'),
+        setWhere: eq(captures.status, 'dropped'),
         set: {
           text,
           /*
@@ -1079,7 +1204,7 @@ async function writeCapture(
             the honest value when this capture arrived without a link.
           */
           sourceUrl: cleanSourceUrl(input.sourceUrl),
-          state: 'want',
+          ...lifecycle('active', null),
           resolvedAt: null,
           updatedAt: sql`now()`,
           source: keepUnlessOwn(captures.source, 'source'),
@@ -1168,7 +1293,7 @@ export async function copyCapture(
       and(
         eq(captures.id, sourceCaptureId),
         inArray(captures.visibility, SHARED_SCOPES),
-        inArray(captures.state, PUBLIC_STATES),
+        isPublicCapture(),
       ),
     )
     .limit(1)
@@ -1215,7 +1340,7 @@ export async function resolveCapture(
       .limit(1)
 
     if (!current) return err('not_found', 'No such capture.')
-    if (current.capture.state !== 'want') {
+    if (current.capture.status !== 'active') {
       return err('conflict', 'That has already been resolved.')
     }
 
@@ -1245,11 +1370,23 @@ export async function resolveCapture(
     const kind = current.possibility?.kind ?? null
     const spec = kind ? specFor(kind, current.capture.intent ?? DEFAULT_INTENT[kind]) : null
 
-    const state = keep ? (spec?.landsIn ?? ('go_back_to' as const)) : ('done' as const)
+    /*
+      ⚠ **`landsIn` still speaks the legacy vocabulary and is TRANSLATED here
+      rather than retyped — step B stops at the data layer.** `VOCABULARY` is a
+      table of user-facing words and their consequences, and retyping it is
+      step B2's job along with every screen that reads it. `STATE_SPLIT` is the
+      one mapping, so translating through it cannot disagree with the backfill.
+
+      Settling always completes the capture; what `keep` decides is whether a
+      verdict is recorded. That is the two-axis model saying out loud what the
+      five states could only imply.
+    */
+    const landed = keep ? (spec?.landsIn ?? ('go_back_to' as const)) : ('done' as const)
+    const { verdict } = STATE_SPLIT[landed]
 
     const [updated] = await tx
       .update(captures)
-      .set({ state, resolvedAt: new Date() })
+      .set({ ...lifecycle('completed', verdict), resolvedAt: new Date() })
       .where(eq(captures.id, captureId))
       .returning()
 
@@ -1274,12 +1411,12 @@ export async function dropCapture(
 ): Promise<Result<Capture>> {
   const [updated] = await db
     .update(captures)
-    .set({ state: 'dropped', resolvedAt: new Date() })
+    .set({ ...lifecycle('dropped', null), resolvedAt: new Date() })
     .where(
       and(
         eq(captures.id, captureId),
         eq(captures.userId, sessionUser.id),
-        eq(captures.state, 'want'),
+        eq(captures.status, 'active'),
       ),
     )
     .returning()
@@ -1304,12 +1441,12 @@ export async function restoreCapture(
 ): Promise<Result<Capture>> {
   const [updated] = await db
     .update(captures)
-    .set({ state: 'want', resolvedAt: null })
+    .set({ ...lifecycle('active', null), resolvedAt: null })
     .where(
       and(
         eq(captures.id, captureId),
         eq(captures.userId, sessionUser.id),
-        eq(captures.state, 'dropped'),
+        eq(captures.status, 'dropped'),
       ),
     )
     .returning()
@@ -1698,7 +1835,7 @@ export async function undoCapture(
       and(
         eq(captures.id, captureId),
         eq(captures.userId, sessionUser.id),
-        eq(captures.state, 'want'),
+        eq(captures.status, 'active'),
         sql`${captures.createdAt} > now() - make_interval(secs => ${UNDO_WINDOW_MS / 1000})`,
       ),
     )

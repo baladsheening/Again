@@ -99,8 +99,8 @@ const capture = async (
   }: { state?: string; source?: string; sourceUserId?: string | null } = {},
 ) => {
   const { rows } = await pool.query(
-    `insert into captures (user_id, text, state, intent, visibility, source, source_user_id, possibility_id)
-     values ($1, $2, $3, 'see', 'mutuals', $4, $5, $6) returning id`,
+    `insert into captures (user_id, text, state, status, verdict, intent, visibility, source, source_user_id, possibility_id)
+     values ($1, $2, $3, (case $3 when 'want' then 'active' when 'dropped' then 'dropped' else 'completed' end), (case $3 when 'go_back_to' then 'again' when 'fixture' then 'have' end), 'see', 'mutuals', $4, $5, $6) returning id`,
     [userId, text, state, source, sourceUserId, possibilityId],
   )
   return rows[0].id as string
@@ -232,7 +232,10 @@ describe('the mark (Phase 2 step 4)', () => {
 
   it('survives being crossed off, and follows the line into the tray', async () => {
     const live = await lineOn(adaId, A, 'ada remembers the convergence film')
-    await pool.query(`update captures set state = 'dropped' where id = $1`, [live!.id])
+    await pool.query(
+      `update captures set state = 'dropped', status = 'dropped', verdict = null where id = $1`,
+      [live!.id],
+    )
 
     /* Struck lines stay on the page (§5), and a resolution is not an erasure. */
     const struck = await lineOn(adaId, A, 'ada remembers the convergence film')
@@ -244,7 +247,9 @@ describe('the mark (Phase 2 step 4)', () => {
       tray draws the mark. `resolved_at` is what orders that surface.
     */
     await pool.query(
-      `update captures set state = 'done', resolved_at = now() where id = $1`,
+      `update captures
+         set state = 'done', status = 'completed', verdict = null, resolved_at = now()
+       where id = $1`,
       [live!.id],
     )
     const settled = await dal.listMySettled(viewer(adaId, A))
@@ -339,11 +344,19 @@ describe('the lock, and what is in the pool (31 August)', () => {
     const live = {
       userId: adaId,
       intent: 'see' as const,
-      state: 'want' as const,
+      status: 'active' as const,
+      verdict: null,
       source: 'self' as const,
       sourceUserId: null,
     }
-    const struck = { ...live, userId: boId, state: 'dropped' as const }
+    /*
+      ⚠ **`dropped` is a STATUS now, not a state** — the vocabulary migration's
+      stage 1. The case this pins is unchanged and is the reason it exists:
+      `classify` is an allowlist of three pairs, none of which names a
+      crossed-off capture, so a struck line converges with nobody by
+      construction rather than by a rule anybody wrote.
+    */
+    const struck = { ...live, userId: boId, status: 'dropped' as const }
 
     /* Two live wants are a convergence — the control for the case below. */
     expect(classify(live, { ...live, userId: boId })).toHaveLength(2)

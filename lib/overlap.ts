@@ -7,7 +7,8 @@ import {
   nameFor,
   SHARED_SCOPES,
   type CaptureSource,
-  type CaptureState,
+  type CaptureStatus,
+  type CaptureVerdict,
   type Intent,
   type NotificationKind,
 } from '@/lib/domain'
@@ -53,7 +54,8 @@ type Counterpart = {
   handle: string
   displayName: string | null
   intent: Intent
-  state: CaptureState
+  status: CaptureStatus
+  verdict: CaptureVerdict | null
   source: CaptureSource
   sourceUserId: string | null
 }
@@ -80,7 +82,8 @@ async function findMutualCounterparts(
       p.handle         as "handle",
       p.display_name   as "displayName",
       c.intent         as "intent",
-      c.state          as "state",
+      c.status         as "status",
+      c.verdict        as "verdict",
       c.source         as "source",
       c.source_user_id as "sourceUserId"
     from tracks outbound
@@ -107,7 +110,8 @@ async function findMutualCounterparts(
 type Side = {
   userId: string
   intent: Intent
-  state: CaptureState
+  status: CaptureStatus
+  verdict: CaptureVerdict | null
   source: CaptureSource
   sourceUserId: string | null
 }
@@ -168,9 +172,22 @@ export type Match = {
   guideHolder?: boolean
 }
 
-const isWantSee = (s: Side) => s.intent === 'see' && s.state === 'want'
-const isGoBackToSee = (s: Side) => s.intent === 'see' && s.state === 'go_back_to'
-const isFixtureOwn = (s: Side) => s.intent === 'own' && s.state === 'fixture'
+/*
+  ⚠⚠ **THE ALLOWLIST OF THREE PAIRS, ON THE TWO AXES — and it is an allowlist,
+  which is the property that must survive this migration.** `classify` returns
+  nothing for any pair not named here, so a state that exists and is not
+  matched produces **no notification** rather than a wrong one. That is what
+  makes `tests/mark.test.ts`'s case true without anybody writing it: a
+  crossed-off line converges with nobody, because no row names `dropped`.
+
+  ⚠ **`active` is a status and the other two are verdicts**, which is the
+  asymmetry the five states hid: *wanting* is a stage of a life, while *would go
+  back* and *have* are opinions about a finished one. Reading the pair off one
+  column was only ever possible because the old vocabulary flattened them.
+*/
+const isWantSee = (s: Side) => s.intent === 'see' && s.status === 'active'
+const isGoBackToSee = (s: Side) => s.intent === 'see' && s.verdict === 'again'
+const isFixtureOwn = (s: Side) => s.intent === 'own' && s.verdict === 'have'
 
 /**
  * Intent must be part of the match (§6). Two people wanting to *see* a film is
@@ -319,11 +336,13 @@ type PairRow = {
   itemId: string
   title: string
   aIntent: Intent
-  aState: CaptureState
+  aStatus: CaptureStatus
+  aVerdict: CaptureVerdict | null
   aSource: CaptureSource
   aSourceUserId: string | null
   bIntent: Intent
-  bState: CaptureState
+  bStatus: CaptureStatus
+  bVerdict: CaptureVerdict | null
   bSource: CaptureSource
   bSourceUserId: string | null
 }
@@ -365,11 +384,13 @@ export async function runOverlapForNewMutual(
       i.id              as "itemId",
       i.title           as "title",
       ca.intent         as "aIntent",
-      ca.state          as "aState",
+      ca.status         as "aStatus",
+      ca.verdict        as "aVerdict",
       ca.source         as "aSource",
       ca.source_user_id as "aSourceUserId",
       cb.intent         as "bIntent",
-      cb.state          as "bState",
+      cb.status         as "bStatus",
+      cb.verdict        as "bVerdict",
       cb.source         as "bSource",
       cb.source_user_id as "bSourceUserId"
     from captures ca
@@ -396,14 +417,16 @@ export async function runOverlapForNewMutual(
       {
         userId: a.userId,
         intent: row.aIntent,
-        state: row.aState,
+        status: row.aStatus,
+        verdict: row.aVerdict,
         source: row.aSource,
         sourceUserId: row.aSourceUserId,
       },
       {
         userId: b.userId,
         intent: row.bIntent,
-        state: row.bState,
+        status: row.bStatus,
+        verdict: row.bVerdict,
         source: row.bSource,
         sourceUserId: row.bSourceUserId,
       },
