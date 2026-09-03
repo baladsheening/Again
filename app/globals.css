@@ -6317,10 +6317,15 @@
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  Only the create-account form may compress the explanation — 1 September
+ *  The wall's outer box: what may compress, and where it sits — 1 Sep, 3 Sep
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * The cap that makes `wall-beats` shrinkable, on the sign-in wall's `main`.
+ * The sign-in wall's `main`. Two things: the cap that makes `wall-beats`
+ * shrinkable (1 September, below), and the desk's vertical centring (3
+ * September, at the foot of the rule). They are one utility because they are one
+ * question asked twice — **how much free space is there, and who gets it** — and
+ * because the cap is what makes the free space non-positive in the one mode that
+ * would otherwise drift furthest.
  *
  * ⚠⚠ **IT SHIPPED UNGATED FOR AN HOUR AND ATE THE BEATS ON THE OPENING SCREEN.**
  * Reported: *now the write / match / keep part is obscured from the get go. i
@@ -6356,10 +6361,82 @@
  * ⚠ **`dvh` and not `vh`.** `100vh` is the *large* viewport, so in a Safari tab
  * with the toolbars showing it is taller than the screen and the fold comes
  * straight back.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A NARROWED DESK KEEPS THE SPREAD'S CENTRING — 3 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Reported: the handset's poster is right, the wide desk is right, and a desk
+ * browser **narrowed past `--breakpoint-stack`** goes top heavy. It did —
+ * measured at 900x1000, the composition sat at the page lead with **258px of
+ * dead ground under the switches**, which is a poster hanging off the top edge
+ * of a window twice as tall as it is.
+ *
+ * ⚠ **This is not a new rule for narrow desks. It is the desk's EXISTING rule
+ * surviving the fallback to one column.** Above the breakpoint the wall is a
+ * two-column grid and `stack:items-center` centres both columns in the row;
+ * below it the same element is a flex column and the centring simply stopped
+ * being expressed. What was asked for is that narrowing a window not change the
+ * composition, and that is what `stack` was already doing on one side of it.
+ *
+ * ⚠⚠ **IT IS GATED ON A CURSOR AND MUST NOT BE GATED ON A WIDTH.** *For the
+ * desktop* is not a viewport size — a phone in landscape is 844px wide, and a
+ * width gate would centre the one surface where centring is directed **against**:
+ * see `app/sign-in/page.tsx`, where three auto margins were removed on 1
+ * September because the composition drifted when a field arrived. `(pointer:
+ * fine)` is the same predicate `control-lift` uses for the same reason, and it
+ * is an input capability rather than a device: a narrowed desk window still has
+ * a mouse and a phone in any orientation still does not. **An iPad is `coarse`
+ * and stays packed from the top**, deliberately — it is a tablet running the
+ * poster, not a desk running a narrowed one.
+ *
+ * ⚠ **What it costs, stated: below the spread the mark now moves when the mode
+ * changes.** The composition floats in its leftover space, so a field arriving
+ * re-centres everything above it — measured ~60px across sign-in / reset /
+ * create-account at 900x1000. **The spread does not have this and cannot**: up
+ * there the mark and the beats are their own column, whose content never
+ * changes, so only the form re-centres. One column cannot be given that, and the
+ * drift is the price of the direction rather than a fault to correct. **Do not
+ * answer it by re-splitting the column** — that was built and thrown away on 1
+ * September, in both arrangements.
+ *
+ * ⚠ **The handset is untouched by construction.** The 1 September rule reads
+ * *packed from the top on every phone, and nothing floats*; a `pointer: coarse`
+ * screen never reaches this declaration, so that rule needs no exception written
+ * into it and cannot be weakened by this one.
+ *
+ * ⚠ **`@variant max-stack` and not a typed `72rem`.** A media query cannot
+ * resolve a `var()`, so the breakpoint has to come from the theme through
+ * Tailwind or be written twice — and two copies of a breakpoint is the drift this
+ * file spends a paragraph on under `--record-floor`. It also makes the pair
+ * exhaustive: `max-stack` and `stack` partition every width, so there is no
+ * ordering question between this and the cap's override below it.
  */
 @utility wall-frame {
   &:has(form[data-mode='sign-up']) {
     max-height: 100dvh;
+  }
+
+  /*
+    THE SECOND CONCERN: the desk keeps the composition off the top edge.
+
+    ⚠ **`safe center`, and the `safe` is the whole reason this is expressible.**
+    A plain `center` distributes negative free space too, so a window shorter
+    than the wall pushes the mark **above the scroll origin** and puts it out of
+    reach — which is exactly the hazard the page's own note protects, and why
+    nothing on this screen centred before. `safe` says *centre while there is
+    room, pack from the start when there is not*, so the short window keeps the
+    behaviour it has today with nothing measuring anything.
+
+    ⚠ **It is on `justify-content` because this box is a flex COLUMN below the
+    spread**, so that property is its block axis. Above `--breakpoint-stack` the
+    same element is a grid and the property changes axis under it — hence the
+    gate below rather than one unconditional line.
+  */
+  @variant max-stack {
+    @media (pointer: fine) {
+      justify-content: safe center;
+    }
   }
 
   @variant stack {

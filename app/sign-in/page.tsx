@@ -147,9 +147,22 @@ export default async function SignInPage() {
           middle, and it is the only arrangement that is the same on every
           screen. **Do not answer a tall phone's foot by putting `my-auto` back.**
 
-          The landscape-keyboard case the old note worried about is answered by
-          construction rather than by an auto margin collapsing: nothing centres,
-          so nothing can overflow upward past the scroll origin.
+          ⚠⚠ **A NARROWED DESK DOES FLOAT, SINCE 3 SEPTEMBER, AND THAT IS NOT AN
+          EXCEPTION TO THE RULE ABOVE — it is the rule's scope being read.** Every
+          sentence in it says *phone*, and it was measured on the handset's own
+          797px box. A desk browser narrowed past `--breakpoint-stack` falls back
+          to this same one-column arrangement in a window twice as tall as the
+          composition, and the ground it left at the foot was reported. It is
+          centred there, gated on a cursor and never on a width, and it takes the
+          drift this note describes as the stated price. The mechanism and the
+          whole argument are on `wall-frame` in `app/globals.css`; **the phone
+          does not reach the declaration**, so nothing above is weakened.
+
+          The landscape-keyboard case the old note worried about is still
+          answered by construction rather than by an auto margin collapsing, and
+          the 3 September centring does not reopen it: an auto margin distributes
+          negative free space, `safe center` refuses to. Nothing can overflow
+          upward past the scroll origin, on any surface, in any mode.
 
           `min-h-0` so this column can be shrunk under its own content — the
           default `min-height: auto` on a flex item is what would otherwise
