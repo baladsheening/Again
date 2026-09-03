@@ -1,4 +1,6 @@
 import 'server-only'
+import { legacyState } from '@/lib/domain'
+import type { CaptureStatus, CaptureVerdict } from '@/lib/domain'
 
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 
@@ -80,7 +82,9 @@ type Row = {
   guideHolder: boolean
   captureId: string
   text: string
-  state: PageLine['state']
+  /* ⚠ Step C2: the row carries the two axes; `state` is derived in `group`. */
+  status: CaptureStatus
+  verdict: CaptureVerdict | null
   year: number | null
   createdAt: Date
   hasImage: boolean
@@ -121,7 +125,9 @@ export async function listMyPortal(
       guideHolder: sql<boolean>`coalesce((${notifications.payload} ->> 'guideHolder')::boolean, false)`,
       captureId: captures.id,
       text: captures.text,
-      state: captures.state,
+      /* ⚠ Step C2: the two axes, with `state` derived in `group` below. */
+      status: captures.status,
+      verdict: captures.verdict,
       year: possibilities.year,
       createdAt: captures.createdAt,
       hasImage: sql<boolean>`${captures.imagePath} is not null`,
@@ -174,7 +180,7 @@ function group(rows: Row[]): PortalLine[] {
         line: {
           id: row.captureId,
           text: row.text,
-          state: row.state,
+          state: legacyState(row.status, row.verdict),
           year: row.year,
           createdAt: row.createdAt,
           /*

@@ -166,7 +166,8 @@ const SHARED_CAPTURE_COLUMNS = {
   possibilityId: captures.possibilityId,
   text: captures.text,
   intent: captures.intent,
-  state: captures.state,
+  status: captures.status,
+  verdict: captures.verdict,
   returnCount: captures.returnCount,
   source: captures.source,
   sourceUserId: captures.sourceUserId,
@@ -209,7 +210,7 @@ export function toCaptureCard({
     id: capture.id,
     text: capture.text,
     intent: capture.intent,
-    state: capture.state,
+    state: legacyState(capture.status, capture.verdict),
     kind: possibility?.kind ?? null,
     title: possibility?.title ?? null,
     year: possibility?.year ?? null,
@@ -312,12 +313,27 @@ export async function countMyCaptures(
   sessionUser: SessionUser,
 ): Promise<Record<OwnerView, number>> {
   const rows = await db
-    .select({ state: captures.state, count: sql<number>`count(*)::int` })
+    .select({
+      status: captures.status,
+      verdict: captures.verdict,
+      count: sql<number>`count(*)::int`,
+    })
     .from(captures)
     .where(eq(captures.userId, sessionUser.id))
-    .groupBy(captures.state)
+    .groupBy(captures.status, captures.verdict)
 
-  const byState = new Map(rows.map((r) => [r.state, r.count]))
+  /*
+    ⚠ **Grouped on the PAIR, and counted through `legacyState` — step C2.** The
+    four view totals are still expressed in the old words because `OwnerView` is
+    a UI shape and belongs to B2; what changed is that they are derived from the
+    two axes rather than read off a column. Same one implementation as every
+    other projection here.
+  */
+  const byState = new Map<CaptureState, number>()
+  for (const r of rows) {
+    const key = legacyState(r.status, r.verdict)
+    byState.set(key, (byState.get(key) ?? 0) + r.count)
+  }
   const n = (state: CaptureState) => byState.get(state) ?? 0
 
   return {
@@ -408,7 +424,12 @@ export async function listMyCapturesForExternalId(
   input: { kind: Kind; externalId: string },
 ): Promise<ListedCapture[]> {
   const rows = await db
-    .select({ id: captures.id, intent: captures.intent, state: captures.state })
+    .select({
+      id: captures.id,
+      intent: captures.intent,
+      status: captures.status,
+      verdict: captures.verdict,
+    })
     .from(captures)
     .innerJoin(possibilities, eq(captures.possibilityId, possibilities.id))
     .where(
@@ -420,7 +441,11 @@ export async function listMyCapturesForExternalId(
     )
     .limit(8)
 
-  return rows.map((r) => ({ captureId: r.id, intent: r.intent, state: r.state }))
+  return rows.map((r) => ({
+    captureId: r.id,
+    intent: r.intent,
+    state: legacyState(r.status, r.verdict),
+  }))
 }
 
 /**
@@ -732,7 +757,11 @@ export async function listMyPage(
     .select({
       id: captures.id,
       text: captures.text,
-      state: captures.state,
+      /* ⚠ Step C2: the two axes are selected and `state` is DERIVED on the
+         way out — see the mapper below. The column is no longer read by
+         anything, which is the precondition for dropping it. */
+      status: captures.status,
+      verdict: captures.verdict,
       year: possibilities.year,
       createdAt: captures.createdAt,
       resolved: captures.possibilityId,
@@ -770,8 +799,9 @@ export async function listMyPage(
     .orderBy(desc(captures.createdAt), desc(captures.id))
     .limit(limit)
 
-  return rows.map(({ resolved, declinedAt, offerTitle, offerYear, imagePath, ...line }) => ({
+  return rows.map(({ resolved, declinedAt, offerTitle, offerYear, imagePath, status, verdict, ...line }) => ({
     ...line,
+    state: legacyState(status, verdict),
     /* Whether, never where — see `PageLine.hasImage`. */
     hasImage: imagePath !== null,
     /*
@@ -804,11 +834,15 @@ export async function listMySettled(
     on it would be the app asking about something already answered. The tray
     has no way to answer one either.
   */
-  return db
+  const rows = await db
     .select({
       id: captures.id,
       text: captures.text,
-      state: captures.state,
+      /* ⚠ Step C2: the two axes are selected and `state` is DERIVED on the
+         way out — see the mapper below. The column is no longer read by
+         anything, which is the precondition for dropping it. */
+      status: captures.status,
+      verdict: captures.verdict,
       year: possibilities.year,
       createdAt: captures.createdAt,
       offer: sql<null>`null`,
@@ -848,6 +882,13 @@ export async function listMySettled(
     .orderBy(desc(captures.resolvedAt), desc(captures.id))
     .limit(limit)
     .offset(offset)
+
+  /* ⚠ Step C2: `state` is derived rather than selected — one implementation,
+     `legacyState`, shared with the page's own mapper above. */
+  return rows.map(({ status, verdict, ...line }) => ({
+    ...line,
+    state: legacyState(status, verdict),
+  }))
 }
 
 /**
@@ -894,11 +935,15 @@ export async function searchMyCaptures(
     surface acts on a line — so a `?` would be a question with no way to answer
     it, which is worse than not asking.
   */
-  return db
+  const rows = await db
     .select({
       id: captures.id,
       text: captures.text,
-      state: captures.state,
+      /* ⚠ Step C2: the two axes are selected and `state` is DERIVED on the
+         way out — see the mapper below. The column is no longer read by
+         anything, which is the precondition for dropping it. */
+      status: captures.status,
+      verdict: captures.verdict,
       year: possibilities.year,
       createdAt: captures.createdAt,
       offer: sql<null>`null`,
@@ -936,6 +981,13 @@ export async function searchMyCaptures(
     )
     .orderBy(desc(captures.createdAt), desc(captures.id))
     .limit(limit)
+
+  /* ⚠ Step C2: `state` is derived rather than selected — one implementation,
+     `legacyState`, shared with the page's own mapper above. */
+  return rows.map(({ status, verdict, ...line }) => ({
+    ...line,
+    state: legacyState(status, verdict),
+  }))
 }
 
 /* -------------------------------------------------------------------------- */

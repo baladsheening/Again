@@ -19,6 +19,7 @@ import {
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 import { getFilm } from '@/lib/tmdb'
 import { intentsFor } from '@/lib/vocabulary'
+import { legacyState } from '@/lib/domain'
 import type { EntryState, Intent } from '@/lib/domain'
 
 /**
@@ -130,7 +131,7 @@ export async function addFilmAction(
     value: {
       entryId: result.value.capture.id,
       created: result.value.created,
-      state: result.value.capture.state,
+      state: legacyState(result.value.capture.status, result.value.capture.verdict),
     },
   }
 }

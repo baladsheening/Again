@@ -407,7 +407,26 @@ export const captures = pgTable(
      * §7's evidence rules are what would have to be satisfied first.
      */
     sourceUrl: text('source_url'),
-    state: text('state').$type<CaptureState>().notNull(),
+    /**
+     * ⚠ **NULLABLE since step C2a, and that is a step on the way out rather than
+     * a loosening.** `state` is the legacy vocabulary's column. It is still
+     * written — the dual-write is what keeps every deploy in this migration
+     * revertible — but the code that stops writing it cannot deploy against a
+     * `NOT NULL`, so the constraint comes off one migration ahead of the deploy
+     * that stops filling it.
+     *
+     * ⚠ **This is the subtractive ordering, and it is `CLAUDE.md`'s rule
+     * INVERTED:** an additive change goes to production before the code, a
+     * subtractive one after it. Dropping a constraint is the first half of
+     * dropping a column, so it goes first; dropping the column itself goes last,
+     * once nothing has read or written it for a whole deploy.
+     *
+     * ⚠ **Nothing is lost when it goes.** `state` is a pure function of
+     * `status` and `verdict` — `legacyState` in lib/domain.ts is the bijection,
+     * and `tests/state-split.test.ts` proves it round-trips on all five values.
+     * The column is redundant, not merely unused.
+     */
+    state: text('state').$type<CaptureState>(),
     /**
      * ─────────────────────────────────────────────────────────────────────────
      *  The vocabulary migration, stage 1 — STEP A. Added, backfilled, unread.

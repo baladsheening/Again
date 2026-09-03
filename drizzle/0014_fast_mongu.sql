@@ -1,0 +1,1 @@
+ALTER TABLE "captures" ALTER COLUMN "state" DROP NOT NULL;
