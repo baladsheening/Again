@@ -52,7 +52,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
   const token = typeof params.token === 'string' ? params.token : null
 
   return (
-    <main className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12 [--safe-bottom-base:3rem]">
+    <main data-ground="paper" className="gutter safe-bottom mx-auto flex w-full max-w-sm flex-1 flex-col py-12 [--safe-bottom-base:3rem]">
       {/*
         ⚠ **`my-auto` STAYS HERE, and the cross-reference this note used to carry
         is the thing that went stale — 3 September.** It read *my-auto rather

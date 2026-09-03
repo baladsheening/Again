@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <!--
+    Television static, as a seamless tile — 3 September.
+
+    ⚠ This is attempt 1 of the paper's own development, kept rather than
+    reinvented. `grain-ground`'s tombstone in app/globals.css records it:
+    "One high-frequency feTurbulence. Read as *television static* — even, fine,
+    identical everywhere." It was rejected there because it is a poor
+    photocopied page. It is an excellent television, which is what this is for.
+
+    ⚠ `stitchTiles="stitch"` is what makes it a TILE rather than a picture.
+    Without it the noise is generated in the filter region's own coordinate
+    space and every repeat shows a hard seam where the lattice restarts. With
+    it, adjacent tiles share their lattice edges and the field is continuous.
+
+    ⚠ `baseFrequency="0.9"` is close to one cycle per pixel, which is what makes
+    it read as static rather than as cloud. Below about 0.4 it becomes the "soft
+    cloud" the paper's attempt 2 describes, and a cloud is a gradient.
+
+    ⚠ `numOctaves="1"`. More octaves add lower-frequency structure — that is
+    exactly what a photocopy wants and exactly what a television does not. A
+    broadcast with no signal has one scale and only one.
+
+    ⚠⚠ THE TRANSFER IS CLIPPED, NOT CENTRED, AND THAT IS THE WHOLE DESIGN.
+    The first version stretched fractalNoise about its own mid-grey centre — a
+    BRIGHT field — and then turned the opacity down to 0.10 to stop it washing
+    the page out. Measured, that lifted the record 5.89% where the paper lifts
+    2.22%, and bought a speckle of only sd 5.3 for the black it cost.
+
+    Contrasty static and a black page pull against each other if opacity is the
+    only knob. The distribution is the better one: slope 4.0 with intercept
+    -1.9 puts the noise's centre BELOW zero, so most of the field clips to black
+    and only the top tail survives. That is sparse bright specks on black, which
+    is what static on a dark scene actually looks like — and it is strictly
+    better on both axes at once. Measured on black, against the version it
+    replaces:
+
+        bright, opacity 0.10   mean 15.02   sd  5.32   p99  26   lift 5.89%
+        clipped, opacity 0.22  mean 10.24   sd 12.18   p99  46   lift 4.01%
+
+    A blacker page AND 2.3x the speckle. `node_modules/.probe/staticsweep.mjs`
+    holds the ladder above it if this is ever wanted louder — slope 5/6/8 reach
+    sd 20, 27 and 39, at 6.5%, 7.6% and 8.8% lift.
+
+    Greyscale on purpose: the RGB channels of a turbulence are three
+    independent noises, which renders as colour confetti. `saturate 0` collapses
+    them to one field, which is what a monochrome tube does.
+  -->
+  <filter id="tv" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch" seed="11" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0" result="grey"/>
+    <feComponentTransfer in="grey">
+      <feFuncR type="linear" slope="4.0" intercept="-1.9"/>
+      <feFuncG type="linear" slope="4.0" intercept="-1.9"/>
+      <feFuncB type="linear" slope="4.0" intercept="-1.9"/>
+      <feFuncA type="linear" slope="0" intercept="1"/>
+    </feComponentTransfer>
+  </filter>
+  <rect width="240" height="240" filter="url(#tv)"/>
+</svg>
