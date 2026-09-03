@@ -21,6 +21,8 @@ import {
 import type {
   CaptureSource,
   CaptureState,
+  CaptureStatus,
+  CaptureVerdict,
   EntrySource,
   EntryState,
   Intent,
@@ -33,6 +35,8 @@ import type {
 export type {
   CaptureSource,
   CaptureState,
+  CaptureStatus,
+  CaptureVerdict,
   EntrySource,
   EntryState,
   Intent,
@@ -404,6 +408,40 @@ export const captures = pgTable(
      */
     sourceUrl: text('source_url'),
     state: text('state').$type<CaptureState>().notNull(),
+    /**
+     * ─────────────────────────────────────────────────────────────────────────
+     *  The vocabulary migration, stage 1 — STEP A. Added, backfilled, unread.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * `status` and `verdict` are the two axes `state` conflates. The mapping is
+     * exactly:
+     *
+     *     want        -> active,    null
+     *     done        -> completed, null
+     *     go_back_to  -> completed, 'again'
+     *     fixture     -> completed, 'have'
+     *     dropped     -> dropped,   null
+     *
+     * ⚠⚠ **NOTHING READS EITHER COLUMN YET, AND NOTHING MAY UNTIL STEP B.** They
+     * are nullable here for one reason: an additive migration old code ignores
+     * is a migration a revert push still rolls back, and that is what makes step
+     * A safe to run against production on its own. `status` becomes `NOT NULL`
+     * in step D, once every writer has been writing it for a deploy.
+     * `docs/re-direction/vocabulary-migration.md` is the order.
+     *
+     * ⚠ **`state` is NOT dropped here and must not be.** It is still the column
+     * every reader and every writer uses; dropping it in the same migration that
+     * adds these would be the 25 August failure exactly — a schema the deployed
+     * code cannot read — with the difference that this one would 500 on every
+     * page rather than on some.
+     */
+    status: text('status').$type<CaptureStatus>(),
+    /**
+     * ⚠ **Null is a value here, not an absence** — a capture completed with no
+     * opinion attached. See `CaptureVerdict`, and the check constraint below
+     * that ties a non-null verdict to a completed capture.
+     */
+    verdict: text('verdict').$type<CaptureVerdict>(),
     /** Experiences only; revisits, rewatches, second attempts. */
     returnCount: integer('return_count').notNull().default(0),
     /**
@@ -549,6 +587,23 @@ export const captures = pgTable(
     check(
       'captures_source_is_not_owner',
       sql`${t.sourceUserId} is null or ${t.sourceUserId} <> ${t.userId}`,
+    ),
+    /*
+      A verdict is an opinion about a finished thing, so there is nothing for it
+      to be an opinion about on a capture that is still active or was dropped.
+      Written as a constraint for the same reason `captures_provenance_shape`
+      is: the shape is a fact about the record, and a fact enforced only in
+      `lib/db/` is a fact a backfill or a psql session can walk straight past.
+
+      ⚠ **It tolerates a null `status`, which is what makes it safe in step A.**
+      Every existing row has `status IS NULL` until the backfill lands, and a
+      constraint that refused those could not be added to a populated table.
+      Step D tightens `status` to NOT NULL and this reads as the real rule from
+      then on.
+    */
+    check(
+      'captures_verdict_shape',
+      sql`${t.verdict} is null or ${t.status} = 'completed'`,
     ),
   ],
 )

@@ -78,6 +78,56 @@ export type EntrySource = 'self' | 'copy' | 'swap'
  */
 export type CaptureState = EntryState
 
+/* -------------------------------------------------------------------------- */
+/*  The vocabulary migration, stage 1 — status and verdict. STEP A of four.    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A capture's LIFECYCLE, as §3 and §5 of the specification describe it
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Three values, against `CaptureState`'s five, and the difference is the point:
+ * **the five conflate two axes.** `want`, `done` and `dropped` are lifecycle;
+ * `go_back_to` and `fixture` are *verdicts on a finished thing* — I would do
+ * that again, I own that now — which is not a stage of a life but an opinion
+ * about one. §5 asks the detail surface to show *the user's intention **and**
+ * status*, two fields, and this is the first of them.
+ *
+ * ⚠⚠ **NOTHING READS THIS YET AND THAT IS DELIBERATE — this is step A of four.**
+ * The column is added and backfilled; the code still reads and writes `state`.
+ * See `docs/re-direction/vocabulary-migration.md` for the order and why it is
+ * that order. **Do not start reading `status` in the same deploy that adds it**:
+ * the whole safety of this sequence is that every step is revert-safe on its
+ * own, and a read added here would make the migration and the deploy one act.
+ *
+ * ⚠ **`dropped` keeps its own value rather than becoming a verdict.** A
+ * crossed-off capture is a lifecycle fact — it left the pool — and it is
+ * *private*, which `PUBLIC_STATES` depends on. Folding it into
+ * `completed` + a verdict would put the privacy question inside a nullable
+ * column, which is the wrong place for the one guarantee that must fail closed.
+ */
+export type CaptureStatus = 'active' | 'completed' | 'dropped'
+
+/**
+ * What a finished capture turned out to be worth. **The second axis.**
+ *
+ * `again` is `go_back_to` — an experience worth repeating. `have` is `fixture`
+ * — a thing now possessed. Both are only meaningful on a `completed` capture,
+ * and the check constraint in the schema says so rather than trusting callers.
+ *
+ * ⚠ **Null is a real and common value**, not a missing one: a capture that was
+ * completed with no opinion attached is `completed` with a null verdict, which
+ * is today's `done`. That is why this is nullable and why the absence has to
+ * mean something specific rather than *not filled in yet*.
+ *
+ * ⚠ **A verdict is PUBLIC and a bare completion is PRIVATE**, which is the one
+ * thing about this pair that can leak. §5.3 makes `done` owner-only; `again`
+ * and `have` are on somebody's page. So the re-derived `PUBLIC_STATES` is not
+ * a function of `status` alone — see the note there.
+ */
+export type CaptureVerdict = 'again' | 'have'
+
 /**
  * How a capture got here. **Server-owned, and immutable once written.**
  *
