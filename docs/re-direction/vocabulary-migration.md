@@ -122,10 +122,51 @@ one guarantee that must fail closed.
 
 | # | What | Why it is safe alone |
 |---|---|---|
-| **A** | Migration `0012`: add `status`, `verdict`, backfill from `state` | Additive. Deployed code ignores both columns, so a revert push is still a rollback |
+| **A** | Migration `0012`: add `status`, `verdict`, backfill from `state` — ⚠ **then** deploy A's code | Additive. Once the columns exist, old and new code both work |
 | **B** | Deploy: write **both** vocabularies; read `status`/`verdict`, falling back to `state` when null | `state` is still written, so rolling back to pre-B works |
 | **C** | Deploy: stop writing `state`; drop the fallback | Nothing reads `state`; a rollback re-reads a column still present |
-| **D** | Migration: re-backfill stragglers, `status` → `NOT NULL`, drop `state` | Nothing has read or written it for a whole deploy |
+| **D** | Deploy first, **then** migration: re-backfill stragglers, `status` → `NOT NULL`, drop `state` | Nothing has read or written it for a whole deploy |
+
+### ⚠⚠ THE RULE, STATED PROPERLY: ADDITIVE MIGRATIONS GO FIRST, SUBTRACTIVE ONES GO LAST
+
+**An earlier draft of this file said step A's code could be deployed before its
+migration because "deployed code ignores both columns". That is false, and it
+would have reproduced the 25 August outage.**
+
+`lib/db/captures.ts` has **three bare `select().from(captures)`** — the
+idempotency check at 986, the upsert-collision read at 1101, and
+`getCaptureByClientMutationId` at 1457 — plus **nine `.returning()`** calls and
+a `getTableColumns(captures)`. Drizzle expands every one of those from the
+schema object, so adding a column to `schema.ts` changes the SQL those queries
+emit whether or not anybody wrote the column's name.
+
+Measured, not reasoned — with the project's own driver:
+
+```
+bare select() expands status:  true
+bare select() expands verdict: true
+```
+
+So deploying step A's code against an unmigrated production would issue
+`SELECT …, "captures"."status", "captures"."verdict" …` against a table without
+them, and **every capture write and every idempotency check would 500** — which
+is the 25 August failure with a wider blast radius, since those are bare selects
+rather than three named columns.
+
+The rule that covers both ends of this migration:
+
+- **Additive** (A) — migration first, deploy second. `CLAUDE.md`'s rule, and it
+  applies exactly.
+- **Subtractive** (D, dropping `state`) — deploy first, migration second.
+  `CLAUDE.md`'s rule **inverted**, for the mirror-image reason: a column dropped
+  while a deployed build still selects it fails the same way.
+- **Value conversion** (B→C) — neither order is safe in two steps, which is why
+  it is three: write both, then stop writing the old one.
+
+⚠ **`CLAUDE.md` states only the first of those three.** That is not a fault in
+the rule — it was written for the additive case and says so — but a reader
+applying it to D or to B would break production. Correct `CLAUDE.md` when stage
+1 is done, not before.
 
 ⚠ **B and C are two deploys and must not be merged.** Merging them is the only
 way to reach a state where the database has been converted and the code that

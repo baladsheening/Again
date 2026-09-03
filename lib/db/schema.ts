@@ -434,6 +434,16 @@ export const captures = pgTable(
      * adds these would be the 25 August failure exactly — a schema the deployed
      * code cannot read — with the difference that this one would 500 on every
      * page rather than on some.
+     *
+     * ⚠⚠ **ADDING A COLUMN HERE CHANGES THE SQL OF QUERIES THAT NEVER NAME IT,
+     * so this migration goes to production BEFORE this code does.** There are
+     * three bare `select().from(captures)` in `lib/db/captures.ts` — 986, 1101,
+     * 1457 — plus nine `.returning()` and a `getTableColumns(captures)`, and
+     * Drizzle expands every one of them from this object. Measured with the
+     * project's own driver: a bare select emits `"status"` and `"verdict"`. So
+     * a deploy that lands first would 500 on every capture write and every
+     * idempotency check. **`schema.ts` is not a description of the database; it
+     * is the source of the column list every query is built from.**
      */
     status: text('status').$type<CaptureStatus>(),
     /**
