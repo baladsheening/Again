@@ -1,6 +1,29 @@
 # The vocabulary migration
 
-**Started 3 September. Stage 1 step A is built and applied to development.**
+**Stage 1 is DONE except the final drop — A, B, C1 and C2 are all applied to
+production and deployed, 3–4 September. Only C3 remains, and it is deliberately
+not done.**
+
+| step | what | state |
+|---|---|---|
+| **A** | `0012`: add `status`/`verdict`, backfill | ✅ production |
+| **B** | read the new columns, write both | ✅ production |
+| **C1** | `0013`: heal, then `status NOT NULL` | ✅ production |
+| **C2** | `0014`: `state` nullable; nothing reads it | ✅ production |
+| **C3** | `DROP COLUMN state` | ⛔ **not done, on purpose** |
+
+⚠ **C3 is the only irreversible act in the migration and there is no reason to
+hurry it.** The column is written, read by nothing, and costs nothing sitting
+there. Time is what tells you the seven derivations are right on real data. When
+it is done: deploy that stops WRITING `state` first, then the migration that
+drops it — subtractive ordering, the same rule as C2.
+
+⚠ **Verified on production after each step** — `scripts/prod-verify-status.sh`,
+which checks the mapping in both directions in SQL over every row. Last reading:
+81 captures, four groups, zero unconverted, and the re-derived `PUBLIC_STATES`
+selecting exactly the old set.
+
+**Stage 2 — the intentions — has not started.** See the section at the foot.
 
 This is the last thing holding Phase 1 open. It is a runbook, not a design
 document: **strike each step as it lands, and move this file to

@@ -446,6 +446,81 @@ for convergence on a line. Nothing is the correct rendering of nothing.
 
 ---
 
+## 9. FOUND BY USING IT — two accounts, 4 September
+
+**The first time Phase 2 was exercised by a person rather than a fixture.** Two
+real accounts, a line on each that resolves to the same film, on a production
+database. **Nothing converged**, and the reasons are the two entries below.
+Neither is a bug in the engine: the engine was never reached.
+
+The diagnosis is reproducible — `scripts/why-no-convergence.mjs`, and
+`scripts/prod-why.sh` for production. It prints which of the four terms is
+false, because **all four fail identically from inside the app: in silence.**
+That is the product working as designed and it is why the script exists.
+
+What it found: 2 accounts, **0 tracks**, 54 resolved captures, one possibility
+(*Scarface*) held by both people, and **0 notifications ever written**.
+
+### 9a. ⚠⚠ ADDING SOMEBODY MUST BE A REQUEST THEY ANSWER — directed
+
+**A mutual track is two independent one-sided acts, and that is the whole
+problem.** Today: I open `/u/your-handle` and track you; then *you* must
+separately remember my handle, go to my page, and track back. Until you do,
+nothing converges — **and nothing tells either of us why.**
+
+**Directed, 4 September:** *if i add a friend on one account, the account i
+added should receive a ping offering accept or reject.*
+
+- ⚠ **This is a real change to `tracks`, not a UI addition.** The table is two
+  rows and mutuality is their conjunction (`lib/db/tracks.ts`:
+  `mutual: outbound && inbound`). A request/accept flow needs a **pending**
+  state that is not yet a track, and an acceptance that writes **both** rows in
+  one transaction — which is what §9's contact handshake already specifies for
+  the QR path: *on successful confirmation, create both existing track rows
+  atomically.*
+- ⚠ **So this and the QR handshake are the same feature reached two ways**, and
+  they should be designed together rather than sequentially. QR is the
+  in-person transport; a handle request is the remote one. Both end in the same
+  two-sided confirmation and the same atomic write, and §9 already says the
+  transport is never the authority.
+- ⚠ **It needs a notification kind, and §6 says there are six and that is the
+  complete set.** A track request is a seventh. That is a specification
+  amendment, not an oversight to fix quietly — and it is the first
+  notification in the product that is **not** about a convergence.
+- ⚠ **One-sided tracking must survive it.** §9 is explicit that a handshake means
+  *add each other*, where following is one-directional and stays available.
+  Whether a plain one-sided track remains reachable in the UI is the product
+  question to answer first.
+- **What it fixes beyond convenience:** the failure stops being silent. A
+  request that is never accepted is a visible pending state, where today it is
+  an absence indistinguishable from having no matches.
+
+### 9b. ⚠ A RESOLVED CAPTURE CAN HAVE NO INTENT, AND THEN IT CAN NEVER CONVERGE
+
+Both *Scarface* captures resolved to the film and carry `intent = null`. **A
+null intention is excluded in SQL before `classify` sees it** (`lib/overlap.ts`,
+both fan-outs), so those two lines cannot match each other or anybody, ever, and
+no surface says so.
+
+- **The matching rule is right and is not what to change.** §6 makes intent part
+  of the match deliberately: two people wanting to *see* a film is a plan; one
+  wanting to see it and one wanting to own a disc is not a match at all. The
+  allowlist is three pairs — `see×see`, `see×again`, `own×have`.
+- ⚠ **What is missing is any way to give a live capture an intention.** §13
+  forbids asking before saving, and `DEFAULT_INTENT` derives one at **settle**
+  time — so a capture that resolves without passing through that path keeps a
+  null forever. This is the *"where an intention is refined after capture"* entry
+  in §7 above, with a measured consequence attached: **2 of 54 resolved
+  production captures are permanently unmatchable.**
+- ⚠ **It is the same gap that makes Have unreachable**, from the other end. See
+  *Have is still not reachable* in `phase-1-capture.md`.
+- **Do not answer it by defaulting the intent at capture time.** That would make
+  every raw capture claim an intention nobody stated, which is the categorising
+  §13 exists to prevent. The console is where a capture is already opened and
+  reconsidered; it is the obvious home for this.
+
+---
+
 ## 8. Sequence
 
 1. ~~**The console**, page-side only — full text, `×`, `✎`, photo, link. No
