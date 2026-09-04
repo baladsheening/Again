@@ -14,8 +14,15 @@ import type { TrackState } from '@/lib/db'
  * them is symmetric:
  *
  *   - neither → *Add* (nothing yet)
- *   - outbound only → *Added* (they have been asked and have not answered)
+ *   - outbound only → *Requested* (they have been asked and have not answered)
  *   - mutual → *Added each other* (§6 fires, and §5 shows names)
+ *
+ * ⚠ **The middle state was *Added* for an hour and is *Requested* — 4 September,
+ * directed after use.** The flaw was the one written down when *Added* was
+ * chosen: **it claims something happened.** *Add* is the verb, *Requested* is
+ * the state it leaves behind, and *Added each other* is the state that is
+ * finished. **The same word is on the row in People**, so the state of a
+ * relationship reads the same in both places it appears.
  *
  * ⚠⚠ **IT SAID *TRACK* / *TRACKING* UNTIL 4 SEPTEMBER, AND THE MIDDLE STATE WAS
  * A LIE.** *Tracking* claimed a live relationship. Nothing of the sort existed:
@@ -81,13 +88,11 @@ export function TrackButton({
             things at once. The screen-reader text carries the verb, which is the
             same division the resolve row uses.
           */}
-          <span aria-hidden>{state.mutual ? 'Added each other' : 'Added'}</span>
+          <span aria-hidden>{state.mutual ? 'Added each other' : 'Requested'}</span>
           {/*
-            ⚠ **The unanswered case is said here and nowhere else.** *Added* on
-            its own is the state; what a reader cannot see is that it is still
-            waiting, and the one place to say so without putting a second line
-            of copy on the page is the label a screen reader gets — which is the
-            same division the label above already uses for the verb.
+            ⚠ **The unanswered case is said here too**, because *Requested* is
+            the state and *they have not answered* is why it is still on screen.
+            Same division the label above uses for the verb.
           */}
           <span className="sr-only">
             Remove @{handle}.{' '}

@@ -19,6 +19,20 @@ import { nameFor } from '@/lib/domain'
  * the work rather than a badge repeating it — and it is the reason not to add a
  * *mutual* tag here, which would state the same fact twice and give the weaker
  * version its own visual weight.
+ *
+ * ⚠⚠ **AND THAT WAS TOO SUBTLE, REPORTED 4 SEPTEMBER: THE PENDING ROW SAYS
+ * *REQUESTED* NOW.** The reasoning above holds for a *mutual* tag and does not
+ * hold for its opposite. A handle rather than a name is legible only to somebody
+ * who already knows the identity rule, and what it is being asked to carry is
+ * not an aesthetic distinction — it is **whether the thing you just did has
+ * happened yet**. Since 4 September the field above adds people, so this list is
+ * where an add is confirmed, and *no confirmation* is precisely the failure the
+ * handshake exists to remove.
+ *
+ * ⚠ **Still no tag on a mutual.** One state is labelled and the other is not,
+ * deliberately: **the label marks what is unfinished.** A pair of tags would be
+ * a status column, and being someone's mutual is the resting state of this list
+ * rather than an achievement to mark.
  */
 export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
   return (
@@ -88,8 +102,9 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
 
         {people.length === 0 ? (
           <p className="text-muted text-sm">
-            Nobody yet. You reach someone by their handle — there is no directory
-            and no search for strangers. Ask a friend for theirs.
+            Nobody yet. Add someone by their handle above — there is no directory
+            and no search for strangers. Ask a friend for theirs. They have to add
+            you back before anything converges.
           </p>
         ) : (
           <ul className="flex flex-col">
@@ -103,9 +118,24 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
                 */}
                 <Link
                   href={`/u/${person.handle}` as Route}
-                  className="hover:text-muted tap-target block py-4 text-lg transition-colors"
+                  className="hover:text-muted tap-target flex items-baseline justify-between gap-3 py-4 text-lg transition-colors"
                 >
-                  {nameFor(person)}
+                  <span className="min-w-0 truncate">{nameFor(person)}</span>
+
+                  {/*
+                    ⚠ **To the right, in the furniture's own register.** It is a
+                    state and not a control, so it takes `text-muted` at the
+                    label size rather than anything a thumb would aim at — §11
+                    gives `--color-chrome` to controls and `--color-accent` to
+                    convergence, and a pending request is neither.
+
+                    ⚠ **Nothing is drawn for a mutual**, so the column is empty
+                    on every settled row and the word only ever appears where
+                    something is still outstanding.
+                  */}
+                  {!person.mutual && (
+                    <span className="micro text-muted shrink-0">Requested</span>
+                  )}
                 </Link>
               </li>
             ))}

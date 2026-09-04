@@ -182,9 +182,15 @@ badge.
 state claims something happened. Nothing did: the offer is sitting undelivered.
 
 - Neither → **Add**
-- Outbound only → **Added** — a state, not a control, exactly as *Tracking* is
-  drawn today. Undoing it is `untrackAction`, which already exists.
+- Outbound only → **Requested** — a state, not a control, exactly as *Tracking*
+  was drawn. Undoing it is `untrackAction`, which already exists.
 - Mutual → **Added each other**.
+
+⚠ **The middle state was *Added* for an hour — 4 September, corrected after
+use.** It fell to the flaw written down when it was chosen: **it claims something
+happened.** *Add* is the verb, *Requested* is the state it leaves behind. **The
+same word is on the row in People**, so a relationship reads the same in both
+places it appears.
 - Inbound only → ⚠ **still not announced.** The button reads *Ask* for a stranger
   and for someone who has asked you, and the reason is unchanged: being told who
   follows you is a follower notification, the §2 shape this design refuses. **The
@@ -198,6 +204,31 @@ lists people you already track. **A handle field on `/profile`, next to People**
 — the smallest thing that closes it, and the same shape §2 already permits: you
 are here because someone gave you their handle. No directory, no stranger
 search, no suggestions.
+
+⚠⚠ **THE FIELD SENDS THE REQUEST. IT SENT YOU TO THEIR PAGE FOR ITS FIRST HOUR
+AND THAT WAS WRONG — reported and rebuilt, 4 September.** The argument for the
+detour was that a mistyped handle can reach a real person, so you should see who
+you are about to ask. **The page you landed on could not tell you**: a non-mutual
+sees nothing of somebody's record, so the destination was the handle you had just
+typed, an *Add* button, and *This list is not shared with you*. Worse than
+confusing — **it read as done**, and the request had not been sent. Production
+confirmed it: 0 tracks, 0 notifications. **The silent failure this feature exists
+to remove, rebuilt in the surface that fixes it.**
+
+- ⚠ **A typo is answered in place** — *No such person.* under the field, which is
+  the check the detour was reaching for and could not perform.
+- ⚠ **The confirmation is the ROW, not a message.** The person arrives in People
+  marked **Requested**, so the state lives where the relationship lives instead
+  of in a sentence that says it once and vanishes. The field stays in view and
+  empties.
+- **What it costs, stated:** a typo that happens to be somebody's real handle
+  sends them a request. They see a handle they do not know and decline it;
+  nothing about them is disclosed by being asked.
+- ⚠ **A non-mutual is now shown NO LISTS on `/u/[handle]`.** *Wants* with *This
+  list is not shared with you.* under it was two thirds of a screen spent
+  explaining an absence, over the one control that is the reason to be there.
+  §6's *silence stays silent*, applied to a surface — and it still makes neither
+  of the two claims the old copy was careful to keep apart.
 
 ### 2f. The QR — ⚠ it is a transport for the handle, and it is NOT the fix
 

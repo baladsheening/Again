@@ -78,10 +78,25 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   only the **act of asking for one** is called adding. `tracks`, `trackUser`,
   `TrackState` and `track_request` all keep their names. ⚠ *Add* is not on the
   banned list, so **the linter cannot hold this and it has to be held by hand.**
-- ⚠ **`Tracking` was a lie and is gone.** *Add* → *Added* → *Added each other*.
-  The middle state used to claim a live relationship where there was an offer
-  nobody had been told about. ⚠ **Watch *Added* for the same flaw** — if it reads
-  as done rather than waiting, the word moves, not the model.
+- ⚠ **`Tracking` was a lie and is gone.** *Add* → **Requested** → *Added each
+  other*. The middle state used to claim a live relationship where there was an
+  offer nobody had been told about. ⚠ **It was *Added* for an hour and fell to
+  the same flaw**, which had been written down when it was chosen: it claims
+  something happened. *Add* is the verb; *Requested* is the state it leaves
+  behind, **and it is the same word on the row in People** so a relationship
+  reads the same in both places it appears.
+- ⚠⚠ **THE HANDLE FIELD SENDS THE REQUEST, AND IT SENT YOU TO THEIR PAGE FOR ITS
+  FIRST HOUR — reported and rebuilt the same day.** The detour existed so a
+  mistyped handle could be seen before being asked; **the destination could not
+  tell you anything**, because a non-mutual sees nothing of a record — so it was
+  the handle you had just typed, an *Add* button and *This list is not shared
+  with you*. **It read as done and nothing had been sent.** Production said so: 0
+  tracks, 0 notifications. *A typo is answered in place now* — **No such
+  person.** under the field — **and the confirmation is the row**, not a message.
+- ⚠ **A non-mutual is shown NO LISTS on `/u/[handle]`.** A heading and *This list
+  is not shared with you.* was two thirds of a screen explaining an absence over
+  the one control worth being there for. §6's *silence stays silent*, applied to
+  a surface; the four terms are untouched and are still the data layer's.
 - ⚠ **A pending request is named `@handle` and the handle is read LIVE from
   `profiles`** — the one place this app departs from *the payload is the record*.
   A convergence's name is history; a request is **a live question about a person

@@ -110,13 +110,36 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
         called this the last caller and said nothing may add another — it is now
         the last caller of nothing, and `toLegacyEntryCards` is deleted.
       */}
-      <PersonList
-        heading={COLLECTIONS.wants}
-        entries={live.map(toCaptureCard)}
-        empty={track.mutual ? 'Nothing here yet.' : 'This list is not shared with you.'}
-      />
+      {/*
+        ⚠⚠ **A NON-MUTUAL IS SHOWN NO LISTS AT ALL — 4 September, reported.** This
+        page used to render *Wants* with *This list is not shared with you.* under
+        it, which is a heading and a sentence spent saying that there is nothing
+        to see. Reported as confusing beside the *Add* button, and it is: two
+        thirds of the screen explaining an absence, over the one control that is
+        the reason to be here.
 
-        <PersonList heading={COLLECTIONS.fixtures} entries={fixtures.map(toCaptureCard)} />
+        ⚠ **It is §6's silence rule applied to a surface rather than a
+        notification** — *silence stays silent*, no empty state. And it keeps
+        what the old copy was carefully protecting: *this person has nothing* and
+        *this person has nothing for you* are different claims, and drawing
+        neither list makes neither.
+
+        ⚠ **The four terms are unchanged and are not enforced here.**
+        `listCapturesForOtherUser` applies all of them whatever this renders —
+        §3, and the guarantee lives in the data layer precisely so that a change
+        to this JSX cannot be the thing that breaks it.
+      */}
+      {track.mutual && (
+        <>
+          <PersonList
+            heading={COLLECTIONS.wants}
+            entries={live.map(toCaptureCard)}
+            empty="Nothing here yet."
+          />
+
+          <PersonList heading={COLLECTIONS.fixtures} entries={fixtures.map(toCaptureCard)} />
+        </>
+      )}
       </div>
     </Screen>
   )
