@@ -55,6 +55,15 @@ await q(`delete from tracks
    where followed_id = $1
      and follower_id in (select id from profiles where handle ~ '^asker[0-9]+$')`, [me.id])
 
+/*
+  ⚠ **And it empties everything else unread, so the probe starts from *a request
+  alone*.** `handshake.mjs` asserts that the door is lit for a request with no
+  convergence anywhere and dark again once the request is answered; a leftover
+  convergence from `seed-portal.mjs` makes both of those false for a reason that
+  has nothing to do with the code under test.
+*/
+await q("update notifications set read_at = now() where user_id = $1 and read_at is null", [me.id])
+
 /* The asker. A real account, because the read joins `profiles` for the handle. */
 const handle = `asker${Date.now().toString().slice(-6)}`
 const email = `${handle}@example.com`

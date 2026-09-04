@@ -277,6 +277,42 @@
    */
   --color-listed: #39ff6a;
 
+  /**
+   * **Yes and no, on the one question somebody else asks you.** Directed
+   * 4 September: *accept in green and decline in red, both shades selected to be
+   * in-keeping with the platform's aesthetic.*
+   *
+   * ⚠⚠ **THESE ARE THE FIRST COLOURS IN THIS APP ON A CONTROL, AND §11's
+   * SCARCITY RULE MEANS THEY MUST NOT SPREAD.** Every other control is
+   * `--color-text` or a fade of it; `--color-accent` is a state and lives in the
+   * gutter. **The moment green appears on a second affirmative or red on a
+   * second dismissal, both stop meaning anything and the portal's request stops
+   * being the one place in the app where a decision is offered in colour.** In
+   * particular: **not for errors** — `docs/decisions.md` has refused a red for
+   * failure twice and this makes that refusal harder to hold, not easier.
+   *
+   * ⚠ **They are the palette's own values, re-pitched, not new hues.** The red
+   * is `--color-active`'s lacquer opened up; the green is the ladder-back
+   * `--color-listed` records for itself, `#4f9860`, rather than its neon — a
+   * control label is prose, and the neon was chosen to be *the loudest mark in
+   * the app*, which is not what a word beside a sentence should be. Nothing
+   * borrows an existing token: a colour with two tenants is the failure the rule
+   * above describes.
+   *
+   * ⚠ **The lacquer at `#c1483c` measures 4.31:1 and that is below AA for 18px
+   * text**, which is why this one is opened up rather than reused as-is.
+   * Measured on the handset's true black: **decline 5.25:1, accept 5.95:1** —
+   * and on the desk's charcoal, where every ratio drops about 12%, **4.6 and
+   * 5.2**, both still past 4.5. ⚠ **Decline is the tighter of the two and is the
+   * first to re-measure if either ground moves.**
+   *
+   * ⚠ **Nothing depends on seeing them.** *Accept* and *Decline* say which is
+   * which in full; the colour is a second reading of a distinction the words
+   * already carry, which is the same terms `--color-live` arrived on.
+   */
+  --color-accept: #4f9860;
+  --color-decline: #cf5a4c;
+
   /*
     The width at which the shell becomes a rail.
 

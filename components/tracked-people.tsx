@@ -117,9 +117,31 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
         <AddPerson />
       </div>
 
-      <div className="bg-surface/40 flex w-full flex-col rounded-2xl p-4">
-        <h2 className="micro text-muted mb-2">People</h2>
+      {/*
+        ⚠⚠ **THE HEADING IS A BAR ACROSS THE PILL — directed, 4 September.** It
+        was a label with 8px under it, floating inside the pill's padding, which
+        made *People* read as the first item in the list rather than as what the
+        list is. **A segment is a boundary the eye gets for free**, which is the
+        same argument that took the hairline out from under the wordmark — except
+        here there is something on both sides of the line and the line is doing
+        work.
 
+        ⚠ **The padding moves off the pill and onto the two segments.** `p-4`
+        would have inset the bar from the pill's edges, and a bar that stops
+        short of its container is a label with a background. The pill is bare;
+        the head and the body each carry their own air, and the rounding is
+        inherited by `overflow-hidden` so the bar's corners cannot disagree with
+        the pill's.
+
+        ⚠ **`border-rule` and not a second fill.** A tint on a tint is what makes
+        a surface muddy on a black ground — the pill is already 40% for exactly
+        that reason — so the segmentation is the one hairline this shape has, and
+        the head is the same ground as the body.
+      */}
+      <div className="bg-surface/40 flex w-full flex-col overflow-hidden rounded-2xl">
+        <h2 className="micro text-muted border-rule border-b px-4 py-2.5">People</h2>
+
+        <div className="px-4 py-2">
         {people.length === 0 ? (
           <p className="text-muted text-sm">
             Nobody yet. Add someone by their handle above — there is no directory
@@ -161,6 +183,7 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
             ))}
           </ul>
         )}
+        </div>
       </div>
     </section>
   )

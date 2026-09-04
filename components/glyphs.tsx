@@ -275,62 +275,63 @@ export function PortalGlyph() {
 }
 
 /**
- * **The door, when it has something to say — `C`, `R`, or `C/R`. Directed, 4
- * September.**
+ * **The door, and the dot that says somebody is waiting on you.** Directed, 4
+ * September.
  *
  * ⚠ **A request needs answering and a convergence does not, so the door cannot
  * say only *something*.** It said exactly that until now: one lit glyph for both
  * kinds of row, which made a reader open the box to find out whether anybody was
- * waiting on them. Two things behind one door, and the door was silent about
- * which.
+ * waiting on them.
  *
- * ⚠⚠ **IT IS STILL NOT A COUNT.** Three states and no digits — two people asking
- * is the same `R` as one, and `portal.mjs`'s assertion that the door carries no
- * numeral holds unchanged. §5 forbids a number, not a distinction.
+ * Three states, and the drawing never changes — only what is added to it:
  *
- * ⚠ **Letters rather than a mark on the circles, and the two circles stay for
- * the resting state.** A `+` was the first suggestion and is ruled out: the
- * capture control is a `+` two cells away in the same bar, and this app cannot
- * afford two plus-shapes side by side on the one control it has to be perfect
- * at. A dot would be a notification badge under another name. **So the slot is
- * the drawing while it is quiet and becomes type when it has something to say**,
- * which is `--font-sans` doing the work the rest of this design already gives it
- * — *type is the entire design*, §11.
+ * | | |
+ * |---|---|
+ * | nothing | the two circles, `OFF` |
+ * | a convergence | the two circles, lit |
+ * | **a request** | the two circles, lit, **with a dot above them** |
  *
- * ⚠ **Set in the interface face at the glyph's own size, not drawn as SVG
- * paths.** An SVG `<text>` on the 20-grid would be a second way of rendering the
- * app's type, at a stroke weight the face does not have; a span inherits
- * `currentColor` from the bar exactly as a `Glyph` does, so lit and off are
- * decided in the same place for both.
+ * ⚠⚠ **LETTERS OVER THE CIRCLES WERE BUILT FIRST AND LOOKED AT, AND THEY WERE A
+ * SMUDGE.** `C`, `R` and `C/R` overlaid on the glyph at 26px collide with the
+ * strokes of both circles — the counters of the `C` and the bowl of the `R` land
+ * on the drawing and the whole thing reads as ink rather than as two characters.
+ * Rendered at `door-overlay.png`. **The direction anticipated this and named the
+ * fallback**, which is what this is.
  *
- * ⚠ **`C/R` is three characters in a 26px cell**, which is the tight case and
- * the one to look at on hardware. It is set at `--glyph` × 0.62 with the
- * numerals' own tracking removed; if it reads cramped, **the fix is the size of
- * this one span**, not a shorter pair of letters — the letters were directed.
+ * ⚠ **A `+` was ruled out before either.** The capture control is a `+` two
+ * cells away in the same bar, and this app cannot afford two plus-shapes side by
+ * side on the one control it has to be perfect at.
+ *
+ * ⚠⚠ **IT IS STILL NOT A COUNT.** One dot however many people are asking, no
+ * digits anywhere, and `portal.mjs`'s assertion holds unchanged. §5 forbids a
+ * number — a thing to clear — not a distinction. ⚠ **It is nonetheless the
+ * closest this app has come to a notification badge, and that is the thing to
+ * watch: if a second dot is ever proposed for a second kind of row, the answer
+ * is that the door has run out of what it can say and the surface behind it is
+ * where the distinction belongs.**
+ *
+ * ⚠ **The clearance is measured against the ink, not against the circles' own
+ * bounding box, and the first attempt got that wrong.** At the dot's x the two
+ * circles cross near their tops, so the outline there is at y 4.71 and the
+ * stroke takes it to 4.09 — a dot ending at 4.1 read as a **stem**, a lollipop
+ * rather than two marks. It sits at cy 1.75
+ * with r 1.15 now, ending at 2.9: **1.2 units of clear ground, about 1.5px at the
+ * handset's 26px and four device pixels at 3×.**
+ *
+ * ⚠ **Filled — the one filled shape in the eleven.** A ring at this size is a
+ * grey blur, and a dot has to be a dot.
+ *
+ * ⚠ **`currentColor`, like everything else here.** Lit and off are the bar's
+ * decision, so the dot cannot be brighter than the glyph it belongs to — and
+ * §11 has no colour to spare on a control.
  */
-export function PortalMark({
-  lines,
-  requests,
-}: {
-  lines: boolean
-  requests: boolean
-}) {
-  if (!lines && !requests) return <PortalGlyph />
-
-  /*
-    Convergence first, and the slash is not a separator so much as an *and* the
-    bar has room for. `R/C` would read as the newer thing first, which is a rule
-    about recency this door does not otherwise keep.
-  */
-  const says = lines && requests ? 'C/R' : lines ? 'C' : 'R'
-
+export function PortalMark({ requests }: { lines: boolean; requests: boolean }) {
   return (
-    <span
-      aria-hidden
-      className="flex size-(--glyph) shrink-0 items-center justify-center text-[length:calc(var(--glyph)*0.62)]/none font-medium tracking-[-0.02em]"
-    >
-      {says}
-    </span>
+    <Glyph>
+      <circle cx="7.75" cy="10" r="5.75" />
+      <circle cx="12.25" cy="10" r="5.75" />
+      {requests && <circle cx="10" cy="1.75" r="1.15" fill="currentColor" stroke="none" />}
+    </Glyph>
   )
 }
 

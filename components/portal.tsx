@@ -158,8 +158,26 @@ export function Portal({
               `flex-wrap` is for. The record truncates because a line is one
               line; **this is a question, and a question with its end cut off is
               not answerable.**
+
+              ⚠ **The handle is full ink and the rest is muted — directed.** A
+              request is *about a person*, and the person was the one thing on
+              the row that read at the same weight as the words around them. Two
+              weights of one type rather than a second face or a second colour,
+              which is what §11 leaves for a distinction of this size.
+
+              ⚠ **It is a SPLIT of the one authored sentence, not a second
+              composition.** `portalSentence` builds it as `@handle` + the rest,
+              so slicing at the handle's own length gives the two halves back
+              with no string assembled here — a component that wrote *wants to
+              track you* itself would be the drift §6 warns about, where the copy
+              and the payload say one event two ways.
             */}
-            <span className="min-w-0">{request.sentence}</span>
+            <span className="min-w-0">
+              <span className="font-medium">@{request.handle}</span>
+              <span className="text-muted">
+                {request.sentence.slice(`@${request.handle}`.length)}
+              </span>
+            </span>
 
             {/*
               ⚠ **Plain text, not buttons in boxes — and that is what *in-line*
@@ -178,12 +196,24 @@ export function Portal({
               division `Ask` makes with its Yes and No. Accepting is the act;
               declining is the way out of it.
             */}
-            <span className="flex shrink-0 items-baseline gap-3">
+            {/*
+              ⚠ **Right-aligned — directed.** `ms-auto` rather than
+              `justify-between` on the parent: the sentence keeps its own width
+              and the answers are pushed to the far edge, so a short handle does
+              not leave a gap in the middle of a sentence. When the row wraps,
+              the answers land on their own line still against the right edge.
+
+              ⚠ **Green and red, and they are the app's first coloured
+              controls** — see `--color-accept` in `globals.css` for the scarcity
+              terms they arrive on. The words say which is which in full; nothing
+              depends on seeing the colour.
+            */}
+            <span className="ms-auto flex shrink-0 items-baseline gap-4">
               <button
                 type="button"
                 onClick={() => onAnswer(request.handle, true)}
                 disabled={answering !== null}
-                className="hover:text-muted tap-target transition-colors disabled:opacity-40"
+                className="text-accept tap-target transition-opacity hover:opacity-80 disabled:opacity-40"
               >
                 Accept
               </button>
@@ -191,7 +221,7 @@ export function Portal({
                 type="button"
                 onClick={() => onAnswer(request.handle, false)}
                 disabled={answering !== null}
-                className="text-muted hover:text-text tap-target transition-colors disabled:opacity-40"
+                className="text-decline tap-target transition-opacity hover:opacity-80 disabled:opacity-40"
               >
                 Decline
               </button>

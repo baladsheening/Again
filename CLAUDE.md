@@ -76,20 +76,46 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   run of words — and the 44px is untouched because `tap-target` hangs its hit
   area off a pseudo-element. ⚠ **It cannot fit on one line on a 390 phone**
   (~394px of content into ~310px) and wraps there; one line from 430px up.
-- ⚠⚠ **THE DOOR SAYS WHICH — `C`, `R`, `C/R`, directed 4 September.** It was one
-  lit glyph for both kinds of row, which made a reader open the box to find out
-  whether anybody was waiting on them. **The two circles stay for the resting
-  state**: the slot is a drawing while it is quiet and becomes type when it has
-  something to say. ⚠ **A `+` was the first suggestion and is ruled out** — the
-  capture control is a `+` two cells away, and this app cannot afford two
-  plus-shapes side by side on the one control it has to be perfect at; a dot
-  would be a notification badge under another name. ⚠ **It is still not a
-  count**: three states, no digits, and two people asking is the same `R` as one.
-  `portal.mjs`'s assertion is the digits and only the digits, which is what it
-  should always have been. ⚠ **The door has three accessible names** — *Who
-  else*, *Requests*, *Requests, and who else* — because `C` and `R` are legible
-  on sight and meaningless to a reader who cannot see them. A probe pinned to one
-  string is a probe that reports a missing door.
+- ⚠⚠ **THE DOOR SAYS WHICH: A DOT ABOVE THE CIRCLES WHEN SOMEBODY IS WAITING ON
+  YOU — directed 4 September.** One lit glyph stood for both kinds of row, which
+  made a reader open the box to find out whether anybody was waiting on them.
+  Three states, one drawing: circles off, circles lit, circles lit **with a dot**.
+  ⚠ **Letters over the glyph (`C`, `R`, `C/R`) were built and looked at first and
+  were a SMUDGE** — the counters collide with both circles' strokes at 26px; the
+  direction had anticipated it and named the dot as the fallback. A `+` was ruled
+  out before either: the capture control is a `+` two cells away and this app
+  cannot afford two plus-shapes side by side on the one control it has to be
+  perfect at.
+- ⚠ **The dot's clearance is measured against the INK, not the bounding box, and
+  the first attempt got it wrong.** At the dot's x the two circles are crossing
+  near their tops, so the ink is at y 4.09 rather than 4.25 — a dot ending at 4.1
+  read as a **stem**. It is cy 1.75 r 1.15 now, 1.2 units clear. **Filled: the one
+  filled shape in the eleven**, because a ring that size is a grey blur.
+- ⚠ **Still not a count** — one dot however many people are asking, and
+  `portal.mjs`'s no-digits assertion holds. ⚠⚠ **It is nonetheless the closest
+  this app has come to a notification badge. If a second dot is ever proposed for
+  a second kind of row, the answer is that the door has run out of what it can
+  say and the surface behind it is where the distinction belongs.**
+- ⚠ **The door has three accessible names** — *Who else*, *Requests*, *Requests,
+  and who else* — because a dot is meaningless to a reader who cannot see it. **A
+  probe pinned to one of those strings reports a missing door** the first time the
+  account under test holds the other kind of row; both probes match the control
+  by prefix, and `seed-request.mjs` empties the account's other unread rows so
+  *a request alone* is a state the probe can actually reach.
+- ⚠⚠ **ACCEPT IS GREEN AND DECLINE IS RED — directed, and they are the FIRST
+  COLOURED CONTROLS IN THIS APP.** §11 gives every other control `--color-text`
+  or a fade of it and reserves `--color-accent` for a state. `--color-accept`
+  `#4f9860` and `--color-decline` `#cf5a4c` are the palette's own values
+  re-pitched — the lacquer red opened up because `#c1483c` measures 4.31:1 and
+  fails AA at 18px, and the green's own recorded ladder-back rather than
+  `--color-listed`'s neon, which was chosen to be *the loudest mark in the app*.
+  **5.95 and 5.25 on true black; 5.2 and 4.6 on the desk's charcoal.** ⚠ **The
+  scarcity rule binds them from day one: the moment green appears on a second
+  affirmative or red on a second dismissal, both stop meaning anything — and
+  neither is the error colour**, which `docs/decisions.md` has refused twice.
+- ⚠ **The handle is full ink, the rest of the sentence muted** — a request is
+  about a person. It is a **split of the one authored string** at the handle's own
+  length, never a second composition: `portalSentence` stays the only author.
 - ⚠ **THE SCREEN SAYS *ADD* AND THE CODE SAYS *TRACK* — directed, and it is the
   first deliberate split of §4's vocabulary rule.** The **relation** is a track;
   only the **act of asking for one** is called adding. `tracks`, `trackUser`,

@@ -172,24 +172,36 @@ Three things have to move, and each is a real cost:
 **Order: requests first, above the convergences.** They are the only rows on that
 surface that are waiting on the reader. The convergences keep *Who else*.
 
-⚠⚠ **AND THE DOOR SAYS WHICH — `C`, `R`, `C/R`, directed 4 September.** One lit
-glyph for both kinds of row made a reader open the box to find out whether
-anybody was waiting on them. **The two circles stay for the resting state**, so
-the slot is a drawing while it is quiet and becomes type when it has something to
-say.
+⚠⚠ **AND THE DOOR SAYS WHICH — a dot above the circles, directed 4 September.**
+One lit glyph for both kinds of row made a reader open the box to find out
+whether anybody was waiting on them. Three states, one drawing: circles off,
+circles lit, circles lit **with a dot**.
 
-- ⚠ **A `+` was the first suggestion and is ruled out.** The capture control is a
-  `+` two cells away in the same bar, and this app cannot afford two plus-shapes
-  side by side on the one control it has to be perfect at. A dot would be a
-  notification badge under another name.
-- ⚠ **Still not a count.** Three states, no digits, and two people asking is the
-  same `R` as one. §5 forbids a *number* — a thing to clear — not a distinction.
-  `portal.mjs`'s assertion is the digits and only the digits, which is what it
-  should always have been; its comment claiming *any text at all is a badge* was
-  true only while the door was a drawing.
+- ⚠⚠ **LETTERS OVER THE GLYPH WERE BUILT AND LOOKED AT FIRST AND WERE A SMUDGE.**
+  `C`, `R` and `C/R` overlaid at 26px collide with both circles' strokes — the
+  counters land on the drawing and the whole thing reads as ink. The direction
+  anticipated it and named the dot as the fallback.
+- ⚠ **A `+` was ruled out before either.** The capture control is a `+` two cells
+  away in the same bar, and this app cannot afford two plus-shapes side by side
+  on the one control it has to be perfect at.
+- ⚠ **The clearance is measured against the INK.** At the dot's x the circles are
+  crossing near their tops — ink at 4.09, not the box's 4.25 — so the first dot
+  *touched* and read as a stem. cy 1.75, r 1.15, filled.
+- ⚠ **Still not a count.** One dot however many people are asking. §5 forbids a
+  *number* — a thing to clear — not a distinction. ⚠ **It is the closest this app
+  has come to a badge; a second dot for a second kind of row means the door has
+  run out of what it can say.**
 - ⚠ **Three accessible names** — *Who else*, *Requests*, *Requests, and who
-  else* — because the letters are legible on sight and meaningless to a reader
-  who cannot see them.
+  else* — because a dot is meaningless to a reader who cannot see it, and a probe
+  pinned to one string reports a missing door.
+
+⚠ **Accept is green and Decline is red — directed, and they are the first
+coloured controls in this app.** `--color-accept` and `--color-decline` are the
+palette's own values re-pitched, and they arrive under §11's scarcity rule from
+day one — see the token's note in `globals.css` for the measurements and for why
+neither is the error colour. **The handle is full ink and the rest of the
+sentence is muted**, split from the one authored string rather than composed a
+second time.
 
 ### 2d. The asker's side — ⚠ *Tracking* is a lie and has to go
 
