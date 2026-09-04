@@ -217,10 +217,10 @@ describe('the fan-out reaches a surface (Phase 2 step 3)', () => {
     await dal.readPortalLine(asViewer(adaId, `${A}@example.com`), ada[0].notificationIds)
 
     expect(await dal.listMyPortal(asViewer(adaId, `${A}@example.com`))).toHaveLength(0)
-    expect(await dal.hasPortalLines(asViewer(adaId, `${A}@example.com`))).toBe(false)
+    expect((await dal.portalWaiting(asViewer(adaId, `${A}@example.com`))).lines).toBe(false)
 
     /* Bo's side of the same convergence is untouched. */
-    expect(await dal.hasPortalLines(asViewer(boId, `${B}@example.com`))).toBe(true)
+    expect((await dal.portalWaiting(asViewer(boId, `${B}@example.com`))).lines).toBe(true)
   })
 
   it('will not empty somebody else’s rows', async () => {

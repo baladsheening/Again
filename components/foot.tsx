@@ -3,7 +3,8 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { PortalGlyph, SearchGlyph, TrayGlyph, WriteGlyph } from './glyphs'
+import { PortalGlyph, PortalMark, SearchGlyph, TrayGlyph, WriteGlyph } from './glyphs'
+import type { PortalWaiting } from '@/lib/db'
 
 /**
  * **The tools: write and search.**
@@ -163,20 +164,23 @@ type Tools = {
    */
   portal?: (() => void) | null
   /**
-   * **The one bit, and it is the only thing the door is allowed to say.**
+   * **What is waiting — and since 4 September the door says WHICH.**
    *
-   * §5: *never a count. One bit at most — something is there, or nothing is.* A
-   * number is a thing to clear, and `CLAUDE.md` excludes engagement metrics by
-   * name. `hasPortalLines` returns a boolean for this reason rather than as a
-   * convenience — see its note.
+   * §5: *never a count. One bit at most.* ⚠ **This is two bits and it is still
+   * not a count**: `C`, `R` or `C/R`, no digits, and two people asking is the
+   * same `R` as one. What §5 forbids is a number — a thing to clear — and what
+   * was directed here is a distinction, because **a request needs answering and
+   * a convergence does not.** A door that says only *something* makes a reader
+   * open the box to find out whether anybody is waiting on them.
    *
    * ⚠ **It is drawn with the bar's existing device, not a new one.** *Controls
    * go off; they do not disappear* — so the portal is lit when there is
    * something and `OFF` when there is not, which is exactly what search already
    * does with an empty record. **No dot, no badge, no ring**: the page has one
-   * way of saying a control can act and this is it.
+   * way of saying a control can act and this is it, and the letters ride inside
+   * it rather than beside it.
    */
-  portalLit?: boolean
+  portalWaiting?: PortalWaiting
 }
 
 /**
@@ -191,7 +195,31 @@ type Tools = {
  * `+` is central by construction and would survive losing search too. Grid
  * placement has no effect on a flex item, so the vertical stack ignores both.
  */
-function ToolSet({ write, searchable = false, portal = null, portalLit = false }: Tools) {
+/**
+ * What the door is called, which is what is behind it.
+ *
+ * ⚠ **Three names for the three states the glyph has.** *Who else* was the
+ * constant while the door had one; it is still the convergence one, because it
+ * is the portal's own heading and the two must not say the event differently.
+ */
+function doorName({ lines, requests }: PortalWaiting): string {
+  if (lines && requests) return 'Requests, and who else'
+  return requests ? 'Requests' : 'Who else'
+}
+
+function ToolSet({
+  write,
+  searchable = false,
+  portal = null,
+  portalWaiting = { lines: false, requests: false },
+}: Tools) {
+  /*
+    ⚠ **Lit is derived here and in one expression, never asked for separately.**
+    The door is open when there is anything behind it; which letters it wears is
+    a second question about the same pair of bits, and two props would let a
+    caller light a door over nothing.
+  */
+  const portalLit = portalWaiting.lines || portalWaiting.requests
   /*
     ⚠ **The explicit columns are dropped when there is no  — 31 August.**
      in a two-column grid creates an implicit THIRD column, which
@@ -307,10 +335,18 @@ function ToolSet({ write, searchable = false, portal = null, portalLit = false }
         <button
           type="button"
           onClick={portal}
-          aria-label="Who else"
+          /*
+            ⚠ **The name says what is behind it, because the letters cannot.**
+            `C` and `R` are legible on sight and meaningless to a reader who
+            cannot see them, so the accessible name carries the distinction the
+            glyph carries. It was the constant *Who else* while the door had one
+            state; with three, a fixed name would announce a convergence to
+            somebody who has only been asked a question.
+          */
+          aria-label={doorName(portalWaiting)}
           className={`text-chrome tap-target ${at(3)} flex items-center transition-colors`}
         >
-          <PortalGlyph />
+          <PortalMark {...portalWaiting} />
         </button>
       ) : (
         /*

@@ -227,7 +227,7 @@ describe('the mark (Phase 2 step 4)', () => {
     expect(await dal.getConvergence(viewer(adaId, A), line!.id)).toContain(B)
 
     /* And the door is dark, because the portal is what empties. */
-    expect(await dal.hasPortalLines(viewer(adaId, A))).toBe(false)
+    expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(false)
   })
 
   it('survives being crossed off, and follows the line into the tray', async () => {

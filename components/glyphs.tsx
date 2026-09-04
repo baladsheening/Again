@@ -275,6 +275,66 @@ export function PortalGlyph() {
 }
 
 /**
+ * **The door, when it has something to say — `C`, `R`, or `C/R`. Directed, 4
+ * September.**
+ *
+ * ⚠ **A request needs answering and a convergence does not, so the door cannot
+ * say only *something*.** It said exactly that until now: one lit glyph for both
+ * kinds of row, which made a reader open the box to find out whether anybody was
+ * waiting on them. Two things behind one door, and the door was silent about
+ * which.
+ *
+ * ⚠⚠ **IT IS STILL NOT A COUNT.** Three states and no digits — two people asking
+ * is the same `R` as one, and `portal.mjs`'s assertion that the door carries no
+ * numeral holds unchanged. §5 forbids a number, not a distinction.
+ *
+ * ⚠ **Letters rather than a mark on the circles, and the two circles stay for
+ * the resting state.** A `+` was the first suggestion and is ruled out: the
+ * capture control is a `+` two cells away in the same bar, and this app cannot
+ * afford two plus-shapes side by side on the one control it has to be perfect
+ * at. A dot would be a notification badge under another name. **So the slot is
+ * the drawing while it is quiet and becomes type when it has something to say**,
+ * which is `--font-sans` doing the work the rest of this design already gives it
+ * — *type is the entire design*, §11.
+ *
+ * ⚠ **Set in the interface face at the glyph's own size, not drawn as SVG
+ * paths.** An SVG `<text>` on the 20-grid would be a second way of rendering the
+ * app's type, at a stroke weight the face does not have; a span inherits
+ * `currentColor` from the bar exactly as a `Glyph` does, so lit and off are
+ * decided in the same place for both.
+ *
+ * ⚠ **`C/R` is three characters in a 26px cell**, which is the tight case and
+ * the one to look at on hardware. It is set at `--glyph` × 0.62 with the
+ * numerals' own tracking removed; if it reads cramped, **the fix is the size of
+ * this one span**, not a shorter pair of letters — the letters were directed.
+ */
+export function PortalMark({
+  lines,
+  requests,
+}: {
+  lines: boolean
+  requests: boolean
+}) {
+  if (!lines && !requests) return <PortalGlyph />
+
+  /*
+    Convergence first, and the slash is not a separator so much as an *and* the
+    bar has room for. `R/C` would read as the newer thing first, which is a rule
+    about recency this door does not otherwise keep.
+  */
+  const says = lines && requests ? 'C/R' : lines ? 'C' : 'R'
+
+  return (
+    <span
+      aria-hidden
+      className="flex size-(--glyph) shrink-0 items-center justify-center text-[length:calc(var(--glyph)*0.62)]/none font-medium tracking-[-0.02em]"
+    >
+      {says}
+    </span>
+  )
+}
+
+/**
  * **The lock, on a line of the record — 31 August.** *This capture is out of the
  * convergence pool.* The row's swipe puts it there and takes it away, and this
  * is what says so.

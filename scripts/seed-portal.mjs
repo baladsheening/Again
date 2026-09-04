@@ -46,8 +46,15 @@ const [poss] = await q(
 )
 
 const [mine] = await q(
-  `insert into captures (user_id, text, state, intent, visibility, source, possibility_id)
-   values ($1, $2, 'want', 'see', 'mutuals', 'self', $3)
+  /*
+    ⚠ **`status` is written, and this script was broken without it — 4
+    September.** Step C1 of the vocabulary migration made `captures.status` NOT
+    NULL, and a raw insert that names its columns does not get a backfill's
+    help. The two axes are the record now; `state` is written beside it only
+    because the column is still there and step C3 has not dropped it.
+  */
+  `insert into captures (user_id, text, state, status, intent, visibility, source, possibility_id)
+   values ($1, $2, 'want', 'active', 'see', 'mutuals', 'self', $3)
    returning id, text`,
   [me.id, `portal seed ${new Date().toISOString().slice(11, 19)}`, poss.id],
 )

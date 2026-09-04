@@ -491,23 +491,36 @@ export async function listMyRequests(
   }))
 }
 
+/** What is behind the door — one bit per kind of row, and never a number. */
+export type PortalWaiting = {
+  /** Convergences: things that happened, which leave on being read. */
+  lines: boolean
+  /** Requests: things to answer, which leave on being answered. */
+  requests: boolean
+}
+
 /**
- * **One bit: is there anything, or nothing.**
+ * **Two bits: what kind of thing is waiting, if anything.**
  *
- * ⚠ **`exists`, not `count`.** §5 forbids a number in the portal and the door
+ * ⚠ **`exists`, never `count`.** §5 forbids a number in the portal and the door
  * is where a number would have crept in first — a badge is the most natural
  * thing in the world to write and it is an engagement metric with a different
- * name. This returns a boolean because a boolean is all the glyph can say, and
- * a function that returned a count would be one refactor away from displaying
- * one.
+ * name. Booleans are all the glyph can say, and a function that returned counts
+ * would be one refactor away from displaying them.
  *
- * ⚠⚠ **IT ANSWERS FOR BOTH KINDS OF ROW SINCE 4 SEPTEMBER, AND THAT IS WHY IT
- * IS ONE FUNCTION RATHER THAN TWO OR'D BY A PAGE.** The door's question is *is
- * there anything behind me* — if a caller had to remember to ask twice, the day
- * somebody adds a third kind of row is the day the portal holds something with
- * an unlit door and no error anywhere. Two statements in parallel, one bit out.
+ * ⚠⚠ **ONE FUNCTION RATHER THAN TWO OR'D BY A PAGE.** *Is there anything behind
+ * me* is the door's question and the answer must come from one place — if a
+ * caller had to remember to ask twice, the day somebody adds a third kind of row
+ * is the day the portal holds something with an unlit door and no error
+ * anywhere. Two statements in parallel, both bits out.
+ *
+ * ⚠ **It returned a single boolean until 4 September and the door now says
+ * WHICH** — `C`, `R`, or `C/R`. Directed: a request needs answering and a
+ * convergence does not, and a door that says only *something* makes the reader
+ * open it to find out which. **That is still not a count**: three states, no
+ * digits, and two people asking is the same `R` as one.
  */
-export async function hasPortalLines(sessionUser: SessionUser): Promise<boolean> {
+export async function portalWaiting(sessionUser: SessionUser): Promise<PortalWaiting> {
   const [lines, requests] = await Promise.all([
     db
       .select({ one: sql<number>`1` })
@@ -529,5 +542,5 @@ export async function hasPortalLines(sessionUser: SessionUser): Promise<boolean>
       .limit(1),
   ])
 
-  return lines.length > 0 || requests.length > 0
+  return { lines: lines.length > 0, requests: requests.length > 0 }
 }

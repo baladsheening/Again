@@ -17,6 +17,7 @@ import {
   settleCaptureAction,
   undoCaptureAction,
 } from '@/app/actions/captures'
+import type { PortalWaiting } from '@/lib/db'
 import type { EntryState } from '@/lib/domain'
 import type { PageLineView } from '@/lib/page-line'
 import { haptic, hapticCrossedOff, hapticSettled } from '@/lib/haptics'
@@ -409,10 +410,14 @@ export function PageScreen({
    * ⚠ **It comes with the document because the glyph has to be right on the
    * first paint.** The rows do not: they are fetched when the portal opens, so
    * a join to `notifications` never stands in front of a capture. See
-   * `hasPortalLines`, which returns a boolean rather than a count so that
+   * `portalWaiting`, which returns two booleans rather than counts so that
    * nothing downstream can display one — §5: *never a count.*
+   *
+   * ⚠ **Two bits since 4 September**: the door says `C`, `R` or `C/R`, because
+   * a request needs answering and a convergence does not. Still not a count —
+   * two people asking is the same `R` as one.
    */
-  portalWaiting: boolean
+  portalWaiting: PortalWaiting
 }) {
   const [lines, setLines] = useState<Line[]>(() =>
     seed.map((l) => ({ ...l, key: l.id })),
@@ -1893,7 +1898,10 @@ export function PageScreen({
       door's question is *is there anything behind me*, and a request is
       something.
     */
-    setWaiting(result.value.lines.length > 0 || result.value.requests.length > 0)
+    setWaiting({
+      lines: result.value.lines.length > 0,
+      requests: result.value.requests.length > 0,
+    })
   }
 
   /**
@@ -1928,7 +1936,10 @@ export function PageScreen({
 
     const left = portalRequests.filter((r) => r.handle !== handle)
     setPortalRequests(left)
-    setWaiting(left.length > 0 || portalLines.some((l) => l.notificationIds.length > 0))
+    setWaiting({
+      lines: portalLines.some((l) => l.notificationIds.length > 0),
+      requests: left.length > 0,
+    })
   }
 
   /**
@@ -1959,10 +1970,10 @@ export function PageScreen({
       setPortalLines((all) =>
         all.map((l) => (l.id === line.id ? { ...l, notificationIds: [] } : l)),
       )
-      setWaiting(
-        portalRequests.length > 0 ||
-          portalLines.some((l) => l.id !== line.id && l.notificationIds.length > 0),
-      )
+      setWaiting({
+        lines: portalLines.some((l) => l.id !== line.id && l.notificationIds.length > 0),
+        requests: portalRequests.length > 0,
+      })
     }
   }
 
@@ -2002,7 +2013,7 @@ export function PageScreen({
       `foot.tsx` beside the control rather than argued here.
     */
     portal: openPortal,
-    portalLit: waiting,
+    portalWaiting: waiting,
   }
 
   /**

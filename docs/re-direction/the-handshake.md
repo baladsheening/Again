@@ -172,9 +172,24 @@ Three things have to move, and each is a real cost:
 **Order: requests first, above the convergences.** They are the only rows on that
 surface that are waiting on the reader. The convergences keep *Who else*.
 
-⚠ **Still no count, anywhere.** `portal.mjs` asserts the absence of digits on the
-door and that assertion must go on holding. A pending request is a row, not a
-badge.
+⚠⚠ **AND THE DOOR SAYS WHICH — `C`, `R`, `C/R`, directed 4 September.** One lit
+glyph for both kinds of row made a reader open the box to find out whether
+anybody was waiting on them. **The two circles stay for the resting state**, so
+the slot is a drawing while it is quiet and becomes type when it has something to
+say.
+
+- ⚠ **A `+` was the first suggestion and is ruled out.** The capture control is a
+  `+` two cells away in the same bar, and this app cannot afford two plus-shapes
+  side by side on the one control it has to be perfect at. A dot would be a
+  notification badge under another name.
+- ⚠ **Still not a count.** Three states, no digits, and two people asking is the
+  same `R` as one. §5 forbids a *number* — a thing to clear — not a distinction.
+  `portal.mjs`'s assertion is the digits and only the digits, which is what it
+  should always have been; its comment claiming *any text at all is a badge* was
+  true only while the door was a drawing.
+- ⚠ **Three accessible names** — *Who else*, *Requests*, *Requests, and who
+  else* — because the letters are legible on sight and meaningless to a reader
+  who cannot see them.
 
 ### 2d. The asker's side — ⚠ *Tracking* is a lie and has to go
 

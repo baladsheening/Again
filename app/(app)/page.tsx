@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { PageScreen } from '@/components/page-screen'
 import {
   getMyProfile,
-  hasPortalLines,
+  portalWaiting,
   getSessionUser,
   listMyPage,
   pageCursor,
@@ -53,13 +53,14 @@ export default async function HomePage() {
     ⚠ **One bit, and it rides with the record's own read.** The portal's glyph
     has to be right on the first paint, which only the server can know — so the
     door's state comes down with the document while its *rows* do not. See
-    `hasPortalLines`, which is an `exists` rather than a count because §5
+    `portalWaiting`, which is a pair of `exists` rather than counts because §5
     forbids the portal a number and a counting function is one refactor from
-    displaying one.
+    displaying one. ⚠ **Two bits since 4 September** — the door says C, R or
+    C/R, because a request needs answering and a convergence does not.
   */
-  const [rows, portalWaiting] = await Promise.all([
+  const [rows, waiting] = await Promise.all([
     listMyPage(sessionUser, { limit: PAGE_SIZE + 1 }),
-    hasPortalLines(sessionUser),
+    portalWaiting(sessionUser),
   ])
   const more = rows.length > PAGE_SIZE
   const shown = more ? rows.slice(0, PAGE_SIZE) : rows
@@ -79,7 +80,7 @@ export default async function HomePage() {
       todayKey={todayKey}
       undoWindowMs={UNDO_WINDOW_MS}
       /* Phase 2 step 3: is there anything to say. One bit — never a count. */
-      portalWaiting={portalWaiting}
+      portalWaiting={waiting}
       /*
         ⚠ **`null` is the record ending, and it is the only thing that says so.**
         The tail control exists exactly while this is a string, so a record of

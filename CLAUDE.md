@@ -68,11 +68,28 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   `payload->>'itemId'` carries the privacy term — do not relax it to let a
   request through.** A request has no `itemId`, and that absence is what keeps it
   out.
-- ⚠ **The console's `Ask` is reused unchanged, for the third time.** A statement
-  — *`@sam` added you.* — then one question, *Add them back?*, then two answers.
-  Yes and No against a statement alone would be a control whose meaning has to be
-  guessed at, on the one surface where guessing wrong lets somebody into your
-  record.
+- ⚠ **ONE LINE: *`@handle` wants to track you.* Accept / Decline** — directed,
+  replacing a borrowed `Ask` that spent two. `Ask`'s shape exists because the
+  console's questions are about a line already above them, so they must name what
+  they ask about; **this sentence already names it**. The answers are **plain
+  words, not boxed buttons** — a bordered control is a block and cannot sit in a
+  run of words — and the 44px is untouched because `tap-target` hangs its hit
+  area off a pseudo-element. ⚠ **It cannot fit on one line on a 390 phone**
+  (~394px of content into ~310px) and wraps there; one line from 430px up.
+- ⚠⚠ **THE DOOR SAYS WHICH — `C`, `R`, `C/R`, directed 4 September.** It was one
+  lit glyph for both kinds of row, which made a reader open the box to find out
+  whether anybody was waiting on them. **The two circles stay for the resting
+  state**: the slot is a drawing while it is quiet and becomes type when it has
+  something to say. ⚠ **A `+` was the first suggestion and is ruled out** — the
+  capture control is a `+` two cells away, and this app cannot afford two
+  plus-shapes side by side on the one control it has to be perfect at; a dot
+  would be a notification badge under another name. ⚠ **It is still not a
+  count**: three states, no digits, and two people asking is the same `R` as one.
+  `portal.mjs`'s assertion is the digits and only the digits, which is what it
+  should always have been. ⚠ **The door has three accessible names** — *Who
+  else*, *Requests*, *Requests, and who else* — because `C` and `R` are legible
+  on sight and meaningless to a reader who cannot see them. A probe pinned to one
+  string is a probe that reports a missing door.
 - ⚠ **THE SCREEN SAYS *ADD* AND THE CODE SAYS *TRACK* — directed, and it is the
   first deliberate split of §4's vocabulary rule.** The **relation** is a track;
   only the **act of asking for one** is called adding. `tracks`, `trackUser`,

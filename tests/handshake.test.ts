@@ -198,12 +198,16 @@ describe('the portal', () => {
     */
     expect(await dal.listMyPortal(asViewer(bo.id))).toHaveLength(0)
 
-    /* But the door must know about it, or the portal holds something unlit. */
-    expect(await dal.hasPortalLines(asViewer(bo.id))).toBe(true)
+    /*
+      ⚠ **The door knows, and it knows WHICH.** `R` and not `C`: a request needs
+      answering and a convergence does not, and a door that said only
+      *something* would make the reader open it to find out.
+    */
+    expect(await dal.portalWaiting(asViewer(bo.id))).toEqual({ lines: false, requests: true })
 
     /* And the asker's own portal says nothing: asking is not an event for them. */
     expect(await dal.listMyRequests(asViewer(ada.id))).toHaveLength(0)
-    expect(await dal.hasPortalLines(asViewer(ada.id))).toBe(false)
+    expect(await dal.portalWaiting(asViewer(ada.id))).toEqual({ lines: false, requests: false })
   })
 
   it('is not pending once the asker has withdrawn', async () => {
@@ -225,7 +229,7 @@ describe('the portal', () => {
     expect(rows[0].read_at).toBeNull()
 
     expect(await dal.listMyRequests(asViewer(bo.id))).toHaveLength(0)
-    expect(await dal.hasPortalLines(asViewer(bo.id))).toBe(false)
+    expect(await dal.portalWaiting(asViewer(bo.id))).toEqual({ lines: false, requests: false })
   })
 })
 
@@ -275,7 +279,7 @@ describe('answering', () => {
 
     expect(await trackRow(ada.id, bo.id)).toBe(false)
     expect(await dal.listMyRequests(asViewer(bo.id))).toHaveLength(0)
-    expect(await dal.hasPortalLines(asViewer(bo.id))).toBe(false)
+    expect(await dal.portalWaiting(asViewer(bo.id))).toEqual({ lines: false, requests: false })
 
     const rows = await requestRows(bo.id)
     expect(rows[0].read_at).not.toBeNull()

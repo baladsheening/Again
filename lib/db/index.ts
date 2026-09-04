@@ -147,13 +147,13 @@ export type { SwapView } from './swaps'
 export {
   listMyPortal,
   readPortalLine,
-  hasPortalLines,
+  portalWaiting,
   getConvergence,
   listMyRequests,
   PORTAL_LIMIT,
   REQUEST_LIMIT,
 } from './notifications'
-export type { PortalLine, TrackRequest } from './notifications'
+export type { PortalLine, PortalWaiting, TrackRequest } from './notifications'
 
 export type {
   Capture,
