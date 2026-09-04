@@ -189,7 +189,7 @@ describe('the portal', () => {
     const pending = await dal.listMyRequests(asViewer(bo.id))
     expect(pending).toHaveLength(1)
     expect(pending[0].handle).toBe(ada.handle)
-    expect(pending[0].sentence).toBe(`@${ada.handle} added you.`)
+    expect(pending[0].sentence).toBe(`@${ada.handle} wants to track you.`)
 
     /*
       ⚠ **Invisible to `listMyPortal` by construction, not by a filter.** That

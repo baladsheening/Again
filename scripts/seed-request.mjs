@@ -35,6 +35,26 @@ const account = JSON.parse(readFileSync('node_modules/.probe/account.json', 'utf
 const [me] = await q('select id, handle from profiles where handle = $1', [account.handle])
 if (!me) throw new Error(`no profile for ${account.handle}`)
 
+/*
+  ⚠ **It clears what it seeded last time first, and that is not tidiness.**
+  `swipe.mjs` failed on its second run against the state its first run left, and
+  the rule taken from it is in `CLAUDE.md`: a probe that is not idempotent will
+  eventually report a bug that is its own. This seeds one pending request and the
+  probe answers one — so a second run against a leftover leaves two rows and the
+  probe's *the door goes dark* fails for a reason that has nothing to do with the
+  code.
+
+  Only rows this script wrote: askers are `asker<digits>`, and nothing else in
+  the app creates a handle of that shape.
+*/
+await q(`delete from notifications
+   where kind = 'track_request'
+     and user_id = $1
+     and (payload ->> 'counterpartName') ~ '^@asker[0-9]+$'`, [me.id])
+await q(`delete from tracks
+   where followed_id = $1
+     and follower_id in (select id from profiles where handle ~ '^asker[0-9]+$')`, [me.id])
+
 /* The asker. A real account, because the read joins `profiles` for the handle. */
 const handle = `asker${Date.now().toString().slice(-6)}`
 const email = `${handle}@example.com`

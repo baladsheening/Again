@@ -526,14 +526,21 @@ export function portalSentence(
       `mutual: false` is what puts the `@` there, at the moment the row was
       written — see `listMyPortal` on why the payload is the record.
 
-      ⚠ **It is the one sentence here with no plural branch, and that is the
-      verb rather than an omission**: *added* is invariant, so `listNames` alone
-      carries the case of two people asking on one row. Requests are not grouped
-      today — one row per requester — but the sentence is correct if they ever
-      are, which is the cheap half of not assuming.
+      ⚠ **It said *`@sam` added you.* for an hour — directed to this, 4
+      September, after use.** *Added* was the past tense of a thing that has not
+      finished happening; **what a request is is a want**, and the sentence now
+      says so and hands straight to its two answers. It is also the only line in
+      this file that is a whole row rather than a clause under one — see
+      `Portal`, where the sentence and *Accept* / *Decline* sit on one line.
+
+      ⚠ **This is the one place *track* is spoken on screen**, against the *the
+      screen says ADD* rule set the same morning. Directed, and it reads right:
+      the button is a verb you press, and this is a person describing what they
+      want. If the two ever have to agree, the button moves — the relation has
+      always been a track.
     */
     case 'track_request':
-      return `${who} added you.`
+      return `${who} ${many ? 'want' : 'wants'} to track you.`
     /*
       ⚠ **Three kinds cannot reach a portal row and say so rather than falling
       through.** The portal is built by joining a notification to *the viewer's
@@ -608,6 +615,6 @@ export function notificationCopy(
       cannot differ. See `portalSentence` above for the vocabulary split.
     */
     case 'track_request':
-      return `${p.counterpartName} added you.`
+      return `${p.counterpartName} wants to track you.`
   }
 }

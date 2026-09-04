@@ -68,9 +68,17 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
         alternative is bleeding it out with a negative margin, which stops it
         being a pill.
 
-        `w-fit max-w-sm` hugs the contents up to 24rem: on a phone that exceeds
-        the column so it fills it, and on a desk it stops at the measure instead
-        of running the width of the page.
+        ⚠ **`w-full`, directed 4 September, where it was `w-fit max-w-sm`.** The
+        old pair hugged the contents up to 24rem — full width on a phone, and on
+        a desk a pill that stopped short of the column. It stops short no longer:
+        **the pill is the column.** `Screen` already caps everything at
+        `--page-measure`, so *screen width* here means the measure the rest of
+        the app is written to, and a second cap inside it was a shape with a
+        width of its own for no reason the page could see.
+
+        ⚠ **The row is what needed it.** Since 4 September a person's row carries
+        *Requested* on its right-hand edge, and a box sized to its contents put
+        that edge wherever the longest handle happened to fall.
 
         Both states wear it. A shape that arrived only once the list was empty
         would be a container that came and went with the data.
@@ -102,13 +110,14 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
         column and the page reads as what it is: **who you are, add somebody, who
         you keep, the way out.**
 
-        `max-w-sm` matches the pill's cap so the two edges agree at every width.
+        Both are `w-full`, so the two edges agree at every width by being the
+        same edge — the column's.
       */}
-      <div className="mt-1 max-w-sm">
+      <div className="mt-1 w-full">
         <AddPerson />
       </div>
 
-      <div className="bg-surface/40 flex w-fit max-w-sm flex-col rounded-2xl p-4">
+      <div className="bg-surface/40 flex w-full flex-col rounded-2xl p-4">
         <h2 className="micro text-muted mb-2">People</h2>
 
         {people.length === 0 ? (

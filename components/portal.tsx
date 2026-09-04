@@ -1,6 +1,5 @@
 'use client'
 
-import { Ask } from './console'
 import type { PortalLineView, TrackRequestView } from '@/app/actions/portal'
 
 /**
@@ -128,30 +127,75 @@ export function Portal({
         {/*
           ⚠ **The questions, before anything that is only information.**
 
-          ⚠ **`Ask` is the console's, reused unchanged and for the third time.**
-          Its docblock says it is *one line asking the person who wrote it to
-          decide something*; this is the first time the asker is somebody else,
-          and nothing about the shape changes — a statement, a question, two
-          answers, and both answerable by ignoring them.
+          ⚠⚠ **ONE LINE — directed, 4 September, and it replaced the console's
+          `Ask`.** The first version borrowed `Ask` and spent two lines on it: a
+          statement, *`@sam` added you.*, then *Add them back?* with Yes and No
+          under it. The direction was **one line, `@handle wants to track you.
+          Accept / Decline`**, and it is better for a reason worth keeping:
+          `Ask`'s shape exists because the console's two questions are about a
+          line already on the screen above them, so the question has to name what
+          it is asking about. **This sentence already names it.** *Add them back?*
+          was a second sentence saying what *Accept* says on its own.
 
-          ⚠ **The statement and the question are two lines, not one.** *`@sam`
-          added you.* is what happened; *Add them back?* is what is being asked.
-          Yes and No against a statement would be a control whose meaning has to
-          be guessed at, on the one surface in this app where guessing wrong
-          lets somebody into your record.
+          ⚠ **So Yes/No became Accept/Decline**, which is what makes one line
+          legible: bare Yes and No answering a *statement* would be a control
+          whose meaning has to be guessed at, on the one surface in this app
+          where guessing wrong lets somebody into your record. The verbs answer
+          for themselves.
+
+          ⚠ **The sentence is still `portalSentence`'s**, beside the six it must
+          not drift from.
         */}
         {requests.map((request) => (
-          <div key={request.handle} className="mb-5">
-            <div className="page-row">
-              <span className="min-w-0 flex-1 truncate">{request.sentence}</span>
-            </div>
+          <div
+            key={request.handle}
+            className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1"
+          >
+            {/*
+              ⚠ **`min-w-0` and no `truncate`.** A handle can be twenty
+              characters and the sentence must never lose its verb; it wraps to a
+              second line and the two answers follow it, which is what
+              `flex-wrap` is for. The record truncates because a line is one
+              line; **this is a question, and a question with its end cut off is
+              not answerable.**
+            */}
+            <span className="min-w-0">{request.sentence}</span>
 
-            <Ask
-              ask="Add them back?"
-              onYes={() => onAnswer(request.handle, true)}
-              onNo={() => onAnswer(request.handle, false)}
-              busy={answering !== null}
-            />
+            {/*
+              ⚠ **Plain text, not buttons in boxes — and that is what *in-line*
+              costs and buys.** A bordered control is a block: it cannot sit in a
+              run of words, so the sentence and its answers were two rows at any
+              width narrow enough to matter. As words they run on from the
+              sentence, which is what was asked for.
+
+              ⚠ **The 44px is untouched.** `tap-target` hangs its hit area off a
+              pseudo-element, so a word is exactly as easy to hit as a box was —
+              see `shortbox.mjs`. **The affordance is carried by the verbs**:
+              *Accept* and *Decline* are not things a sentence says, so they read
+              as controls without a border drawn round them.
+
+              ⚠ **Full ink against muted is the whole hierarchy**, the same
+              division `Ask` makes with its Yes and No. Accepting is the act;
+              declining is the way out of it.
+            */}
+            <span className="flex shrink-0 items-baseline gap-3">
+              <button
+                type="button"
+                onClick={() => onAnswer(request.handle, true)}
+                disabled={answering !== null}
+                className="hover:text-muted tap-target transition-colors disabled:opacity-40"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => onAnswer(request.handle, false)}
+                disabled={answering !== null}
+                className="text-muted hover:text-text tap-target transition-colors disabled:opacity-40"
+              >
+                Decline
+              </button>
+            </span>
           </div>
         ))}
 
