@@ -42,9 +42,14 @@ export default async function SettledPage() {
     <Screen>
         <h1 className="stamp text-muted mb-2.5">Settled</h1>
 
-        {rows.length === 0 ? (
-          <p className="page-line text-muted">Nothing settled yet.</p>
-        ) : (
+        {/*
+          ⚠ **An empty tray says nothing — 4 September.** *Nothing settled yet.*
+          under a heading reading *Settled* is the heading said twice, the second
+          time in a sentence. The heading stays because it is the only thing
+          naming the route; what went is the line explaining that the space below
+          it is empty, which the space already does.
+        */}
+        {rows.length === 0 ? null : (
           /*
             ⚠ **The mark travels to the tray — 31 August.** A settled line is
             still a line of the record, and a convergence that happened before it

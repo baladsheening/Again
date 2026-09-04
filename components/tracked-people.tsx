@@ -142,11 +142,19 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
         <h2 className="micro text-muted border-rule border-b px-4 py-2.5">People</h2>
 
         <div className="px-4 py-2">
+        {/*
+          ⚠ **34 words to 20 — 4 September.** It is the one place in the app that
+          teaches, so rule 1 keeps all three facts that are not on the screen
+          already: you need a handle from a person, you cannot look anyone up,
+          and it is two-sided. What went is what the screen says without it —
+          *add someone by their handle above*, over a field labelled `@handle`
+          two lines up — and *before anything converges*, which is a reason where
+          the sentence needs an instruction.
+        */}
         {people.length === 0 ? (
           <p className="text-muted text-sm">
-            Nobody yet. Add someone by their handle above — there is no directory
-            and no search for strangers. Ask a friend for theirs. They have to add
-            you back before anything converges.
+            Nobody yet. Ask a friend for their handle — you cannot look people
+            up. They have to add you back.
           </p>
         ) : (
           <ul className="flex flex-col">
