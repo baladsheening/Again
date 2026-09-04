@@ -129,13 +129,18 @@ export default async function PersonPage({ params }: PageProps<'/u/[handle]'>) {
         §3, and the guarantee lives in the data layer precisely so that a change
         to this JSX cannot be the thing that breaks it.
       */}
+      {/*
+        ⚠ **AND AN EMPTY LIST DRAWS NOTHING EITHER — 4 September.** *Wants* over
+        *Nothing here yet.* was the same shape as the sentence above it, one
+        step further in: a heading and a line of copy spent saying there is
+        nothing to see. Fixtures already worked this way — *an empty Fixtures
+        heading on every page would be furniture* — and the two sections had no
+        business differing. `PersonList`'s `empty` prop is deleted with it,
+        rather than left unused for somebody to reach for.
+      */}
       {track.mutual && (
         <>
-          <PersonList
-            heading={COLLECTIONS.wants}
-            entries={live.map(toCaptureCard)}
-            empty="Nothing here yet."
-          />
+          <PersonList heading={COLLECTIONS.wants} entries={live.map(toCaptureCard)} />
 
           <PersonList heading={COLLECTIONS.fixtures} entries={fixtures.map(toCaptureCard)} />
         </>

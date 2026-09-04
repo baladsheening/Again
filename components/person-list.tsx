@@ -14,7 +14,6 @@ import { PersonRow } from './person-row'
 export function PersonList({
   heading,
   entries,
-  empty,
 }: {
   heading: string
   /**
@@ -23,24 +22,26 @@ export function PersonList({
    * on the capture page was silently absent from this list. See `PersonRow`.
    */
   entries: CaptureCard[]
-  /** Omit to render nothing at all when the section is empty. */
-  empty?: string
 }) {
-  if (entries.length === 0 && !empty) return null
+  /*
+    ⚠ **An empty section is not drawn, and there is no longer a way to ask for
+    one.** The `empty` prop and its one caller — *Nothing here yet.* under
+    *Wants* — went on 4 September: a heading and a line of copy spent saying
+    there is nothing to see is the absence the rest of this page stopped
+    explaining. Fixtures were already silent, and the two had no business
+    differing.
+  */
+  if (entries.length === 0) return null
 
   return (
     <section className="flex flex-col">
       <h2 className="micro text-muted mb-1">{heading}</h2>
 
-      {entries.length === 0 ? (
-        <p className="text-muted max-w-sm py-6 text-sm">{empty}</p>
-      ) : (
-        <ul className="flex flex-col">
-          {entries.map((card) => (
-            <PersonRow key={card.id} card={card} />
-          ))}
-        </ul>
-      )}
+      <ul className="flex flex-col">
+        {entries.map((card) => (
+          <PersonRow key={card.id} card={card} />
+        ))}
+      </ul>
     </section>
   )
 }
