@@ -321,16 +321,41 @@ export function PortalGlyph() {
  * ⚠ **Filled — the one filled shape in the eleven.** A ring at this size is a
  * grey blur, and a dot has to be a dot.
  *
- * ⚠ **`currentColor`, like everything else here.** Lit and off are the bar's
- * decision, so the dot cannot be brighter than the glyph it belongs to — and
- * §11 has no colour to spare on a control.
+ * ⚠⚠ **THE DOT IS GREEN, AND IT IS THE ONLY THING IN THE BAR THAT IS NOT
+ * `currentColor` — directed 4 September.** Everything else here inherits, so lit
+ * and off are the bar's decision; this one does not, because **the dot is not
+ * part of the control, it is what is behind it.** It is `--color-accept`: the
+ * colour of the *Accept* waiting one tap away, so the mark on the door and the
+ * action behind it are the same green. One meaning — *there is something here to
+ * say yes to* — said twice on one path.
+ *
+ * ⚠ **A red one was raised for the convergence side and is refused.** Red is
+ * `--color-decline` and it is the answer *no*; on a mark that reports an event
+ * nobody has to answer it would read as an alarm, and `docs/decisions.md` has
+ * refused a red for failure twice. **A convergence is not a problem.**
+ *
+ * ⚠ **A convergence gets NO dot, and that is the other half of the answer.** Its
+ * colour is `--color-accent` and the accent already means *this converged* — on
+ * the line itself, in the record's gutter, where §11 spent it after reserving it
+ * for eight days. Putting it in the bar as well would give the one-tenant rule a
+ * second tenant to say the same thing in a place where it would sit beside a
+ * control. **The lit glyph is the convergence signal; the green dot is the one
+ * that says somebody is waiting on you.**
+ *
+ * ⚠ **`--color-accept` measures 5.95:1 on true black**, past the 3:1 WCAG 1.4.11
+ * asks of a graphical object with room to spare — which matters more here than
+ * on the words, because unlike *Accept* and *Decline* this mark has no text
+ * beside it. What it is *not* carrying is the only-signal: the door is lit either
+ * way, and the dot distinguishes rather than announces.
  */
 export function PortalMark({ requests }: { lines: boolean; requests: boolean }) {
   return (
     <Glyph>
       <circle cx="7.75" cy="10" r="5.75" />
       <circle cx="12.25" cy="10" r="5.75" />
-      {requests && <circle cx="10" cy="1.75" r="1.15" fill="currentColor" stroke="none" />}
+      {requests && (
+        <circle cx="10" cy="1.75" r="1.15" fill="var(--color-accept)" stroke="none" />
+      )}
     </Glyph>
   )
 }

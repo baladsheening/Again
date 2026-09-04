@@ -26,10 +26,11 @@ handshake are the same feature reached two ways — design them together.**
 | The seventh kind, `track_request`, and its delivery | **BUILT.** `lib/domain.ts`, and `trackUser`'s non-mutual branch in `lib/db/tracks.ts` — the branch that used to do nothing |
 | `declineTrack` | **BUILT.** `lib/db/tracks.ts`. The one place a person deletes somebody else's row; `followed_id = viewer` is the whole safety argument and is asserted |
 | `listMyRequests`, and the door answering for both kinds | **BUILT.** `lib/db/notifications.ts`. `pendingRequest` is the one owner of the predicate |
-| The portal's request rows | **BUILT.** `components/portal.tsx`, reusing the console's `Ask` unchanged |
-| *Add* / *Added* / *Added each other* | **BUILT.** `components/track-button.tsx`. The silent one-sided track is gone |
-| A way to add somebody in the app at all | **BUILT.** `components/add-person.tsx`, in People on `/profile`. It goes to their page; it does not add anybody |
-| The QR | **NOT BUILT** — §2f, and the encoder question in §5 is still open |
+| The portal's request rows | **BUILT.** `components/portal.tsx` — one line, *@handle wants to track you.* with Accept/Decline right-aligned in green and red |
+| *Add* / *Requested* / *Added each other* | **BUILT.** `components/track-button.tsx`. The silent one-sided track is gone |
+| A way to add somebody in the app at all | **BUILT.** `components/add-person.tsx`, above People on `/profile`. **It sends the request**; a typo is answered in place |
+| The door says which | **BUILT.** A green dot above the circles when somebody is waiting on you — `PortalMark` in `glyphs.tsx` |
+| The QR | **NOT BUILT and DEFERRED** — §2f, and the encoder question in §5 is still open |
 | Blocking | **deliberately not built** — §3, and it is the honest answer to re-asking |
 
 **Proved:** `tests/handshake.test.ts` (8 cases, including *accepting runs the
@@ -191,6 +192,15 @@ circles lit, circles lit **with a dot**.
   *number* — a thing to clear — not a distinction. ⚠ **It is the closest this app
   has come to a badge; a second dot for a second kind of row means the door has
   run out of what it can say.**
+- ⚠⚠ **THE DOT IS GREEN — directed, and it is the only thing in the bar that is
+  not `currentColor`.** It is `--color-accept`: the colour of the *Accept* one
+  tap behind it, so the mark on the door and the action behind it say one thing
+  twice. ⚠ **A red one was raised for the convergence side and is refused** —
+  red is *no*, and on a mark reporting an event nobody has to answer it reads as
+  an alarm. **A convergence is not a problem.** ⚠ **And a convergence gets no dot
+  at all**: its colour is `--color-accent`, which already means *this converged*
+  on the line itself, and a second tenant saying the same thing beside a control
+  is what the one-tenant rule exists to prevent.
 - ⚠ **Three accessible names** — *Who else*, *Requests*, *Requests, and who
   else* — because a dot is meaningless to a reader who cannot see it, and a probe
   pinned to one string reports a missing door.

@@ -86,6 +86,20 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   out before either: the capture control is a `+` two cells away and this app
   cannot afford two plus-shapes side by side on the one control it has to be
   perfect at.
+- ⚠⚠ **THE DOT IS GREEN, AND IT IS THE ONLY THING IN THE BAR THAT IS NOT
+  `currentColor`.** It is `--color-accept` — the colour of the *Accept* one tap
+  behind it, so the mark on the door and the action behind it say one thing
+  twice. ⚠ **A red one was raised for the convergence side and is refused**: red
+  is *no*, and on a mark reporting an event nobody has to answer it reads as an
+  alarm. **A convergence is not a problem.** ⚠ **And a convergence gets no dot at
+  all** — its colour is `--color-accent`, which already means *this converged* on
+  the line itself in the gutter, and a second tenant saying the same thing beside
+  a control is what the one-tenant rule exists to prevent.
+- ⚠ **A margin that separates two things must belong to the thing that may not be
+  there.** The request row wore `mb-4`; with no convergence under it the card
+  measured 20px of air above the row and 36 below, so the one thing in the box
+  sat 16px high in it. The gap is the heading's `mt-4` now, and the space
+  *between* requests is a `gap` on their own container. Measured 20/20.
 - ⚠ **The dot's clearance is measured against the INK, not the bounding box, and
   the first attempt got it wrong.** At the dot's x the two circles are crossing
   near their tops, so the ink is at y 4.09 rather than 4.25 — a dot ending at 4.1

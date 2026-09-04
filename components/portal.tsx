@@ -146,10 +146,22 @@ export function Portal({
           ⚠ **The sentence is still `portalSentence`'s**, beside the six it must
           not drift from.
         */}
+        {/*
+          ⚠ **The gap between the two blocks belongs to the SECOND one, and the
+          request row carries no bottom margin — measured 4 September.** It wore
+          `mb-4`, which is right while something follows it and is dead space
+          when nothing does: with a request and no convergence the card measured
+          20px of air above the row and 36 below, so the one thing in the box sat
+          16px high in it. **A margin that separates two things must belong to
+          the thing that may not be there** — so it is the heading's `mt-4`
+          below, and the space *between* requests is a `gap` on their own
+          container, which no last child can inherit.
+        */}
+        <div className="flex flex-col gap-4">
         {requests.map((request) => (
           <div
             key={request.handle}
-            className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1"
+            className="flex flex-wrap items-baseline gap-x-3 gap-y-1"
           >
             {/*
               ⚠ **`min-w-0` and no `truncate`.** A handle can be twenty
@@ -228,13 +240,18 @@ export function Portal({
             </span>
           </div>
         ))}
+        </div>
 
         {/*
           ⚠ **The heading belongs to the lines and moves with them.** With
           nothing but requests in the box there is nothing for *Who else* to
           label, and a heading over an empty list is furniture.
         */}
-        {lines.length > 0 && <h2 className="stamp text-muted mb-2.5">Who else</h2>}
+        {lines.length > 0 && (
+          <h2 className={`stamp text-muted mb-2.5 ${requests.length > 0 ? 'mt-4' : ''}`}>
+            Who else
+          </h2>
+        )}
 
         <ol className="portal-list">
           {failed !== null && <li className="page-line">{failed}</li>}
