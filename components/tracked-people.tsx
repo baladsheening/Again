@@ -88,17 +88,28 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
         way a hand-picked near-black would. `bg-surface/60` on the search bar's back
         arrow is the same move.
       */}
-      <div className="bg-surface/40 mt-1 flex w-fit max-w-sm flex-col rounded-2xl p-4">
-        <h2 className="micro text-muted mb-2">People</h2>
+      {/*
+        ⚠⚠ **THE FIELD IS OUTSIDE THE PILL — directed, 4 September.** It was
+        inside it for an hour, under the *People* heading, on the reasoning that
+        somebody arriving with a handle is doing the one thing this pill exists
+        for.
 
-        {/*
-          ⚠ **The way in, and it belongs above the list rather than below it.**
-          Somebody arriving here with a handle in their hand is doing the one
-          thing this pill exists for; a field under the names would be found
-          after scrolling past everyone they have already added. See
-          `AddPerson` — it goes to their page and does not add anybody.
-        */}
+        **The pill is a list and the field is not a member of it.** Inside, the
+        field was inset by the pill's own `p-4`, so it aligned with *People*
+        rather than with the left edge of type on every other screen — the exact
+        cost the pill's docblock already names — and a container that groups
+        names had an action sitting in it. Outside, both boxes are flush to the
+        column and the page reads as what it is: **who you are, add somebody, who
+        you keep, the way out.**
+
+        `max-w-sm` matches the pill's cap so the two edges agree at every width.
+      */}
+      <div className="mt-1 max-w-sm">
         <AddPerson />
+      </div>
+
+      <div className="bg-surface/40 flex w-fit max-w-sm flex-col rounded-2xl p-4">
+        <h2 className="micro text-muted mb-2">People</h2>
 
         {people.length === 0 ? (
           <p className="text-muted text-sm">
