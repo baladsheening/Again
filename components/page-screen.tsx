@@ -1817,29 +1817,28 @@ export function PageScreen({
 
   const empty = lines.length === 0
 
-  /**
-   * ───────────────────────────────────────────────────────────────────────────
-   *  ⚠ **The lock's sentence waits for a line to exist — 31 August, directed**
-   * ───────────────────────────────────────────────────────────────────────────
-   *
-   * It was on the first-run screen, above the writing rule, and the direction
-   * was that it should **appear when somebody makes an entry** instead. That is
-   * right for the reason the other two beats left that screen: *you cannot swipe
-   * a line you have not written*. On an empty page it is an instruction with no
-   * target; under the first line it is a caption on the thing itself.
-   *
-   * ⚠ **`=== 1` is a first-run test and not a count, for the same reason `empty`
-   * is.** Nothing is ever deleted (§5) — a crossed-off line stays in the record,
-   * struck — so the record's length only ever climbs, and it passes through 1
-   * exactly once in an account's life. There is no seen-flag, no column and no
-   * state: the sentence is there for as long as the first capture is the only
-   * capture, and the second one retires it for good.
-   *
-   * ⚠ **It says *matching*, never *private*.** The swipe takes a line out of the
-   * pool; it does not change who may read the record. Same rule as everywhere
-   * else this sentence has been.
-   */
-  const justStarted = lines.length === 1
+  /*
+    ⚠ **THE LOCK'S SENTENCE IS DELETED — 4 September, directed.** It read *swipe
+    a line away and it stays out of matching*, under the first line and only
+    under it, on a  test that fired at a record length of exactly
+    one. **Every account that exists has passed through that length forever** —
+    nothing is deleted, so the length only climbs — so this was already dead copy
+    everywhere but a brand-new account.
+
+    ⚠ **What it costs, stated: nothing now teaches the lock swipe.** The padlock
+    confirms it once it is found and the gesture has no other advertisement. That
+    was judged affordable rather than free: the verb is a rare one (locking a
+    line is not a daily act), and a sentence shown beside a person's *first*
+    capture is not where a gesture they will want months later is learnt. **If
+    the lock turns out to be undiscoverable, this is the thing that was removed
+    — and it should come back somewhere a reader is actually looking, not at
+    record length one.**
+
+    ⚠ **It also said *matching*, which is not a word in §3's vocabulary.** The
+    product's word is convergence. That is not why it went, but it is why it
+    should not come back in these words.
+  */
+
 
   /**
    * **The two tools, built once and handed to both placements.**
@@ -1934,12 +1933,40 @@ export function PageScreen({
       return
     }
 
-    const left = portalRequests.filter((r) => r.handle !== handle)
-    setPortalRequests(left)
+    /*
+      ⚠⚠ **THE ANSWER IS RE-READ, IT IS NOT PATCHED LOCALLY — 4 September.**
+      Removing the row from state was wrong in a way that only accepting shows:
+      **accepting runs the fan-out**, so the same tap can write convergences into
+      this very box. A local patch left `waiting.lines` at whatever it was before
+      the answer, so the door went dark over rows that had just been created for
+      it. One read answers the rows, the door and the emptiness together.
+
+      ⚠ **A read costs nothing here** — no rate limit and no mutation id, by
+      `portalAction`'s own note — and it is the same read the portal does every
+      time it opens, which is what *it empties* has always meant.
+    */
+    const fresh = await portalAction()
+    if (!fresh.ok) {
+      setPortalFailed(fresh.message)
+      return
+    }
+
+    setPortalLines(fresh.value.lines)
+    setPortalRequests(fresh.value.requests)
     setWaiting({
-      lines: portalLines.some((l) => l.notificationIds.length > 0),
-      requests: left.length > 0,
+      lines: fresh.value.lines.length > 0,
+      requests: fresh.value.requests.length > 0,
     })
+
+    /*
+      ⚠ **An empty box closes — directed.** A card left standing with nothing in
+      it is the *empty portal* §5 says cannot exist, reached from the other side:
+      the door is already dark, so what is on screen is a surface you could not
+      have opened. Answering the last thing in it is leaving it.
+    */
+    if (fresh.value.lines.length === 0 && fresh.value.requests.length === 0) {
+      closePortal()
+    }
   }
 
   /**
@@ -3559,29 +3586,7 @@ export function PageScreen({
           })}
         </ol>
 
-        {/*
-          ⚠ **The lock's sentence, under the first line and only under it — 31
-          August, directed.** It sat on the first-run screen and was moved here:
-          on an empty page it is an instruction with no target, and *you cannot
-          swipe a line you have not written*. Under the one line that exists, it
-          is a caption on the thing it governs — the same rule (*a control
-          belongs where its effect appears*) that put cross off and rewrite on
-          the console.
-
-          ⚠ **It needs no seen-state, and `justStarted` says why**: nothing is
-          ever deleted, so the record's length only climbs and passes through 1
-          once in an account's life. The second capture retires this for good.
-
-          It sits after the list rather than inside it, so it is not a row: a
-          `<li>` here would be a line of the record that is not a capture, and
-          every swipe, tap and count on this page assumes those are the same
-          thing.
-        */}
-        {justStarted && (
-          <p className="zine-caption text-muted mt-6 text-center">
-            swipe a line away and it stays out of matching
-          </p>
-        )}
+        {/* The lock's sentence stood here. See its tombstone by `empty` above. */}
 
         {/*
           ⚠ **The tail was a control, stopped being one, and is one again for a

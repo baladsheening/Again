@@ -95,6 +95,22 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   all** — its colour is `--color-accent`, which already means *this converged* on
   the line itself in the gutter, and a second tenant saying the same thing beside
   a control is what the one-tenant rule exists to prevent.
+- ⚠⚠ **ANSWERING RE-READS THE PORTAL; IT DOES NOT PATCH THE ROW OUT LOCALLY.**
+  Removing it from state was wrong in a way only *accepting* shows: **accepting
+  runs the fan-out**, so the same tap can write convergences into the box being
+  looked at, and a local patch left the door dark over rows it had just created.
+  One read answers the rows, the door and the emptiness together. ⚠ **An empty
+  card then CLOSES** — directed: a card standing with nothing in it is §5's
+  *empty portal* reached from the other side, a surface you could not have
+  opened.
+- ⚠ **The lock's sentence — *swipe a line away and it stays out of matching* — is
+  DELETED, 4 September, directed.** It fired at a record length of exactly one,
+  which every existing account has passed forever. ⚠ **What it costs: nothing now
+  teaches the lock swipe.** Judged affordable rather than free — locking is a rare
+  verb and a person's *first* capture is not where a gesture they want months
+  later is learnt. **If the lock proves undiscoverable, this is what was removed,
+  and it should come back where a reader is actually looking.** It also said
+  *matching*, which is not a word in §3's vocabulary.
 - ⚠ **A margin that separates two things must belong to the thing that may not be
   there.** The request row wore `mb-4`; with no convergence under it the card
   measured 20px of air above the row and 36 below, so the one thing in the box
