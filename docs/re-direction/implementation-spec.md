@@ -71,6 +71,42 @@ and never learns why.
 Directed by the product owner with the conflict stated. Update `docs/decisions.md`
 before revisiting it.
 
+**Amendment 3 — 4 September 2026, §8 *Friend convergence*, §9 *Contact
+handshake*.** **Adding somebody is a request they answer**, and there is no
+silent one-sided track left in the product. The design and its reasoning are
+`docs/re-direction/the-handshake.md`; three clauses move.
+
+The reason is again a delivery failure. A mutual track was two independent
+one-sided acts, so the second was forgettable and **its failure was silent**:
+the first time Phase 2 was used by a person rather than a fixture, two accounts
+held the same film, there were **0 tracks and 0 notifications ever written**, and
+nothing in the app said why. Directed: *the account i added should receive a ping
+offering accept or reject.*
+
+- **A seventh notification kind, `track_request`.** The notification budget is
+  stated as six and complete. This is the first notification in the product that
+  is **not about a convergence**, and the budget's purpose is untouched by it —
+  no digests, no streaks, no re-engagement. A request is addressed to one person
+  by another and is *answerable*, which is the opposite of what that rule exists
+  to stop. The bar for an eighth is unchanged.
+- **§9's *one-sided tracking remains available elsewhere in the product* is
+  withdrawn.** There is nothing left for it to be. An outbound-only `tracks` row
+  grants no visibility, no name and no convergence — it is already a request, and
+  the only change is that it is now delivered. Two controls for one act would be
+  the drift, not the safeguard.
+- **§9's *on successful confirmation, create both existing track rows
+  atomically* is restated.** The first row is written when the ask is made and
+  the second on acceptance, so the two are not written together. What the clause
+  protects is intact and is what it should have said: **no half-state grants
+  anything, and mutuality arrives in one transaction together with its fan-out.**
+
+**What is unchanged:** the QR/pairing transport is still two-sided and still
+confirmed by hand; §6's suppression rule; and every term of what may be read.
+⚠ **One further deviation is proposed and not yet built** — the contact
+handshake's code carrying a handle rather than an opaque session token, argued
+in §2f of the handshake brief. The transfer-session machinery stays with Phase
+3's list transfer, where a snapshot is claimed exactly once.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -764,14 +800,20 @@ transport is not the authority that grants access.
 Contact handshake is a two-sided action. Each participant must be authenticated,
 unblocked with respect to the other, and explicitly confirm.
 
-On successful confirmation, create both existing track rows atomically. This is
-the only transfer type that makes the pair mutual. The normal new-mutual-track
-convergence trigger then runs against captures the two people independently
-hold.
+⚠ **AMENDED 4 SEPTEMBER — Amendment 3.** ~~On successful confirmation, create
+both existing track rows atomically.~~ The first row is written when the ask is
+made and the second on acceptance. **No half-state grants anything** — an
+outbound-only row carries no visibility, no name and no convergence — and
+**mutuality arrives in one transaction together with its fan-out**, which is
+what this clause was protecting. This is still the only transfer type that makes
+the pair mutual, and the normal new-mutual-track convergence trigger runs
+against captures the two people independently hold.
 
-One-sided tracking remains available elsewhere in the product. A transfer
-handshake is deliberately different: it means “add each other,” not “follow
-this person.”
+⚠ **WITHDRAWN 4 SEPTEMBER — Amendment 3.** ~~One-sided tracking remains
+available elsewhere in the product.~~ There is none left: adding somebody **is**
+a request they answer, everywhere in the product. The distinction this clause
+drew still holds and is now the only behaviour — a handshake means “add each
+other,” never “follow this person.”
 
 ### List-import semantics
 

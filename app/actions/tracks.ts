@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 
 import {
+  declineTrack,
   getProfileByHandle,
   requireSessionUser,
   trackUser,
@@ -72,6 +73,34 @@ export async function untrackAction(handle: string): Promise<TrackResult> {
   if (!resolved.ok) return resolved
 
   const result = await untrackUser(resolved.viewer, resolved.targetId)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  refresh()
+  return { ok: true, state: result.value }
+}
+
+/**
+ * **Decline a request** — the No half of the portal's question.
+ *
+ * ⚠ **There is no `acceptAction`, and that is the design rather than an
+ * omission.** Accepting is adding them back, which is `trackAction` above:
+ * the same call, from a different surface, running the same fan-out on the
+ * transition into mutuality. A second entry point would be a second place that
+ * decides what mutuality means.
+ *
+ * ⚠ **By handle, like everything else here**, so a client never learns a uuid it
+ * could iterate. The portal hands the handle down for exactly this reason.
+ *
+ * It shares the `track` bucket. Declining costs nobody else anything — nothing
+ * is written to another person — but it deletes a row from a request body, and
+ * an unbounded endpoint that deletes rows wants a ceiling whatever its blast
+ * radius.
+ */
+export async function declineAction(handle: string): Promise<TrackResult> {
+  const resolved = await resolveTarget(handle)
+  if (!resolved.ok) return resolved
+
+  const result = await declineTrack(resolved.viewer, resolved.targetId)
   if (!result.ok) return { ok: false, message: result.message }
 
   refresh()

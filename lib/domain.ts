@@ -281,6 +281,19 @@ export type SwapStatus = 'pending' | 'committed' | 'complete' | 'declined'
 /**
  * The complete set (§6, "Notification budget"). Do not add more.
  * No digests, no streaks, no re-engagement, no "you haven't opened the app."
+ *
+ * ⚠⚠ **THERE ARE SEVEN, AND §6 SAYS SIX IS THE COMPLETE SET — 4 September.**
+ * `track_request` is the seventh and it is a **specification amendment**, not an
+ * oversight to fix quietly: see `docs/re-direction/the-handshake.md` §4. It is
+ * the first notification in this product that is **not about a convergence**,
+ * and the budget's purpose is untouched by it — a request is addressed to one
+ * person by another person and it is *answerable*, which is the opposite of the
+ * thing that rule exists to stop.
+ *
+ * ⚠ **The bar for an eighth is unchanged and this does not lower it.** What
+ * earned this one is that its absence made the social half of the app inert:
+ * two accounts, matching captures, no way for either to learn that adding
+ * somebody had not worked. See §9 of `phase-2-convergence.md`.
  */
 export type NotificationKind =
   | 'convergence'
@@ -289,6 +302,7 @@ export type NotificationKind =
   | 'swap_invite'
   | 'swap_revealed'
   | 'landed'
+  | 'track_request'
 
 /**
  * How a person is named on screen (§5): *people who know you should see your

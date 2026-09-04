@@ -520,10 +520,19 @@ export function Ask({
   ask,
   onYes,
   onNo,
+  busy = false,
 }: {
   ask: string
   onYes: () => void
   onNo: () => void
+  /**
+   * ⚠ **Only for a question whose answer is a round trip.** The two the console
+   * asks are local — settling and resolving happen under the finger — so this
+   * defaults to off and they never pass it. The portal's request is the one
+   * question whose answer is a mutation somebody else's account depends on, and
+   * a second tap while the first is in flight is a second call.
+   */
+  busy?: boolean
 }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-4 pointer-coarse:gap-5">
@@ -531,14 +540,16 @@ export function Ask({
       <button
         type="button"
         onClick={onYes}
-        className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors"
+        disabled={busy}
+        className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors disabled:opacity-40"
       >
         Yes
       </button>
       <button
         type="button"
         onClick={onNo}
-        className="text-muted hover:text-text tap-target text-sm transition-colors"
+        disabled={busy}
+        className="text-muted hover:text-text tap-target text-sm transition-colors disabled:opacity-40"
       >
         No
       </button>

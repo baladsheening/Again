@@ -1,6 +1,7 @@
 'use client'
 
-import type { PortalLineView } from '@/app/actions/portal'
+import { Ask } from './console'
+import type { PortalLineView, TrackRequestView } from '@/app/actions/portal'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -50,15 +51,47 @@ import type { PortalLineView } from '@/app/actions/portal'
  * matches yet*, no empty state for convergence. An empty portal cannot be
  * opened at all, because the door is off when there is nothing behind it, so
  * this component never renders a zero case and must not grow one.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Two kinds of row — the handshake, 4 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠⚠ **A REQUEST DOES NOT EMPTY ON OPEN, AND THAT GENERALISES *IT EMPTIES*
+ * RATHER THAN BREAKING IT.** §5's rule is *a row you have opened leaves*; the
+ * true statement underneath it is **a row leaves when it has been dealt with**,
+ * and for a convergence, reading it *is* dealing with it, because there is
+ * nothing to answer. A request has an answer. **A request that emptied on being
+ * looked at would be a request destroyed by being read.**
+ *
+ * ⚠ **Requests come first**, because they are the only rows in this box waiting
+ * on the reader. Convergences are information and can wait.
+ *
+ * ⚠ **No heading over them, where the lines have one.** *Who else* exists
+ * because a portal line is also a line of the record and without a word saying
+ * so it is *the same list, filtered, for a reason you cannot see*. A request
+ * says who is asking in its own sentence — a label above it would be the second
+ * thing on the screen saying what the first already said.
+ *
+ * ⚠ **Still no count and no badge**, on either kind. `portal.mjs` asserts the
+ * absence of digits on the door and that must go on holding.
  */
 export function Portal({
   lines,
+  requests,
+  answering,
+  onAnswer,
   loading,
   failed,
   onOpen,
   children,
 }: {
   lines: PortalLineView[]
+  /** Who has added you and is waiting. */
+  requests: TrackRequestView[]
+  /** The handle in flight, so one tap cannot become two. */
+  answering: string | null
+  /** `true` adds them back — the same act as the button on their page. */
+  onAnswer: (handle: string, yes: boolean) => void
   /** The read is out. There is nothing to draw yet and nothing to say about it. */
   loading: boolean
   /** The read failed, in the page's own voice. */
@@ -92,7 +125,42 @@ export function Portal({
           and it is the third thing that furniture does rather than a fourth use
           of a scarce face.
         */}
-        <h2 className="stamp text-muted mb-2.5">Who else</h2>
+        {/*
+          ⚠ **The questions, before anything that is only information.**
+
+          ⚠ **`Ask` is the console's, reused unchanged and for the third time.**
+          Its docblock says it is *one line asking the person who wrote it to
+          decide something*; this is the first time the asker is somebody else,
+          and nothing about the shape changes — a statement, a question, two
+          answers, and both answerable by ignoring them.
+
+          ⚠ **The statement and the question are two lines, not one.** *`@sam`
+          added you.* is what happened; *Add them back?* is what is being asked.
+          Yes and No against a statement would be a control whose meaning has to
+          be guessed at, on the one surface in this app where guessing wrong
+          lets somebody into your record.
+        */}
+        {requests.map((request) => (
+          <div key={request.handle} className="mb-5">
+            <div className="page-row">
+              <span className="min-w-0 flex-1 truncate">{request.sentence}</span>
+            </div>
+
+            <Ask
+              ask="Add them back?"
+              onYes={() => onAnswer(request.handle, true)}
+              onNo={() => onAnswer(request.handle, false)}
+              busy={answering !== null}
+            />
+          </div>
+        ))}
+
+        {/*
+          ⚠ **The heading belongs to the lines and moves with them.** With
+          nothing but requests in the box there is nothing for *Who else* to
+          label, and a heading over an empty list is furniture.
+        */}
+        {lines.length > 0 && <h2 className="stamp text-muted mb-2.5">Who else</h2>}
 
         <ol className="portal-list">
           {failed !== null && <li className="page-line">{failed}</li>}

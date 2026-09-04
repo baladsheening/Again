@@ -508,6 +508,33 @@ export function portalSentence(
     case 'lend':
       return `${who} ${many ? 'have' : 'has'} one.`
     /*
+      ⚠ **The seventh kind, and the only one here that is not about a
+      possibility** — see `docs/re-direction/the-handshake.md`. It is written
+      beside the others for the reason this whole block exists: a kind added to
+      `NotificationKind` must fail to compile in both registers at once, and the
+      day a request says one thing in the portal and another in a push is the
+      day §6's warning about the payload comes true.
+
+      ⚠ **The screen says ADD and the code says TRACK — directed, 4 September.**
+      §4 makes the vocabulary load-bearing in identifiers *and* in copy, and this
+      is the first place the two are deliberately split: the relation is a
+      track, the act of asking for one is called adding. `track_request` keeps
+      its name; this sentence does not use it.
+
+      ⚠ **Named `@handle`, never a display name.** §5: a name is for people who
+      know you, and somebody who has only asked does not yet. `nameFor` with
+      `mutual: false` is what puts the `@` there, at the moment the row was
+      written — see `listMyPortal` on why the payload is the record.
+
+      ⚠ **It is the one sentence here with no plural branch, and that is the
+      verb rather than an omission**: *added* is invariant, so `listNames` alone
+      carries the case of two people asking on one row. Requests are not grouped
+      today — one row per requester — but the sentence is correct if they ever
+      are, which is the cheap half of not assuming.
+    */
+    case 'track_request':
+      return `${who} added you.`
+    /*
       ⚠ **Three kinds cannot reach a portal row and say so rather than falling
       through.** The portal is built by joining a notification to *the viewer's
       own capture for the same possibility*, and these three are not about a
@@ -574,5 +601,13 @@ export function notificationCopy(
       return `You and ${p.counterpartName} swapped.`
     case 'landed':
       return `${p.counterpartName} would go back to ${p.title}.`
+    /*
+      ⚠ **The one kind with no `title`, because it is about a person.** Both
+      registers say the same words for it — there is no capture for a standalone
+      line to name that a portal row would already be showing, so the two
+      cannot differ. See `portalSentence` above for the vocabulary split.
+    */
+    case 'track_request':
+      return `${p.counterpartName} added you.`
   }
 }

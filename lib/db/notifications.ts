@@ -5,7 +5,7 @@ import type { CaptureStatus, CaptureVerdict } from '@/lib/domain'
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 
 import { db } from './client'
-import { captures, notifications, possibilities } from './schema'
+import { captures, notifications, possibilities, profiles, tracks } from './schema'
 import type { SessionUser } from './session'
 import type { PageLine } from './captures'
 import { portalSentence } from '@/lib/overlap'
@@ -370,6 +370,127 @@ export async function readPortalLine(
     )
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Requests — the handshake, 4 September                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * **What makes a request pending, in one place.**
+ *
+ * ⚠ **The list and the door must never disagree about whether there is anything
+ * behind it**, so the predicate is written once and both read it. That is the
+ * same rule `hasPortalLines` was written under, applied to a second kind of row.
+ *
+ * Three terms, and each one is doing a job:
+ *
+ *   1. **an unread `track_request` addressed to the viewer** — the arrival. It
+ *      is what makes a request *noticeable*, and it is why pending is not
+ *      derived from `tracks` alone: a mutual pair that later breaks leaves the
+ *      asker's row standing, and a derived predicate would resurface it as a
+ *      fresh request the viewer already answered once.
+ *   2. **their row still exists** — the truth. Somebody who withdrew has
+ *      nothing outstanding, and a question with nothing left to answer must not
+ *      be asked.
+ *   3. **the viewer has not written the reverse row** — answered. Accepting
+ *      from `/u/[handle]` rather than from the portal is the case this covers,
+ *      and `trackUser` marks the row read in the same transaction, so this term
+ *      is belt and braces on purpose.
+ *
+ * ⚠ **`(payload ->> 'counterpartId')::uuid`, because a notification carries no
+ * foreign key and cannot** — the same reasoning as `listMyPortal`'s join on
+ * `itemId`. The payload is where a notification says who it is about.
+ */
+function pendingRequest(viewerId: string) {
+  const counterpart = sql`(${notifications.payload} ->> 'counterpartId')::uuid`
+
+  return and(
+    eq(notifications.userId, viewerId),
+    eq(notifications.kind, 'track_request'),
+    isNull(notifications.readAt),
+    sql`exists (
+      select 1 from ${tracks} asked
+      where asked.follower_id = ${counterpart} and asked.followed_id = ${viewerId}
+    )`,
+    sql`not exists (
+      select 1 from ${tracks} answered
+      where answered.follower_id = ${viewerId} and answered.followed_id = ${counterpart}
+    )`,
+  )
+}
+
+/** One pending request: who is asking, and the sentence that says so. */
+export type TrackRequest = {
+  notificationId: string
+  /**
+   * ⚠ **Read live from `profiles`, NOT from the payload — the one place this
+   * file departs from *the payload is the record*.** A convergence's name is
+   * history: it is what was said at the time and re-deriving it would restate
+   * the past. A pending request is not history, it is **a live question about a
+   * person you are about to let in** — and answering it addresses them by
+   * handle. A handle that has changed since would name somebody the viewer does
+   * not recognise and address somebody who no longer exists.
+   */
+  handle: string
+  /** Already written, by `portalSentence` — the portal's one author. */
+  sentence: string
+  askedAt: Date
+}
+
+/**
+ * How many pending requests one read considers. §10 forbids an unbounded
+ * select; this is that bound. It is smaller than `PORTAL_LIMIT` because a
+ * request is a person and the mechanic assumes small clusters (§10's scale
+ * note) — fifty people asking at once is not a busy week, it is a different
+ * app.
+ */
+export const REQUEST_LIMIT = 50
+
+/**
+ * **Who has added you and is waiting.**
+ *
+ * ⚠ **A second read rather than a widening of `listMyPortal`.** That statement
+ * inner-joins the viewer's own captures on `payload->>'itemId'`, and that join
+ * carries the privacy term — a notification names a counterpart and must never
+ * be a door to the counterpart's row. A request has no `itemId`, so it is
+ * invisible there **by construction**, which is the right way for it to be
+ * invisible. **Do not relax that join to let this through.**
+ *
+ * ⚠ **The rows are not grouped.** A portal line is a group because two people
+ * can converge on one capture; two people asking is two questions, each with
+ * its own answer. Grouping them would be one row that could only be answered
+ * one way.
+ */
+export async function listMyRequests(
+  sessionUser: SessionUser,
+  { limit = REQUEST_LIMIT }: { limit?: number } = {},
+): Promise<TrackRequest[]> {
+  const rows = await db
+    .select({
+      notificationId: notifications.id,
+      handle: profiles.handle,
+      askedAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .innerJoin(
+      profiles,
+      sql`${profiles.id} = (${notifications.payload} ->> 'counterpartId')::uuid`,
+    )
+    .where(pendingRequest(sessionUser.id))
+    .orderBy(desc(notifications.createdAt), desc(notifications.id))
+    .limit(limit)
+
+  return rows.map((row) => ({
+    ...row,
+    /*
+      ⚠ **`@handle` and never a name, and `portalSentence` is still the author.**
+      §5: a name is for people who know you. Somebody who has only asked does
+      not, which is exactly what makes the `@` the honest thing to show — you
+      are being asked by a handle, and accepting is what turns it into a name.
+    */
+    sentence: portalSentence('track_request', [`@${row.handle}`]),
+  }))
+}
+
 /**
  * **One bit: is there anything, or nothing.**
  *
@@ -379,20 +500,34 @@ export async function readPortalLine(
  * name. This returns a boolean because a boolean is all the glyph can say, and
  * a function that returned a count would be one refactor away from displaying
  * one.
+ *
+ * ⚠⚠ **IT ANSWERS FOR BOTH KINDS OF ROW SINCE 4 SEPTEMBER, AND THAT IS WHY IT
+ * IS ONE FUNCTION RATHER THAN TWO OR'D BY A PAGE.** The door's question is *is
+ * there anything behind me* — if a caller had to remember to ask twice, the day
+ * somebody adds a third kind of row is the day the portal holds something with
+ * an unlit door and no error anywhere. Two statements in parallel, one bit out.
  */
 export async function hasPortalLines(sessionUser: SessionUser): Promise<boolean> {
-  const rows = await db
-    .select({ one: sql<number>`1` })
-    .from(notifications)
-    .innerJoin(
-      captures,
-      and(
-        eq(captures.userId, sessionUser.id),
-        sql`${captures.possibilityId}::text = ${notifications.payload} ->> 'itemId'`,
-      ),
-    )
-    .where(and(eq(notifications.userId, sessionUser.id), isNull(notifications.readAt)))
-    .limit(1)
+  const [lines, requests] = await Promise.all([
+    db
+      .select({ one: sql<number>`1` })
+      .from(notifications)
+      .innerJoin(
+        captures,
+        and(
+          eq(captures.userId, sessionUser.id),
+          sql`${captures.possibilityId}::text = ${notifications.payload} ->> 'itemId'`,
+        ),
+      )
+      .where(and(eq(notifications.userId, sessionUser.id), isNull(notifications.readAt)))
+      .limit(1),
 
-  return rows.length > 0
+    db
+      .select({ one: sql<number>`1` })
+      .from(notifications)
+      .where(pendingRequest(sessionUser.id))
+      .limit(1),
+  ])
+
+  return lines.length > 0 || requests.length > 0
 }

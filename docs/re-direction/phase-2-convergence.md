@@ -461,7 +461,18 @@ That is the product working as designed and it is why the script exists.
 What it found: 2 accounts, **0 tracks**, 54 resolved captures, one possibility
 (*Scarface*) held by both people, and **0 notifications ever written**.
 
-### 9a. ⚠⚠ ADDING SOMEBODY MUST BE A REQUEST THEY ANSWER — directed
+### 9a. ~~ADDING SOMEBODY MUST BE A REQUEST THEY ANSWER~~ — **BUILT, 4 September**
+
+⚠⚠ **DESIGNED AND BUILT THE SAME DAY IT WAS RAISED. The whole of it now lives in
+`docs/re-direction/the-handshake.md`, which is where to read and to edit.** What
+follows is kept only because it is the account of the failure that caused it —
+and one prediction in it was wrong in a way worth keeping: **a request/accept
+flow needed no `tracks` change at all.** A one-sided track already *was* a
+request; nothing delivered it. There is no pending state, no new table and no
+migration.
+
+⚠ **The QR half is still unbuilt** — §2f of the brief, where it reduces to a
+handle in a URL scanned by the phone's own camera.
 
 **A mutual track is two independent one-sided acts, and that is the whole
 problem.** Today: I open `/u/your-handle` and track you; then *you* must

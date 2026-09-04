@@ -24,6 +24,86 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
+built.** Until this, a mutual track was **two independent one-sided acts**: I add
+you, then *you* must separately remember my handle, go to my page and add me
+back. Nothing told you I had asked. The first time Phase 2 was used by a person
+rather than a fixture the result was **2 accounts, both holding *Scarface*, 0
+tracks, 0 notifications ever written** — the engine, the portal and the mark were
+all correct and all downstream of an introduction that never arrived. The design
+is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
+
+- ⚠⚠ **A ONE-SIDED TRACK ALREADY *WAS* A REQUEST AND NOTHING DELIVERED IT.** All
+  three consumers of the relation demand both rows — the §6 fan-out's self-join,
+  `listCapturesForOtherUser`'s two joins, and `nameFor` — so an outbound-only row
+  grants **nothing**. **So there is no pending column, no requests table and no
+  state machine, and no migration.** The pending object existed; what was missing
+  was the delivery and one control to answer it. *Remove the mechanism* read from
+  the other end: do not build a second one beside the one that is already there.
+- ⚠ **Accept is `trackUser`, unchanged, fan-out included.** There is deliberately
+  no `acceptAction` — a second entry point would be a second place deciding what
+  mutuality means, and mutuality is what runs the fan-out.
+- ⚠⚠ **`declineTrack` IS THE ONLY PLACE ONE PERSON DELETES ANOTHER PERSON'S ROW,
+  AND `followed_id = viewer` IS THE WHOLE SAFETY ARGUMENT.** There is no
+  parameter that can widen it — the `includeArchive` rule, applied to a delete —
+  and `tests/handshake.test.ts` asserts a bystander cannot reach a row that does
+  not point at them.
+- ⚠ **A decline remembers nothing and the asker is never told.** `untrackUser`'s
+  own reasoning: any state a declined request could sit in is a list of people
+  you turned down. **The price, stated: a declined person can ask again**, and
+  the honest answer is a block list, which does not exist — Phase 6 owns it, and
+  **a lower rate limit is not the fix.**
+- ⚠⚠ **A REQUEST DOES NOT EMPTY ON OPEN, WHICH GENERALISES §5's *IT EMPTIES*
+  RATHER THAN BREAKING IT.** A row leaves when it has been **dealt with**; for a
+  convergence, reading it *is* dealing with it, because there is nothing to
+  answer. **A request that emptied on being looked at would be a request
+  destroyed by being read** — asserted from the screen by
+  `node_modules/.probe/handshake.mjs`.
+- ⚠ **It lands in the PORTAL because that is the only surface that says something
+  arrived.** On `/profile` it would have been as silent as the bug it fixes. The
+  cost is real and is paid in three places: the line read is a second query
+  (`listMyRequests`), the door answers for both kinds inside `hasPortalLines`
+  rather than being OR'd by a page, and the box now holds a row that is a
+  **person** rather than a line. ⚠ **`listMyPortal`'s join on
+  `payload->>'itemId'` carries the privacy term — do not relax it to let a
+  request through.** A request has no `itemId`, and that absence is what keeps it
+  out.
+- ⚠ **The console's `Ask` is reused unchanged, for the third time.** A statement
+  — *`@sam` added you.* — then one question, *Add them back?*, then two answers.
+  Yes and No against a statement alone would be a control whose meaning has to be
+  guessed at, on the one surface where guessing wrong lets somebody into your
+  record.
+- ⚠ **THE SCREEN SAYS *ADD* AND THE CODE SAYS *TRACK* — directed, and it is the
+  first deliberate split of §4's vocabulary rule.** The **relation** is a track;
+  only the **act of asking for one** is called adding. `tracks`, `trackUser`,
+  `TrackState` and `track_request` all keep their names. ⚠ *Add* is not on the
+  banned list, so **the linter cannot hold this and it has to be held by hand.**
+- ⚠ **`Tracking` was a lie and is gone.** *Add* → *Added* → *Added each other*.
+  The middle state used to claim a live relationship where there was an offer
+  nobody had been told about. ⚠ **Watch *Added* for the same flaw** — if it reads
+  as done rather than waiting, the word moves, not the model.
+- ⚠ **A pending request is named `@handle` and the handle is read LIVE from
+  `profiles`** — the one place this app departs from *the payload is the record*.
+  A convergence's name is history; a request is **a live question about a person
+  you are about to let in**, and a handle that has changed since would name
+  somebody you do not recognise and address somebody who is gone.
+- ⚠ **There was no in-app way to add anybody at all**, which is half the bug:
+  `/u/[handle]` was reached by typing the URL. `components/add-person.tsx` is a
+  handle field in People on `/profile`, and ⚠ **it goes to their page rather than
+  adding them** — a typo can reach a real person, and asking is what puts a
+  question in somebody's portal. **It is not search and must not become one.**
+- **Proved:** `tests/handshake.test.ts` — 8 cases, and the one that matters is
+  **accepting runs the fan-out**, which is the whole reason the feature exists
+  and cannot be seen from a screen. `node_modules/.probe/handshake.mjs` for the
+  surface; `scripts/seed-request.mjs` seeds one locally with the production
+  guard.
+- **Still open:** the QR, which is §2f of the brief and reduces to *a handle in a
+  URL, scanned by the phone's own camera* — `BarcodeDetector` is not in Safari,
+  so an opaque token would mean shipping a decoder to do what iOS does from the
+  lock screen. **The encoder is a tenth dependency or ~300 lines, and that is
+  undecided.** ⚠ **Blocking is also still open**, and it is named rather than
+  quietly deferred.
+
 ⚠⚠ **A CAPTURE IS SHAREABLE WHEN IT IS WRITTEN, AND THE SWIPE IS THE LOCK — 31
 August, directed. This overrules the specification's private-by-default and it
 was directed with that stated.** Until this, **the entire social half of the
@@ -1244,8 +1324,16 @@ the one matching owner; do not duplicate any of it.
 - The suppression rule is the most important line in the app. Without it,
   copying something off someone's page pings them that you match, which is
   noise — they are the source.
-- Six notification kinds, and that is the complete set. No digests, no streaks,
-  no re-engagement.
+- ⚠ **SEVEN notification kinds since 4 September, and that is the complete set.**
+  It said six. `track_request` is the seventh and the first that is **not about a
+  convergence** — Amendment 3 to the implementation specification, and
+  `docs/re-direction/the-handshake.md` for why it earned the exception. No
+  digests, no streaks, no re-engagement; the bar for an eighth is unchanged.
+- ⚠ **A request is the one notification `lib/overlap.ts` does not write**, and
+  the single-owner rule is not broken: that rule owns everything about a
+  **match**, and a request has no possibility, no intent pair and nothing to
+  suppress. **The sentence is still `portalSentence`'s**, beside the six it must
+  not drift from.
 
 ## Re-direction vocabulary
 

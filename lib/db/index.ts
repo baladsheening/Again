@@ -47,7 +47,7 @@ export type { Result, ErrorCode } from './result'
 
 export { getMyProfile, getProfileByHandle, createProfile } from './profiles'
 
-export { getTrackState, listMyTracks, trackUser, untrackUser } from './tracks'
+export { declineTrack, getTrackState, listMyTracks, trackUser, untrackUser } from './tracks'
 export type { TrackState, TrackedPerson } from './tracks'
 
 /*
@@ -149,9 +149,11 @@ export {
   readPortalLine,
   hasPortalLines,
   getConvergence,
+  listMyRequests,
   PORTAL_LIMIT,
+  REQUEST_LIMIT,
 } from './notifications'
-export type { PortalLine } from './notifications'
+export type { PortalLine, TrackRequest } from './notifications'
 
 export type {
   Capture,

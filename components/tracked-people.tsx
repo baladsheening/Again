@@ -1,6 +1,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 
+import { AddPerson } from './add-person'
 import type { TrackedPerson } from '@/lib/db'
 import { nameFor } from '@/lib/domain'
 
@@ -75,6 +76,15 @@ export function TrackedPeople({ people }: { people: TrackedPerson[] }) {
       */}
       <div className="bg-surface/40 mt-1 flex w-fit max-w-sm flex-col rounded-2xl p-4">
         <h2 className="micro text-muted mb-2">People</h2>
+
+        {/*
+          ⚠ **The way in, and it belongs above the list rather than below it.**
+          Somebody arriving here with a handle in their hand is doing the one
+          thing this pill exists for; a field under the names would be found
+          after scrolling past everyone they have already added. See
+          `AddPerson` — it goes to their page and does not add anybody.
+        */}
+        <AddPerson />
 
         {people.length === 0 ? (
           <p className="text-muted text-sm">

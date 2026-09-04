@@ -5,9 +5,11 @@ import { z } from 'zod'
 import {
   getConvergence,
   listMyPortal,
+  listMyRequests,
   readPortalLine,
   requireSessionUser,
   PORTAL_LIMIT,
+  REQUEST_LIMIT,
 } from '@/lib/db'
 import { dayStamper } from '@/lib/day'
 import { toPageLines, type PageLineView } from '@/lib/page-line'
@@ -37,6 +39,40 @@ export type PortalLineView = PageLineView & {
 }
 
 /**
+ * A pending request, as the client gets it: **who is asking, and the sentence
+ * that says so.**
+ *
+ * ⚠ **No notification id, unlike a line.** A line empties by id because opening
+ * it is the only thing that marks it read. A request is marked read by the
+ * answer — `trackUser` and `declineTrack` both do it in the same transaction as
+ * the row they write, scoped by counterpart — so the id would be a field the
+ * client holds and never uses. **The handle is the address for both answers**,
+ * which is the rule `app/actions/tracks.ts` already states.
+ *
+ * ⚠ **No `askedAt` either.** The portal shows no timestamps anywhere; a request
+ * that wore one would be the first, and *when* is not what the question is
+ * about.
+ */
+export type TrackRequestView = {
+  handle: string
+  sentence: string
+}
+
+/**
+ * **Everything behind the door, in one read.**
+ *
+ * ⚠ **Two lists rather than one, because they are two kinds of row.** A
+ * convergence is information and leaves when it has been looked at; a request
+ * is a question and leaves when it has been answered. Merging them would need
+ * a discriminator on every row and a component that branched on it — which is
+ * the same thing, said less honestly.
+ */
+export type PortalView = {
+  requests: TrackRequestView[]
+  lines: PortalLineView[]
+}
+
+/**
  * **What happened while you were away.**
  *
  * ⚠ **Fetched when the portal opens, not handed down with the page.** The one
@@ -55,10 +91,19 @@ export type PortalLineView = PageLineView & {
  * way to make one — so a portal row and a record row can never disagree about
  * which day they belong to. See `lib/day.ts` for why the client never formats.
  */
-export async function portalAction(): Promise<ActionResult<PortalLineView[]>> {
+export async function portalAction(): Promise<ActionResult<PortalView>> {
   const sessionUser = await requireSessionUser()
 
-  const rows = await listMyPortal(sessionUser, { limit: PORTAL_LIMIT })
+  /*
+    ⚠ **In parallel, because they are independent statements and the door has
+    already been lit.** Whoever opened the portal is looking at an empty card
+    until both return; asking one after the other would make the rarer of the
+    two — a request — pay for the commoner one every time.
+  */
+  const [rows, requests] = await Promise.all([
+    listMyPortal(sessionUser, { limit: PORTAL_LIMIT }),
+    listMyRequests(sessionUser, { limit: REQUEST_LIMIT }),
+  ])
   const { stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
 
   /*
@@ -71,11 +116,14 @@ export async function portalAction(): Promise<ActionResult<PortalLineView[]>> {
   const lines = toPageLines(rows, stamp)
   return {
     ok: true,
-    value: lines.map((line, i) => ({
-      ...line,
-      sentence: rows[i].sentence,
-      notificationIds: rows[i].notificationIds,
-    })),
+    value: {
+      requests: requests.map(({ handle, sentence }) => ({ handle, sentence })),
+      lines: lines.map((line, i) => ({
+        ...line,
+        sentence: rows[i].sentence,
+        notificationIds: rows[i].notificationIds,
+      })),
+    },
   }
 }
 

@@ -31,7 +31,16 @@ import {
   emptyPortalLineAction,
   portalAction,
   type PortalLineView,
+  type TrackRequestView,
 } from '@/app/actions/portal'
+/*
+  ⚠ **The record's page calls the track actions, and that is not scope creep.**
+  A request lives in the portal, the portal lives on this page, and answering
+  one is `trackAction` — the same call `/u/[handle]`'s button makes. A portal
+  that built its own would be a second implementation of mutuality, which is the
+  render-prop argument this component already makes about consoles.
+*/
+import { declineAction, trackAction } from '@/app/actions/tracks'
 import { AttachGlyph, LinkGlyph, LockGlyph, UndoGlyph, WriteGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { useRowSwipe } from './row-swipe'
@@ -470,6 +479,14 @@ export function PageScreen({
    */
   const [portal, setPortal] = useState(false)
   const [portalLines, setPortalLines] = useState<PortalLineView[]>([])
+  /*
+    ⚠ **A second list, because a request is a second kind of row** — a question
+    that leaves when it is answered, beside information that leaves when it is
+    read. `portalAction` returns both from one read; see `PortalView`.
+  */
+  const [portalRequests, setPortalRequests] = useState<TrackRequestView[]>([])
+  /** The handle being answered, so one tap cannot become two. */
+  const [answering, setAnswering] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalFailed, setPortalFailed] = useState<string | null>(null)
   const [waiting, setWaiting] = useState(portalWaiting)
@@ -1864,14 +1881,54 @@ export function PageScreen({
       setPortalFailed(result.message)
       return
     }
-    setPortalLines(result.value)
+    setPortalLines(result.value.lines)
+    setPortalRequests(result.value.requests)
     /*
       ⚠ **The bit is corrected by the read, in both directions.** A portal opened
       on a stale lit glyph shows nothing and turns it off; one that came back
       full turns it on. The server's answer and this one cannot disagree for
       longer than the read takes.
+
+      ⚠ **Both kinds of row count, exactly as `hasPortalLines` counts both.** The
+      door's question is *is there anything behind me*, and a request is
+      something.
     */
-    setWaiting(result.value.length > 0)
+    setWaiting(result.value.lines.length > 0 || result.value.requests.length > 0)
+  }
+
+  /**
+   * **Answering a request — the handshake, 4 September.**
+   *
+   * ⚠ **Yes is `trackAction`, the same call the button on `/u/[handle]` makes.**
+   * Accepting is adding them back; a separate accept action would be a second
+   * place that decides what mutuality means, and mutuality is what runs the
+   * fan-out. See `docs/re-direction/the-handshake.md` §1.
+   *
+   * ⚠ **This one IS awaited, unlike emptying a line.** A line's write only
+   * decides whether a row comes back next time; this one decides who can see
+   * your record and it fires notifications across everything the pair holds in
+   * common. A row that vanished optimistically and failed silently would be a
+   * person you believe you added and have not.
+   *
+   * ⚠ **The row leaves on the answer, not on being looked at.** That is the
+   * whole difference between the two kinds of row in this box — see `Portal`.
+   */
+  async function answerRequest(handle: string, yes: boolean) {
+    if (answering !== null) return
+    setAnswering(handle)
+    setPortalFailed(null)
+
+    const result = await (yes ? trackAction(handle) : declineAction(handle))
+    setAnswering(null)
+
+    if (!result.ok) {
+      setPortalFailed(result.message)
+      return
+    }
+
+    const left = portalRequests.filter((r) => r.handle !== handle)
+    setPortalRequests(left)
+    setWaiting(left.length > 0 || portalLines.some((l) => l.notificationIds.length > 0))
   }
 
   /**
@@ -1903,7 +1960,8 @@ export function PageScreen({
         all.map((l) => (l.id === line.id ? { ...l, notificationIds: [] } : l)),
       )
       setWaiting(
-        portalLines.some((l) => l.id !== line.id && l.notificationIds.length > 0),
+        portalRequests.length > 0 ||
+          portalLines.some((l) => l.id !== line.id && l.notificationIds.length > 0),
       )
     }
   }
@@ -2482,6 +2540,9 @@ export function PageScreen({
       {portal && (
         <Portal
           lines={portalLines}
+          requests={portalRequests}
+          answering={answering}
+          onAnswer={answerRequest}
           loading={portalLoading}
           failed={portalFailed}
           onOpen={openPortalLine}
