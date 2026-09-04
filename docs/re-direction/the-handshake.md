@@ -126,6 +126,13 @@ yet; the scope is the whole safety argument and it belongs in `lib/db/` (§3).
 - ⚠ **The requester is not told.** A declined ask and an unanswered one look
   identical from their side — their button simply reads *Ask* again. §6's
   silence rule, and the kind reading of the same rule.
+- ⚠⚠ **DECLINING MUST NEVER BLOCK, AND THAT IS DIRECTED — 4 September.** A
+  decline is *not now* and it is often *not this person, not by this route*; a
+  block is a durable judgement about somebody. Making one imply the other would
+  put an irreversible-feeling act behind a one-tap No, on a surface with no
+  confirmation, and it would make declining something people avoid doing. **When
+  a block list is built it is a separate, deliberate act**, and this line is what
+  it must not quietly become.
 - **What it costs, stated: a declined person can ask again.** The only thing
   standing in front of that is `LIMITS.track` (30/minute, per user and per IP).
   ⚠ **The honest answer is a block list, and there is not one** — §8 names block,
@@ -276,8 +283,12 @@ acceptance is already two-sided and by hand.
    §1: the thing that clause protects does not exist in this product.
 3. ⚠ **The QR carries the handle as a URL.** Directed. §2f's argument stands as
    written, including the deviation from §9's platform contract.
-4. **Still open — the QR encoder**, §2f: a tenth dependency, or ~300 lines. It
-   is step 6 and nothing before it depends on the answer.
+4. ⚠ **The QR is DEFERRED — directed, 4 September.** Not refused: the design in
+   §2f stands as the one to build from, and the encoder question (a tenth
+   dependency, or ~300 lines) is still the only thing in it that is undecided.
+   The request flow is what makes an introduction arrive; QR only makes it
+   quicker between two people standing together.
+5. ⚠ **A decline never blocks — directed.** See §2b.
 
 ---
 

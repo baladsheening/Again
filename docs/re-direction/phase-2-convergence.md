@@ -506,7 +506,32 @@ added should receive a ping offering accept or reject.*
   request that is never accepted is a visible pending state, where today it is
   an absence indistinguishable from having no matches.
 
-### 9b. ⚠ A RESOLVED CAPTURE CAN HAVE NO INTENT, AND THEN IT CAN NEVER CONVERGE
+### 9b. ⚠⚠ NOTHING WRITTEN ON THE CURRENT APP CAN EVER CONVERGE
+
+⚠⚠ **THIS SECTION SAID *2 OF 54 CAPTURES* AND THAT BADLY UNDERSTATED IT —
+measured against production on 4 September.** The real shape:
+
+| captures | intent | first | last |
+|---|---|---|---|
+| **48** | set | 7 August | **22 August** |
+| **34** | **null** | **22 August** | 2 September |
+
+**The split is the day Phase 1's capture page replaced the film flow**, and the
+cause is exact: **`addFilm` is the only writer that ever set an intent, and
+nothing references it any more.** `writeCapture` takes `input.intent ?? null`
+and no surface supplies one; `DEFAULT_INTENT` is *derived* at settle to choose a
+landing state and **is never written to the column**. So the 48 are relics of a
+deleted flow, and **every capture written since 22 August has `intent = null`
+and is permanently unmatchable.**
+
+⚠ **The handshake (§9a) is necessary and it is not sufficient.** Two people can
+now find each other, become mutual, and still converge on nothing — which is the
+same silence, reached one step later. **This is the next thing to build.**
+
+⚠ **It is not a matching bug and the fix is not in `lib/overlap.ts`.** The rule
+below is right. What is missing is any way for a live capture to acquire an
+intention, and the console is where a capture is already opened and
+reconsidered.
 
 Both *Scarface* captures resolved to the film and carry `intent = null`. **A
 null intention is excluded in SQL before `classify` sees it** (`lib/overlap.ts`,
