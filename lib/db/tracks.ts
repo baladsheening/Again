@@ -308,9 +308,27 @@ export async function trackUser(
  * number is not the fix (`docs/re-direction/the-handshake.md` §2b).
  *
  * ⚠ **The asker is never told.** Their button reads *Add* again, exactly as it
- * would for somebody they had never asked, so a decline and an unanswered
- * request are indistinguishable from that side. §6's silence rule, and the kind
+ * would for somebody they had never asked. §6's silence rule, and the kind
  * reading of it.
+ *
+ * ⚠ **This claimed a decline was *indistinguishable* from an unanswered
+ * request on the asker's side, and that was only ever true of the BUTTON —
+ * corrected 4 September.** People on `/profile` is built from `listMyTracks`,
+ * which reads the asker's outbound rows: unanswered is a row tagged
+ * *Requested*, and declined is **no row at all**. So the fact leaks by an
+ * absence while the word is withheld. It is left that way deliberately —
+ * telling them costs either an eighth notification kind, which is a rejection
+ * with a timestamp on it, or a tombstone column, which is the pending state
+ * machine §1 of the handshake proved unnecessary **and** would break re-asking,
+ * since `onConflictDoNothing` makes a second ask over a surviving row a silent
+ * no-op that writes no notification. Re-asking is the recovery, and it works.
+ *
+ * ⚠ **What the person declining keeps is a WINDOW, not a record — 4
+ * September.** The request line is the only place `@handle` ever appears for a
+ * non-mutual, so a mis-tap used to destroy the only copy of it. The portal now
+ * holds the struck line with an *Add* beside it until the card closes; nothing
+ * is written, nothing is read back, and this function is unchanged. See
+ * `DeclinedRequest` in `components/portal.tsx`.
  *
  * ⚠ **The notification is marked read in the same transaction**, because a
  * request whose row is gone but whose notification is unread would sit in the

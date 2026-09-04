@@ -30,15 +30,23 @@ handshake are the same feature reached two ways — design them together.**
 | *Add* / *Requested* / *Added each other* | **BUILT.** `components/track-button.tsx`. The silent one-sided track is gone |
 | A way to add somebody in the app at all | **BUILT.** `components/add-person.tsx`, above People on `/profile`. **It sends the request**; a typo is answered in place |
 | The door says which | **BUILT.** A green dot above the circles when somebody is waiting on you — `PortalMark` in `glyphs.tsx` |
+| A declined request leaves a line behind | **BUILT.** `DeclinedRequest` in `components/portal.tsx` — struck sentence, *Add* beside it, gone when the card closes. Client-only; §2b |
 | The QR | **NOT BUILT and DEFERRED** — §2f, and the encoder question in §5 is still open |
 | Blocking | **deliberately not built** — §3, and it is the honest answer to re-asking |
 
 **Proved:** `tests/handshake.test.ts` (8 cases, including *accepting runs the
 fan-out*, which is the whole reason the feature exists and cannot be seen from a
-screen) and `node_modules/.probe/handshake.mjs` (11 assertions, including that
+screen) and `node_modules/.probe/handshake.mjs` (23 assertions, including that
 **looking at a request does not answer it** and that the door goes dark when it
 is). `scripts/seed-request.mjs` writes one locally, with the tests' production
 guard.
+
+⚠ **The probe's *close and reopen* step was clicking INSIDE the card and closed
+nothing — found and fixed 4 September.** The card runs y 77–165 with a request
+in it, the scrim's handler is on the scrim, the sheet over it is
+`pointer-events: none` and the door underneath stays clickable — so the step
+passed for the wrong reason and the reopen was a re-read of a box that never
+shut. It clicks 195,500 now. **A probe that cannot fail is not evidence.**
 
 ⚠ **No migration. No schema change.** §1 is why.
 
@@ -124,9 +132,45 @@ yet; the scope is the whole safety argument and it belongs in `lib/db/` (§3).
   is no state a withdrawn track could sit in that would not also be a list of
   people you stopped following, which is a worse thing to keep than the row.* A
   declined-requests table is a list of people you rejected. Worse again.
-- ⚠ **The requester is not told.** A declined ask and an unanswered one look
-  identical from their side — their button simply reads *Ask* again. §6's
+- ⚠ **The requester is not told.** Their button simply reads *Add* again. §6's
   silence rule, and the kind reading of the same rule.
+- ⚠⚠ **THIS SAID THE TWO WERE *IDENTICAL FROM THEIR SIDE* AND THAT WAS ONLY EVER
+  TRUE OF THE BUTTON — corrected 4 September, after the build.** People on
+  `/profile` is `listMyTracks`, which reads the asker's own outbound rows: an
+  unanswered ask is a row tagged *Requested*, and a declined one is **no row at
+  all**. So the fact leaks as an absence while the word is withheld — the worst
+  of both, strictly speaking. **It is left that way on purpose.** Telling them
+  costs either an eighth notification kind, which is a rejection with a
+  timestamp on it, or a tombstone column — the pending state machine §1 proved
+  unnecessary, which would *also* break re-asking, because `onConflictDoNothing`
+  makes a second ask over a surviving row a silent no-op that writes no
+  notification. **Re-asking is the recovery and it works**; a vanished row reads
+  as *ask again*, which is the right next act.
+- ⚠⚠ **WHAT THE PERSON DECLINING KEEPS IS A WINDOW, NOT A RECORD — built 4
+  September.** *Decline* is a plain word one tap from *Accept*, with no
+  confirmation, and **the request line is the only place `@handle` has ever
+  appeared for somebody you are not mutual with** — so a mis-tap destroyed the
+  only copy of it: the asker is never told, so they do not know to ask again,
+  and the receiver cannot look them up to put it right. The portal now keeps the
+  struck sentence with an **Add** beside it **until the card closes**.
+  - ⚠ **Nothing is written and nothing is read back.** `declineTrack` is
+    unchanged; the line is held in the open card and dies with it, so there is
+    still no state a decline sits in and still no list of people you turned
+    down. See `DeclinedRequest` in `components/portal.tsx`.
+  - ⚠ **`Add` is not an undo and the copy does not claim to be.** Their row is
+    gone, and putting it back would mean writing another person's statement —
+    worse than deleting one. It sends a request the other way, through the same
+    `trackAction` every other Add makes, and the line then reads *Requested*.
+  - ⚠ **The strike-through IS the word, so no new copy is authored.**
+    `portalSentence` stays the one author; a line reading `@sam — declined.`
+    would be a second composition, and it is ambiguous besides — *declined* has
+    two possible subjects in a sentence that starts with somebody else's handle.
+    The word is spoken in full to a screen reader, which cannot see a strike.
+  - ⚠ **A decline therefore does not close the card**, where accepting the last
+    row still does. *An empty card closes* is about a card with **nothing** in
+    it; this one holds a line with a live control, and closing over it would
+    destroy the handle at the exact moment the line exists to preserve. The door
+    goes dark above it, correctly — nobody is waiting on the reader any more.
 - ⚠⚠ **DECLINING MUST NEVER BLOCK, AND THAT IS DIRECTED — 4 September.** A
   decline is *not now* and it is often *not this person, not by this route*; a
   block is a durable judgement about somebody. Making one imply the other would

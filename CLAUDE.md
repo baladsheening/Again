@@ -53,6 +53,33 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   you turned down. **The price, stated: a declined person can ask again**, and
   the honest answer is a block list, which does not exist — Phase 6 owns it, and
   **a lower rate limit is not the fix.**
+- ⚠⚠ **A DECLINE LEAVES A STRUCK LINE IN THE OPEN CARD, AND IT IS A WINDOW
+  RATHER THAN A RECORD — 4 September.** *Decline* is a plain word one tap from
+  *Accept* with no confirmation, and **the request line is the only place
+  `@handle` ever appears for a non-mutual** — so a mis-tap destroyed the only
+  copy of it, unrecoverably, on both sides at once. The sentence stays struck
+  with **Add** beside it until the card closes. ⚠ **Nothing is written and
+  nothing is read back**: `declineTrack` is untouched, `DeclinedRequest` lives in
+  the client, and a residue that outlived the card would be the list of people
+  you turned down. ⚠ **`Add` is not an undo** — their row is gone and putting it
+  back would mean writing another person's statement; it asks them, through the
+  same `trackAction`, and the line then reads *Requested*. ⚠ **The
+  strike-through IS the word**, so `portalSentence` is still the only author —
+  `@sam — declined.` would be a second composition and reads ambiguously
+  besides; the word is spoken to a screen reader, which cannot see a strike.
+  ⚠ **So a decline does not close the card** where accepting the last row does:
+  *an empty card closes* is about a card with **nothing** in it, and closing over
+  the struck line would destroy the handle at the moment it exists to keep. The
+  door goes dark above it, which is right — nobody is waiting on you any more.
+- ⚠ **`declineTrack`'s claim that a decline is *indistinguishable* from an
+  unanswered request on the asker's side was only ever true of the BUTTON, and
+  is corrected in both places.** People reads `listMyTracks`, so unanswered is a
+  row tagged *Requested* and declined is **no row at all** — the fact leaks as an
+  absence while the word is withheld. Left that way deliberately: telling them
+  costs an eighth notification kind (a rejection with a timestamp) or a tombstone
+  column, which is the pending machine §1 removed **and** would break re-asking,
+  since `onConflictDoNothing` makes a second ask over a surviving row a silent
+  no-op. **Re-asking is the recovery and it works.**
 - ⚠⚠ **A REQUEST DOES NOT EMPTY ON OPEN, WHICH GENERALISES §5's *IT EMPTIES*
   RATHER THAN BREAKING IT.** A row leaves when it has been **dealt with**; for a
   convergence, reading it *is* dealing with it, because there is nothing to

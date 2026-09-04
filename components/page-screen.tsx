@@ -26,7 +26,7 @@ import { Bar, OFF } from './bar'
 import { useChromeRecede } from './chrome-recede'
 import { Ask, Console } from './console'
 import { Foot, ToolStack } from './foot'
-import { Portal } from './portal'
+import { Portal, type DeclinedRequest } from './portal'
 import {
   convergenceAction,
   emptyPortalLineAction,
@@ -490,6 +490,14 @@ export function PageScreen({
     read. `portalAction` returns both from one read; see `PortalView`.
   */
   const [portalRequests, setPortalRequests] = useState<TrackRequestView[]>([])
+  /*
+    ⚠ **A third list, and it is the only thing in this box the server does not
+    know about.** A decline deletes the row and remembers nothing — deliberately
+    — so the struck line is held here for as long as the card is open and dies
+    with it. See `DeclinedRequest` for what it is for: not a history, the
+    handle.
+  */
+  const [declined, setDeclined] = useState<DeclinedRequest[]>([])
   /** The handle being answered, so one tap cannot become two. */
   const [answering, setAnswering] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
@@ -1724,7 +1732,13 @@ export function PageScreen({
         setAsking(null)
         return
       }
-      setPortal(false)
+      /*
+        ⚠ **`closePortal`, not `setPortal(false)`.** Leaving by key is leaving,
+        and since 4 September the box holds one thing a bare `setPortal` would
+        not clear — the declined lines, which must not survive into the next
+        opening.
+      */
+      closePortal()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -1922,6 +1936,13 @@ export function PageScreen({
    */
   async function answerRequest(handle: string, yes: boolean) {
     if (answering !== null) return
+    /*
+      Read before the await: the re-read below replaces `portalRequests`, and
+      the struck line needs the sentence that asked. `portalSentence` stays its
+      one author — nothing is composed here.
+    */
+    const request = portalRequests.find((r) => r.handle === handle)
+
     setAnswering(handle)
     setPortalFailed(null)
 
@@ -1934,17 +1955,74 @@ export function PageScreen({
     }
 
     /*
-      ⚠⚠ **THE ANSWER IS RE-READ, IT IS NOT PATCHED LOCALLY — 4 September.**
-      Removing the row from state was wrong in a way that only accepting shows:
-      **accepting runs the fan-out**, so the same tap can write convergences into
-      this very box. A local patch left `waiting.lines` at whatever it was before
-      the answer, so the door went dark over rows that had just been created for
-      it. One read answers the rows, the door and the emptiness together.
-
-      ⚠ **A read costs nothing here** — no rate limit and no mutation id, by
-      `portalAction`'s own note — and it is the same read the portal does every
-      time it opens, which is what *it empties* has always meant.
+      ⚠ **A DECLINE LEAVES A LINE BEHIND AND AN ACCEPT DOES NOT — 4 September.**
+      Accepting confirms itself: the pair is mutual, the fan-out may have
+      written convergences into this very box, and the People row says
+      *Added each other*. Declining destroys the only copy of a handle the
+      reader has ever been shown, and tells the asker nothing — so the box
+      holds the line until it closes. See `DeclinedRequest` in `portal.tsx`.
     */
+    const residue =
+      yes || request === undefined
+        ? declined
+        : [...declined, { handle, sentence: request.sentence, asked: false }]
+    setDeclined(residue)
+
+    await rereadPortal(residue)
+  }
+
+  /**
+   * **Adding somebody back after declining them, in the same open box.**
+   *
+   * ⚠ **`trackAction`, exactly like every other Add** — accepting a request,
+   * the button on `/u/[handle]`, and the handle field in People all make this
+   * one call, and there is no second entry point deciding what a track is.
+   *
+   * ⚠ **It is not an undo and the copy does not claim to be.** Their row was
+   * deleted; this writes the viewer's own, which asks *them*. If they have
+   * asked again in the meantime their row is back, so this makes the pair
+   * mutual and **runs the fan-out** — which is precisely why it re-reads
+   * rather than patching the line: the same tap can put convergences in the
+   * box being looked at.
+   */
+  async function addBack(handle: string) {
+    if (answering !== null) return
+    setAnswering(handle)
+    setPortalFailed(null)
+
+    const result = await trackAction(handle)
+    setAnswering(null)
+
+    if (!result.ok) {
+      setPortalFailed(result.message)
+      return
+    }
+
+    const residue = declined.map((d) => (d.handle === handle ? { ...d, asked: true } : d))
+    setDeclined(residue)
+
+    await rereadPortal(residue)
+  }
+
+  /**
+   * **Re-read the box after an answer, and leave it if the answer emptied it.**
+   *
+   * ⚠⚠ **THE ANSWER IS RE-READ, IT IS NOT PATCHED LOCALLY — 4 September.**
+   * Removing the row from state was wrong in a way that only accepting shows:
+   * **accepting runs the fan-out**, so the same tap can write convergences into
+   * this very box. A local patch left `waiting.lines` at whatever it was before
+   * the answer, so the door went dark over rows that had just been created for
+   * it. One read answers the rows, the door and the emptiness together.
+   *
+   * ⚠ **A read costs nothing here** — no rate limit and no mutation id, by
+   * `portalAction`'s own note — and it is the same read the portal does every
+   * time it opens, which is what *it empties* has always meant.
+   *
+   * ⚠ **The residue is passed in, never read off state.** Both callers set it in
+   * the same tick, and a `useState` value does not change under the function
+   * that set it. It decides exactly one thing: whether the box is empty.
+   */
+  async function rereadPortal(residue: DeclinedRequest[]) {
     const fresh = await portalAction()
     if (!fresh.ok) {
       setPortalFailed(fresh.message)
@@ -1963,8 +2041,19 @@ export function PageScreen({
       it is the *empty portal* §5 says cannot exist, reached from the other side:
       the door is already dark, so what is on screen is a surface you could not
       have opened. Answering the last thing in it is leaving it.
+
+      ⚠ **A declined line is not nothing, so a decline never closes the box.**
+      The rule is about a card with nothing in it; this card holds a line with a
+      live control on it, and closing over the struck sentence would destroy the
+      handle at the exact moment the line exists to preserve it. The door is
+      dark above it, which is correct — nobody is waiting on the reader any
+      more — and the box goes when it is dismissed like everything else.
     */
-    if (fresh.value.lines.length === 0 && fresh.value.requests.length === 0) {
+    if (
+      fresh.value.lines.length === 0 &&
+      fresh.value.requests.length === 0 &&
+      residue.length === 0
+    ) {
       closePortal()
     }
   }
@@ -2013,6 +2102,13 @@ export function PageScreen({
     setPortal(false)
     setOpened(null)
     setAsking(null)
+    /*
+      ⚠ **The declined lines go with the box, and that is the whole of their
+      lifetime.** They are the one thing in here nothing on the server knows
+      about — see `DeclinedRequest` — and a residue that outlived the card would
+      be the list of people you turned down that `declineTrack` refuses to keep.
+    */
+    setDeclined([])
   }
 
   const tools = {
@@ -2579,8 +2675,10 @@ export function PageScreen({
         <Portal
           lines={portalLines}
           requests={portalRequests}
+          declined={declined}
           answering={answering}
           onAnswer={answerRequest}
+          onAdd={addBack}
           loading={portalLoading}
           failed={portalFailed}
           onOpen={openPortalLine}

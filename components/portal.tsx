@@ -71,14 +71,63 @@ import type { PortalLineView, TrackRequestView } from '@/app/actions/portal'
  * says who is asking in its own sentence — a label above it would be the second
  * thing on the screen saying what the first already said.
  *
+ * ⚠ **A DECLINED REQUEST LEAVES A LINE BEHIND, AND ONLY UNTIL THE BOX CLOSES —
+ * 4 September.** It is the one thing in this card that nothing on the server
+ * knows about; see `DeclinedRequest` below for what it is for and why *Add* is
+ * not an undo.
+ *
  * ⚠ **Still no count and no badge**, on either kind. `portal.mjs` asserts the
  * absence of digits on the door and that must go on holding.
  */
+
+/**
+ * **A request you have declined, for as long as the box stays open.**
+ *
+ * ⚠⚠ **NOTHING ON THE SERVER KNOWS THIS EXISTS, AND IT MUST STAY THAT WAY.**
+ * `declineTrack` deletes the row and remembers nothing, deliberately: any state
+ * a declined request could sit in is a list of people you turned down, which is
+ * a worse thing to keep than the row. So this is not read back from anywhere —
+ * it is held in the open card, layered over the re-read that answers everything
+ * else, and it is gone the moment the portal closes. **A window, not a record.**
+ *
+ * ⚠ **What it exists for is not history, it is THE HANDLE.** *Decline* is a
+ * plain word one tap from *Accept*, with no confirmation, and the request line
+ * is the only place `@handle` ever appears for somebody you are not mutual
+ * with. A mis-tap used to destroy the only copy of it: the asker is never told,
+ * so they do not know to ask again, and the person who declined cannot look
+ * them up to put it right. **The open box is the repair.**
+ *
+ * ⚠ **`Add` is not an undo and does not pretend to be.** Their row is gone, and
+ * putting it back would mean writing another person's statement — worse than
+ * deleting one, which is why `declineTrack` is the only place in this app one
+ * person touches another's row at all. Adding them sends a request the other
+ * way, through the same `trackAction` every other Add on this surface calls,
+ * and the line then says *Requested* — the word the People row already uses for
+ * exactly that state.
+ *
+ * ⚠ **The strike-through IS the word *declined*, so no new copy is authored.**
+ * The sentence stays the one `portalSentence` wrote and wears the record's own
+ * mark for *dealt with*; a line saying `@sam — declined.` would have been a
+ * second composition of an event that already has an author, and it reads
+ * ambiguously besides — *declined* has two subjects in a sentence starting with
+ * somebody else's handle. The word is said in full to a screen reader, which
+ * cannot see a strike.
+ */
+export type DeclinedRequest = {
+  handle: string
+  /** The sentence that asked, struck through rather than replaced. */
+  sentence: string
+  /** *Add* has been tapped: the request is out and there is nothing left to do. */
+  asked: boolean
+}
+
 export function Portal({
   lines,
   requests,
+  declined,
   answering,
   onAnswer,
+  onAdd,
   loading,
   failed,
   onOpen,
@@ -87,10 +136,14 @@ export function Portal({
   lines: PortalLineView[]
   /** Who has added you and is waiting. */
   requests: TrackRequestView[]
+  /** Who you have declined since this box was opened. Client-only; see the type. */
+  declined: DeclinedRequest[]
   /** The handle in flight, so one tap cannot become two. */
   answering: string | null
   /** `true` adds them back — the same act as the button on their page. */
   onAnswer: (handle: string, yes: boolean) => void
+  /** Ask somebody you just declined, which sends a request the other way. */
+  onAdd: (handle: string) => void
   /** The read is out. There is nothing to draw yet and nothing to say about it. */
   loading: boolean
   /** The read failed, in the page's own voice. */
@@ -240,15 +293,87 @@ export function Portal({
             </span>
           </div>
         ))}
+
+        {/*
+          ⚠ **Below the live questions, because it is not one.** Requests come
+          first in this box for one reason — they are the only rows waiting on
+          the reader — and a request that has been answered is no longer waiting
+          on anybody. It keeps its place in the same container so the answer
+          stays where the question was, rather than reflowing to somewhere the
+          eye has to find it.
+
+          ⚠ **Smaller and muted, which is what *dealt with* looks like here
+          already.** `text-[0.8125rem]` is the size the convergence sentence
+          uses on this very surface, so nothing new is picked — and at that size
+          the two kinds of row cannot be mistaken for each other even before the
+          strike is seen.
+
+          ⚠ **No `opacity-50` on top, unlike the console's struck link.** That
+          link is `aria-hidden` decoration on a decision already made; this
+          sentence names the person you may be about to add back, so it has to
+          stay readable.
+        */}
+        {declined.map((request) => (
+          <div
+            key={request.handle}
+            className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[0.8125rem]"
+          >
+            <span
+              className={`text-muted min-w-0 ${request.asked ? '' : 'line-through'}`}
+            >
+              {request.asked ? `@${request.handle}` : request.sentence}
+            </span>
+            {/*
+              ⚠ **The word a strike-through cannot say.** Nothing announces
+              `line-through`, so the state is spoken here and drawn there —
+              the same division the record's rows make between an `aria-label`
+              carrying the whole capture and an ellipsis on screen.
+            */}
+            <span className="sr-only">{request.asked ? 'Requested.' : 'Declined.'}</span>
+
+            {/*
+              ⚠ **`Add` is full ink and deliberately NOT green.** Green is
+              *Accept*, and the scarcity rule on `--color-accept` binds from day
+              one: the moment it appears on a second affirmative both colours
+              stop meaning anything. §11's default is what every other control
+              in this app wears.
+
+              ⚠ **It lands where the answers were**, on the same `ms-auto`, so
+              the control a thumb is already aimed at does not move under it.
+            */}
+            {request.asked ? (
+              <span className="text-muted ms-auto shrink-0">Requested</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onAdd(request.handle)}
+                disabled={answering !== null}
+                className="text-text tap-target ms-auto shrink-0 transition-opacity hover:opacity-80 disabled:opacity-40"
+              >
+                Add
+                <span className="sr-only"> @{request.handle}</span>
+              </button>
+            )}
+          </div>
+        ))}
         </div>
 
         {/*
           ⚠ **The heading belongs to the lines and moves with them.** With
           nothing but requests in the box there is nothing for *Who else* to
           label, and a heading over an empty list is furniture.
+
+          ⚠ **A declined line counts for the gap.** The margin belongs to the
+          thing that may not be there, and what may be above the heading is
+          *either* kind of row — so a box holding one struck line and a
+          convergence needs the air exactly as much as a live request does.
         */}
         {lines.length > 0 && (
-          <h2 className={`stamp text-muted mb-2.5 ${requests.length > 0 ? 'mt-4' : ''}`}>
+          <h2
+            className={`stamp text-muted mb-2.5 ${
+              requests.length > 0 || declined.length > 0 ? 'mt-4' : ''
+            }`}
+          >
             Who else
           </h2>
         )}
