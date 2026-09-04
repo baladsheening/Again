@@ -231,6 +231,41 @@ describe('the portal', () => {
     expect(await dal.listMyRequests(asViewer(bo.id))).toHaveLength(0)
     expect(await dal.portalWaiting(asViewer(bo.id))).toEqual({ lines: false, requests: false })
   })
+
+  it('removing a mutual takes both rows, and they can ask again', async () => {
+    const ada = await person('ada')
+    const bo = await person('bo')
+
+    await dal.trackUser(asViewer(ada.id), bo.id)
+    await dal.trackUser(asViewer(bo.id), ada.id)
+    expect((await dal.getTrackState(asViewer(ada.id), bo.id)).mutual).toBe(true)
+
+    await dal.untrackUser(asViewer(ada.id), bo.id)
+
+    /*
+      ⚠ **BOTH rows, which is what stops the other person being stranded.**
+      Deleting only the remover's left theirs pointing at somebody who had gone:
+      their People row read *Requested* — a question nobody had been asked — and
+      `onConflictDoNothing` made a second ask a silent no-op over it, so they
+      could not get back in at all.
+    */
+    expect(await dal.getTrackState(asViewer(ada.id), bo.id)).toEqual({
+      outbound: false,
+      inbound: false,
+      mutual: false,
+    })
+    expect(await dal.getTrackState(asViewer(bo.id), ada.id)).toEqual({
+      outbound: false,
+      inbound: false,
+      mutual: false,
+    })
+
+    /* And the recovery works: asking again delivers, exactly as a decline's does. */
+    const before = (await requestRows(ada.id)).length
+    await dal.trackUser(asViewer(bo.id), ada.id)
+    expect(await requestRows(ada.id)).toHaveLength(before + 1)
+    expect(await dal.listMyRequests(asViewer(ada.id))).toHaveLength(1)
+  })
 })
 
 describe('answering', () => {

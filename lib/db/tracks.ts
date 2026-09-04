@@ -398,22 +398,47 @@ export async function declineTrack(
  *
  * No fan-out. Overlap fires on convergence, never on its loss — §6 has no
  * notification for a match going away and should not get one.
+ *
+ * ⚠⚠ **IT DELETES BOTH ROWS SINCE 4 SEPTEMBER, AND DELETING ONE STRANDED THE
+ * OTHER PERSON.** Removing a mutual used to take only the viewer's row, so
+ * theirs survived pointing at somebody who had gone. From their side the People
+ * row flipped from *Added each other* to **Requested** — a question nobody had
+ * been asked and nobody would answer — and **they could not ask again**, because
+ * `trackUser`'s `onConflictDoNothing` makes a second ask over a surviving row a
+ * silent no-op that writes no notification. A dead end reached by somebody
+ * else's tap.
+ *
+ * ⚠ **Mutuality is one relationship, so ending it ends the relationship rather
+ * than half of it.** Both sides lose the row, both People lists lose the name,
+ * and either side can ask afresh — which is the same recovery a decline leaves.
+ *
+ * ⚠ **This is the SECOND place one person deletes another's row**, after
+ * `declineTrack`, and it is held to the same discipline: **every term names the
+ * viewer**, so neither clause can reach a row that is not about them. There is
+ * no parameter that widens it.
+ *
+ * ⚠ **A withdrawn request needs nothing done to its notification.** `pending`
+ * demands the arrival *and* the row, so deleting the row is what un-asks the
+ * question — asserted in `tests/handshake.test.ts`. One transaction (§10)
+ * because it is now more than one write.
  */
 export async function untrackUser(
   viewer: SessionUser,
   targetUserId: string,
 ): Promise<Result<TrackState>> {
-  await db
-    .delete(tracks)
-    .where(
-      and(eq(tracks.followerId, viewer.id), eq(tracks.followedId, targetUserId)),
-    )
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(tracks)
+      .where(
+        and(eq(tracks.followerId, viewer.id), eq(tracks.followedId, targetUserId)),
+      )
 
-  const [back] = await db
-    .select({ followerId: tracks.followerId })
-    .from(tracks)
-    .where(and(eq(tracks.followerId, targetUserId), eq(tracks.followedId, viewer.id)))
-    .limit(1)
+    await tx
+      .delete(tracks)
+      .where(
+        and(eq(tracks.followerId, targetUserId), eq(tracks.followedId, viewer.id)),
+      )
+  })
 
-  return ok({ outbound: false, inbound: Boolean(back), mutual: false })
+  return ok({ outbound: false, inbound: false, mutual: false })
 }

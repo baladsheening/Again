@@ -8,14 +8,23 @@ import type { TrackState } from '@/lib/db'
 /**
  * Add somebody, on their page.
  *
- * **The button says what tracking is for, not what it is.** The state
- * underneath it is what the person came to find out, so the line below reports
- * the relationship rather than repeating the verb. Three states, and only one of
- * them is symmetric:
+ * ⚠⚠ **THE STATE IS TEXT AND THE BUTTON IS THE VERB — 4 September, and it
+ * reverses this file's own founding note.** The label used to *be* the state —
+ * *Requested*, *Added each other* — with the action carried only by the hover
+ * and the screen-reader text. **On a handset there is no hover**, so the one
+ * control that revokes somebody's access to your record read as a status and
+ * removed them when tapped. *Will a reader understand what this does* is the
+ * question every element answers now, and that one could not.
  *
- *   - neither → *Add* (nothing yet)
- *   - outbound only → *Requested* (they have been asked and have not answered)
- *   - mutual → *Added each other* (§6 fires, and §5 shows names)
+ * Three states, the state muted beside the verb it belongs to:
+ *
+ *   - neither → *Add*
+ *   - outbound only → *Requested* · **Withdraw**
+ *   - mutual → *Added each other* · **Remove**
+ *
+ * ⚠ **Two elements rather than a longer word, and it costs no height** — one
+ * line either way. The state is not a control and must not be inside the box;
+ * the box is the only thing a tap does something to.
  *
  * ⚠ **The middle state was *Added* for an hour and is *Requested* — 4 September,
  * directed after use.** The flaw was the one written down when *Added* was
@@ -75,41 +84,35 @@ export function TrackButton({
 
   return (
     <div className="flex flex-col items-start gap-2">
-      {state.outbound ? (
-        <button
-          type="button"
-          onClick={() => run('untrack')}
-          disabled={isPending}
-          className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors disabled:opacity-40"
-        >
-          {/*
-            The label is the state and the action is the hover — a control that
-            already reads as *Added* cannot also say *Remove* without saying two
-            things at once. The screen-reader text carries the verb, which is the
-            same division the resolve row uses.
-          */}
-          <span aria-hidden>{state.mutual ? 'Added each other' : 'Requested'}</span>
-          {/*
-            ⚠ **The unanswered case is said here too**, because *Requested* is
-            the state and *they have not answered* is why it is still on screen.
-            Same division the label above uses for the verb.
-          */}
-          <span className="sr-only">
-            Remove @{handle}.{' '}
-            {state.mutual ? 'You have added each other.' : 'They have not answered yet.'}
+      <div className="flex items-baseline gap-3">
+        {/*
+          ⚠ **Outside the box, because it is not a control.** A state inside a
+          button is a button that lies about what tapping it does — and it is
+          the same weight division the portal's request line uses, where the
+          handle is ink and what happened to it is muted.
+        */}
+        {state.outbound && (
+          <span className="text-muted text-sm">
+            {state.mutual ? 'Added each other' : 'Requested'}
           </span>
-        </button>
-      ) : (
+        )}
+
         <button
           type="button"
-          onClick={() => run('track')}
+          onClick={() => run(state.outbound ? 'untrack' : 'track')}
           disabled={isPending}
           className="border-rule hover:border-text tap-target rounded border px-3 py-1 text-sm transition-colors disabled:opacity-40"
         >
-          Add
+          {/*
+            ⚠ **Withdraw and Remove are different acts and are named
+            differently.** Withdrawing takes back a question nobody has answered;
+            removing ends a relationship and takes their sight of your record
+            with it. One word cannot be honest about both.
+          */}
+          {state.outbound ? (state.mutual ? 'Remove' : 'Withdraw') : 'Add'}
           <span className="sr-only"> @{handle}</span>
         </button>
-      )}
+      </div>
 
       {/* Full strength at body size, as everywhere else a failure is reported. */}
       {error && <p>{error}</p>}

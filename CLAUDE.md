@@ -1367,6 +1367,33 @@ This file holds the engineering rules for building. Three companions:
   or track re-direction phases there; the implementation specification owns
   that sequence.
 
+## Two questions every design decision answers
+
+**Directed 4 September, standing, and they apply to every element on every
+screen.**
+
+**1. Will a reader understand what this means, or what it does?** Ask it of each
+element, not of the screen as a whole. A control whose label states a *status*
+fails it — there is no hover on a handset, so a button reading *Added each
+other* that removes somebody when tapped is a button that lies. Say the state
+and say the verb, as two things.
+
+**2. Minimalism and maximum density: the finite space, used optimally.** Cut
+anything the screen already says. A second sentence saying what the first said,
+a heading over a list that reads as a list, copy explaining a control — each one
+pushes the content down. Reuse an existing row before adding a block; use a
+column that is already there before adding a line. **Fewer words at the same
+size, never the same words at a smaller size.**
+
+⚠ **When they conflict, comprehension wins** — question 1 is the tiebreak, and
+the second word is usually free: a state beside a verb is one line either way.
+The precedents are all here already: *Add them back?* deleted because *Accept*
+said it, *This list is not shared with you* deleted for spending a screen on an
+absence, the lock's teaching sentence deleted, and §6's *silence stays silent*.
+
+⚠ **Screens, not docblocks.** The comments in this repository and this file are
+deliberately dense with reasoning; that is not what these govern.
+
 ## How things get fixed
 
 **Every fix is structural, and every fix holds on every device.** A change that
