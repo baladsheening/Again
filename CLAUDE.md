@@ -1394,6 +1394,37 @@ absence, the lock's teaching sentence deleted, and §6's *silence stays silent*.
 ⚠ **Screens, not docblocks.** The comments in this repository and this file are
 deliberately dense with reasoning; that is not what these govern.
 
+**Four more, earned by `/u/[handle]` on 4 September — the two above passed it
+and it was still wrong, which is what showed they were not enough.**
+
+**3. One object has one height wherever it appears.** A capture is a line of the
+record; it measures the same on somebody else's page as on your own. Measured
+that day: **34px on the record, 111–134px there**, so three of somebody's lines
+filled a handset where the record fits twenty-four. Take the row's geometry from
+`page-row` rather than choosing padding locally — that is what makes one app out
+of several screens, and it carries the separation with it: **the record parts
+lines by rhythm, so a list of lines draws no rules between them.**
+
+**4. A control that repeats on every row does not belong on the row.** *Add to
+wants* was printed once per line, underlined — louder than the capture it
+belonged to, and the most repeated string on the screen. The record settled this
+already: `×` and `✎` came off the row into the console because three controls
+for a line whose words the row could not show was too many. **Put it behind the
+tap.**
+
+**5. One gesture means one thing across the app.** Tapping the words opened the
+console on your record and revealed a poster on somebody else's, with the acting
+done by a separate underlined word — two grammars in one app. **A tap on a row
+opens that row, everywhere.** How it opens may differ by surface, and already
+does: the console is a fixed card on a handset and expands in place on the desk.
+
+**6. A screen may not invent a breakpoint.** `person-row.tsx` switched layout at
+Tailwind's `lg:` (64rem), which is not one of this app's three —
+`--breakpoint-rail`, `--breakpoint-stack`, `--breakpoint-pane` — so that page
+changed shape at a width nothing else in the app responds to. The three are
+derived sums (§11); a fourth taken from a framework's defaults is a number
+nobody chose.
+
 ## How things get fixed
 
 **Every fix is structural, and every fix holds on every device.** A change that
