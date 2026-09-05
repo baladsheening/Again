@@ -4802,6 +4802,42 @@
   }
 }
 
+/**
+ * **The receipt: the line that lands above the composer, centred in its band.**
+ *
+ * ⚠⚠ **Directed 5 September:** *when the line lands in the area above the
+ * composer, it has to be centred between the top of the composer and the top of
+ * the sheet behind it.* It was not — it sat hard against the strip's top edge,
+ * **0px above the line box and 5px below it**, because the strip is content-sized
+ * and the receipt was the first thing in it.
+ *
+ * ⚠⚠ **CENTRED ON THE INK, NEVER ON THE BOX — and this is the writing row's own
+ * lesson applied a second time.** `sheet-writing` says it in one line: *equal
+ * padding is what put the text low; equal gaps to the INK is what was asked
+ * for.* A line box is not symmetrical about its characters — at 18/24 the ink
+ * sits **5.8px** below the box's top and **1.8px** above its bottom — so equal
+ * padding would leave the words 4px high in their own band.
+ *
+ * ⚠ **One optical gap, spent twice, less what the line box already provides.**
+ * `--line-ink-lead` and `--line-ink-foot` are derived from the face fence and
+ * the type, so this follows the desk's root scale and any change of leading for
+ * free — there is no pixel in it.
+ *
+ * ⚠ **The gap is `--line-hem × 1.5`, which is the figure the strip already
+ * spends between the card and the foot.** Not a new number: the strip has one
+ * air, and now it has it above the card as well as below.
+ *
+ * ⚠ **The composer does not move.** The strip is anchored to the bottom edge, so
+ * growing it by the 2.4px this adds moves its **top** up and leaves the card,
+ * the foot and the keyboard where they were.
+ */
+@utility receipt-line {
+  --receipt-air: calc(var(--line-hem) * 1.5);
+
+  padding-block: calc(var(--receipt-air) - var(--line-ink-lead))
+    calc(var(--receipt-air) - var(--line-ink-foot));
+}
+
 @utility composer-refused {
   animation: composer-refuse calc(var(--recede) / 2) var(--ease-recede) 1;
 }

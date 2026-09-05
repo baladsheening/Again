@@ -481,7 +481,7 @@ export function ComposeScreen({
               `UndoGlyph` was redrawn on its own grid rather than nudged from
               outside. Anything but `items-start` here re-opens that.
             */
-            <div className="flex items-start px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)]">
+            <div className="receipt-line flex items-start px-[calc(var(--line-hem)*2.5)]">
               <p
                 dir="auto"
                 className="text-muted min-w-0 truncate text-[length:var(--text-line)] leading-[var(--leading-line)]"
@@ -505,7 +505,13 @@ export function ComposeScreen({
           )}
 
           {failed !== null && (
-            <p className="text-decline px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
+            /*
+              ⚠ **The same air as the receipt.** They are alternatives in the same
+              slot — one says the capture landed, the other says it did not — so a
+              reader who sees them in succession must not see the strip change
+              shape between them.
+            */
+            <p className="text-decline receipt-line px-[calc(var(--line-hem)*2.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
               {failed}
             </p>
           )}

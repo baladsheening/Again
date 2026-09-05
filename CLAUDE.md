@@ -73,6 +73,22 @@ add a home glyph to the left of the bottom bar.*
   **335** on a 390 handset. ⚠ **The composer's own control row stayed FOUR
   columns**: send is aligned to nothing, so there was nothing for a fifth column
   to keep in step with.
+- ⚠⚠ **THE RECEIPT IS CENTRED IN ITS BAND, AND ON THE INK RATHER THAN THE BOX
+  — directed:** *when the line lands in the area above the composer, it has to be
+  centred between the top of the composer and the top of the sheet behind it.* It
+  was not: the strip is content-sized, so the receipt sat hard on its top edge —
+  **0px above the line box and 5px below it.** ⚠ **Equal padding would not have
+  fixed it**, which is `sheet-writing`’s own lesson said twice: at 18/24 the ink
+  sits 5.8px below the box’s top and 1.8px above its bottom, so equal padding
+  leaves the words 4px high in their own band. `receipt-line` spends one optical
+  gap on both sides, less what the line box already provides, using the derived
+  `--line-ink-lead`/`--line-ink-foot` — **no pixel in it**, so it follows the
+  desk’s root scale and any change of leading. Measured **7.49 above, 7.49
+  below**. ⚠ **The gap is `--line-hem × 1.5`, which the strip already spends
+  between the card and the foot** — not a new number. ⚠ **The composer does not
+  move**: the strip is anchored to the bottom edge, so the 2.4px it grows moves
+  its top. ⚠ **The failure line wears it too**, because the two are alternatives
+  in one slot and the strip must not change shape between them.
 - **Proved by `node_modules/.probe/traysightline.mjs`** (5 assertions, and it
   exists so the next person to add a glyph finds out immediately) and by
   `composerundo.mjs`, now 21, which asserts the commit lets go, the door is on
