@@ -2557,6 +2557,48 @@
    * now is the bar and this.
    */
   --page-lead: 1.25rem;
+  /**
+   * **How bright the light behind the composer's glass is, at its peak.**
+   *
+   * ⚠ **The one dial, and it is a percentage of the PAPER rather than a
+   * colour.** `color-mix` against `--color-text` means it follows the palette
+   * on every surface — the desk lifted its ink on 30 August and this would have
+   * followed it without being touched.
+   *
+   * ⚠ **Directed twice, and the second half changed the answer.** First: *as
+   * faint as possible whilst being just enough to make the contours of the
+   * glass composer seen.* Then, on seeing a rim with a black interior: *we
+   * should still have a glassy aesthetic; in fact the glow should enhance the
+   * glass aesthetic.*
+   *
+   * ⚠⚠ **SO THERE ARE TWO FIGURES TO SATISFY, NOT ONE**, and they are what the
+   * scan in `node_modules/.probe/composerglow.mjs` reads off a line through the
+   * card's left edge at 390:
+   *
+   * - **step** — outside minus inside. **The contour.** A light that lifts the
+   *   ground and the card equally draws nothing.
+   * - **inside** — the glass itself. **Whether it is see-through.** Zero here is
+   *   a hole with a rim, which is what the shadow-only version was.
+   *
+   * | peak | page | outside | inside | step |
+   * |---|---|---|---|---|
+   * | 3% | 2 | 4 | 3 | 1 |
+   * | 5% | 5 | 7 | 5 | 2 |
+   * | **8%** | 7 | 12 | **8** | **4** |
+   * | 12% | 11 | 18 | 12 | 6 |
+   *
+   * ⚠ **8% is the faintest value that reads as GLASS rather than as an edge.**
+   * At 5% the pane is marginal — step 2 is at the eye's own floor near black; at
+   * 12% the ground itself is lit at 11 and it stops being *as faint as
+   * possible*. **The lower bound moved because the ask did**: a rim alone was
+   * cheaper and was refused.
+   *
+   * ⚠ **These are near-black sRGB steps, so the surface matters.** Measured in a
+   * browser at 390; **an OLED handset in a dark room will show more than this
+   * table does, and a lit room less.** If it reads loud on hardware the ladder
+   * above says exactly what each stop down costs.
+   */
+  --composer-glow-peak: 8%;
 
   /**
    * The reading column above `rail`. 680px — the same measure the design's
@@ -4529,6 +4571,109 @@
  * `band-dim` once somebody started. A summoned sheet is never waiting: it exists
  * because somebody asked for it, so there is one light and no fade between two.
  */
+/**
+ * **A light behind the composer's glass, so its contours can be seen.**
+ *
+ * ⚠⚠ **THIS REOPENS *THERE IS NO LIGHT ON THIS PAGE* — 29 August — AND THE
+ * TOMBSTONE'S OWN ARGUMENT IS WHY IT MAY.** `--row-light` says: *two flat
+ * grounds came back "too grey", because a uniform tone inside a rectangle with
+ * edges reads as a slab at any value; the gradient existed **so the row had no
+ * boundary anywhere.** The strip has a boundary now on purpose — it is glass —
+ * so the thing the light was avoiding is the thing that replaced it. If a glow
+ * is ever wanted back, that is the argument to re-read first.*
+ *
+ * ⚠⚠ **IT WAS RE-READ, AND THE CONDITION IS INVERTED.** That glow existed to
+ * **remove** a boundary. This one exists to **create** one: the composer is
+ * glass over an empty page, glass is a lens, and a lens with nothing behind it
+ * shows nothing. **Same mechanism, opposite job**, which is why this is not the
+ * deleted light coming back — and why it must not spread to anything the old
+ * one covered. It is the mark's glow that is the precedent here, not the row's.
+ *
+ * ⚠ **It goes BEHIND the card and is filtered by it.** The card's
+ * `backdrop-filter` samples what is painted under it, so the light reads
+ * diffuse and muted *inside* the card and sharp *outside* it. **That difference
+ * is the contour** — nothing is drawn on the card's edge, and nothing may be.
+ * A border would be the one rule this design does not have anywhere else.
+ *
+ * ⚠ **As faint as it can be — directed.** `--composer-glow-peak` is the whole
+ * dial; the shape is not the thing to tune. **Measured off the rendered pixels
+ * rather than argued**, because a value that reads on a desk at 100% brightness
+ * is not the value that reads on a handset. See
+ * `node_modules/.probe/composerglow.mjs`.
+ *
+ * ⚠⚠ **IT IS A POOL BEHIND THE CARD PLUS A RIM, AND BOTH EARLIER ATTEMPTS
+ * FAILED IN OPPOSITE DIRECTIONS. Both are recorded because each is the obvious
+ * thing to reach for.**
+ *
+ * **First: an ellipse inscribed in the card's own box.** Brightest at its
+ * centre, which is the one place the glass is over it — the scan read the light
+ * *inside* the card as brighter than the ground beside it and the contour came
+ * out **negative**. A gradient centred on a thing cannot light that thing's
+ * edge.
+ *
+ * **Second: a shadow and nothing else.** The contour was right — a shadow
+ * follows the border radius, which no gradient knows how to do — but the card's
+ * interior stayed **pure black**, so it read as *a hole with a rim*. Directed,
+ * on seeing it: *we should still have a glassy aesthetic; in fact the glow
+ * should enhance the glass aesthetic.*
+ *
+ * ⚠⚠ **WHAT GLASS ACTUALLY IS: LIGHT COMING THROUGH IT, DIMMED.** So there has
+ * to be light **behind** the card, and the card's own 38% tint is what makes the
+ * inside darker than the outside. **The tint draws the contour; the pool makes
+ * it see-through.** Neither alone is glass.
+ *
+ * ⚠ **The pool must be MUCH broader than the card, and that is the whole
+ * correction over the first attempt.** Spread wide, the ramp is nearly flat
+ * across the card, so inside ≈ 0.62 × outside — a positive step *and* a lit
+ * interior. Spread tight, it falls off before it reaches the edge and the
+ * centre wins, which is exactly what was measured.
+ *
+ * ⚠ **The rim stays, small.** The pool alone gives a soft boundary; a tight
+ * shadow following the radius is what makes it an *edge*. It is the one thing
+ * here that knows where the corners are.
+ */
+@utility composer-glow {
+  position: relative;
+
+  /*
+    ⚠ **The rim: tight, one layer, on the radius.** The pool below does the
+    diffusion, so this does not need a second wide layer of its own.
+  */
+  box-shadow: 0 0 var(--page-lead) 0
+    color-mix(in srgb, var(--color-text) var(--composer-glow-peak), transparent);
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    /*
+      ⚠ **Three hems past the card on every side, so the ramp is FLAT where the
+      card is.** This number is the difference between glass and a bright smudge
+      under a black box: at one hem the gradient has already fallen off by the
+      card's edge and the interior out-shines the ground beside it — measured,
+      and that is what the first attempt did.
+    */
+    inset: calc(-3 * var(--page-lead));
+    /*
+      ⚠ **Transparent by 80%, not at the corners**, so there is no rectangle in
+      it anywhere. That is the deleted row light's shape inherited as a rule
+      about gradients, not as a purpose — see the `--row-light` tombstone.
+    */
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--color-text) var(--composer-glow-peak), transparent) 0%,
+      color-mix(
+          in srgb,
+          var(--color-text) calc(var(--composer-glow-peak) * 0.55),
+          transparent
+        )
+        45%,
+      transparent 80%
+    );
+  }
+}
+
 @utility writing-sheet {
   position: fixed;
   inset-inline: 0;
