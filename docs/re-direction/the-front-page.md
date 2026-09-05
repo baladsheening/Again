@@ -421,6 +421,26 @@ front page except attachment.
 
 ## 9. Open, and blocking nothing yet
 
+- ⚠⚠ **THE COMPOSER'S OVERFLOW — RAISED 5 September, AND IT IS THE FIRST THING
+  TO DECIDE ON THIS SCREEN.** *What if the text exceeding the two-line limit
+  prints in the area above the composer, faded, so a user never has to scroll?*
+  **There is a project called `ance` in the root directory where this is already
+  implemented** — read it before designing anything.
+  - ⚠ **Judge it as a REPLACEMENT, not an addition.** If it wins it deletes the
+    roll-under, `roll-mark`, `composer-bar` and `readRoll`. Two ways of showing
+    one overflow in one box is the drift this document keeps ruling against.
+  - ⚠⚠ **It collides with §4.** The area above the composer is where the corpus
+    rail goes. **Decide what the faded overflow does once the rail is there**, or
+    it ships with a deletion date on it.
+- ⚠ **A swipe should scroll anywhere inside the composer, not only over the text
+  column — raised the same day and HELD.** Today only the `<textarea>` scrolls,
+  so the card's padding swallows the gesture. **Not built on purpose: if the
+  overflow question above goes the other way there is no scroll area at all.**
+  If the current design is kept, the fix is to move the fixed height,
+  `overflow-y-auto` and `touch-action: pan-y` onto the field's wrapper with
+  `-mx-[--page-lead] px-[--page-lead]`, and ⚠ **move the roll mark out of the
+  scroller** — inside it, it would scroll with the content.
+
 - ⚠⚠ **Colour-by-type is PARKED, not answered — directed 5 September: *leave
   colour by type for now; keep it in mind for later.*** It stays written up in
   `docs/decisions.md` as a product question with an engineering cost.
