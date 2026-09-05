@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
@@ -89,31 +89,6 @@ export function ComposeScreen({
   useKeyboardHem({ writing, host, floorAnchor })
 
   /**
-   * **The box grows with the words in it.**
-   *
-   * ⚠ **Directed 5 September: the composer wraps, and the record's rows stay
-   * one line.** That reverses half of the 28 August rule and leaves what the
-   * rule protects intact — the record's density is what fits twenty-four lines
-   * on a handset, and none of it is on this screen.
-   *
-   * ⚠ **Wrapping is SOFT, and a capture is still one line.** Return commits, so
-   * there are no hard newlines in the text: what wraps is the display of a long
-   * capture, which is the whole reason the box exists — you cannot attach
-   * something to words you cannot read back.
-   *
-   * ⚠ **Height is measured, not counted.** `scrollHeight` after a reset to
-   * `auto` is the only figure that survives a different face, a different root
-   * scale and a different word — counting characters or `\n`s is a constant
-   * waiting to be wrong on the next screen.
-   */
-  const grow = useCallback(() => {
-    const el = field.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }, [])
-
-  /**
    * **Save one line.**
    *
    * ⚠ **Optimistic, and it has to be.** The four-second criterion is the
@@ -133,8 +108,6 @@ export function ComposeScreen({
     setDraft('')
     setLanded(text)
     setFailed(null)
-    /* The box came back to one line with the words, so it comes back in height too. */
-    requestAnimationFrame(grow)
 
     const result = await captureAction({
       text,
@@ -151,7 +124,6 @@ export function ComposeScreen({
       setLanded(null)
       setFailed(result.message)
       setDraft(text)
-      requestAnimationFrame(grow)
     }
   }
 
@@ -295,10 +267,7 @@ export function ComposeScreen({
             dir="auto"
             value={draft}
             placeholder="Anything"
-            onChange={(e) => {
-              setDraft(e.target.value)
-              grow()
-            }}
+            onChange={(e) => setDraft(e.target.value)}
             onFocus={() => setWriting(true)}
             /*
               ⚠ **Losing focus is leaving.** iOS's own *Done* takes the focus and
@@ -320,11 +289,29 @@ export function ComposeScreen({
               }
               if (e.key === 'Escape') {
                 setDraft('')
-                requestAnimationFrame(grow)
                 e.currentTarget.blur()
               }
             }}
-            className="page-input block max-h-[calc(var(--leading-line)*6)] min-h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
+            /*
+              ⚠⚠ **THE BOX NEVER CHANGES SIZE — directed 5 September.** It grew
+              with the words in it, measured off `scrollHeight`, from two lines
+              to six. **It is two lines, always**, and when there is more than
+              that the words scroll inside it: `overflow-y-auto` on a fixed
+              height, with the engine keeping the caret in view. **Do not put a
+              `min-h`/`max-h` pair back** — a range is a box that resizes, which
+              is the thing this removes.
+
+              ⚠ **What it buys: the composer, the light behind it and the foot
+              under it are one shape that never moves.** A growing box moved the
+              card's top edge, the glow's box and the strip's height on every
+              keystroke past the second line — three things animating while
+              somebody types, on the one screen whose promise is that writing is
+              instant.
+
+              ⚠ **`resize-none`, and it matters more now.** A drag handle on a
+              deliberately fixed box is a control that undoes the rule.
+            */
+            className="page-input block h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
           />
 
           {/*
