@@ -130,6 +130,51 @@ and there is a tombstone in `globals.css`. The account is §10 of
 - **Proved by `node_modules/.probe/composercap.mjs`** — 50 assertions, two
   surfaces, three scripts, both heights.
 
+⚠⚠ **THE UNDO IS BACK ON THE FRONT PAGE, AND A CONTROL IN THE COMPOSER'S STRIP
+COULD NOT BE CLICKED AT ALL UNTIL IT WAS — 5 September.** §5's *nothing is ever
+deleted* has exactly one exception, a ten-second undo on creation for typos, and
+it lived on the record's own row. **The record moved to `/record` and the front
+page kept the receipt without it**, so for a day the only way to take back a
+mistyped capture was to navigate to another screen and find it there. It is
+beside the receipt now, in the record's own slot geometry.
+
+- ⚠⚠ **THE BUG THIS UNCOVERED IS THE IMPORTANT HALF.** `onBlur` was
+  unconditional, so a click on the undo blurred the field → `writing` went false
+  → **the composer shrank three lines to two** → the button moved ~20px out from
+  under the pointer between mousedown and mouseup → **no click event was ever
+  dispatched.** The control was lit, correctly placed, hit-tested to itself, and
+  dead. ⚠ **It took the send arrow with it**, which had been failing the same way
+  and was written off as a probe artefact. **Any control in that strip would
+  have been.**
+- ⚠ **The fix is the record's own guard, arriving a day late:** `relatedTarget`
+  inside the strip is not leaving. `page-screen.tsx` has said so in writing since
+  30 August, for its own chips; this screen was written without it and the cost
+  stayed invisible until the box learnt to change height. ⚠ **iOS never had the
+  bug and still needs the guard** — it does not focus a button on tap at all, so
+  the field never blurs there; the desk and Android do.
+- ⚠ **The window is a PROP, not a second `10_000`.** `undoCapture` bounds the
+  delete in SQL against `created_at`, so a number typed in the client is a clock
+  that can disagree with the one that decides — and the disagreement shows as a
+  control that is lit and refuses. `app/(app)/page.tsx` hands `UNDO_WINDOW_MS`
+  down exactly as the record's page does.
+- ⚠ **The receipt outlives the control.** `landed` stays until the next capture
+  replaces it — it is the confirmation, and a confirmation that vanished after
+  ten seconds would be the toast this screen refuses to be. `landedId` is the
+  window. **Two states because they expire differently.**
+- ⚠⚠ **THE WORDS COME BACK INTO THE COMPOSER, WHICH THE RECORD'S UNDO DOES NOT
+  DO.** Same act, finished on a surface that can finish it: the undo exists *for
+  a typo*, and on the record there is no field to put the words back into. ⚠
+  **Only into an EMPTY composer** — if something is already being written the
+  words stay taken back, and **appending is not the fix**: a capture is one line
+  and two run together are neither.
+- ⚠ **A refusal puts the receipt back.** `undoCapture` bounds itself in SQL, so
+  the clock here and the clock there can disagree; the honest answer to *too
+  late* is the capture still being there. The record says this in the same words.
+- **Proved by `node_modules/.probe/composerundo.mjs`** — 14 assertions,
+  including that the capture is really gone from the record, that a full composer
+  keeps its draft, that the window closes on its own while the receipt stays, and
+  that **tapping the send arrow commits**.
+
 ⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
 built.** Until this, a mutual track was **two independent one-sided acts**: I add
 you, then *you* must separately remember my handle, go to my page and add me

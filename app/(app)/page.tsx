@@ -1,7 +1,13 @@
 import { redirect } from 'next/navigation'
 
 import { ComposeScreen } from '@/components/compose-screen'
-import { getMyProfile, portalWaiting, getSessionUser, listMyPage } from '@/lib/db'
+import {
+  getMyProfile,
+  portalWaiting,
+  getSessionUser,
+  listMyPage,
+  UNDO_WINDOW_MS,
+} from '@/lib/db'
 import { imagesAvailable } from '@/lib/media'
 
 /**
@@ -54,6 +60,13 @@ export default async function ComposePage() {
     <ComposeScreen
       portalWaiting={waiting}
       searchable={firstRow.length > 0}
+      /*
+        ⚠ **Handed down, because the number belongs to the delete.**
+        `undoCapture` bounds itself in SQL against `created_at`, and a second
+        `10_000` written in a client component is a clock that can disagree with
+        the one that actually decides. The record's page does the same.
+      */
+      undoWindowMs={UNDO_WINDOW_MS}
       /*
         ⚠ **A server fact, because the token is one.** Attach is dark when there
         is nowhere to put a photograph — a control that cannot act goes off —

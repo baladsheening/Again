@@ -5,9 +5,9 @@ import { useRef, useState } from 'react'
 
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
-import { AttachGlyph, SendGlyph } from './glyphs'
+import { AttachGlyph, SendGlyph, UndoGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
-import { captureAction } from '@/app/actions/captures'
+import { captureAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
 
 /**
@@ -40,6 +40,7 @@ export function ComposeScreen({
   portalWaiting,
   searchable,
   imagesOn,
+  undoWindowMs,
 }: {
   /** Phase 2 step 3: is there anything to say. One bit — never a count. */
   portalWaiting: PortalWaiting
@@ -54,6 +55,15 @@ export function ComposeScreen({
    * rather than broken. See `imagesAvailable`.
    */
   imagesOn: boolean
+  /**
+   * How long the undo beside the receipt stays lit.
+   *
+   * ⚠ **The server's number, not a second copy of it.** `undoCapture` bounds
+   * the delete in SQL against `created_at`; a `10_000` typed here would be a
+   * clock that can disagree with the one that decides, and the disagreement
+   * would show as a control that is lit and refuses.
+   */
+  undoWindowMs: number
 }) {
   const router = useRouter()
   const [draft, setDraft] = useState('')
@@ -74,6 +84,23 @@ export function ComposeScreen({
    * typed. A timed message would be an absence again a second later.
    */
   const [landed, setLanded] = useState<string | null>(null)
+  /**
+   * **The capture the receipt is for, while it can still be taken back.**
+   *
+   * ⚠⚠ **THE UNDO WAS LOST IN THE SPLIT AND THIS PUTS IT BACK.** §5's *nothing
+   * is ever deleted* has exactly one exception — a ten-second undo on creation,
+   * for typos — and it lived on the record's own row. The record moved to
+   * `/record` on 5 September and the front page kept the receipt without it, so
+   * for a day the only way to take back a mistyped capture was to navigate to
+   * another screen and find it there.
+   *
+   * ⚠ **Separate from `landed`, because they expire differently.** The receipt
+   * stays until the next capture replaces it — it is the confirmation, and a
+   * confirmation that vanished after ten seconds would be the toast this screen
+   * refuses to be. The *control* is the window.
+   */
+  const [landedId, setLandedId] = useState<string | null>(null)
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
   /**
    * **Does what is in the field fit the two lines it has?**
@@ -219,9 +246,62 @@ export function ComposeScreen({
         place for it is where they can send it again.
       */
       setLanded(null)
+      setLandedId(null)
       setFailed(result.message)
       setDraft(text)
+      return
     }
+
+    /*
+      ⚠ **The window opens when the row exists, not when the words left the
+      field.** The receipt is optimistic on purpose — the four-second capture is
+      the one measured quality this screen has — but there is nothing to undo
+      until the server says what it wrote, and an undo glyph over a capture with
+      no id is a control that cannot act.
+    */
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    setLandedId(result.value.id)
+    undoTimer.current = setTimeout(() => setLandedId(null), undoWindowMs)
+  }
+
+  /**
+   * **Take the last capture back, and give the words back with it.**
+   *
+   * ⚠⚠ **THE WORDS RETURN TO THE COMPOSER, WHICH THE RECORD'S UNDO DOES NOT
+   * DO.** It is the same act on a surface that can finish it: the undo exists
+   * *for a typo*, a typo is something you meant to write and got wrong, and on
+   * the record there is no field to put it back into. Here there is one, empty,
+   * directly below. Undoing and then retyping eighty characters would be the
+   * four-second capture spent twice.
+   *
+   * ⚠ **Only into an EMPTY composer.** If something is already being written,
+   * the words stay taken back rather than landing in the middle of a sentence
+   * somebody is in the middle of. **Do not "fix" this by appending** — a capture
+   * is one line and two of them run together are neither.
+   *
+   * ⚠ **A refusal puts the receipt back, and it has to.** `undoCapture` bounds
+   * the delete in SQL against `created_at` rather than trusting the client's
+   * word for how long ago the line landed, so the clock here and the clock there
+   * can disagree; the honest answer to *too late* is the capture still being
+   * there. Same argument as the record's, which says so in the same words.
+   */
+  function undo() {
+    const id = landedId
+    const text = landed
+    if (!id || text === null) return
+
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    setLandedId(null)
+    setLanded(null)
+    if (draft === '') setDraft(text)
+
+    void undoCaptureAction(id).then((result) => {
+      if (!result.ok) {
+        setLanded(text)
+        setFailed(result.message)
+        if (draft === '') setDraft('')
+      }
+    })
   }
 
   return (
@@ -281,13 +361,39 @@ export function ComposeScreen({
             One line, truncated exactly as a row of the record truncates, so the
             words look the same here as they will there.
           */}
+          {/*
+            ⚠ **The undo sits immediately after the words, not out at the
+            margin.** That is the record's own finding, reported the hour it was
+            built the other way: a short line leaves its control stranded with a
+            gap of nothing between. So the words keep `truncate` and give width
+            up to the glyph, and the row is only as wide as it needs to be.
+
+            ⚠ **`line-glyph`, never `align-middle`** — `middle` centres a box on
+            the *parent's* x-height, so a glyph beside 18px text is aligned
+            against the page's body type and reads as sitting low. The record
+            measured that at 3.29px and this is the same fix, not a new one.
+          */}
           {landed !== null && (
-            <p
-              dir="auto"
-              className="text-muted truncate px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)] text-[length:var(--text-line)] leading-[var(--leading-line)]"
-            >
-              {landed}
-            </p>
+            <div className="flex items-baseline px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)]">
+              <p
+                dir="auto"
+                className="text-muted min-w-0 truncate text-[length:var(--text-line)] leading-[var(--leading-line)]"
+              >
+                {landed}
+              </p>
+              {landedId !== null && (
+                <div className="line-glyph ms-3 shrink-0 [--glyph:var(--glyph-line)]">
+                  <button
+                    type="button"
+                    onClick={undo}
+                    aria-label="Undo the last capture"
+                    className="text-chrome flex items-center"
+                  >
+                    <UndoGlyph />
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {failed !== null && (
@@ -452,8 +558,42 @@ export function ComposeScreen({
               says nothing else, so a mode wired only to gestures the page can
               see stands with no keyboard under it. This is the one fact true of
               every exit.
+
+              ⚠⚠ **BUT FOCUS MOVING TO A CONTROL IN THE STRIP IS NOT LEAVING,
+              AND WITHOUT THAT THE CONTROLS DO NOT WORK AT ALL — found 5
+              September, and it is the record's own guard arriving a day late.**
+              `page-screen.tsx` has said in writing since 30 August that
+              *`relatedTarget` inside the sheet is not leaving*, because the
+              chips beside its field take focus on a desk click. This screen was
+              written without it and the cost was invisible until the box learnt
+              to change height:
+
+              **a click on the undo blurred the field → `writing` went false →
+              the composer shrank from three lines to two → the button moved
+              ~20px under the pointer between mousedown and mouseup → no click
+              event was ever dispatched.** The control was lit, correctly placed,
+              hit-tested to itself, and dead.
+
+              ⚠ **It takes the send arrow with it**, which had been failing the
+              same way and was written off as a probe artefact. **Any control in
+              this strip would have been.**
+
+              ⚠ **iOS never had the bug and still needs the guard.** It does not
+              focus a button on tap at all, so the field never blurs there — the
+              engines that do are the desk and Android, and a fix that held on
+              only one of them is the thing *How things get fixed* rules out.
             */
-            onBlur={() => setWriting(false)}
+            onBlur={(e) => {
+              const strip = e.currentTarget.closest('.writing-sheet')
+              if (
+                e.relatedTarget instanceof Node &&
+                strip !== null &&
+                strip.contains(e.relatedTarget)
+              ) {
+                return
+              }
+              setWriting(false)
+            }}
             onKeyDown={(e) => {
               /*
                 ⚠ **Return commits; it does not open a line.** A capture is one

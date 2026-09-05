@@ -581,6 +581,53 @@ in adds **exactly one line**, that leaving a full composer **keeps** it, that a
 refused keystroke leaves the caret where it was and **bumps the box**, that the
 bump animates `translate` and paints nothing, and that Return still commits.
 
+## 11. The undo, and the control that could not be clicked
+
+**Asked 5 September:** *when I submit, where does it land? previously it would
+land and a user would have the option to undo it.* It lands in the record at
+`/record`; the front page shows the receipt. **The undo did not come with it** —
+step 1 moved the record and left its one exception behind.
+
+⚠ **It is beside the receipt now**, in the record's own slot geometry:
+`line-glyph`, `--glyph-line`, immediately after the words rather than out at the
+margin — which is the record's finding, reported the hour it was built the other
+way.
+
+⚠⚠ **THE BUG IT UNCOVERED IS THE IMPORTANT HALF, AND IT WAS NOT ABOUT THE UNDO.**
+`onBlur` was unconditional, so a click on the undo blurred the field, `writing`
+went false, **the composer shrank three lines to two**, the button moved ~20px
+out from under the pointer between mousedown and mouseup, and **no click event
+was ever dispatched.** Lit, correctly placed, hit-tested to itself, and dead.
+⚠ **The send arrow had been failing the same way and it was written off as a
+probe artefact.** Any control in that strip would have been.
+
+⚠ **The fix is the record's own guard, a day late:** *`relatedTarget` inside the
+sheet is not leaving*, which `page-screen.tsx` has said in writing since 30
+August for its own chips. This screen was written without it and the cost stayed
+invisible until the box learnt to change height. ⚠ **iOS never had the bug and
+still needs the guard** — it does not focus a button on tap, so the field never
+blurs there; the desk and Android do.
+
+⚠ **The window is handed down, not retyped.** `undoCapture` bounds the delete in
+SQL against `created_at`, so a `10_000` in the client is a clock that can
+disagree with the one that decides, and the disagreement shows as a control that
+is lit and refuses.
+
+⚠ **The receipt outlives the control.** It stays until the next capture replaces
+it — it is the confirmation, and a confirmation that vanished after ten seconds
+would be the toast this screen refuses to be.
+
+⚠⚠ **THE WORDS COME BACK INTO THE COMPOSER, WHICH THE RECORD'S UNDO DOES NOT
+DO.** The same act finished on a surface that can finish it: the undo exists *for
+a typo*, and on the record there is no field to put the words back into. ⚠ **Only
+into an empty one** — appending is not the fix, because a capture is one line and
+two run together are neither.
+
+**Measured by `node_modules/.probe/composerundo.mjs`** — 14 assertions, including
+that the capture is really gone from the record, that a full composer keeps its
+draft, that the window closes on its own while the receipt stays, and that
+tapping the send arrow commits.
+
 ⚠ **The `ance` mirror was read and refused, and the reasoning is worth keeping.**
 It is not "overflow printed above" — it is a **full mirror**: past 40 characters
 the whole body re-renders as a centred, faded, tappable block above the field,
