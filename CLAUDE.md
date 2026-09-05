@@ -24,6 +24,71 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **A CAPTURE STOPS BEING A DRAFT AND BECOMES A STATEMENT, IN PLACE — directed
+5 September, and it DELETES THE RECEIPT ABOVE THE COMPOSER.** *When writing, text
+that has passed is partially dimmed, so that when the arrow is tapped it all goes
+solid, blinks twice, and the optically in-line undo appears. This all stays inside
+the composer, never outside.* **A capture no longer travels on being sent.**
+
+- ⚠⚠ **THE TWO STATES OF ONE SET OF WORDS ARE TOLD APART BY WEIGHT OF INK, AND BY
+  NOTHING ELSE.** A draft is `--color-muted` and provisional; what has landed is
+  `--color-text` and is a statement. ⚠ **The words must not MOVE between them** —
+  the sent line is absolutely positioned over the field and inherits its content
+  box to the pixel, so a capture that filled three lines while it was typed does
+  not settle into two the instant it lands. Asserted: same top, same left, same
+  right.
+- ⚠ **A layer over the field, never a replacement for it.** The `<textarea>` is
+  mounted at all times — iOS raises a keyboard only for a focus inside the
+  gesture that asked for it — so undo can put the words back **and focus the
+  field in one handler**. ⚠ **The placeholder is emptied while a line is landed**:
+  it showed *through* the words the first time this was built, which is two texts
+  in one box, one of them inviting you to write while the last capture was still
+  being offered back.
+- ⚠⚠ **THE UNDO FOLLOWS THE WORDS, MEASURED FROM THE LAST CHARACTER.** A `Range`
+  over the final character gives where the words actually stop, written through
+  the CSSOM as `--undo-x`/`--undo-y` — §10 blocks inline `style` attributes, and
+  this is the door the roll mark used. ⚠ **Direction is read off the element**, so
+  in Arabic the control goes to the left end of the last line; one
+  `getComputedStyle` rather than a locale branch. ⚠ **The gap belongs to the
+  control, not to the measurement** — `--undo-x` is literally where the words
+  stop, and `padding-inline-start` puts the drawing clear of them.
+- ⚠ **The cap reserves the control's room** — directed: *adequate space left at
+  the end of the third line if a user writes on three lines.* `composer-draft`
+  puts `--undo-reserve` (the glyph plus two hems) on the field's end, and the cap
+  measures against that box, so the last line always has somewhere to put it.
+  **Reserved on every line, not just the last**, because a per-line reservation is
+  `shape-outside` on a text field and there is no such thing; the price is a
+  measure one glyph narrower throughout.
+- ⚠⚠ **UNDO RE-ENGAGES RATHER THAN ERASES**, which is where it parts company with
+  the record's: *if a user taps undo, s/he doesn't delete the text written but
+  re-engages it so they can edit it as they please.* The row is deleted; the
+  words go back into the field, the field takes focus and the caret goes to the
+  end. **The record's undo leaves nothing behind; this one leaves you mid-
+  sentence.**
+- ⚠ **Left alone, the line LEAVES rather than being cut.** `composer-sent-leaving`
+  fades and drifts a hem downward — toward the foot, where the record's door is —
+  and the door bounces on the same tick. ⚠ **The component clears the line on
+  `animationend`, never on a timer**, so the duration lives in the stylesheet and
+  nothing in JavaScript holds a copy of it. ⚠ **It is not a literal flight to the
+  glyph**, which would mean positioning against a control in another subtree and
+  re-measuring on every resize.
+- ⚠ **Two blinks, each at `--recede`.** One dip reads as a glitch, three is a toy,
+  and the opacity never reaches zero — `line-landed`'s rule on the record — so the
+  words stay legible for somebody reading what they just wrote.
+- ⚠ **The failure line is the ONE thing still above the composer.** A capture that
+  did not land puts its words back in the field, so there is nothing in the box to
+  say it with.
+- **Proved by `node_modules/.probe/composersent.mjs`** — 27 assertions, including
+  that the sent line is the field's own box, that the drawing sits on the last
+  line's centre, that undo re-engages with the caret at the end, and that the
+  capture is really gone from the record afterwards. ⚠ **Its text is stamped at
+  the FRONT**, because the cap trims from the end and a probe searching the record
+  for text an earlier run also wrote reports its own leftovers as a bug. It did.
+- ⚠ **`frontpage.mjs` was reading the composer's card as `field.parentElement`**
+  and silently began measuring the new positioning wrapper — reporting the
+  composer as having no glass, no radius and no padding. It finds the card by name
+  now.
+
 ⚠⚠ **THREE REPORTS FROM A HANDSET, AND ONE OF THEM WAS ANSWERED BY A RULE THIS
 SCREEN NEVER INHERITED — 5 September.** *The bounce of the record glyph cannot be
 seen when the keyboard is up; is the undo icon optically in-line with the line?;

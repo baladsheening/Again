@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
@@ -115,6 +115,17 @@ export function ComposeScreen({
    * language that cannot read it.
    */
   const [arrived, setArrived] = useState(false)
+  /**
+   * **The line is on its way out.**
+   *
+   * ⚠ **A state rather than a straight unmount**, so the words can be seen to
+   * leave: *the text vanishes as it transfers, or looks to be transferred, to the
+   * record.* The line is cleared by the fade's own `animationend`, never by a
+   * timer holding a second copy of `--recede`.
+   */
+  const [leaving, setLeaving] = useState(false)
+  const sentLine = useRef<HTMLParagraphElement | null>(null)
+  const sentUndo = useRef<HTMLSpanElement | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
   /**
    * **Does what is in the field fit the two lines it has?**
@@ -246,6 +257,44 @@ export function ComposeScreen({
   useKeyboardHem({ writing, host, floorAnchor })
 
   /**
+   * **Put the undo at the end of the words, on whichever line they end on.**
+   *
+   * ⚠⚠ **MEASURED FROM THE LAST CHARACTER, NOT FROM THE BOX.** A control parked
+   * at the end of the *box* is stranded out at the margin after a short capture
+   * with a gap of nothing between it and the text — the record reported exactly
+   * that the hour it was built the other way. A `Range` over the final character
+   * gives where the words actually stop.
+   *
+   * ⚠ **Through the CSSOM.** §10 blocks inline `style` attributes in production
+   * and the linter enforces it, so this writes custom properties — the same door
+   * the roll mark used before it was deleted.
+   *
+   * ⚠ **Direction is read off the element, never assumed.** The line carries
+   * `dir="auto"`, so in Arabic the end of the last line is its LEFT edge and the
+   * control belongs there. One `getComputedStyle` instead of a locale branch.
+   */
+  useEffect(() => {
+    const line = sentLine.current
+    const holder = sentUndo.current
+    const node = line?.firstChild
+    if (!line || !holder || !node || !node.textContent) return
+
+    const range = document.createRange()
+    range.setStart(node, node.textContent.length - 1)
+    range.setEnd(node, node.textContent.length)
+    const last = range.getBoundingClientRect()
+    const base = line.getBoundingClientRect()
+    const rtl = getComputedStyle(line).direction === 'rtl'
+    const gap = holder.offsetWidth
+
+    holder.style.setProperty(
+      '--undo-x',
+      `${rtl ? last.left - base.left - gap : last.right - base.left}px`,
+    )
+    holder.style.setProperty('--undo-y', `${last.top - base.top}px`)
+  }, [landed, landedId])
+
+  /**
    * **Save one line.**
    *
    * ⚠ **Optimistic, and it has to be.** The four-second criterion is the
@@ -342,8 +391,15 @@ export function ComposeScreen({
       one moment is two clocks to keep in step.
     */
     undoTimer.current = setTimeout(() => {
+      /*
+        ⚠ **The words are not cut, they LEAVE.** `leaving` runs the fade and the
+        fade's own `animationend` clears the line — so the duration is stated in
+        the stylesheet and nothing here holds a copy of it. The door bounces on
+        the same tick, which is what makes the two read as one event: the line
+        goes to the record and the record says it arrived.
+      */
       setLandedId(null)
-      setLanded(null)
+      setLeaving(true)
       setArrived(true)
     }, undoWindowMs)
   }
@@ -369,6 +425,24 @@ export function ComposeScreen({
    * can disagree; the honest answer to *too late* is the capture still being
    * there. Same argument as the record's, which says so in the same words.
    */
+  /**
+   * **Take the capture back, and put the writer back in the middle of it.**
+   *
+   * ⚠⚠ **DIRECTED: *if a user taps undo, s/he doesn't delete the text written
+   * but re-engages it so they can edit it as they please.*** So this is not the
+   * record's undo, which erases a line and leaves nothing — the words go back
+   * into the field **and the field takes the focus**, which raises the keyboard
+   * with the caret at the end. The capture row is deleted; the writing is not.
+   *
+   * ⚠ **It replaces whatever is in the field.** There is nothing to protect: the
+   * box has been showing the sent line for the whole window, so a draft
+   * underneath it is not a thing anybody could have been looking at.
+   *
+   * ⚠ **A refusal puts the line back.** `undoCapture` bounds the delete in SQL
+   * against `created_at` rather than trusting the client's word for how long ago
+   * it landed, so the two clocks can disagree and the honest answer to *too late*
+   * is the capture still being there.
+   */
   function undo() {
     const id = landedId
     const text = landed
@@ -384,13 +458,25 @@ export function ComposeScreen({
     setArrived(false)
     setLandedId(null)
     setLanded(null)
-    if (draft === '') setDraft(text)
+    setLeaving(false)
+    setDraft(text)
+    /*
+      ⚠ **Focus in the handler, never in an effect.** iOS raises a keyboard only
+      for a focus that happens inside the gesture that asked for it, and this is
+      that gesture. The caret goes to the end so the next keystroke continues the
+      sentence rather than landing wherever the value happened to leave it.
+    */
+    const el = field.current
+    if (el) {
+      el.focus()
+      el.setSelectionRange(text.length, text.length)
+    }
 
     void undoCaptureAction(id).then((result) => {
       if (!result.ok) {
         setLanded(text)
         setFailed(result.message)
-        if (draft === '') setDraft('')
+        setDraft('')
       }
     })
   }
@@ -447,71 +533,15 @@ export function ComposeScreen({
           edge.
         */}
         <div className="gutter mx-auto w-full max-w-[var(--record-measure)] pb-[calc(var(--line-hem)*1.5)]">
-          {/*
-            ⚠ **The receipt sits above the field, in the record's own type.**
-            One line, truncated exactly as a row of the record truncates, so the
-            words look the same here as they will there.
-          */}
-          {/*
-            ⚠ **The undo sits immediately after the words, not out at the
-            margin.** That is the record's own finding, reported the hour it was
-            built the other way: a short line leaves its control stranded with a
-            gap of nothing between. So the words keep `truncate` and give width
-            up to the glyph, and the row is only as wide as it needs to be.
-
-            ⚠ **`line-glyph`, never `align-middle`** — `middle` centres a box on
-            the *parent's* x-height, so a glyph beside 18px text is aligned
-            against the page's body type and reads as sitting low. The record
-            measured that at 3.29px and this is the same fix, not a new one.
-          */}
-          {landed !== null && (
-            /*
-              ⚠⚠ **`items-start`, NEVER `items-baseline` — measured 5 September
-              after *is the undo icon optically in-line with the line?*** It was
-              not: `items-baseline` aligns a flex item on ITS baseline, and a box
-              containing only an `<svg>` has no text baseline, so the engine uses
-              its bottom margin edge — which put the drawing's centre at 662.5
-              against the words' ink centre at 667.5. **Five pixels high.**
-
-              ⚠ **`line-glyph` already does this job and was being overridden.**
-              It makes the holder exactly one line box tall and hangs its hit area
-              off in the hems, so top-aligned against a line of the same leading
-              the drawing lands on the line's own centre **with no face metric
-              anywhere in it** — which is the record's own rule, and the reason
-              `UndoGlyph` was redrawn on its own grid rather than nudged from
-              outside. Anything but `items-start` here re-opens that.
-            */
-            <div className="receipt-line flex items-start px-[calc(var(--line-hem)*2.5)]">
-              <p
-                dir="auto"
-                className="text-muted min-w-0 truncate text-[length:var(--text-line)] leading-[var(--leading-line)]"
-              >
-                {landed}
-              </p>
-              {landedId !== null && (
-                <div className="line-glyph ms-3 shrink-0 [--glyph:var(--glyph-line)]">
-                  <button
-                    type="button"
-                    onMouseDown={keepFocus}
-                    onClick={undo}
-                    aria-label="Undo the last capture"
-                    className="text-chrome flex items-center"
-                  >
-                    <UndoGlyph />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {failed !== null && (
             /*
-              ⚠ **The same air as the receipt.** They are alternatives in the same
-              slot — one says the capture landed, the other says it did not — so a
-              reader who sees them in succession must not see the strip change
-              shape between them.
+              ⚠ **The one thing still ABOVE the composer, and it is the failure.**
+              A landed capture stays in the box now; a capture that did not land
+              puts its words back in the field, so there is nothing in the box to
+              say it with. This is the exception, and it is rare enough to be
+              allowed to change the strip's height when it appears.
             */
-            <p className="text-decline receipt-line px-[calc(var(--line-hem)*2.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
+            <p className="text-decline px-[calc(var(--line-hem)*2.5)] pb-[calc(var(--line-hem)*1.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
               {failed}
             </p>
           )}
@@ -567,6 +597,13 @@ export function ComposeScreen({
             className={`composer-glow ${writing ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none`}
           >
           {/*
+            ⚠ **A positioning context for the line that lands.** The card cannot
+            be it: the card is padded, so `inset: 0` against it would put the
+            words a hem out from where the field's own words sit, and the whole
+            point is that they do not move on being sent.
+          */}
+          <div className="relative">
+          {/*
             ⚠⚠ **THE FIELD IS MOUNTED AT ALL TIMES.** iOS raises a keyboard only
             for a focus that happens *inside* the gesture that asked for it, so
             a field mounted by a state change is focused a tick too late.
@@ -584,7 +621,15 @@ export function ComposeScreen({
             */
             dir="auto"
             value={draft}
-            placeholder="Anything"
+            /*
+              ⚠ **Silent while a line is landed.** The field is empty and
+              underneath the words that were just written, so its placeholder
+              showed THROUGH them — two texts in one box, one of them an
+              invitation to write while the last capture was still being offered
+              back. Emptying the attribute is enough; the field stays mounted and
+              stays focusable, which is the rule that matters.
+            */
+            placeholder={landed === null ? 'Anything' : ''}
             /*
               ⚠⚠ **THE CAP LIVES HERE, AND IT REFUSES RATHER THAN TRUNCATES.**
               The element already holds the new value by the time this runs, so
@@ -796,10 +841,76 @@ export function ComposeScreen({
               a box that jumped while everything around it eased would be the
               only thing on the screen that did.
             */
-            className={`page-input block h-[calc(var(--leading-line)*var(--composer-lines,2))] w-full resize-none overflow-y-hidden text-[length:var(--text-line)] leading-[var(--leading-line)] transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-              writing || draft !== '' ? '[--composer-lines:3]' : ''
+            /*
+              ⚠⚠ **`composer-draft` DIMS THE WORDS AND RESERVES THE UNDO'S ROOM
+              — directed 5 September.** *Text that has passed is partially dimmed
+              while writing, so that when the arrow is tapped it all goes solid.*
+              A draft is provisional and reads as provisional; what has landed is
+              a statement and is at full strength. **The two states of the same
+              words are told apart by weight of ink, and by nothing else.**
+
+              ⚠ **The end padding is the room the undo will need**, because the
+              cap measures against this box: without it a capture that fills the
+              third line leaves the control nowhere to go but a fourth.
+            */
+            className={`page-input composer-draft block h-[calc(var(--leading-line)*var(--composer-lines,2))] w-full resize-none overflow-y-hidden text-[length:var(--text-line)] leading-[var(--leading-line)] transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+              writing || draft !== '' || landed !== null ? '[--composer-lines:3]' : ''
             }`}
           />
+
+          {/*
+            ⚠⚠ **WHAT WAS JUST WRITTEN, STILL IN THE BOX — directed 5 September:
+            *this all stays inside the composer, never outside.*** The receipt
+            above the composer is deleted. A capture does not travel on being
+            sent; it stops being a draft and becomes a statement, in place, at
+            full strength, and blinks twice to say so.
+
+            ⚠ **`aria-live`, because nothing else announces it.** The words are
+            already on screen for a reader who can see them; for one who cannot,
+            the field emptying is the only event, and an empty field is not a
+            confirmation.
+
+            ⚠ **It is a layer over the field, never a replacement for it.** The
+            `<textarea>` is mounted at all times — iOS raises a keyboard only for
+            a focus inside the gesture that asked for it — so undo can put the
+            words back and focus it in one handler.
+          */}
+          {landed !== null && (
+            <p
+              ref={sentLine}
+              dir="auto"
+              aria-live="polite"
+              onAnimationEnd={
+                leaving
+                  ? () => {
+                      setLanded(null)
+                      setLeaving(false)
+                    }
+                  : undefined
+              }
+              className={`composer-sent ${leaving ? 'composer-sent-leaving' : ''}`}
+            >
+              {landed}
+            </p>
+          )}
+
+          {landed !== null && landedId !== null && (
+            <span
+              ref={sentUndo}
+              className="composer-undo line-glyph [--glyph:var(--glyph-line)]"
+            >
+              <button
+                type="button"
+                onMouseDown={keepFocus}
+                onClick={undo}
+                aria-label="Undo the last capture"
+                className="text-chrome flex items-center"
+              >
+                <UndoGlyph />
+              </button>
+            </span>
+          )}
+          </div>
 
           {/*
             ⚠⚠ **THE CONSOLE'S OWN ROW, TO THE PIXEL — directed 5 September:

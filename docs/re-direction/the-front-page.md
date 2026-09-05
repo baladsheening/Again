@@ -687,6 +687,34 @@ a lit door to the other and a dark drawing of itself. ⚠ **It duplicates the
 wordmark**, which `foot.tsx` had ruled out; the cost is stated rather than
 hidden.
 
+## 13. The line stays in the box
+
+**Directed 5 September, and it deletes §11's receipt outright.** *When writing,
+text that has passed is partially dimmed, so that when the arrow is tapped it all
+goes solid, blinks twice, and the optically in-line undo appears. This all stays
+inside the composer, never outside.*
+
+**A capture no longer travels on being sent.** It stops being a draft and becomes
+a statement, in place: the words hold their box to the pixel, go from
+`--color-muted` to `--color-text`, blink twice, and the undo appears at the end
+of the last line. The keyboard retracts. Left alone for ten seconds the line fades
+and drifts toward the foot while the record's door bounces; tapped, the undo
+deletes the row and **puts the writer back mid-sentence** — words in the field,
+field focused, caret at the end.
+
+⚠ **The cap reserves the control's room**, because the last line has to have
+somewhere to put it: `--undo-reserve` on the field's end, on every line, since a
+per-line reservation is `shape-outside` on a text field and there is no such
+thing.
+
+⚠ **The undo's position is measured from the last character**, not from the box —
+a control parked at the end of the box is stranded after a short capture, which
+the record reported the hour it was built that way.
+
+**Measured by `node_modules/.probe/composersent.mjs`** — 27 assertions.
+
+---
+
 ⚠⚠ **IT MOVED THE TRAY, SO THE CONSOLE'S SETTLE MOVED WITH IT** — `foot.tsx` has
 warned since 2 September that moving the tray out of column four breaks the
 unbuilt reaction the sight line is for. Both are column five now, measured equal

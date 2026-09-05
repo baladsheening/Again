@@ -4803,39 +4803,139 @@
 }
 
 /**
- * **The receipt: the line that lands above the composer, centred in its band.**
+ * **What was just written, still in the box, while it can still be taken back.**
  *
- * ⚠⚠ **Directed 5 September:** *when the line lands in the area above the
- * composer, it has to be centred between the top of the composer and the top of
- * the sheet behind it.* It was not — it sat hard against the strip's top edge,
- * **0px above the line box and 5px below it**, because the strip is content-sized
- * and the receipt was the first thing in it.
+ * ⚠⚠ **DIRECTED 5 September, and it deletes the receipt above the composer.**
+ * *Text that has passed is partially dimmed while writing, so that when the
+ * arrow is tapped it all goes solid, blinks twice, and the optically in-line
+ * undo appears. This all stays inside the composer, never outside.* The line no
+ * longer moves anywhere on being sent — **it stops being a draft and becomes a
+ * statement, in place.**
  *
- * ⚠⚠ **CENTRED ON THE INK, NEVER ON THE BOX — and this is the writing row's own
- * lesson applied a second time.** `sheet-writing` says it in one line: *equal
- * padding is what put the text low; equal gaps to the INK is what was asked
- * for.* A line box is not symmetrical about its characters — at 18/24 the ink
- * sits **5.8px** below the box's top and **1.8px** above its bottom — so equal
- * padding would leave the words 4px high in their own band.
+ * ⚠ **Over the field, not instead of it.** The `<textarea>` is mounted at all
+ * times — iOS raises a keyboard only for a focus inside the gesture that asked
+ * for it — so this is a layer on top of a field that is still there and still
+ * focusable. **Never make the field conditional to make room for this.**
  *
- * ⚠ **One optical gap, spent twice, less what the line box already provides.**
- * `--line-ink-lead` and `--line-ink-foot` are derived from the face fence and
- * the type, so this follows the desk's root scale and any change of leading for
- * free — there is no pixel in it.
- *
- * ⚠ **The gap is `--line-hem × 1.5`, which is the figure the strip already
- * spends between the card and the foot.** Not a new number: the strip has one
- * air, and now it has it above the card as well as below.
- *
- * ⚠ **The composer does not move.** The strip is anchored to the bottom edge, so
- * growing it by the 2.4px this adds moves its **top** up and leaves the card,
- * the foot and the keyboard where they were.
+ * ⚠⚠ **THE SAME CONTENT BOX AS THE FIELD, TO THE PIXEL, OR THE WORDS REFLOW ON
+ * BEING SENT.** It inherits the field's reserved end padding for that reason:
+ * one pixel of difference in the measure and a capture that filled three lines
+ * while it was being typed settles into two the instant it lands, which reads as
+ * the box rewriting what you wrote.
  */
-@utility receipt-line {
-  --receipt-air: calc(var(--line-hem) * 1.5);
+@utility composer-sent {
+  position: absolute;
+  inset: 0;
+  color: var(--color-text);
+  font-size: var(--text-line);
+  line-height: var(--leading-line);
+  padding-inline-end: var(--undo-reserve);
+  animation: composer-sent-land calc(var(--recede) * 2) var(--ease-recede) 1;
+}
 
-  padding-block: calc(var(--receipt-air) - var(--line-ink-lead))
-    calc(var(--receipt-air) - var(--line-ink-foot));
+/**
+ * **Two blinks, and they are the whole of *it landed*.**
+ *
+ * ⚠ **Two, not one and not three.** One dip is a flicker and reads as a glitch;
+ * three is a toy. Each dip runs at `--recede`, the app's one duration, so the
+ * pair is `--recede × 2` and there is no new number in it.
+ *
+ * ⚠ **It never reaches zero**, which is `line-landed`'s rule on the record: at
+ * 0.2 the words stay legible for the whole blink, so nothing is taken away from
+ * somebody who is reading what they just wrote.
+ */
+@keyframes composer-sent-land {
+  0%,
+  40%,
+  80%,
+  100% {
+    opacity: 1;
+  }
+
+  20%,
+  60% {
+    opacity: 0.2;
+  }
+}
+
+/**
+ * **The line leaving for the record.**
+ *
+ * ⚠ **Directed: *the text vanishes as it transfers, or looks to be transferred,
+ * to the record.*** It fades and drifts a hem downward — toward the foot, which
+ * is where the record's door is — while the door itself bounces. ⚠ **It is not a
+ * literal flight to the glyph**, and that is worth knowing before somebody
+ * reports the drift as unfinished: a real one has to be positioned against a
+ * control in a different subtree and re-measured on every resize.
+ *
+ * ⚠ **The component clears the line on `animationend`**, never on a timer, so
+ * this duration is stated once and nothing in JavaScript holds a copy of it.
+ */
+@utility composer-sent-leaving {
+  animation: composer-sent-leave var(--recede) var(--ease-recede) 1 forwards;
+}
+
+@keyframes composer-sent-leave {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  to {
+    opacity: 0;
+    translate: 0 var(--line-hem);
+  }
+}
+
+/**
+ * **The undo, at the end of the words rather than at the end of the box.**
+ *
+ * ⚠⚠ **ITS POSITION IS MEASURED FROM THE LAST CHARACTER AND WRITTEN THROUGH THE
+ * CSSOM.** A short capture leaves its control stranded at the margin with a gap
+ * of nothing between — the record reported that the hour it was built the other
+ * way — so this follows the text, on whichever of the three lines it ends on.
+ * §10 blocks inline `style` attributes in production, so the component sets
+ * `--undo-x` and `--undo-y` as custom properties, which is the same door the
+ * roll mark used.
+ *
+ * ⚠ **`top` lands the DRAWING on the line's centre with no arithmetic here.**
+ * `line-glyph` is one line box tall with a hem of padding and an equal negative
+ * margin, so an absolute `top` positions the margin edge, the margin pulls it
+ * back and the padding puts the content where it was asked for. **Do not add a
+ * correction on top of it.**
+ */
+@utility composer-undo {
+  /*
+    ⚠ The gap belongs to the CONTROL, not to the measurement. --undo-x is
+    literally where the words stop; padding puts the drawing clear of them, and
+    being logical it moves to the other side in Arabic for free. Two hems plus
+    the glyph is exactly --undo-reserve, so the last line always has room.
+  */
+  padding-inline-start: calc(var(--line-hem) * 2);
+  position: absolute;
+  inset-block-start: var(--undo-y, 0px);
+  inset-inline-start: var(--undo-x, 0px);
+}
+
+/**
+ * **The room the undo needs at the end of the last line.**
+ *
+ * ⚠ **Directed: *requiring adequate space left at the end of the third line if a
+ * user writes on three lines.*** The cap measures whether the words fit the box,
+ * so the box has to be the box **minus the control that is going to appear in
+ * it** — otherwise a capture that fills the third line leaves the undo nowhere
+ * to go but a fourth.
+ *
+ * ⚠ **It is reserved on EVERY line, not just the last.** A per-line reservation
+ * is `shape-outside` on a text field, which does not exist; the price is that
+ * the measure is a glyph narrower throughout, and the benefit is that the last
+ * line is guaranteed whatever the words do.
+ */
+@utility composer-draft {
+  --undo-reserve: calc(var(--glyph-line) + var(--line-hem) * 2);
+
+  padding-inline-end: var(--undo-reserve);
+  color: var(--color-muted);
 }
 
 @utility composer-refused {
