@@ -227,6 +227,31 @@ export function WriteGlyph() {
 }
 
 /**
+ * The composer. **Send it.**
+ *
+ * ⚠ **An upward arrow, which is the one thing every composer on a phone means
+ * by this position.** §11 permits known icons and this is as known as they get;
+ * inventing a mark here would be inventing a word for *send*.
+ *
+ * ⚠ **It is not the `+`.** `WriteGlyph` came free when the foot lost its plus
+ * on 5 September and was the obvious thing to reach for — but a `+` in a
+ * composer means **attach**, everywhere it appears, so spending it on submit
+ * would put two meanings on one drawing in the one row that has both.
+ *
+ * ⚠ **Return sends too, and this is not redundant with it.** A box that wraps
+ * looks like a box where Return opens a line; the arrow is what says it does
+ * not. On a handset it is also the only visible way to submit at all.
+ */
+export function SendGlyph() {
+  return (
+    <Glyph>
+      <path d="M10 16.25V4.75" />
+      <path d="M5.25 9.5 10 4.75l4.75 4.75" />
+    </Glyph>
+  )
+}
+
+/**
  * Foot. **The record** — §5's *My things*, on its own route since 5 September.
  *
  * ⚠ **Three RAGGED lines, and the raggedness is the whole drawing.** Three

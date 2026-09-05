@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { ComposeScreen } from '@/components/compose-screen'
 import { getMyProfile, portalWaiting, getSessionUser, listMyPage } from '@/lib/db'
+import { imagesAvailable } from '@/lib/media'
 
 /**
  * **The front page: the corpus above, a composer below.** Amendment 5, 5
@@ -49,5 +50,16 @@ export default async function ComposePage() {
     portalWaiting(sessionUser),
   ])
 
-  return <ComposeScreen portalWaiting={waiting} searchable={firstRow.length > 0} />
+  return (
+    <ComposeScreen
+      portalWaiting={waiting}
+      searchable={firstRow.length > 0}
+      /*
+        ⚠ **A server fact, because the token is one.** Attach is dark when there
+        is nowhere to put a photograph — a control that cannot act goes off —
+        which also means deploying with no Blob store is safe rather than broken.
+      */
+      imagesOn={imagesAvailable()}
+    />
+  )
 }

@@ -348,8 +348,43 @@ were invisible to seventeen passing assertions, a typecheck and a lint.
   field is a line and can sit hard on the keys; a surface with a corner radius
   reads as cut off when it meets an edge.
 
-⚠ **What is not built and is the next thing on this screen: attach.** The
-composer takes words and nothing else yet.
+⚠⚠ **AND A THIRD, WHICH CHANGED THE SHAPE — directed 5 September: *it is not
+a composer like Claude's; it should have the same aesthetic as the console that
+opens when a user taps an item in their list.*** The box was a thin pill with a
+field in it. **It is a card now: the words at the top, a row of controls along
+its bottom edge inside it.**
+
+- ⚠ **The console's own row, to the pixel.** `-mx-[--page-lead]` to cancel the
+  card's padding, `grid-cols-4` with the left controls at `col-span-3` and one
+  at `col-start-4`, `--glyph-foot` throughout, `rounded-2xl` and
+  `p-[--page-lead]` on the card. **That is what *the same aesthetic* has to mean
+  if it is to be checkable rather than a feeling.**
+- ⚠ **The two answers agreed**, which is why this was one change and not two: a
+  composer on a phone *is* words above a control row inside a box, and so is the
+  console.
+- ⚠ **Attach is in the row from the first build, drawn OFF** — the foot's rule,
+  *controls go off; they do not disappear*, and the same one the record's camera
+  follows while there is no Blob store. **A row that arrives empty and grows a
+  control later is a row whose shape nobody could judge.**
+- ⚠ **`SendGlyph` is a new eleventh-and-twelfth glyph, and it is NOT the `+`.**
+  The plus came free when the foot lost it and was the obvious thing to reach
+  for — but **a `+` in a composer means attach**, everywhere it appears, and
+  this is the one row that has both. Return still sends; the arrow is what tells
+  a box that wraps that Return does not open a line.
+- ⚠ **`col-start-4` is inherited from the console and means nothing here.**
+  There it is the settle glyph, on the foot tray's x centre as a sight line for
+  an unbuilt reaction. **If a sight line is ever wanted for a capture going to
+  the record, the column to aim at is TWO** — that is where the record's glyph
+  now is.
+- ⚠ **The ground stays `--color-surface` and that is the console's rule, not a
+  departure from it.** The console is glass on a handset because a scrimmed
+  record passes under it, and `--color-surface` on the desk where its own CSS
+  says *nothing behind it in flow*. **Nothing is behind the composer**, so it
+  takes the second branch. ⚠ **The day the browse half lands there will be cards
+  under it and glass becomes available again — reconsider it then, not before.**
+
+⚠ **What is not built and is the next thing on this screen: attach acting.** The
+control is drawn and dark; it needs the Blob billing switch.
 
 **2. The card**, against TMDB and against a fixture with no image. Four states,
 no rail yet — one component, judged on its own.

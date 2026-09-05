@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 
-import { Bar } from './bar'
+import { Bar, OFF } from './bar'
 import { Foot } from './foot'
+import { AttachGlyph, SendGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { captureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
@@ -38,11 +39,21 @@ import type { PortalWaiting } from '@/lib/db'
 export function ComposeScreen({
   portalWaiting,
   searchable,
+  imagesOn,
 }: {
   /** Phase 2 step 3: is there anything to say. One bit — never a count. */
   portalWaiting: PortalWaiting
   /** Whether there is a record to search. */
   searchable: boolean
+  /**
+   * Whether the app has anywhere to put a photograph.
+   *
+   * ⚠ **A server fact, because the token is one.** Attach is dark when there is
+   * nowhere to put a photograph — *a control that cannot act goes off*, which is
+   * the foot's own rule — and it is what makes deploying with no Blob store safe
+   * rather than broken. See `imagesAvailable`.
+   */
+  imagesOn: boolean
 }) {
   const router = useRouter()
   const [draft, setDraft] = useState('')
@@ -224,7 +235,7 @@ export function ComposeScreen({
             black page today and is the right thing the day cards scroll under
             it. **Do not delete it to tidy up.**
           */}
-          <div className="rounded-[1.25rem] bg-[var(--color-surface)] px-[calc(var(--line-hem)*2.5)] py-[calc(var(--line-hem)*1.5)]">
+          <div className="rounded-2xl bg-[var(--color-surface)] p-[var(--page-lead)]">
           {/*
             ⚠⚠ **THE FIELD IS MOUNTED AT ALL TIMES.** iOS raises a keyboard only
             for a focus that happens *inside* the gesture that asked for it, so
@@ -273,8 +284,72 @@ export function ComposeScreen({
                 e.currentTarget.blur()
               }
             }}
-            className="page-input block max-h-[calc(var(--leading-line)*6)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
+            className="page-input block max-h-[calc(var(--leading-line)*6)] min-h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
           />
+
+          {/*
+            ⚠⚠ **THE CONSOLE'S OWN ROW, TO THE PIXEL — directed 5 September:
+            *it should have the same aesthetic as the console that opens when a
+            user taps an item in their list.*** `-mx-[--page-lead]` cancels the
+            card's padding so the row spans its full width, `grid-cols-4` with
+            the left controls at `col-span-3` and one control at `col-start-4`,
+            `--glyph-foot` throughout. It is `console.tsx`'s controls row with
+            different occupants, which is what *the same aesthetic* has to mean
+            if it is to mean anything checkable.
+
+            ⚠ **And it is what a composer looks like** — the words above, the
+            controls along the bottom edge inside the box. The two answers agreed,
+            which is why this is one change and not two.
+
+            ⚠ **`col-start-4` is inherited from the console and is NOT claimed to
+            mean anything here.** There it is the settle glyph, deliberately on
+            the foot tray's x centre as a sight line for a reaction that is not
+            built. Send lands on the same column because the row is the same row.
+            **If a sight line is ever wanted for a capture going to the record,
+            the column to aim at is TWO** — that is where the record's glyph is.
+          */}
+          <div className="-mx-[var(--page-lead)] mt-4 grid grid-cols-4 items-center [--glyph:var(--glyph-foot)]">
+            <div className="col-span-3 flex items-center gap-5 ps-[var(--page-lead)]">
+              {/*
+                ⚠ **Attach is drawn OFF until there is a Blob store**, which is
+                the foot's rule — *controls go off; they do not disappear* — and
+                the same one the record's camera already follows. A `<span>`,
+                because there is no disabled state for a control that opens
+                something, and the label goes with the door rather than staying on
+                a drawing a reader would be told they can reach.
+
+                ⚠ **It is here from the first build on purpose.** The direction
+                was *a box in which to type and attach things before submitting*;
+                a row that arrives empty and grows a control later is a row whose
+                shape nobody could judge. See step 4 of the brief.
+              */}
+              {imagesOn ? (
+                <button
+                  type="button"
+                  aria-label="Attach a photograph"
+                  className="text-chrome tap-target flex items-center"
+                >
+                  <AttachGlyph />
+                </button>
+              ) : (
+                <span aria-hidden className={`tap-target flex items-center ${OFF}`}>
+                  <AttachGlyph />
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void commit()}
+              aria-label="Save it"
+              disabled={draft.trim() === ''}
+              className={`tap-target col-start-4 flex items-center justify-self-center transition-colors ${
+                draft.trim() === '' ? OFF : 'text-chrome'
+              }`}
+            >
+              <SendGlyph />
+            </button>
+          </div>
           </div>
         </div>
 
