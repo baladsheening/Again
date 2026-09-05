@@ -4631,6 +4631,45 @@
  * ⚠ **The rim stays, small.** The pool alone gives a soft boundary; a tight
  * shadow following the radius is what makes it an *edge*. It is the one thing
  * here that knows where the corners are.
+ *
+ * ⚠⚠ **AND THE THIRD FAILURE WAS THE ONE THAT MATTERED: A SMOOTH POOL IS NOT
+ * GLASS, BECAUSE `backdrop-filter: blur()` ON A SMOOTH GRADIENT DOES NOTHING.**
+ * Reported: *it's not glassy enough — the items in the list when tapped open a
+ * console and they have this blurred look behind them, and it's not uniform,
+ * because the blur is for the TEXT behind the glass console.* **That is the
+ * whole mechanism.** A console looks like glass because the record's lines are
+ * behind it: blur has structure to smear, so the inside of the card is a field
+ * of soft shapes while the same lines outside it are sharp. **The difference
+ * between sharp and smeared is what the eye reads as a pane.** A uniform wash
+ * blurs to the identical uniform wash and the filter is a no-op.
+ *
+ * ⚠⚠ **SO THE LIGHT HAS STRUCTURE: SEVEN LOBES, NOT ONE POOL.** They are
+ * different sizes, at different strengths, deliberately not on a grid, and
+ * **several straddle the card's edges** — which is what puts a sharp lobe
+ * outside the glass and its blurred continuation inside it, in one shape. The
+ * precedent is the mark's glow, which is nine lobes for the same reason and
+ * whose note says not to regularise it.
+ *
+ * ⚠ **Do not tidy these into an even spread.** Evenly spaced lobes of equal
+ * size sum to a flat field, which is the smooth pool again with more code. The
+ * unevenness IS the feature, exactly as it is behind the mark.
+ *
+ * ⚠ **Measured, and the figure that proves it is ROUGHNESS rather than
+ * brightness** — the mean absolute difference between neighbouring pixels along
+ * a line, which is what a blur destroys and a sharp image keeps. Sixty samples
+ * across the card on a 390 handset:
+ *
+ * | | spread | roughness |
+ * |---|---|---|
+ * | outside the card | 14.9 | **0.64** |
+ * | inside the glass | 11.9 | **0.42** |
+ *
+ * **Same light, 34% smoother behind the pane.** That difference is the whole
+ * effect; a smooth pool measures the same on both sides, which is what *not
+ * glassy enough* was. ⚠ **If this is ever re-tuned, roughness is the number to
+ * hold** — brightness can be raised without making anything look more like
+ * glass, and that is the mistake the first three attempts made in three
+ * different ways.
  */
 @utility composer-glow {
   position: relative;
@@ -4656,21 +4695,97 @@
     */
     inset: calc(-3 * var(--page-lead));
     /*
-      ⚠ **Transparent by 80%, not at the corners**, so there is no rectangle in
-      it anywhere. That is the deleted row light's shape inherited as a rule
-      about gradients, not as a purpose — see the `--row-light` tombstone.
+      ⚠ **Seven lobes and a wash under them.** Every one reaches transparent
+      before its own box's corners, so there is no rectangle anywhere in the
+      shape — the deleted row light's rule about gradients, inherited without
+      its purpose. See the `--row-light` tombstone.
+
+      ⚠ **The wash is last, so it is BEHIND the lobes** and is the thing that
+      keeps the interior lit where no lobe reaches. It is a third of the peak:
+      any more and it floods the structure back into a flat field, which is the
+      version this replaced.
+
+      ⚠ **The radii are in `--page-lead`s**, so the whole light scales with the
+      type and the desk's root, like everything else here. **A lobe smaller than
+      the blur radius is erased by it** — 18px is `--glass-blur`, so nothing here
+      is under one `--page-lead` across.
     */
-    background: radial-gradient(
-      ellipse at center,
-      color-mix(in srgb, var(--color-text) var(--composer-glow-peak), transparent) 0%,
-      color-mix(
-          in srgb,
-          var(--color-text) calc(var(--composer-glow-peak) * 0.55),
-          transparent
-        )
-        45%,
-      transparent 80%
-    );
+    background:
+      radial-gradient(
+          calc(var(--page-lead) * 4.5) calc(var(--page-lead) * 3) at 22% 34%,
+          color-mix(in srgb, var(--color-text) var(--composer-glow-peak), transparent) 0%,
+          transparent 100%
+        ),
+      radial-gradient(
+          calc(var(--page-lead) * 3) calc(var(--page-lead) * 2.2) at 63% 22%,
+          color-mix(
+              in srgb,
+              var(--color-text) calc(var(--composer-glow-peak) * 0.8),
+              transparent
+            )
+            0%,
+          transparent 100%
+        ),
+      radial-gradient(
+          calc(var(--page-lead) * 5.5) calc(var(--page-lead) * 2.6) at 78% 61%,
+          color-mix(
+              in srgb,
+              var(--color-text) calc(var(--composer-glow-peak) * 0.95),
+              transparent
+            )
+            0%,
+          transparent 100%
+        ),
+      radial-gradient(
+          calc(var(--page-lead) * 2.4) calc(var(--page-lead) * 2.4) at 41% 72%,
+          color-mix(
+              in srgb,
+              var(--color-text) calc(var(--composer-glow-peak) * 0.7),
+              transparent
+            )
+            0%,
+          transparent 100%
+        ),
+      radial-gradient(
+          calc(var(--page-lead) * 3.6) calc(var(--page-lead) * 1.8) at 8% 66%,
+          color-mix(
+              in srgb,
+              var(--color-text) calc(var(--composer-glow-peak) * 0.6),
+              transparent
+            )
+            0%,
+          transparent 100%
+        ),
+      radial-gradient(
+          calc(var(--page-lead) * 2.8) calc(var(--page-lead) * 2) at 92% 30%,
+          color-mix(
+              in srgb,
+              var(--color-text) calc(var(--composer-glow-peak) * 0.55),
+              transparent
+            )
+            0%,
+          transparent 100%
+        ),
+      radial-gradient(
+          calc(var(--page-lead) * 4) calc(var(--page-lead) * 1.6) at 55% 88%,
+          color-mix(
+              in srgb,
+              var(--color-text) calc(var(--composer-glow-peak) * 0.5),
+              transparent
+            )
+            0%,
+          transparent 100%
+        ),
+      radial-gradient(
+        ellipse at center,
+        color-mix(
+            in srgb,
+            var(--color-text) calc(var(--composer-glow-peak) / 3),
+            transparent
+          )
+          0%,
+        transparent 80%
+      );
   }
 }
 
