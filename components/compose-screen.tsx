@@ -178,7 +178,25 @@ export function ComposeScreen({
         move into a token — a `var()` is substituted where it is *declared*, and
         `--keyboard-overlap` is written onto `host` below `<body>`.
       */}
-      <div className="writing-sheet z-20 bg-[var(--sheet-tint)] backdrop-blur-[var(--sheet-blur)]">
+      {/*
+        ⚠⚠ **THE STRIP HAS NO GROUND, AND THAT IS THE CONSOLE'S ARRANGEMENT —
+        directed 5 September.** It wore the record strip's glass, and with the
+        card now wearing the console's the two nested: a backdrop filter filters
+        what is behind it **including the outer one's result**, so the card would
+        have been 38% over 38% at 24px blur under 18px more. **A glass card
+        inside a glass box is not the console** — the console is a transparent
+        positioner over a blurred scrim holding one glass card, and one glass
+        surface is the whole point of the effect.
+
+        ⚠ **What this costs, and it is not payable yet: the foot loses its
+        ground.** On the record the foot rides inside the strip's glass because
+        the record scrolls under it. Here it sits on the page. **Invisible today**
+        — the page behind it is black — and the question comes back the day the
+        browse half lands, at which point it depends on whether the rail scrolls
+        under the foot or stops above the composer. **Do not pre-build a ground
+        for it; look at it then.**
+      */}
+      <div className="writing-sheet z-20">
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
           the air between the box and the foot, which were touching; writing it is
@@ -235,7 +253,27 @@ export function ComposeScreen({
             black page today and is the right thing the day cards scroll under
             it. **Do not delete it to tidy up.**
           */}
-          <div className="rounded-2xl bg-[var(--color-surface)] p-[var(--page-lead)]">
+          {/*
+            ⚠⚠ **GLASS, WHICH IS THE CONSOLE'S OWN RECIPE — directed 5
+            September, with the cost stated and accepted.** `--glass-tint` over
+            `blur(--glass-blur)` on a handset; `--color-surface` and no blur at
+            and above `--breakpoint-stack`, where `console-card` says *nothing
+            behind it in flow*. **Byte for byte what a console wears.**
+
+            ⚠⚠ **AND IT IS NEARLY INVISIBLE TODAY, WHICH IS THE POINT OF THE
+            CHOICE.** 38% black over black is black. What makes a console read as
+            an object is not its own edge — it is **a sharp card against a
+            blurred record**, and the browse half that will be behind this is not
+            built. The alternative offered was to keep the solid
+            `--color-surface` until the rail lands and switch then; **glass now
+            was chosen deliberately**, so that when the rail arrives the composer
+            is already the lens rather than becoming one.
+
+            ⚠ **So if this reads as *the composer disappeared again*, that is the
+            known price and not a regression.** The fix is the browse half, not a
+            ground. See `docs/re-direction/the-front-page.md` §5.
+          */}
+          <div className="rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none">
           {/*
             ⚠⚠ **THE FIELD IS MOUNTED AT ALL TIMES.** iOS raises a keyboard only
             for a focus that happens *inside* the gesture that asked for it, so

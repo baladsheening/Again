@@ -376,12 +376,31 @@ its bottom edge inside it.**
   an unbuilt reaction. **If a sight line is ever wanted for a capture going to
   the record, the column to aim at is TWO** — that is where the record's glyph
   now is.
-- ⚠ **The ground stays `--color-surface` and that is the console's rule, not a
-  departure from it.** The console is glass on a handset because a scrimmed
-  record passes under it, and `--color-surface` on the desk where its own CSS
-  says *nothing behind it in flow*. **Nothing is behind the composer**, so it
-  takes the second branch. ⚠ **The day the browse half lands there will be cards
-  under it and glass becomes available again — reconsider it then, not before.**
+- ⚠⚠ **THE GROUND IS GLASS — directed 5 September, with the cost stated and
+  accepted.** `--glass-tint` over `blur(--glass-blur)` on a handset,
+  `--color-surface` and no blur at and above `--breakpoint-stack`. **Measured
+  byte for byte against a real open console**: `color(srgb 0 0 0 / 0.38)`,
+  `blur(18px)`, 16px, 20px — the probe opens a console on the record and
+  compares, rather than typing the numbers.
+- ⚠⚠ **AND IT IS NEARLY INVISIBLE ON AN EMPTY PAGE, WHICH IS THE POINT OF THE
+  CHOICE.** 38% black over black is black. **What makes a console read as an
+  object is not its own edge — it is a sharp card against a blurred record**, and
+  the browse half that will be behind this is not built. The alternative offered
+  was to keep a solid `--color-surface` until the rail lands and switch then;
+  **glass now was chosen deliberately**, so that when the rail arrives the
+  composer already *is* the lens rather than becoming one. ⚠ **If it reads as
+  *the composer disappeared again*, that is the known price and not a
+  regression. The fix is the browse half, not a ground.**
+- ⚠⚠ **THE STRIP LOST ITS OWN GROUND, AND IT HAD TO.** A backdrop filter filters
+  what is behind it **including an outer one's result**, so a glass card inside
+  the glass strip was 38% over 38% under 24px of blur plus 18 more. **A glass
+  card inside a glass box is not the console** — the console is a transparent
+  positioner over a blurred scrim holding **one** glass surface. ⚠ **What it
+  costs is not payable yet: the foot loses its ground.** On the record the foot
+  rides inside the strip's glass because the record scrolls under it; here it
+  sits on the page, invisible today because the page is black. **The question
+  comes back the day the rail lands and depends on whether it scrolls under the
+  foot or stops above the composer. Do not pre-build a ground for it.**
 
 ⚠ **What is not built and is the next thing on this screen: attach acting.** The
 control is drawn and dark; it needs the Blob billing switch.
