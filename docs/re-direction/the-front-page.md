@@ -213,14 +213,28 @@ handed down as a render prop.
 capture may be from March and outside the fifty this page loaded. That rule
 travels with the portal wherever the record lives.
 
-**The foot returns to three columns.** It is a three-column grid today — portal
-door, `+`, search — and the `+` holds the centre **by construction**. With a
-composer always on screen there is no `+` to place, so the third column is the
-record's glyph: **portal, record, search**. ⚠ **`foot.tsx`'s founding argument is
-that the `+` is the one control this app has to be perfect at. That control is
-going away**, so the reasoning around it should be re-read rather than
-inherited — including the portal door's placement, which was granted the foot's
-real estate against §2 partly because column one was empty.
+~~**The foot returns to three columns.**~~ ⚠ **WRONG, AND CORRECTED BY READING
+THE CODE — 5 September.** This said the foot was three columns (portal, `+`,
+search) on the strength of a stale paragraph in CLAUDE.md. **It is four**:
+search, `+`, convergence, tray, since 31 August. So the change is smaller than
+this brief claimed — **the `+`'s slot becomes the record's glyph** and nothing
+else moves: **search, record, convergence, tray.**
+
+⚠ **The tray may not leave column four.** The console's settle glyph is aligned
+to it as a sight line for a reaction that is not built yet (2 September, measured
+at 326.25 on a 390) — *moving this glyph out of column four breaks something that
+is not written yet.*
+
+⚠ **What the change buys outright: the first-run shift is gone.** The foot was
+three columns on a first run and four ever after, because the `+` was null on an
+empty record, and the stated price was *the glyphs MOVE when the first line
+lands* — from the sixth marks to the eighth. The record glyph is never absent, so
+the grid is four from the first paint of a new account and nothing ever moves.
+
+⚠ **`foot.tsx`'s founding argument was that the `+` is the one control this app
+has to be perfect at. That control is gone**, so the reasoning around it should
+be re-read rather than inherited — including the portal door's placement, granted
+the foot against §2 partly because a column was empty.
 
 ---
 
@@ -269,10 +283,43 @@ Expanding the union touches `VOCABULARY`, `specFor`, `DEFAULT_INTENT` and
 with a compile-time-only `$type<>`; see Amendment 4's correction of the enum
 claim.
 
-**1. The split.** The record gets its own route and the foot gets its glyph; `/`
-becomes the composer, full height. ⚠ **One step, not two** — a half-done version
-is an app with no record or no capture. Shippable on its own: two working
-screens and nothing new invented.
+~~**1. The split.**~~ **BUILT — 5 September.** `/record` is the record,
+unchanged but for its route; `/` is `components/compose-screen.tsx`; the foot's
+second slot is `RecordGlyph`, drawn off on the record itself. Measured by
+`node_modules/.probe/frontpage.mjs` — 19 assertions on a 390 handset and a 1440
+desk. **Four things were decided in the building that this brief did not say:**
+
+- ⚠⚠ **THE CONFIRMATION IS THE ROW, AND THE ROW IS NOW ONE LINE IN THE
+  COMPOSER.** The brief never answered *what tells you a capture landed* once
+  the record is on another screen, and it is the exact failure this repository
+  has hit twice — the handshake's handle field **read as done when nothing had
+  been sent**, and production held 0 tracks. So the words stay where they were
+  typed until the next capture replaces them. ⚠ **It is not a toast**: it does
+  not time out and it carries no tick, because a timed message is an absence
+  again a second later.
+- ⚠⚠ **THE PORTAL'S DOOR IS ON `/` AND THE PORTAL IS NOT.** Its rows open
+  **consoles**, and a console only exists where the record is — so the door
+  navigates to `/record?portal=1` and the record opens the box on arrival
+  (`portalOpen`). **A door that landed you on a page where you had to find the
+  door again would be worse than no door.** It has to be lit on the landing page
+  whatever it costs: a portal reachable only from a screen you choose to visit
+  is §9's silent failure rebuilt.
+- ⚠⚠ **THE FOOT IS THE STRIP'S SECOND ROW, AND THE FIRST BUILD PUT IT OUTSIDE.**
+  `Foot` carries `col-start-1 row-start-1`, which places it in the record
+  strip's **one-cell grid**; outside any grid it has no positioning at all and
+  fell to the end of a full-height document. **The front page had no navigation
+  on it, and typecheck, lint and seventeen passing assertions all said nothing.
+  The screenshot said it immediately.** ⚠ **Two ROWS here, where the record has
+  two STATES in one cell** — so the foot may be unmounted here, and must not be
+  there. ⚠ **It does not fade, which is a known rough edge**: `hidden` carries
+  an opacity and cannot carry a height. **If it reads badly the fix is a
+  collapsing row, never a reserved gap.**
+- ⚠ **`openSheet` stayed on the record.** The strip is still there for the one
+  job it has left — **rewriting**, from the console's pencil. What went is the
+  *second* door to it, which was the `+`.
+
+⚠ **What is not built and is the next thing on this screen: attach.** The
+composer takes words and nothing else yet.
 
 **2. The card**, against TMDB and against a fixture with no image. Four states,
 no rail yet — one component, judged on its own.
@@ -290,11 +337,21 @@ front page except attachment.
 
 ## 9. Open, and blocking nothing yet
 
-- ⚠⚠ **Colour-by-type is now under pressure and is still UNDECIDED.** It is
-  written up in `docs/decisions.md` as a product question with an engineering
-  cost. `--color-accent` is spent on convergence and is the only colour left.
+- ⚠⚠ **Colour-by-type is PARKED, not answered — directed 5 September: *leave
+  colour by type for now; keep it in mind for later.*** It stays written up in
+  `docs/decisions.md` as a product question with an engineering cost.
+  `--color-accent` is spent on convergence and is the only colour left.
   **Until it is decided, kind is carried by the qualifier's words and not by a
-  colour.** Do not pick a palette inside this work.
+  colour, and no palette is picked inside this work.**
+- **An etch-a-sketch aesthetic for the cards — raised 5 September, kept in
+  mind.** Held here rather than in `docs/decisions.md` because it is an idea and
+  not yet a decision with a cost attached. ⚠ **Note what it would answer if it
+  were taken up:** it is a *drawing* treatment, so it is one possible answer to
+  §3's hardest constraint — **the imageless card** — and it would apply to every
+  type at once rather than needing seven treatments. ⚠ **And what it would
+  collide with:** §11's *type is the entire design* and *known icons*, and the
+  fact that a poster inside an etched frame is two visual languages in one tile.
+  **Look at it against the four states in §3 before deciding anything.**
 - **The frame's aspect** — 2:3 to start; wants a look on hardware.
 - **What the rail is a rail of** — §4.
 - **Whether the browse half survives an empty corpus.** Today the catalogue is

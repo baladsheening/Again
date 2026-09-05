@@ -369,10 +369,25 @@ export function PageScreen({
   todayKey,
   undoWindowMs,
   portalWaiting,
+  portalOpen = false,
   earlier: earlierSeed,
   imagesOn,
 }: {
   lines: PageLineView[]
+  /**
+   * **Open the portal on arrival.**
+   *
+   * ⚠ **It exists because the door is in the foot of a page the portal does not
+   * live on — 5 September.** `/` is the composer now, and its foot carries the
+   * same lit door; but the portal's rows open **consoles**, and a console only
+   * exists where the record is. So the door there navigates here with
+   * `?portal=1` rather than opening a box it cannot fill.
+   *
+   * ⚠ **A door that landed you on a page where you had to find the door again
+   * would be worse than no door**, which is the whole reason this prop is not
+   * simply a link.
+   */
+  portalOpen?: boolean
   /**
    * Whether the app has anywhere to put a photograph.
    *
@@ -482,7 +497,7 @@ export function PageScreen({
    * know — and it has to go dark the moment the last row is emptied, which only
    * the client can. One value, two writers, in that order.
    */
-  const [portal, setPortal] = useState(false)
+  const [portal, setPortal] = useState(portalOpen)
   const [portalLines, setPortalLines] = useState<PortalLineView[]>([])
   /*
     ⚠ **A second list, because a request is a second kind of row** — a question
@@ -2113,12 +2128,18 @@ export function PageScreen({
 
   const tools = {
     /*
-      ⚠ **Never null.** The other entry here can be off, because it needs
-      something to act on. There is nowhere a capture cannot be started, so this
-      is the one control on the page that is always lit — and on an empty record
-      it is the only one.
+      ⚠⚠ **`write` LEFT THIS OBJECT ON 5 SEPTEMBER — Amendment 5.** It read
+      `write: empty ? null : openSheet`, with the note *there is nowhere a
+      capture cannot be started, so this is the one control on the page that is
+      always lit.* **Capture moved to `/`**, which is the composer, so the foot's
+      second slot is the record's own glyph — and here it is `'here'`, which
+      draws it off, because this is the record.
+
+      ⚠ **`openSheet` did not go with it.** The strip is still on this screen and
+      still opens, for the one job it has left: **rewriting**, from the console's
+      pencil through `startEdit`. What is gone is the *second* door to it.
     */
-    write: empty ? null : openSheet,
+    record: 'here' as const,
     /*
       ⚠ **The page's own list is the test, and it is not the whole record.**
       Search reads across settled captures too, so a person whose every line is

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { PortalGlyph, PortalMark, SearchGlyph, TrayGlyph, WriteGlyph } from './glyphs'
+import { PortalGlyph, PortalMark, RecordGlyph, SearchGlyph, TrayGlyph } from './glyphs'
 import type { PortalWaiting } from '@/lib/db'
 
 /**
@@ -149,7 +149,7 @@ type Tools = {
    * this screen, never that there is none. Do not pass `null` from any surface
    * that has no `+` of its own.
    */
-  write: (() => void) | null
+  record?: 'here' | 'away'
   /**
    * Whether there is a record to search. `false` on an empty page, where the
    * only answer the surface could give is *Nothing.*
@@ -208,7 +208,7 @@ function doorName({ lines, requests }: PortalWaiting): string {
 }
 
 function ToolSet({
-  write,
+  record = 'away',
   searchable = false,
   portal = null,
   portalWaiting = { lines: false, requests: false },
@@ -237,7 +237,12 @@ function ToolSet({
     3: 'col-start-3',
     4: 'col-start-4',
   } as const
-  const at = (n: 1 | 2 | 3 | 4) => (write ? COL[n] : '')
+  /*
+    ⚠ **Unconditional since 5 September**, where it used to return '' with no
+    `+` so the grid could auto-place three glyphs. **The record glyph is never
+    absent**, so there are always four and there is nothing left to switch on.
+  */
+  const at = (n: 1 | 2 | 3 | 4) => COL[n]
   return (
     <>
       {/*
@@ -290,15 +295,41 @@ function ToolSet({
         `col-start-*` names go with it, so what is left auto-places one per
         column.
       */}
-      {write && (
-        <button
-          type="button"
-          onClick={write}
-          aria-label="Write a capture"
-          className={`text-chrome tap-target ${at(2)} flex items-center`}
+      {/*
+        ⚠⚠ **THE `+` LEFT THIS SLOT ON 5 SEPTEMBER AND THE RECORD TOOK IT —
+        Amendment 5.** Writing is `/` now: the front page is the corpus above a
+        composer, so there is no capture to *summon* from a bar and nothing for a
+        `+` to do. What the second slot is for instead is **reaching what you
+        wrote**, which is the one thing a record-first app must never make hard.
+
+        ⚠ **It is a `<Link>`, where the `+` was a `<button>`, and the difference
+        is real: a sheet is not a route and a route is not a sheet.** The `+`
+        summoned a field over this page; this goes somewhere.
+
+        ⚠ **The first-run shift is GONE, and it was a stated price.** The old
+        note here read: *the glyphs MOVE when the first line lands — from the
+        sixth marks to the eighth marks — because the `+` returns and takes its
+        slot.* The record glyph is never absent, so the grid is four columns from
+        the first paint of a new account and nothing ever moves. **That is the
+        one thing this change buys outright.**
+
+        ⚠ **Off on the record itself**, which is search's own device: *controls
+        go off; they do not disappear*, and the off state is the drawing without
+        the door. The way back to the composer is the **wordmark**, which has
+        linked to `/` since the bar existed — no new control for it.
+      */}
+      {record === 'away' ? (
+        <Link
+          href="/record"
+          aria-label="The record"
+          className={`text-chrome tap-target ${at(2)} flex items-center transition-colors`}
         >
-          <WriteGlyph />
-        </button>
+          <RecordGlyph />
+        </Link>
+      ) : (
+        <span aria-hidden className={`tap-target ${at(2)} flex items-center ${OFF}`}>
+          <RecordGlyph />
+        </span>
       )}
 
       {/*
@@ -448,23 +479,15 @@ export function Foot({
         and neither reads the other's placement.
       */
       /*
-        ⚠ **THREE COLUMNS ON THE FIRST RUN, FOUR EVER AFTER — 31 August,
-        directed.** The row is search, `+`, convergence, tray. With `write` null
-        the `+`'s slot is empty, and holding it open would leave the other three
-        with a hole in the middle of them; dropping to three columns divides the
-        strip in thirds and puts each on its own centre line, so what is left is
-        evenly spaced rather than merely symmetric. Same mechanism as the two/three
-        it replaces — the count moved, the argument did not.
-
-        ⚠ **The price, stated: the glyphs MOVE when the first line lands** — from
-        the sixth marks to the eighth marks — because the `+` returns and takes
-        its slot. That is one shift, once, in an account's life, at the moment the
-        person is looking at the line they just wrote rather than at the strip.
-        The alternative is a permanent hole where the plus will be.
+        ⚠⚠ **FOUR COLUMNS ALWAYS, SINCE 5 SEPTEMBER.** The row is search,
+        **record**, convergence, tray. It used to be three on a first run and
+        four ever after, because the `+` was null on an empty record — and the
+        stated price was that *the glyphs MOVE when the first line lands*, from
+        the sixth marks to the eighth. **The record glyph is never absent**, so
+        the grid never changes and nothing ever moves. See `ToolSet`'s note on
+        the slot for what left it.
       */
-      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] ${
-        tools.write ? 'grid-cols-4' : 'grid-cols-3'
-      } items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
+      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] grid-cols-4 items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
         hidden ? 'pointer-events-none opacity-0' : ''
       }`}
     >

@@ -226,6 +226,30 @@ export function WriteGlyph() {
   )
 }
 
+/**
+ * Foot. **The record** — §5's *My things*, on its own route since 5 September.
+ *
+ * ⚠ **Three RAGGED lines, and the raggedness is the whole drawing.** Three
+ * equal strokes is a hamburger, which means *a menu of routes* everywhere it
+ * has ever appeared and would be the app's first navigation drawer if it
+ * appeared here. Uneven lengths — 13, 8.5, 11 — read as **written lines**,
+ * which is what the record is: one line per capture, most of them short, some
+ * of them long. It is also not monotonic, so it is not a sort control either.
+ *
+ * ⚠ **It takes the `+`'s slot, and the `+` is gone.** Writing moved to `/`,
+ * which is the composer now; the second slot is how you reach what you wrote.
+ * See `foot.tsx` and `docs/re-direction/the-front-page.md`.
+ */
+export function RecordGlyph() {
+  return (
+    <Glyph>
+      <path d="M3.5 6.25h13" />
+      <path d="M3.5 10h8.5" />
+      <path d="M3.5 13.75h11" />
+    </Glyph>
+  )
+}
+
 /** Foot. Where is that thing I wrote in June. Not per-line. */
 export function SearchGlyph() {
   return (
