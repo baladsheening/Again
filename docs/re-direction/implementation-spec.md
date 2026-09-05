@@ -2,7 +2,9 @@
 
 Status: normative product and build specification  
 Date: 22 August 2026  
-Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 / §13 (see *Amendments* below)
+Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 /
+§13; 4 September 2026 — Amendment 3, §8 / §9; 5 September 2026 — Amendment 4, §2 /
+§6 / §8 / §13 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -107,6 +109,98 @@ handshake's code carrying a handle rather than an opaque session token, argued
 in §2f of the handshake brief. The transfer-session machinery stays with Phase
 3's list transfer, where a snapshot is claimed exactly once.
 
+**Amendment 4 — 5 September 2026, §2 *Exact overlap before inferred similarity*,
+§6 *Unmatched input*, §8 *Friend convergence*, §13 Phase 2.** **A capture
+converges on its words.** Resolution to a possibility and a stated intention
+both stop being conditions of a match.
+
+Directed: *a user opens the app and starts writing, submits, goes about their
+day, maybe gets a notification later of someone or others who've matched with
+him.* **There is no resolution step, no categorising step and no confirmation
+step in that sentence**, and the product had all three standing between a
+written line and a match.
+
+The reason is a delivery failure, and it is the third of the same shape.
+Amendment 2 found the gate shut, Amendment 3 found the introduction never
+delivered, and this is what was behind both. Measured on production, 4
+September: **every capture written since 22 August has `intent = null`** — 48
+captures carry one and were all written on or before that day, 34 carry none and
+were all written after it. `addFilm` was the only writer that ever set an intent
+and nothing references it any more, while `DEFAULT_INTENT` is derived at settle
+to choose a landing state and is never written to the column. `lib/overlap.ts`
+excludes a null intent in SQL before `classify` sees it, and **both fan-outs also
+join on `possibility_id`, so an unresolved capture has never been able to
+converge with anything at all.** Two accounts are now mutual, both hold the same
+film, every other term is green, and they converge on nothing.
+
+Three clauses move:
+
+- ⚠⚠ **§8's *both captures resolve to the same possibility* becomes *both
+  captures agree* — the same possibility, or the same normalised text.**
+  `normalised_text` is already a generated, indexed column and is already the
+  rule search compares on — `btrim(regexp_replace(lower(text),
+  '[^[:alnum:]]+', ' ', 'g'))`, written once in `lib/db/schema.ts`. It becomes
+  the rule **matching** compares on as well. ⚠ **That promotes it from a search
+  convenience to a product rule** — what counts as *the same words* is now a
+  statement about people, and changing the expression silently re-partitions
+  every capture in the database. It is already documented as never to be
+  redefined without a backfill; that warning is now load-bearing.
+- ⚠⚠ **§13's *possible-match prompts for unresolved, normalised-equal captures;
+  no notification until each user confirms the resolution* is withdrawn**, with
+  its exit criterion. Identical text **is** a convergence, not a prompt.
+  ⚠ **What that costs, stated: two people who both wrote *the wedding* will be
+  told they agree, and they may mean different weddings.** It is affordable here
+  and would not be on a public surface — a convergence is disclosed only to a
+  person the reader deliberately added and accepted, it discloses one line, and
+  the sentence it writes (*Sam too.*) is a claim about words rather than about
+  the world. The alternative is a confirmation beat *after* the capture whose
+  failure is **silent**, which is the exact shape of the two failures above.
+- ⚠ **Intent stops being a match term.** The specification never listed it as
+  one — §8's conditions do not mention intent — so this is a correction of the
+  code to the specification as much as a change to it. `classify`'s allowlist
+  becomes a way of choosing **which** sentence to write, not **whether** to
+  write one: where both sides state an intention the existing three pairs still
+  pick the richer sentence, and where either is null it is the plain one.
+  ⚠ **The cost: two people who resolved the same possibility under different
+  intentions now match**, where the *a plan, not a coincidence* argument
+  (CLAUDE.md §6) excluded them. For a text match the words carry that
+  distinction — *watch scarface* and *buy the scarface disc* are neither the
+  same string nor the same meaning — but **for a possibility match the words are
+  not read**. If it proves noisy, **this is the clause to reopen; not the text
+  rule.**
+
+**What is unchanged, and is why this is safe:**
+
+- **The consent is still the mutual track**, and every term of what may be
+  **read** is untouched. This changes what may *match*, never what may be
+  *read* — the same boundary Amendment 2 drew.
+- **The lock still withdraws a line from the pool**, and a capture whose
+  provenance is another person is still private and still unmatched.
+- **§6's suppression rule and the transfer exclusion are untouched.**
+- **No eighth notification kind.** A text convergence is a convergence and uses
+  the kinds that exist. The bar set in Amendment 3 is unchanged.
+- **Nothing new is asked of anybody.** §2's *capture before categorisation* is
+  not merely preserved: this is what restores it. The app asks for nothing
+  before a capture and nothing after one, and the four-second criterion is
+  untouched.
+
+⚠ **Semantic similarity is still later, opt-in and explainable, and §2's
+principle stands. Words are not semantics** — `normalised_text` is exact
+equality after case-folding and punctuation, so §8's *"Visit Japan" and "visit
+Tokyo" should not be treated as the same possibility* is unaffected and still
+holds. **When a similarity layer is built it may propose and must never
+decide**: it surfaces candidates to the person who wrote the line, and only
+agreement in the words or the possibility writes a notification to anybody else.
+
+⚠⚠ **The second half of the directed sentence is not built.** *Goes about their
+day* means the notification reaches somebody who is **not in the app**, and
+delivery is in-app only: there is no service worker, no subscription record and
+no worker, and the VAPID keys in `lib/env.ts` are still optional. §8's
+*notifications should initially be in-app* and Phase 5's *push delivery only
+through the background worker* both still stand, so until push exists the loop
+ends at **opens the app again and finds it**. Named here rather than assumed,
+because it is half of what was asked for.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -193,8 +287,13 @@ and a thing being available in a particular place at a particular time.
 
 ### Exact overlap before inferred similarity
 
-The first convergence implementation matches the same canonical possibility.
-Semantic or AI-assisted similarity is later, opt-in, and explainable.
+⚠ **Amended 5 September — see Amendment 4 and §8 *Friend convergence*.** The
+first convergence implementation matches **exactly**: the same canonical
+possibility, or the same normalised text. Neither is inference — normalised text
+is equality after case-folding and punctuation — so this principle is widened
+rather than weakened. Semantic or AI-assisted similarity is later, opt-in, and
+explainable, and when it arrives it **proposes to the person who wrote the line
+and never writes a notification to anybody else**.
 
 ### Remove friction before adding intelligence
 
@@ -420,6 +519,12 @@ matches. Selecting a suggestion is an explicit action.
 
 If no provider result exists, the input is still saved. It appears in the
 user's personal list as an unresolved capture.
+
+⚠ **Amended 5 September — see Amendment 4. An unresolved capture is a full
+participant in convergence**, matched on its normalised text against another
+person's. Resolution enriches a capture; it has never been, and must not become,
+the price of being matched. A person who writes a line and never touches the app
+again has done everything the product asks of them.
 
 The app must not show language implying that the user's intention is invalid,
 unimportant, or misspelled because no catalogue result was found.
@@ -649,13 +754,28 @@ Convergence fires when:
 
 - both users mutually track each other
 - both have an active capture
-- both captures resolve to the same possibility
+- **the two captures agree** — they resolve to the same possibility, **or their
+  normalised text is identical**
 - neither capture is private from the other
 - the match is not suppressed by the existing copy/source rule
 - neither capture was transferred from the other participant
 
+⚠ **The third condition was *both captures resolve to the same possibility* and
+was amended on 5 September — see Amendment 4.** Requiring a possibility meant an
+unresolved capture could never converge with anything, which is most of what
+people write. A capture converges on its words.
+
+⚠ **A stated intention is not a condition and never was one in this document.**
+The implementation required a non-null intent and an allowed pair before it would
+match, which excluded every capture written since 22 August. The pair now chooses
+**which** sentence a convergence writes, not **whether** one is written. See
+Amendment 4 for what that costs.
+
 The match must be exact at first. “Visit Japan” and “visit Tokyo” should not be
 treated as the same possibility merely because they are semantically related.
+**Identical normalised text is exact**, not similar: it is equality after
+case-folding and punctuation-stripping, by the one rule in `lib/db/schema.ts`
+that search already uses.
 
 Existing overlap logic should remain the single owner of classification and
 notification writing. The code must support both triggers:
@@ -1262,9 +1382,12 @@ implementation anywhere. Production held 79 captures, all private, and no
 notification had ever been written. **See Amendment 2**: a self-written capture
 is now shareable on write and a per-capture lock takes it out of the pool.
 
-⚠ **What is still not built** is at the end of this section, and the two that
-matter are the **QR/code contact handshake** and **possible-match prompts for
-unresolved, normalised-equal captures**.
+⚠ **What is still not built** is at the end of this section. The **QR/code
+contact handshake** is one. The other was *possible-match prompts for unresolved,
+normalised-equal captures*, and **Amendment 4 withdrew the prompt and made the
+match itself the deliverable** — normalised-equal text converges, with no
+confirmation step. ⚠ **Push delivery is a third and is named in Amendment 4**:
+until it exists a convergence waits in the app rather than reaching anybody.
 
 ⚠ **And what no test can supply: Phase 2 has never fired for a real person.**
 Production holds **one account and no tracks**, so every convergence this phase
@@ -1287,8 +1410,8 @@ re-pointed at captures in Phase 0:
 rather than deleted — 31 August.** Two surfaces read it now: **the portal**,
 which is the overlap list, and **the console**, which is its detail and which
 also carries the mark's sentence. What remains unbuilt from the list below is the
-**QR/code contact handshake** and the **possible-match prompt for unresolved,
-normalised-equal captures**.
+**QR/code contact handshake** and **convergence on normalised-equal text**, which
+Amendment 4 turned from a prompt into a match.
 
 ⚠ **Steps 1 and 2 of the design's sequence are built and deployed — 30 August:
 the CONSOLE and the SWIPES.** A swipe on a row crosses it off one way and asks
@@ -1332,8 +1455,12 @@ Deliver:
   shareable on write and a **lock** takes one out of the pool, on a swipe. See
   the amendment under *Visibility*.
 - exact canonical overlap
-- possible-match prompts for unresolved, normalised-equal captures; no
-  notification until each user confirms the resolution
+- ⚠ **exact overlap on normalised-equal text, for captures that resolve to
+  nothing** — amended 5 September; this line read *possible-match prompts for
+  unresolved, normalised-equal captures; no notification until each user confirms
+  the resolution*, and the confirmation step is withdrawn. See Amendment 4.
+- ⚠ **a null intention does not block a match** — the intent pair selects the
+  sentence, and is not a gate
 - in-app convergence notification
 - overlap list and detail
 - suppression for copied/source entries
@@ -1345,8 +1472,13 @@ Exit criteria:
 - a new mutual track triggers existing matching captures
 - two people can complete a QR/code contact handshake without exposing either
   list
-- identical unresolved text cannot create a false convergence, but can be
-  reviewed as a possible match by its owner
+- ⚠ **two real accounts can write the same words, resolve nothing, and see one
+  correct convergence** — amended 5 September; this criterion read *identical
+  unresolved text cannot create a false convergence, but can be reviewed as a
+  possible match by its owner*, and it is inverted. See Amendment 4 for the cost
+  it accepts.
+- ⚠ **a capture with no intention converges**, and the sentence it produces is
+  the plain one
 - private captures never leak
 - duplicate mutations do not duplicate notifications
 

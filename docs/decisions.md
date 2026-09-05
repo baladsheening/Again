@@ -277,6 +277,13 @@ people who both typed *try pottery* and neither of whom resolved it to anything
 canonical. Exact convergence runs on `possibility_id`; this is the only handle
 the possible-match path has when that column is null on both sides.
 
+⚠⚠ **AND ON 5 SEPTEMBER THAT PATH BECAME THE MATCH ITSELF — see *Amendment 4 to
+the specification* below.** This column no longer feeds a prompt somebody has to
+confirm; **identical normalised text is a convergence.** Everything below is
+unchanged and every word of it is now load-bearing in a way it was not: the rule
+in this column decides who is told they agree with whom, so *the day the rule
+changes* is no longer only a search question.
+
 **It is a generated column, not a TypeScript function.** One implementation of
 the rule, living where the rows live, so a writer cannot forget it and two
 writers cannot disagree about it.
@@ -506,6 +513,80 @@ worth re-verifying a database migration for.
 What Phase 0 is, stated plainly, so the exit criteria can be honest about it:
 **a compatibility and data-safety step. It changes what the records are, not
 what they say.**
+
+### Amendment 4 to the specification — a capture converges on its words (5 September)
+
+Directed: *a user opens the app and starts writing, submits, goes about their
+day, maybe gets a notification later of someone or others who've matched with
+him.* Written out, that sentence contains **no resolving step, no categorising
+step and no confirming step**, and the product had all three standing between a
+written line and a match.
+
+**What forced it was a measurement, not a preference.** Production, 4 September:
+48 captures carry an intent and were all written on or before 22 August; 34
+carry none and were all written after it. That day is when Phase 1's capture
+page replaced the film flow, and `addFilm` was the only writer that ever set an
+intent. `lib/overlap.ts` excludes a null intent in SQL before `classify` sees
+it — so **nothing written on the current app could converge.** Two accounts were
+mutual, both held the same film, and they matched on nothing.
+
+⚠ **The second wall was the larger one and was nearly missed.** Both fan-outs
+also join on `possibility_id`. Fixing intent alone would have unblocked only
+captures that had already resolved to a TMDB film — **an unresolved capture had
+never been able to converge with anything at all**, and unresolved is most of
+what anybody writes. A diary line about a wedding, a walk or a person resolves
+to nothing and always will; the catalogue is one provider and one kind.
+
+**What was rejected: an intention control in the console.** It was this file's
+sibling brief's own proposal (§9b of `phase-2-convergence.md`) and it is
+withdrawn. It answers the smaller wall, and it is **a beat after the capture
+that somebody has to come back for, whose failure is silent** — which is the
+shape of every failure §9 of that brief records: the visibility gate nobody
+opened (Amendment 2), the introduction nobody delivered (Amendment 3). The third
+one would have been an intention nobody went back to state.
+
+**Why identical text is a convergence and not a prompt.** §13 specified a
+possible-match prompt for unresolved, normalised-equal captures, confirmed by
+each owner before any notification. The confirmation is the same silent beat.
+⚠ **The cost of dropping it, stated: two people who both wrote *the wedding*
+will be told they agree, and they may mean different weddings.** That is
+affordable here and would not be on a public surface — a convergence is
+disclosed only to somebody the reader deliberately added *and* accepted, it
+discloses one line, and *Sam too.* is a claim about words rather than about the
+world. A wrong text match costs a shrug between two friends. A missed one costs
+the product.
+
+**Intent stops gating and starts choosing.** The specification never listed it
+as a condition — §8's list does not mention it — so this is as much a correction
+of the code to the specification as a change to it. `classify`'s three pairs now
+pick **which** sentence a convergence writes rather than **whether** one is
+written. ⚠ **The real cost is on the possibility side**: two people who resolved
+the same film under different intentions now match, where *a plan, not a
+coincidence* excluded them. For a text match the words carry that distinction —
+*watch scarface* and *buy the scarface disc* are neither the same string nor the
+same meaning — but a possibility match does not read the words at all.
+
+⚠ **Words are not semantics, and this adds no similarity.** `normalised_text` is
+equality after case-folding and punctuation-stripping, by the rule already in
+the column. §2's *exact overlap before inferred similarity* is widened, not
+weakened, and §8's *"Visit Japan" and "visit Tokyo" should not be treated as the
+same possibility* is untouched. **When a similarity layer is built it may
+propose and must never decide**: it surfaces candidates to the person who wrote
+the line, and only agreement in the words or the possibility notifies anybody
+else. Embeddings are also a paid service and are lodged, not built.
+
+⚠ **Half the directed sentence is not delivered.** *Goes about their day* means
+reaching somebody who is not in the app. Delivery is in-app only — no service
+worker, no subscription record, no worker, and the VAPID keys in `lib/env.ts`
+are still optional. Until push exists the loop ends at *opens the app again and
+finds it*. Named here so it is not quietly assumed away.
+
+**What would change this.** If text convergence proves noisy in use, the first
+clause to reopen is **intent on the possibility side**, not the text rule — the
+words are the part that carries meaning, and it is the resolved pair that lost
+its discrimination. If it proves noisy on the text side instead, the answer is a
+**longer minimum** or a stop-list, not a confirmation step; the confirmation
+step is what this amendment exists to remove.
 
 ### The runbook runs in the shell it will actually be typed into (22 August)
 

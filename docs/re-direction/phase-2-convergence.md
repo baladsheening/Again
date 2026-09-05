@@ -35,6 +35,8 @@ wins and this file is wrong.
 | Haptic vocabulary | **BUILT, and dead on iOS.** Three patterns in `lib/haptics.ts`, Android only. The native-shell note is in `docs/decisions.md` |
 | The notification portal | **built, 30 August** — door in the FOOT, against §2 |
 | The convergence mark on a line | **BUILT — 31 August.** `--color-accent` in the gutter, on every line that has ever converged, and it **does not empty**. §5's mark sub-section is struck. The code is the `converged` utility in `globals.css`, `converged` in `lib/db/captures.ts` and `getConvergence` beside the portal's read |
+| A capture converges on its WORDS | ⚠⚠ **DIRECTED 5 September, NOT BUILT.** `possibility_id` and `intent` stop being conditions of a match; two captures agree on the same possibility **or on identical `normalised_text`**. **Amendment 4** to the specification is normative; §9b below carries the failure it answers |
+| Push delivery | ⚠ **NOT BUILT, and it is half of the directed loop.** *Goes about their day* means reaching somebody who is not in the app. No service worker, no subscription record, no worker; the VAPID keys in `lib/env.ts` are still optional |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
 
@@ -440,9 +442,10 @@ for convergence on a line. Nothing is the correct rendering of nothing.
   the engine landed and is exactly this; the portal writes it and reads
   `is null`. **The vocabulary migration is therefore not waiting to be batched
   with anything.**
-- **Where an intention is refined after capture** is still undesigned, and it is
-  the other half of why **Have** is unreachable. See *Have is still not
-  reachable* in `phase-1-capture.md`.
+- **Where an intention is refined after capture** is still undesigned. ⚠ **It
+  stopped blocking convergence on 5 September — see §9b and Amendment 4** — and
+  it is still the other half of why **Have** is unreachable. See *Have is still
+  not reachable* in `phase-1-capture.md`.
 
 ---
 
@@ -506,7 +509,31 @@ added should receive a ping offering accept or reject.*
   request that is never accepted is a visible pending state, where today it is
   an absence indistinguishable from having no matches.
 
-### 9b. ⚠⚠ NOTHING WRITTEN ON THE CURRENT APP CAN EVER CONVERGE
+### 9b. ~~NOTHING WRITTEN ON THE CURRENT APP CAN EVER CONVERGE~~ — ANSWERED 5 September
+
+⚠⚠ **THE ANSWER WAS TO REMOVE TWO CONDITIONS, NOT TO ADD A CONTROL. This section
+prescribed an intention control in the console and that is WITHDRAWN — do not
+build it.** Directed, 5 September: *a user opens the app and starts writing,
+submits, goes about their day, maybe gets a notification later of someone or
+others who've matched with him.* **There is no resolving step, no categorising
+step and no confirming step in that sentence.**
+
+**So a capture converges on its words.** `possibility_id` and `intent` both stop
+being conditions of a match: two captures agree when they resolve to the same
+possibility **or when their `normalised_text` is identical**, and the intent pair
+selects which sentence to write rather than whether to write one. The normative
+statement is **Amendment 4** to the implementation specification, which carries
+what it costs and what it leaves untouched. ⚠ **The consent is still the mutual
+track and reading is still untouched** — this changes what may *match*, never
+what may be *read*.
+
+⚠ **The half that is not built: push.** *Goes about their day* means reaching
+somebody who is not in the app, and delivery is in-app only — no service worker,
+no subscription record, no worker. Until it exists the loop ends at *opens the
+app again and finds it*.
+
+**What follows is the account of the failure, kept because it is what the change
+answers. The prescriptions inside it are superseded.**
 
 ⚠⚠ **THIS SECTION SAID *2 OF 54 CAPTURES* AND THAT BADLY UNDERSTATED IT —
 measured against production on 4 September.** The real shape:
@@ -526,34 +553,48 @@ and is permanently unmatchable.**
 
 ⚠ **The handshake (§9a) is necessary and it is not sufficient.** Two people can
 now find each other, become mutual, and still converge on nothing — which is the
-same silence, reached one step later. **This is the next thing to build.**
+same silence, reached one step later. ~~**This is the next thing to build.**~~
+**It was — and what got built is Amendment 4, not what this section proposed.**
 
-⚠ **It is not a matching bug and the fix is not in `lib/overlap.ts`.** The rule
-below is right. What is missing is any way for a live capture to acquire an
-intention, and the console is where a capture is already opened and
-reconsidered.
+⚠⚠ **THIS PARAGRAPH WAS WRONG IN BOTH HALVES AND IS KEPT TO SAY SO.** It read:
+*it is not a matching bug and the fix is not in `lib/overlap.ts`; the rule below
+is right; what is missing is any way for a live capture to acquire an intention,
+and the console is where a capture is already opened and reconsidered.* **The
+fix is exactly in `lib/overlap.ts`, and the rule below is what changed.** A
+control in the console would have answered *intent* and left the larger wall
+standing: **both fan-outs join on `possibility_id`**, so a capture that resolves
+to nothing could never converge with anything whatever its intention — and that
+is most of what anybody writes.
 
 Both *Scarface* captures resolved to the film and carry `intent = null`. **A
 null intention is excluded in SQL before `classify` sees it** (`lib/overlap.ts`,
 both fan-outs), so those two lines cannot match each other or anybody, ever, and
 no surface says so.
 
-- **The matching rule is right and is not what to change.** §6 makes intent part
-  of the match deliberately: two people wanting to *see* a film is a plan; one
-  wanting to see it and one wanting to own a disc is not a match at all. The
-  allowlist is three pairs — `see×see`, `see×again`, `own×have`.
-- ⚠ **What is missing is any way to give a live capture an intention.** §13
-  forbids asking before saving, and `DEFAULT_INTENT` derives one at **settle**
-  time — so a capture that resolves without passing through that path keeps a
-  null forever. This is the *"where an intention is refined after capture"* entry
-  in §7 above, with a measured consequence attached: **2 of 54 resolved
-  production captures are permanently unmatchable.**
+- ~~**The matching rule is right and is not what to change.**~~ ⚠ **It is what
+  changed.** The argument it rested on is real and is now a **cost rather than a
+  rule**: §6 made intent part of the match deliberately — two people wanting to
+  *see* a film is a plan, one wanting to see it and one wanting to own a disc is
+  not — and under Amendment 4 that pair matches and writes the plain sentence.
+  The three pairs (`see×see`, `see×again`, `own×have`) survive as the chooser of
+  the richer sentence. ⚠ **For a text match the words carry the distinction; for
+  a possibility match nothing does. If it proves noisy, that is the clause to
+  reopen — not the text rule.**
+- ⚠ **There is still no way to give a live capture an intention, and it no longer
+  blocks anything.** §13 forbids asking before saving, and `DEFAULT_INTENT` is
+  derived at **settle** to choose a landing state and never written. Under
+  Amendment 4 a null intention matches, so the *"where an intention is refined
+  after capture"* entry in §7 above is a **refinement** question rather than a
+  blocking one. It is still the other half of why **Have** is unreachable.
 - ⚠ **It is the same gap that makes Have unreachable**, from the other end. See
   *Have is still not reachable* in `phase-1-capture.md`.
 - **Do not answer it by defaulting the intent at capture time.** That would make
   every raw capture claim an intention nobody stated, which is the categorising
-  §13 exists to prevent. The console is where a capture is already opened and
-  reconsidered; it is the obvious home for this.
+  §13 exists to prevent. ⚠⚠ **And do not answer it in the console either — that
+  was this section's own proposal, and Amendment 4 replaced it.** A control there
+  is still a beat after the capture that somebody has to come back for, and its
+  failure is silent, which is the shape of every failure §9 records. **The
+  intention is in the words.**
 
 ---
 
@@ -578,6 +619,16 @@ no surface says so.
    sequencing paid: the portal had already put a real convergence on screen, so
    what the mark had to be was known rather than guessed. §5's sub-section above
    is struck.
+5. ⚠⚠ **THE WORDS — added 5 September, directed, and it is the first item here
+   that is not a surface.** Everything above reads a convergence; **nothing has
+   ever produced one from a line somebody wrote on this app.** Two conditions
+   come out of `lib/overlap.ts` — the join on `possibility_id` and the non-null
+   intent — and normalised-equal text becomes an agreement. **Amendment 4** is
+   normative; §9b is the account. ⚠ **The whole of it is in the matching owner
+   and no surface changes**, which is why it is one item and comes after four
+   that were all screens.
+6. ⚠ **PUSH — named, not scheduled.** Until it exists a convergence waits in the
+   app, and *goes about their day* is not delivered.
 
 ⚠⚠ **THE SEQUENCE IS COMPLETE AND THIS FILE IS NOT YET FOR THE BIN — read this
 before moving it.** All four steps are built, so the instruction at the head of
@@ -590,9 +641,12 @@ this document points at `docs/re-direction/inactive/`. **What holds it here is
   other half of why **Have** is unreachable.
 - §6 holds three things back on purpose — conversations, other listers, and the
   silence rule — and those are the notes a Phase 6 reader will need.
-- §13 of `implementation-spec.md` is normative for the phase's exit criteria and
-  still names the possible-match prompt for unresolved normalised-equal captures.
-  **This document has never owned that item and cannot close it.**
+- ~~§13 of `implementation-spec.md` still names the possible-match prompt for
+  unresolved normalised-equal captures.~~ ⚠ **Amendment 4 withdrew the prompt on
+  5 September and made the match itself the deliverable** — normalised-equal text
+  converges with no confirmation step. §13 is still normative for the exit
+  criteria and **this document has never owned that item**; what it now owns is
+  step 5 of the sequence, which is unbuilt.
 
 **The call is the product owner's**: move this file when those are answered
 elsewhere, not because the sequence ran out.
