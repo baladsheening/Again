@@ -2139,6 +2139,8 @@ export function PageScreen({
       still opens, for the one job it has left: **rewriting**, from the console's
       pencil through `startEdit`. What is gone is the *second* door to it.
     */
+    /* The mirror of `record` below: home is elsewhere from here. */
+    home: 'away' as const,
     record: 'here' as const,
     /*
       ⚠ **The page's own list is the test, and it is not the whole record.**

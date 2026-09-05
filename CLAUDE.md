@@ -24,6 +24,63 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THREE REPORTS FROM A HANDSET, AND ONE OF THEM WAS ANSWERED BY A RULE THIS
+SCREEN NEVER INHERITED — 5 September.** *The bounce of the record glyph cannot be
+seen when the keyboard is up; is the undo icon optically in-line with the line?;
+add a home glyph to the left of the bottom bar.*
+
+- ⚠⚠ **A COMMIT ENDS THE WRITING MODE HERE TOO, WHICH IT SHOULD HAVE DONE ON DAY
+  ONE.** Directed 27 August for the record's strip — *once a line is submitted
+  the person is presumed done* — and the front page was written without it. **The
+  foot is unmounted while somebody writes**, so the door that acknowledges the
+  capture was not on screen at the moment it had something to say. `commit`
+  calls `field.current?.blur()`, and the receipt, its undo, the window closing
+  and the bounce all now happen on a screen that is showing them. **Nothing new
+  is drawn.** ⚠ **What it costs, stated: a run of captures is a tap back into the
+  field between each** — the 27 August trade exactly, and the reason the field is
+  mounted at all times.
+- ⚠ **`blur()`, never `setWriting(false)`.** The mode has one exit and it is the
+  field losing focus; setting the state directly leaves a focused field on a
+  screen that thinks nobody is writing, which is the state iOS's own *Done* used
+  to produce.
+- ⚠⚠ **THE UNDO WAS FIVE PIXELS HIGH, AND `items-baseline` WAS DOING IT.** A
+  flex item is aligned on **its** baseline, and a box holding only an `<svg>` has
+  no text baseline — so the engine used its bottom margin edge and put the
+  drawing's centre at 662.5 against the words' ink centre at 667.5. `items-start`
+  lets `line-glyph` do the job it exists for: the holder is exactly one line box
+  tall, so top-aligned against a line of the same leading **the drawing lands on
+  the line's own centre with no face metric anywhere in it.** Measured 0.00px
+  after. ⚠ **It reads ~2px above the CAP-ink centre and that is correct**, not a
+  residue: it is the relationship every glyph on a record row has, and
+  `UndoGlyph` was redrawn on its own grid for it. **Do not nudge a glyph from
+  outside the glyph.**
+- ⚠⚠ **A HOME GLYPH ON THE FAR LEFT, AND IT TOOK THE BAR FROM FOUR COLUMNS TO
+  FIVE.** `HomeGlyph` is a house — deliberately the most conventional drawing in
+  the file, because §11 permits *known* icons and the leftmost slot of a bottom
+  bar is where nobody should have to learn anything. Drawn on the one grid,
+  viewBox 20, stroke 1.25. Off on the composer, lit on the record: **the mirror
+  of `record`**, so the app is two surfaces each holding a lit door to the other
+  and a dark drawing of itself.
+- ⚠ **It duplicates the wordmark, which is the stated cost.** `foot.tsx` has said
+  since the split that *the way back to the composer is the wordmark — no new
+  control for it*. This is a second door to the same place, at the bottom edge
+  because that is where reflexes live.
+- ⚠⚠ **AND IT MOVED THE TRAY, SO THE CONSOLE'S SETTLE MOVED WITH IT.** `foot.tsx`
+  has warned since 2 September that *moving this glyph out of column four breaks
+  something that is not written yet, so move the console's with it* — the settle
+  glyph sits on the tray's x centre as a sight line for a reaction that is not
+  built. Both are column **five** of a five-column grid now, measured equal at
+  **335** on a 390 handset. ⚠ **The composer's own control row stayed FOUR
+  columns**: send is aligned to nothing, so there was nothing for a fifth column
+  to keep in step with.
+- **Proved by `node_modules/.probe/traysightline.mjs`** (5 assertions, and it
+  exists so the next person to add a glyph finds out immediately) and by
+  `composerundo.mjs`, now 21, which asserts the commit lets go, the door is on
+  screen to be bounced, and the undo is on the line's centre.
+- ⚠ **Two probes were already failing before this and still are, for reasons of
+  their own:** `console.mjs` waits for `Write a capture`, the `+` deleted in the
+  split, and `portal.mjs`/`handshake.mjs` need their local seeds.
+
 ⚠⚠ **A CAPTURE IS AS LONG AS THE BOX, AND THE BOX GROWS A LINE TO WRITE IN —
 5 September, two directions, built and measured. THE COMPOSER NO LONGER SCROLLS
 AT ALL.** Directed: *limit the number of

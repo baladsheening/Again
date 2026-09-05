@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { OFF } from './bar'
-import { PortalGlyph, PortalMark, RecordGlyph, SearchGlyph, TrayGlyph } from './glyphs'
+import { HomeGlyph, PortalGlyph, PortalMark, RecordGlyph, SearchGlyph, TrayGlyph } from './glyphs'
 import type { PortalWaiting } from '@/lib/db'
 
 /**
@@ -149,6 +149,15 @@ type Tools = {
    * this screen, never that there is none. Do not pass `null` from any surface
    * that has no `+` of its own.
    */
+  /**
+   * **Where home is from here.** `'here'` on the composer itself, which draws
+   * the glyph off; `'away'` anywhere else, where it is a link back to `/`.
+   *
+   * ⚠ **The mirror of `record`**, and the pair is the whole navigation of this
+   * app: two surfaces, each holding a lit door to the other and a dark drawing
+   * of itself. *Controls go off; they do not disappear.*
+   */
+  home?: 'here' | 'away'
   record?: 'here' | 'away'
   /**
    * **A capture has just landed, so the door to the record says so — once.**
@@ -220,6 +229,7 @@ function doorName({ lines, requests }: PortalWaiting): string {
 }
 
 function ToolSet({
+  home = 'away',
   record = 'away',
   searchable = false,
   portal = null,
@@ -250,15 +260,42 @@ function ToolSet({
     2: 'col-start-2',
     3: 'col-start-3',
     4: 'col-start-4',
+    5: 'col-start-5',
   } as const
   /*
     ⚠ **Unconditional since 5 September**, where it used to return '' with no
     `+` so the grid could auto-place three glyphs. **The record glyph is never
     absent**, so there are always four and there is nothing left to switch on.
   */
-  const at = (n: 1 | 2 | 3 | 4) => COL[n]
+  const at = (n: 1 | 2 | 3 | 4 | 5) => COL[n]
   return (
     <>
+      {/*
+        ⚠⚠ **HOME, FAR LEFT — directed 5 September, and it took the bar from four
+        columns to five.** The cost is named in the tray's own note below: the
+        console's settle glyph is aligned to the tray's x centre as a sight line
+        for a reaction that is not built, and *moving this glyph out of column
+        four breaks something that is not written yet, so move the console's with
+        it.* **Both moved to column five together**, and the alignment is
+        asserted rather than assumed.
+
+        ⚠ **Off on the composer**, which is search's device and the record
+        glyph's: the off state is the drawing without the door.
+      */}
+      {home === 'away' ? (
+        <Link
+          href="/"
+          aria-label="Home"
+          className={`text-chrome tap-target ${at(1)} flex items-center transition-colors`}
+        >
+          <HomeGlyph />
+        </Link>
+      ) : (
+        <span aria-hidden className={`tap-target ${at(1)} flex items-center ${OFF}`}>
+          <HomeGlyph />
+        </span>
+      )}
+
       {/*
         ⚠ **Search leads the row since 31 August**, where the portal used to. The
         four slots are search, `+`, convergence, tray — see the head of this file
@@ -268,7 +305,7 @@ function ToolSet({
         <Link
           href="/search"
           aria-label="Search"
-          className={`text-chrome tap-target ${at(1)} flex items-center transition-colors`}
+          className={`text-chrome tap-target ${at(2)} flex items-center transition-colors`}
         >
           <SearchGlyph />
         </Link>
@@ -280,7 +317,7 @@ function ToolSet({
           with the door rather than staying on something a screen reader would
           announce as reachable.
         */
-        <span aria-hidden className={`tap-target ${at(1)} flex items-center ${OFF}`}>
+        <span aria-hidden className={`tap-target ${at(2)} flex items-center ${OFF}`}>
           <SearchGlyph />
         </span>
       )}
@@ -344,7 +381,7 @@ function ToolSet({
             ⚠ **`onAnimationEnd` puts it down**, rather than a timer that would
             be a second copy of `--recede` in a language that cannot read it.
           */
-          className={`text-chrome tap-target ${at(2)} flex items-center transition-colors ${
+          className={`text-chrome tap-target ${at(3)} flex items-center transition-colors ${
             arrived ? 'record-arrived' : ''
           }`}
           onAnimationEnd={onArrived}
@@ -352,7 +389,7 @@ function ToolSet({
           <RecordGlyph />
         </Link>
       ) : (
-        <span aria-hidden className={`tap-target ${at(2)} flex items-center ${OFF}`}>
+        <span aria-hidden className={`tap-target ${at(3)} flex items-center ${OFF}`}>
           <RecordGlyph />
         </span>
       )}
@@ -400,7 +437,7 @@ function ToolSet({
             somebody who has only been asked a question.
           */
           aria-label={doorName(portalWaiting)}
-          className={`text-chrome tap-target ${at(3)} flex items-center transition-colors`}
+          className={`text-chrome tap-target ${at(4)} flex items-center transition-colors`}
         >
           <PortalMark {...portalWaiting} />
         </button>
@@ -410,7 +447,7 @@ function ToolSet({
           note on search's `<span>` for why the label goes with the door rather
           than staying on something a reader would be told it can reach.
         */
-        <span aria-hidden className={`tap-target ${at(3)} flex items-center ${OFF}`}>
+        <span aria-hidden className={`tap-target ${at(4)} flex items-center ${OFF}`}>
           <PortalGlyph />
         </span>
       )}
@@ -440,7 +477,7 @@ function ToolSet({
       <Link
         href="/settled"
         aria-label="Settled"
-        className={`text-chrome tap-target ${at(4)} flex items-center transition-colors`}
+        className={`text-chrome tap-target ${at(5)} flex items-center transition-colors`}
       >
         <TrayGlyph />
       </Link>
@@ -512,7 +549,7 @@ export function Foot({
         the grid never changes and nothing ever moves. See `ToolSet`'s note on
         the slot for what left it.
       */
-      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] grid-cols-4 items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
+      className={`col-start-1 row-start-1 stack:hidden mx-auto grid w-full max-w-[var(--page-measure)] grid-cols-5 items-center justify-items-center transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] [--glyph:var(--glyph-foot)] ${
         hidden ? 'pointer-events-none opacity-0' : ''
       }`}
     >

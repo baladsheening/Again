@@ -660,6 +660,40 @@ leaves the click alone. The guard stays for keyboard users tabbing in.
 ⚠ **The lesson generalises past this screen:** a control beside a focused field
 must not take the focus, on any surface where losing it moves the layout.
 
+## 12. A commit lets go, the undo comes down a line, and home joins the bar
+
+**Three reports from a handset, 5 September.**
+
+⚠⚠ **THE BOUNCE COULD NOT BE SEEN WITH THE KEYBOARD UP, AND THE ANSWER WAS A RULE
+THIS SCREEN NEVER INHERITED.** *A commit ends the writing mode* was directed 27
+August for the record's strip; the front page was written without it. The foot is
+unmounted while somebody writes, so the door had nothing to say on a screen it
+was not on. `commit` blurs the field now, and the receipt, its undo, the window
+closing and the bounce all happen where they can be seen. **Nothing new is
+drawn.** ⚠ **Cost: a run of captures is a tap back into the field between each** —
+the 27 August trade, taken again.
+
+⚠⚠ **THE UNDO WAS FIVE PIXELS HIGH.** `items-baseline` aligns a flex item on
+**its** baseline, and a box holding only an `<svg>` has none, so the engine used
+its bottom margin edge. `items-start` lets `line-glyph` do its job — the holder
+is one line box tall, so the drawing lands on the line's own centre. **Measured
+0.00px after.** It reads ~2px above the cap-ink centre, which is the relationship
+every glyph on a record row has and is what `UndoGlyph` was redrawn for.
+
+⚠⚠ **HOME, FAR LEFT — AND THE BAR IS FIVE COLUMNS.** A house: the most
+conventional drawing in the file, on purpose. Off on the composer, lit on the
+record — the mirror of the record glyph, so the app is two surfaces each holding
+a lit door to the other and a dark drawing of itself. ⚠ **It duplicates the
+wordmark**, which `foot.tsx` had ruled out; the cost is stated rather than
+hidden.
+
+⚠⚠ **IT MOVED THE TRAY, SO THE CONSOLE'S SETTLE MOVED WITH IT** — `foot.tsx` has
+warned since 2 September that moving the tray out of column four breaks the
+unbuilt reaction the sight line is for. Both are column five now, measured equal
+at **335** on a 390 handset by `node_modules/.probe/traysightline.mjs`, which
+exists so the next person to add a glyph finds out immediately. ⚠ **The
+composer's own control row stayed four columns**: send is aligned to nothing.
+
 **Measured by `node_modules/.probe/composerundo.mjs`** — 19 assertions, including
 that pressing a control does not move the focus, that ONE tap undoes, that the
 capture is really gone from the record, that a full composer keeps its draft,

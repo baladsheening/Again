@@ -446,8 +446,18 @@ export function Console({
           `node_modules/.probe/trayalign.mjs` measures both in one run — 326.25
           against 326.25 at 390.
         */}
-        <div className="-mx-[var(--page-lead)] mt-4 grid grid-cols-4 items-center [--glyph:var(--glyph-foot)]">
-          <div className="col-span-3 flex items-center gap-5 ps-[var(--page-lead)]">
+        {/*
+          ⚠⚠ **FIVE COLUMNS SINCE 5 SEPTEMBER, BECAUSE THE FOOT HAS FIVE.** This
+          row is the foot's grid for one reason: the settle glyph sits on the
+          tray's x centre as a sight line for a reaction that is not built. The
+          foot took a home glyph on its far left that day, so the tray moved from
+          column four to column five — and `foot.tsx` says in writing that
+          moving it *breaks something that is not written yet, so move the
+          console's with it.* **This is that move.** Both centres are asserted
+          equal by `node_modules/.probe/traysightline.mjs`.
+        */}
+        <div className="-mx-[var(--page-lead)] mt-4 grid grid-cols-5 items-center [--glyph:var(--glyph-foot)]">
+          <div className="col-span-4 flex items-center gap-5 ps-[var(--page-lead)]">
             <button
               type="button"
               onClick={onCrossOff}
@@ -488,7 +498,7 @@ export function Console({
               onClick={onSettle}
               aria-label="Settle it"
               aria-expanded={asking}
-              className="text-chrome tap-target col-start-4 flex items-center justify-self-center"
+              className="text-chrome tap-target col-start-5 flex items-center justify-self-center"
             >
               <SettleGlyph />
             </button>

@@ -275,6 +275,37 @@ export function RecordGlyph() {
   )
 }
 
+/**
+ * Foot, far left. **Home: the composer.**
+ *
+ * ⚠ **Directed 5 September**, and it is deliberately the most conventional
+ * drawing in the file. §11 permits *known* icons, and a house is the one glyph
+ * on this bar nobody has to learn — which is what the leftmost slot of a bottom
+ * bar is for.
+ *
+ * ⚠ **Drawn on this grid, not scaled in from another.** viewBox 20, stroke 1.25,
+ * like the other eleven — see the head of this file for what mixing viewBoxes
+ * cost the first time.
+ *
+ * ⚠ **The walls start where the roof line actually is, not near it.** At x 5.25
+ * the roof has fallen to y 8.05, so the wall tops are 8.05 — a tenth of a unit
+ * out reads as a nick at `--glyph-foot` and worse on the desk.
+ *
+ * ⚠ **It duplicates the wordmark, and that is the stated cost.** `foot.tsx` has
+ * said since the split that *the way back to the composer is the wordmark, which
+ * has linked to `/` since the bar existed — no new control for it*. This is a
+ * second door to the same place, put at the bottom edge because that is where
+ * reflexes live and the wordmark is at the top.
+ */
+export function HomeGlyph() {
+  return (
+    <Glyph>
+      <path d="M3.25 9.75 10 4l6.75 5.75" />
+      <path d="M5.25 8.05V16h9.5V8.05" />
+    </Glyph>
+  )
+}
+
 /** Foot. Where is that thing I wrote in June. Not per-line. */
 export function SearchGlyph() {
   return (

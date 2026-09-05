@@ -274,6 +274,31 @@ export function ComposeScreen({
     setDraft('')
     setLanded(text)
     setFailed(null)
+    /*
+      ⚠⚠ **A COMMIT ENDS THE WRITING MODE, AND THIS SCREEN SHOULD HAVE INHERITED
+      THAT ON DAY ONE.** Directed 27 August for the record's own strip — *once a
+      line is submitted the person is presumed done* — and the front page was
+      written without it. Reported 5 September: **the bounce of the record glyph
+      cannot be seen when the keyboard is up.** It could not: the foot is
+      unmounted while somebody writes, so the door that acknowledges the capture
+      is not on screen at the moment it has something to say.
+
+      ⚠ **The fix is the rule, not a second signal.** Letting go of the keyboard
+      brings the foot back, so the receipt, its undo, the window closing and the
+      door's bounce all happen on a screen that is showing them. Nothing new is
+      drawn.
+
+      ⚠ **What it costs, stated: a run of captures is a tap back into the field
+      between each.** That is the 27 August trade exactly, taken there with the
+      cost written down, and it is the reason the field is mounted at all times —
+      the tap back costs one gesture and raises the keyboard synchronously.
+
+      ⚠ **`blur()` and not `setWriting(false)`.** The mode has one exit and it is
+      the field losing focus; setting the state directly would leave a focused
+      field in a screen that thinks nobody is writing, which is the state iOS's
+      own *Done* used to produce.
+    */
+    field.current?.blur()
 
     const result = await captureAction({
       text,
@@ -440,7 +465,23 @@ export function ComposeScreen({
             measured that at 3.29px and this is the same fix, not a new one.
           */}
           {landed !== null && (
-            <div className="flex items-baseline px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)]">
+            /*
+              ⚠⚠ **`items-start`, NEVER `items-baseline` — measured 5 September
+              after *is the undo icon optically in-line with the line?*** It was
+              not: `items-baseline` aligns a flex item on ITS baseline, and a box
+              containing only an `<svg>` has no text baseline, so the engine uses
+              its bottom margin edge — which put the drawing's centre at 662.5
+              against the words' ink centre at 667.5. **Five pixels high.**
+
+              ⚠ **`line-glyph` already does this job and was being overridden.**
+              It makes the holder exactly one line box tall and hangs its hit area
+              off in the hems, so top-aligned against a line of the same leading
+              the drawing lands on the line's own centre **with no face metric
+              anywhere in it** — which is the record's own rule, and the reason
+              `UndoGlyph` was redrawn on its own grid rather than nudged from
+              outside. Anything but `items-start` here re-opens that.
+            */
+            <div className="flex items-start px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)]">
               <p
                 dir="auto"
                 className="text-muted min-w-0 truncate text-[length:var(--text-line)] leading-[var(--leading-line)]"
@@ -768,6 +809,14 @@ export function ComposeScreen({
             controls along the bottom edge inside the box. The two answers agreed,
             which is why this is one change and not two.
 
+            ⚠⚠ **IT STAYED FOUR COLUMNS WHEN THE CONSOLE WENT TO FIVE — 5
+            September.** The console's row moved because the **tray** moved: its
+            settle glyph is aligned to the tray's x centre and that alignment is
+            load bearing. **Send is aligned to nothing**, which the note below
+            has always said, so there is nothing here for a fifth column to keep
+            in step with — and widening it would move the arrow off the edge of
+            the box for no reason at all.
+
             ⚠ **`col-start-4` is inherited from the console and is NOT claimed to
             mean anything here.** There it is the settle glyph, deliberately on
             the foot tray's x centre as a sight line for a reaction that is not
@@ -895,6 +944,7 @@ export function ComposeScreen({
             */}
             <div className="flex min-h-[var(--tap-floor)] items-center">
               <Foot
+                home="here"
                 record="away"
                 arrived={arrived}
                 onArrived={() => setArrived(false)}
