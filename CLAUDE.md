@@ -97,11 +97,18 @@ the composer, never outside.* **A capture no longer travels on being sent.**
   and two ways to reach it. **Do not let them drift apart.** ⚠ **It is lit while
   the field is empty**, because the draft test would otherwise draw the one
   control that has something to do as off.
-- ⚠⚠ **IT OPENS THE NEXT CAPTURE, SO THE FOOT GOES AND THE BOUNCE WAITS — and
-  that is NOT the bug reported an hour earlier.** There the person was idle and
-  the door was the only thing that could tell them anything; here they have said
-  *I meant it* and are already typing. The held `arrived` plays when writing
-  stops, which is what state rather than an event buys.
+- ⚠⚠ **IT MUST NOT RAISE THE KEYBOARD, AND IT DID FOR AN HOUR — reported:**
+  *why when I press + does the keyboard pop up again?* It focused the field, on
+  the reasoning that a `+` means *start another one*. **That reasoning cost the
+  control the one thing it exists for:** focus raises the keyboard, the keyboard
+  unmounts the foot, and the foot is where the door is — so tapping *do the
+  transfer now* hid the only thing that says the transfer happened.
+- ⚠ **What it skips is the WAIT, not the next capture** — confirmed: *the `+` is
+  for users to short circuit the ten second undo wait.* The box is left empty and
+  lit and writing again is the tap it has always been. ⚠ **The label went with
+  the behaviour**: it said *Write another* while it focused the field, and a
+  control promising a keyboard that does not arrive is the button that lies. The
+  pair reads as a pair now — *Undo the last capture* against *Keep it*.
 - **Proved by `node_modules/.probe/composersent.mjs`** — 38 assertions, including
   that the sent line is the field's own box, that the drawing sits on the last
   line's centre, that undo re-engages with the caret at the end, and that the

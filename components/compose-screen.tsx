@@ -438,9 +438,15 @@ export function ComposeScreen({
    * is one description of what the end of a window is and two ways to reach it.
    * **Do not let these drift apart.**
    *
-   * ⚠ **And it opens the next capture**, which is what a `+` means. The focus is
-   * taken inside the click, because iOS raises a keyboard only for a focus that
-   * happens inside the gesture that asked for it.
+   * ⚠⚠ **IT DOES NOT RAISE THE KEYBOARD, AND IT DID FOR AN HOUR — reported:
+   * *why when I press + does the keyboard pop up again?*** It focused the field
+   * on the reasoning that a `+` means *start another one*. **That reasoning cost
+   * the control the one thing it exists for:** focus raises the keyboard, the
+   * keyboard unmounts the foot, and the foot is where the door is — so tapping
+   * *do the transfer now* hid the only thing that says the transfer happened.
+   *
+   * ⚠ **The wait is what is being skipped, not the next capture.** The box is
+   * left empty and lit, and writing again is the tap it has always been.
    */
   function acceptNow() {
     if (landedId === null) return
@@ -448,7 +454,6 @@ export function ComposeScreen({
     setLandedId(null)
     setLeaving(true)
     setArrived(true)
-    field.current?.focus()
   }
 
   /**
@@ -1002,7 +1007,13 @@ export function ComposeScreen({
               type="button"
               onMouseDown={keepFocus}
               onClick={() => (landedId === null ? void commit() : acceptNow())}
-              aria-label={landedId === null ? 'Save it' : 'Write another'}
+              /*
+                ⚠ **The pair reads as a pair: *Undo the last capture* against
+                *Keep it*.** It said *Write another* while it focused the field;
+                it does not focus the field any more, and a control promising a
+                keyboard that does not arrive is the button that lies.
+              */
+              aria-label={landedId === null ? 'Save it' : 'Keep it'}
               /*
                 ⚠ **Lit whenever it can act.** While the window is open the field
                 is empty, so the draft test would draw the one control that has
