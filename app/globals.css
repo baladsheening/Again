@@ -2599,6 +2599,31 @@
    * above says exactly what each stop down costs.
    */
   --composer-glow-peak: 8%;
+  /**
+   * **The colour of the light behind the composer's glass.**
+   *
+   * ⚠⚠ **THE FIRST COLOUR IN THIS APP THAT IS NEITHER A CONTROL NOR A STATE,
+   * AND THE PALETTE'S SCARCITY RULES ARE WHAT CHOSE IT.** Directed: *maybe the
+   * light source itself is irregularly shaped and of a relaxing colour.* Three
+   * quarters of the wheel were unavailable before anything was picked:
+   *
+   * - **Amber is `--color-accent` and means *this converged*.** §11: it stops
+   *   meaning anything the second it is used for decoration. A warm glow behind
+   *   the composer is decoration by that definition.
+   * - **Green is `--color-accept`** and red is `--color-decline`, the app's two
+   *   coloured controls, bound by a scarcity rule from the day they shipped.
+   * - **Lit brass was `--color-chrome`** and means *a control*.
+   *
+   * ⚠ **So it is indigo-violet, which is the one part of the wheel this palette
+   * has never spent.** It is also the cool end, against a page that runs warm
+   * everywhere else — deliberate rather than accidental: **a light source should
+   * not look like the paper it falls on**, or it reads as the paper glowing.
+   *
+   * ⚠ **It is a light, so it may never appear on a control, a row, a glyph or a
+   * state.** The moment it does, it is a fifth meaning-carrying colour and this
+   * one is the easiest of them to spend by accident, because it is ambient.
+   */
+  --composer-glow-colour: #8a7fd4;
 
   /**
    * The reading column above `rail`. 680px — the same measure the design's
@@ -4643,16 +4668,30 @@
  * between sharp and smeared is what the eye reads as a pane.** A uniform wash
  * blurs to the identical uniform wash and the filter is a no-op.
  *
- * ⚠⚠ **SO THE LIGHT HAS STRUCTURE: SEVEN LOBES, NOT ONE POOL.** They are
- * different sizes, at different strengths, deliberately not on a grid, and
- * **several straddle the card's edges** — which is what puts a sharp lobe
- * outside the glass and its blurred continuation inside it, in one shape. The
- * precedent is the mark's glow, which is nine lobes for the same reason and
- * whose note says not to regularise it.
+ * ⚠⚠ **SO THE LIGHT HAS STRUCTURE — BUT IT IS ONE SOURCE, NOT A SMATTERING.**
+ * Seven lobes were spread across the whole box first and it was reported as
+ * *strange*: scattered evenly, they read as blotches on the glass rather than as
+ * light falling on it, because **nothing in the world lights a surface from
+ * seven places at once.** Directed: *a light source directly under the arrow
+ * that emanates outward, impacting the glass and diffusing naturally, and maybe
+ * the source itself is irregularly shaped.*
  *
- * ⚠ **Do not tidy these into an even spread.** Evenly spaced lobes of equal
- * size sum to a flat field, which is the smooth pool again with more code. The
- * unevenness IS the feature, exactly as it is behind the mark.
+ * ⚠⚠ **THE FIX WAS TO CLUSTER THE LOBES, NOT TO DELETE THEM.** Four overlapping
+ * lobes at **one point**, at different radii and slightly offset, make a single
+ * source with a **ragged edge** — which is what keeps the blur something to
+ * work on. One clean circle would be a smooth pool again, and that measured
+ * identically inside and outside the glass. **Structure is still the whole
+ * mechanism; what changed is that it is now the shape of one lamp rather than
+ * seven of them.**
+ *
+ * ⚠ **It sits under the send arrow**, so the brightest thing on the screen is
+ * behind the control that acts. That is the one position on this card that is
+ * not arbitrary.
+ *
+ * ⚠ **And it emanates OUTWARD**, so the falloff crosses the card's edges: the
+ * near corner is lit, the far one is nearly dark, and the light is sharp outside
+ * the glass and smeared inside it. A source centred on the card would light it
+ * evenly and say nothing about where the light is coming from.
  *
  * ⚠ **Measured, and the figure that proves it is ROUGHNESS rather than
  * brightness** — the mean absolute difference between neighbouring pixels along
@@ -4679,7 +4718,11 @@
     diffusion, so this does not need a second wide layer of its own.
   */
   box-shadow: 0 0 var(--page-lead) 0
-    color-mix(in srgb, var(--color-text) var(--composer-glow-peak), transparent);
+    color-mix(
+      in srgb,
+      var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.7),
+      transparent
+    );
 
   &::before {
     content: '';
@@ -4695,96 +4738,95 @@
     */
     inset: calc(-3 * var(--page-lead));
     /*
-      ⚠ **Seven lobes and a wash under them.** Every one reaches transparent
-      before its own box's corners, so there is no rectangle anywhere in the
-      shape — the deleted row light's rule about gradients, inherited without
-      its purpose. See the `--row-light` tombstone.
+      ⚠ **The source is under the send arrow, and the position is DERIVED.** The
+      box is inset `-3 × --page-lead` on every side, so the card's own right and
+      bottom edges are at `100% - 3 hems`; the arrow sits about 2.2 hems in from
+      the card's right edge and about 1.1 above its bottom. Both are one
+      expression rather than a percentage that would drift the day the card's
+      padding or the control row's height changed.
 
-      ⚠ **The wash is last, so it is BEHIND the lobes** and is the thing that
-      keeps the interior lit where no lobe reaches. It is a third of the peak:
-      any more and it floods the structure back into a flat field, which is the
-      version this replaced.
+      ⚠ **Four lobes at that one point and a falloff under them.** The lobes are
+      the lamp — overlapping, different radii, slightly offset, so its edge is
+      ragged rather than a clean circle. **A clean circle is a smooth pool and
+      measured identically on both sides of the glass**, which is what *not
+      glassy enough* was. The falloff is the light reaching across the card.
+
+      ⚠ **Every one reaches transparent before its own box's corners**, so there
+      is no rectangle anywhere in the shape — the deleted row light's rule about
+      gradients, inherited without its purpose. See the `--row-light` tombstone.
 
       ⚠ **The radii are in `--page-lead`s**, so the whole light scales with the
-      type and the desk's root, like everything else here. **A lobe smaller than
-      the blur radius is erased by it** — 18px is `--glass-blur`, so nothing here
+      type and the desk's root like everything else here. **A lobe smaller than
+      the blur radius is erased by it** — `--glass-blur` is 18px, so nothing here
       is under one `--page-lead` across.
     */
+    --lamp-x: calc(100% - 5.2 * var(--page-lead));
+    --lamp-y: calc(100% - 4.1 * var(--page-lead));
+
     background:
       radial-gradient(
-          calc(var(--page-lead) * 4.5) calc(var(--page-lead) * 3) at 22% 34%,
-          color-mix(in srgb, var(--color-text) var(--composer-glow-peak), transparent) 0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 3) calc(var(--page-lead) * 2.2) at 63% 22%,
+          calc(var(--page-lead) * 2.2) calc(var(--page-lead) * 1.7) at var(--lamp-x)
+            var(--lamp-y),
           color-mix(
               in srgb,
-              var(--color-text) calc(var(--composer-glow-peak) * 0.8),
+              var(--composer-glow-colour) var(--composer-glow-peak),
               transparent
             )
             0%,
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 5.5) calc(var(--page-lead) * 2.6) at 78% 61%,
+          calc(var(--page-lead) * 1.5) calc(var(--page-lead) * 2.1) at
+            calc(var(--lamp-x) - var(--page-lead) * 0.5)
+            calc(var(--lamp-y) + var(--page-lead) * 0.35),
           color-mix(
               in srgb,
-              var(--color-text) calc(var(--composer-glow-peak) * 0.95),
+              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.85),
               transparent
             )
             0%,
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 2.4) calc(var(--page-lead) * 2.4) at 41% 72%,
+          calc(var(--page-lead) * 2.6) calc(var(--page-lead) * 1.2) at
+            calc(var(--lamp-x) + var(--page-lead) * 0.4)
+            calc(var(--lamp-y) - var(--page-lead) * 0.3),
           color-mix(
               in srgb,
-              var(--color-text) calc(var(--composer-glow-peak) * 0.7),
+              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.75),
               transparent
             )
             0%,
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 3.6) calc(var(--page-lead) * 1.8) at 8% 66%,
+          calc(var(--page-lead) * 1.3) calc(var(--page-lead) * 1.3) at
+            calc(var(--lamp-x) - var(--page-lead) * 0.9)
+            calc(var(--lamp-y) - var(--page-lead) * 0.55),
           color-mix(
               in srgb,
-              var(--color-text) calc(var(--composer-glow-peak) * 0.6),
+              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.6),
               transparent
             )
             0%,
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 2.8) calc(var(--page-lead) * 2) at 92% 30%,
-          color-mix(
-              in srgb,
-              var(--color-text) calc(var(--composer-glow-peak) * 0.55),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 4) calc(var(--page-lead) * 1.6) at 55% 88%,
-          color-mix(
-              in srgb,
-              var(--color-text) calc(var(--composer-glow-peak) * 0.5),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-        ellipse at center,
+        calc(var(--page-lead) * 17) calc(var(--page-lead) * 10) at var(--lamp-x)
+          var(--lamp-y),
         color-mix(
             in srgb,
-            var(--color-text) calc(var(--composer-glow-peak) / 3),
+            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.5),
             transparent
           )
           0%,
-        transparent 80%
+        color-mix(
+            in srgb,
+            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.2),
+            transparent
+          )
+          40%,
+        transparent 100%
       );
   }
 }
