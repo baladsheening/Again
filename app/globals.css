@@ -4693,6 +4693,66 @@
  * keys and everything above the card is empty page, which is where three hems of
  * light reads as a wash rather than as a spill. See `composer-glow`.
  */
+/**
+ * **A scrollbar in the composer, and only while the words are rolling under.**
+ *
+ * ⚠⚠ **THIS IS AN EXCEPTION TO *THERE IS NO SCROLLBAR ON THIS PAGE* — directed
+ * 5 September, and it is deliberately narrow.** That rule was directed on 30
+ * August about the **document's** bar and is enforced on `html`; the utility it
+ * deleted carried a warning with it — *do not reach for this anywhere content is
+ * primarily navigated by scrolling, where the bar is the only thing saying how
+ * much is left.* **The composer is exactly that case**: the box never grows, so
+ * a long capture rolls up out of sight and nothing else on the screen says there
+ * is more above.
+ *
+ * ⚠⚠ **THE NATIVE BAR CANNOT DO IT, MEASURED.** It was styled here first —
+ * `scrollbar-width: thin` and a `::-webkit-scrollbar-thumb` — and it never
+ * appeared: `offsetWidth − clientWidth` is **0**, so it is an **overlay** bar,
+ * and an overlay bar is drawn only during a scroll *gesture*. **The roll-under
+ * is caused by typing, not by scrolling**, so the one moment it exists for is
+ * the one moment the platform will not draw it. So this utility takes the
+ * native bar away and the mark beside it is drawn instead.
+ *
+ * ⚠ **Both properties are needed and neither is a browser sniff** — each is the
+ * one its own engine reads, the same pairing `html` uses.
+ */
+@utility composer-bar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/**
+ * **The mark that says the words are rolling under.**
+ *
+ * ⚠ **`--color-rule` is the hairline**, which is what this is: the quietest mark
+ * the palette has, and the one thing already used for *a division you are not
+ * meant to look at*. **Not `--color-chrome`** — that means a control, and this
+ * is a readout. **Not `--composer-glow-colour`** — that is a light.
+ *
+ * ⚠ **It lives in the card's own padding**, so it costs the words no width. The
+ * card is `--page-lead` all round and this sits in the right-hand hem.
+ *
+ * ⚠⚠ **ITS SIZE AND POSITION ARE CUSTOM PROPERTIES SET THROUGH THE CSSOM, AND
+ * THAT IS A CSP RULE RATHER THAN A PREFERENCE.** §10 blocks inline `style`
+ * attributes in production and the linter enforces it, so a `style={{ height }}`
+ * would be right on this machine and **silently dead on the deployed app**. The
+ * hook writes `--roll-size` and `--roll-top` onto the element instead, which is
+ * the same door the probes use to reach the CSSOM under this policy.
+ */
+@utility roll-mark {
+  position: absolute;
+  top: 0;
+  right: calc(-0.5 * var(--page-lead));
+  width: 2px;
+  border-radius: 999px;
+  background: var(--color-rule);
+  height: var(--roll-size, 100%);
+  translate: 0 var(--roll-top, 0);
+}
+
 @utility composer-glow-tight {
   --composer-glow-lead: calc(-1 * var(--page-lead));
 }

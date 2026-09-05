@@ -75,6 +75,40 @@ export function ComposeScreen({
    */
   const [landed, setLanded] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
+  /**
+   * **How much of the capture is out of sight, and where.**
+   *
+   * ⚠ **`null` when it all fits**, so the mark is absent rather than full-height
+   * — *controls go off; they do not disappear* is about controls, and this is a
+   * readout: a bar that is always there says nothing on the ordinary line.
+   *
+   * ⚠ **Read off the element, never computed from the text.** Counting
+   * characters or newlines to guess a line count is a constant waiting to be
+   * wrong on the next face, the next root scale and the next word.
+   */
+  const [rolling, setRolling] = useState(false)
+  const mark = useRef<HTMLSpanElement | null>(null)
+
+  function readRoll() {
+    const el = field.current
+    if (!el) return
+    const over = el.scrollHeight > el.clientHeight
+    setRolling(over)
+    if (!over || !mark.current) return
+    /*
+      ⚠ **Through the CSSOM, never a `style` attribute.** §10 blocks inline
+      styles in production and the linter enforces it, so `style={{ height }}`
+      would work here and be dead on the deployed app.
+    */
+    mark.current.style.setProperty(
+      '--roll-size',
+      `${(el.clientHeight / el.scrollHeight) * 100}%`,
+    )
+    mark.current.style.setProperty(
+      '--roll-top',
+      `${(el.scrollTop / el.clientHeight) * 100}%`,
+    )
+  }
 
   const host = useRef<HTMLDivElement | null>(null)
   const floorAnchor = useRef<HTMLDivElement | null>(null)
@@ -256,6 +290,13 @@ export function ComposeScreen({
             effect** — that has survived every redesign of the writing strip and
             it survives this one.
           */}
+          {/*
+            ⚠ **The mark is positioned against the FIELD, not the card**, so its
+            percentage height is a fraction of what is visible rather than of the
+            whole box. Without this wrapper it would measure against the card and
+            start a hem above the first line.
+          */}
+          <div className="relative">
           <textarea
             ref={field}
             rows={1}
@@ -267,7 +308,16 @@ export function ComposeScreen({
             dir="auto"
             value={draft}
             placeholder="Anything"
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              /*
+                ⚠ **After the value lands, not with it.** The element's
+                `scrollHeight` is only right once the browser has laid the new
+                text out, and `onChange` runs before that.
+              */
+              requestAnimationFrame(readRoll)
+            }}
+            onScroll={readRoll}
             onFocus={() => setWriting(true)}
             /*
               ⚠ **Losing focus is leaving.** iOS's own *Done* takes the focus and
@@ -311,8 +361,23 @@ export function ComposeScreen({
               ⚠ **`resize-none`, and it matters more now.** A drag handle on a
               deliberately fixed box is a control that undoes the rule.
             */
-            className="page-input block h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
+            className="page-input composer-bar block h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
           />
+
+          {/*
+            ⚠ **Only while there is something out of sight.** The box never
+            grows, so a long capture rolls up above the top edge and **nothing
+            else on this screen says there is more** — which is exactly the case
+            the deleted `scrollbar-none` utility warned about when the page's own
+            bar was taken away.
+
+            ⚠ **`aria-hidden`, because the field already says it.** A textarea
+            carries its whole value to a screen reader whatever is scrolled out
+            of view, so announcing this would be narrating a visual fact that
+            does not apply to the reader.
+          */}
+          <span ref={mark} aria-hidden className={`roll-mark ${rolling ? '' : 'hidden'}`} />
+          </div>
 
           {/*
             ⚠⚠ **THE CONSOLE'S OWN ROW, TO THE PIXEL — directed 5 September:
