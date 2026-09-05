@@ -4657,32 +4657,23 @@
  * shadow following the radius is what makes it an *edge*. It is the one thing
  * here that knows where the corners are.
  *
- * ⚠⚠ **AND THE THIRD FAILURE WAS THE ONE THAT MATTERED: A SMOOTH POOL IS NOT
- * GLASS, BECAUSE `backdrop-filter: blur()` ON A SMOOTH GRADIENT DOES NOTHING.**
- * Reported: *it's not glassy enough — the items in the list when tapped open a
- * console and they have this blurred look behind them, and it's not uniform,
- * because the blur is for the TEXT behind the glass console.* **That is the
- * whole mechanism.** A console looks like glass because the record's lines are
- * behind it: blur has structure to smear, so the inside of the card is a field
- * of soft shapes while the same lines outside it are sharp. **The difference
- * between sharp and smeared is what the eye reads as a pane.** A uniform wash
- * blurs to the identical uniform wash and the filter is a no-op.
+ * ⚠⚠ **NOTHING IS DRAWN BEHIND THE ARROW. ONE SMOOTH FALLOFF AND A RIM, AND
+ * THAT IS THE WHOLE THING.**
  *
- * ⚠⚠ **SO THE LIGHT HAS STRUCTURE — BUT IT IS ONE SOURCE, NOT A SMATTERING.**
- * Seven lobes were spread across the whole box first and it was reported as
- * *strange*: scattered evenly, they read as blotches on the glass rather than as
- * light falling on it, because **nothing in the world lights a surface from
- * seven places at once.** Directed: *a light source directly under the arrow
- * that emanates outward, impacting the glass and diffusing naturally, and maybe
- * the source itself is irregularly shaped.*
+ * ⚠ **Four rounds went on giving the light visible STRUCTURE**, on the
+ * reasoning that `backdrop-filter` needs something to smear because a blur over
+ * a smooth gradient is a no-op. Seven lobes across the box read as blotches;
+ * four clustered lobes read as a smudge; nine text-scale shapes read as **marks
+ * behind the arrow** and were cut on sight — *what the heck is the stuff behind
+ * the arrow; get rid of everything behind the arrow.*
  *
- * ⚠⚠ **THE FIX WAS TO CLUSTER THE LOBES, NOT TO DELETE THEM.** Four overlapping
- * lobes at **one point**, at different radii and slightly offset, make a single
- * source with a **ragged edge** — which is what keeps the blur something to
- * work on. One clean circle would be a smooth pool again, and that measured
- * identically inside and outside the glass. **Structure is still the whole
- * mechanism; what changed is that it is now the shape of one lamp rather than
- * seven of them.**
+ * ⚠⚠ **THE REASONING WAS RIGHT ABOUT BLUR AND WRONG ABOUT WHAT TO DO WITH IT.**
+ * A pane over an empty page has nothing to be a lens on, and **painting fake
+ * content behind it so the blur has a job is drawing rubbish on the screen.**
+ * What is left is a light: it says where the composer is and does not pretend
+ * to be anything else. ⚠ **When the browse half lands there will be real cards
+ * under this glass and the blur will have real work. Nothing is to be invented
+ * in the meantime.**
  *
  * ⚠ **It sits under the send arrow**, so the brightest thing on the screen is
  * behind the control that acts. That is the one position on this card that is
@@ -4693,22 +4684,6 @@
  * the glass and smeared inside it. A source centred on the card would light it
  * evenly and say nothing about where the light is coming from.
  *
- * ⚠ **Measured, and the figure that proves it is ROUGHNESS rather than
- * brightness** — the mean absolute difference between neighbouring pixels along
- * a line, which is what a blur destroys and a sharp image keeps. Sixty samples
- * across the card on a 390 handset:
- *
- * | | spread | roughness |
- * |---|---|---|
- * | outside the card | 14.9 | **0.64** |
- * | inside the glass | 11.9 | **0.42** |
- *
- * **Same light, 34% smoother behind the pane.** That difference is the whole
- * effect; a smooth pool measures the same on both sides, which is what *not
- * glassy enough* was. ⚠ **If this is ever re-tuned, roughness is the number to
- * hold** — brightness can be raised without making anything look more like
- * glass, and that is the mistake the first three attempts made in three
- * different ways.
  */
 @utility composer-glow {
   position: relative;
@@ -4759,26 +4734,6 @@
       argument** — this one was quoted at the user as beating the reasoning, and
       it was the broken half.
 
-      ⚠⚠ **THE SOURCE IS A CLUSTER OF SMALL SHAPES AT TEXT SCALE, AND THAT IS
-      WHAT MAKES IT LOOK BLURRED RATHER THAN LIT.** Directed: *the light source
-      behind the arrow should have the blurred effect of the text behind the
-      items' consoles.* Four medium lobes could not do it, and the reason is the
-      same one that killed the smooth pool: **`backdrop-filter` needs structure
-      at ITS OWN SCALE.** `--glass-blur` is 18px, so what reads as *blurred
-      text* is a field of shapes roughly a line of text across — 10 to 22px —
-      overlapping into soft mottle. Shapes much larger than the blur come
-      through as themselves; shapes much smaller vanish into an average.
-
-      ⚠ **Nine of them, within a hem or two of the arrow**, at different sizes
-      and strengths and deliberately not on a grid. **Do not regularise them and
-      do not merge them into fewer, larger ones** — the count and the unevenness
-      are the effect, and both earlier versions failed by having too few shapes
-      that were too big.
-
-      ⚠ **They are all ON the arrow's point, not around it.** An earlier version
-      offset them from one another and the cluster's centroid sat beside the
-      arrow rather than under it.
-
       ⚠⚠ **THE FALLOFF HAS TO CROSS THE WHOLE CARD, AND AT 14 HEMS IT DID NOT.**
       Measured across the card at the lamp's height: 19.4 at 89% of the way
       across, 7.4 at 79%, **2.1 at the middle and 0 at the left edge.** The reach
@@ -4810,137 +4765,28 @@
     --lamp-y: calc(74.6% - 1.476 * var(--page-lead));
     --lamp-reach: calc(var(--page-lead) * 22);
 
-    background:
-      radial-gradient(
-          calc(var(--page-lead) * 0.95) calc(var(--page-lead) * 0.55) at
-            calc(var(--lamp-x) + var(--page-lead) * -1.15)
-            calc(var(--lamp-y) + var(--page-lead) * -0.45),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 1),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.6) calc(var(--page-lead) * 0.9) at
-            calc(var(--lamp-x) + var(--page-lead) * 0.55)
-            calc(var(--lamp-y) + var(--page-lead) * -0.95),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.9),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 1.1) calc(var(--page-lead) * 0.5) at
-            calc(var(--lamp-x) + var(--page-lead) * 1.35)
-            calc(var(--lamp-y) + var(--page-lead) * 0.2),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.85),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.5) calc(var(--page-lead) * 0.75) at
-            calc(var(--lamp-x) + var(--page-lead) * -0.4)
-            calc(var(--lamp-y) + var(--page-lead) * 0.85),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.8),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.85) calc(var(--page-lead) * 0.45) at
-            calc(var(--lamp-x) + var(--page-lead) * 0.95)
-            calc(var(--lamp-y) + var(--page-lead) * 1.05),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.7),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.55) calc(var(--page-lead) * 0.6) at
-            calc(var(--lamp-x) + var(--page-lead) * -1.6)
-            calc(var(--lamp-y) + var(--page-lead) * 0.45),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.65),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.75) calc(var(--page-lead) * 0.5) at
-            calc(var(--lamp-x) + var(--page-lead) * 0.15)
-            calc(var(--lamp-y) + var(--page-lead) * -1.45),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.6),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.45) calc(var(--page-lead) * 0.85) at
-            calc(var(--lamp-x) + var(--page-lead) * 1.95)
-            calc(var(--lamp-y) + var(--page-lead) * -0.6),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.5),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-          calc(var(--page-lead) * 0.65) calc(var(--page-lead) * 0.55) at
-            calc(var(--lamp-x) + var(--page-lead) * -0.95)
-            calc(var(--lamp-y) + var(--page-lead) * -1.25),
-          color-mix(
-              in srgb,
-              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.45),
-              transparent
-            )
-            0%,
-          transparent 100%
-        ),
-      radial-gradient(
-        var(--lamp-reach) var(--lamp-reach) at var(--lamp-x) var(--lamp-y),
-        color-mix(
-            in srgb,
-            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.55),
-            transparent
-          )
-          0%,
-        color-mix(
-            in srgb,
-            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.28),
-            transparent
-          )
-          38%,
-        color-mix(
-            in srgb,
-            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.1),
-            transparent
-          )
-          68%,
-        transparent 100%
-      );
+    background: radial-gradient(
+      var(--lamp-reach) var(--lamp-reach) at var(--lamp-x) var(--lamp-y),
+      color-mix(
+          in srgb,
+          var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.55),
+          transparent
+        )
+        0%,
+      color-mix(
+          in srgb,
+          var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.28),
+          transparent
+        )
+        38%,
+      color-mix(
+          in srgb,
+          var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.1),
+          transparent
+        )
+        68%,
+      transparent 100%
+    );
   }
 }
 
