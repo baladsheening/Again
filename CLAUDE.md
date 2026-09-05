@@ -77,9 +77,19 @@ add a home glyph to the left of the bottom bar.*
   exists so the next person to add a glyph finds out immediately) and by
   `composerundo.mjs`, now 21, which asserts the commit lets go, the door is on
   screen to be bounced, and the undo is on the line's centre.
-- ⚠ **Two probes were already failing before this and still are, for reasons of
-  their own:** `console.mjs` waits for `Write a capture`, the `+` deleted in the
-  split, and `portal.mjs`/`handshake.mjs` need their local seeds.
+- ⚠⚠ **`console.mjs` HAD BEEN RED SINCE THE SPLIT AND IS FIXED.** It opened
+  `/` — which has been the composer since Amendment 5 — and seeded through
+  `button[aria-label="Write a capture"]`, the `+` the split deleted, so it timed
+  out **before a single assertion ran**. It writes its seed on the composer and
+  reads it on `/record` now, and clicks back into the field between lines
+  because a commit ends the writing mode. ⚠ **Its foot block was anchored on the
+  `+` too**, and asks about even spacing rather than that control’s distance
+  from the centre; it counts `children` rather than `button, a`, because a glyph
+  drawn OFF is a `<span>` and a query for controls reports a five-cell bar as
+  four and the grid as uneven. **All assertions pass on both surfaces.**
+- ⚠ **`portal.mjs` and `handshake.mjs` still need their local seeds** —
+  `scripts/seed-portal.mjs` and `scripts/seed-request.mjs` — and are red without
+  them. Not a regression from this work.
 
 ⚠⚠ **A CAPTURE IS AS LONG AS THE BOX, AND THE BOX GROWS A LINE TO WRITE IN —
 5 September, two directions, built and measured. THE COMPOSER NO LONGER SCROLLS
