@@ -168,7 +168,16 @@ export function ComposeScreen({
         `--keyboard-overlap` is written onto `host` below `<body>`.
       */}
       <div className="writing-sheet z-20 bg-[var(--sheet-tint)] backdrop-blur-[var(--sheet-blur)]">
-        <div className="gutter mx-auto w-full max-w-[var(--record-measure)]">
+        {/*
+          ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
+          the air between the box and the foot, which were touching; writing it is
+          the air between the box and the top of the keyboard, where the strip is
+          parked. **A rounded box needs it where a bare line did not** — the
+          record's field is a line and can sit hard on the keys, and this is a
+          surface with a corner radius, which reads as cut off when it meets an
+          edge.
+        */}
+        <div className="gutter mx-auto w-full max-w-[var(--record-measure)] pb-[calc(var(--line-hem)*1.5)]">
           {/*
             ⚠ **The receipt sits above the field, in the record's own type.**
             One line, truncated exactly as a row of the record truncates, so the
@@ -177,18 +186,45 @@ export function ComposeScreen({
           {landed !== null && (
             <p
               dir="auto"
-              className="text-muted truncate text-[length:var(--text-line)] leading-[var(--leading-line)]"
+              className="text-muted truncate px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)] text-[length:var(--text-line)] leading-[var(--leading-line)]"
             >
               {landed}
             </p>
           )}
 
           {failed !== null && (
-            <p className="text-decline text-[length:var(--text-line)] leading-[var(--leading-line)]">
+            <p className="text-decline px-[calc(var(--line-hem)*2.5)] pb-[var(--line-hem)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
               {failed}
             </p>
           )}
 
+          {/*
+            ⚠⚠ **A BOX, AND IT IS A LIFTED GROUND RATHER THAN GLASS — reported
+            from a handset, 5 September: *the composer itself isn't especially
+            visible.*** It was the bars' glass, which is what the record's strip
+            wears, and **that is exactly why it disappeared**: glass reads as a
+            surface because the record passes under it at full strength, and on
+            this screen **there is no record under it**. The browse half is not
+            built, so what is behind the composer is the page's own true black.
+
+            ⚠⚠ **THIS REPOSITORY HAS ALREADY ANSWERED THIS ONCE, FOR THE
+            CONSOLE.** Its note reads: *its ground lifts toward
+            `--color-surface` rather than sinking toward the page — the strip's
+            glass recipe made the card **invisible** on a true-black page, because
+            a floating card has no borrowed edge.* **The composer has no borrowed
+            edge either.** Same problem, same answer, and the second time it has
+            been found by looking at a handset rather than by reasoning.
+
+            ⚠ **The direction said *box* twice** — *a box in which to type and
+            attach things before submitting* — so this is not an invention to
+            solve a visibility bug; it is the thing that was asked for, and the
+            bug is what made it obvious that glass was not it.
+
+            ⚠ **The strip behind it keeps the glass**, which does nothing on a
+            black page today and is the right thing the day cards scroll under
+            it. **Do not delete it to tidy up.**
+          */}
+          <div className="rounded-[1.25rem] bg-[var(--color-surface)] px-[calc(var(--line-hem)*2.5)] py-[calc(var(--line-hem)*1.5)]">
           {/*
             ⚠⚠ **THE FIELD IS MOUNTED AT ALL TIMES.** iOS raises a keyboard only
             for a focus that happens *inside* the gesture that asked for it, so
@@ -237,8 +273,9 @@ export function ComposeScreen({
                 e.currentTarget.blur()
               }
             }}
-            className="page-input block max-h-[calc(var(--leading-line)*6)] w-full resize-none overflow-y-auto py-[var(--line-hem)] text-[length:var(--text-line)] leading-[var(--leading-line)]"
+            className="page-input block max-h-[calc(var(--leading-line)*6)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
           />
+          </div>
         </div>
 
         {/*
@@ -290,12 +327,36 @@ export function ComposeScreen({
               to choose to visit is the *silent failure* every one of §9's
               findings turned out to be.
             */}
-            <Foot
-              record="away"
-              searchable={searchable}
-              portal={() => router.push('/record?portal=1')}
-              portalWaiting={portalWaiting}
-            />
+            {/*
+              ⚠⚠ **THE ROW IS `--tap-floor` TALL, AND THAT IS WHAT STOPPED IT
+              EATING THE FIELD — reported from a handset, 5 September: *it says
+              'Anything' but it's partially obscured by the bottom bar.*** The
+              glyph drawing is `--glyph-foot` (26px) and `tap-target` hangs a
+              44px hit area off it, **9px past the drawing at each end** — so with
+              the row only as tall as its glyphs, the foot's invisible targets
+              reached up over the composer's last line and took the taps meant for
+              it. Nothing was drawn over the words; **the box that was over them
+              was the one you cannot see.**
+
+              ⚠ **On the record this could not happen and the reason is
+              structural.** There the foot and the field are two states of **one
+              cell**, never on screen together, so the overhang has only the
+              record above it — which is why `sheet-glyph` hangs its whole
+              target *upward* on purpose. Here they are two **rows**, both
+              present, so the row has to contain its own reach.
+
+              ⚠ **44px is the thumb, and it does not scale with the desk's root.**
+              That is `--tap-floor`'s whole point: hardware does not get bigger
+              because a window did.
+            */}
+            <div className="flex min-h-[var(--tap-floor)] items-center">
+              <Foot
+                record="away"
+                searchable={searchable}
+                portal={() => router.push('/record?portal=1')}
+                portalWaiting={portalWaiting}
+              />
+            </div>
           </>
         )}
       </div>

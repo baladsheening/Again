@@ -318,6 +318,36 @@ desk. **Four things were decided in the building that this brief did not say:**
   job it has left — **rewriting**, from the console's pencil. What went is the
   *second* door to it, which was the `+`.
 
+⚠⚠ **AND TWO MORE FOUND BY LOOKING AT IT ON A HANDSET, the same day.** Both
+were invisible to seventeen passing assertions, a typecheck and a lint.
+
+- ⚠⚠ **THE COMPOSER IS A BOX WITH A LIFTED GROUND, NOT GLASS.** Reported: *the
+  composer itself isn't especially visible.* It wore the bars' glass, which is
+  what the record's strip wears — and **that is exactly why it disappeared**:
+  glass reads as a surface because the record passes under it at full strength,
+  and **there is no record under it on this screen.** ⚠ **This repository had
+  already answered this once, for the console**: *its ground lifts toward
+  `--color-surface` rather than sinking toward the page — the strip's glass
+  recipe made the card invisible on a true-black page, because a floating card
+  has no borrowed edge.* Same problem, same answer, found the same way — by
+  looking. ⚠ **The direction said *box* twice**, so this is what was asked for
+  and the bug is only what made it obvious. ⚠ **The strip keeps its glass behind
+  the box** — inert on a black page today, right the day cards scroll under it.
+- ⚠⚠ **THE FOOT'S ROW IS `--tap-floor` TALL.** Reported: *it says 'Anything'
+  but it's partially obscured by the bottom bar.* Nothing was drawn over the
+  words — **the box over them was the one you cannot see.** The glyph is
+  `--glyph-foot` (26px) and `tap-target` hangs 44px off it, **9px past the
+  drawing at each end**, so the foot's invisible targets reached up over the
+  composer's last line and took its taps. ⚠ **On the record this cannot happen
+  and the reason is structural**: there the foot and the field are two states of
+  **one cell**, never both present, which is why `sheet-glyph` hangs its whole
+  target upward on purpose. Two rows means the row must contain its own reach.
+- ⚠ **A hem under the box, doing two jobs**: idle it is the air between the box
+  and the foot; writing it is the air between the box and the keyboard's top
+  edge. **A rounded box needs it where a bare line did not** — the record's
+  field is a line and can sit hard on the keys; a surface with a corner radius
+  reads as cut off when it meets an edge.
+
 ⚠ **What is not built and is the next thing on this screen: attach.** The
 composer takes words and nothing else yet.
 
