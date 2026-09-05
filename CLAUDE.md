@@ -461,11 +461,24 @@ answers: `tracks`, `lib/overlap.ts` on both triggers, the suppression rule and
 `notifications` rows written in the same transaction all exist, run, **and are
 now read**. The fan-out is proved end to end with two accounts —
 `tests/portal.test.ts`, and `tests/mark.test.ts` for the mark's side of it.
-**What is still not built:** no QR handshake and no possible-match prompt. ⚠ **The
-convergence mark was in this list until 31 August and is built** — see Phase 2
-step 4 above. ⚠ **Overlap joins on `possibility_id`, so only *resolved*
-captures converge, and TMDB is the only catalogue** — today two people can
-converge on a film and on nothing else. See §13 of the implementation
+**What is still not built:** no QR handshake, no push delivery, and **the words**
+— see below. ⚠ **The convergence mark was in this list until 31 August and is
+built** — see Phase 2 step 4 above.
+
+⚠⚠ **A CAPTURE CONVERGES ON ITS WORDS — directed 5 September, Amendment 4,
+DOCUMENTED AND NOT YET BUILT.** This paragraph said *overlap joins on
+`possibility_id`, so only resolved captures converge, and TMDB is the only
+catalogue — today two people can converge on a film and on nothing else.* **That
+is the bug, not the design.** Two conditions come out of `lib/overlap.ts`: the
+join on `possibility_id` and the non-null `intent`. Two captures agree when they
+resolve to the same possibility **or when their `normalised_text` is identical**,
+and `classify`'s three pairs choose **which** sentence to write rather than
+**whether** to write one. ⚠ **The possible-match PROMPT is withdrawn with it** —
+identical text is a convergence, with no confirmation step. ⚠⚠ **And do not build
+an intention control in the console: that was the proposal this replaced.** The
+normative statement is Amendment 4 in the implementation specification; §9b of
+`phase-2-convergence.md` is the account of the failure and `docs/decisions.md`
+holds the costs and the reopen points. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
 ⚠ **Phase 2 step 2 is built — TAP THINKS, SWIPE DOES, 30 August.** Swipe a line

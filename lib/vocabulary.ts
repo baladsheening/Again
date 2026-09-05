@@ -139,14 +139,23 @@ export function specFor(kind: Kind, intent: Intent): IntentSpec {
  * `landsIn` encodes is real, an experience you can repeat against a thing you
  * now possess.
  *
- * ⚠ **The stored values do not move, and that is not an oversight.** Renaming
- * `want` to `active` is a Postgres enum migration with every row in the product
- * behind it, and Phase 1's page is schema-free by design. **These are the words;
- * the identifiers follow in the migration**, and when they do, `PUBLIC_STATES`
- * is the line that has to be re-derived beside them rather than renamed in
- * place — a positive list of three whose members are read against the new set,
- * because renaming its members without re-reading it is the one edit in this
- * phase that can leak somebody's private rows.
+ * ⚠⚠ **THIS SAID RENAMING `want` TO `active` WAS A POSTGRES ENUM MIGRATION.
+ * THERE IS NO ENUM AND THERE NEVER WAS — corrected 5 September.** Every
+ * vocabulary column is plain `text` with a compile-time-only `$type<>`; up and
+ * down are both `UPDATE`s. **That false claim is what deferred the migration
+ * from 24 August**, and the rename it called impossible has since shipped:
+ * `0012`–`0014` split `captures.state` onto `status` (active/completed/dropped)
+ * and `verdict` (null/again/have), and nothing reads `state` any more.
+ *
+ * ⚠ **So this table is legacy and the work left on it is a UI move, not a
+ * migration.** `STATE_WORD` is still keyed on `EntryState` and still speaks film
+ * vocabulary, as do `WHERE_IT_IS`, `COLLECTIONS` and the tray; projections carry
+ * a legacy `state` through `legacyState` so no component has had to change.
+ * `docs/re-direction/vocabulary-migration.md` is the runbook. ⚠ When it moves,
+ * `PUBLIC_STATES` is the line that has to be **re-derived** rather than renamed
+ * in place — a positive list of three whose members are read against the new
+ * set, because renaming its members without re-reading it is the one edit here
+ * that can leak somebody's private rows.
  *
  * ⚠ **`null` is a word too.** Two states deliberately say nothing: an active
  * capture is the page, and a crossed-off one has a strikethrough already saying

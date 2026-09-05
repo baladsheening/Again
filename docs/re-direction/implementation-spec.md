@@ -1316,13 +1316,20 @@ Deliver:
   intentions in §3, the conversion of existing records onto them, and the
   user-facing words that replace the film-first ones (Amendment 1, from
   Phase 0) — **the words are on screen** (`STATE_WORD`, `WHERE_IT_IS`); the
-  Postgres enum and §3's types and intentions are untouched. ⚠ **Deferred at
-  the user's direction on 24 August, and it is the only item nothing has
-  touched** — because it is the **one migration in this phase that is not
-  additive**. The three that shipped are nullable columns old code ignores, so a
-  revert push is still a rollback; renaming enum values ends that permanently.
-  It wants a phase that plans a down migration. ⚠ When it runs, `PUBLIC_STATES`
-  is **re-derived** rather than renamed
+  §3's types and intentions are untouched. ⚠⚠ **THIS ITEM SAID THE BLOCKER WAS A
+  POSTGRES ENUM AND THERE IS NO ENUM — corrected 5 September.** Every vocabulary
+  column is plain `text` with a compile-time-only `$type<>`; up and down are both
+  `UPDATE`s. **That false claim is what deferred this from 24 August**, and with
+  it gone **stage 1 has shipped**: `0012`–`0014` split `captures.state` onto
+  `status` and `verdict`, nothing reads `state`, and only `DROP COLUMN state` is
+  left — deliberately, since the column is written, read by nothing and costs
+  nothing. See `docs/re-direction/vocabulary-migration.md`, which is the runbook.
+  ⚠ **What is genuinely left is not a migration**: moving the UI onto the two
+  axes (`STATE_WORD`, `WHERE_IT_IS`, `COLLECTIONS` and the tray still speak film
+  vocabulary), and **stage 2, the intentions**, whose mapping is many-to-one
+  (`see` and `read` both → `consume`) so its down needs `kind` to reconstruct —
+  decide that before writing it. ⚠ When it runs, `PUBLIC_STATES` is
+  **re-derived** rather than renamed
 
 Exit criteria:
 
