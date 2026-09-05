@@ -1402,6 +1402,16 @@ either order.
 
 ## The shape: the page is the app
 
+⚠⚠ **THE LANDING SCREEN STOPS BEING THE RECORD — directed 5 September,
+Amendment 5, and it is NOT BUILT.** `/` becomes two halves — the corpus above,
+a composer below — and **the record moves to its own surface**, reached by a
+glyph in the bottom bar. ⚠ **Nothing in this section is deleted, because none of
+it is wrong about the record**: every rule below still governs the record, on the
+route it moves to. What changes is which screen you land on. ⚠ **The record may
+never be more than one tap away** — the app is still record-first, and that glyph
+is the whole of what pays for the move. The design is
+`docs/re-direction/the-front-page.md`; §5 of the specification is normative.
+
 **The landing screen is a blank page you type down.** Not a capture field
 pinned above a list — the page itself is the record, empty on first run and
 filling as you write.

@@ -816,14 +816,21 @@ you can reach and cannot act from is worse than one extra control.
 The revive path is still unreachable by gesture, and now for a second reason:
 nothing in the interface resolves a possibility at all.
 
-### Five notification kinds or six?
+### ~~Five notification kinds or six?~~ — CLOSED 5 September: it is SEVEN
 
-§6 says "those five kinds in the schema are the complete set." The schema lists
+§6 said "those five kinds in the schema are the complete set"; the schema listed
 six — `convergence`, `guide`, `lend`, `swap_invite`, `swap_revealed`, `landed` —
-and §8 says "the six kinds."
+and §8 said "the six kinds." **Built six**, and the question was which of the
+six the missing one was.
 
-**Built six.** All six are in `NotificationKind` in `lib/domain.ts`. If five was
-meant, one has to go, and it is not obvious which.
+**Answered by events rather than by a decision.** `track_request` was added on
+4 September as a seventh (**Amendment 3**), so `NotificationKind` in
+`lib/domain.ts` now holds seven and the count in the prose is simply wrong
+wherever it still says five or six. ⚠ **The rule the count was protecting is
+intact and is the thing to carry forward**: no digests, no streaks, no
+re-engagement. A request earned its place by being *addressed to one person and
+answerable*, which is the opposite of what the budget exists to stop. The bar
+for an eighth is unchanged.
 
 ### Overlap never fires on a new mutual track
 
@@ -835,10 +842,12 @@ This bites hardest exactly at seed time, when §13's "one friend group, a dozen
 people" all join in a week and backfill their lists before the graph is
 complete. The app's first impression is the case it currently misses.
 
-**Proposed fix, not yet built:** call the same `lib/overlap.ts` fan-out when a
-track becomes mutual, scoped to that one pair. Second caller, same module — it
-does not scatter the logic, which is what §3 cares about. Belongs in Phase 2,
-when tracking is built.
+~~**Proposed fix, not yet built:**~~ **BUILT — this is closed.** The same
+`lib/overlap.ts` fan-out is called when a track becomes mutual, scoped to that
+one pair: second caller, same module, which is what §3 cares about.
+`tests/handshake.test.ts` asserts it in the case that matters — **accepting a
+request runs the fan-out** — and it is the reason accepting re-reads the portal
+rather than patching the row out locally.
 
 ### Swap landing versus the unique constraint
 

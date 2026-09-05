@@ -37,6 +37,7 @@ wins and this file is wrong.
 | The convergence mark on a line | **BUILT — 31 August.** `--color-accent` in the gutter, on every line that has ever converged, and it **does not empty**. §5's mark sub-section is struck. The code is the `converged` utility in `globals.css`, `converged` in `lib/db/captures.ts` and `getConvergence` beside the portal's read |
 | A capture converges on its WORDS | ⚠⚠ **DIRECTED 5 September, NOT BUILT.** `possibility_id` and `intent` stop being conditions of a match; two captures agree on the same possibility **or on identical `normalised_text`**. **Amendment 4** to the specification is normative; §9b below carries the failure it answers |
 | Push delivery | ⚠ **NOT BUILT, and it is half of the directed loop.** *Goes about their day* means reaching somebody who is not in the app. No service worker, no subscription record, no worker; the VAPID keys in `lib/env.ts` are still optional |
+| ⚠ The record moves to its own surface | **DIRECTED 5 September, NOT BUILT** — Amendment 5. The console, the lock swipe, the mark, the fade and the portal's render prop **travel with it and none is rewritten**; only the route changes. `docs/re-direction/the-front-page.md`. ⚠ The foot returns to three columns and **the `+` goes away**, so the portal door's placement — granted the foot against §2 partly because column one was empty — wants re-reading rather than inheriting |
 | Conversations in the console | **deliberately not designed** — see *Held back* |
 | Non-friend listers | **deliberately not designed** — see *Held back* |
 

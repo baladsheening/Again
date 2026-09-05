@@ -4,7 +4,7 @@ Status: normative product and build specification
 Date: 22 August 2026  
 Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 /
 §13; 4 September 2026 — Amendment 3, §8 / §9; 5 September 2026 — Amendment 4, §2 /
-§6 / §8 / §13 (see *Amendments* below)
+§6 / §8 / §13; 5 September 2026 — Amendment 5, §5 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -200,6 +200,70 @@ no worker, and the VAPID keys in `lib/env.ts` are still optional. §8's
 through the background worker* both still stand, so until push exists the loop
 ends at **opens the app again and finds it**. Named here rather than assumed,
 because it is half of what was asked for.
+
+**Amendment 5 — 5 September 2026, §5 *Home / Capture* and *My things*.** **The
+front page becomes two halves — the corpus above, a composer below — and the
+record moves to its own surface**, reached by a glyph in the bottom bar.
+
+⚠⚠ **The governing sentence, directed the same day and standing above the rest
+of this amendment: *this is a record-first app. We exist so people can make a
+record of the things that interest them — things they want to do, eat, see, try,
+buy.*** So the browse half is a **feeder, not a destination**: every path
+through it ends in a capture, and **the record may never be more than one tap
+away.** Where anything below is ambiguous, that sentence decides it.
+
+**Most of this is not a change to §5 but an arrival at it.** *Home / Capture*
+and *My things* have always been two surfaces here. Phase 1 collapsed them into
+one page because the record was the product's only screen; this un-collapses
+them. Two clauses genuinely move:
+
+- **§5's Home item 3, *recent active captures*, moves off Home** to *My things*.
+  ⚠ **The cost, stated: the record stops being the first thing you see**, and
+  the record is what the app is for. It is paid for by the glyph in the bottom
+  bar and by nothing else, so **that control is load-bearing in a way no other
+  navigation in this app has been.**
+- **§5's Home item 5, the horizontal rail, arrives early and is not gated on
+  location.** It reads the corpus — one set of possibilities with mixed
+  provenance, TMDB today and user contributions from Phase 4 — rather than
+  proximity. The *Here* and *For you here* rails of Phase 5 land in the same
+  place later.
+
+⚠⚠ **IT MUST NOT BECOME A RECOMMENDATION FEED.** §2 permits recommendation only
+as an explained, user-controlled local relevance result and bans a
+recommendation feed outright. **A *popular now* or *trending* rail is a feed
+under another name.** A rail ordered by something the reader chose, or by
+nothing at all, is not. §1's Release 1 exclusions are unamended.
+
+**Two consequences worth stating as requirements rather than design:**
+
+- ⚠ **One container for every possibility type, and it cannot assume an image.**
+  §3 specifies seven types; the catalogue serves posters for one of them, and a
+  user-contributed experience or an article has no image at all. **A card whose
+  design depends on a picture fails progressively as Phase 4 succeeds**, so the
+  container is text-first with the image as enrichment, one height whatever is
+  in it. §7's confidence states ride it, and only when they are not the default.
+- ⚠ **The composer wraps; the record's rows stay one line.** Directed. This
+  reverses half of an earlier interface rule and leaves what that rule protects
+  intact — the record's density — because only the live input grows.
+
+**What is unchanged:** every privacy term; the consent being the mutual track;
+Amendment 4, which lives entirely inside the matching owner and reads no
+surface; §2's *capture before categorisation*, which the composer serves rather
+than strains; and §6's *silence stays silent*, which still forbids explaining an
+absence — including an empty browse half.
+
+⚠ **This is not a new phase and it blocks nothing.** It revises Phase 1's
+surface. Phase 2's outstanding work — the words, and push delivery — is
+independent of it and can be built before, after or beside it. The design brief
+is `docs/re-direction/the-front-page.md`, which carries the sequence, and it is
+meant to die as it is built.
+
+⚠ **One dependency is lodged rather than scheduled**, under the standing
+direction not to build what costs money: **attachment and the camera.**
+Photograph storage exists and is switched off for want of billing; parsing a
+photographed thing into its salient words needs a vision model, because there is
+no OCR in Safari and OCR would be the wrong tool anyway. §6's *Optional images*
+rules and §7's evidence rules already govern both, unamended.
 
 ## 1. Product definition
 
@@ -406,19 +470,39 @@ product must provide these surfaces.
 
 ### Home / Capture
 
-The primary screen contains:
+⚠ **Amended 5 September — see Amendment 5.** The primary screen is **two
+halves**: the corpus above, a composer below. It contains:
 
-1. a prominent capture field
+1. a prominent capture field — **a composer that wraps, and to which a
+   photograph or a link may be attached before submitting**
 2. optional suggestions below the field while typing
-3. recent active captures
+3. ~~recent active captures~~ ⚠ **moved to *My things*, reached by a glyph in
+   the bottom bar.** The cost is that the record is no longer the first thing
+   seen, and that glyph is the whole of what pays for it
 4. a quiet indication of newly relevant overlaps
-5. a horizontal Here or For you here rail when location discovery is
-   available
+5. a horizontal rail — ⚠ **no longer gated on location.** It reads the corpus
+   now; Phase 5's *Here* and *For you here* land in the same place later.
+   ⚠ **It must not become a recommendation feed**: a *popular now* or
+   *trending* rail is a feed under another name
 
 The capture field should remain usable from the home screen without opening a
 dialog or separate search route.
 
+⚠ **The rail needs one container for every possibility type, and it cannot
+assume an image.** §3 specifies seven; the catalogue serves posters for one of
+them, and a user-contributed experience or an article has none. The container is
+text-first with the image as enrichment, **one height whatever is in it**,
+carrying §7's confidence states only when they are not the default. The design
+is `docs/re-direction/the-front-page.md`.
+
 ### My things
+
+⚠ **Amended 5 September — see Amendment 5. This is now its own surface**, where
+Phase 1 had collapsed it into Home, and it is reached by a glyph in the bottom
+bar. ⚠ **Everything the record has grown keeps working and none of it is
+rewritten** — the console on a tap, the lock on a swipe, the convergence mark in
+the gutter, the fade at the foot, and the portal handing its console down. Only
+the route changes.
 
 The user's captures are shown as a calm, text-first list. The list supports:
 
