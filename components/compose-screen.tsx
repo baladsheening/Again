@@ -273,7 +273,9 @@ export function ComposeScreen({
             known price and not a regression.** The fix is the browse half, not a
             ground. See `docs/re-direction/the-front-page.md` §5.
           */}
-          <div className="composer-glow rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none">
+          <div
+            className={`composer-glow ${writing ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none`}
+          >
           {/*
             ⚠⚠ **THE FIELD IS MOUNTED AT ALL TIMES.** iOS raises a keyboard only
             for a focus that happens *inside* the gesture that asked for it, so

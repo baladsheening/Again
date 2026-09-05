@@ -4685,6 +4685,18 @@
  * evenly and say nothing about where the light is coming from.
  *
  */
+/**
+ * **The composer's light while somebody is writing.**
+ *
+ * ⚠ **One hem of spill above the card instead of three**, so what shows above it
+ * matches what shows beside it. With the keyboard up the strip is parked on the
+ * keys and everything above the card is empty page, which is where three hems of
+ * light reads as a wash rather than as a spill. See `composer-glow`.
+ */
+@utility composer-glow-tight {
+  --composer-glow-lead: calc(-1 * var(--page-lead));
+}
+
 @utility composer-glow {
   position: relative;
 
@@ -4705,13 +4717,26 @@
     z-index: -1;
     pointer-events: none;
     /*
-      ⚠ **Three hems past the card on every side, so the ramp is FLAT where the
-      card is.** This number is the difference between glass and a bright smudge
-      under a black box: at one hem the gradient has already fallen off by the
-      card's edge and the interior out-shines the ground beside it — measured,
-      and that is what the first attempt did.
+      ⚠ **Three hems past the card on the sides and below**, so the ramp is flat
+      where the card is and the contour is drawn by the card's tint rather than
+      by the ramp falling off at the edge.
+
+      ⚠⚠ **THE TOP IS ITS OWN TERM, BECAUSE ONLY PART OF THE SIDE SPILL IS EVER
+      ON SCREEN.** The card sits one hem from each edge of the glass, so of the
+      three hems of spill beside it **only one is visible** — the rest is off the
+      screen. Above the card all three show, against empty page, so the same
+      number reads as three times as much light. Directed with the keyboard open:
+      **make the spill above the composer the same dimension as the spill to its
+      sides**, which means matching the *visible* side spill and not the declared
+      one. See `composer-glow-tight`.
+
+      ⚠ **It is a custom property, never a second utility setting `inset`.** Two
+      utilities writing one property are resolved by their order in the compiled
+      sheet, and a class attribute cannot state that order — the trap
+      `--bar-gutter` is a token to avoid.
     */
-    inset: calc(-3 * var(--page-lead));
+    inset: var(--composer-glow-lead, calc(-3 * var(--page-lead)))
+      calc(-3 * var(--page-lead)) calc(-3 * var(--page-lead));
     /*
       ⚠⚠ **THE ORIGIN IS THE ARROW'S OWN CENTRE, AND IT IS DERIVED FROM THE
       LAYOUT RATHER THAN MEASURED OR GUESSED.** The send button sits at
