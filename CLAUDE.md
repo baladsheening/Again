@@ -78,7 +78,31 @@ the composer, never outside.* **A capture no longer travels on being sent.**
 - ⚠ **The failure line is the ONE thing still above the composer.** A capture that
   did not land puts its words back in the field, so there is nothing in the box to
   say it with.
-- **Proved by `node_modules/.probe/composersent.mjs`** — 27 assertions, including
+- ⚠⚠ **THE ARROW BECOMES A `+` FOR AS LONG AS THE UNDO IS THERE — directed:**
+  *a `+` replaces the arrow for the duration that the undo is available, so users
+  can tap it if they don’t want to wait ten seconds for the transfer to happen.*
+  **The two controls are the two answers to one question** — the undo says *give
+  it back*, the `+` says *I meant it, let me write the next one* — and waiting
+  out a countdown was the only other way to say the second.
+- ⚠⚠ **`SendGlyph`’S OWN NOTE ARGUES AGAINST A `+` HERE AND DOES NOT BIND.** It
+  reads: *a `+` in a composer means attach, everywhere it appears, so spending it
+  on submit would put two meanings on one drawing in the one row that has both.*
+  **That is about submit**, and nothing is being submitted in this state — the
+  capture has already landed. `WriteGlyph`’s own note says a plus means *another
+  one*, which is exactly what this is. ⚠ **So the arrow keeps submit and must not
+  be replaced by a `+` in the ordinary state**, and the two can never be seen
+  together: one drawing holds the slot at a time.
+- ⚠ **`acceptNow` is the timer’s own ending run by hand** — the same three effects
+  in the same order, so there is one description of what the end of a window is
+  and two ways to reach it. **Do not let them drift apart.** ⚠ **It is lit while
+  the field is empty**, because the draft test would otherwise draw the one
+  control that has something to do as off.
+- ⚠⚠ **IT OPENS THE NEXT CAPTURE, SO THE FOOT GOES AND THE BOUNCE WAITS — and
+  that is NOT the bug reported an hour earlier.** There the person was idle and
+  the door was the only thing that could tell them anything; here they have said
+  *I meant it* and are already typing. The held `arrived` plays when writing
+  stops, which is what state rather than an event buys.
+- **Proved by `node_modules/.probe/composersent.mjs`** — 38 assertions, including
   that the sent line is the field's own box, that the drawing sits on the last
   line's centre, that undo re-engages with the caret at the end, and that the
   capture is really gone from the record afterwards. ⚠ **Its text is stamped at

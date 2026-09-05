@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
-import { AttachGlyph, SendGlyph, UndoGlyph } from './glyphs'
+import { AttachGlyph, SendGlyph, UndoGlyph, WriteGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { captureAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
@@ -425,6 +425,32 @@ export function ComposeScreen({
    * can disagree; the honest answer to *too late* is the capture still being
    * there. Same argument as the record's, which says so in the same words.
    */
+  /**
+   * **Let it go now, rather than waiting the window out.**
+   *
+   * ⚠⚠ **DIRECTED 5 September:** *a `+` replaces the arrow for the duration that
+   * the undo is available, so users can tap it if they don't want to wait ten
+   * seconds for the transfer to happen.* The window exists to give the words
+   * back, not to hold anybody up — **this is the way to say *I meant it*.**
+   *
+   * ⚠ **It is the timer's own ending, run by hand.** Same three effects in the
+   * same order — the control goes, the line leaves, the door bounces — so there
+   * is one description of what the end of a window is and two ways to reach it.
+   * **Do not let these drift apart.**
+   *
+   * ⚠ **And it opens the next capture**, which is what a `+` means. The focus is
+   * taken inside the click, because iOS raises a keyboard only for a focus that
+   * happens inside the gesture that asked for it.
+   */
+  function acceptNow() {
+    if (landedId === null) return
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    setLandedId(null)
+    setLeaving(true)
+    setArrived(true)
+    field.current?.focus()
+  }
+
   /**
    * **Take the capture back, and put the writer back in the middle of it.**
    *
@@ -975,14 +1001,40 @@ export function ComposeScreen({
             <button
               type="button"
               onMouseDown={keepFocus}
-              onClick={() => void commit()}
-              aria-label="Save it"
-              disabled={draft.trim() === ''}
+              onClick={() => (landedId === null ? void commit() : acceptNow())}
+              aria-label={landedId === null ? 'Save it' : 'Write another'}
+              /*
+                ⚠ **Lit whenever it can act.** While the window is open the field
+                is empty, so the draft test would draw the one control that has
+                something to do as off.
+              */
+              disabled={landedId === null && draft.trim() === ''}
               className={`tap-target col-start-4 flex items-center justify-self-center transition-colors ${
-                draft.trim() === '' ? OFF : 'text-chrome'
+                landedId === null && draft.trim() === '' ? OFF : 'text-chrome'
               }`}
             >
-              <SendGlyph />
+              {/*
+                ⚠⚠ **A `+` FOR AS LONG AS THE UNDO IS THERE — directed 5
+                September.** The two controls are the two answers to the same
+                question: the undo says *give it back*, the `+` says *I meant it,
+                let me write the next one.* Waiting ten seconds was the only other
+                way to say the second, and a countdown is not an answer.
+
+                ⚠⚠ **`SendGlyph`'s OWN NOTE ARGUES AGAINST A `+` HERE AND DOES NOT
+                BIND, WHICH IS WORTH SAYING BEFORE SOMEBODY RESTORES IT.** It
+                reads: *a `+` in a composer means attach, everywhere it appears,
+                so spending it on submit would put two meanings on one drawing in
+                the one row that has both.* **That is about submit.** Nothing is
+                being submitted in this state — the capture has already landed —
+                and `WriteGlyph`'s own note says a plus means *another one*, which
+                is exactly what this is. ⚠ **So the arrow keeps submit and must
+                not be replaced by a `+` in the ordinary state.**
+
+                ⚠ **They cannot be seen together.** One drawing occupies the slot
+                at a time, so there is never a `+` beside an arrow asking which
+                one sends.
+              */}
+              {landedId === null ? <SendGlyph /> : <WriteGlyph />}
             </button>
           </div>
           </div>
