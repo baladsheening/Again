@@ -4721,6 +4721,55 @@
  * again, which is the tidier place for it to be.
  */
 
+/**
+ * **The box saying no: one small bump, down and back.**
+ *
+ * ⚠⚠ **IT EXISTS BECAUSE THE CAP IS OTHERWISE SILENT.** A capture is as long as
+ * the box, and a keystroke past that simply does not appear — nothing is drawn,
+ * nothing moves, and *silent failure* is the one thing this screen's own history
+ * says to fix. This is the smallest thing that says it.
+ *
+ * ⚠⚠ **A COUNTER WAS ASKED FOR FIRST AND CANNOT BE HONEST.** There is no number
+ * of characters remaining: measured on the live page the cap is **106 in Latin,
+ * 213 of `i`, 57 of `m` on a handset and 214 on the desk**, so *how many
+ * more* depends on which ones. A digit in that corner would have to pick one and
+ * lie. **Do not add one.** What is true is *not that one*, and that is what this
+ * says.
+ *
+ * ⚠ **DOWN, not sideways.** A shake is the borrowed idiom for refusal, and it is
+ * the wrong sentence here: nothing was rejected as invalid, the words reached the
+ * bottom of the box. Down and back is the thing that actually happened.
+ *
+ * ⚠ **No colour, and that is forced rather than restrained.** `--color-accent`
+ * means *this converged*, `--color-chrome` means *a control*, and
+ * `--color-decline` is spent on the one dismissal in the app — §11's scarcity
+ * rule takes all three, and `docs/decisions.md` has twice refused to make red
+ * the error colour. **Motion is what is left, and it is enough.**
+ *
+ * ⚠ **Half a hem, so the desk gets it at four-thirds like everything else**, and
+ * half of `--recede`, so it borrows the app's one duration rather than
+ * inventing a second. A bump wants to be quicker than a travel.
+ *
+ * ⚠ **Reduced motion ends it before it is seen**, by the global block: every
+ * animation runs at 0.01ms and resolves to its last frame, which is the box
+ * where it started. Somebody who asked for no motion gets none, and loses only a
+ * signal they asked not to be given.
+ */
+@utility composer-refused {
+  animation: composer-refuse calc(var(--recede) / 2) var(--ease-recede) 1;
+}
+
+@keyframes composer-refuse {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  45% {
+    translate: 0 calc(var(--line-hem) / 2);
+  }
+}
+
 @utility composer-glow-tight {
   --composer-glow-lead: calc(-1 * var(--page-lead));
 }

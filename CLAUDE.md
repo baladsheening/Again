@@ -106,7 +106,28 @@ and there is a tombstone in `globals.css`. The account is §10 of
   capture stop dead at 106 — including 106 narrow ones the box had room for.
   The deletion path clears it because the field is getting shorter; a commit is
   the other way the field empties.
-- **Proved by `node_modules/.probe/composercap.mjs`** — 47 assertions, two
+- ⚠⚠ **THE BOX BUMPS WHEN IT SAYS NO, AND A COUNTER WAS ASKED FOR FIRST AND
+  REFUSED — 5 September.** Asked: *can there be a counter that appears as the
+  user is about to approach the last allowed character?* **There is no such
+  number.** The cap is measured, so *characters remaining* is 106 in Latin, 213
+  of `i`, 57 of `m`, 214 on the desk — it depends on which ones you type next,
+  and a digit in that corner would have to pick one and lie. ⚠ **Do not add one.**
+- ⚠ **What was real in the question is that the cap is SILENT** — a keystroke
+  past the end simply does not appear. `composer-refused` is the answer: the card
+  moves down half a hem and back, over half of `--recede`, once per refused
+  keystroke. **Down rather than sideways** — a shake says *rejected as invalid*,
+  and what happened is that the words reached the bottom of the box.
+- ⚠ **No colour, and that is forced rather than restrained.** `--color-accent` is
+  a convergence, `--color-chrome` is a control, `--color-decline` is the one
+  dismissal in the app, and `docs/decisions.md` has twice refused to make red the
+  error colour. §11's scarcity rule takes all three; **motion is what is left.**
+- ⚠ **It fires only when NOTHING landed**, which is both the honest case and the
+  safe one: a refusal changes no state, so the class survives the animation,
+  where after a `setDraft` React reconciles it away mid-bump. A trimmed paste put
+  words in and can be seen to have done so.
+- ⚠ **Restarted through `classList` — remove, force a reflow, add.** A counter in
+  state would be re-rendering the screen in order to say *nothing happened*.
+- **Proved by `node_modules/.probe/composercap.mjs`** — 50 assertions, two
   surfaces, three scripts, both heights.
 
 ⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is

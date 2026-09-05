@@ -542,11 +542,44 @@ a *length*, and a length outlives the words it measured: left behind, a capture
 that filled the box at 106 characters made the next one stop dead at 106 —
 including 106 narrow characters the box had room for.
 
-**Measured by `node_modules/.probe/composercap.mjs`** — 47 assertions across two
+## The box says no
+
+**Asked 5 September:** *can there be a counter that appears as the user is about
+to approach the last allowed character?*
+
+⚠⚠ **A COUNTER CANNOT BE HONEST HERE, AND THAT IS THE WHOLE ANSWER.** The cap is
+measured, so *characters remaining* has no value: it is **106 in Latin, 213 of
+`i`, 57 of `m`, 214 on the desk**. A digit in that corner would have to pick one
+and lie, and the lie would be worst exactly where it mattered — at the end. **Do
+not add one.**
+
+⚠ **What was real in the question is that the cap is SILENT.** A keystroke past
+the end simply does not appear: nothing is drawn, nothing moves, and *silent
+failure* is this screen's own recorded failure. So the box answers instead —
+`composer-refused`, the card down half a hem and back over half of `--recede`,
+once per refused keystroke.
+
+⚠ **Down rather than sideways.** A shake is the borrowed idiom for refusal and it
+is the wrong sentence: nothing was rejected as invalid, the words reached the
+bottom of the box.
+
+⚠ **No colour, and it is forced rather than restrained.** `--color-accent` means
+a convergence, `--color-chrome` means a control, `--color-decline` is the one
+dismissal in the app, and `docs/decisions.md` has twice refused to make red the
+error colour. §11's scarcity rule takes all three. **Motion is what is left, and
+it is enough.**
+
+⚠ **It fires only when nothing landed** — the honest case and the safe one. A
+refusal changes no state, so the class survives the animation; after a
+`setDraft` React would reconcile it away mid-bump. A trimmed paste put words in
+and can be seen to have done so.
+
+**Measured by `node_modules/.probe/composercap.mjs`** — 50 assertions across two
 surfaces and three scripts, including that the cap differs in all five cases
 above, that the kept text is a **strict prefix** of what was typed, that tapping
 in adds **exactly one line**, that leaving a full composer **keeps** it, that a
-refused keystroke leaves the caret where it was, and that Return still commits.
+refused keystroke leaves the caret where it was and **bumps the box**, that the
+bump animates `translate` and paints nothing, and that Return still commits.
 
 ⚠ **The `ance` mirror was read and refused, and the reasoning is worth keeping.**
 It is not "overflow printed above" — it is a **full mirror**: past 40 characters

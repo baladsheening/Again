@@ -153,6 +153,17 @@ export function ComposeScreen({
     return next.slice(0, lo)
   }
 
+  /**
+   * **The card, so a refused keystroke can be answered on it.**
+   *
+   * ⚠ **The animation is restarted through `classList`, not through state.** A
+   * pure refusal deliberately changes nothing React knows about — that is what
+   * makes it invisible — so there is no re-render to hang a class on, and a
+   * counter in state would be re-rendering the screen to say *nothing happened*.
+   * Remove, force a reflow, add: the standard restart, so a held key bumps once
+   * per keystroke instead of once ever.
+   */
+  const box = useRef<HTMLDivElement | null>(null)
   const host = useRef<HTMLDivElement | null>(null)
   const floorAnchor = useRef<HTMLDivElement | null>(null)
   const field = useRef<HTMLTextAreaElement | null>(null)
@@ -332,6 +343,7 @@ export function ComposeScreen({
             ground. See `docs/re-direction/the-front-page.md` §5.
           */}
           <div
+            ref={box}
             className={`composer-glow ${writing ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none`}
           >
           {/*
@@ -406,6 +418,22 @@ export function ComposeScreen({
                 for one.
               */
               const kept = next.length - draft.length > 1 ? longestThatFits(el, next) : draft
+              /*
+                ⚠⚠ **THE BOX BUMPS ONLY WHEN NOTHING LANDED.** A trimmed paste
+                put words in and can be seen to have done so; a refused keystroke
+                put nothing in, changes no state, and is therefore the one case
+                with no evidence at all. **That is what needs saying, and it is
+                also the only case where this is safe** — a refusal triggers no
+                re-render, so the class survives the animation, where after
+                `setDraft` React would reconcile it away mid-bump.
+              */
+              if (kept === draft && box.current) {
+                box.current.classList.remove('composer-refused')
+                /* Force a reflow so the animation restarts rather than being
+                   removed and re-added inside one frame, which does nothing. */
+                void box.current.offsetWidth
+                box.current.classList.add('composer-refused')
+              }
               /*
                 ⚠ **A trimmed paste latches at what it KEPT.** Latching at the
                 length that was offered would leave the field refusing input it
