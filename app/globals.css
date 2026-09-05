@@ -4738,18 +4738,39 @@
     */
     inset: calc(-3 * var(--page-lead));
     /*
-      ⚠ **The source is under the send arrow, and the position is DERIVED.** The
-      box is inset `-3 × --page-lead` on every side, so the card's own right and
-      bottom edges are at `100% - 3 hems`; the arrow sits about 2.2 hems in from
-      the card's right edge and about 1.1 above its bottom. Both are one
-      expression rather than a percentage that would drift the day the card's
-      padding or the control row's height changed.
+      ⚠⚠ **THE ORIGIN IS THE ARROW'S OWN CENTRE, AND IT IS DERIVED FROM THE
+      LAYOUT RATHER THAN MEASURED OR GUESSED.** The send button sits at
+      `col-start-4` with `justify-self-center` in a four-column row spanning the
+      card, so **its centre is at 87.5% of the CARD's width** and at a fixed
+      fraction of the card's height. This box is the card plus `3 × --page-lead`
+      on every side, so converting one to the other is
+      `3 hems + f × (100% − 6 hems)`, which is what these two expressions are.
+      **Exact at both surfaces**: 366.25px of 470 on a 390 handset and 826.4 of
+      1013 on a 1440 desk, against measured 366.25 and 826.4.
 
-      ⚠ **Four lobes at that one point and a falloff under them.** The lobes are
-      the lamp — overlapping, different radii, slightly offset, so its edge is
-      ragged rather than a clean circle. **A clean circle is a smooth pool and
-      measured identically on both sides of the glass**, which is what *not
-      glassy enough* was. The falloff is the light reaching across the card.
+      ⚠⚠ **A FLAT PERCENTAGE DOES NOT WORK IN X, AND THAT COST A ROUND.** The
+      lamp was set to `87%` on the strength of a probe that read `--page-lead`
+      as the *string* `1.25rem` — `parseFloat` gave 1.25, so it computed
+      percentages of a box 357px wide instead of 470 and reported the arrow at
+      86.7%. **The real figures are 77.9% on a handset and 81.6% on a desk**:
+      the card gets much wider up there while the six hems around it do not, so
+      one percentage cannot serve both. ⚠ **The lesson is not *derive rather
+      than measure*, it is that a measurement has to be checked as hard as an
+      argument** — this one was quoted at the user as beating the reasoning, and
+      it was the broken half.
+
+      ⚠ **Four lobes ON that point, not around it.** They were offset from each
+      other, so the cluster's centroid sat beside the arrow rather than under it.
+      They share one centre now and differ only in their **radii** — some wide,
+      some tall — so their union is an irregular blob **centred on the arrow**.
+      ⚠ **That is what keeps the source ragged without moving it**: a clean
+      circle is a smooth pool and measured identically on both sides of the
+      glass, which is what *not glassy enough* was.
+
+      ⚠ **The falloff is CIRCULAR, so the light emanates rather than smears.** It
+      was 17 hems wide by 10 tall, which spreads sideways along the card and
+      reads as a band. Equal radii radiate, and the box clipping the circle at
+      the top and bottom is what a light under an edge actually does.
 
       ⚠ **Every one reaches transparent before its own box's corners**, so there
       is no rectangle anywhere in the shape — the deleted row light's rule about
@@ -4760,8 +4781,13 @@
       the blur radius is erased by it** — `--glass-blur` is 18px, so nothing here
       is under one `--page-lead` across.
     */
-    --lamp-x: calc(100% - 5.2 * var(--page-lead));
-    --lamp-y: calc(100% - 4.1 * var(--page-lead));
+    /*
+      87.5% of the card's width, 74.6% of its height, expressed in this box's
+      coordinates. Verified against the arrow's own rect at 390 and 1440.
+    */
+    --lamp-x: calc(87.5% - 2.25 * var(--page-lead));
+    --lamp-y: calc(74.6% - 1.476 * var(--page-lead));
+    --lamp-reach: calc(var(--page-lead) * 14);
 
     background:
       radial-gradient(
@@ -4769,16 +4795,15 @@
             var(--lamp-y),
           color-mix(
               in srgb,
-              var(--composer-glow-colour) var(--composer-glow-peak),
+              var(--composer-glow-colour) calc(var(--composer-glow-peak) * 1),
               transparent
             )
             0%,
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 1.5) calc(var(--page-lead) * 2.1) at
-            calc(var(--lamp-x) - var(--page-lead) * 0.5)
-            calc(var(--lamp-y) + var(--page-lead) * 0.35),
+          calc(var(--page-lead) * 1.4) calc(var(--page-lead) * 2.4) at var(--lamp-x)
+            var(--lamp-y),
           color-mix(
               in srgb,
               var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.85),
@@ -4788,9 +4813,8 @@
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 2.6) calc(var(--page-lead) * 1.2) at
-            calc(var(--lamp-x) + var(--page-lead) * 0.4)
-            calc(var(--lamp-y) - var(--page-lead) * 0.3),
+          calc(var(--page-lead) * 2.7) calc(var(--page-lead) * 1.15) at var(--lamp-x)
+            var(--lamp-y),
           color-mix(
               in srgb,
               var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.75),
@@ -4800,9 +4824,8 @@
           transparent 100%
         ),
       radial-gradient(
-          calc(var(--page-lead) * 1.3) calc(var(--page-lead) * 1.3) at
-            calc(var(--lamp-x) - var(--page-lead) * 0.9)
-            calc(var(--lamp-y) - var(--page-lead) * 0.55),
+          calc(var(--page-lead) * 1.75) calc(var(--page-lead) * 1.95) at var(--lamp-x)
+            var(--lamp-y),
           color-mix(
               in srgb,
               var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.6),
@@ -4812,8 +4835,7 @@
           transparent 100%
         ),
       radial-gradient(
-        calc(var(--page-lead) * 17) calc(var(--page-lead) * 10) at var(--lamp-x)
-          var(--lamp-y),
+        var(--lamp-reach) var(--lamp-reach) at var(--lamp-x) var(--lamp-y),
         color-mix(
             in srgb,
             var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.5),
@@ -4822,10 +4844,10 @@
           0%,
         color-mix(
             in srgb,
-            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.2),
+            var(--composer-glow-colour) calc(var(--composer-glow-peak) * 0.18),
             transparent
           )
-          40%,
+          42%,
         transparent 100%
       );
   }
