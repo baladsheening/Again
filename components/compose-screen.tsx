@@ -101,6 +101,20 @@ export function ComposeScreen({
    */
   const [landedId, setLandedId] = useState<string | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /**
+   * **The door to the record has something to say, and has not said it yet.**
+   *
+   * ⚠ **State, not an event, because the foot is UNMOUNTED while somebody
+   * writes.** A capture committed with the keyboard up has no glyph to animate
+   * at the moment its window closes; this survives until the foot is on screen
+   * and the bounce plays when it mounts. **A signal nobody could have seen is
+   * not a signal.**
+   *
+   * ⚠ **Put down by the animation itself**, through `onAnimationEnd`, rather
+   * than by a timer here that would be a second copy of `--recede` written in a
+   * language that cannot read it.
+   */
+  const [arrived, setArrived] = useState(false)
   const [failed, setFailed] = useState<string | null>(null)
   /**
    * **Does what is in the field fit the two lines it has?**
@@ -129,6 +143,34 @@ export function ComposeScreen({
    * deep inside an overflow, which is a state the cap means the field can never
    * be in.
    */
+  /**
+   * **A control in this strip may not take the focus off the field.**
+   *
+   * ⚠⚠ **WITHOUT THIS THE FIRST TAP ONLY PUTS THE KEYBOARD AWAY — reported from
+   * a handset, 5 September: *when I tap the undo it only instructs the app to
+   * collapse the keyboard; I have to press it again to actually undo.*** The tap
+   * blurred the field, iOS took the keyboard down, the strip travelled from the
+   * top of the keyboard to the bottom of the glass, and the button was no longer
+   * under the finger when the tap completed. **The second tap worked because by
+   * then nothing was moving.**
+   *
+   * ⚠ **This is the same failure as the one fixed an hour earlier and the guard
+   * for that one could not reach it.** `relatedTarget` says *where focus went*,
+   * and on iOS a tap on a button focuses nothing at all — it just blurs the
+   * field, so `relatedTarget` is `null` and the guard reads it as leaving.
+   * **The fix has to stop the blur, not classify it.**
+   *
+   * ⚠ **`mousedown`, and it is not a mouse.** Focus moves on the compatibility
+   * `mousedown` that every engine synthesises from a tap, before `click`;
+   * `preventDefault` there cancels the focus change and leaves the click alone.
+   * This is the toolbar-button technique, and it is the one thing that works on
+   * all four surfaces.
+   *
+   * ⚠ **Every control in the strip needs it**, not just the one that was
+   * reported: send and attach sit in the same box and move the same way.
+   */
+  const keepFocus = (e: { preventDefault: () => void }) => e.preventDefault()
+
   const fits = (el: HTMLTextAreaElement) => el.scrollHeight <= el.clientHeight
 
   /**
@@ -261,7 +303,24 @@ export function ComposeScreen({
     */
     if (undoTimer.current) clearTimeout(undoTimer.current)
     setLandedId(result.value.id)
-    undoTimer.current = setTimeout(() => setLandedId(null), undoWindowMs)
+    /*
+      ⚠⚠ **THE RECEIPT GOES WITH THE WINDOW — directed 5 September, and it
+      REVERSES what was written here this morning.** That note read: *the receipt
+      stays until the next capture replaces it; a confirmation that vanished
+      after ten seconds would be the toast this screen refuses to be.* The
+      direction is that it should go, **and the reasoning holds because something
+      takes its place**: the record's own glyph bounces at the same instant, so
+      the screen stops saying *here is what you wrote* and starts saying *it is
+      in there*. A toast leaves nothing behind; this hands over.
+
+      ⚠ **One timer for all three**, because they are one event. Two timers on
+      one moment is two clocks to keep in step.
+    */
+    undoTimer.current = setTimeout(() => {
+      setLandedId(null)
+      setLanded(null)
+      setArrived(true)
+    }, undoWindowMs)
   }
 
   /**
@@ -290,7 +349,14 @@ export function ComposeScreen({
     const text = landed
     if (!id || text === null) return
 
+    /*
+      ⚠ **The bounce is cancelled with the capture it was for.** The window's
+      timer is what fires it, so clearing the timer is enough — but `arrived`
+      may already be up from a capture before this one, and a door announcing an
+      arrival at the moment one is taken back is the screen contradicting itself.
+    */
     if (undoTimer.current) clearTimeout(undoTimer.current)
+    setArrived(false)
     setLandedId(null)
     setLanded(null)
     if (draft === '') setDraft(text)
@@ -385,6 +451,7 @@ export function ComposeScreen({
                 <div className="line-glyph ms-3 shrink-0 [--glyph:var(--glyph-line)]">
                   <button
                     type="button"
+                    onMouseDown={keepFocus}
                     onClick={undo}
                     aria-label="Undo the last capture"
                     className="text-chrome flex items-center"
@@ -726,6 +793,7 @@ export function ComposeScreen({
               {imagesOn ? (
                 <button
                   type="button"
+                  onMouseDown={keepFocus}
                   aria-label="Attach a photograph"
                   className="text-chrome tap-target flex items-center"
                 >
@@ -740,6 +808,7 @@ export function ComposeScreen({
 
             <button
               type="button"
+              onMouseDown={keepFocus}
               onClick={() => void commit()}
               aria-label="Save it"
               disabled={draft.trim() === ''}
@@ -827,6 +896,8 @@ export function ComposeScreen({
             <div className="flex min-h-[var(--tap-floor)] items-center">
               <Foot
                 record="away"
+                arrived={arrived}
+                onArrived={() => setArrived(false)}
                 searchable={searchable}
                 portal={() => router.push('/record?portal=1')}
                 portalWaiting={portalWaiting}

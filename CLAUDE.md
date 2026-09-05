@@ -157,10 +157,26 @@ beside the receipt now, in the record's own slot geometry.
   that can disagree with the one that decides — and the disagreement shows as a
   control that is lit and refuses. `app/(app)/page.tsx` hands `UNDO_WINDOW_MS`
   down exactly as the record's page does.
-- ⚠ **The receipt outlives the control.** `landed` stays until the next capture
-  replaces it — it is the confirmation, and a confirmation that vanished after
-  ten seconds would be the toast this screen refuses to be. `landedId` is the
-  window. **Two states because they expire differently.**
+- ⚠⚠ **THE RECEIPT GOES WITH THE WINDOW, AND THAT REVERSES WHAT WAS WRITTEN
+  HERE THE SAME MORNING — directed.** This entry read: *the receipt stays until
+  the next capture replaces it; a confirmation that vanished after ten seconds
+  would be the toast this screen refuses to be.* The direction is that it should
+  go, **and the reasoning survives because something takes its place**: the
+  record's own door bounces at that instant, so the screen stops saying *here is
+  what you wrote* and starts saying *it is in there*. **A toast leaves nothing
+  behind; this hands over.** One timer fires all three — two clocks on one moment
+  is two clocks to keep in step.
+- ⚠ **The bounce is STATE, not an event, because the foot is unmounted while
+  somebody writes.** A capture committed with the keyboard up has no door to
+  animate when its window closes; `arrived` survives until the foot is on screen
+  and plays on mount. **A signal nobody could have seen is not a signal.** It is
+  put down by `onAnimationEnd`, never by a second timer holding a copy of
+  `--recede`. ⚠ **An undo clears it** — a door announcing an arrival at the
+  moment one is taken back is the screen contradicting itself.
+- ⚠ **UP, where the composer's refusal bump is DOWN**: same family, opposite
+  reading — down is *the words hit the bottom of the box*, up is *it went
+  somewhere*. ⚠ **It is not a badge and must not become one**; §5 forbids the
+  portal a count and the same reasoning holds here.
 - ⚠⚠ **THE WORDS COME BACK INTO THE COMPOSER, WHICH THE RECORD'S UNDO DOES NOT
   DO.** Same act, finished on a surface that can finish it: the undo exists *for
   a typo*, and on the record there is no field to put the words back into. ⚠
@@ -170,10 +186,27 @@ beside the receipt now, in the record's own slot geometry.
 - ⚠ **A refusal puts the receipt back.** `undoCapture` bounds itself in SQL, so
   the clock here and the clock there can disagree; the honest answer to *too
   late* is the capture still being there. The record says this in the same words.
-- **Proved by `node_modules/.probe/composerundo.mjs`** — 14 assertions,
-  including that the capture is really gone from the record, that a full composer
-  keeps its draft, that the window closes on its own while the receipt stays, and
-  that **tapping the send arrow commits**.
+- ⚠⚠ **AND THE `relatedTarget` GUARD WAS NOT ENOUGH — reported from a handset
+  within the hour: *tapping the undo only collapses the keyboard; I have to press
+  it again to actually undo.*** The tap blurred the field, iOS took the keyboard
+  down, **the strip travelled from the top of the keyboard to the bottom of the
+  glass**, and the button was no longer under the finger when the tap completed.
+  The second tap worked because by then nothing was moving.
+- ⚠⚠ **THE GUARD COULD NOT REACH IT, AND THE REASON IS WORTH KEEPING.**
+  `relatedTarget` says *where the focus went*, and **on iOS a tap on a button
+  focuses nothing at all** — it simply blurs the field, so `relatedTarget` is
+  `null` and the guard reads it as leaving. **A fix had to stop the blur, not
+  classify it.** `onMouseDown={keepFocus}` on every control in the strip:
+  `preventDefault` on the compatibility `mousedown` every engine synthesises
+  from a tap cancels the focus change and leaves the click alone. ⚠ **The guard
+  stays** — it is still what a keyboard user tabbing to a control needs.
+- ⚠ **Every control in the strip needs it, not just the one that was reported.**
+  Send and attach sit in the same box and move the same way.
+- **Proved by `node_modules/.probe/composerundo.mjs`** — 19 assertions,
+  including that pressing a control **does not move the focus**, that ONE tap
+  undoes, that the capture is really gone from the record, that a full composer
+  keeps its draft, that the receipt goes with the window, and that the door
+  bounces once and leaves no mark.
 
 ⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
 built.** Until this, a mutual track was **two independent one-sided acts**: I add

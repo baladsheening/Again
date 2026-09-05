@@ -151,6 +151,18 @@ type Tools = {
    */
   record?: 'here' | 'away'
   /**
+   * **A capture has just landed, so the door to the record says so — once.**
+   *
+   * ⚠ **The foot is UNMOUNTED while somebody writes**, so a capture committed
+   * with the keyboard up has no glyph to animate at the moment it lands. This is
+   * state rather than an event for exactly that reason: it survives until the
+   * foot is on screen, and the bounce plays when it mounts. **A signal nobody
+   * could have seen is not a signal.**
+   */
+  arrived?: boolean
+  /** Called when the bounce has played, so the caller can put `arrived` down. */
+  onArrived?: () => void
+  /**
    * Whether there is a record to search. `false` on an empty page, where the
    * only answer the surface could give is *Nothing.*
    */
@@ -212,6 +224,8 @@ function ToolSet({
   searchable = false,
   portal = null,
   portalWaiting = { lines: false, requests: false },
+  arrived = false,
+  onArrived,
 }: Tools) {
   /*
     ⚠ **Lit is derived here and in one expression, never asked for separately.**
@@ -322,7 +336,18 @@ function ToolSet({
         <Link
           href="/record"
           aria-label="The record"
-          className={`text-chrome tap-target ${at(2)} flex items-center transition-colors`}
+          /*
+            ⚠ **The bounce is on the LINK, not on the glyph.** The drawing is
+            shared with the off state, and an animation living on it would play
+            on a control that is drawn dark and goes nowhere.
+
+            ⚠ **`onAnimationEnd` puts it down**, rather than a timer that would
+            be a second copy of `--recede` in a language that cannot read it.
+          */
+          className={`text-chrome tap-target ${at(2)} flex items-center transition-colors ${
+            arrived ? 'record-arrived' : ''
+          }`}
+          onAnimationEnd={onArrived}
         >
           <RecordGlyph />
         </Link>

@@ -623,10 +623,48 @@ a typo*, and on the record there is no field to put the words back into. ⚠ **O
 into an empty one** — appending is not the fix, because a capture is one line and
 two run together are neither.
 
-**Measured by `node_modules/.probe/composerundo.mjs`** — 14 assertions, including
-that the capture is really gone from the record, that a full composer keeps its
-draft, that the window closes on its own while the receipt stays, and that
-tapping the send arrow commits.
+## What the window closing looks like
+
+**Directed 5 September**, and it reverses what this section said that morning:
+**the receipt goes when the undo does**, and the record's own door bounces at the
+same instant. One event, two things — the screen stops saying *here is what you
+wrote* and starts saying *it is in there*. A toast leaves nothing behind; this
+hands over.
+
+⚠ **The bounce is state, not an event.** The foot is unmounted while somebody
+writes, so a capture committed with the keyboard up has no door to animate when
+its window closes; `arrived` survives until the foot is on screen and plays on
+mount. **A signal nobody could have seen is not a signal.** An undo clears it.
+
+⚠ **Up, where the composer's refusal bump is down.** Same family, opposite
+reading: down is *the words hit the bottom of the box*, up is *it went
+somewhere*. ⚠ **Not a badge, and it must not become one.**
+
+## The two-tap bug, and why the first guard missed it
+
+**Reported from a handset within the hour:** *tapping the undo only collapses the
+keyboard; I have to press it again to actually undo.*
+
+The tap blurred the field, iOS took the keyboard down, **the strip travelled from
+the top of the keyboard to the bottom of the glass**, and the button was no
+longer under the finger when the tap completed.
+
+⚠⚠ **THE `relatedTarget` GUARD COULD NOT REACH IT.** That property says *where
+the focus went*, and **on iOS a tap on a button focuses nothing at all** — it
+simply blurs the field, so `relatedTarget` is `null` and the guard reads it as
+leaving. **The fix had to stop the blur, not classify it:**
+`onMouseDown={keepFocus}` on every control in the strip, because
+`preventDefault` on the compatibility `mousedown` cancels the focus change and
+leaves the click alone. The guard stays for keyboard users tabbing in.
+
+⚠ **The lesson generalises past this screen:** a control beside a focused field
+must not take the focus, on any surface where losing it moves the layout.
+
+**Measured by `node_modules/.probe/composerundo.mjs`** — 19 assertions, including
+that pressing a control does not move the focus, that ONE tap undoes, that the
+capture is really gone from the record, that a full composer keeps its draft,
+that the receipt goes with the window, and that the door bounces once and leaves
+no mark.
 
 ⚠ **The `ance` mirror was read and refused, and the reasoning is worth keeping.**
 It is not "overflow printed above" — it is a **full mirror**: past 40 characters

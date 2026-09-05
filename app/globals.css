@@ -4755,6 +4755,53 @@
  * where it started. Somebody who asked for no motion gets none, and loses only a
  * signal they asked not to be given.
  */
+/**
+ * **The record glyph acknowledging that something arrived in it.**
+ *
+ * ⚠ **Directed 5 September**, at the moment the undo window closes: *the receipt
+ * should disappear and the glyph users tap to go to their record should bounce
+ * to indicate successful submission.* One event, two things — the window retires
+ * and the door says where the capture went.
+ *
+ * ⚠ **UP, where the composer's refusal is DOWN.** They are the same family read
+ * in opposite directions: down is *the words hit the bottom of the box*, up is
+ * *it went somewhere*. A glyph that dipped to celebrate would be the refusal
+ * again in a different corner.
+ *
+ * ⚠ **Two hops, and the second is smaller.** One hop is a nudge and reads as a
+ * layout jump; three is a toy. It is `--line-hem` and then two fifths of it, on
+ * `--recede`, so the whole thing is the app's own distance and the app's own
+ * duration.
+ *
+ * ⚠ **It is not a badge and must not become one.** §5 forbids the portal a
+ * count, and the same reasoning holds here: this says *something arrived*, once,
+ * and then there is nothing left on the glyph. **A dot that stayed would be an
+ * unread marker for your own writing.**
+ *
+ * ⚠ **Reduced motion ends it before it is seen**, by the global block — every
+ * animation runs at 0.01ms and resolves to its last frame, which is the glyph
+ * where it started.
+ */
+@utility record-arrived {
+  animation: record-arrive var(--recede) var(--ease-recede) 1;
+}
+
+@keyframes record-arrive {
+  0%,
+  55%,
+  100% {
+    translate: 0 0;
+  }
+
+  30% {
+    translate: 0 calc(-1 * var(--line-hem));
+  }
+
+  78% {
+    translate: 0 calc(-0.4 * var(--line-hem));
+  }
+}
+
 @utility composer-refused {
   animation: composer-refuse calc(var(--recede) / 2) var(--ease-recede) 1;
 }
