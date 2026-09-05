@@ -24,8 +24,9 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
-⚠⚠ **A CAPTURE IS AS LONG AS THE BOX — 5 September, directed, built and
-measured. THE COMPOSER NO LONGER SCROLLS AT ALL.** Directed: *limit the number of
+⚠⚠ **A CAPTURE IS AS LONG AS THE BOX, AND THE BOX GROWS A LINE TO WRITE IN —
+5 September, two directions, built and measured. THE COMPOSER NO LONGER SCROLLS
+AT ALL.** Directed: *limit the number of
 characters to the number that can fit in the given space so we have no need for
 scrolling in the composer.* The field asks itself on every keystroke and refuses
 the one that would not fit. **Deleted with the scroll: the roll-under,
@@ -75,8 +76,38 @@ and there is a tombstone in `globals.css`. The account is §10 of
   touch scroll only from inside the **padding box**; a drag beginning in a
   border scrolls nothing. If a scroller in a padded card ever needs its air to be
   swipeable again, that is the finding to start from.
-- **Proved by `node_modules/.probe/composercap.mjs`** — 34 assertions, two
-  surfaces, three scripts.
+- ⚠⚠ **TWO LINES AT REST, THREE WHILE IT IS BEING WRITTEN IN — directed the
+  same day: *when a user taps in the composer and the keyboard rises, the
+  composer itself should increase in size just enough to add one extra line of
+  writing.*** Measured: field 48 → 72, card 130 → 154 on a handset; 64 → 96 on
+  the desk, which is the same one line at the desk's root scale. **The cap reads
+  the box, so the third line is a third line of writing** — 106 characters of
+  Latin where two lines took 73.
+- ⚠⚠ **THIS IS NOT THE GROWING BOX THAT WAS DELETED, AND THE DIFFERENCE IS THE
+  TRIGGER.** That one measured `scrollHeight` and grew two lines to six **as the
+  words arrived**, moving the card, the glow and the strip on every keystroke.
+  This moves **once, when you tap in**, and never again while you type. *The box
+  does not follow the words* is the rule that survived; *the box has one height*
+  was never the point of it.
+- ⚠⚠ **IT STAYS TALL WHILE THERE IS A DRAFT IN IT — `writing || draft !== ''` —
+  AND THAT IS NOT A THIRD STATE.** The field is `overflow-y-hidden`, so three
+  lines of draft in a box that shrank to two is a line of somebody's words
+  **clipped with nothing saying so**. The short box is only ever the empty one.
+  ⚠ **Do not tidy this to `writing` alone.**
+- ⚠ **Keyed on `writing`, NEVER on `--keyboard-overlap`.** The direction says
+  *the keyboard rises*, but that property measures a gap that also opens when a
+  Safari tab's address bar collapses during a scroll — `useKeyboardHem` says in
+  writing that it is not a keyboard detector. ⚠ **So the desk grows too**, which
+  is deliberate: a pointer-type branch would be a device sniff for a behaviour
+  that reads correctly on both.
+- ⚠ **The latch is cleared by `commit`, and that was a bug for an hour.**
+  `fullAt` is a *length*, and a length outlives the words it measured: left
+  behind, a capture that filled the box at 106 characters made the **next**
+  capture stop dead at 106 — including 106 narrow ones the box had room for.
+  The deletion path clears it because the field is getting shorter; a commit is
+  the other way the field empties.
+- **Proved by `node_modules/.probe/composercap.mjs`** — 47 assertions, two
+  surfaces, three scripts, both heights.
 
 ⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
 built.** Until this, a mutual track was **two independent one-sided acts**: I add

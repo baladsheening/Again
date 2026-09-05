@@ -182,6 +182,15 @@ export function ComposeScreen({
     if (!text || sending.current) return
     sending.current = true
 
+    /*
+      ⚠⚠ **THE LATCH GOES WITH THE WORDS IT WAS SET ON.** `fullAt` is a length,
+      and lengths outlive the text they measured: left behind, a capture that
+      filled the box at 73 characters would make the *next* capture stop dead at
+      73 — even 73 narrow ones the box has room for. The deletion path clears it
+      because the field is getting shorter; this is the other way the field
+      empties, and it was missed when the latch was written.
+    */
+    fullAt.current = null
     setDraft('')
     setLanded(text)
     setFailed(null)
@@ -434,20 +443,44 @@ export function ComposeScreen({
               }
             }}
             /*
-              ⚠⚠ **THE BOX NEVER CHANGES SIZE — directed 5 September.** It grew
-              with the words in it, measured off `scrollHeight`, from two lines
-              to six. **It is two lines, always**, and when there is more than
-              that the words scroll inside it: `overflow-y-auto` on a fixed
-              height, with the engine keeping the caret in view. **Do not put a
-              `min-h`/`max-h` pair back** — a range is a box that resizes, which
-              is the thing this removes.
+              ⚠⚠ **TWO LINES AT REST, THREE WHILE IT IS BEING WRITTEN IN —
+              directed 5 September: *when a user taps in the composer and the
+              keyboard rises, the composer itself should increase in size just
+              enough to add one extra line of writing.*** The box therefore has
+              exactly **two** heights and moves between them on a gesture.
 
-              ⚠ **What it buys: the composer, the light behind it and the foot
-              under it are one shape that never moves.** A growing box moved the
-              card's top edge, the glow's box and the strip's height on every
-              keystroke past the second line — three things animating while
-              somebody types, on the one screen whose promise is that writing is
-              instant.
+              ⚠⚠ **THIS IS NOT THE GROWING BOX THAT WAS DELETED, AND THE
+              DIFFERENCE IS THE TRIGGER.** That one measured `scrollHeight` and
+              grew from two lines to six **as the words arrived** — the card's
+              top edge, the glow's box and the strip's height all moving on every
+              keystroke past the second line, on the one screen whose promise is
+              that writing is instant. This moves **once, when you tap in**, and
+              never again while you type. *The box does not follow the words* is
+              the rule that survived; *the box has one height* was never the
+              point of it. **Do not put a `min-h`/`max-h` pair back** — a range
+              is a box that follows its content, which is the thing that went.
+
+              ⚠⚠ **IT STAYS TALL WHILE THERE IS A DRAFT IN IT, AND THAT IS NOT A
+              THIRD STATE — IT IS WHAT STOPS THE THIRD LINE BEING HIDDEN.** The
+              field is `overflow-y-hidden` and the cap is measured against
+              whatever the box currently is, so three lines of draft in a box
+              that shrank to two is a line of somebody's words **clipped, with
+              nothing saying so**. `writing || draft !== ''` costs no
+              measurement and cannot get it wrong: the short box is only ever the
+              empty one. ⚠ **Do not "tidy" this to `writing` alone.**
+
+              ⚠ **Keyed on `writing`, NEVER on `--keyboard-overlap`.** The
+              direction says *the keyboard rises*, but that property measures a
+              gap that also opens when a Safari tab's address bar collapses
+              during a scroll — `useKeyboardHem` says in writing that it is not a
+              keyboard detector, and reading it as one is a bug this page has
+              already shipped once. `writing` is the gesture that asked for the
+              keyboard.
+
+              ⚠ **So the desk grows too, and that is deliberate rather than
+              overlooked.** There is no keyboard up there, but there is a focused
+              composer, and a pointer-type branch would be a device sniff for a
+              behaviour that reads correctly on both.
 
               ⚠ **`resize-none`, and it matters more now.** A drag handle on a
               deliberately fixed box is a control that undoes the rule.
@@ -469,7 +502,21 @@ export function ComposeScreen({
               a drag handle on a fixed box is still a control that undoes the
               rule.
             */
-            className="page-input block h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-hidden text-[length:var(--text-line)] leading-[var(--leading-line)]"
+            /*
+              ⚠ **One property, two values, set by a class that only ever
+              appears once.** Two utilities declaring `height` would be resolved
+              by their order in the compiled sheet and a class attribute cannot
+              state that order — the trap `--bar-gutter` is a token to avoid — so
+              the height reads `--composer-lines` and the state sets it.
+
+              ⚠ **It moves on the app's one duration and one curve.** The bars,
+              the foot and the strip all travel on `--recede`/`--ease-recede`;
+              a box that jumped while everything around it eased would be the
+              only thing on the screen that did.
+            */
+            className={`page-input block h-[calc(var(--leading-line)*var(--composer-lines,2))] w-full resize-none overflow-y-hidden text-[length:var(--text-line)] leading-[var(--leading-line)] transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+              writing || draft !== '' ? '[--composer-lines:3]' : ''
+            }`}
           />
 
           {/*

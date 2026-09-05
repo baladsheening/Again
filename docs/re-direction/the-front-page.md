@@ -456,7 +456,7 @@ front page except attachment.
 
 ---
 
-## 10. A capture is as long as the box
+## 10. A capture is as long as the box, and the box grows a line to write in
 
 **Directed 5 September**, and it closes both of the composer questions §9 used to
 carry. The field measures itself on every keystroke and **refuses the one that
@@ -507,9 +507,45 @@ That is a request for a taller box or a shorter rule, and both are one number in
 `compose-screen.tsx`. Restoring the scroll restores the readout, and the readout
 is what the cap was chosen over.
 
-**Measured by `node_modules/.probe/composercap.mjs`** — 34 assertions across two
+## The third line
+
+**Directed the same day:** *when a user taps in the composer and the keyboard
+rises, the composer itself should increase in size just enough to add one extra
+line of writing.* Two lines at rest, three while it is being written in.
+Measured: field **48 → 72**, card **130 → 154** on a handset, **64 → 96** on the
+desk — the same one line at the desk's root scale. **The cap reads the box**, so
+the third line is a third line of *writing*: 106 characters of Latin where two
+lines took 73.
+
+⚠⚠ **NOT THE GROWING BOX THAT WAS DELETED — the difference is the trigger.** That
+one measured `scrollHeight` and grew from two lines to six *as the words
+arrived*, moving the card, the glow and the strip on every keystroke past the
+second line. This moves **once, when you tap in**. *The box does not follow the
+words* is the rule that survived; *the box has one height* was never the point of
+it.
+
+⚠⚠ **IT STAYS TALL WHILE THERE IS A DRAFT IN IT, AND THAT IS WHAT STOPS THE THIRD
+LINE BEING HIDDEN.** The field is `overflow-y-hidden`, so three lines of draft in
+a box that shrank back to two is a line of somebody's words clipped with nothing
+saying so. `writing || draft !== ''` costs no measurement and cannot get it
+wrong: **the short box is only ever the empty one.** Do not tidy it to `writing`
+alone.
+
+⚠ **Keyed on `writing`, never on `--keyboard-overlap`** — that property measures
+a gap that also opens when a Safari tab's address bar collapses during a scroll,
+and `useKeyboardHem` says in writing that it is not a keyboard detector. ⚠ **The
+desk grows too**, deliberately: a pointer-type branch would be a device sniff for
+a behaviour that reads correctly on both.
+
+⚠ **The latch is cleared by `commit`, which was a bug for an hour.** `fullAt` is
+a *length*, and a length outlives the words it measured: left behind, a capture
+that filled the box at 106 characters made the next one stop dead at 106 —
+including 106 narrow characters the box had room for.
+
+**Measured by `node_modules/.probe/composercap.mjs`** — 47 assertions across two
 surfaces and three scripts, including that the cap differs in all five cases
-above, that the kept text is a **strict prefix** of what was typed, that a
+above, that the kept text is a **strict prefix** of what was typed, that tapping
+in adds **exactly one line**, that leaving a full composer **keeps** it, that a
 refused keystroke leaves the caret where it was, and that Return still commits.
 
 ⚠ **The `ance` mirror was read and refused, and the reasoning is worth keeping.**
