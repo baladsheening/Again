@@ -421,25 +421,11 @@ front page except attachment.
 
 ## 9. Open, and blocking nothing yet
 
-- ⚠⚠ **THE COMPOSER'S OVERFLOW — RAISED 5 September, AND IT IS THE FIRST THING
-  TO DECIDE ON THIS SCREEN.** *What if the text exceeding the two-line limit
-  prints in the area above the composer, faded, so a user never has to scroll?*
-  **There is a project called `ance` in the root directory where this is already
-  implemented** — read it before designing anything.
-  - ⚠ **Judge it as a REPLACEMENT, not an addition.** If it wins it deletes the
-    roll-under, `roll-mark`, `composer-bar` and `readRoll`. Two ways of showing
-    one overflow in one box is the drift this document keeps ruling against.
-  - ⚠⚠ **It collides with §4.** The area above the composer is where the corpus
-    rail goes. **Decide what the faded overflow does once the rail is there**, or
-    it ships with a deletion date on it.
-- ⚠ **A swipe should scroll anywhere inside the composer, not only over the text
-  column — raised the same day and HELD.** Today only the `<textarea>` scrolls,
-  so the card's padding swallows the gesture. **Not built on purpose: if the
-  overflow question above goes the other way there is no scroll area at all.**
-  If the current design is kept, the fix is to move the fixed height,
-  `overflow-y-auto` and `touch-action: pan-y` onto the field's wrapper with
-  `-mx-[--page-lead] px-[--page-lead]`, and ⚠ **move the roll mark out of the
-  scroller** — inside it, it would scroll with the content.
+- ⚠⚠ **BOTH COMPOSER QUESTIONS ARE CLOSED, AND THE ANSWER TO BOTH WAS THE SAME
+  SUBTRACTION — 5 September, directed: *limit the number of characters to the
+  number that can fit in the given space so we have no need for scrolling in the
+  composer.*** The overflow does not print above the composer, and the swipe does
+  not scroll anywhere in it, **because there is nothing to scroll**. See §10.
 
 - ⚠⚠ **Colour-by-type is PARKED, not answered — directed 5 September: *leave
   colour by type for now; keep it in mind for later.*** It stays written up in
@@ -467,3 +453,71 @@ front page except attachment.
   it covers. `--keyboard-overlap` and `useKeyboardHem` already measure it —
   ⚠ **and `useKeyboardHem` says explicitly that the gap it measures is not a
   keyboard detector**, so do not read it as one here either.
+
+---
+
+## 10. A capture is as long as the box
+
+**Directed 5 September**, and it closes both of the composer questions §9 used to
+carry. The field measures itself on every keystroke and **refuses the one that
+would not fit**. Nothing rolls under, so nothing scrolls, so there is no scroll
+area to swipe on and no overflow to print anywhere.
+
+⚠⚠ **DELETED WITH THE SCROLL:** the roll-under, `roll-mark`, `composer-bar` and
+`readRoll`. The field is `overflow-y-hidden`. There is a tombstone in
+`globals.css` holding the argument, because all four will look like missing
+features to somebody reading the composer cold.
+
+⚠⚠ **THE CAP IS MEASURED AND IS NEVER A NUMBER.** *"The number of characters that
+fit"* is not one: measured on the live page it is **73 in Latin, 92 in Arabic, 38
+of `m`, 142 of `i` on a 390 handset, and 146 on the desk** — five different
+answers from one rule. A `maxLength` would be a constant tuned until one handset
+looked right, which this repository rules out by name.
+
+⚠ **The measurement is synchronous, and that was checked rather than assumed.**
+`readRoll` ran in a `requestAnimationFrame` because `scrollHeight` is not right
+until the new text is laid out — but a cap has to refuse a keystroke *during* it,
+a frame later being a character that appears and then vanishes. Measured in
+Chromium and WebKit: **at the boundary the synchronous read and the post-frame
+read agree**, because reading `scrollHeight` forces the layout it needs. They
+part company only deep inside an overflow, which the cap makes unreachable.
+
+⚠⚠ **THE CAP IS STICKY, AND THAT IS NOT A DETAIL — IT IS THE DIFFERENCE BETWEEN
+STOPPING AND SIEVING.** Asking only *does this exact string fit* is right about
+every string and wrong about typing: at the cap a wide letter does not fit and a
+narrow one still does, so `mike` arrived as `m` refused, `i` **accepted**, `k`
+and `e` refused. Measured before the latch: **62 letters kept out of a prefix of
+74, in no order a reader could explain.** A full field has to stop taking input,
+not sieve it. The latch is the length at which the box first said no, held in a
+`useRef`; a deletion clears it.
+
+⚠ **A paste is TRIMMED, not refused.** Refusing it outright would be silent, and
+silent failure is this screen's own recorded failure mode. It keeps a prefix, so
+a paste into the middle loses the tail — stated rather than solved.
+
+⚠ **What it costs, and it is the one hole:** a capture that fitted when it was
+typed can stop fitting if the type reflows under it — a rotation, or a desk
+window narrowed — and what does not fit is then **clipped rather than scrolled
+to**. The alternative was trimming somebody's words on a resize, which is worse.
+**The cap is about what can be written, not a promise about every width it is
+later read at.**
+
+⚠ **So do not answer *the composer feels short* by putting the scroll back.**
+That is a request for a taller box or a shorter rule, and both are one number in
+`compose-screen.tsx`. Restoring the scroll restores the readout, and the readout
+is what the cap was chosen over.
+
+**Measured by `node_modules/.probe/composercap.mjs`** — 34 assertions across two
+surfaces and three scripts, including that the cap differs in all five cases
+above, that the kept text is a **strict prefix** of what was typed, that a
+refused keystroke leaves the caret where it was, and that Return still commits.
+
+⚠ **The `ance` mirror was read and refused, and the reasoning is worth keeping.**
+It is not "overflow printed above" — it is a **full mirror**: past 40 characters
+the whole body re-renders as a centred, faded, tappable block above the field,
+which keeps the caret. Three things ruled it out here: **the text is on screen
+twice** (density rule 2), **its precondition is a permanently empty top half**
+which §4 is committed to filling, and it is an addition where this was a
+subtraction. ⚠ **One idea in it is still worth having and is NOT built**: tapping
+a word in the mirror moves the caret to it. If the cap is ever loosened, that is
+the thing to take.

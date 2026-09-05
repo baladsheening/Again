@@ -76,38 +76,81 @@ export function ComposeScreen({
   const [landed, setLanded] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
   /**
-   * **How much of the capture is out of sight, and where.**
+   * **Does what is in the field fit the two lines it has?**
    *
-   * ⚠ **`null` when it all fits**, so the mark is absent rather than full-height
-   * — *controls go off; they do not disappear* is about controls, and this is a
-   * readout: a bar that is always there says nothing on the ordinary line.
+   * ⚠⚠ **A CAPTURE IS AS LONG AS THE BOX — directed 5 September, and it is a
+   * SUBTRACTION.** The words used to roll up out of sight and a drawn mark said
+   * so; the ask was that the composer never need scrolling at all, and the way
+   * to get that is not a better readout, it is for the overflow to be
+   * unreachable. **The roll-under, the roll mark and `readRoll` are deleted**
+   * — see the tombstones in `globals.css`.
    *
-   * ⚠ **Read off the element, never computed from the text.** Counting
-   * characters or newlines to guess a line count is a constant waiting to be
-   * wrong on the next face, the next root scale and the next word.
+   * ⚠⚠ **MEASURED, NEVER A CHARACTER COUNT.** *"The number of characters that
+   * fit"* is not a number: it is different on the desk (four-thirds the type),
+   * different in Arabic, different for `mmmm` than for `iiii`. A `maxLength`
+   * would be a constant tuned until one handset looked right, which is the one
+   * thing this repository rules out by name. **The element is asked instead**,
+   * which is `readRoll`'s own rule kept after `readRoll` went.
+   *
+   * ⚠ **Synchronous, and that was checked rather than assumed.** `readRoll` ran
+   * in a `requestAnimationFrame` because `scrollHeight` is not right until the
+   * new text is laid out — but a cap has to refuse a keystroke *during* it, a
+   * frame later being a character that appears and then vanishes. Measured in
+   * Chromium and WebKit at the boundary — **the first keystroke that overflows
+   * reads the same value synchronously as it does a frame later**, because
+   * reading `scrollHeight` forces the layout it needs. The two only part company
+   * deep inside an overflow, which is a state the cap means the field can never
+   * be in.
    */
-  const [rolling, setRolling] = useState(false)
-  const mark = useRef<HTMLSpanElement | null>(null)
+  const fits = (el: HTMLTextAreaElement) => el.scrollHeight <= el.clientHeight
 
-  function readRoll() {
-    const el = field.current
-    if (!el) return
-    const over = el.scrollHeight > el.clientHeight
-    setRolling(over)
-    if (!over || !mark.current) return
-    /*
-      ⚠ **Through the CSSOM, never a `style` attribute.** §10 blocks inline
-      styles in production and the linter enforces it, so `style={{ height }}`
-      would work here and be dead on the deployed app.
-    */
-    mark.current.style.setProperty(
-      '--roll-size',
-      `${(el.clientHeight / el.scrollHeight) * 100}%`,
-    )
-    mark.current.style.setProperty(
-      '--roll-top',
-      `${(el.scrollTop / el.clientHeight) * 100}%`,
-    )
+  /**
+   * **How long the capture was when the box first said no.**
+   *
+   * ⚠⚠ **THE CAP IS STICKY, AND WITHOUT THIS IT MANGLES WORDS.** Asking only
+   * *does this exact string fit* is right about every string and wrong about
+   * typing: at the cap a wide letter does not fit and a narrow one still does,
+   * so somebody typing `mike` gets `m` refused, `i` **accepted**, `k` and `e`
+   * refused — the word arrives as a single letter in the middle of a sentence.
+   * Measured: 62 letters kept out of a prefix of 74, in no order a reader could
+   * explain. **A full field has to stop taking input, not sieve it.**
+   *
+   * ⚠ **A length, not a boolean, so a deletion re-opens it with nothing to
+   * reset.** The latch holds while the text is as long as it was when it was
+   * refused; take a character out and the next one is measured again. There is
+   * no `useEffect`, no clearing on blur and no state — a `useRef`, because this
+   * changes nothing on screen.
+   *
+   * ⚠ **It also closes the space leak.** A trailing space hangs at the end of a
+   * wrapped line without making a third, so it genuinely fits and was accepted
+   * for ever at the cap; the latch refuses it with everything else.
+   */
+  const fullAt = useRef<number | null>(null)
+
+  /**
+   * **The most of `next` that fits, found by asking the element.**
+   *
+   * ⚠ **Only ever reached by a PASTE.** Typing adds one character, and one
+   * character that does not fit is simply refused — so the ordinary keystroke
+   * at the cap costs a single measurement and never a search. A paste is worth
+   * the seven: **refusing a paste outright would be silent**, and the words
+   * would go nowhere with nothing said, which is the failure this screen's own
+   * *the confirmation is the row* note exists about.
+   *
+   * ⚠ **It keeps a PREFIX**, so a paste into the middle of a line loses the
+   * tail rather than the pasted words. Stated rather than solved: a caret-aware
+   * trim is two more cases for a keystroke nobody has reported making.
+   */
+  function longestThatFits(el: HTMLTextAreaElement, next: string) {
+    let lo = 0
+    let hi = next.length
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2)
+      el.value = next.slice(0, mid)
+      if (fits(el)) lo = mid
+      else hi = mid - 1
+    }
+    return next.slice(0, lo)
   }
 
   const host = useRef<HTMLDivElement | null>(null)
@@ -290,13 +333,6 @@ export function ComposeScreen({
             effect** — that has survived every redesign of the writing strip and
             it survives this one.
           */}
-          {/*
-            ⚠ **The mark is positioned against the FIELD, not the card**, so its
-            percentage height is a fraction of what is visible rather than of the
-            whole box. Without this wrapper it would measure against the card and
-            start a hem above the first line.
-          */}
-          <div className="relative">
           <textarea
             ref={field}
             rows={1}
@@ -308,16 +344,71 @@ export function ComposeScreen({
             dir="auto"
             value={draft}
             placeholder="Anything"
+            /*
+              ⚠⚠ **THE CAP LIVES HERE, AND IT REFUSES RATHER THAN TRUNCATES.**
+              The element already holds the new value by the time this runs, so
+              the question *does it fit* is asked of the thing itself. If it
+              does not, the DOM is put back to the value React last rendered —
+              which is what makes the refusal invisible: no state changes, so
+              nothing re-renders, and the character simply never appears.
+
+              ⚠⚠ **THE CARET IS PUT BACK BY WHAT WAS DROPPED, NOT TO WHERE IT
+              IS.** `selectionStart` here is the position *after* the character
+              that is being refused, so restoring the value and leaving the caret
+              alone moves it one to the right — a refused keystroke in the middle
+              of a line would walk the caret along and the next one would land in
+              the wrong place. Measured: it read 6 where it had been 5, the whole
+              time this was written the other way. So the offset is the
+              difference between what was offered and what was kept, which is 1
+              for a refusal and the trimmed tail for a paste, clamped at both
+              ends because a paste can start before the caret.
+
+
+            */
             onChange={(e) => {
-              setDraft(e.target.value)
+              const el = e.currentTarget
+              const next = el.value
               /*
-                ⚠ **After the value lands, not with it.** The element's
-                `scrollHeight` is only right once the browser has laid the new
-                text out, and `onChange` runs before that.
+                ⚠ **A deletion always lands, and it un-latches.** Less text than
+                fitted a moment ago still fits, so there is nothing to measure —
+                and the box is no longer full, so the next character is asked
+                about again.
               */
-              requestAnimationFrame(readRoll)
+              if (next.length < draft.length) {
+                fullAt.current = null
+                setDraft(next)
+                return
+              }
+              /*
+                ⚠ **A full field takes nothing, whatever the letter is.** This is
+                the sticky half; without it the cap sieves narrow characters
+                through and words arrive in pieces.
+              */
+              const latched = fullAt.current !== null && draft.length >= fullAt.current
+              if (!latched && fits(el)) {
+                setDraft(next)
+                return
+              }
+              const caret = el.selectionStart ?? next.length
+              /*
+                ⚠ **One character over is refused; a paste is trimmed.** The
+                search is worth its measurements only when there is something to
+                find, and at the cap every further keystroke would otherwise pay
+                for one.
+              */
+              const kept = next.length - draft.length > 1 ? longestThatFits(el, next) : draft
+              /*
+                ⚠ **A trimmed paste latches at what it KEPT.** Latching at the
+                length that was offered would leave the field refusing input it
+                has room for, and latching not at all would let the next narrow
+                character through — the sieve again, one keystroke later.
+              */
+              fullAt.current = kept.length
+              el.value = kept
+              const back = Math.max(0, Math.min(caret - (next.length - kept.length), kept.length))
+              el.setSelectionRange(back, back)
+              if (kept !== draft) setDraft(kept)
             }}
-            onScroll={readRoll}
             onFocus={() => setWriting(true)}
             /*
               ⚠ **Losing focus is leaving.** iOS's own *Done* takes the focus and
@@ -361,23 +452,25 @@ export function ComposeScreen({
               ⚠ **`resize-none`, and it matters more now.** A drag handle on a
               deliberately fixed box is a control that undoes the rule.
             */
-            className="page-input composer-bar block h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-auto text-[length:var(--text-line)] leading-[var(--leading-line)]"
+            /*
+              ⚠ **`overflow-y-hidden`, not `auto`, and that is the cap stated
+              twice on purpose.** Nothing can overflow by typing, so `auto` would
+              be an offer the field never makes; `hidden` says the box is the
+              whole of it. ⚠ **What it costs, and it is the one hole in this:**
+              a capture that fitted when it was typed can stop fitting if the
+              type reflows under it — a rotation, or a desk window narrowed —
+              and what does not fit is then clipped rather than scrolled to.
+              **The alternative was trimming somebody's words on a resize**,
+              which is worse; the cap is about what can be written, not a
+              promise about every width it might later be read at.
+
+              ⚠ **`composer-bar` is gone with the scroll it hid**, and so is
+              `resize-none`'s neighbour `overflow-y-auto`. `resize-none` stays:
+              a drag handle on a fixed box is still a control that undoes the
+              rule.
+            */
+            className="page-input block h-[calc(var(--leading-line)*2)] w-full resize-none overflow-y-hidden text-[length:var(--text-line)] leading-[var(--leading-line)]"
           />
-
-          {/*
-            ⚠ **Only while there is something out of sight.** The box never
-            grows, so a long capture rolls up above the top edge and **nothing
-            else on this screen says there is more** — which is exactly the case
-            the deleted `scrollbar-none` utility warned about when the page's own
-            bar was taken away.
-
-            ⚠ **`aria-hidden`, because the field already says it.** A textarea
-            carries its whole value to a screen reader whatever is scrolled out
-            of view, so announcing this would be narrating a visual fact that
-            does not apply to the reader.
-          */}
-          <span ref={mark} aria-hidden className={`roll-mark ${rolling ? '' : 'hidden'}`} />
-          </div>
 
           {/*
             ⚠⚠ **THE CONSOLE'S OWN ROW, TO THE PIXEL — directed 5 September:

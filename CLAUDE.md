@@ -24,6 +24,60 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **A CAPTURE IS AS LONG AS THE BOX — 5 September, directed, built and
+measured. THE COMPOSER NO LONGER SCROLLS AT ALL.** Directed: *limit the number of
+characters to the number that can fit in the given space so we have no need for
+scrolling in the composer.* The field asks itself on every keystroke and refuses
+the one that would not fit. **Deleted with the scroll: the roll-under,
+`roll-mark`, `composer-bar` and `readRoll`**; the field is `overflow-y-hidden`
+and there is a tombstone in `globals.css`. The account is §10 of
+`docs/re-direction/the-front-page.md`.
+
+- ⚠⚠ **THE CAP IS MEASURED AND MUST NEVER BECOME A NUMBER.** *"The number of
+  characters that fit"* is not one — measured on the live page it is **73 in
+  Latin, 92 in Arabic, 38 of `m`, 142 of `i` on a 390 handset and 146 on the
+  desk**, five answers from one rule. A `maxLength` would be a constant tuned
+  until one handset looked right, which *How things get fixed* rules out by name.
+  It is `readRoll`'s own rule — **read off the element, never computed from the
+  text** — kept after `readRoll` went.
+- ⚠ **The measurement is synchronous, and that was checked rather than assumed.**
+  `readRoll` ran in a `requestAnimationFrame` because `scrollHeight` is not right
+  until the new text is laid out; a cap has to refuse a keystroke *during* it, a
+  frame later being a character that appears and then vanishes. Measured in
+  Chromium and WebKit: **at the boundary the two reads agree**, because reading
+  `scrollHeight` forces the layout it needs. They differ only deep inside an
+  overflow, which the cap makes unreachable.
+- ⚠⚠ **THE CAP IS STICKY, AND THAT IS THE DIFFERENCE BETWEEN STOPPING AND
+  SIEVING.** *Does this exact string fit* is right about every string and wrong
+  about typing: at the cap a wide letter does not fit and a narrow one does, so
+  `mike` arrived as `m` refused, `i` **accepted**, `k` and `e` refused —
+  **62 letters kept out of a prefix of 74, in no order a reader could explain.**
+  A full field stops taking input rather than sieving it. The latch is the length
+  at which the box first said no, in a `useRef`; a deletion clears it, and it is
+  also what closed a leak where a trailing space fitted for ever.
+- ⚠ **A paste is TRIMMED, not refused** — refusing it would be silent, which is
+  this screen's own recorded failure. It keeps a prefix, so a paste into the
+  middle loses the tail; stated rather than solved.
+- ⚠ **What it costs, and it is the one hole:** a capture that fitted when it was
+  typed can stop fitting if the type reflows under it — a rotation, a desk window
+  narrowed — and is then **clipped rather than scrolled to**. The alternative was
+  trimming somebody's words on a resize. **The cap governs what can be written,
+  not every width it is later read at.**
+- ⚠ **Do not answer *the composer feels short* by putting the scroll back.** That
+  asks for a taller box or a shorter rule, both one number in
+  `compose-screen.tsx`. The scroll brings the readout back, and the readout is
+  what the cap was chosen over.
+- ⚠⚠ **THE SWIPE-ANYWHERE FIX IS DEAD RATHER THAN DEFERRED, AND SO IS THE `ance`
+  MIRROR.** Both were open questions about a scroll that no longer exists. **A
+  transparent border on the field was built for the swipe and deleted the same
+  hour**: it put every point of the card on the field by hit-test in both
+  engines — and **a hit-test is not a gesture**. Measured: Chromium starts a
+  touch scroll only from inside the **padding box**; a drag beginning in a
+  border scrolls nothing. If a scroller in a padded card ever needs its air to be
+  swipeable again, that is the finding to start from.
+- **Proved by `node_modules/.probe/composercap.mjs`** — 34 assertions, two
+  surfaces, three scripts.
+
 ⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
 built.** Until this, a mutual track was **two independent one-sided acts**: I add
 you, then *you* must separately remember my handle, go to my page and add me
