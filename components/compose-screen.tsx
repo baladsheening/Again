@@ -298,9 +298,28 @@ export function ComposeScreen({
     const root = host.current
     if (!box || !root) return
     const observer = new ResizeObserver(([entry]) => {
-      root.style.setProperty('--sheet-block', `${entry.contentRect.height}px`)
+      /*
+        ⚠⚠ **THE BORDER BOX, NOT `contentRect`.** `writing-sheet` spends the
+        notch's clearance as `padding-block`, and `contentRect` is the
+        **content** box — so the reserve was short by that padding and the rail's
+        floor sat **18px below the strip's top edge** on every notched handset.
+        The strip occupies its border box; that is the number to keep clear of,
+        and the rail's floor is now a picture's edge rather than empty page.
+      */
+      const measured = entry.borderBoxSize?.[0]
+      root.style.setProperty(
+        '--sheet-block',
+        `${measured ? measured.blockSize : entry.contentRect.height}px`,
+      )
     })
-    observer.observe(box)
+    /*
+      ⚠⚠ **`box: 'border-box'`, OR THE CLEARANCE IS NEVER SEEN.** The default is
+      the **content** box, so a change that is purely `padding-block` — which
+      `env(safe-area-inset-bottom)` is — moves nothing being watched and **fires
+      no callback at all**, leaving the reserve at whatever it was before the
+      inset existed.
+    */
+    observer.observe(box, { box: 'border-box' })
     return () => observer.disconnect()
   }, [])
 
@@ -616,8 +635,34 @@ export function ComposeScreen({
           curve**, collapsed from two on 24 August precisely so nobody sets a
           second equal to it.
         */}
+        {/*
+          ⚠⚠ **THE `translate-y` IS WHAT KEEPS THE RAIL ON SCREEN, AND IT IS
+          THE REPORTED BUG — 6 September, from an installed app:** *the picture
+          rail moves up, with the upper part obscured as it's essentially off
+          screen.* **iOS pans the visual viewport up to reveal a focused field**,
+          and everything anchored to the top of the page goes with it — over a
+          document that has nothing to scroll, so `window.scrollY` never moves
+          and nothing else can see it happen.
+
+          ⚠ **`--viewport-top` is `visualViewport.offsetTop`**, written by the
+          same rAF loop that writes the overlap, so the two cannot disagree
+          about where the page is. Translating **down** by it puts the rail back
+          where it was drawn. `keyboard-hem.ts` had exactly this as `head()`
+          until 27 August and its deletion note says *if a top-pinned field ever
+          comes back, so does this* — **this is that**, for a rail rather than a
+          field.
+
+          ⚠ **The dim keys on `writing` and the pin keys on the measurement**,
+          the same split the height already makes: `--keyboard-overlap` and
+          `--viewport-top` are **lengths**, never a keyboard detector.
+
+          ⚠ **No transition on the transform.** The pan is iOS animating the
+          viewport; a duration of ours on top of it would be a second clock
+          chasing a first, which is the failure `--recede` was collapsed to one
+          value to avoid.
+        */}
         <div
-          className={`flex min-h-0 flex-1 flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
+          className={`flex min-h-0 flex-1 translate-y-[var(--viewport-top,0px)] flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
             writing ? 'opacity-60' : 'opacity-100'
           }`}
         >

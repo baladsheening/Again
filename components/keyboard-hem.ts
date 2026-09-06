@@ -132,6 +132,27 @@ export function useKeyboardHem({
         edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
       )
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
+
+      /*
+        ⚠⚠ **HOW FAR iOS HAS PANNED THE PAGE UP TO REVEAL THE FIELD — 6
+        September, and this is `head()` returning under its own terms.** The
+        note below says it in writing: *if a top-pinned field ever comes back,
+        so does this.* **The rail is that.** Reported from an installed app the
+        day the browse half landed: *the picture rail moves up, with the upper
+        part obscured as it's essentially off screen.*
+
+        ⚠ **It is the visual viewport's offset, not a scroll position.** iOS
+        pans the visual viewport over a document that has nothing to scroll —
+        `window.scrollY` stays 0 through the whole thing, which is why
+        `chrome-recede.ts`'s lesson applies here too: **the only honest
+        measurement of where the page has gone is `visualViewport`.**
+
+        ⚠ **Written for every consumer, used by whoever is anchored to the
+        top.** The sheet does not need it — it is on the bottom edge and already
+        rides `--keyboard-overlap` — so this is deliberately a property rather
+        than a transform applied here. **Nothing is moved by this function.**
+      */
+      box.style.setProperty('--viewport-top', `${Math.round(vv.offsetTop)}px`)
     }
 
     /*
@@ -223,6 +244,7 @@ export function useKeyboardHem({
         keyboard's worth of dead space under it for the rest of the session.
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
+      hostEl?.style.removeProperty('--viewport-top')
     }
   }, [writing, host, floorAnchor])
 }

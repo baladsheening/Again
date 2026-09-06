@@ -118,7 +118,26 @@ function Tile({ tile }: { tile: RailTile }) {
       definite height is what an aspect ratio needs**, so the frame is given one
       below and the tile shrink-wraps to whatever width the ratio then produces.
     */
-    <li className="rail-focus h-full w-fit shrink-0">
+    /*
+      ⚠⚠ **`justify-end`: THE PICTURE'S BOTTOM EDGE IS THE RAIL'S FLOOR, WHICH
+      IS THE TOP OF THE COMPOSER'S SHEET — 6 September, directed.** Before this
+      the tile was top-anchored and the frame was capped by width, so on a
+      notched handset the pictures stopped **61px short** of the sheet and the
+      band between them was bare page.
+
+      ⚠ **Bottom-anchored rather than stretched, because the two cannot always
+      both be had.** A 2:3 picture filling the full height would be **400px wide
+      on a 374px rail** — the arithmetic `rail.tsx` already recorded against
+      running the rail behind the composer. Where the width still binds, the
+      slack now sits **above** the pictures instead of below, so *the bottom edge
+      is on the sheet* holds on every device and the residue is between the bar
+      and the first picture.
+
+      ⚠ **This is the one thing it costs, stated:** *the rail starts at the bar's
+      own edge* (6 September) is no longer true wherever the width binds. **The
+      floor was chosen over the ceiling** because that is what was asked for.
+    */
+    <li className="rail-focus flex h-full w-fit shrink-0 flex-col justify-end">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every
@@ -196,7 +215,7 @@ function Tile({ tile }: { tile: RailTile }) {
         a landscape image letterboxes onto the frame's ground. **The reverse
         reads broken and there is no bespoke art to crop to.**
       */}
-      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(80cqw*1.5))] overflow-hidden">
+      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(100cqw*1.5))] overflow-hidden">
         {/*
           ⚠⚠ **THE NAME LIVES INSIDE THIS `relative` BOX, AND PUTTING IT ON THE
           `<li>` BROKE THE WHOLE PAGE.** `sr-only` is `position: absolute` **with
