@@ -710,18 +710,41 @@ export function ComposeScreen({
           edge.
         */}
         <div className="gutter mx-auto w-full max-w-[var(--record-measure)] pb-[calc(var(--line-hem)*1.5)]">
-          {failed !== null && (
-            /*
-              ⚠ **The one thing still ABOVE the composer, and it is the failure.**
-              A landed capture stays in the box now; a capture that did not land
-              puts its words back in the field, so there is nothing in the box to
-              say it with. This is the exception, and it is rare enough to be
-              allowed to change the strip's height when it appears.
-            */
-            <p className="text-decline px-[calc(var(--line-hem)*2.5)] pb-[calc(var(--line-hem)*1.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
-              {failed}
-            </p>
-          )}
+          {/*
+            ⚠⚠ **THE BAND ABOVE THE COMPOSER IS BACK, AND NOTHING LANDS IN IT —
+            6 September, directed:** *I want the old sheet back but I don't want
+            any receipts to land in it; leave the receipt flow we have now
+            intact.* The strip carried this space until 5 September, when *a
+            capture stops being a draft and becomes a statement, in place* moved
+            the whole moment **inside** the composer and the receipt was deleted.
+            **The receipt flow is untouched** — the words still dim, go solid,
+            blink twice and offer their undo in the field. Only the space came
+            back.
+
+            ⚠⚠ **IT IS ALWAYS THERE, WHICH IS THE DIFFERENCE FROM THE OLD ONE.**
+            The strip used to be content-sized, so the band existed only while
+            something was in it and **the sheet changed shape between the two
+            states** — which is the fault `receipt-line` was written to answer.
+            Reserved unconditionally, the sheet is one height, the rail's floor
+            is one height, and nothing moves when a capture fails.
+
+            ⚠ **The failure line renders INTO this slot rather than beside it.**
+            It is the one thing still allowed above the composer, and two bands
+            would be two answers to *what is this space for*. Its `pb` moved onto
+            the band, so the box is the same whether the line is there or not.
+
+            ⚠ **`--leading-line` plus `--line-hem × 1.5`, and neither is a new
+            number** — one line of the record's own leading, and the gap the
+            strip already spends between the card and the foot. **No pixel in
+            it**, so it follows the desk's root scale.
+          */}
+          <div className="h-[calc(var(--leading-line)+var(--line-hem)*1.5)]">
+            {failed !== null && (
+              <p className="text-decline px-[calc(var(--line-hem)*2.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
+                {failed}
+              </p>
+            )}
+          </div>
 
           {/*
             ⚠⚠ **A BOX, AND IT IS A LIFTED GROUND RATHER THAN GLASS — reported
