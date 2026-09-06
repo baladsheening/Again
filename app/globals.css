@@ -3336,6 +3336,64 @@
 }
 
 /**
+ * The tile under the middle of the rail is full size and the ones either side
+ * of it are not. 6 September, directed: *make the pic that's centre or
+ * approaching centre slightly bigger than the rest by making its adjacents
+ * smaller.*
+ *
+ * ⚠⚠ **THE CENTRE ONE IS NOT SCALED UP; THE OTHERS ARE SCALED DOWN.** That is
+ * the direction read literally, and it is also the only version that cannot
+ * overlap: a tile grown past 1 would ride over its neighbours and need a
+ * `z-index` race the rail has no way to settle. **Full size is the
+ * resting state and everything else recedes from it.**
+ *
+ * ⚠⚠ **NO JAVASCRIPT, AND THAT IS WHY IT IS DONE THIS WAY.** `Rail` is a
+ * server component handed into a client one precisely so the corpus read and
+ * the markup stay off the bundle; a scroll handler or an
+ * `IntersectionObserver` would undo that for an effect. A `view()`
+ * timeline is the browser doing it on the compositor, with nothing to keep in
+ * step and nothing to unsubscribe.
+ *
+ * ⚠ **50% of a `view(x)` range IS the scroller's centre line** — the
+ * range runs from the tile beginning to enter the scrollport to it fully
+ * leaving, so the midpoint is where its centre meets the scrollport's. Nothing
+ * here measures anything.
+ *
+ * ⚠⚠ **THE `@supports` GUARD IS NOT DEFENSIVE PADDING — WITHOUT IT THIS
+ * IS WRONG EVERYWHERE IT IS UNSUPPORTED.** An engine that does not know
+ * `animation-timeline` drops that declaration and keeps the rest, so the
+ * animation runs on the **document** timeline at a 0s duration with
+ * `both` fill — which applies the 100% keyframe to **every** tile and
+ * shrinks the whole rail uniformly for no reason. Guarded, an unsupporting
+ * engine gets today's design exactly: **every tile full size.** *How things get
+ * fixed* asks for right by construction on all four surfaces, and this is a
+ * feature that is either present or absent rather than half-applied.
+ *
+ * ⚠ **The amplitude is a design quantity, like `--recede` is a
+ * duration.** 0.92 is *slightly*, which is the word the direction used; it
+ * leaves about 25px between two receded neighbours on a handset. **If it reads
+ * as too much or too little, this is the one number to move** — and it is the
+ * only one in the effect.
+ */
+@keyframes rail-focus {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+}
+
+@utility rail-focus {
+  @supports (animation-timeline: view()) {
+    animation: rail-focus linear both;
+    animation-timeline: view(x);
+  }
+}
+
+/**
  * The masthead's own box — the air above and below its row, with the notch
  * cleared at the top.
  *

@@ -104,6 +104,12 @@ function Tile({ tile }: { tile: RailTile }) {
 
   return (
     /*
+      ⚠ **`rail-focus` is the centre tile being full size and its neighbours
+      receding from it** — a `view(x)` scroll timeline, **no JavaScript**, and
+      guarded by `@supports` so an engine without scroll-driven animations gets
+      every tile at full size rather than every tile shrunk. Its own utility in
+      `globals.css` carries the argument.
+
       ⚠⚠ **`w-fit`, AND IT IS WHAT MAKES THE ASPECT WORK AT ALL.** The first
       build gave the frame `flex-1` and let `aspect-2/3` derive the width from
       it — **and every tile came out 5px wide**, measured. A flex item's width is
@@ -112,7 +118,7 @@ function Tile({ tile }: { tile: RailTile }) {
       definite height is what an aspect ratio needs**, so the frame is given one
       below and the tile shrink-wraps to whatever width the ratio then produces.
     */
-    <li className="h-full w-fit shrink-0">
+    <li className="rail-focus h-full w-fit shrink-0">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every

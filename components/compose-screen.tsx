@@ -582,8 +582,47 @@ export function ComposeScreen({
         so there is one line of air between the bar and the first image and it
         belongs to the tile rather than to the page.
       */}
-      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[var(--bar-height)] pb-[var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))]">
-        {rail}
+      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[var(--bar-height)] pb-[calc(var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))+var(--keyboard-overlap,0px))]">
+        {/*
+          ⚠⚠ **WRITING DOWNSIZES THE RAIL AND DIMS IT; IT DOES NOT MOVE IT — 6
+          September, directed: *when tapping in the composer, the rail should not
+          move up but downsize and dim.*** It is anchored under the bar, so
+          taking height off its **bottom** is the whole of *downsize without
+          moving* — nothing translates and the first picture does not shift a
+          pixel.
+
+          ⚠⚠ **THE HEIGHT READS `--keyboard-overlap` AND THE DIM READS
+          `writing`, AND THAT SPLIT IS DELIBERATE.** CLAUDE.md's rule is *keyed
+          on `writing`, never on `--keyboard-overlap`* — and it is a rule
+          about using that property as a **keyboard detector**, which it is not:
+          it measures a gap that also opens when a Safari tab's address bar
+          collapses during a scroll. **Here it is used as a LENGTH**, to put the
+          rail's floor on the composer's real top edge, which is the one thing
+          it does measure honestly. ⚠ **Read it as a boolean here and this page
+          re-acquires the bug it shipped on 24 August.**
+
+          ⚠ **Without the overlap term the composer sits ON the rail.** The
+          sheet rides to the top of the keyboard while `--sheet-block` is only
+          its own height, so the rail's floor stayed at the glass and 336px of
+          picture went behind the keys — *the rail overlaps it*, reported once
+          already and reintroduced by every fix that forgets this term.
+
+          ⚠ **60%, because that is the app's one existing fade.**
+          `--color-muted` is the ink at 60%, so a rail that recedes to the same
+          fraction recedes by the same amount as every secondary thing on the
+          screen. **Not a number picked for this.**
+
+          ⚠ **`--recede` on `--ease-recede`, the app's one duration and one
+          curve**, collapsed from two on 24 August precisely so nobody sets a
+          second equal to it.
+        */}
+        <div
+          className={`flex min-h-0 flex-1 flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
+            writing ? 'opacity-60' : 'opacity-100'
+          }`}
+        >
+          {rail}
+        </div>
       </main>
 
       {/* A zero-height fixed twin on the viewport's bottom edge — see `useKeyboardHem`. */}
