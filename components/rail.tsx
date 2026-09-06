@@ -66,8 +66,41 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
       `auto`, which refuses to shrink below its content — so without it the rail
       would push past the composer instead of fitting the space `flex-1` gives
       it, and the height the tiles derive from would be the wrong one.
+
+      ⚠⚠ **THE SNAP IS A POSITION-PRESERVING MECHANISM, NOT A FEEL — 6
+      September, and it is the whole of a reported bug.** Reported from the
+      device: *the rail slides across to another image when it downsizes.* It
+      did, and it is arithmetic rather than animation: `scrollLeft` is an
+      absolute pixel offset into content whose width **collapses 44% when the
+      keyboard rises** — measured 7488px → 4227px while `scrollLeft` sat frozen
+      at 927, which slides the corpus **two and a half tiles** under a
+      stationary eye. Nothing was scrolling; the content moved out from under
+      the number.
+
+      ⚠ **CSS's own answer, so there is no JavaScript and no observer.** A snap
+      container re-resolves its snap position after a relayout, so the tile that
+      was at the start edge is still at the start edge when every tile has
+      changed size — measured in **both** engines: first tile 3 → 3 with
+      `scrollLeft` recomputed 937 → 531, and 3 again on the way back. Without
+      it, 3 → 5. ⚠ **A `ResizeObserver` scaling `scrollLeft` by the ratio of
+      `scrollWidth` was the alternative and lands within 8px of this** — it was
+      refused because it puts client code in a rail whose whole point is that it
+      is server-rendered markup.
+
+      ⚠ **`mandatory`, not `proximity`.** Only mandatory guarantees the
+      re-snap; proximity may leave the offset where it was, which is the bug.
+      Safe here because a snap area larger than the scrollport is what traps a
+      mandatory scroller and a tile is **80cqw** — deliberately smaller. ⚠ **No
+      `scroll-snap-stop`**: a fling should cross several tiles, because this is
+      browsing.
+
+      ⚠ **`start`, and it makes an existing rule true rather than adding one.**
+      *A fifth of the next tile is always visible* was true at rest only by luck
+      before; aligned to the start edge it is true at every rest position. ⚠ **It
+      does not touch the bleed** — the track still runs past the column, so the
+      tile at the far end is still cut.
     */
-    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
+    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 snap-x snap-mandatory touch-pan-x overflow-x-auto overscroll-x-contain">
       {/*
         ⚠ **`gap-0`, written rather than omitted.** The tiles touching is the
         direction, not the absence of a decision — a gap is what a reader would
@@ -118,7 +151,7 @@ function Tile({ tile }: { tile: RailTile }) {
       definite height is what an aspect ratio needs**, so the frame is given one
       below and the tile shrink-wraps to whatever width the ratio then produces.
     */
-    <li className="rail-focus h-full w-fit shrink-0">
+    <li className="rail-focus h-full w-fit shrink-0 snap-start">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every
