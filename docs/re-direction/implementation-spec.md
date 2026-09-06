@@ -5,7 +5,7 @@ Date: 22 August 2026
 Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 /
 §13; 4 September 2026 — Amendment 3, §8 / §9; 5 September 2026 — Amendment 4, §2 /
 §6 / §8 / §13; 5 September 2026 — Amendment 5, §5; 6 September 2026 — Amendment 6,
-§3 / §5 (see *Amendments* below)
+§3 / §5; 6 September 2026 — Amendment 7, §1 / §5 / §7 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -327,6 +327,90 @@ type and no intention; Amendment 5's structure and the record-first sentence
 above it; §7's evidence, provenance and confidence states; and §1's Release 1
 exclusions.
 
+**Amendment 7 — 6 September 2026, §1 *Release 1 exclusions*, §5 *Home /
+Capture*, §7 *Catalogue*.** **The rail shows the image alone and admits nothing
+without one; a tap enlarges it and the words arrive beneath it; and each tile
+carries the number of times it has been opened.** Directed, and the collisions
+below were stated when it was given.
+
+⚠⚠ **THE IMAGE REQUIREMENT IS A GATE ON THE RAIL, NOT ON THE CORPUS — directed
+in those words: *any entry that doesn't have an attached image can never enter
+the front page rail*.** This reverses a named requirement of Amendment 5 — *a
+card whose design depends on a picture fails progressively as Phase 4 succeeds*,
+so the container was to be text-first with the image as enrichment. **The
+container is now the image.**
+
+- ⚠⚠ **A POSSIBILITY WITHOUT AN IMAGE STILL EXISTS, STILL RESOLVES AND STILL
+  MATCHES.** It is searchable, a capture may resolve to it, and it converges
+  exactly as before. **What it cannot do is appear in the rail.** The gate is
+  one term in the rail's own read and nothing else in the model knows about it.
+- ⚠⚠ **AND IT IS NEVER A GATE ON CAPTURE.** §1 excludes *a forced search or
+  catalogue match before a person can save a capture*, and §2's *capture before
+  categorisation* is unamended. **Amendment 6 is what keeps them apart:** a
+  capture has no type, no possibility and no image, and most captures never
+  resolve to one. An ambition still enters the record in four seconds and still
+  converges on its words.
+- ⚠ **What it costs, stated: the rail can show only what somebody supplied a
+  picture for**, which today is TMDB's posters. A rail that is briefly thin is
+  §6's *silence stays silent* — **an empty or short rail explains nothing about
+  itself.** ⚠ **Do not answer a thin rail by admitting imageless tiles**; that
+  is the design this replaced.
+- ⚠ **Three §3 rules die with it**, and are deleted rather than softened: *no
+  image is not an error state*, *the name set in the frame is the drawing*, and
+  the imageless card as a thing to design at all. **The four states to judge
+  become two** — an image that fits the frame, and one that does not.
+
+⚠⚠ **THE TILE SAYS NOTHING UNTIL IT IS TAPPED, AND THAT IS THE DIRECTION RATHER
+THAN A SIDE EFFECT.** *For users to find out what each image signifies, they have
+to tap it.* Title, qualifier and §7's confidence states all move off the tile and
+into the opened view — an **almost full-screen image with the words beneath it**.
+
+- ⚠ **Amendment 6 is unchanged.** The qualifier is still a field the possibility
+  carries and the opened view still **branches on nothing**: image, title,
+  qualifier, confidence state when it is not the default. Only where it is
+  printed moved.
+- ⚠ **§3's rule 7 is served, not bent.** *A tap opens the possibility; capturing
+  it is a control on what opens, not on the card* — so the capture control lives
+  in the opened view, and design rule 5's *a tap on a row opens that row,
+  everywhere* holds across both halves of the app.
+- ⚠ **It borrows the console's GRAMMAR and is not the console.** A fixed surface
+  over a blurred page on a handset, expanding in place on the desk. **It must not
+  be routed through `components/console.tsx`**, which acts on the viewer's own
+  capture, and it must not resurrect the deleted `film-screen.tsx`.
+- ⚠ **Browsing becomes exploratory rather than scannable**, which is the stated
+  price of an image-only tile. A reader cannot tell what a rail holds without
+  opening things.
+
+⚠⚠ **THE OPENING COUNT TOUCHES A RELEASE 1 EXCLUSION, AND IT WAS DIRECTED WITH
+THAT STATED.** §1 excludes *likes, comments, public activity feeds, streaks, or
+engagement metrics*, and Amendment 5 bans a *popular now* or *trending* rail as
+a feed under another name. A visible count of openings is an engagement metric
+under the plain reading. **The exclusion is narrowed rather than deleted, and
+the surviving form is the whole of what is permitted:**
+
+- **It counts openings of a POSSIBILITY** — a world record that belongs to
+  nobody. It may never appear on a person, a capture, a track or a notification.
+  ⚠ **§5's *the portal is never given a count* is untouched**, and
+  `portal.mjs`'s assertion that the door carries no digits still holds.
+- ⚠⚠ **IT IS NEVER A SORT KEY.** The rail may be ordered by what the reader
+  chose or by nothing at all. **The day the count orders it, it is a trending
+  feed and this exclusion has been broken** — that is the reopen point, named
+  here so it is recognisable when it arrives.
+- **It is one integer on the possibility, incremented when the enlarged view is
+  opened.** It is inflatable by anyone willing to tap, which is accepted: it is
+  a texture of interest, not a measurement, and nothing ranks on it.
+
+**The keyboard question of §9 of the front-page brief is closed: the browse half
+SHRINKS.** Directed — *sort of parallax style*. ⚠ **It is keyed on whether
+somebody is writing, never on `--keyboard-overlap`**, which measures a gap that
+also opens when a Safari tab's address bar collapses during a scroll;
+`useKeyboardHem` states in writing that it is not a keyboard detector, and the
+composer's own third line already follows this rule.
+
+**What is unchanged:** every privacy term; Amendment 4; Amendment 6; §2's
+*capture before categorisation*; §6's *silence stays silent*; and the rest of
+§1's Release 1 exclusions, none of which this touches.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -398,6 +482,13 @@ precise location is never stored by default.
 There are no likes, comments, follower counts, public activity feeds, scores,
 streaks, or engagement loops. Social information appears when it is relevant to
 an intention.
+
+⚠ **Narrowed 6 September — see Amendment 7, and this is the only exception.**
+A tile in the rail shows **how many times that possibility has been opened**. It
+is about a world record and never about a person, a capture, a track or a
+notification; it is **never a sort key**; and §5's *the portal is never given a
+count* is untouched. **The day it orders a rail it is a trending feed and this
+principle has been broken.**
 
 ### No marketplace behaviour
 
@@ -567,6 +658,16 @@ is `docs/re-direction/the-front-page.md`.
 Title, a qualifier the possibility carries, and an image if there is one. One
 height **by construction rather than by care**, and a new possibility type never
 re-touches it.
+
+⚠⚠ **Amended again 6 September — see Amendment 7. THE TILE IS THE IMAGE ALONE,
+AND A POSSIBILITY WITHOUT ONE NEVER ENTERS THE RAIL.** The words move into the
+opened view: a tap enlarges the image to almost the whole screen and prints
+title, qualifier and a non-default confidence state beneath it. ⚠ **The image
+requirement is a gate on the RAIL, never on the corpus and never on capture** —
+an imageless possibility still exists, still resolves and still converges; §1's
+ban on a forced catalogue match before saving is unamended, and Amendment 6 is
+what keeps the two apart. Each tile carries **the number of times it has been
+opened**, above the image, which is **never a sort key**.
 
 ### My things
 

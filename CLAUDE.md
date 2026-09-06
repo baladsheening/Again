@@ -24,6 +24,65 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE RAIL IS IMAGES AND NOTHING ELSE, AND THE WORDS ARE BEHIND THE TAP — 6
+September, directed, Amendment 7. DOCUMENTED, NOT BUILT.** *What's presented is
+the image on the front page; for users to find out what each image signifies
+they have to tap it, at which point the card details — the title, qualifier —
+appear beneath the enlarged, almost full-screen image. Above each image is a
+number showing how many openings it has received.* And the gate, given after:
+***any entry that doesn't have an attached image can never enter the front page
+rail.***
+
+- ⚠⚠ **THE GATE IS ON THE RAIL, NOT ON THE CORPUS.** A possibility with no image
+  still exists, is still searchable, is still what a capture resolves to, and
+  still converges. **It never appears in the rail.** One term in the rail's own
+  read — nothing near `lib/overlap.ts`, nothing near the capture path. ⚠ **And
+  never a gate on capture**: §1 bans a forced catalogue match before saving, and
+  Amendment 6 is what keeps the two apart.
+- ⚠ **It reverses §3 of the brief, whose founding line was *THE CORPUS CANNOT
+  PROMISE AN IMAGE*.** Three rules die with it: *no image is not an error
+  state*, *the name set in the frame is the drawing*, and the imageless card as
+  a thing to design. **Two states to judge now, not four** — an image that fits
+  the frame and one that letterboxes.
+- ⚠⚠ **THE TILE SAYS NOTHING, AND THAT IS THE DIRECTION.** No title, no
+  qualifier, no caption, no hover. ⚠ **Do not answer *I can't tell what these
+  are* by putting the title back** — the answer is one tap away. **Stated price:
+  browsing is exploratory rather than scannable.**
+- ⚠ **Amendment 6 is untouched.** The qualifier is still a field the possibility
+  carries and the opened view still branches on nothing; only where it prints
+  moved.
+- ⚠⚠ **THE OPENED VIEW BORROWS THE CONSOLE'S GRAMMAR AND IS NOT THE CONSOLE** —
+  fixed over a blurred page on a handset, expanding in place on the desk. **Not
+  routed through `components/console.tsx`**, which acts on the viewer's own
+  capture; **and it must not resurrect `film-screen.tsx`**, deleted in Phase 2
+  step 1.
+- ⚠⚠ **THE OPENING COUNT IS THE ONE ENGAGEMENT NUMBER IN THIS APP, AND IT
+  NARROWS A RELEASE 1 EXCLUSION.** §2's *social without a feed* bans engagement
+  loops and §1 bans engagement metrics; Amendment 5 bans a trending rail by
+  name. **Directed with that stated.** What survives: it counts openings of a
+  **possibility**, which belongs to nobody; it may never appear on a person, a
+  capture, a track or a notification; **§5's *the portal is never given a count*
+  is untouched**. ⚠⚠ **IT IS NEVER A SORT KEY — the day it orders the rail, the
+  rail is a trending feed and the exclusion has been broken.** ⚠ It is
+  `--color-muted`: brass means *a control*, the accent means *this converged*,
+  and a count is neither.
+- ⚠⚠ **THE BROWSE HALF SHRINKS WHEN SOMEBODY WRITES — *sort of parallax style*,
+  and §9's last open question is closed.** ⚠ **Keyed on `writing`, NEVER on
+  `--keyboard-overlap`** — that property measures a gap that also opens when a
+  Safari tab's address bar collapses during a scroll, and `useKeyboardHem` says
+  in writing that it is not a keyboard detector. The composer's third line
+  already follows this rule; the rail follows the same one so the two halves
+  cannot disagree. ⚠ **One duration and one curve** — `--recede` on
+  `--ease-recede`: **parallax is a difference of distance, not of timing.** ⚠
+  **It must not unmount.**
+- ⚠ **`fixture` is §4's word for a thing you own** — an `EntryState` the linter
+  enforces. A hand-made row for judging a tile is a **sample possibility**. The
+  brief said *fixture* and has been corrected.
+- **What this needs before the tile can be looked at:** `possibilities.qualifier`,
+  `possibilities.opens`, and **a way to read the corpus at all** —
+  `lib/db/possibilities.ts` exports exactly one function, `upsertPossibility`.
+  **Migration before deploy.**
+
 ⚠⚠ **THE CARD BRANCHES ON NOTHING, AND STEP 0 OF THE FRONT PAGE'S SEQUENCE IS
 DISSOLVED RATHER THAN ANSWERED — 6 September, Amendment 6.** The sequence said
 *decide `Kind` — four values today, seven in §3 — before the card is written or

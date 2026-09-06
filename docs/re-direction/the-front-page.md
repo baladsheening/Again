@@ -80,72 +80,102 @@ decision that has to be taken before the card is written.**
 
 ---
 
-## 3. The card — one wrapper for every type
+## 3. The tile is the image; the words are behind the tap
 
-⚠⚠ **THE CONSTRAINT THAT KILLS THE OBVIOUS DESIGN: THE CORPUS CANNOT PROMISE AN
-IMAGE.** A film has a poster. An arXiv paper has none. A user-contributed
-experience has none. **If the wrapper is a poster grid, everything without a
-poster is a hole — and the holes multiply exactly as Phase 4 succeeds.** The
-container is therefore text-first with the image as enrichment, which is what
-§11 already says this app is: *type is the entire design*.
+⚠⚠ **REWRITTEN 6 SEPTEMBER, AMENDMENT 7, AND IT REVERSES THIS SECTION'S OWN
+FOUNDING CONSTRAINT.** It opened: *THE CONSTRAINT THAT KILLS THE OBVIOUS DESIGN
+— THE CORPUS CANNOT PROMISE AN IMAGE*, and built a text-first card with the
+image as enrichment. **Directed instead:** *make it so that what's presented is
+the image on the front page; for users to find out what each image signifies
+they have to tap it, at which point the card details — the title, qualifier —
+appear beneath the enlarged, almost full-screen image.* And, given as the
+gate: ***any entry that doesn't have an attached image can never enter the front
+page rail.***
+
+⚠⚠ **THE GATE IS ON THE RAIL, NOT ON THE CORPUS, AND THAT IS THE WHOLE
+DIFFERENCE.** A possibility with no image still exists, is still searchable, is
+still what a capture resolves to and still converges. **It simply never appears
+in the rail.** One term in the rail's own read; nothing else in the model knows
+about it. ⚠ **And never a gate on capture** — §1 bans a forced catalogue match
+before saving, and a capture has no possibility at all in the ordinary case.
+
+**The tile:**
 
 ```
-┌──────────────┐   frame — one aspect, one height, always
-│              │   image FITTED inside it, never cropped to fill
-│  image  or   │   no image → the name, set in type, on the paper
-│    type      │
+      12            ← openings. above the image, and nothing else up there
+┌──────────────┐
+│              │   frame — one aspect, one height, always
+│    image     │   there is ALWAYS an image; that is what admission means
+│              │
 └──────────────┘
-  Name            ← the only mandatory field. one line, truncates
-  qualifier       ← the one line that says WHICH one. A FIELD, not a branch
-  state           ← only when it is not the default
 ```
+
+**The opened view:** the image, almost full screen, with the words beneath it —
+title, qualifier, and a confidence state only when it is not the default.
 
 **The rules:**
 
-1. ⚠ **The name is the only required field.** Every other slot may be empty and
-   the card still measures the same — design rule 3, *one object has one height
-   wherever it appears*. A rail whose tiles ripple has already failed.
+1. ⚠ **No image, no tile.** The rail's read carries the term. **A thin rail is
+   not answered by admitting imageless tiles** — that is the design this
+   replaced. §6's *silence stays silent* governs a short rail: it explains
+   nothing about itself.
 2. ⚠ **The image is FITTED, never cropped to fill.** A 2:3 poster survives; a
-   landscape article image letterboxes onto the paper that is already behind
-   every screen. The reverse — a poster cropped to 16:9 — reads broken, and
-   there is no bespoke art to crop to.
-3. ⚠ **No image is not an error state.** The name set in the frame **is** the
-   drawing. **No placeholder icon**: it says nothing at full cost, and it would
-   become the app's most repeated glyph.
-4. ⚠⚠ **THE QUALIFIER IS A FIELD ON THE POSSIBILITY, AND THE CARD BRANCHES ON
-   NOTHING — 6 September, Amendment 6.** This rule read: *derived from `kind`,
-   never asked — year for a film, author for a paper, locality for a place, date
-   for an event, brand for a product.* **That is a slot solved as a taxonomy**,
-   and it was the whole reason §8 item 0 looked like a decision that had to be
-   taken first. The possibility carries **one line**, written where it is
-   ingested by whoever knows what it means — `1974`, `Ridley Scott`,
-   `Hackney`, `Toyota` — and the card prints it. ⚠ **`possibilities.year`
-   is that column with a film's meaning welded into it**: superseded, not
-   deleted, and nothing migrates away from it. ⚠ **Still never asked of the
-   user** — §2's *never ask the user to categorise anything* is what this
-   serves, not what it bends.
+   landscape image letterboxes onto the paper that is already behind every
+   screen. The reverse — a poster cropped to 16:9 — reads broken, and there is
+   no bespoke art to crop to. ⚠ **Two states to judge now, not four**: an image
+   that fits the frame and one that does not.
+3. ⚠⚠ **THE TILE SAYS NOTHING, AND THAT IS THE POINT RATHER THAN A COST TO
+   MITIGATE.** No title under it, no qualifier, no caption, **no hover** — there
+   is no hover on a handset. ⚠ **Do not answer *I can't tell what these are* by
+   putting the title back**; the answer is the opened view, which is one tap
+   away. **The stated price: browsing is exploratory rather than scannable.**
+4. ⚠ **The qualifier is still a FIELD on the possibility — Amendment 6 is
+   untouched.** It moved from the tile into the opened view; it did not go back
+   to being derived from a kind. **The opened view branches on nothing** either:
+   image, title, qualifier, confidence state.
 5. ⚠ **A confidence state shows only when it is NOT the default.** §7's states
    are *Unverified possibility*, *Corroborated by several people*, *Identified
    by a trusted source*, *Recently confirmed nearby*, *Possibly outdated*,
-   *Disputed*. **Printing *Unverified* on every user-contributed card is noise;
-   *Disputed* and *Possibly outdated* must show.** Design rule 2 applied to
-   state. ⚠ **Never a number** — §7 forbids an unexplained numeric score in the
-   first release.
+   *Disputed*. **Printing *Unverified* on everything is noise; *Disputed* and
+   *Possibly outdated* must show.** ⚠ **Never a number** — §7 forbids an
+   unexplained numeric score in the first release, and the opening count is the
+   one exception §2 now carries.
 6. ⚠ **No price, no call to action, no source logo.** §2's no-marketplace rule.
-   A source is evidence and attribution and lives on the detail surface.
-7. ⚠ **A tap opens the possibility. Capturing it is a control on what opens, not
-   on the card.** Design rules 4 and 5, both earned by `/u/[handle]` on 4
-   September, where *Add to wants* printed once per row was louder than the
-   content it belonged to. **Do not put a capture control on the tile.**
+   A source is evidence and attribution and lives in the opened view.
+7. ⚠ **A tap opens the possibility. Capturing it is a control on what opens.**
+   Design rules 4 and 5, both earned by `/u/[handle]` on 4 September. **Do not
+   put a capture control on the tile** — with an image-only tile there is
+   nowhere for one to go that is not on top of the picture.
+8. ⚠⚠ **THE OPENED VIEW BORROWS THE CONSOLE'S GRAMMAR AND IS NOT THE CONSOLE.**
+   A fixed surface over a blurred page on a handset, expanding in place on the
+   desk — the shape design rule 5 already permits, and the one the record
+   taught. ⚠ **It must not be routed through `components/console.tsx`**, which
+   acts on the viewer's **own capture** and carries cross-off, settle and the
+   pencil. ⚠ **And it must not resurrect `film-screen.tsx`**, deleted in Phase
+   2 step 1.
 
-**Four states to draw and judge together:** a poster that fills the frame; a
-landscape article image letterboxed; **no image at all**; and one carrying
-*Disputed*.
+⚠⚠ **THE OPENING COUNT SITS ABOVE THE IMAGE, AND IT IS THE ONE ENGAGEMENT
+NUMBER IN THE APP.** Directed. §2's *social without a feed* is **narrowed, not
+deleted** — see Amendment 7:
+
+- **It counts openings of a POSSIBILITY**, which belongs to nobody. It may never
+  appear on a person, a capture, a track or a notification. ⚠ **§5's *the portal
+  is never given a count* is untouched**, and `portal.mjs`'s no-digits
+  assertion on the door still holds.
+- ⚠⚠ **IT IS NEVER A SORT KEY. The day it orders the rail, the rail is a
+  trending feed** — which Amendment 5 bans by name — **and the exclusion has
+  been broken.** Named here so it is recognisable when it is proposed.
+- **One integer on the possibility, incremented when the enlarged view opens.**
+  Inflatable by anyone willing to tap, and that is accepted: it is a texture of
+  interest, not a measurement, and nothing ranks on it.
+- ⚠ **It is not `--color-chrome` and not `--color-accent`.** Brass means *a
+  control* and the accent means *this converged*; a count is neither. It is
+  `--color-muted`, which is what everything that is not those two is.
 
 ⚠ **The frame's aspect is a number to LOOK AT, not to argue.** Start at **2:3** —
 posters are the only asset we get free at scale and the only one that cannot
-survive a crop — but a rail of tall portraits on half a handset screen wants
-seeing before it is committed to.
+survive a crop — but a rail of tall portraits on half a handset wants seeing
+before it is committed to.
 
 ---
 
@@ -171,9 +201,18 @@ what keeps design rule 5 (*one gesture means one thing*) intact: the rail is a
 verb it collides with the record's lock swipe, and this rule is what it has to
 answer to.**
 
+⚠⚠ **THE RAIL ADMITS ONLY POSSIBILITIES THAT HAVE AN IMAGE — 6 September,
+Amendment 7.** One term in its read. **The corpus is not filtered anywhere else**
+— an imageless possibility is still searchable, still resolvable and still
+converges — so this term lives in the rail's own query and nowhere near
+`lib/overlap.ts` or the capture path.
+
 **Open: what the rail is a rail OF.** By kind? By recency in the corpus? One rail
 or several? Half a handset screen holds one rail of ~2:3 tiles, so *several* is
-probably a desk affordance. **Undecided, and it does not block the card.**
+probably a desk affordance. **Undecided, and it does not block the tile.**
+⚠⚠ **WHAT IT MAY NEVER BE ORDERED BY IS THE OPENING COUNT** — that is a trending
+feed under another name, and §2's narrowing in Amendment 7 permits the number on
+the tile and nothing else.
 
 ---
 
@@ -450,10 +489,29 @@ its bottom edge inside it.**
 ⚠ **What is not built and is the next thing on this screen: attach acting.** The
 control is drawn and dark; it needs the Blob billing switch.
 
-**2. The card**, against TMDB and against a fixture with no image. Four states,
-no rail yet — one component, judged on its own.
+**2. The tile and the opened view** — 6 September, Amendment 7. This read *the
+card, against TMDB and against a fixture with no image; four states*. ⚠ **Both
+halves of that are wrong now**: there is no imageless state to judge, and
+**`fixture` is §4's own word for a thing you own** — an `EntryState` the
+linter enforces — so a sample row must never be called one. **Say sample
+possibility.**
 
-**3. The browse half** arrives above the composer. `/` becomes two halves.
+- **The tile**, against a real TMDB poster and against a sample possibility
+  whose image is landscape. **Two states**: an image that fits the frame, one
+  that letterboxes.
+- **The opened view** beneath it — the enlarged image, title, qualifier, and a
+  sample carrying *Disputed*, which the corpus cannot produce today.
+- ⚠ **`possibilities.qualifier` and the rail's read come first**, because the
+  tile cannot be judged against nothing. `lib/db/possibilities.ts` exports
+  exactly one function — `upsertPossibility` — so **there is no way to read the
+  corpus at all**, and the rail's image term lives in the read that does not yet
+  exist. **Migration before deploy.**
+- ⚠ **`possibilities.opens` with it** — one integer, incremented when the
+  enlarged view opens, **never a sort key**.
+
+**3. The browse half** arrives above the composer. `/` becomes two halves, and
+the rail **shrinks** when somebody writes — keyed on `writing`, never on
+`--keyboard-overlap`.
 
 **4. Attach** — the billing switch, then the control.
 
@@ -493,11 +551,27 @@ front page except attachment.
   TMDB and one kind. §6's *silence stays silent* forbids explaining an absence,
   so a browse half with nothing in it is a design question rather than an empty
   state to write copy for.
-- **How the composer and the browse half share the screen when the keyboard is
-  up.** The keyboard covers roughly half a handset; the browse half is the half
-  it covers. `--keyboard-overlap` and `useKeyboardHem` already measure it —
-  ⚠ **and `useKeyboardHem` says explicitly that the gap it measures is not a
-  keyboard detector**, so do not read it as one here either.
+- ~~**How the composer and the browse half share the screen when the keyboard
+  is up.**~~ ⚠⚠ **CLOSED 6 September, directed: THE BROWSE HALF SHRINKS,
+  *sort of parallax style*.** It is not covered and it does not scroll away —
+  it compresses, moving at its own rate rather than the composer's, so the two
+  halves read as two planes.
+  - ⚠⚠ **KEYED ON `writing`, NEVER ON `--keyboard-overlap`.** That property
+    measures a gap that also opens when a Safari tab's address bar collapses
+    during a scroll, and `useKeyboardHem` says in writing that **it is not a
+    keyboard detector**. **The composer's own third line already follows this
+    rule** — see CLAUDE.md — and the rail follows the same one, so the two
+    halves cannot disagree about whether somebody is writing.
+  - ⚠ **So the desk shrinks too**, exactly as the composer's third line grows
+    there. A pointer-type branch would be a device sniff for a behaviour that
+    reads correctly on both.
+  - ⚠ **One duration and one curve: `--recede` on `--ease-recede`.** The app
+    has one, collapsed from two on 24 August precisely so nobody sets a second
+    one equal to it. **Parallax is a difference of DISTANCE, not of timing** —
+    two travels over one duration. Two durations is two clocks to keep in step,
+    which this repository has refused three times.
+  - ⚠ **It must not unmount.** A rail that unmounted would resize the strip and
+    lose its scroll position; §5's one-cell grid lesson, applied a floor up.
 
 ---
 

@@ -9717,3 +9717,102 @@ one it must stay **out of `normalised_text`**: *learn to sail* is the common
 intention, *because I saw a boat in Greece* is not, and matching on the reason
 would make convergence **rarer the more carefully somebody wrote** — the exact
 inverse of what §2's exact-overlap principle asks for.
+
+## The rail is images, and the one number this app now shows — Amendment 7, 6 September
+
+**Directed, in three parts, on the day the card was about to be built.** *Make
+it so that what's presented is the image on the front page; for users to find
+out what each image signifies they have to tap it, at which point the card
+details — the title, qualifier — appear beneath the enlarged, almost full-screen
+image. Above each image in the horizontal rail is a number showing how many
+openings it has received.* Then, as the gate: *any entry that doesn't have an
+attached image can never enter the front page rail.* And the keyboard question:
+*make it shrink, sort of parallax style.*
+
+### The gate is on the rail, and the first reading of it was wrong
+
+Read as *the corpus requires an image*, this is expensive: an article, a paper,
+a plain experience and every ambition are locked out of the shared record, and
+because user-contributed images need the Blob store — built and dark for want of
+billing — **the corpus's growth becomes coupled to a billing switch.** That was
+stated back, and the direction that followed was narrower and better: it is the
+**rail** that admits nothing without an image.
+
+**A possibility with no image still exists, is still searchable, is still what a
+capture resolves to, and still converges.** It never appears in the rail. The
+gate is one term in the rail's own read; nothing in `lib/overlap.ts` and nothing
+on the capture path knows about it. ⚠ **And it is never a gate on capture** —
+§1 bans a forced catalogue match before saving, and Amendment 6 had just
+established that a capture has no type, no possibility and no image, and that
+most captures never resolve to one.
+
+⚠ **The failure mode to recognise: a thin rail.** The corpus is TMDB today, so
+the rail is posters. **Do not answer a thin rail by admitting imageless tiles** —
+that is the design this replaced, and §6's *silence stays silent* already says a
+short rail explains nothing about itself.
+
+### What the image-only tile costs, and why the cost was taken
+
+**Browsing stops being scannable.** A reader cannot tell what a rail holds
+without opening things — no title, no qualifier, no caption, and no hover,
+because there is no hover on a handset. That is the direction stated plainly:
+*to find out what each image signifies, they have to tap it.*
+
+⚠ **The rule that follows: do not answer *I can't tell what these are* by
+putting the title back.** The answer is the opened view, one tap away. If it
+proves genuinely unusable the thing to reconsider is the direction, not to
+smuggle the words back onto the tile a few pixels at a time.
+
+**What it buys:** design rule 3 — *one object has one height* — becomes true by
+construction rather than by care, because there is nothing variable on the tile.
+And §3's hardest constraint, the imageless card, stops existing rather than
+being solved.
+
+### The opening count narrows a Release 1 exclusion
+
+§1 excludes engagement metrics; §2's *social without a feed* bans engagement
+loops; Amendment 5 bans a *popular now* or *trending* rail as a feed under
+another name. **A visible count of openings is an engagement metric under the
+plain reading**, and this was stated when the direction was given.
+
+**The narrowing, and it is the whole of what is permitted:**
+
+- It counts openings of a **possibility** — a world record that belongs to
+  nobody. **Never on a person, a capture, a track or a notification.** §5's *the
+  portal is never given a count* is untouched, and `portal.mjs`'s assertion that
+  the door carries no digits still holds.
+- ⚠⚠ **It is never a sort key.** The rail may be ordered by what the reader
+  chose or by nothing at all. **The day the count orders it, the rail is a
+  trending feed and the exclusion has been broken.** That is the reopen point,
+  written here so it is recognisable when it is proposed — and it will be
+  proposed, because a number on screen exerts constant pressure to sort by it.
+- It is inflatable by anyone willing to tap. Accepted: **it is a texture of
+  interest, not a measurement**, and nothing ranks on it.
+- ⚠ It is `--color-muted`. Brass means *a control*, `--color-accent` means *this
+  converged*; a count is neither, and §11's scarcity rule takes both.
+
+### The shrink is keyed on writing, not on the keyboard
+
+*Sort of parallax style* — the browse half compresses rather than being covered
+or scrolled away, moving at its own rate so the two halves read as two planes.
+
+⚠ **It keys on `writing` and never on `--keyboard-overlap`.** That property
+measures a gap that also opens when a Safari tab's address bar collapses during
+a scroll; `useKeyboardHem` states in writing that it is not a keyboard detector,
+and this page shipped a bug on 24 August from reading it as one. The composer's
+own third line already follows this rule, so keying the rail the same way is
+what stops the two halves disagreeing about whether somebody is writing.
+
+⚠ **One duration and one curve — `--recede` on `--ease-recede`.** The app has
+one, collapsed from two on 24 August precisely so nobody sets a second equal to
+it. **Parallax is a difference of distance, not of timing:** two travels over
+one duration. Two durations would be two clocks to keep in step, which this
+repository has refused three times.
+
+### A word that had to be corrected
+
+The brief's sequence said *the card, against TMDB and against a fixture with no
+image*. ⚠ **`fixture` is §4's own vocabulary for a thing you own** — an
+`EntryState`, `verdict = 'have'`, enforced by the restricted-vocabulary lint. A
+hand-made row for judging a tile is a **sample possibility**, and calling it a
+fixture in this repository is asking for exactly the drift §4 exists to prevent.
