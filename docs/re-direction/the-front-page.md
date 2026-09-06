@@ -343,7 +343,7 @@ was never the right axis.
 
 **What replaces it, in build order:**
 
-- ⚠ **`possibilities.qualifier`, additive.** One nullable `text` column,
+- ~~**`possibilities.qualifier`, additive.**~~ **DONE, `0015`.** A nullable `text` column,
   written at ingest. **Migration first, deploy second** — the runbook's
   ordering, and the one this repository has already paid ~18h of 500s for
   inverting. ⚠ **`year` stays**: superseded, not migrated away from.
@@ -501,13 +501,21 @@ possibility.**
   that letterboxes.
 - **The opened view** beneath it — the enlarged image, title, qualifier, and a
   sample carrying *Disputed*, which the corpus cannot produce today.
-- ⚠ **`possibilities.qualifier` and the rail's read come first**, because the
-  tile cannot be judged against nothing. `lib/db/possibilities.ts` exports
-  exactly one function — `upsertPossibility` — so **there is no way to read the
-  corpus at all**, and the rail's image term lives in the read that does not yet
-  exist. **Migration before deploy.**
-- ⚠ **`possibilities.opens` with it** — one integer, incremented when the
-  enlarged view opens, **never a sort key**.
+- ~~**`possibilities.qualifier` comes first.**~~ **DONE — `0015`, 6
+  September: `qualifier`, `image_path` and `open_count` on `items`, with
+  two re-runnable backfills. Applied to production first, then dev.** ⚠ **A
+  third column the brief did not ask for**: the picture lived at
+  `metadata->>'posterPath'`, **a film-shaped location for a universal thing** —
+  the same fault `year` had as a qualifier — and the rail's gate has to be one
+  term. Measured on production: **71 possibilities, 71 with a qualifier, 71 with
+  an image.** The ingest writes both, stated by the caller.
+- ⚠ **STILL MISSING, AND IT BLOCKS THE TILE: a way to read the corpus at all.**
+  `lib/db/possibilities.ts` exports exactly one function —
+  `upsertPossibility` — no list, no get, no query. **The rail's image term
+  lives in the read that does not yet exist.** §3 and §10 apply:
+  `SessionUser` first, paginated, no unbounded select.
+- ⚠ **`open_count` has no index, deliberately** — the ordering that would break
+  *never a sort key* is also the one that gets slow enough to notice.
 
 **3. The browse half** arrives above the composer. `/` becomes two halves, and
 the rail **shrinks** when somebody writes — keyed on `writing`, never on

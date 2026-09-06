@@ -87,6 +87,9 @@ export async function addFilmAction(
     externalId: film.externalId,
     title: film.title,
     year: film.year,
+    /* Amendments 6 and 7 — see the note at the same call in app/actions/captures.ts. */
+    qualifier: film.year === null ? null : String(film.year),
+    imagePath: film.posterPath,
     metadata: { posterPath: film.posterPath, directors: film.directors },
   })
 

@@ -78,10 +78,40 @@ rail.***
 - ⚠ **`fixture` is §4's word for a thing you own** — an `EntryState` the linter
   enforces. A hand-made row for judging a tile is a **sample possibility**. The
   brief said *fixture* and has been corrected.
-- **What this needs before the tile can be looked at:** `possibilities.qualifier`,
-  `possibilities.opens`, and **a way to read the corpus at all** —
-  `lib/db/possibilities.ts` exports exactly one function, `upsertPossibility`.
-  **Migration before deploy.**
+- ⚠⚠ **THE MIGRATION IS BUILT AND APPLIED — 6 September, `0015`, THREE
+  COLUMNS ON `items` AND TWO BACKFILLS.** `qualifier`, `image_path` and
+  `open_count`. **Production first, then dev**, in that order; both read 16 of
+  16 afterwards. ⚠ **`0014` had never been applied to dev** and went with it —
+  pre-existing, not from this work.
+- ⚠⚠ **`image_path` IS A THIRD COLUMN THE BRIEF DID NOT ASK FOR, AND IT IS THE
+  SAME FAULT `year` HAD.** The picture lives at `metadata->>'posterPath'` —
+  **a film-shaped location for a universal thing**, exactly as `year` was a
+  film-shaped qualifier. The rail's gate has to be **one term**, so it reads a
+  column. ⚠ **The rail must never read `metadata->>'posterPath'`**: a JSON term
+  is a branch on kind wearing a different hat.
+- ⚠ **A PATH, NOT A URL, AND THAT IS LOAD BEARING.** `lib/posters.ts` picks the
+  CDN size at **render** time — `rungFor` measures the viewport and multiplies
+  by `devicePixelRatio` — so a URL resolved at ingest would freeze the size and
+  undo that whole mechanism.
+- ⚠ **Both backfills are re-runnable**, guarded on `target IS NULL`. **Measured
+  on production: 71 possibilities, 71 with a qualifier, 71 with an image** — so
+  the rail's gate excludes nothing that exists today, and every one of them had
+  both a year and a poster to take.
+- ⚠ **The ingest writes them, stated by the CALLER and never derived in
+  `lib/db/`.** `PossibilityInput` gained two required fields, so the compiler
+  asks at every call site — a `String(year)` inside `upsertPossibility` would
+  put the film-shaped assumption back one layer down, where it is harder to see.
+  Without this, only the 71 backfilled rows would ever reach the rail.
+- ⚠ **`onConflictDoNothing` STAYS, and it is not an oversight to upgrade to a
+  `DO UPDATE`.** A possibility is shared and canonical; letting the second
+  person to resolve to a film overwrite its picture is one account editing the
+  corpus every other account reads.
+- **Still needed before the tile can be looked at: a way to read the corpus at
+  all.** `lib/db/possibilities.ts` exports exactly one function,
+  `upsertPossibility` — no list, no get, no query. The rail's image term lives
+  in that read. ⚠ **`open_count` gets no index**, so the ordering that would
+  break the never-a-sort-key rule is also the one that gets slow enough to
+  notice.
 
 ⚠⚠ **THE CARD BRANCHES ON NOTHING, AND STEP 0 OF THE FRONT PAGE'S SEQUENCE IS
 DISSOLVED RATHER THAN ANSWERED — 6 September, Amendment 6.** The sequence said

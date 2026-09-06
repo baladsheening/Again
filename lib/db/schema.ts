@@ -175,7 +175,76 @@ export const possibilities = pgTable(
     externalId: text('external_id'),
     title: text('title').notNull(),
     year: integer('year'),
-    /** poster_path, director */
+    /**
+     * The one line that says WHICH one — `1974`, `Ridley Scott`, `Hackney`,
+     * `Toyota`. Amendment 6, 6 September.
+     *
+     * ⚠ **It exists so the card branches on NOTHING.** §3 of the front-page
+     * brief derived this line from `kind` — year for a film, author for a
+     * paper, locality for a place — which is **a slot solved as a taxonomy**,
+     * and it was the whole reason the `Kind` union looked like a decision that
+     * had to be taken before the card could be written. One field, written
+     * where the row is ingested by whoever knows what it means, and the surface
+     * prints it.
+     *
+     * ⚠ **`year` above is this column with a film's meaning welded into it.**
+     * It is superseded, not deleted: it is an `integer`, so it still sorts and
+     * still disambiguates two films of one title, which a string cannot do.
+     * Backfilled from it, and nothing migrates away from it.
+     *
+     * ⚠ **Never asked of the user.** §2: *never ask the user to categorise
+     * anything.* This is a property of the shared world record, not of anyone's
+     * capture — and a capture has no qualifier because it has no kind.
+     */
+    qualifier: text('qualifier'),
+    /**
+     * Where this row's picture is, as a **path** rather than a URL. Amendment 7,
+     * 6 September.
+     *
+     * ⚠⚠ **THE RAIL ADMITS NOTHING WITHOUT ONE** — directed: *any entry that
+     * doesn't have an attached image can never enter the front page rail.* That
+     * gate is **one term in the rail's own read**, `image_path is not null`,
+     * and it lives nowhere else. ⚠ **It is not a gate on the corpus and never
+     * on capture**: a possibility with no image still exists, is still
+     * searchable, is still what a capture resolves to, and still converges. It
+     * simply never appears in the rail.
+     *
+     * ⚠ **A PATH, NOT A URL, AND THAT IS LOAD BEARING.** `lib/posters.ts`
+     * chooses the CDN size at **render** time — `rungFor` measures the
+     * viewport and multiplies by `devicePixelRatio` — so a resolved URL stored
+     * here would freeze the size at ingest and undo the whole of that
+     * mechanism. Store what TMDB stores; resolve per surface.
+     *
+     * ⚠ **It supersedes `metadata.posterPath`, which is a film-shaped location
+     * for a universal thing** — the same fault `year` had as a qualifier, and
+     * it is corrected the same way. Backfilled from it. **The rail must never
+     * read `metadata->>'posterPath'`**: a JSON term is a branch on kind
+     * wearing a different hat.
+     */
+    imagePath: text('image_path'),
+    /**
+     * How many times the enlarged view of this possibility has been opened.
+     * Amendment 7, directed: *above each image in the horizontal rail is a
+     * number showing how many openings it has received.*
+     *
+     * ⚠⚠ **THIS IS THE ONE ENGAGEMENT NUMBER IN THE APP AND IT NARROWS A
+     * RELEASE 1 EXCLUSION.** §1 excludes engagement metrics and §2's *social
+     * without a feed* bans engagement loops; it was directed with that stated.
+     * What is permitted is exactly this: **a count of openings of a
+     * POSSIBILITY**, which belongs to nobody. It may never appear on a person,
+     * a capture, a track or a notification, and §5's *the portal is never given
+     * a count* is untouched.
+     *
+     * ⚠⚠ **IT IS NEVER A SORT KEY. The day it orders the rail, the rail is a
+     * trending feed** — which Amendment 5 bans by name — **and the exclusion has
+     * been broken.** There is deliberately no index on it, so the ordering that
+     * would break this is also the one that gets slow enough to notice.
+     *
+     * It is inflatable by anyone willing to tap. Accepted: it is a texture of
+     * interest, not a measurement, and nothing ranks on it.
+     */
+    openCount: integer('open_count').notNull().default(0),
+    /** poster_path, director. ⚠ `posterPath` is superseded by `imagePath`. */
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
   },
   (t) => [

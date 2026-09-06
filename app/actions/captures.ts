@@ -531,6 +531,15 @@ export async function offerAction(
     externalId: match.externalId,
     title: match.title,
     year: match.year,
+    /*
+      Amendments 6 and 7. Stated here rather than derived in `lib/db`, because
+      **this is where it is known that a film's qualifier is its year** — the
+      next catalogue's will not be. `imagePath` supersedes the `posterPath`
+      below, which stays: `metadata` is where a provider's extras live, and
+      dropping a key nothing reads any more is a different day's work.
+    */
+    qualifier: match.year === null ? null : String(match.year),
+    imagePath: match.posterPath,
     metadata: { posterPath: match.posterPath },
   })
 

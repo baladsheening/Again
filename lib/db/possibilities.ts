@@ -31,6 +31,33 @@ export type PossibilityInput = {
   externalId: string
   title: string
   year: number | null
+  /**
+   * The one line that says WHICH one. Amendment 6.
+   *
+   * ⚠ **Stated by the CALLER, never derived here.** The whole point of the
+   * column is that the surface branches on nothing, and a `String(year)` in
+   * this function would put the film-shaped assumption back one layer down —
+   * where it would be harder to see and would silently be wrong for the first
+   * catalogue that is not TMDB. **Whoever ingests the row knows what its
+   * qualifier means; nobody else does.**
+   *
+   * ⚠ **Required rather than optional, so a new catalogue cannot forget it.**
+   * A missing qualifier is a blank line under a picture, which nothing in the
+   * app would report.
+   */
+  qualifier: string | null
+  /**
+   * The picture's path, as a path. Amendment 7.
+   *
+   * ⚠ **A row without one never enters the front page rail** — that gate is one
+   * term in the rail's read. It is not a gate on the corpus: the row still
+   * exists, still resolves and still converges.
+   *
+   * ⚠ **A path, not a URL.** `lib/posters.ts` picks the CDN size at render
+   * time against the viewport and the pixel ratio; a URL resolved here would
+   * freeze it at ingest.
+   */
+  imagePath: string | null
   metadata: Record<string, unknown>
 }
 
@@ -43,6 +70,15 @@ export type PossibilityInput = {
  *
  * Idempotent (§10). Two people resolving to the same film race to the same row
  * and both get it; neither gets a duplicate.
+ *
+ * ⚠ **A row that already exists is returned UNCHANGED, qualifier and image
+ * included.** `onConflictDoNothing` is deliberate and this is not an oversight
+ * to fix by upgrading it to a `DO UPDATE`: a possibility is a shared canonical
+ * record, and letting the second person to resolve to a film overwrite its
+ * picture is one account editing the corpus every other account reads. **The
+ * 71 rows backfilled on 6 September keep what the backfill gave them.** If a
+ * bad or stale image ever needs correcting, that is an enrichment path with its
+ * own provenance — §7 — and not a side effect of somebody capturing something.
  */
 export async function upsertPossibility(
   _sessionUser: SessionUser,
