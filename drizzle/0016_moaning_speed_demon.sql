@@ -1,0 +1,1 @@
+CREATE INDEX "items_rail_idx" ON "items" USING btree ("id") WHERE "items"."image_path" is not null;

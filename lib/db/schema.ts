@@ -265,6 +265,36 @@ export const possibilities = pgTable(
       'items_external_pair',
       sql`(${t.externalSource} is null) = (${t.externalId} is null)`,
     ),
+    /*
+      The rail's whole read, and the only index the front page needs from this
+      table. Amendment 7.
+
+      ⚠ **PARTIAL, on the gate.** `where image_path is not null` is the rail's
+      admission rule, so the index holds exactly the rows the rail can show and
+      nothing else — the filter disappears into the index rather than being
+      applied after it. On a corpus that is mostly imageless (which is what
+      Phase 4 makes it) the index stays the size of the rail rather than the
+      size of the catalogue.
+
+      ⚠ **Ordered by `id`, which is *by nothing at all* — deliberately.** §2
+      permits a rail ordered by what the reader chose or by nothing; a v4 uuid
+      is arbitrary and, crucially, **stable**, so a keyset walk over it never
+      shows a row twice and never skips one. The read is two indexed range
+      scans and no sort at any corpus size.
+
+      ⚠⚠ **THERE IS DELIBERATELY NO INDEX ON `open_count`.** Ordering by it is
+      what turns the rail into a trending feed, which Amendment 5 bans by name —
+      so the query that breaks the rule is also the one that has to sort the
+      whole table to run. **Do not add one.**
+
+      ⚠ **A plain CREATE INDEX takes a lock that blocks writes to this table.**
+      At 71 rows that is microseconds. If the corpus is ever large when an index
+      here changes, it wants CONCURRENTLY — which cannot run inside drizzle's
+      transaction and would need a migration written by hand.
+    */
+    index('items_rail_idx')
+      .on(t.id)
+      .where(sql`${t.imagePath} is not null`),
   ],
 )
 
