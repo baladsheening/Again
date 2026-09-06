@@ -106,12 +106,31 @@ rail.***
   `DO UPDATE`.** A possibility is shared and canonical; letting the second
   person to resolve to a film overwrite its picture is one account editing the
   corpus every other account reads.
-- **Still needed before the tile can be looked at: a way to read the corpus at
-  all.** `lib/db/possibilities.ts` exports exactly one function,
-  `upsertPossibility` — no list, no get, no query. The rail's image term lives
-  in that read. ⚠ **`open_count` gets no index**, so the ordering that would
-  break the never-a-sort-key rule is also the one that gets slow enough to
-  notice.
+- ⚠⚠ **THE CORPUS HAS A READER — `listRail`, 6 September, `0016`.** The
+  admission rule lives in it **and nowhere else**: `image_path is not null`.
+  Keyset cursor on `id` — *by nothing at all*, which is what §2 permits — so a
+  walk shows no row twice and skips none. ⚠ **A seed with no cursor starts at a
+  RANDOM point and wraps**, because a stable order read from its start shows
+  every reader the same 24 tiles for ever: **a shelf, not a feeder.** Paging
+  onward does not wrap.
+- ⚠⚠ **MEASURED RATHER THAN ASSERTED, AND THE SMALL TABLE LIED.** The docblock
+  first claimed *an indexed range scan with no sort at any corpus size* and
+  `EXPLAIN` did not support it: at 58 rows the planner takes a **Seq Scan plus
+  a Sort**, and `enable_seqscan = off` only gets a **Bitmap** Index Scan, which
+  does not preserve order — so the Sort stays. **Built the shape at 300,000 rows
+  and asked again: plain Index Scan, no Sort, 27 buffers, 0.126 ms** for a page
+  of 24 from a random start. ⚠ **A `Seq Scan` in a local `EXPLAIN` is not a
+  regression** — it is what a 58-row table costs.
+- ⚠ **`items_rail_idx` is PARTIAL on the gate**, so on a corpus that is mostly
+  imageless — which is what Phase 4 makes it — the index stays the size of the
+  rail rather than the size of the catalogue.
+- ⚠ **The start uuid is generated in NODE.** `gen_random_uuid()` was tried
+  first and is **a round trip to Neon spent before the read it exists to
+  begin**; `crypto.randomUUID()` is built in and the same uniform 122 bits.
+- ⚠ **`open_count` gets no index**, so the ordering that would break the
+  never-a-sort-key rule is also the one that gets slow enough to notice.
+- **What is left before the tile can be looked at: the tile.** The data is
+  there and nothing draws it.
 
 ⚠⚠ **THE CARD BRANCHES ON NOTHING, AND STEP 0 OF THE FRONT PAGE'S SEQUENCE IS
 DISSOLVED RATHER THAN ANSWERED — 6 September, Amendment 6.** The sequence said

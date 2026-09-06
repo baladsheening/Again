@@ -9816,3 +9816,83 @@ image*. ⚠ **`fixture` is §4's own vocabulary for a thing you own** — an
 `EntryState`, `verdict = 'have'`, enforced by the restricted-vocabulary lint. A
 hand-made row for judging a tile is a **sample possibility**, and calling it a
 fixture in this repository is asking for exactly the drift §4 exists to prevent.
+
+## The rail's read, and the one call the brief left open — 6 September
+
+`listRail` is the front page's whole read of the corpus. Three decisions in it
+were not made by the brief, and one of them is a product call rather than an
+engineering one.
+
+### Ordered by `id`, which is *by nothing at all*
+
+§2 permits a rail ordered by what the reader chose or by nothing, and bans a
+*popular now* or *trending* rail as a feed under another name. Nothing about the
+corpus suggests an order — there is no `created_at` on `items`, so even
+*recency* is not available without another column.
+
+**A v4 uuid is arbitrary and, crucially, stable.** A keyset walk over it shows
+no row twice and skips none, which is the property an offset cannot give: a row
+entering the corpus mid-session would push a tile the reader has already seen
+into the next slice. That is `listMyPage`'s own argument, applied sideways.
+
+**What was refused: `order by random()`, and a seeded `order by md5(id ||
+seed)`.** Both sort the entire table for every page. They are fine at 71 rows
+and fatal at a million, which is §10's *build so nothing prevents scale* — and
+the alternative costs no more code.
+
+### The random start is a product call, and it is flagged as one
+
+⚠ **A seed with no cursor starts at a random point rather than at the
+beginning.** The brief says *what the rail is a rail of* is undecided; it does
+**not** leave open that the rail is a feeder — §0: *every path through the browse
+half ends in a capture, or it has wasted the screen.*
+
+**A stable order read from its start shows every reader the same first 24 tiles
+for ever**, which is a shelf rather than a feeder. One random uuid fixes it, it
+is not a ranking, and it costs one comparison.
+
+⚠ **It wraps, and only on the seed.** A start near the end of the order would
+otherwise return two tiles and call it a page. The two halves are disjoint by
+construction — `id > start` against `id <= start` — so the wrap cannot duplicate
+a row. **Paging onward deliberately does not wrap:** a short slice there means
+the corpus is exhausted, which is the honest signal, and an endlessly circling
+rail is an engagement pattern nobody asked for.
+
+### The small table lied, and the docblock was corrected before it shipped
+
+The read's docblock first claimed *an indexed range scan with no sort at any
+corpus size*. **`EXPLAIN` on the dev database did not support it.** At 58 rows
+the planner takes a **Seq Scan plus a Sort**; forcing `enable_seqscan = off`
+only gets a **Bitmap Index Scan**, which does not preserve order, so the Sort
+stays either way.
+
+**So the shape was built at 300,000 rows — 200,000 of them with an image, the
+mix Phase 4 produces — and asked again:** a plain `Index Scan`, **no Sort node**,
+27 buffers, **0.126 ms** for a page of 24 from a random start.
+
+⚠ **The lesson, which is the standing one: a claim about scale cannot be made
+from a table that has none.** And the corollary for whoever reads a plan next:
+**a `Seq Scan` in a local `EXPLAIN` here is not a regression** — it is what 58
+rows cost.
+
+### Two smaller ones
+
+⚠ **`items_rail_idx` is partial on the gate** — `where image_path is not null`.
+On a corpus that is mostly imageless, which is what Phase 4 makes it, the index
+stays the size of the rail rather than the size of the catalogue, and the filter
+disappears into the index rather than being applied after it.
+
+⚠ **The start uuid is generated in Node, and `gen_random_uuid()` was tried
+first.** Postgres has it and it is this table's own `id` default — but asking
+for one is **a round trip to Neon, spent before the read it exists to begin**.
+`crypto.randomUUID()` is built in, needs no dependency, and is the same uniform
+122 bits.
+
+### And one that was left alone
+
+⚠ **`onConflictDoNothing` stays in `upsertPossibility`, and it is not an
+oversight to upgrade to a `DO UPDATE`.** A possibility is shared and canonical.
+Letting the second person to resolve to a film overwrite its picture is **one
+account editing the corpus every other account reads**. Correcting a bad or
+stale image is an enrichment path with its own provenance — §7 — not a side
+effect of somebody capturing something.

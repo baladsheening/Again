@@ -509,13 +509,14 @@ possibility.**
   the same fault `year` had as a qualifier — and the rail's gate has to be one
   term. Measured on production: **71 possibilities, 71 with a qualifier, 71 with
   an image.** The ingest writes both, stated by the caller.
-- ⚠ **STILL MISSING, AND IT BLOCKS THE TILE: a way to read the corpus at all.**
-  `lib/db/possibilities.ts` exports exactly one function —
-  `upsertPossibility` — no list, no get, no query. **The rail's image term
-  lives in the read that does not yet exist.** §3 and §10 apply:
-  `SessionUser` first, paginated, no unbounded select.
+- ~~**A way to read the corpus.**~~ **DONE — `listRail`, `0016`.** The
+  admission rule lives in it and nowhere else. Keyset cursor on `id`; a seed
+  with no cursor starts at a random point and wraps. **Measured at 300,000 rows:
+  plain Index Scan, no Sort, 0.126 ms** — and at 58 rows the planner takes a Seq
+  Scan, which is a small-table artefact rather than a regression.
 - ⚠ **`open_count` has no index, deliberately** — the ordering that would break
   *never a sort key* is also the one that gets slow enough to notice.
+- **What is left: the tile itself.** The data is there and nothing draws it.
 
 **3. The browse half** arrives above the composer. `/` becomes two halves, and
 the rail **shrinks** when somebody writes — keyed on `writing`, never on
