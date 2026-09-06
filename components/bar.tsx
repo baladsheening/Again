@@ -95,36 +95,7 @@ export function Bar({
         340ms — see `--recede` for why the two tokens collapsed rather than being
         set equal, and why re-splitting them needs a hardware reason.
       */
-      /*
-        ⚠⚠ **`top` IS THE PAN, NOT ZERO — 6 September, and it is the whole of
-        *the page jumps up*.** Reported from the installed app: *the logo row
-        goes up and off screen and stays off screen until the user taps outside
-        the composer.* **iOS pans the visual viewport to reveal a focused
-        field**, and this bar is fixed to the **layout** viewport, so it leaves
-        with it. `--viewport-top` is that pan, written by `useKeyboardHem`;
-        putting it in `top` holds the bar on the top edge of what is actually on
-        screen.
-
-        ⚠⚠ **THE TELL WAS THAT IT WORKED ABOUT ONE TIME IN FOUR.** Those are the
-        taps where **iOS did not pan at all** — the whole keyboard then lands in
-        `--keyboard-overlap`, the browse half eases the lot, and nothing is
-        anchored wrongly. **A bug that is intermittent on a handset and absent on
-        a desk is a viewport bug**, and the frequency is the evidence.
-
-        ⚠ **`top`, NOT the `translate` below.** That slot belongs to the chrome's
-        recede and the two would resolve by their order in the compiled sheet,
-        which a class attribute cannot state — the trap `--bar-gutter` is a token
-        to avoid. Two properties, two owners, no collision.
-
-        ⚠ **No transition on it**, for the same reason the browse half's
-        translate has none: the pan is instantaneous, and a duration of ours
-        would show the page jump and then slide back.
-
-        ⚠ **`0px` everywhere else, and that is not a special case.** The property
-        is only written while somebody is writing, and only on the surface whose
-        host the hook holds; every other route falls through to the fallback.
-      */
-      className={`mark-glow fixed inset-x-0 top-[var(--viewport-top,0px)] z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+      className={`mark-glow fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
         receded ? '-translate-y-full' : ''
       }`}
     >
