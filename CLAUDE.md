@@ -24,6 +24,75 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE RAIL IS GLOBAL BY DEFAULT AND LOCATION IS A CONSTRAINT ON IT — 6
+September, directed, Amendment 8. THE COORDINATES AND THE EXPLANATION SLOT ARE
+BUILT; NOTHING ELSE IS.** Directed: *find things to do based on their own
+record… as for location, there should be an option to constrain what the rail
+shows to their current location, otherwise the default is a global presentation
+of things to do, see, eat, try, buy.*
+
+- ⚠⚠ **§7 ALREADY HELD THE ANSWER AND IT RULES OUT THE EXPENSIVE HALF.** The
+  relevance ladder, in priority order: **exact active possibility match; same
+  place or activity linked to an active possibility; same explicit intention or
+  type; freshness and confidence; distance and time relevance** — with the copy
+  mandated as *Because you saved "try pottery".* **The top three are joins on
+  records the app already holds.** §7 then says in its own words that *inferred
+  taste, embeddings, and opaque recommendation models are not required for the
+  first release.*
+- ⚠ **So semantic parsing is the fallback, not the mechanism**, and it is a
+  **paid dependency** — a model, a vector index, a re-embed on every
+  contribution. **Lodged beside the Blob store and the vision model**, under the
+  standing direction not to build what costs money.
+- ⚠ **The tension Amendment 6 left behind, named: most captures have no type.**
+  A capture is words and most never resolve, so **term 3 reaches only the
+  minority that did** — and deriving a type from free text *is* the inference
+  being deferred. Not an argument against the ladder; the reason terms 1 and 2
+  are above term 3.
+- ⚠⚠ **THE RAIL MAY RANK; THE FAN-OUT MAY NOT.** §2 as amended: similarity
+  *proposes to the person who wrote the line and never writes a notification to
+  anybody else.* **An inferred match that wrote one would tell somebody *Sam
+  wants this too* when Sam wrote something merely similar** — the app making an
+  untrue claim about a third party. **This is the one failure here that damages
+  trust rather than function.**
+- ⚠ **The constraint is what makes the rail legal.** Amendment 5's test is *a
+  rail ordered by something the reader chose, or by nothing at all, is not* a
+  feed, and §2 permits recommendation only as *an explained, user-controlled*
+  result. **The reader switching location on is the control half.** Distance is
+  §7's weakest term, so a filter rather than a sort is what the ladder already
+  asks for.
+- ⚠⚠ **`RailTile.why` EXISTS, IS `null` ON EVERY TILE, AND THAT IS THE POINT.**
+  §7 gives the copy and Phase 5 requires that *For you here can explain its
+  relation to the user's list* — **and an explanation retrofitted onto a rail
+  that already ranks is the thing that never gets done.** The field ships before
+  the ranking so every consumer has to decide what an empty one looks like;
+  `console.tsx` did exactly this for the convergence sentence a phase early. ⚠
+  **A sentence, never a score** — *0.82 relevant* is §7's banned numeric score
+  renamed. ⚠ **About the reader's own record only**: *three of your friends want
+  this* is a disclosure nobody consented to make.
+- ⚠⚠ **`latitude` / `longitude` ON THE POSSIBILITY — `0017`, AND IT IS THE ONE
+  UNRECOVERABLE COST IN THIS AREA.** Nothing reads them and no rail is gated on
+  them. **But a possibility contributed without coordinates can never be given
+  them** — you cannot retroactively locate somebody else's photograph — so every
+  row added between now and the day location ships would be permanently
+  un-locatable.
+- ⚠ **On the POSSIBILITY, never on the capture.** §1 excludes continuous
+  background location tracking, and where a person was when they wrote something
+  is a different fact from where the thing is. **Do not add a location to
+  `captures` because this is here.**
+- ⚠ **`double precision`, not PostGIS, and no index.** A geography column with a
+  GiST index is what this should become, but that is an extension, an index and
+  a query taken before one located row exists. ⚠ **Upgrading is a BACKFILL from
+  these two columns** (`ST_MakePoint(longitude, latitude)`), not a
+  re-collection — the expensive half is bought by having them at all. Whether
+  the index wants a composite btree for a bounding box or a GiST for a KNN order
+  is a decision that belongs **with the query**.
+- ⚠ **Null is the ordinary case.** A film is nowhere, and most of the corpus
+  always will be — so a rail constrained to a location removes most of it, which
+  is exactly why the constraint is optional. ⚠ **A constrained rail that empties
+  is §6's *silence stays silent*, not an empty state to write copy for**, and
+  Phase 5's *an area without source coverage does not render a misleading rail*
+  binds the default too.
+
 ⚠⚠ **THE RAIL IS IMAGES AND NOTHING ELSE, AND THE WORDS ARE BEHIND THE TAP — 6
 September, directed, Amendment 7. DOCUMENTED, NOT BUILT.** *What's presented is
 the image on the front page; for users to find out what each image signifies

@@ -2,6 +2,7 @@ import { sql, type SQL } from 'drizzle-orm'
 import {
   boolean,
   check,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -244,6 +245,41 @@ export const possibilities = pgTable(
      * interest, not a measurement, and nothing ranks on it.
      */
     openCount: integer('open_count').notNull().default(0),
+    /**
+     * Where this thing is, when it is somewhere. 6 September.
+     *
+     * ⚠⚠ **TAKEN NOW BECAUSE IT IS THE ONE UNRECOVERABLE COST IN THIS AREA.**
+     * Nothing reads these yet and no rail is gated on them. But a possibility
+     * contributed **without** coordinates can never be given them afterwards —
+     * you cannot retroactively locate somebody else's photograph — so every row
+     * added between now and the day location ships would be permanently
+     * un-locatable. The columns are additive and cost nothing; the data they
+     * hold cannot be recovered later.
+     *
+     * ⚠ **On the POSSIBILITY, never on the capture.** A place is somewhere; a
+     * person writing about it is not the same fact, and §1 excludes continuous
+     * background location tracking. **Do not add a location to `captures`
+     * because this is here.**
+     *
+     * ⚠ **`double precision` and not PostGIS, deliberately.** A geography
+     * column with a GiST index is the right answer for ordering by distance and
+     * it is what this should become — but it is an extension, an index and a
+     * query, taken before a single located row exists, which is §10's *do not
+     * build for millions now*. ⚠ **Upgrading is a BACKFILL from these two
+     * columns** (`ST_MakePoint(longitude, latitude)`), not a re-collection, so
+     * the expensive half is already bought by having them at all.
+     *
+     * ⚠ **No index, and that is not an oversight.** There is no query and no
+     * row. Whether it wants a composite btree for a bounding box or a GiST for
+     * a KNN order is a decision that belongs **with the query**, and picking one
+     * now is picking it blind.
+     *
+     * ⚠ **Null is the ordinary case.** A film is nowhere. Most of the corpus
+     * will always be nowhere, so a rail constrained to a location is a filter
+     * that removes most of it — which is the point of it being optional.
+     */
+    latitude: doublePrecision('latitude'),
+    longitude: doublePrecision('longitude'),
     /** poster_path, director. ⚠ `posterPath` is superseded by `imagePath`. */
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
   },

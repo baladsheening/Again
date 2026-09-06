@@ -9896,3 +9896,113 @@ Letting the second person to resolve to a film overwrite its picture is **one
 account editing the corpus every other account reads**. Correcting a bad or
 stale image is an enrichment path with its own provenance — §7 — not a side
 effect of somebody capturing something.
+
+## What the rail is a rail of — Amendment 8, 6 September
+
+**Raised as a question rather than a direction:** *maybe we should want it so
+users can open the app in a location and find things to do* — then, refined:
+*find things to do based on their own record, what they've added in terms of
+type and interests — requires semantic parsing. As for location, maybe there
+should be an option to constrain what the rail shows to their current location,
+otherwise the default is a global presentation of things to do, see, eat, try,
+buy, recommended based on a user's own record.*
+
+**The brief had left *what the rail is a rail of* open. This answers it**, and
+most of the answer was already in §7 and nobody had gone and read it.
+
+### The spec already had a relevance ladder, and it rules out the expensive half
+
+§7, in priority order: exact active possibility match; same place or activity
+linked to an active possibility; same explicit intention or type; freshness and
+confidence; distance and time relevance. With the copy mandated:
+`Because you saved "try pottery".` And then, in its own words: **"Inferred
+taste, embeddings, and opaque recommendation models are not required for the
+first release."**
+
+**The top three terms are joins on records the app already holds.** Semantic
+parsing is the fallback, not the mechanism — and it is a paid dependency (an
+embedding model, a vector index, a re-embed on every contribution), so it is
+lodged beside the Blob store and the vision model rather than scheduled.
+
+⚠ **The tension Amendment 6 left behind, and it is worth stating plainly: most
+captures have no type.** A capture is words and most never resolve to a
+possibility, so **term 3 reaches only the minority that did** — and deriving a
+type from free text *is* the inference being deferred. That is not an argument
+against the ladder; it is precisely why terms 1 and 2 sit above term 3.
+
+### Location as a constraint is what keeps this out of the feed ban
+
+§2 permits recommendation **only** as *an explained, user-controlled local
+relevance result* and bans a recommendation feed outright; Amendment 5's test is
+*a rail ordered by something the reader chose, or by nothing at all, is not* a
+feed. **The reader switching the location constraint on is the control half of
+that carve-out.**
+
+It also matches §7's own weighting: distance is the **fifth and weakest** term,
+so location as a filter rather than a sort is what the ladder already asks for.
+§5's *Here* read as though location were a precondition; it becomes a filter on
+a rail that works everywhere.
+
+⚠ **A constrained rail that empties is §6's *silence stays silent*, not an empty
+state to write copy for** — and Phase 5's *an area without source coverage does
+not render a misleading Here rail* now binds the default as well.
+
+### The one line that matters most here
+
+⚠⚠ **The rail may rank; the fan-out may not.** §2 as amended already requires
+that similarity, when it arrives, *proposes to the person who wrote the line and
+never writes a notification to anybody else.*
+
+**An inferred match that wrote a notification would tell somebody *Sam wants
+this too* when Sam wrote something merely similar.** That is the app making a
+claim about a third party that is not true, and it is the one failure in this
+area that damages trust rather than function — the same class as
+`listEntriesForOtherUser`'s unconditional exclusion.
+
+### Two things built now, and why now rather than later
+
+**`RailTile.why`, `null` on every tile.** §7 gives the copy and Phase 5 requires
+that *For you here can explain its relation to the user's list*. **An
+explanation retrofitted onto a rail that already ranks is the thing that never
+gets done**, so the field exists from the first tile drawn and every consumer
+has to decide what an empty one looks like. `console.tsx` made exactly this move
+for the convergence sentence a phase before there was one.
+
+⚠ **A sentence, never a score.** §7 forbids exposing an unexplained numeric
+reliability score in the first release, and *0.82 relevant* is that score under
+a different name. ⚠ **And it speaks about the reader's own record only** —
+*three of your friends want this* is a disclosure the reader never consented to
+make.
+
+**`latitude` / `longitude` on `possibilities`, and this is the only
+unrecoverable cost in the whole area.** Nothing reads them, no rail is gated on
+them, and no index exists. But **a possibility contributed without coordinates
+can never be given them** — you cannot retroactively locate somebody else's
+photograph — so every row added between now and the day location ships would be
+permanently un-locatable. The columns are free; the data is not recoverable.
+
+⚠ **On the possibility, never on the capture.** §1 excludes continuous
+background location tracking, and where a person was when they wrote something
+is a different fact from where the thing is. **Do not add a location to
+`captures` because this exists.**
+
+⚠ **`double precision` rather than PostGIS, and no index — both deliberate.** A
+geography column with a GiST index is what this should become, but that is an
+extension, an index and a query taken before a single located row exists, which
+is §10's *do not build for millions now*. **Upgrading is a backfill from these
+two columns** — `ST_MakePoint(longitude, latitude)` — not a re-collection, so
+the expensive half is already bought. Whether the index wants a composite btree
+for a bounding box or a GiST for a KNN order is a decision that belongs **with
+the query**, and picking one now is picking it blind.
+
+### What still blocks all of it
+
+**The corpus is 71 films.** The ladder's top three terms need possibilities that
+*are* places and activities, and a film is nowhere. ⚠ **And Amendment 7's image
+gate fights sourced local data**: the free sources (OSM, Overpass) have no
+images, so none of it could enter the rail; the sourced ones with images cost
+money and drag in §7's provenance and freshness obligations plus an approved
+location launch contract. **The version that does not fight is
+user-contributed** — a person photographing where they are produces an image and
+a location in one act, by construction — which is also what §10's note about
+density inside friend groups argues for.

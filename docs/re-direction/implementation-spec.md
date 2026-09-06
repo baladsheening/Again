@@ -5,7 +5,8 @@ Date: 22 August 2026
 Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 /
 §13; 4 September 2026 — Amendment 3, §8 / §9; 5 September 2026 — Amendment 4, §2 /
 §6 / §8 / §13; 5 September 2026 — Amendment 5, §5; 6 September 2026 — Amendment 6,
-§3 / §5; 6 September 2026 — Amendment 7, §1 / §5 / §7 (see *Amendments* below)
+§3 / §5; 6 September 2026 — Amendment 7, §1 / §5 / §7; 6 September 2026 —
+Amendment 8, §5 / §7 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -411,6 +412,82 @@ composer's own third line already follows this rule.
 *capture before categorisation*; §6's *silence stays silent*; and the rest of
 §1's Release 1 exclusions, none of which this touches.
 
+**Amendment 8 — 6 September 2026, §5 *Here*, §7 *Relevance*.** **The rail is
+global by default and location is an optional CONSTRAINT on it, not a separate
+surface — and relevance to the reader's own record follows §7's ladder, with no
+embeddings in Release 1.** Directed.
+
+⚠⚠ **LOCATION STOPS BEING A PRECONDITION AND BECOMES A FILTER.** §5's *Here*
+reads: *requires an explicit location permission or a manually chosen location*,
+and Phase 5 delivers *Here* and *For you here* as surfaces. **The direction is
+that the rail works everywhere by default and can be narrowed to where the
+reader is** — *the default is a global presentation of things to do, see, eat,
+try, buy; with an option to constrain what the rail shows to their current
+location*.
+
+- ⚠ **This is what makes it legal rather than a feed.** Amendment 5's test —
+  *a rail ordered by something the reader chose, or by nothing at all, is not*
+  — is met **because the reader turns the constraint on**. §2 permits
+  recommendation only as *an explained, user-controlled local relevance result*;
+  the constraint is the control half.
+- ⚠ **It matches §7's own ordering.** Distance is the **fifth** and weakest term
+  of the relevance ladder. Location as a filter rather than a sort is what that
+  ladder already says.
+- ⚠ **Phase 5's exit criteria are unamended and now bind the default too:** an
+  area without source coverage must not render a misleading rail, and results
+  must never claim complete local coverage. **A constrained rail that empties is
+  §6's *silence stays silent*, not an empty state to write copy for.**
+- ⚠ **The two rails may collapse into one control.** *Here* and *For you here*
+  remain §5's names for the two readings; whether they are two rails or one rail
+  with two settings is a surface decision the front-page brief owns.
+
+⚠⚠ **RELEVANCE FOLLOWS §7's LADDER, AND ITS TOP THREE TERMS NEED NO SEMANTIC
+PARSING.** Asked: *find things to do based on their own record, what they've
+added in terms of type and interests — requires semantic parsing.* **§7 already
+answers it and is unamended:** exact active possibility match; same place or
+activity linked to an active possibility; same explicit intention or type;
+freshness and confidence; distance and time relevance. **The first three are
+joins on records the app already holds.**
+
+- ⚠⚠ **§7's *inferred taste, embeddings, and opaque recommendation models are
+  not required for the first release* STANDS, and is reaffirmed rather than
+  narrowed.** Semantic similarity is a **paid dependency** — an embedding model,
+  a vector index, and a re-embed on every contribution — and joins the lodged
+  list beside the Blob store and the vision model.
+- ⚠ **The tension worth naming: most captures have no type.** Amendment 6
+  established that a capture is words and that most never resolve to a
+  possibility, so **term 3 only works for the minority that did** — and deriving
+  a type from free text *is* the semantic parsing. That is not an argument
+  against the ladder; it is why terms 1 and 2 sit above term 3.
+- ⚠⚠ **THE RAIL MAY RANK; THE FAN-OUT MAY NOT.** §2 as amended already requires
+  that similarity, when it arrives, *proposes to the person who wrote the line
+  and never writes a notification to anybody else.* **An inferred match that
+  wrote one would tell somebody *Sam wants this too* when Sam wrote something
+  merely similar** — the app making a claim about a third party that is not
+  true. This is the one failure mode in this area that damages trust rather
+  than function.
+
+⚠⚠ **THE EXPLANATION SHIPS BEFORE THE RANKING.** §7 gives the copy —
+*Because you saved "try pottery".* — and Phase 5 requires that *For you here can
+explain its relation to the user's list*. **The slot exists on the tile from the
+first one drawn, empty**, because an explanation retrofitted onto a rail that
+already ranks is the thing that never gets done. ⚠ **A sentence, never a score:**
+§7 forbids an unexplained numeric score in the first release, and *0.82 relevant*
+is that score renamed. ⚠ **And it speaks about the reader's own record only** —
+*three of your friends want this* is a disclosure nobody consented to make.
+
+⚠ **Coordinates are taken now, ahead of any of this, because they are the one
+unrecoverable cost here.** A possibility contributed without them can never be
+given them — you cannot retroactively locate somebody else's photograph. They
+are on the **possibility**, never on the capture: §1 excludes continuous
+background location tracking, and where a person was when they wrote something
+is a different fact from where the thing is.
+
+**What is unchanged:** every privacy term; Amendments 4, 6 and 7; §2's *exact
+overlap before inferred similarity* and *remove friction before adding
+intelligence*; §7's evidence, provenance and confidence states; and §1's Release
+1 exclusions, including the ban on a recommendation feed.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -736,6 +813,14 @@ This is a list of actionable convergences. Each row explains:
 There is no public activity feed.
 
 ### Here
+
+⚠ **Amended 6 September — see Amendment 8. LOCATION IS A CONSTRAINT, NOT A
+PRECONDITION.** The rail is global by default — *things to do, see, eat, try,
+buy* — and the reader may narrow it to where they are. **That the reader turns
+the constraint on is what keeps it out of Amendment 5's ban on a ranked rail.**
+Distance is §7's fifth and weakest relevance term, so a filter rather than a
+sort is what the ladder already asks for. The permission and the manual
+fallback below are what the constraint needs **when it is switched on**.
 
 The Here surface requires an explicit location permission or a manually chosen
 location. It has two modes:
@@ -1369,6 +1454,19 @@ The result should explain itself:
 
 Inferred taste, embeddings, and opaque recommendation models are not required
 for the first release.
+
+⚠ **Reaffirmed 6 September — see Amendment 8.** The first three terms above are
+**joins on records the app already holds** and need no semantic parsing.
+Similarity is a paid dependency and is lodged rather than scheduled. ⚠ **Note
+that term 3 reaches only the minority of captures that resolved**: Amendment 6
+established that a capture is words and most never resolve, and deriving a type
+from free text *is* the inference this defers. That is why terms 1 and 2 sit
+above it.
+
+⚠⚠ **THE RAIL MAY RANK; THE FAN-OUT MAY NOT.** §2 requires that similarity,
+when it comes, proposes to the person who wrote the line and never writes a
+notification to anybody else. ⚠ **And the explanation ships before the
+ranking** — the slot is on the tile, empty, from the first one drawn.
 
 ### Presentation
 

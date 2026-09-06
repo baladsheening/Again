@@ -142,6 +142,37 @@ export type RailTile = {
   imagePath: string
   /** ⚠ Displayed above the image. **Never a sort key.** */
   openCount: number
+  /**
+   * **Why this tile is in front of this person.** `null` today, on every tile,
+   * and that is the honest answer: the rail is the corpus and nothing is ranked.
+   *
+   * ⚠⚠ **THE SLOT SHIPS BEFORE THE RANKING, AND THAT IS THE WHOLE POINT OF IT.**
+   * §2 permits recommendation **only** as *an explained, user-controlled local
+   * relevance result*; §7 gives the copy — `Because you saved "try pottery".` —
+   * and Phase 5's exit criteria require that *For you here can explain its
+   * relation to the user's list*. **An explanation retrofitted onto a rail that
+   * already ranks is the thing that never gets done**, so the field exists from
+   * the first tile and every consumer has to decide what to do with an empty
+   * one. `console.tsx` did exactly this for the convergence sentence a phase
+   * before there was one.
+   *
+   * ⚠ **It is a SENTENCE, never a score.** §7 forbids exposing an unexplained
+   * numeric reliability score in the first release, and *0.82 relevant* is that
+   * score with a different name.
+   *
+   * ⚠ **It says something about the READER'S OWN record and nothing about
+   * anybody else's.** *Because you saved …* is safe; *three of your friends
+   * want this* is a disclosure the reader never consented to make and is not
+   * what this field is for.
+   *
+   * ⚠⚠ **AND IT IS NOT A CONVERGENCE.** The rail may rank; **the fan-out may
+   * not.** §2 as amended is explicit that when similarity arrives it *proposes
+   * to the person who wrote the line and never writes a notification to anybody
+   * else* — an inferred match that wrote one would tell somebody *Sam wants this
+   * too* when Sam wrote something merely similar, which is the app making a
+   * claim about a third party that is not true.
+   */
+  why: string | null
 }
 
 /**
@@ -304,6 +335,11 @@ async function readSlice(
     `imagePath` is `text | null` on the table and non-null on a tile: the
     predicate above is what makes that true, and this is the one place the two
     facts meet. Not a cast of convenience — a row without one cannot be here.
+
+    `why` is `null` because nothing is ranked: **the corpus in an arbitrary
+    order owes the reader no explanation**, and inventing one would be the
+    "because" of a decision nobody took. It becomes a sentence when the rail
+    starts choosing — §7's ladder, top term first — and not before.
   */
-  return rows.map((row) => ({ ...row, imagePath: row.imagePath as string }))
+  return rows.map((row) => ({ ...row, imagePath: row.imagePath as string, why: null }))
 }
