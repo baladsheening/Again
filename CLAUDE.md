@@ -251,8 +251,47 @@ rail.***
   begin**; `crypto.randomUUID()` is built in and the same uniform 122 bits.
 - ⚠ **`open_count` gets no index**, so the ordering that would break the
   never-a-sort-key rule is also the one that gets slow enough to notice.
-- **What is left before the tile can be looked at: the tile.** The data is
-  there and nothing draws it.
+⚠⚠ **THE RAIL IS DRAWN — 6 September, and two things only a screenshot could
+have found.** `components/rail.tsx` is a **server component handed into
+`ComposeScreen` as a node**, so the corpus read, the image URLs and the
+markup itself stay off the client — the arrangement the portal already uses for
+its console. 24 tiles, `--tile-width` 9rem, `aspect-2/3`,
+`object-contain`, bleeding past the column so a tile is cut at the edge.
+
+- ⚠⚠ **AN `sr-only` SPAN ON THE `<li>` BROKE THE ENTIRE PAGE, AND
+  NOTHING BUT A PROBE SAW IT.** `sr-only` is **`position: absolute`
+  with no offsets**, so with no positioned ancestor each span resolved against
+  the **initial containing block** and **escaped the rail's clipping**:
+  twenty-four of them at their static positions stretched the document to
+  **3792px on a 390px handset**, the mobile viewport zoomed out to fit at 4×,
+  and **the composer and the foot went off the bottom of the screen.** ⚠ **The
+  tiles still looked correct in the screenshot**; what found it was
+  `frontpage.mjs` reporting that `<main>` intercepted a click meant
+  for the composer. **Typecheck, lint and build all passed.** The fix is one
+  word: the span lives inside the frame, which is already `relative`.
+- ⚠⚠ **THE TITLE IS NOT ON `alt`, AND PUTTING IT BACK IS THE BUG.** With
+  it there, a poster path TMDB no longer serves draws **the alt text and a
+  broken-image icon** — words, on a tile whose whole design is that it has none.
+  Two of the first three tiles on the dev database did it. `alt=""` marks
+  the image decorative so a failed one renders **nothing at all**, and the
+  frame's ground is what is left. ⚠ **Not a data problem**: TMDB withdraws
+  artwork, so a path that resolved at ingest can stop at any time.
+- ⚠ **An empty rail draws NOTHING** — not a message, not a skeleton. §6's
+  *silence stays silent*, and Phase 5's *an area without source coverage does
+  not render a misleading rail* from the other end.
+- ⚠ **`touch-pan-x` and no verb.** The record's rows own the horizontal
+  swipe for the lock, so this is a **scroller**. **The day a swipe on a tile is
+  given a verb it collides with that**, and design rule 5 is what it answers to.
+- ⚠ **Nothing is drawn for a zero opening count**, and the row keeps its height
+  either way so the pictures stay on one line. Mono at `--text-micro` but
+  **not `stamp`** — that utility is tracked +0.22em and uppercased, which
+  reads as spaced-out digits on a number. `--color-muted`: brass means a
+  control, the accent means *this converged*, and a count is neither.
+- ⚠ **There is no tap yet**, so a tile is not a `<button>` — a control
+  that does nothing is worse than no control. The opened view is next.
+- **Measured on both surfaces**: 24 tiles, first tile on the column's text edge
+  at 20 and 293, `touch-action: pan-x`, no page overflow, and
+  `frontpage.mjs`'s 23 assertions all green after the fix.
 
 ⚠⚠ **THE CARD BRANCHES ON NOTHING, AND STEP 0 OF THE FRONT PAGE'S SEQUENCE IS
 DISSOLVED RATHER THAN ANSWERED — 6 September, Amendment 6.** The sequence said

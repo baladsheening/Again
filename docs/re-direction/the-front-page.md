@@ -528,7 +528,16 @@ possibility.**
   Scan, which is a small-table artefact rather than a regression.
 - ⚠ **`open_count` has no index, deliberately** — the ordering that would break
   *never a sort key* is also the one that gets slow enough to notice.
-- **What is left: the tile itself.** The data is there and nothing draws it.
+- ~~**The tile.**~~ **DRAWN — 6 September.** `components/rail.tsx`, a
+  server component handed down as a node. ⚠ **Two bugs a screenshot found and a
+  build did not**: an `sr-only` span on the `<li>` escaped the
+  scroller's clipping (it is `position: absolute` with no offsets) and
+  stretched the document to 3792px, zooming the handset out 4× and pushing the
+  composer off screen; and the title on `alt` drew **words and a
+  broken-image icon** on a wordless tile whenever TMDB no longer served the
+  poster. **See CLAUDE.md.**
+- **What is left: the opened view** — a tap enlarging the image with the words
+  beneath it, and the `open_count` increment that goes with it.
 
 **3. The browse half** arrives above the composer. `/` becomes two halves, and
 the rail **shrinks** when somebody writes — keyed on `writing`, never on

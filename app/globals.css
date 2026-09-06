@@ -2906,6 +2906,25 @@
   );
 
   /**
+   * One tile in the browse half's rail. Amendment 7.
+   *
+   * ⚠ **A rem, so the desk gets it at 4/3 with nothing written down** — 9rem is
+   * 144px on a handset and 192px on the desk, which is *the desk is the same
+   * design, four-thirds the size* applied to a tile.
+   *
+   * ⚠ **Chosen so a handset shows about two and a half of them.** A rail whose
+   * tiles divide evenly into the screen reads as a finished row; a half tile at
+   * the edge is what says *there is more this way* — the record's fade says the
+   * same thing downward and for the same reason. At 390: 144 + 20 + 144 + 20 =
+   * 328 of 350 usable, so the third is cut.
+   *
+   * ⚠ **The frame's height is derived from it, never typed** — the tile is
+   * `aspect-2/3`, so changing this number changes both and they cannot
+   * disagree. **2:3 is the number to look at on hardware**, not this one.
+   */
+  --tile-width: 9rem;
+
+  /**
    * ───────────────────────────────────────────────────────────────────────────
    *  The tools move: onto the line, and beside the column — 25 August
    * ───────────────────────────────────────────────────────────────────────────

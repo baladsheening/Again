@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
@@ -37,11 +37,23 @@ import type { PortalWaiting } from '@/lib/db'
  * for new ones**. Two single-purpose objects where there was one that did both.
  */
 export function ComposeScreen({
+  rail,
   portalWaiting,
   searchable,
   imagesOn,
   undoWindowMs,
 }: {
+  /**
+   * The browse half, rendered on the server and handed down finished.
+   *
+   * ⚠ **A NODE rather than the rows.** This component is `'use client'`
+   * because the composer is; the rail is pure markup with no state, so it
+   * crosses the boundary already rendered and adds nothing to the bundle.
+   * **The portal hands its console down the same way, for the same reason.**
+   * ⚠ **Do not import `Rail` here** — that would pull the corpus read and
+   * every image URL across with it.
+   */
+  rail: ReactNode
   /** Phase 2 step 3: is there anything to say. One bit — never a count. */
   portalWaiting: PortalWaiting
   /** Whether there is a record to search. */
@@ -517,12 +529,19 @@ export function ComposeScreen({
       <Bar />
 
       {/*
-        ⚠ **The browse half's space, and it is empty on purpose.** See the head
-        of this file. It holds the column open so the composer sits on the
-        bottom edge rather than under the bar, which is where it will be once
-        there is a rail in here.
+        ⚠ **The browse half, filled since 6 September.** It held the column open
+        while it was empty and still does the same job: the composer sits on the
+        bottom edge and the rail sits under the bar.
+
+        ⚠ **The rail is at the TOP of it, not centred in it.** *The bottom edge
+        is for what you do without looking, the top edge is for what you go to
+        on purpose* — browsing is the deliberate half, so it starts where the
+        eye starts. **The space below it is the page, not a gap to fill**; §6's
+        *silence stays silent* covers a rail with little in it.
       */}
-      <main className="gutter mx-auto flex min-h-svh w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-[calc(var(--foot-height)+var(--leading-line)*3)]" />
+      <main className="gutter mx-auto flex min-h-svh w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-[calc(var(--foot-height)+var(--leading-line)*3)]">
+        {rail}
+      </main>
 
       {/* A zero-height fixed twin on the viewport's bottom edge — see `useKeyboardHem`. */}
       <div ref={floorAnchor} aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-0" />

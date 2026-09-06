@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
 
 import { ComposeScreen } from '@/components/compose-screen'
+import { Rail } from '@/components/rail'
 import {
   getMyProfile,
   portalWaiting,
   getSessionUser,
   listMyPage,
+  listRail,
   UNDO_WINDOW_MS,
 } from '@/lib/db'
 import { imagesAvailable } from '@/lib/media'
@@ -25,13 +27,16 @@ import { imagesAvailable } from '@/lib/media'
  * there was. This is not a departure from the specification; it is arriving at
  * it. See `docs/re-direction/the-front-page.md`.
  *
- * ⚠ **The browse half is not built.** Step 3 of the brief's sequence fills it
- * from the corpus, and until then its space is deliberately empty rather than
- * occupied by a placeholder that would have to be deleted.
+ * ⚠ **The browse half is built as of 6 September** — `listRail` and
+ * `components/rail.tsx`. The rail is **handed down as a node**, not
+ * imported by `ComposeScreen`: that screen is `'use client'`
+ * because the composer is, and the rail is pure server markup, so crossing the
+ * boundary as a prop keeps it out of the client bundle entirely. **The portal
+ * hands its console down the same way.**
  *
- * This component does two reads and stops. There is no seed, because there is
- * no list on this screen: what gets written goes to the record, and the
- * confirmation is one line in the composer.
+ * There is still no seed for the composer, because there is no list on that
+ * half: what gets written goes to the record, and the confirmation is one line
+ * in the box.
  */
 export default async function ComposePage() {
   const sessionUser = await getSessionUser()
@@ -51,13 +56,28 @@ export default async function ComposePage() {
     refactor from displaying one. The door has to be right on the first paint,
     which only the server can know.
   */
-  const [firstRow, waiting] = await Promise.all([
+  const [firstRow, waiting, tiles] = await Promise.all([
     listMyPage(sessionUser, { limit: 1 }),
     portalWaiting(sessionUser),
+    /*
+      ⚠ **In parallel with the other two, so the composer never waits on the
+      corpus.** §2's *remove friction before adding intelligence*: the primary
+      product quality is the speed of capture, and a rail that is slow to read
+      must not hold up the box somebody types in.
+    */
+    listRail(sessionUser),
   ])
 
   return (
     <ComposeScreen
+      /*
+        ⚠ **A NODE, not a list of rows.** The rail is a server component and
+        `ComposeScreen` is a client one; handing the finished markup down
+        keeps the corpus read, the image URLs and the markup itself off the
+        client entirely. Passing `tiles` instead would pull all of it
+        across the boundary to render the same thing.
+      */
+      rail={<Rail tiles={tiles} />}
       portalWaiting={waiting}
       searchable={firstRow.length > 0}
       /*
