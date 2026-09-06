@@ -774,7 +774,47 @@ export function ComposeScreen({
             strip already spends between the card and the foot. **No pixel in
             it**, so it follows the desk's root scale.
           */}
-          <div className="h-[calc(var(--leading-line)+var(--line-hem)*1.5)]">
+          {/*
+            ⚠⚠ **THE BAND CLOSES TO THE COMPOSER'S OWN SIDE GAP WHILE SOMEBODY
+            WRITES — 6 September, directed:** *when the keyboard is up the band
+            above the composer should reduce in height so it's the same size as
+            the padding between the sides of the composer and the edges of the
+            phone.* **It is the same token, not the same number** —
+            `--gutter-l` is what `gutter` puts on the card's sides, so the gap
+            over the composer and the gap beside it cannot drift apart, and
+            neither is written here.
+
+            ⚠ **`--gutter-l` rather than an average of the two.** The gutters are
+            `max(1.25rem, env(safe-area-inset-*))` and are equal in portrait; in
+            landscape a notch makes one side wider, and the band takes the start
+            side rather than inventing a third value.
+
+            ⚠ **Keyed on `writing`, not on `--keyboard-overlap`.** The direction
+            says *when the keyboard is up*, but that property measures a gap that
+            also opens when a Safari tab's address bar collapses during a scroll
+            — `useKeyboardHem` says in writing that it is not a keyboard
+            detector. This is the same key the dim and the composer's third line
+            already use, so the three cannot disagree about what state the screen
+            is in.
+
+            ⚠ **It transitions on the app's one duration and curve**, because the
+            field's own height already does: the strip's top edge is the rail's
+            floor, and two things moving it on different clocks is the fault
+            `--recede` was collapsed to one value to avoid.
+
+            ⚠ **A failure line still fits, and that is by the flow rather than by
+            the box.** A commit blurs the field, so `writing` is false by the
+            time a failure can be shown and the band is at its full height. **If
+            a failure is ever raised without ending the writing mode, this height
+            has to become a `min`.**
+          */}
+          <div
+            className={`transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+              writing
+                ? 'h-[var(--gutter-l)]'
+                : 'h-[calc(var(--leading-line)+var(--line-hem)*1.5)]'
+            }`}
+          >
             {failed !== null && (
               <p className="text-decline px-[calc(var(--line-hem)*2.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
                 {failed}
