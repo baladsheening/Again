@@ -572,10 +572,17 @@ export function ComposeScreen({
         ⚠ **The rail is at the TOP of it, not centred in it.** *The bottom edge
         is for what you do without looking, the top edge is for what you go to
         on purpose* — browsing is the deliberate half, so it starts where the
-        eye starts. **The space below it is the page, not a gap to fill**; §6's
-        *silence stays silent* covers a rail with little in it.
+        eye starts.
+
+        ⚠⚠ **AND IT STARTS AT THE BAR'S OWN EDGE — the `1.25rem` under the bar
+        is DELETED, 6 September, directed: *move the rail up closer to the
+        title.*** A subtraction rather than a smaller number, which is the order
+        *How things get fixed* asks for. ⚠ **The rail is not flush against the
+        wordmark even so**: each tile carries the openings row above its picture,
+        so there is one line of air between the bar and the first image and it
+        belongs to the tile rather than to the page.
       */}
-      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-[var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))]">
+      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[var(--bar-height)] pb-[var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))]">
         {rail}
       </main>
 

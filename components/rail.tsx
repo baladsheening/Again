@@ -51,18 +51,23 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
       absolutely be no scroll bar.*** Its own utility carries the cost: **the
       rail gives no sign of its length or where you are in it.**
 
-      ⚠ **It bleeds past the column, and that is now the ONLY thing saying
-      *there is more this way*.** The negative margin cancels the gutter so a
-      tile is cut by the screen's edge rather than stopping inside it — the job
-      the record's fade does downward, and the job a bar would have done here.
-      **If the rail ever stops bleeding, nothing is left.**
+      ⚠⚠ **IT BLEEDS PAST THE COLUMN, AND WITH THE BAR GONE THAT WAS THE ONLY
+      THING SAYING *THERE IS MORE THIS WAY* — WHICH WAS NOT ENOUGH.** A tile as
+      wide as 2:3 of the full height measured **386.8 of a 390px handset**: one
+      picture, 3px of the next, and nothing at all to say the rail moves. **The
+      cap below is the answer** and the bleed is still what it works through.
+
+      ⚠ **`@container` is here for that cap**, so the tile measures itself
+      against **the rail** rather than the window. A `vw` would be right on a
+      handset, where the rail is the screen, and wrong on the desk, where it is
+      the column.
 
       ⚠ **`min-h-0` is not decoration.** A flex item's default `min-height` is
       `auto`, which refuses to shrink below its content — so without it the rail
       would push past the composer instead of fitting the space `flex-1` gives
       it, and the height the tiles derive from would be the wrong one.
     */
-    <div className="rail-track -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
+    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
       {/*
         ⚠ **`gap-0`, written rather than omitted.** The tiles touching is the
         direction, not the absence of a decision — a gap is what a reader would
@@ -144,6 +149,22 @@ function Tile({ tile }: { tile: RailTile }) {
         which is what an aspect ratio needs. ⚠ **Do not "tidy" this back to
         `flex-1`.**
 
+        ⚠⚠ **`max-w-[80cqw]` IS A RULE RATHER THAN A NUMBER: A FIFTH OF THE
+        NEXT TILE IS ALWAYS VISIBLE.** Not a width tuned against one screen —
+        every surface gets the same promise, and **it only binds where it is
+        needed**: on a 390 handset 2:3 of the full height wants 386.8 and the cap
+        holds it to 312, while on the desk 2:3 wants 375 of a 947px rail and the
+        cap never fires, so the desk keeps its two and a half tiles untouched.
+
+        ⚠ **The HEIGHT survives the cap, which is why the gap does not come
+        back.** `height` is set explicitly, so `aspect-2/3` only supplies the
+        automatic *width* and `max-width` clamps that — the box ends up 312 ×
+        580 and the ratio is simply not honoured. ⚠ **The poster is then
+        letterboxed inside it by `object-contain`**, which is §3's rule 2 doing
+        exactly its job: **fitted, never cropped.** The frame's ground shows
+        above and below, and that is a picture keeping its shape rather than a
+        gap.
+
         ⚠ **No rounding, because the tiles touch.** A radius on a flush strip
         cuts four notches of ground at every seam, which reads as a mistake
         rather than a shape. **Rounding and gaps go together; so do square
@@ -153,7 +174,7 @@ function Tile({ tile }: { tile: RailTile }) {
         a landscape image letterboxes onto the frame's ground. **The reverse
         reads broken and there is no bespoke art to crop to.**
       */}
-      <div className="bg-surface relative aspect-2/3 h-[calc(100%-var(--text-micro)*1.3)] overflow-hidden">
+      <div className="bg-surface relative aspect-2/3 h-[calc(100%-var(--text-micro)*1.3)] max-w-[80cqw] overflow-hidden">
         {/*
           ⚠⚠ **THE NAME LIVES INSIDE THIS `relative` BOX, AND PUTTING IT ON THE
           `<li>` BROKE THE WHOLE PAGE.** `sr-only` is `position: absolute` **with
