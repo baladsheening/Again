@@ -6,7 +6,8 @@ Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, �
 §13; 4 September 2026 — Amendment 3, §8 / §9; 5 September 2026 — Amendment 4, §2 /
 §6 / §8 / §13; 5 September 2026 — Amendment 5, §5; 6 September 2026 — Amendment 6,
 §3 / §5; 6 September 2026 — Amendment 7, §1 / §5 / §7; 6 September 2026 —
-Amendment 8, §5 / §7 (see *Amendments* below)
+Amendment 8, §5 / §7; 6 September 2026 — Amendment 9, §3 / §5 / §7 (see
+*Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -488,6 +489,72 @@ overlap before inferred similarity* and *remove friction before adding
 intelligence*; §7's evidence, provenance and confidence states; and §1's Release
 1 exclusions, including the ban on a recommendation feed.
 
+**Amendment 9 — 6 September 2026, §3 *Occurrence*, §5 *Home / Capture*, §7
+*Catalogue contribution*.** **Location lives on two different objects, and the
+corpus is two layers rather than a choice between them.** Both came out of one
+question: *why isn't a film somewhere you can go if it's in the cinema?*
+
+⚠⚠ **A FILM IS NOWHERE; A SCREENING IS SOMEWHERE. CONFUSING THEM WAS THE
+ERROR.** Amendment 8's note said *a film is nowhere, and most of the corpus
+always will be* — true of the film **and false of the thing you can actually
+go to.** §3 already had the word and its first example is exactly this: *an
+occurrence — a time-bound experience connected to a possibility: **a
+screening**, workshop, concert, event.*
+
+- **A possibility may have a fixed location** — the Barbican is at a point, a
+  film is not. Amendment 8's `latitude`/`longitude` on `possibilities` are for
+  **places** and are unchanged and correct.
+- **An occurrence has a location AND a time**, and it points at a possibility.
+  ⚠ **Neither an occurrence nor an offer exists as a table** — the words are in
+  §3 and nothing in the tree implements them.
+- ⚠⚠ **SO THE 71 FILMS ALREADY IN THE CORPUS BECOME *THINGS TO DO NEAR ME* THE
+  MOMENT OCCURRENCES EXIST.** No new possibilities, no new catalogue, no
+  contributed data — **only when and where they are on.** That is by a long way
+  the shortest route to a location rail, and it was missed because the film and
+  the screening had been treated as one object.
+- ⚠ **And a screening inherits the film's poster**, so it clears Amendment 7's
+  image gate **for free**. It is the one vertical where the picture problem
+  solves itself; everywhere else the picture is the constraint.
+- ⚠ **The table is DEFERRED, not designed away.** Its shape is decided —
+  possibility, place, start time, provenance, expiry — and it is built **when
+  there is a source for it**, because a table nothing writes is a name bought
+  for a consumer that does not exist. ⚠ **Nothing is lost by waiting, and that
+  is the difference from Amendment 8's coordinates**: nobody is generating
+  occurrence data today, so there is no unrecoverable moment passing.
+- ⚠ **Showtimes are their own supply problem.** TMDB does not carry them and
+  there is no dependable free feed. **It is one narrow dependency rather than
+  local data for the whole world**, which is the point of preferring it.
+
+⚠⚠ **THE CORPUS IS TWO LAYERS AND THEY ARE COMPLEMENTARY, NOT ALTERNATIVES.**
+Asked directly: *why not both the free sources and people adding it themselves?*
+**Because it was put as a choice, and it is not one.**
+
+- **A free source is the SKELETON.** OpenStreetMap and the like give names,
+  coordinates and categories for every café, park and gallery. **No images.**
+- ⚠ **Amendment 7 is what makes this work, read as the direction actually gave
+  it:** the image is a gate on the **rail**, never on the corpus. So skeleton
+  rows live in the corpus perfectly well, are searchable, are resolvable and
+  converge — **they simply do not show.**
+- **A photograph is what ADMITS one.** Somebody photographs the place and the
+  picture attaches to a row that already carries the right name and the right
+  coordinates. That row can now enter the rail.
+- ⚠⚠ **THE REAL PAYOFF IS CANONICAL IDENTITY, AND IT REPAIRS A WEAKNESS RECORDED
+  THE SAME DAY.** It was written that a user-contributed possibility is a weaker
+  canonical claim — two people photographing one café get two rows and never
+  converge. **With a skeleton beneath them they attach to the same row**, so
+  they do. §7's *Corroborated by several people* then has something to
+  corroborate rather than two strangers to merge.
+- ⚠ **The licence is a real check and is named rather than assumed.**
+  OpenStreetMap is ODbL: attribution is required and there are share-alike
+  obligations on a derived database. §7 already requires provenance and
+  attribution, so the spirit is compatible — **but it is a decision to take
+  before ingesting, not a free lunch.**
+
+**What is unchanged:** every privacy term; Amendments 4, 6, 7 and 8; the image
+gate on the rail; *the rail may rank, the fan-out may not*; and §1's Release 1
+exclusions, including that local offers and occurrences require provenance,
+freshness and an approved location launch contract before they can be shown.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -648,6 +715,14 @@ visited, booked, or obtained. Offers expire and must carry provenance.
 
 A time-bound experience connected to a possibility: a screening, workshop,
 concert, event, or scheduled visit.
+
+⚠ **Amended 6 September — see Amendment 9. THIS IS WHERE A FILM ACQUIRES A
+LOCATION.** The film is nowhere; the screening is at the Barbican on Thursday.
+**So the films already in the corpus become *things to do near me* the moment
+occurrences exist** — no new possibilities, only when and where. A screening
+also inherits the film's poster, so it clears the rail's image gate for free.
+⚠ **Neither occurrence nor offer exists as a table**; the shape is decided and
+it is built when there is a source.
 
 ### Intention
 

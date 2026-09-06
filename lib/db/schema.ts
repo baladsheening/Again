@@ -274,9 +274,17 @@ export const possibilities = pgTable(
      * a KNN order is a decision that belongs **with the query**, and picking one
      * now is picking it blind.
      *
-     * ⚠ **Null is the ordinary case.** A film is nowhere. Most of the corpus
-     * will always be nowhere, so a rail constrained to a location is a filter
-     * that removes most of it — which is the point of it being optional.
+     * ⚠ **Null is the ordinary case, and a film is nowhere** — so a rail
+     * constrained to a location is a filter that removes most of the corpus,
+     * which is the point of it being optional.
+     *
+     * ⚠⚠ **BUT A SCREENING IS SOMEWHERE, AND THAT IS A DIFFERENT OBJECT —
+     * Amendment 9.** §3's *occurrence* is a time-bound experience connected to
+     * a possibility, and its first example is a screening. **The film has no
+     * location; the showing of it has one and a time.** These two columns are
+     * for a possibility that genuinely sits somewhere — a place — and the
+     * occurrence carries its own. **Do not try to make these hold a screening**:
+     * a film shown in forty cinemas is forty occurrences and one possibility.
      */
     latitude: doublePrecision('latitude'),
     longitude: doublePrecision('longitude'),

@@ -10006,3 +10006,79 @@ location launch contract. **The version that does not fight is
 user-contributed** — a person photographing where they are produces an image and
 a location in one act, by construction — which is also what §10's note about
 density inside friend groups argues for.
+
+## The film and the screening, and why the corpus is two layers — Amendment 9, 6 September
+
+Two questions, both corrections of something I had said, and both improved the
+design.
+
+### "Why isn't a film somewhere you can go if it's in the cinema?"
+
+**It is, and the claim it corrects was mine.** Amendment 8's note read *a film
+is nowhere, and most of the corpus always will be* — true of the **film** and
+false of the **thing you can actually go to.**
+
+§3 already had the word, and its first example is exactly the one asked about:
+*an occurrence — a time-bound experience connected to a possibility: **a
+screening**, workshop, concert, event.*
+
+**So there are two objects and two locations:**
+
+- A **possibility** may sit somewhere — the Barbican is at a point. A film is
+  not. Amendment 8's `latitude`/`longitude` are for places, and are unchanged.
+- An **occurrence** has a location **and a time**, and points at a possibility.
+  **A film shown in forty cinemas is forty occurrences and one possibility.**
+
+⚠⚠ **The consequence is the largest thing in this entry: the 71 films already in
+the corpus become *things to do near me* the moment occurrences exist.** No new
+possibilities, no contributed data, no local catalogue — **only when and where
+they are on.** That is by a long way the shortest route to a location rail, and
+it was invisible for as long as the film and the showing of it were one object.
+
+⚠ **And a screening inherits the film's poster**, so it clears Amendment 7's
+image gate for free. **It is the one vertical where the picture problem solves
+itself**; everywhere else the picture is the binding constraint.
+
+**What was deferred rather than designed away:** `occurrences` and `offers`
+exist in §3's vocabulary and nowhere in the tree. The shape is decided —
+possibility, place, start, provenance, expiry — and the table is built when
+there is a source. ⚠ **Nothing is lost by waiting, and that is what separates it
+from the coordinates**: nobody is generating occurrence data today, so no
+unrecoverable moment is passing. A table nothing writes is the *name bought for
+a second consumer, then the consumer deleted* failure this repository has
+already recorded once.
+
+⚠ **Showtimes are their own supply problem** — TMDB does not carry them and
+there is no dependable free feed. It is **one narrow dependency rather than
+local data for the whole world**, which is precisely the argument for preferring
+it over a general local-data contract.
+
+### "Why not both the free sources and people adding it themselves?"
+
+**Because I put it as a choice and it is not one.** Doing both is better than
+either, and the reason is not effort — it is identity.
+
+- **A free source is the skeleton.** OpenStreetMap and the like give names,
+  coordinates and categories for every café, park and gallery, with **no
+  images**.
+- ⚠ **Amendment 7, read as it was actually given, is what makes this work.** The
+  image is a gate on the **rail**, never on the corpus. Skeleton rows live in
+  the corpus, are searchable, are resolvable and converge — **they simply do not
+  show.**
+- **A photograph admits one.** The picture attaches to a row that already
+  carries the right name and the right coordinates, and that row can now enter
+  the rail.
+
+⚠⚠ **The payoff repairs a weakness recorded the same day.** It was written that
+a user-contributed possibility is a weaker canonical claim — two people
+photographing one café get two rows and never converge. **With a skeleton
+beneath them they attach to the same row**, so they do, and §7's *Corroborated
+by several people* has something to corroborate rather than two strangers to
+merge.
+
+⚠ **The licence is a real check and is named rather than assumed.**
+OpenStreetMap is **ODbL**: attribution is required, and there are share-alike
+obligations on a derived database. §7 already requires provenance and
+attribution, so the spirit is compatible — **but it is a decision to take before
+ingesting, not a free lunch**, and it is the first thing to settle if this layer
+is built.

@@ -207,7 +207,19 @@ Amendment 7.** One term in its read. **The corpus is not filtered anywhere else*
 converges — so this term lives in the rail's own query and nowhere near
 `lib/overlap.ts` or the capture path.
 
-**Open: what the rail is a rail OF.** By kind? By recency in the corpus? One rail
+⚠⚠ **PARTLY ANSWERED — 6 September, Amendments 8 and 9.** Global by default,
+with location as an **optional constraint** the reader switches on; relevance to
+the reader's own record follows §7's ladder, whose top three terms are joins and
+need no inference. ⚠ **And the shortest route to a local rail is the corpus we
+already have**: a film is nowhere but a *screening* is somewhere, so occurrences
+turn 71 existing possibilities into things to do near somebody — **and a
+screening inherits the film's poster, so it clears the image gate for free.**
+⚠ **The corpus is two layers**: a free source is the skeleton (names and
+coordinates, no images, so it never reaches the rail) and a photograph is what
+admits a row to it. **Both, and the skeleton is what makes two people
+photographing one café converge on one row.**
+
+**Still open: the SHAPE.** By kind? By recency in the corpus? One rail
 or several? Half a handset screen holds one rail of ~2:3 tiles, so *several* is
 probably a desk affordance. **Undecided, and it does not block the tile.**
 ⚠⚠ **WHAT IT MAY NEVER BE ORDERED BY IS THE OPENING COUNT** — that is a trending

@@ -24,6 +24,59 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **A FILM IS NOWHERE; A SCREENING IS SOMEWHERE — 6 September, Amendment 9,
+AND IT IS THE SHORTEST ROUTE TO A LOCAL RAIL.** Asked: *why isn't a film
+somewhere you can go if it's in the cinema?* **It is, and the entry above this
+one was wrong to say the corpus is nowhere.** §3 already had the word and its
+first example is exactly this: *an occurrence — a time-bound experience
+connected to a possibility: **a screening**, workshop, concert, event.*
+
+- ⚠⚠ **THE 71 FILMS ALREADY IN THE CORPUS BECOME *THINGS TO DO NEAR ME* THE
+  MOMENT OCCURRENCES EXIST.** No new possibilities, no contributed data, no
+  local catalogue — **only when and where they are on.** It was missed because
+  the film and the showing of it had been treated as one object.
+- ⚠ **A screening inherits the film's poster**, so it clears Amendment 7's image
+  gate **for free**. It is the one vertical where the picture problem solves
+  itself; everywhere else the picture is the constraint.
+- ⚠ **Two objects, two locations.** `possibilities.latitude/longitude` are for a
+  possibility that genuinely sits somewhere — **a place**. An occurrence carries
+  its own location **and a time**. ⚠ **Do not try to make the possibility's
+  columns hold a screening**: a film shown in forty cinemas is forty occurrences
+  and one possibility.
+- ⚠ **`occurrences` and `offers` do not exist as tables** and are **deferred,
+  not designed away** — shape decided (possibility, place, start, provenance,
+  expiry), built when there is a source. ⚠ **Nothing is lost by waiting, which
+  is the difference from the coordinates**: nobody is generating occurrence data
+  today, so no unrecoverable moment is passing.
+- ⚠ **Showtimes are their own supply problem** — TMDB does not carry them and
+  there is no dependable free feed. **One narrow dependency rather than local
+  data for the whole world**, which is the reason to prefer it.
+
+⚠⚠ **AND THE CORPUS IS TWO LAYERS, NOT A CHOICE — asked: *why not both the free
+sources and people adding it themselves?*** **Because it was put as a choice and
+it is not one.**
+
+- **The free source is the SKELETON** — OpenStreetMap and the like give names,
+  coordinates and categories with **no images**.
+- ⚠ **Amendment 7 read as it was actually given is what makes this work:** the
+  image is a gate on the **rail**, never on the corpus. Skeleton rows live in
+  the corpus, are searchable, are resolvable and converge — **they simply do not
+  show.**
+- **A photograph is what ADMITS one.** The picture attaches to a row that
+  already has the right name and the right coordinates, and that row can now
+  enter the rail.
+- ⚠⚠ **THE PAYOFF IS CANONICAL IDENTITY, AND IT REPAIRS A WEAKNESS RECORDED THE
+  SAME DAY.** Without a skeleton, two people photographing one café make **two
+  rows and never converge**. With one they attach to the **same** row, so they
+  do — and §7's *Corroborated by several people* has something to corroborate
+  rather than two strangers to merge.
+- ⚠ **The licence is a real check, named rather than assumed.** OpenStreetMap is
+  **ODbL**: attribution required, share-alike obligations on a derived database.
+  §7 already requires provenance and attribution so the spirit is compatible —
+  **but it is a decision to take before ingesting, not a free lunch.**
+- **Nothing is built by this entry.** Amendment 9; §3's *Occurrence* and §4 of
+  `docs/re-direction/the-front-page.md` carry it.
+
 ⚠⚠ **THE RAIL IS GLOBAL BY DEFAULT AND LOCATION IS A CONSTRAINT ON IT — 6
 September, directed, Amendment 8. THE COORDINATES AND THE EXPLANATION SLOT ARE
 BUILT; NOTHING ELSE IS.** Directed: *find things to do based on their own
