@@ -2905,24 +2905,16 @@
     max(var(--record-floor), calc(100% - 2 * var(--mark-column)))
   );
 
-  /**
-   * One tile in the browse half's rail. Amendment 7.
-   *
-   * ⚠ **A rem, so the desk gets it at 4/3 with nothing written down** — 9rem is
-   * 144px on a handset and 192px on the desk, which is *the desk is the same
-   * design, four-thirds the size* applied to a tile.
-   *
-   * ⚠ **Chosen so a handset shows about two and a half of them.** A rail whose
-   * tiles divide evenly into the screen reads as a finished row; a half tile at
-   * the edge is what says *there is more this way* — the record's fade says the
-   * same thing downward and for the same reason. At 390: 144 + 20 + 144 + 20 =
-   * 328 of 350 usable, so the third is cut.
-   *
-   * ⚠ **The frame's height is derived from it, never typed** — the tile is
-   * `aspect-2/3`, so changing this number changes both and they cannot
-   * disagree. **2:3 is the number to look at on hardware**, not this one.
-   */
-  --tile-width: 9rem;
+  /*
+    ⚠ **`--tile-width` was here for four hours on 6 September and is
+    DELETED — directed the same day: *the images stuck to each other and
+    bigger, there's a big space between the rail and the top of the sheet the
+    composer lays on.* A tile is no longer a width at all.** It is **as tall as
+    the space between the bar and the composer**, and `aspect-2/3` makes
+    the width follow — so the two complaints have one answer and neither is a
+    number anybody picked. **Do not put a width token back**: the day one
+    exists, the gap it was tuned against is a gap again on the next screen.
+  */
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -3309,6 +3301,38 @@
 @utility gutter {
   padding-left: var(--gutter-l);
   padding-right: var(--gutter-r);
+}
+
+/**
+ * A scroller with no bar. 6 September, directed: *when scrolling, there should
+ * absolutely be no scroll bar. That is a necessity.*
+ *
+ * ⚠⚠ **THIS IS THE `scrollbar-none` UTILITY COMING BACK, AND ITS OWN
+ * TOMBSTONE ARGUED AGAINST IT.** That utility was deleted into the `html`
+ * rule on 30 August; its docblock read *do not reach for this anywhere content
+ * is primarily navigated by scrolling — the lists — where the bar is the only
+ * thing saying how much is left.* ⚠ **The rail is exactly that place, and the
+ * direction overrides it.** The cost is stated rather than argued away: **the
+ * rail gives no sign of its length or where you are in it.**
+ *
+ * ⚠ **What is left saying *there is more*: the cut tile at the edge**, which is
+ * why the rail bleeds past the column rather than stopping inside it. That is
+ * the record's fade doing the same job downward. **If the rail ever stops
+ * bleeding, this is what it costs.**
+ *
+ * ⚠ **Both declarations are needed and neither is a browser sniff** — each is
+ * the property its own engine reads. ⚠ **And unlike the page's own indicator,
+ * this one is reachable on iOS:** `scrollbar-width` and
+ * `::-webkit-scrollbar` reach scrollable **elements** there; it is only
+ * the main document's native scroll view that CSS cannot touch. See the §11
+ * note on why the handset's page indicator survives.
+ */
+@utility rail-track {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /**

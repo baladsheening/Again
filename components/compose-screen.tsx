@@ -268,6 +268,42 @@ export function ComposeScreen({
   */
   useKeyboardHem({ writing, host, floorAnchor })
 
+  /*
+    ⚠⚠ **THE COMPOSER MEASURES ITSELF, AND THE RAIL FILLS WHAT IS LEFT — 6
+    September.** Directed: *there's a big space between the rail and the top of
+    the sheet the composer lays on.* There was, and `main` was reserving
+    `--foot-height + 3 lines` for a strip that is really **a card, a hem and a
+    foot** — a guess at somebody else's height, and wrong by whatever the card
+    happened to be.
+
+    ⚠ **So it is read off the element rather than computed from the tokens.**
+    The same rule `readRoll` and the swipe's detent were built on: *measure the
+    thing, never re-derive it.* The composer grows a line when somebody writes,
+    and this follows it with nothing told about that.
+
+    ⚠ **A `ResizeObserver`, not an effect that runs once.** The strip changes
+    height when the field grows, when the failure line appears, and when the
+    desk's root scale ramps — three occasions, one observer.
+
+    ⚠ **Written through the CSSOM onto `host`, which is what `--keyboard-overlap`
+    already does** — §10 blocks inline `style` attributes, and this is the door
+    that rule leaves open. ⚠ **It must NOT be lifted into `@theme`**: a
+    custom property's `var()` is substituted where it is *declared*, so a token
+    on `:root` would resolve this against `:root`, where nothing writes it. That
+    bug cost a day on 29 August.
+  */
+  const sheet = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const box = sheet.current
+    const root = host.current
+    if (!box || !root) return
+    const observer = new ResizeObserver(([entry]) => {
+      root.style.setProperty('--sheet-block', `${entry.contentRect.height}px`)
+    })
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [])
+
   /**
    * **Put the undo at the end of the words, on whichever line they end on.**
    *
@@ -539,7 +575,7 @@ export function ComposeScreen({
         eye starts. **The space below it is the page, not a gap to fill**; §6's
         *silence stays silent* covers a rail with little in it.
       */}
-      <main className="gutter mx-auto flex min-h-svh w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-[calc(var(--foot-height)+var(--leading-line)*3)]">
+      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+1.25rem)] pb-[var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))]">
         {rail}
       </main>
 
@@ -572,7 +608,7 @@ export function ComposeScreen({
         under the foot or stops above the composer. **Do not pre-build a ground
         for it; look at it then.**
       */}
-      <div className="writing-sheet z-20">
+      <div ref={sheet} className="writing-sheet z-20">
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
           the air between the box and the foot, which were touching; writing it is
