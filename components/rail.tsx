@@ -149,21 +149,37 @@ function Tile({ tile }: { tile: RailTile }) {
         which is what an aspect ratio needs. ⚠ **Do not "tidy" this back to
         `flex-1`.**
 
-        ⚠⚠ **`max-w-[80cqw]` IS A RULE RATHER THAN A NUMBER: A FIFTH OF THE
-        NEXT TILE IS ALWAYS VISIBLE.** Not a width tuned against one screen —
-        every surface gets the same promise, and **it only binds where it is
-        needed**: on a 390 handset 2:3 of the full height wants 386.8 and the cap
-        holds it to 312, while on the desk 2:3 wants 375 of a 947px rail and the
-        cap never fires, so the desk keeps its two and a half tiles untouched.
+        ⚠⚠ **`80cqw` IS A RULE RATHER THAN A NUMBER: A FIFTH OF THE NEXT TILE
+        IS ALWAYS VISIBLE.** Not a width tuned against one screen — every
+        surface gets the same promise, and **it only binds where it is needed**:
+        on a 390 handset 2:3 of the full height wants 386.8 and the cap holds it
+        to 312, while on the desk 2:3 wants 393 of a 947px rail and the cap never
+        fires, so the desk keeps its two and a half tiles untouched.
 
-        ⚠ **The HEIGHT survives the cap, which is why the gap does not come
-        back.** `height` is set explicitly, so `aspect-2/3` only supplies the
-        automatic *width* and `max-width` clamps that — the box ends up 312 ×
-        580 and the ratio is simply not honoured. ⚠ **The poster is then
-        letterboxed inside it by `object-contain`**, which is §3's rule 2 doing
-        exactly its job: **fitted, never cropped.** The frame's ground shows
-        above and below, and that is a picture keeping its shape rather than a
-        gap.
+        ⚠⚠ **THE CAP IS SPENT ON THE HEIGHT, NOT ON A `max-width`, AND THAT
+        REVERSES HOW IT WAS FIRST BUILT.** As a `max-width` over a definite
+        height it produced a **312 × 600 frame holding a 312 × 468 poster** —
+        the ratio simply not honoured, and 132px of frame ground under every
+        picture. **A band inside the tile reads as a broken picture where the
+        same emptiness below the rail reads as page**, so the frame takes the
+        smaller of *the height available* and *the height the capped width
+        allows*, and is therefore **always 2:3**. The slack lands under the rail
+        as ground.
+
+        ⚠ **`min()` of two heights, so one expression covers both surfaces.**
+        The handset takes the second term (the cap binds) and the desk takes the
+        first (it does not). **No branch, no breakpoint.**
+
+        ⚠⚠ **AND THIS IS WHY THE COMPOSER'S GLASS STILL HAS NOTHING BEHIND IT ON
+        A HANDSET.** Running the rail under the composer was proposed and does
+        **not** work: for a picture to reach the glass it would have to be 594px
+        tall, which at 2:3 is 396px wide — **wider than a 390px screen**, so the
+        cap that puts a fifth of the next tile on screen makes it arithmetically
+        impossible. ⚠ **The recorded prediction in `compose-screen.tsx` — *the
+        fix is the browse half, not a ground* — is therefore TESTED AND WRONG on
+        a handset.** If the composer needs an edge it needs the console's own
+        answer: a ground that **lifts** toward `--color-surface` rather than
+        sinking toward the page.
 
         ⚠ **No rounding, because the tiles touch.** A radius on a flush strip
         cuts four notches of ground at every seam, which reads as a mistake
@@ -174,7 +190,7 @@ function Tile({ tile }: { tile: RailTile }) {
         a landscape image letterboxes onto the frame's ground. **The reverse
         reads broken and there is no bespoke art to crop to.**
       */}
-      <div className="bg-surface relative aspect-2/3 h-[calc(100%-var(--text-micro)*1.3)] max-w-[80cqw] overflow-hidden">
+      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(80cqw*1.5))] overflow-hidden">
         {/*
           ⚠⚠ **THE NAME LIVES INSIDE THIS `relative` BOX, AND PUTTING IT ON THE
           `<li>` BROKE THE WHOLE PAGE.** `sr-only` is `position: absolute` **with
