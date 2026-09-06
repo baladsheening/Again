@@ -67,48 +67,34 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
       would push past the composer instead of fitting the space `flex-1` gives
       it, and the height the tiles derive from would be the wrong one.
 
-      ⚠⚠ **THE SNAP IS A POSITION-PRESERVING MECHANISM, NOT A FEEL — 6
-      September, and it is the whole of a reported bug.** Reported from the
-      device: *the rail slides across to another image when it downsizes.* It
-      did, and it is arithmetic rather than animation: `scrollLeft` is an
-      absolute pixel offset into content whose width **collapses 44% when the
-      keyboard rises** — measured 7488px → 4227px while `scrollLeft` sat frozen
-      at 927, which slides the corpus **two and a half tiles** under a
-      stationary eye. Nothing was scrolling; the content moved out from under
-      the number.
-
-      ⚠ **CSS's own answer, so there is no JavaScript and no observer.** A snap
-      container re-resolves its snap position after a relayout, so the tile that
-      was at the start edge is still at the start edge when every tile has
-      changed size — measured in **both** engines: first tile 3 → 3 with
-      `scrollLeft` recomputed 937 → 531, and 3 again on the way back. Without
-      it, 3 → 5. ⚠ **A `ResizeObserver` scaling `scrollLeft` by the ratio of
-      `scrollWidth` was the alternative and lands within 8px of this** — it was
-      refused because it puts client code in a rail whose whole point is that it
-      is server-rendered markup.
-
-      ⚠ **`mandatory`, not `proximity`.** Only mandatory guarantees the
-      re-snap; proximity may leave the offset where it was, which is the bug.
-      Safe here because a snap area larger than the scrollport is what traps a
-      mandatory scroller and a tile is **80cqw** — deliberately smaller. ⚠ **No
-      `scroll-snap-stop`**: a fling should cross several tiles, because this is
-      browsing.
-
-      ⚠ **`start`, and it makes an existing rule true rather than adding one.**
-      *A fifth of the next tile is always visible* was true at rest only by luck
-      before; aligned to the start edge it is true at every rest position. ⚠ **It
-      does not touch the bleed** — the track still runs past the column, so the
-      tile at the far end is still cut.
+      ⚠⚠ **SCROLL-SNAP WAS BUILT HERE ON 6 SEPTEMBER AND REMOVED THE SAME
+      DAY. DO NOT PUT IT BACK.** It was the answer to a real bug — the tiles
+      resize when the keyboard rises, `scrollLeft` is an absolute offset into
+      content whose width **collapses 44%** (measured 7488px → 4227px), and the
+      corpus slid two and a half tiles under a stationary eye. `snap-x
+      snap-mandatory` + `snap-start` did hold the tile, measured in both
+      engines. **It failed on the device for two reasons a desk cannot show:**
+      *"sliding the rail feels worse, less intuitive, than before"* — mandatory
+      snap takes the free flick away from a browsing surface — and *"after
+      repeated taps in the composer it occurs randomly"*, because re-snapping is
+      **best-effort**: which target the engine re-resolves to depends on where
+      the offset sat when the relayout began, so it is right most times and
+      wrong some.
+      ⚠ **The replacement is deterministic and lives in `compose-screen.tsx`**:
+      a `ResizeObserver` on the strip scales `scrollLeft` by the ratio of the
+      content width, in the callback, which runs **after layout and before
+      paint** — so the correction lands in the same frame with no flicker and no
+      opinion about which tile you meant. **Arithmetic, not a guess.**
     */
-    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 snap-x snap-mandatory touch-pan-x overflow-x-auto overscroll-x-contain">
+    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
       {/*
         ⚠ **`gap-0`, written rather than omitted.** The tiles touching is the
         direction, not the absence of a decision — a gap is what a reader would
         put back without knowing it had been taken out.
       */}
       <ul className="flex h-full w-max gap-0">
-        {tiles.map((tile) => (
-          <Tile key={tile.id} tile={tile} />
+        {tiles.map((tile, i) => (
+          <Tile key={tile.id} tile={tile} eager={i < EAGER} />
         ))}
       </ul>
     </div>
@@ -124,7 +110,25 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
  * tell what these are* by putting the title back** — the answer is one tap
  * away, and the tile saying nothing is the design rather than a gap in it.
  */
-function Tile({ tile }: { tile: RailTile }) {
+/**
+ * How many tiles are fetched before they are scrolled to.
+ *
+ * ⚠ **A handset shows 1.25 tiles at rest**, so this is the first screenful and
+ * a little ahead of it. Reported from the device: *some of the posters take a
+ * while to load, showing a grey panel in the meantime.* ⚠ **That is
+ * `next/image`'s lazy loading, not the resize** — `next.config.ts` sets
+ * `unoptimized`, so there is **no srcset and no second request when a tile
+ * changes size**; a poster is fetched once, at `w500`, whatever the tile
+ * measures.
+ *
+ * ⚠ **Not all 24.** The rest stay lazy because eagerly fetching a whole rail is
+ * ~24 posters on somebody's data before they have looked at one, and the grey
+ * is `bg-surface` — the frame's own ground, which is what an unloaded tile is
+ * supposed to look like rather than an error.
+ */
+const EAGER = 4
+
+function Tile({ tile, eager }: { tile: RailTile; eager: boolean }) {
   /*
     ⚠ **`w500` fixed, rather than measured against the box.** `PosterReveal`
     measures because it is full-bleed and its box is the window. This box is now
@@ -151,7 +155,7 @@ function Tile({ tile }: { tile: RailTile }) {
       definite height is what an aspect ratio needs**, so the frame is given one
       below and the tile shrink-wraps to whatever width the ratio then produces.
     */
-    <li className="rail-focus h-full w-fit shrink-0 snap-start">
+    <li className="rail-focus h-full w-fit shrink-0">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every
@@ -253,7 +257,16 @@ function Tile({ tile }: { tile: RailTile }) {
           artwork, so a path that resolved at ingest can stop at any time.
         */}
         <span className="sr-only">{tile.title}</span>
-        {src && <Image src={src} alt="" fill sizes="100vw" className="object-contain" />}
+        {src && (
+          <Image
+            src={src}
+            alt=""
+            fill
+            sizes="100vw"
+            loading={eager ? 'eager' : 'lazy'}
+            className="object-contain"
+          />
+        )}
       </div>
     </li>
   )
