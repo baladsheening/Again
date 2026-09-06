@@ -582,7 +582,44 @@ export function ComposeScreen({
         so there is one line of air between the bar and the first image and it
         belongs to the tile rather than to the page.
       */}
-      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[var(--bar-height)] pb-[calc(var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))+var(--keyboard-overlap,0px))]">
+      {/*
+        ⚠⚠ **`--viewport-top` IS IN THE PAGE'S TOP PADDING, AND IT IS THE
+        REPORTED BUG — 6 September, from an installed app:** *the picture rail
+        moves up, with the upper part obscured as it's essentially off screen.*
+        **iOS pans the visual viewport up to reveal a focused field**, and
+        everything anchored to the top of the LAYOUT viewport goes with it —
+        over a document that has nothing to scroll, so `window.scrollY` never
+        moves and nothing but `visualViewport` can see it happen.
+        `keyboard-hem.ts` had this as `head()` until 27 August and its deletion
+        note says *if a top-pinned field ever comes back, so does this* —
+        **this is that**, for a rail rather than a field.
+
+        ⚠⚠ **A `translate-y` ON THE BROWSE HALF WAS BUILT FIRST AND IS WRONG,
+        because it moves the FLOOR as well as the ceiling.** The bottom padding
+        is already correct and always was: `--keyboard-overlap` is measured as
+        `floorAnchor.bottom − (offsetTop + vv.height)`, and `floorAnchor` is
+        fixed to the layout viewport's bottom edge — so **the pan is already
+        subtracted in it**, and the content's floor lands on the composer's real
+        top edge at any offset. A transform adds the pan a second time and
+        drives the rail `offsetTop` px INTO the sheet, which is the collision
+        this page is separately trying to remove. **Only the ceiling was ever
+        wrong; only the ceiling is corrected.**
+
+        ⚠ **No transition, and there is nothing to give one to.** Padding is not
+        in the transition list here; the pan is iOS animating the viewport, and
+        a duration of ours on top would be a second clock chasing a first.
+
+        ⚠ **The dim keys on `writing`, the geometry keys on the measurement** —
+        `--keyboard-overlap` and `--viewport-top` are **lengths**, never a
+        keyboard detector.
+
+        ⚠ **The bar is fixed at `top-0` and is anchored the same way, so it
+        pans off too and is deliberately NOT corrected here** — nothing has seen
+        it happen. If the wordmark is gone from the top edge while somebody
+        writes, the fix is `top-[var(--viewport-top,0px)]` on `bar.tsx`, which
+        is a different property from the `translate` its recede already owns.
+      */}
+      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+var(--viewport-top,0px))] pb-[calc(var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))+var(--keyboard-overlap,0px))]">
         {/*
           ⚠⚠ **WRITING DOWNSIZES THE RAIL AND DIMS IT; IT DOES NOT MOVE IT — 6
           September, directed: *when tapping in the composer, the rail should not
