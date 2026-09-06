@@ -9634,3 +9634,86 @@ intent rather than a purchase prompt, so it clears the Release 1 exclusion on
 checkout and price comparison — but it is the closest any user-facing string
 comes to that line, and §13's sourced-offers layer will one day sit beside the
 word. **If the exclusion is ever tested, this is the string to look at.**
+
+## Kind was never the axis — Amendment 6, 6 September
+
+**Asked, before the card was written: *are the values too constricting?* — with
+the origin restated.** *I frequently see things that interest me and want to
+make a record of them: a picture showing an aesthetic I like, a film, a book, an
+object, a house, a car, even an ambition — and optionally the reason I found
+them interesting.*
+
+The front page's sequence had an item 0 in front of everything: **decide `Kind`,
+four values today against §3's seven, before the card is written or every branch
+in it gets re-touched.** It is dissolved rather than answered, and the reasoning
+is worth keeping because the same shape will present itself again.
+
+### What the evidence said
+
+`captures` carries **no kind column**. It has `text`, `normalised_text`,
+`possibility_id` (nullable), `intent` (nullable), `note`, `status`, `verdict`,
+`visibility`, `source`. `kind` lives on `possibilities`, and
+`lib/db/captures.ts` reads it as `possibility?.kind ?? null`.
+
+So `Kind` never answered *what is this thing I wrote*. It answers *what sort of
+catalogue row is this*. **Two different questions**, and only the second has a
+finite answer.
+
+### The origin is the test, and four of its six examples fail a taxonomy
+
+An aesthetic, a house, a car and an ambition have no external id, no image, no
+year and no catalogue row — and an ambition never will. All four are complete
+captures today, because a capture with `possibility_id = null` is a complete
+capture. **Amendment 4 finishes the argument:** convergence is identical
+`normalised_text`, so the matching loop reads neither `kind` nor `intent`. Two
+people who each write *learn to sail* converge, and arguably that is a bigger
+event than two people wanting to see the same film. **A taxonomy cannot be
+load-bearing for a loop that never consults it.**
+
+⚠ **And any closed enumeration of *interest* fails the same way:** it grows an
+`other` that swallows the majority, and a majority sitting in `other` is the
+taxonomy reporting that it was never the right axis.
+
+### The one thing that made it look mandatory
+
+§3 of the brief derived the card's qualifier line from the kind — year for a
+film, author for a paper, locality for a place, date for an event, brand for a
+product. That is a **five-way branch to print one line**, on a card whose
+governing rule is *one wrapper, one height, never ripples*.
+
+**It is a slot solved as a taxonomy.** The possibility carries a `qualifier`
+instead, written at ingest by whoever knows what it means, and the card prints
+`title + qualifier + image?` with no branch in it. One code path; **one height
+by construction rather than by care**; and a new possibility type never
+re-touches it. ⚠ **`possibilities.year` is that column with a film's meaning
+welded into it** — superseded, not deleted, nothing migrated away from it.
+
+### What `Kind` keeps
+
+Two jobs, **both behind a resolution**: the console's resolve question (*Go
+back?* against *Keeping it?*, through `VOCABULARY` / `specFor` /
+`DEFAULT_INTENT` / `landsIn`), and catalogue identity. Neither is on the card,
+and neither is reached by an unresolved capture — which is most of them, and
+all of the ambitions. So the union is widened by **the ingest that needs it,
+with a real example in hand**, rather than guessed at now. §3's seven remain the
+conceptual target.
+
+### What was refused, and why
+
+**Widening to seven now.** It buys nothing the card needs, it commits seven rows
+of `VOCABULARY` — labels, resolve actions, questions and a `landsIn` — to
+catalogues that do not exist, and every one of those is a string somebody would
+be guessing. `Record<Kind, …>` makes the union exhaustive, so the day a real
+catalogue arrives the compiler asks the question again anyway, at the moment
+there is an example to answer it with.
+
+**Putting `kind` on the capture.** It is the thing §2 forbids, said in a column.
+
+### Named and unscheduled
+
+⚠ **The origin says *optionally the reason*, and `captures.note` has no door** —
+the column exists and nothing in `components/` or `app/` writes it. When it gets
+one it must stay **out of `normalised_text`**: *learn to sail* is the common
+intention, *because I saw a boat in Greece* is not, and matching on the reason
+would make convergence **rarer the more carefully somebody wrote** — the exact
+inverse of what §2's exact-overlap principle asks for.

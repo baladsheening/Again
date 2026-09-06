@@ -96,7 +96,7 @@ container is therefore text-first with the image as enrichment, which is what
 │    type      │
 └──────────────┘
   Name            ← the only mandatory field. one line, truncates
-  qualifier       ← the one line that says WHICH one
+  qualifier       ← the one line that says WHICH one. A FIELD, not a branch
   state           ← only when it is not the default
 ```
 
@@ -112,10 +112,18 @@ container is therefore text-first with the image as enrichment, which is what
 3. ⚠ **No image is not an error state.** The name set in the frame **is** the
    drawing. **No placeholder icon**: it says nothing at full cost, and it would
    become the app's most repeated glyph.
-4. **The qualifier is derived from `kind`, never asked.** Year for a film,
-   author for a paper, locality for a place, date for an event, brand for a
-   product. The same move `lib/vocabulary.ts` already makes deriving labels from
-   `kind + intent`. §2: *never ask the user to categorise anything.*
+4. ⚠⚠ **THE QUALIFIER IS A FIELD ON THE POSSIBILITY, AND THE CARD BRANCHES ON
+   NOTHING — 6 September, Amendment 6.** This rule read: *derived from `kind`,
+   never asked — year for a film, author for a paper, locality for a place, date
+   for an event, brand for a product.* **That is a slot solved as a taxonomy**,
+   and it was the whole reason §8 item 0 looked like a decision that had to be
+   taken first. The possibility carries **one line**, written where it is
+   ingested by whoever knows what it means — `1974`, `Ridley Scott`,
+   `Hackney`, `Toyota` — and the card prints it. ⚠ **`possibilities.year`
+   is that column with a film's meaning welded into it**: superseded, not
+   deleted, and nothing migrates away from it. ⚠ **Still never asked of the
+   user** — §2's *never ask the user to categorise anything* is what this
+   serves, not what it bends.
 5. ⚠ **A confidence state shows only when it is NOT the default.** §7's states
    are *Unverified possibility*, *Corroborated by several people*, *Identified
    by a trusted source*, *Recently confirmed nearby*, *Possibly outdated*,
@@ -276,12 +284,49 @@ never becomes public evidence without its owner's consent.
 
 ## 8. Sequence
 
-**0. ⚠ Decide `Kind`.** Four values today, seven in §3. The card branches on it,
-so this is taken **before** the card is written or it is re-touched afterwards.
-Expanding the union touches `VOCABULARY`, `specFor`, `DEFAULT_INTENT` and
-`landsIn`. ⚠ **It is not a migration** — every vocabulary column is plain `text`
-with a compile-time-only `$type<>`; see Amendment 4's correction of the enum
-claim.
+~~**0. Decide `Kind`.**~~ ⚠⚠ **DISSOLVED — 6 September, Amendment 6. THERE IS
+NO DECISION HERE AND THE CARD IS NOT BLOCKED.** It read: *four values today,
+seven in §3; the card branches on it, so this is taken before the card is
+written or it is re-touched afterwards.*
+
+**The premise was false in the model this app already has.** `captures` has
+**no kind column** — a type is a property of the **possibility**, read as
+`possibility?.kind ?? null` in `lib/db/captures.ts` — so nothing about a
+capture waits on this. **Asked from the origin, it is not even close:** a
+picture showing an aesthetic, a house, a car, **an ambition** — none of them
+resolve to a catalogue, all of them are complete captures today, and under
+Amendment 4 all of them converge on their words with nothing classified
+anywhere.
+
+⚠ **A closed enumeration of *interest* grows an `other` that swallows the
+majority**, and a majority sitting in `other` is the taxonomy reporting that it
+was never the right axis.
+
+**What replaces it, in build order:**
+
+- ⚠ **`possibilities.qualifier`, additive.** One nullable `text` column,
+  written at ingest. **Migration first, deploy second** — the runbook's
+  ordering, and the one this repository has already paid ~18h of 500s for
+  inverting. ⚠ **`year` stays**: superseded, not migrated away from.
+- **Write the card against `title + qualifier + image?`.** No `kind` branch
+  anywhere in it. That is what makes design rule 3 — *one object has one height*
+  — true by construction rather than by care.
+- ⚠ **Leave `Kind` at its four values.** It is widened by the ingest that needs
+  it, with a real example in hand. It keeps exactly two jobs, both **behind a
+  resolution**: the console's resolve question through `VOCABULARY` /
+  `specFor` / `DEFAULT_INTENT` / `landsIn`, and catalogue identity. Neither
+  is on the card; neither is reached by an unresolved capture. ⚠ **Still not a
+  migration when it does move** — every vocabulary column is plain `text` with
+  a compile-time-only `$type<>`; see Amendment 4's correction of the enum
+  claim.
+
+⚠⚠ **AND ONE THING THE ORIGIN NAMED THAT NOTHING IN THE TREE SERVES: *optionally
+the reason for finding them interesting*.** `captures.note` exists and **has no
+door** — no component in `components/` or `app/` writes it. ⚠ **When it gets
+one it must stay out of `normalised_text`**: *learn to sail* is the common
+intention, *because I saw a boat in Greece* is not, and matching on the reason
+would make convergence **rarer the more carefully somebody wrote**. Unscheduled
+and named rather than quietly deferred.
 
 ~~**1. The split.**~~ **BUILT — 5 September.** `/record` is the record,
 unchanged but for its route; `/` is `components/compose-screen.tsx`; the foot's

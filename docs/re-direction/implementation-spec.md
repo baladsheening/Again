@@ -4,7 +4,8 @@ Status: normative product and build specification
 Date: 22 August 2026  
 Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, §2 / §7 /
 §13; 4 September 2026 — Amendment 3, §8 / §9; 5 September 2026 — Amendment 4, §2 /
-§6 / §8 / §13; 5 September 2026 — Amendment 5, §5 (see *Amendments* below)
+§6 / §8 / §13; 5 September 2026 — Amendment 5, §5; 6 September 2026 — Amendment 6,
+§3 / §5 (see *Amendments* below)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -265,6 +266,67 @@ photographed thing into its salient words needs a vision model, because there is
 no OCR in Safari and OCR would be the wrong tool anyway. §6's *Optional images*
 rules and §7's evidence rules already govern both, unamended.
 
+**Amendment 6 — 6 September 2026, §3 *Possibility*, §5 *Home / Capture*.** **The
+card does not branch on possibility type, and the type is not decided before the
+card is written.**
+
+⚠⚠ **The origin, restated by the person who asked for the app, and standing
+above the rest of this amendment: *I frequently see things that interest me and
+want to make a record of them — a picture showing an aesthetic I like, a film, a
+book, an object, a house, a car, even an ambition — and optionally the reason I
+found them interesting.*** Where anything below is ambiguous, that sentence
+decides it, exactly as Amendment 5's does.
+
+⚠⚠ **A CLOSED ENUMERATION OF *INTEREST* CANNOT BE WRITTEN, AND THE MODEL ALREADY
+AGREES WITH THAT.** `captures` carries no type column and **must not be given
+one**. A type is a property of the **possibility** — the shared world record —
+and most captures will never resolve to one. An ambition never will: it has no
+external id, no image, no year, and no catalogue will ever hold it. **It is a
+first-class capture regardless, and under Amendment 4 a first-class
+convergence** — two people who each write *learn to sail* converge on the words,
+with nothing classified anywhere. Any closed list of interest grows an *other*
+that swallows the majority, and a majority sitting in *other* is the taxonomy
+reporting that it was never the right axis.
+
+⚠ **So the seven types are neither too few nor too many: they are not on the
+capture path at all.** §2's *capture before categorisation* and *never ask the
+user to categorise anything* are unamended, and this strengthens both.
+
+**What changes is the card.** §5's requirement — one container, one height,
+whatever is in it — was to be met by deriving a qualifier line from the type:
+year for a film, author for a paper, locality for a place, date for an event,
+brand for a product. ⚠⚠ **THAT IS A SLOT SOLVED AS A TAXONOMY**, and it is what
+made the type union look like a decision that had to be taken first.
+
+- **A possibility carries its own qualifier** — one line, written where it is
+  ingested, by whoever knows what it means: `1974`, `Ridley Scott`, `Hackney`,
+  `Toyota`. ⚠ **`year` is that column with a film's meaning welded into it**;
+  it is superseded rather than deleted, and nothing is migrated away from it.
+- **The card branches on nothing.** Title, qualifier, image if there is one. One
+  code path, **one height by construction rather than by care**, and adding a
+  possibility type never re-touches it.
+- ⚠ **Which dissolves the decision that was blocking the card.** The type union
+  stays at what the catalogue actually holds and is widened by the ingest that
+  needs it, with a real example in hand. §3's seven remain the conceptual
+  target; **nothing has to enumerate them in code before the corpus does.**
+
+⚠ **The type keeps two jobs and both sit behind a resolution:** the question a
+console asks when a capture is resolved (*Go back?* against *Keeping it?*), and
+catalogue identity. Neither is on the card, and neither is reached by an
+unresolved capture — which is most of them, and all of the ambitions.
+
+⚠⚠ **THE REASON A THING INTERESTED SOMEBODY IS PART OF THE ORIGIN AND HAS NO
+DOOR.** The column exists and nothing in the tree writes to it. ⚠ **It must stay
+out of the matched text**: *learn to sail* is the common intention, *because I
+saw a boat in Greece* is not, and matching on the reason would make convergence
+**rarer the more carefully somebody wrote** — the opposite of what §2 asks of
+exact overlap.
+
+**What is unchanged:** every privacy term; Amendment 4, which still reads no
+type and no intention; Amendment 5's structure and the record-first sentence
+above it; §7's evidence, provenance and confidence states; and §1's Release 1
+exclusions.
+
 ## 1. Product definition
 
 Again is a calm, private-first social app for recording things a person wants
@@ -397,6 +459,12 @@ Initial possibility types are:
 The user is not required to choose one during capture. The type may be inferred
 from a provider result or selected during later enrichment.
 
+⚠ **Amended 6 September — see Amendment 6.** The seven are the conceptual
+target, not a union that has to exist in code before the corpus does. **A
+capture has no type**, most captures never resolve to a possibility, and the
+card that shows one **does not branch on the type** — it reads a qualifier the
+possibility carries. The type is widened by the ingest that needs it.
+
 ### Claim
 
 Evidence that a possibility exists or that a capture refers to it. A claim may
@@ -494,6 +562,11 @@ them, and a user-contributed experience or an article has none. The container is
 text-first with the image as enrichment, **one height whatever is in it**,
 carrying §7's confidence states only when they are not the default. The design
 is `docs/re-direction/the-front-page.md`.
+
+⚠ **Amended 6 September — see Amendment 6. The container branches on nothing.**
+Title, a qualifier the possibility carries, and an image if there is one. One
+height **by construction rather than by care**, and a new possibility type never
+re-touches it.
 
 ### My things
 

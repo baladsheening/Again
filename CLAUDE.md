@@ -24,6 +24,48 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE CARD BRANCHES ON NOTHING, AND STEP 0 OF THE FRONT PAGE'S SEQUENCE IS
+DISSOLVED RATHER THAN ANSWERED — 6 September, Amendment 6.** The sequence said
+*decide `Kind` — four values today, seven in §3 — before the card is written or
+it is re-touched afterwards.* **The premise was false in the model this app
+already has**, and asking it from the origin is what showed it: *I see things
+that interest me and want to make a record of them — an aesthetic, a film, a
+book, an object, a house, a car, even an ambition, and optionally the reason.*
+
+- ⚠⚠ **`captures` HAS NO KIND COLUMN AND MUST NOT BE GIVEN ONE.** A type is a
+  property of the **possibility** — `lib/db/captures.ts` reads it as
+  `possibility?.kind ?? null` — and most captures never resolve to one. **An
+  ambition never will**: no external id, no image, no year, and no catalogue
+  will ever hold it. It is a complete capture today and, under Amendment 4, a
+  first-class convergence, because the words are what match.
+- ⚠ **A closed enumeration of *interest* grows an `other` that swallows the
+  majority**, and a majority in `other` is the taxonomy saying it was never the
+  right axis. §2's *capture before categorisation* is strengthened by this, not
+  bent.
+- ⚠⚠ **THE QUALIFIER WAS A SLOT SOLVED AS A TAXONOMY.** §3 of the brief derived
+  the card's one line from the kind — year for a film, author for a paper,
+  locality for a place. **That branch is what made the union look load-bearing.**
+  The possibility carries a `qualifier` instead, written at ingest, and the card
+  prints `title + qualifier + image?` with **no branch anywhere in it** — which
+  is design rule 3, *one object has one height*, made true by construction
+  rather than by care.
+- ⚠ **`possibilities.year` is that column with a film's meaning welded into it**
+  — superseded, not deleted, and nothing migrates away from it. The new column
+  is additive and **the migration still goes before the deploy**.
+- ⚠ **`Kind` stays at four and keeps two jobs, both BEHIND A RESOLUTION:** the
+  console's resolve question (`VOCABULARY` / `specFor` / `DEFAULT_INTENT` /
+  `landsIn`) and catalogue identity. Neither is on the card; neither is reached
+  by an unresolved capture. It is widened by the ingest that needs it, with a
+  real example in hand.
+- ⚠⚠ **AND THE ORIGIN NAMED SOMETHING NOTHING IN THE TREE SERVES: *optionally
+  the reason*.** `captures.note` exists and **has no door** — nothing in
+  `components/` or `app/` writes it. ⚠ **When it gets one it stays out of
+  `normalised_text`**: *learn to sail* is the common intention, *because I saw a
+  boat in Greece* is not, and matching on the reason would make convergence
+  **rarer the more carefully somebody wrote**. Named, unscheduled.
+- **Nothing is built by this entry.** It is Amendment 6 to the implementation
+  specification, §3 rule 4 and §8 item 0 of `docs/re-direction/the-front-page.md`.
+
 ⚠⚠ **A CAPTURE STOPS BEING A DRAFT AND BECOMES A STATEMENT, IN PLACE — directed
 5 September, and it DELETES THE RECEIPT ABOVE THE COMPOSER.** *When writing, text
 that has passed is partially dimmed, so that when the arrow is tapped it all goes
