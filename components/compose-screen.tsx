@@ -1358,7 +1358,18 @@ export function ComposeScreen({
               That is `--tap-floor`'s whole point: hardware does not get bigger
               because a window did.
             */}
-            <div className="flex min-h-[var(--tap-floor)] items-center">
+            {/*
+              ⚠⚠ **`foot-clear` IS WHAT MAKES THE BAND AND THE FOOT READ EQUAL
+              IN A SAFARI TAB — 7 September, reported from a handset.** The band
+              above the card is `--tap-floor`; the air below it is this row's
+              hem, its own air around a `--glyph-foot` drawing, and the notch's
+              clearance. On a notched handset that came to 43.875 against the
+              band's 44 and looked right; **in a tab the inset is zero, so it
+              was 25.5** and the band read as nearly twice the foot. See
+              `foot-clear` for the derivation and why the air is here rather
+              than on the strip's padding.
+            */}
+            <div className="max-stack:foot-clear flex min-h-[var(--tap-floor)] items-center">
               <Foot
                 home="here"
                 record="away"

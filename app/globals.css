@@ -5315,14 +5315,35 @@
     because with no notch both versions compute zero. See the deleted token for
     the full account. **Do not lift this into a variable again.**
   */
-  padding-block: 0
-    max(
-      0px,
-      calc(
-        env(safe-area-inset-bottom) - var(--keyboard-height, 0px) -
-          var(--sheet-air) / 2 - var(--sheet-drop)
-      )
-    );
+  /*
+    ⚠⚠ **IT IS A PROPERTY ON THIS ELEMENT NOW, AND THAT IS NOT THE MISTAKE THE
+    PARAGRAPH ABOVE FORBIDS — 7 September.** The failure it records is a token on
+    `:root`: a `var()` is substituted where the property is **declared**, so
+    `--keyboard-height` resolved against `:root`, where `useKeyboardHem` never
+    writes it, and took the fallback. **Declared here it resolves at the strip**,
+    which is a descendant of `host` and is already the element reading
+    `--keyboard-overlap` for its own `bottom`. The rule the warning states is
+    unchanged and this obeys it — what must never happen is the expression moving
+    to an element the script does not write to.
+
+    ⚠ **`foot-clear` is why it has a name at all**, and one reader is the whole
+    justification: the foot's own air has to know what the notch already gave it,
+    and writing the expression twice is two things to keep in step. **A second
+    reader is the point at which this should be looked at again**, not a licence.
+
+    ⚠ **Proved with the inset overridden**, because the 30 August bug was
+    invisible without one — `Emulation.setSafeAreaInsetsOverride` in
+    `node_modules/.probe/bandink.mjs`, at 0 and at 34. With no notch both
+    spellings compute zero and a desk browser can tell you nothing.
+  */
+  --sheet-clearance: max(
+    0px,
+    calc(
+      env(safe-area-inset-bottom) - var(--keyboard-height, 0px) -
+        var(--sheet-air) / 2 - var(--sheet-drop)
+    )
+  );
+  padding-block: 0 var(--sheet-clearance);
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -5392,6 +5413,58 @@
     background: linear-gradient(to top, var(--color-bg), transparent);
     pointer-events: none;
   }
+}
+
+/**
+ * **The air under the foot's glyphs, so the band and the foot read equal on a
+ * surface with no home indicator — 7 September, reported from a handset:** *when
+ * idle, in Safari on the phone, the band looks bigger than the foot.*
+ *
+ * ⚠⚠ **THE EQUALITY WAS AN ACCIDENT OF THE NOTCH, AND THAT IS WHY IT HELD IN
+ * ONE PLACE AND NOT THE OTHER.** The band above the composer is `--tap-floor`.
+ * The air below it is the card's hem, the foot row's own air either side of a
+ * `--glyph-foot` drawing, and then whatever `--sheet-clearance` gave. Measured
+ * idle at 390×844 with the inset overridden: **44 above against 43.875 below in
+ * the installed app, and 44 against 25.5 in a tab**, where the inset is zero and
+ * there is no clearance to spend. The installed app has always looked right by
+ * arithmetic nobody chose — the iPhone's 34px happening to land where the band
+ * already was.
+ *
+ * ⚠ **It completes the band rather than adding to it**, so it is a `max()` down
+ * to zero and not a hem: on a notched handset the clearance has already paid
+ * nearly all of it and this contributes 0.125px. **The installed app does not
+ * move**, which is the test of a fix aimed at the other surface.
+ *
+ * ⚠ **On the FOOT ROW and never on the strip's own padding.** That padding is
+ * the notch's clearance and is cancelled by `--keyboard-height` while somebody
+ * writes — a floor under it would put dead space above the keyboard, which is
+ * the 6 September bug rebuilt. The foot row is mounted only when nobody is
+ * writing, so the air arrives and leaves with the thing it is spacing.
+ *
+ * ⚠ **Below `--breakpoint-stack` only, applied as `max-stack:foot-clear`.** Up
+ * there the `<footer>` is `stack:hidden` and the row is an empty 44px box, so
+ * this would be air under nothing.
+ *
+ * ⚠⚠ **A MARGIN, AND IT WAS A PADDING FOR A BUILD.** The row is
+ * `min-h-[var(--tap-floor)]` and everything here is `border-box`, so a padding
+ * sat **inside** the 44px and pushed the glyphs up the row instead of adding air
+ * under it — measured 18.5px of padding buying 0px of height. The row's 44 is a
+ * thumb's reach and may not be spent; the air belongs outside it. **The strip is
+ * a flex column, so there is nothing for the margin to collapse into.**
+ *
+ * ⚠ **No pixel in it.** `--tap-floor` is the band, `--line-hem` × 1.5 is the gap
+ * the card already spends, and `--tap-floor − --glyph-foot` is the row's own air
+ * around its drawing. It follows the desk's root scale and any change to the
+ * glyph.
+ */
+@utility foot-clear {
+  margin-block-end: max(
+    0px,
+    calc(
+      var(--tap-floor) - var(--line-hem) * 1.5 -
+        (var(--tap-floor) - var(--glyph-foot)) - var(--sheet-clearance)
+    )
+  );
 }
 
 /**
