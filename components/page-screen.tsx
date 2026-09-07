@@ -3862,7 +3862,7 @@ export function PageScreen({
         ref={sheet}
         className={`writing-sheet z-20 transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
           writing
-            ? 'sheet-lit'
+            ? 'sheet-lit sheet-over-keys'
             : `stack:pointer-events-none stack:translate-y-full bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] ${
                 chrome.strip ? 'pointer-events-none translate-y-full' : ''
               }`

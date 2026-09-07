@@ -5414,11 +5414,53 @@
     `node_modules/.probe/bandink.mjs`, at 0 and at 34. With no notch both
     spellings compute zero and a desk browser can tell you nothing.
   */
-  --sheet-clearance: max(
-    0px,
-    calc(
-      env(safe-area-inset-bottom) - var(--keyboard-height, 0px) -
-        var(--sheet-air) / 2 - var(--sheet-drop)
+  /*
+    ⚠⚠ **THE `--keyboard-height` TERM IS DELETED — 7 September, THE SAME DAY IT
+    LANDED, AND IT IS THE `--keyboard-overlap` MISTAKE UNDER A NEW NAME.**
+    Reported from a handset: *tapping the card in the home app, the strip
+    frequently — more than not — jolts before settling; this does not happen on
+    the Safari page.*
+
+    ⚠ **Measured, `node_modules/.probe/sheetjolt.mjs`, with the inset overridden
+    at 34 and at 0: the card travels 18.37px as the term ramps, and 0.00px with
+    no notch.** That is exactly the pair of surfaces reported, and the expression
+    predicts it — with the inset at zero the `max()` is zero from both ends, so
+    there is nothing to move.
+
+    ⚠⚠ **THE TERM WAS A CONTINUOUS MEASUREMENT ANSWERING A BINARY QUESTION.**
+    `useKeyboardHem` samples it every frame for the length of the keyboard's
+    animation, so the whole 18.37px was spent at whichever frame the ramp crossed
+    the clamp — on the main thread, against a pan and a resize iOS is running on
+    the compositor. **That is why it is intermittent rather than constant:** the
+    step lands in a different place each time, and only sometimes where it shows.
+
+    ⚠ **CLAUDE.md already says this in two places, about the other property:**
+    *keyed on `writing`, NEVER on `--keyboard-overlap`* — and `useKeyboardHem`
+    says in writing that its numbers are not keyboard detectors. **The question
+    here is *is the keyboard over the home indicator*, which is a state, and the
+    app has held it as `writing` all along.** `sheet-over-keys` carries it.
+
+    ⚠ **So the change is one discrete step at the gesture**, alongside the third
+    line, the bar's recede and the foot unmounting — all of them already keyed on
+    `writing`. It cannot land mid-animation because it does not happen during
+    one.
+
+    ⚠ **One declaration and a fallback, never two rules on one property.** The
+    same trap `chrome-ink-gone` records: `@utility` output is ordered by Tailwind
+    and not by this file, so a second rule re-declaring `--sheet-clearance` would
+    win or lose by emission order. The writing class declares an inherited
+    property that nothing else sets, and with the class off there is nothing to
+    resolve and the fallback is the expression.
+
+    ⚠ **`foot-clear` still reads `--sheet-clearance` and is unaffected**: the
+    foot row is mounted only when nobody is writing, so it never sees the
+    cancelled value.
+  */
+  --sheet-clearance: var(
+    --sheet-clearance-writing,
+    max(
+      0px,
+      calc(env(safe-area-inset-bottom) - var(--sheet-air) / 2 - var(--sheet-drop))
     )
   );
   padding-block: 0 var(--sheet-clearance);
@@ -5514,7 +5556,7 @@
  * move**, which is the test of a fix aimed at the other surface.
  *
  * ⚠ **On the FOOT ROW and never on the strip's own padding.** That padding is
- * the notch's clearance and is cancelled by `--keyboard-height` while somebody
+ * the notch's clearance and is cancelled by `sheet-over-keys` while somebody
  * writes — a floor under it would put dead space above the keyboard, which is
  * the 6 September bug rebuilt. The foot row is mounted only when nobody is
  * writing, so the air arrives and leaves with the thing it is spacing.
@@ -5589,6 +5631,33 @@
  * which is the top of the keyboard.** Do not answer that report by moving the
  * air; the air is what centres the glyphs a thumb has to hit.
  */
+
+/**
+ * **The strip is over the keys, so the home indicator's clearance is not its to
+ * spend — 7 September.** Worn by both strips while somebody is writing.
+ *
+ * `env(safe-area-inset-bottom)` keeps content off the home indicator, which is
+ * right while the strip sits on the bottom edge of the glass. With a keyboard up
+ * the keyboard is already covering the indicator, and iOS goes on reporting 34px
+ * because the inset describes the display rather than what is drawn over it.
+ *
+ * ⚠⚠ **IT IS A STATE AND NOT A MEASUREMENT, WHICH IS THE WHOLE POINT.** This
+ * replaced a `--keyboard-height` term sampled every frame for the length of the
+ * keyboard's animation — see `--sheet-clearance` for the 18.37px jolt that
+ * produced and why it only showed in the installed app. **Do not re-derive this
+ * from `--keyboard-overlap`, `--keyboard-height`, or any other viewport
+ * arithmetic**: CLAUDE.md says twice that this question is keyed on `writing`,
+ * and `useKeyboardHem` says in writing that its numbers are not keyboard
+ * detectors.
+ *
+ * ⚠ **One inherited property, declared nowhere else**, so `writing-sheet`'s own
+ * declaration keeps the expression as its fallback and no two rules ever set
+ * `--sheet-clearance`. That is `chrome-ink-gone`'s lesson about `@utility`
+ * emission order, applied before it could bite a second time.
+ */
+@utility sheet-over-keys {
+  --sheet-clearance-writing: 0px;
+}
 @utility sheet-lit {
   background-color: var(--sheet-tint);
   backdrop-filter: blur(var(--sheet-blur));

@@ -134,45 +134,35 @@ export function useKeyboardHem({
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
 
       /*
-        ⚠⚠ **THE KEYBOARD'S OWN HEIGHT, BECAUSE `--keyboard-overlap` IS ZERO ON
-        iOS AND THE CLEARANCE ABOVE READS IT — 7 September.** Reported from a
-        handset: *why, when writing, does the composer foot look bigger than the
-        band on the home app? On the Safari page it looks the same.*
+        ⚠⚠ **`--keyboard-height` WAS WRITTEN HERE AND IS DELETED — 7 September,
+        the same day it landed. It is a TOMBSTONE, not a gap to fill.**
 
-        ⚠ **The overlap cancels to nothing on iOS, and two measured facts say
-        why.** `visualViewport.offsetTop + visualViewport.height` equalled
-        `clientHeight` in every sample of every trace on the device; and a
-        `fixed` element's rect is reported against the **visual** viewport
-        there — a host at `top: 0` read `top: -271`. So the ruler's `bottom` is
-        the visible height, the subtraction above is
-        `visible − (offset + visible)`, and the clamp turns that into a
-        confident **0**.
+        It measured `clientHeight - visualViewport.height` every frame, and its
+        one consumer was `--sheet-clearance`, which spent the notch's inset
+        *less* this height so the strip would stop reserving the home
+        indicator's clearance while a keyboard covered the indicator.
 
-        ⚠ **Which is harmless for the strip's position and wrong for its
-        clearance.** At zero the strip sits on the layout viewport's bottom edge,
-        which the invariant makes the visible bottom, so it lands right. But
-        `writing-sheet` also spends `env(safe-area-inset-bottom)` **less the
-        overlap** — so with the overlap stuck at zero it keeps the home
-        indicator's clearance while a keyboard is covering the indicator. **In
-        the installed app that is ~34px of dead space under the card; in a
-        Safari tab the inset is 0 and nothing shows.** That is exactly the pair
-        of behaviours reported.
+        ⚠ **It fixed the dead space and bought a jolt.** Reported within hours:
+        *tapping the card in the home app, the strip frequently — more than not —
+        jolts before settling; this does not happen on the Safari page.* Measured
+        with the inset overridden, the card travels **18.37px at inset 34 and
+        0.00px at inset 0** as the term ramps — the reported pair of surfaces,
+        exactly.
 
-        ⚠⚠ **THIS IS A SECOND MEASUREMENT, NOT A CORRECTION OF THE FIRST. DO NOT
-        MAKE `--keyboard-overlap` EQUAL THIS.** The strip's `bottom` reads the
-        overlap, and at 271 rather than 0 it would ride a keyboard's height
-        **above** the keyboard.
+        ⚠⚠ **THE FAULT IS THE SHAPE, NOT THE ARITHMETIC.** A continuous
+        measurement was answering a binary question, so the whole step was spent
+        at whichever frame the ramp crossed the clamp — on the main thread,
+        against a pan and a resize iOS runs on the compositor. **Intermittent
+        because the frame it lands on moves.**
 
-        ⚠ **`clientHeight`, and here that is defensible where `keyboard-hem`'s
-        own note warns against it.** The warning is about deriving a *position*
-        from numbers browsers disagree on with a keyboard open. This is the
-        layout viewport's height, which the traces showed constant at 660
-        through every state, minus a height the platform states outright.
+        ⚠ **The question — *is the keyboard over the home indicator* — is a state
+        this app already holds as `writing`**, which is what `sheet-over-keys`
+        reads. That is CLAUDE.md's own standing rule, written twice about
+        `--keyboard-overlap`, and this file's own warning that its numbers are
+        not keyboard detectors. **Do not write a keyboard's height from here
+        again.** If something genuinely needs the number rather than the state,
+        it needs a reason this note does not anticipate.
       */
-      box.style.setProperty(
-        '--keyboard-height',
-        `${Math.max(0, Math.round(document.documentElement.clientHeight - vv.height))}px`,
-      )
 
       /*
         ⚠⚠ **HOW FAR iOS HAS PANNED THE PAGE UP TO REVEAL THE FIELD — 6
@@ -285,7 +275,6 @@ export function useKeyboardHem({
         keyboard's worth of dead space under it for the rest of the session.
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
-      hostEl?.style.removeProperty('--keyboard-height')
       hostEl?.style.removeProperty('--viewport-top')
     }
   }, [writing, host, floorAnchor])
