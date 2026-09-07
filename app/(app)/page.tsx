@@ -1,13 +1,11 @@
 import { redirect } from 'next/navigation'
 
 import { ComposeScreen } from '@/components/compose-screen'
-import { Rail } from '@/components/rail'
 import {
   getMyProfile,
   portalWaiting,
   getSessionUser,
   listMyPage,
-  listRail,
   UNDO_WINDOW_MS,
 } from '@/lib/db'
 import { imagesAvailable } from '@/lib/media'
@@ -56,16 +54,15 @@ export default async function ComposePage() {
     refactor from displaying one. The door has to be right on the first paint,
     which only the server can know.
   */
-  const [firstRow, waiting, tiles] = await Promise.all([
+  /*
+    ⚠ **The corpus read is gone from this page — 7 September.** The browse half
+    was taken off the front page so the keyboard could be judged with one
+    variable on screen; `listRail` and everything under it is untouched in
+    `lib/db` and comes back with the rail.
+  */
+  const [firstRow, waiting] = await Promise.all([
     listMyPage(sessionUser, { limit: 1 }),
     portalWaiting(sessionUser),
-    /*
-      ⚠ **In parallel with the other two, so the composer never waits on the
-      corpus.** §2's *remove friction before adding intelligence*: the primary
-      product quality is the speed of capture, and a rail that is slow to read
-      must not hold up the box somebody types in.
-    */
-    listRail(sessionUser),
   ])
 
   return (
@@ -77,7 +74,6 @@ export default async function ComposePage() {
         client entirely. Passing `tiles` instead would pull all of it
         across the boundary to render the same thing.
       */
-      rail={<Rail tiles={tiles} />}
       portalWaiting={waiting}
       searchable={firstRow.length > 0}
       /*

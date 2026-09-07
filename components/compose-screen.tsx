@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
@@ -37,23 +37,11 @@ import type { PortalWaiting } from '@/lib/db'
  * for new ones**. Two single-purpose objects where there was one that did both.
  */
 export function ComposeScreen({
-  rail,
   portalWaiting,
   searchable,
   imagesOn,
   undoWindowMs,
 }: {
-  /**
-   * The browse half, rendered on the server and handed down finished.
-   *
-   * ⚠ **A NODE rather than the rows.** This component is `'use client'`
-   * because the composer is; the rail is pure markup with no state, so it
-   * crosses the boundary already rendered and adds nothing to the bundle.
-   * **The portal hands its console down the same way, for the same reason.**
-   * ⚠ **Do not import `Rail` here** — that would pull the corpus read and
-   * every image URL across with it.
-   */
-  rail: ReactNode
   /** Phase 2 step 3: is there anything to say. One bit — never a count. */
   portalWaiting: PortalWaiting
   /** Whether there is a record to search. */
@@ -584,91 +572,34 @@ export function ComposeScreen({
       <Bar />
 
       {/*
-        ⚠ **The browse half, filled since 6 September.** It held the column open
-        while it was empty and still does the same job: the composer sits on the
-        bottom edge and the rail sits under the bar.
+        ⚠⚠ **THE BROWSE HALF IS GONE FROM THIS PAGE — 7 September, directed:
+        *do this from scratch, from first principles; wipe out everything on the
+        front page currently in existence except the strip and the way things
+        work in the composer that we settled days ago.*
 
-        ⚠ **The rail is at the TOP of it, not centred in it.** *The bottom edge
-        is for what you do without looking, the top edge is for what you go to
-        on purpose* — browsing is the deliberate half, so it starts where the
-        eye starts.
+        ⚠⚠ **THE REASON IS THAT THE KEYBOARD AND THE RAIL WERE ENTANGLED, AND
+        NEITHER COULD BE JUDGED WITH THE OTHER ON SCREEN.** Five fixes were
+        built and deployed in one day for *the page jolts when I tap in the
+        composer* and *the images don't resize properly*, and every one of them
+        corrected the wrong half, because a page that moves and a rail that
+        resizes late look the same from a handset. **With nothing here but the
+        strip, "does it jolt" has exactly one possible cause.**
 
-        ⚠⚠ **AND IT STARTS AT THE BAR'S OWN EDGE — the `1.25rem` under the bar
-        is DELETED, 6 September, directed: *move the rail up closer to the
-        title.*** A subtraction rather than a smaller number, which is the order
-        *How things get fixed* asks for. ⚠ **The rail is not flush against the
-        wordmark even so**: each tile carries the openings row above its picture,
-        so there is one line of air between the bar and the first image and it
-        belongs to the tile rather than to the page.
+        ⚠ **The corpus is untouched.** `possibilities`, `listRail`,
+        `items_rail_idx` and the backfills all stay; it is the reader that has
+        gone. `components/rail.tsx` is deleted and is in git at `395b767`.
+
+        ⚠⚠ **NOTHING BELOW THIS LINE CHANGED.** The strip, the card, the
+        measured cap, the third line on focus, the line that lands in place, the
+        undo, the `+`, the failure line and the foot are exactly as they were.
+        **That was the condition this was done under and it is the thing to
+        check first if anything about writing feels different.**
+
+        ⚠ **`main` stays as the page's landmark and its height.** It has no
+        padding for a bar or a reserve for the sheet any more, because it has
+        nothing in it to keep clear of them.
       */}
-      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[var(--bar-height)] pb-[calc(var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))+var(--keyboard-overlap,0px))]">
-        {/*
-          ⚠⚠ **WRITING DOWNSIZES THE RAIL AND DIMS IT; IT DOES NOT MOVE IT — 6
-          September, directed: *when tapping in the composer, the rail should not
-          move up but downsize and dim.*** It is anchored under the bar, so
-          taking height off its **bottom** is the whole of *downsize without
-          moving* — nothing translates and the first picture does not shift a
-          pixel.
-
-          ⚠⚠ **THE HEIGHT READS `--keyboard-overlap` AND THE DIM READS
-          `writing`, AND THAT SPLIT IS DELIBERATE.** CLAUDE.md's rule is *keyed
-          on `writing`, never on `--keyboard-overlap`* — and it is a rule
-          about using that property as a **keyboard detector**, which it is not:
-          it measures a gap that also opens when a Safari tab's address bar
-          collapses during a scroll. **Here it is used as a LENGTH**, to put the
-          rail's floor on the composer's real top edge, which is the one thing
-          it does measure honestly. ⚠ **Read it as a boolean here and this page
-          re-acquires the bug it shipped on 24 August.**
-
-          ⚠ **Without the overlap term the composer sits ON the rail.** The
-          sheet rides to the top of the keyboard while `--sheet-block` is only
-          its own height, so the rail's floor stayed at the glass and 336px of
-          picture went behind the keys — *the rail overlaps it*, reported once
-          already and reintroduced by every fix that forgets this term.
-
-          ⚠ **60%, because that is the app's one existing fade.**
-          `--color-muted` is the ink at 60%, so a rail that recedes to the same
-          fraction recedes by the same amount as every secondary thing on the
-          screen. **Not a number picked for this.**
-
-          ⚠ **`--recede` on `--ease-recede`, the app's one duration and one
-          curve**, collapsed from two on 24 August precisely so nobody sets a
-          second equal to it.
-        */}
-        {/*
-          ⚠⚠ **THE `translate-y` IS WHAT KEEPS THE RAIL ON SCREEN, AND IT IS
-          THE REPORTED BUG — 6 September, from an installed app:** *the picture
-          rail moves up, with the upper part obscured as it's essentially off
-          screen.* **iOS pans the visual viewport up to reveal a focused field**,
-          and everything anchored to the top of the page goes with it — over a
-          document that has nothing to scroll, so `window.scrollY` never moves
-          and nothing else can see it happen.
-
-          ⚠ **`--viewport-top` is `visualViewport.offsetTop`**, written by the
-          same rAF loop that writes the overlap, so the two cannot disagree
-          about where the page is. Translating **down** by it puts the rail back
-          where it was drawn. `keyboard-hem.ts` had exactly this as `head()`
-          until 27 August and its deletion note says *if a top-pinned field ever
-          comes back, so does this* — **this is that**, for a rail rather than a
-          field.
-
-          ⚠ **The dim keys on `writing` and the pin keys on the measurement**,
-          the same split the height already makes: `--keyboard-overlap` and
-          `--viewport-top` are **lengths**, never a keyboard detector.
-
-          ⚠ **No transition on the transform.** The pan is iOS animating the
-          viewport; a duration of ours on top of it would be a second clock
-          chasing a first, which is the failure `--recede` was collapsed to one
-          value to avoid.
-        */}
-        <div
-          className={`flex min-h-0 flex-1 translate-y-[var(--viewport-top,0px)] flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
-            writing ? 'opacity-60' : 'opacity-100'
-          }`}
-        >
-          {rail}
-        </div>
-      </main>
+      <main className="gutter mx-auto h-svh w-full max-w-[var(--record-measure)]" />
 
       {/* A zero-height fixed twin on the viewport's bottom edge — see `useKeyboardHem`. */}
       <div ref={floorAnchor} aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-0" />
