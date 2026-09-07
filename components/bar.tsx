@@ -95,7 +95,26 @@ export function Bar({
         340ms — see `--recede` for why the two tokens collapsed rather than being
         set equal, and why re-splitting them needs a hardware reason.
       */
-      className={`mark-glow fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+      /*
+        ⚠⚠ **`top` IS THE PAN, NOT ZERO — 7 September, and it is the ONLY
+        change on a page stripped to the strip.** Reported with nothing else on
+        the front page: *the logo row goes off screen; it doesn't come back.*
+        iOS does not shrink the layout viewport for a keyboard — it pans the
+        **visual** viewport down inside it — and a `fixed` box is anchored to
+        the layout one, so the bar ends up above everything the reader can see
+        and stays there.
+
+        ⚠ **`--viewport-top` is `visualViewport.offsetTop`, already written by
+        `useKeyboardHem` and until now read by nothing.** The writer went in on
+        6 September and its consumer here was lost in a revert; this is that
+        line coming back on its own, on a page with one variable on it, rather
+        than as part of a stack of five corrections.
+
+        ⚠ **The fallback is `0px`, so every other surface is untouched** — the
+        property is only written while somebody is writing, and only onto the
+        host that asked for it.
+      */
+      className={`mark-glow fixed inset-x-0 top-[var(--viewport-top,0px)] z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
         receded ? '-translate-y-full' : ''
       }`}
     >
