@@ -668,41 +668,45 @@ export function ComposeScreen({
         for it; look at it then.**
       */}
       {/*
-        ⚠⚠ **THE BOTTOM THIRD OF THE SCREEN BELONGS TO THE COMPOSER — 6
-        September, directed:** *I want the bottom third of the screen to the
-        composer and the sheet and that part of the screen; the images can exist
-        in the top two thirds between the logo row and the bottom third.* The
-        strip was content-sized — 231px of an 852px screen, a shade over a
-        quarter — so the split was whatever the card, the hem and the foot
-        happened to add up to.
+        ⚠⚠ **THE BOTTOM-THIRD FLOOR IS GONE, AND IT WAS WHAT MADE THE BAND LOOK
+        BIGGER THAN THE FOOT — 7 September, reported from a handset.** The strip
+        carried `min-block-size: (100svh − --keyboard-overlap) / 3` with
+        `justify-end`, and its own note said in writing that *what the floor adds
+        is empty strip over the band*. Measured idle at 390×844: content 225.5
+        against a third of 281.33, so **55.83px of empty glass sat above a 44px
+        band** — the reader sees 99.83 above the card against 51.5 below it, and
+        the band and the foot's row being equal at 44 each is invisible
+        underneath that.
 
-        ⚠ **A floor, not a height.** `min-block-size` leaves the strip free to be
-        taller when it needs to be — a failure line, a third line of writing, the
-        desk's root scale — and only holds the third when the content is shorter
-        than that. **The composer never shrinks to fit a fraction.**
+        ⚠⚠ **THE CONDITION IT WAS DIRECTED UNDER NO LONGER EXISTS.** It was
+        directed 6 September as *I want the bottom third of the screen to the
+        composer and the sheet and that part of the screen; **the images can
+        exist in the top two thirds** between the logo row and the bottom third*
+        — a reservation of the bottom third **against the rail**.
+        `components/rail.tsx` was deleted on 6 September (`a7be55c`), so the
+        floor has been holding a third of the screen against nothing.
+        **Subtraction rather than a correction**, which is the order
+        `CLAUDE.md`'s *How things get fixed* asks for.
 
-        ⚠⚠ **A THIRD OF WHAT IS ON SCREEN, NOT A THIRD OF THE DISPLAY.**
-        `100svh − --keyboard-overlap` is the space a reader can actually see, so
-        with the keys up the third is taken of what is left above them. Without
-        that term a keyboard would leave the strip claiming a third of the whole
-        display **on top of** the keyboard — 620px of 852 gone, and the rail
-        squeezed into what remained. With it, the writing state is content-sized
-        exactly as before, because the content is already taller than a third of
-        the visible area.
+        ⚠ **IT COMES BACK WITH THE RAIL, AND IT IS ONE CLASS:**
+        `max-stack:min-h-[calc((100svh_-_var(--keyboard-overlap,0px))/3)]`. What
+        it must carry back with it is recorded here rather than lost — the
+        `100svh − --keyboard-overlap` term, because a third of the whole display
+        with the keys up is 620px of 852 claimed **on top of** the keyboard; a
+        **floor** rather than a height, so a failure line or a third line of
+        writing can still make the strip taller; `justify-end`, so the room goes
+        above the content and the composer's bottom edge never moves; and
+        `max-stack:`, because on the desk the strip is the field alone and a
+        third of a tall window is a great empty pane of glass over one line.
 
-        ⚠ **`justify-end`, so the room goes ABOVE the content.** The card, the
-        hem and the foot keep the bottom edge they have always had; what the
-        floor adds is empty strip over the band. **Nothing about the composer
-        moves.**
-
-        ⚠ **Below `--breakpoint-stack` only.** Up there the strip is the field
-        alone with no foot bar, so a third of a tall window would be a great
-        empty pane of glass over a single line. **`--breakpoint-stack` is one of
-        the app's own three**, not a fourth invented for this.
+        ⚠ **The writing state never used it and does not change.** With the keys
+        up the content is already taller than a third of what is left visible —
+        20 + 154 + 20 against 169 on this handset — so the floor was inactive
+        there. **Only the idle glass moved**, and nothing about the composer did.
       */}
       <div
         ref={sheet}
-        className="writing-sheet z-20 flex flex-col justify-end max-stack:min-h-[calc((100svh_-_var(--keyboard-overlap,0px))/3)]"
+        className="writing-sheet z-20 flex flex-col justify-end"
       >
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
