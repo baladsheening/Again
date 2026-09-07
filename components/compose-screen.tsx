@@ -562,10 +562,24 @@ export function ComposeScreen({
         ⚠ **The stated cost, which was weighed and accepted:** the top of the
         screen is empty while you write. That is chosen rather than imposed.
 
-        ⚠ **`top-[var(--viewport-top)]` stays on `bar.tsx` and must not be
-        removed as redundant.** It is what puts the bar back on the screen's
-        edge for the frames around the blur, when it is on its way in and iOS
-        has not finished putting the page back.
+        ⚠⚠ **THIS BLOCK USED TO SAY `top-[var(--viewport-top)]` STAYS ON
+        `bar.tsx` AND MUST NOT BE REMOVED. IT IS NOT THERE, AND THE CLAIM IS
+        DELETED RATHER THAN CORRECTED — 7 September.** The bar is `top-0`. That
+        correction was tried the same day and measured worse three ways — see
+        `bar.tsx`, which has the readings — and `--viewport-top` is no longer
+        written on this page at all, because `useKeyboardHem` came off it with
+        the strip's `fixed` positioning.
+
+        ⚠ **A comment describing a mechanism that is not there is worse than no
+        comment**, because the next reader trusts it. This one survived a day
+        and was found by reading the two files against each other.
+
+        ⚠ **The bar is the last `fixed` box on this screen, and if anything is
+        still seen to jolt on the BLUR, that is the suspect and the answer is
+        the strip's, not a correction:** put it in flow as the column's first
+        child. It reserves the same height either way — `main` is the spacer —
+        so the layout does not move, and `mark-glow`'s `::before` would need
+        `position: relative` on the header to keep its containing block.
       */}
       <Bar receded={writing} />
 
