@@ -713,7 +713,26 @@ export function ComposeScreen({
           surface with a corner radius, which reads as cut off when it meets an
           edge.
         */}
-        <div className="gutter mx-auto w-full max-w-[var(--record-measure)] pb-[calc(var(--line-hem)*1.5)]">
+        {/*
+          ⚠⚠ **THE AIR UNDER THE CARD IS THE AIR BESIDE IT WHILE SOMEBODY
+          WRITES — 7 September, directed.** `gutter` is what holds the card off
+          the screen's edges, so with the foot gone the card is inset by the
+          same amount on all four sides: `--gutter-l` above it in the band,
+          `--gutter-l` below it here, `--gutter-l` either side.
+
+          ⚠ **At rest it is the card's gap to the FOOT and stays `--line-hem`
+          × 1.5**, which is what the strip has spent between a card and a bar
+          since 28 August. The foot is the bottom element then, so this is not
+          the page's edge and must not be squared with it.
+
+          ⚠ **It transitions with the band, on the one duration and curve**, or
+          the two halves of the same inset arrive at different times.
+        */}
+        <div
+          className={`gutter mx-auto w-full max-w-[var(--record-measure)] transition-[padding-bottom] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+            writing ? 'pb-[var(--gutter-l)]' : 'pb-[calc(var(--line-hem)*1.5)]'
+          }`}
+        >
           {/*
             ⚠⚠ **THE BAND ABOVE THE COMPOSER IS BACK, AND NOTHING LANDS IN IT —
             6 September, directed:** *I want the old sheet back but I don't want
@@ -780,7 +799,7 @@ export function ComposeScreen({
             className={`transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
               writing
                 ? 'h-[var(--gutter-l)]'
-                : 'h-[calc(var(--leading-line)+var(--line-hem)*1.5)]'
+                : 'h-[var(--tap-floor)]'
             }`}
           >
             {failed !== null && (
