@@ -68,7 +68,6 @@ export const OFF = 'text-[color-mix(in_srgb,var(--color-text)_28%,transparent)]'
 
 export function Bar({
   receded = false,
-  flow = false,
 }: {
   /**
    * Off the top of the glass while the record is being read — see
@@ -82,26 +81,6 @@ export function Bar({
    * grows a scroll, it passes the prop.
    */
   receded?: boolean
-  /**
-   * In ordinary flow rather than pinned to the layout viewport — 7 September.
-   *
-   * ⚠⚠ **THE FRONT PAGE PASSES THIS BECAUSE ITS WHOLE SCREEN IS ALREADY PINNED
-   * TO THE VISUAL VIEWPORT.** `screen-viewport` is the one `fixed` box there,
-   * and a second one inside it is a second thing for iOS's keyboard pan to move
-   * differently — which is exactly what put the wordmark off the top of a
-   * handset. See `components/visual-viewport.ts`.
-   *
-   * ⚠ **`relative`, not nothing.** `mark-glow` hangs an `absolute`
-   * pseudo-element off this header, and an absolute box with no positioned
-   * ancestor resolves against the initial containing block and escapes the
-   * layout entirely.
-   *
-   * ⚠ **The safe-area padding is unchanged and must stay that way.** A panned
-   * visual viewport still starts at the physical top of the screen, so the
-   * notch is still over this bar and still wants its full inset; subtracting
-   * the pan from it would open a gap that only a notched handset could show.
-   */
-  flow?: boolean
 }) {
   return (
     /*
@@ -116,7 +95,7 @@ export function Bar({
         340ms — see `--recede` for why the two tokens collapsed rather than being
         set equal, and why re-splitting them needs a hardware reason.
       */
-      className={`mark-glow ${flow ? 'relative' : 'fixed inset-x-0 top-0'} z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+      className={`mark-glow fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
         receded ? '-translate-y-full' : ''
       }`}
     >

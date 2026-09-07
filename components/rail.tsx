@@ -67,13 +67,13 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
       would push past the composer instead of fitting the space `flex-1` gives
       it, and the height the tiles derive from would be the wrong one.
     */
-    <div className="rail-track -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
+    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
       {/*
         ⚠ **`gap-0`, written rather than omitted.** The tiles touching is the
         direction, not the absence of a decision — a gap is what a reader would
         put back without knowing it had been taken out.
       */}
-      <ul className="flex w-max items-start gap-0">
+      <ul className="flex h-full w-max gap-0">
         {tiles.map((tile) => (
           <Tile key={tile.id} tile={tile} />
         ))}
@@ -137,7 +137,7 @@ function Tile({ tile }: { tile: RailTile }) {
       own edge* (6 September) is no longer true wherever the width binds. **The
       floor was chosen over the ceiling** because that is what was asked for.
     */
-    <li className="flex w-fit shrink-0 flex-col justify-end">
+    <li className="rail-focus flex h-full w-fit shrink-0 flex-col justify-end">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every
@@ -215,18 +215,7 @@ function Tile({ tile }: { tile: RailTile }) {
         a landscape image letterboxes onto the frame's ground. **The reverse
         reads broken and there is no bespoke art to crop to.**
       */}
-      {/*
-        ⚠⚠ **A WIDTH AND AN ASPECT RATIO — NO PERCENTAGE, NO CONTAINER, NO CAP
-        — 7 September.** This was
-        `h-[min(calc(100%-var(--text-micro)*1.3),calc(100cqw*1.5))]`: a
-        percentage of the band, resolved through a horizontally scrolling flex
-        row that also carried `container-type: inline-size`. **iOS does not
-        re-resolve it when the band shrinks** — the tiles stayed at their
-        at-rest height and were clipped, which is what *the images don't even
-        resize properly* was describing. ⚠ **Do not size a tile from its
-        container's height again.** See `--tile-width` for the full account.
-      */}
-      <div className="bg-surface relative aspect-2/3 w-[var(--tile-width)] overflow-hidden">
+      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(100cqw*1.5))] overflow-hidden">
         {/*
           ⚠⚠ **THE NAME LIVES INSIDE THIS `relative` BOX, AND PUTTING IT ON THE
           `<li>` BROKE THE WHOLE PAGE.** `sr-only` is `position: absolute` **with
