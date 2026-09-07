@@ -1847,22 +1847,42 @@
    * has to be made at `--recede` on its own terms; this is not a precedent for
    * it.**
    *
-   * ⚠ **`--recede / 3` = 113ms out, and it is derived rather than picked.** The
-   * bar is **90% travelled at 128ms** — it has visually gone by then — so the
-   * ink at a third is out *before* the slab clears, and what leaves the screen
-   * is an empty bar. That is what *too slow* was describing: ink still on a bar
-   * that was already going.
    *
-   * ⚠ **`--recede` exactly on the way in, so the ink lands on the same tick the
-   * slab settles.** Not longer: the complaint was that it arrived **early**,
-   * not that it should outlast the furniture carrying it.
+   * ⚠⚠ **`--recede / 6` = 57ms OUT, AND THE LITERAL LANDMARK WAS MEASURED AND
+   * REFUSED.** Directed: *basically faded by the time the logo and profile
+   * icons approach the status bar.* Driven at 390×844 with the inset overridden
+   * — `node_modules/.probe/_where.mjs` — **the row starts 13px under the status
+   * bar in the installed app** (top 60 against an inset of 47) **and crosses it
+   * at ~14ms.** A 14ms fade is **one frame**: that is a cut, not a fade, and it
+   * would remove the very thing the ink was added for.
    *
-   * ⚠ **Spelled as the base duration and one override**, so the class that
-   * removes the ink also names the shorter number and taking the class off
-   * restores the longer one. There is no state to keep in step.
+   * ⚠ **There is no surface-stable geometric landmark here, which is why this
+   * is a fraction of the travel and not a distance.** The bar is 48px tall in a
+   * tab and 95px installed, so the same *fraction* of the slide puts the ink in
+   * completely different places against the status bar: the mark's letters
+   * cross the top of the screen at ~12ms with no notch and ~34ms with one. **A
+   * length derived from either surface is wrong on the other.**
+   *
+   * ⚠ **57ms is the nearest landmark that is still a fade**: measured, the row
+   * is above the top of the screen by then on both insets, so the ink is out as
+   * the bar clears rather than while it is still in view. ⚠ **If it still reads
+   * slow, the next step is `/ 8` (43ms) and then it stops being a fade** — at
+   * 60Hz that is two and a half frames.
+   *
+   * ⚠ **`--recede × 1.25` = 425ms IN, so the bar arrives BEFORE its own ink.**
+   * Directed as *a tad slower*, and the quarter is what makes the pair state one
+   * rule rather than two adjustments: **the furniture leaves already empty and
+   * lands before the ink catches up.** ⚠ **It is the one number here with no
+   * derivation behind it** — *a tad* has no landmark — so it is expressed as a
+   * multiple of `--recede` rather than typed, and it follows the travel if that
+   * ever moves.
+   *
+   * ⚠ **Spelled as a base duration and one inherited override** — see
+   * `chrome-ink-gone`, and the ordering trap it records. There is no state to
+   * keep in step.
    */
-  --ink-out: calc(var(--recede) / 3);
-  --ink-in: var(--recede);
+  --ink-out: calc(var(--recede) / 6);
+  --ink-in: calc(var(--recede) * 1.25);
 
   /**
    * **How much a control grows under a cursor — 1 September.** Directed for the
