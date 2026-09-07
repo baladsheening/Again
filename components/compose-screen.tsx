@@ -7,7 +7,6 @@ import { Bar, OFF } from './bar'
 import { Foot } from './foot'
 import { AttachGlyph, SendGlyph, UndoGlyph, WriteGlyph } from './glyphs'
 import { useVisualViewport } from './visual-viewport'
-import { VvTrace } from './vv-trace'
 import { captureAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
 
@@ -549,10 +548,7 @@ export function ComposeScreen({
   }
 
   return (
-    <>
-      {/* Diagnostic, behind `?trace=1`, and meant to be deleted. See `vv-trace.tsx`. */}
-      <VvTrace />
-      <div ref={host} className="screen-viewport flex flex-col">
+    <div ref={host} className="screen-viewport flex flex-col">
       {/*
         ⚠ **In flow, not `fixed`.** It is a flex child of a host that is already
         the visible area; a second `fixed` box inside the first is a second
@@ -638,9 +634,7 @@ export function ComposeScreen({
           one is the bug, whichever element it lands on.
         */}
         <div
-          className={`flex min-h-0 flex-1 flex-col transition-opacity duration-[var(--recede)] ease-[var(--ease-recede)] ${
-            writing ? 'opacity-60' : 'opacity-100'
-          }`}
+          className={`flex min-h-0 flex-col overflow-hidden ${writing ? 'h-0 flex-none' : 'flex-1'}`}
         >
           {rail}
         </div>
@@ -1377,7 +1371,6 @@ export function ComposeScreen({
           </>
         )}
       </div>
-      </div>
-    </>
+    </div>
   )
 }

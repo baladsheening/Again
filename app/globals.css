@@ -2906,15 +2906,30 @@
   );
 
   /*
-    ⚠ **`--tile-width` was here for four hours on 6 September and is
-    DELETED — directed the same day: *the images stuck to each other and
-    bigger, there's a big space between the rail and the top of the sheet the
-    composer lays on.* A tile is no longer a width at all.** It is **as tall as
-    the space between the bar and the composer**, and `aspect-2/3` makes
-    the width follow — so the two complaints have one answer and neither is a
-    number anybody picked. **Do not put a width token back**: the day one
-    exists, the gap it was tuned against is a gap again on the next screen.
+    ⚠⚠ **`--tile-width` IS BACK — 7 September, and the direction that deleted
+    it is reversed with the reason stated.** From 6 September it read: *a tile
+    is no longer a width at all; it is as tall as the space between the bar and
+    the composer, and `aspect-2/3` makes the width follow. Do not put a width
+    token back.* **That made the tile's height a percentage of a box whose
+    height changes when a keyboard opens, and iOS does not re-resolve it.**
+    Reported from a handset: *the images don't even resize properly; the left
+    image is the only one properly resized, and that only happened after tapping
+    in and out of the composer repeatedly.* The tiles stayed at their at-rest
+    height and were **clipped** by the shortened band — a 253pt-wide slice in a
+    143pt band, measured off the screenshot.
+
+    ⚠ **It also answers a complaint from the same day at the other end.** Asked
+    which of five screenshots was right, the answer was the one with four
+    legible posters; the one with a single tile 334pt wide on a 390pt screen was
+    wrong. **A band-derived height is what produced that**, because a tall band
+    makes a huge tile. A width makes the rail read the same at every band
+    height, on every device, with nothing resolved through a flexible ancestor.
+
+    ⚠ **8rem is measured off the screenshot that was picked**, not chosen: the
+    tiles there ran ~127pt at a device pixel ratio of 2.37. **If it wants
+    changing, change it here** — it is one number and it is the only one.
   */
+  --tile-width: 8rem;
 
   /**
    * ───────────────────────────────────────────────────────────────────────────

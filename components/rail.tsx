@@ -73,7 +73,7 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
         direction, not the absence of a decision — a gap is what a reader would
         put back without knowing it had been taken out.
       */}
-      <ul className="flex h-full w-max gap-0">
+      <ul className="flex w-max items-start gap-0">
         {tiles.map((tile) => (
           <Tile key={tile.id} tile={tile} />
         ))}
@@ -137,7 +137,7 @@ function Tile({ tile }: { tile: RailTile }) {
       own edge* (6 September) is no longer true wherever the width binds. **The
       floor was chosen over the ceiling** because that is what was asked for.
     */
-    <li className="flex h-full w-fit shrink-0 flex-col justify-end">
+    <li className="flex w-fit shrink-0 flex-col justify-end">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every
@@ -216,17 +216,17 @@ function Tile({ tile }: { tile: RailTile }) {
         reads broken and there is no bespoke art to crop to.**
       */}
       {/*
-        ⚠⚠ **`100cqw` BECAME `100vw` AND THE `@container` WENT WITH IT — 7
-        September.** The cap is *a tile may not be wider than the screen*, and
-        the screen is what it was always reaching for; the container query unit
-        bought nothing and brought `container-type: inline-size` — layout
-        containment — onto a horizontally scrolling flex row whose children
-        resolve a **percentage height** through it. Reported from a handset:
-        *the images don't even resize properly; the left image is the only one
-        properly resized.* ⚠ **Do not reintroduce a container here** to make the
-        cap read more precisely.
+        ⚠⚠ **A WIDTH AND AN ASPECT RATIO — NO PERCENTAGE, NO CONTAINER, NO CAP
+        — 7 September.** This was
+        `h-[min(calc(100%-var(--text-micro)*1.3),calc(100cqw*1.5))]`: a
+        percentage of the band, resolved through a horizontally scrolling flex
+        row that also carried `container-type: inline-size`. **iOS does not
+        re-resolve it when the band shrinks** — the tiles stayed at their
+        at-rest height and were clipped, which is what *the images don't even
+        resize properly* was describing. ⚠ **Do not size a tile from its
+        container's height again.** See `--tile-width` for the full account.
       */}
-      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(100vw*1.5))] overflow-hidden">
+      <div className="bg-surface relative aspect-2/3 w-[var(--tile-width)] overflow-hidden">
         {/*
           ⚠⚠ **THE NAME LIVES INSIDE THIS `relative` BOX, AND PUTTING IT ON THE
           `<li>` BROKE THE WHOLE PAGE.** `sr-only` is `position: absolute` **with
