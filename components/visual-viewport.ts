@@ -11,137 +11,105 @@ import { useEffect } from 'react'
 const KEYBOARD_ARRIVAL_MS = 700
 
 /**
- * **What this device's visible area measured last time, at rest and while
- * somebody was writing — keyed by the viewport's width, so a rotation gets its
- * own pair.**
- *
- * ⚠⚠ **THIS EXISTS TO STOP iOS PANNING, WHICH IS THE ONLY WAY TO STOP THE
- * SCREEN GOING UP AND COMING BACK DOWN.** Reported 7 September: *I tap in the
- * composer and the page, the images and the logo row go up then come down.*
- * That is the pan and our correction, in that order — and it cannot be fixed by
- * correcting sooner, because **iOS does not publish `visualViewport.offsetTop`
- * while it is animating.** The value arrives when the animation is over, so
- * anything that follows it lands after the excursion has already been seen.
- *
- * ⚠ **So the screen shrinks BEFORE the keyboard, not after it.** iOS pans to
- * reveal a focused field it believes the keyboard will cover; if the field is
- * already above the keyboard's line when it looks, there is nothing to reveal
- * and no pan. The only thing missing at that instant is how tall the keyboard
- * is — so the app remembers what it was.
- *
- * ⚠⚠ **IT REMEMBERS A VISIBLE HEIGHT, NOT A KEYBOARD HEIGHT, AND THAT IS
- * DELIBERATE.** A keyboard height would have to be derived from
- * `innerHeight`/`clientHeight`/`offsetTop` arithmetic with a keyboard open —
- * exactly the guessing that falsified five versions of `keyboard-hem.ts` one
- * after another. `visualViewport.height` is one number the platform states
- * outright, and *what it was last time somebody wrote* needs no arithmetic at
- * all.
- *
- * ⚠ **Not a tuned constant.** Nothing is typed in: both numbers are this
- * device's own measurements at this width, and where there is no measurement
- * yet the optimism simply does not happen and the screen behaves as it did
- * before. ⚠ **The stated cost: the FIRST focus after a cold load still pans
- * once**, because there is nothing to remember yet. It is module scope rather
- * than storage, so it survives a client navigation and a resume but not a
- * reload — and this app introduces no web storage anywhere.
- *
- * ⚠ **It is self-gating on the desk.** A pointer device never shrinks the
- * visible area on focus, so `WHILE_WRITING` is never filled up there and the
- * optimism never fires. **There is no pointer sniff and there must not be one.**
- */
-const AT_REST = new Map<number, number>()
-const WHILE_WRITING = new Map<number, number>()
-
-/**
  * **Make one element the visible viewport, and put everything else in flow
  * inside it — 7 September.**
  *
- * ⚠⚠ **THIS EXISTS BECAUSE THREE FIXED ELEMENTS EACH ANSWERED THE SAME PAN
- * DIFFERENTLY, AND TWO OF THEM ANSWERED IT IN OPPOSITE DIRECTIONS.** iOS does
- * not shrink the layout viewport for a keyboard — `app/layout.tsx` records the
- * measurement — it offsets the **visual** viewport inside a layout viewport
- * that keeps its full height. Every `position: fixed` box is anchored to the
- * layout one, so on a pan every one of them is wrong, and the front page had
- * three of them correcting separately:
- *
- * - `Bar` — `fixed; top: 0`, **no correction at all**, so it left the screen.
- * - the composer's sheet — `fixed; bottom: var(--keyboard-overlap)`, corrected
- *   **up**.
- * - the rail — `translate-y: var(--viewport-top)`, corrected **down**.
- *
- * The rail walked into the composer, the composer is glass, and the pictures
- * showed straight through it. Reported from a handset on 7 September with a
- * screenshot of exactly that.
- *
- * ⚠⚠ **A FOURTH CORRECTION WOULD HAVE BEEN A FOURTH THING TO DISAGREE.** *How
- * things get fixed* asks for the mechanism to be removed before it is
- * corrected, and the mechanism here is *many boxes each pinned to the wrong
- * viewport*. So: **one box is pinned to the visual viewport and everything else
- * is in ordinary flow inside it.** There is nothing left that can drift,
- * because there is only one thing being positioned.
- *
- * ⚠ **What the caller gets, and it is the whole point: the host's box IS the
- * visible area.** A composer at the flex end sits on the keyboard's top edge
- * with no arithmetic; a third of the host is a third of what the reader can
- * see; the rail fills what is left. None of those need to know a keyboard
- * exists.
+ * ⚠⚠ **THIS EXISTS BECAUSE THREE FIXED ELEMENTS EACH ANSWERED THE SAME iOS
+ * KEYBOARD PAN DIFFERENTLY, AND TWO OF THEM ANSWERED IT IN OPPOSITE
+ * DIRECTIONS.** The bar did not correct at all and left the screen, the
+ * composer's sheet corrected itself up, the rail corrected itself down — so on a
+ * panned tap the rail walked into the composer and showed through its glass.
+ * One box is pinned to the visible area now and everything else is an ordinary
+ * flex child of it, so there is nothing left that can disagree.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- *  The three lengths
+ *  The one measured fact this rests on
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * - **`--vv-top`** is `visualViewport.offsetTop`: how far iOS has panned. The
- *   host takes it as `top`, so the host's top edge is the visible top edge.
- * - **`--vv-height`** is `visualViewport.height`: what is left after the
- *   keyboard. The host takes it as `height`.
- * - **`--keyboard-overlap`** is what it always was — how much of the layout
- *   viewport's bottom is covered. **It no longer positions anything.** Its one
- *   remaining reader is the sheet's safe-area clearance, which must be spent
- *   when the bottom of the screen is the bottom of the *device* and not when it
- *   is the top of a keyboard.
+ * ⚠⚠ **`visualViewport.offsetTop + visualViewport.height === clientHeight`, IN
+ * EVERY SAMPLE OF EVERY TRACE TAKEN ON THE HANDSET.** `0 + 660`, `271 + 389`,
+ * `202 + 458`, `187 + 473` — always 660. **The visible region's bottom edge is
+ * always the layout viewport's bottom edge**; a keyboard only ever eats it from
+ * the top.
  *
- * ⚠ **`top`, deliberately, and NOT a `transform`.** A transform makes its
- * element the containing block for every `position: fixed` descendant — and
- * there are two inside this host: the floor anchor below, and the desk's tool
- * stack in `foot.tsx`. Both would silently start resolving against the host.
- * A transform is the cheaper property to animate; a trap that fires only on the
- * desk, only in one component, is not worth the frames. The subtree is a bar, a
- * row of pictures and a card.
+ * ⚠⚠ **SO THE HOST IS ANCHORED TO `bottom: 0` AND SIZED BY `height`, AND THERE
+ * IS NO `--vv-top`.** `screen-viewport` needs one number, read at one instant,
+ * and it lands on the visible region exactly. **Nothing is corrected, so nothing
+ * can lag** — which is what two earlier versions of this file got wrong.
+ *
+ * ⚠ **`--vv-top` was the whole defect and it is DELETED.** It held
+ * `visualViewport.offsetTop` and the host took it as `top`. iOS reports that
+ * number in the frame *after* it has already moved the page, so the screen went
+ * up and came back down on every tap — reported as *the page, the images and
+ * the logo row go up then come down*. ⚠⚠ **DO NOT REINTRODUCE A TOP-ANCHORED
+ * CORRECTION.** Any position taken from `offsetTop` is a frame behind by
+ * construction.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Two things that were tried, measured, and are dead
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠⚠ **ANTICIPATING THE KEYBOARD DOES NOT PREVENT THE PAN.** The screen was
+ * shrunk in the focus's own frame from a remembered height, on the reasoning
+ * that iOS pans to reveal a field the keyboard would cover. The trace shows the
+ * anticipation working — `hh 389` at `t=60`, before any keyboard — **and iOS
+ * panning anyway at `t=87`.** A field inside a `position: fixed` host cannot be
+ * brought into view by scrolling the document, so iOS scrolls the whole range it
+ * invented and gives up. **The reveal was never the trigger.** With a
+ * bottom-anchored host the anticipation would also be actively wrong: it would
+ * hold the screen 271px low for the 27ms before the keyboard arrives.
+ *
+ * ⚠⚠ **AND PUTTING THE SCROLL BACK STARTS A FIGHT THAT LASTS SECONDS.** iOS
+ * invents scroll range the height of the keyboard and scrolls to the end of it,
+ * so `window.scrollY` reads 271 on a page with nothing to scroll. A synchronous
+ * `scrollTo(0, 0)` in the scroll handler looked like a subtraction and was not:
+ * the trace shows `off` grinding **down one pixel per frame** — 202, 201, 200,
+ * … — **still going 2.5 seconds after the tap**, with the viewport growing a
+ * pixel at a time to match. ⚠ **Never fight the platform's scroll here.** The
+ * bottom anchor makes the scroll irrelevant rather than contested.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The rest
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠ **`--keyboard-overlap` no longer positions anything and keeps one job**: the
+ * sheet's safe-area clearance, spent when the bottom of the screen is the bottom
+ * of the *device* and not when it is the top of a keyboard. It is
+ * `clientHeight − visualViewport.height`. ⚠ **The floor anchor it used to be
+ * measured against is DELETED** — a `fixed` element's rect is reported against
+ * the **visual** viewport on iOS, which the trace proves outright (a host at
+ * `top: 0` read `top: -271`), so with the page panned that ruler read `vvh`,
+ * the subtraction came out negative, clamped to zero, and **the clearance was
+ * silently spent under an open keyboard on every notched handset.**
  *
  * ⚠ **None of these are keyboard detectors and nothing may read them as one.**
- * `keyboard-hem.ts` has the full account: the gap they measure also opens when
- * a Safari tab's address bar collapses during a scroll. They are lengths.
+ * `keyboard-hem.ts` has the account: the gap they measure also opens when a
+ * Safari tab's address bar collapses during a scroll. They are lengths.
  *
  * ⚠ **It runs always, not only while somebody is writing.** The host has to be
  * the right size on the first paint too — and sizing it to a measured
- * `visualViewport.height` is also what stops the installed app laying out short
+ * `visualViewport.height` is what stops the installed app laying out short
  * before its first drag, which `100svh` does not.
  *
  * ⚠ **Written straight to the element, never through state.** `visualViewport`
  * emits `scroll` continuously while a finger is down; a re-render per event is
  * how a page starts dropping frames while it is being read. §10 blocks inline
- * `style` attributes and the CSSOM is the door that rule leaves open — the same
- * one `useKeyboardHem` and the console's settle already use.
+ * `style` attributes and the CSSOM is the door that rule leaves open.
  *
- * ⚠ **The properties are written on the HOST and read on the host and its
- * descendants.** A `var()` is substituted where the property is *declared*, so
- * none of this may ever be lifted into `@theme`: a token on `:root` would
- * resolve against `:root`, where nothing writes it. That bug cost a day on 29
- * August and is recorded in `globals.css`.
+ * ⚠ **The property is written on the HOST and read on the host and its
+ * descendants.** A `var()` is substituted where it is *declared*, so this may
+ * never be lifted into `@theme`: a token on `:root` would resolve against
+ * `:root`, where nothing writes it. That bug cost a day on 29 August.
  *
  * ⚠ **`useKeyboardHem` is untouched and still owns the record.** `/record`
  * scrolls a document, which this arrangement would have to replace with an
- * inner scroller — a bigger change and a separate one. Two hooks is the honest
- * state of the tree until that is done, not a duplication to tidy.
+ * inner scroller — a bigger change and a separate one.
  */
 export function useVisualViewport({
   host,
-  floorAnchor,
 }: {
-  /** The one element pinned to the visual viewport; everything else is in flow inside it. */
+  /** The one element pinned to the visible area; everything else is in flow inside it. */
   host: React.RefObject<HTMLElement | null>
-  /** A zero-height `fixed` twin on the layout viewport's bottom edge — the ruler. */
-  floorAnchor: React.RefObject<HTMLElement | null>
 }) {
   useEffect(() => {
     const vv = window.visualViewport
@@ -151,132 +119,25 @@ export function useVisualViewport({
     let until = 0
     const hostEl = host.current
 
-    /* Somebody is writing in this host — set by the focus, not by the DOM. */
-    let writing = false
-    /*
-      The height written ahead of the keyboard, held until the keyboard either
-      arrives or the burst gives up. Zero when nothing is being anticipated.
-    */
-    let expecting = 0
-
     const write = () => {
       const box = host.current
-      const edge = floorAnchor.current
-      if (!box || !edge) return
+      if (!box) return
 
-      const width = Math.round(vv.width)
       const height = Math.round(vv.height)
+      box.style.setProperty('--vv-height', `${height}px`)
 
-      box.style.setProperty('--vv-top', `${Math.round(vv.offsetTop)}px`)
-
-      /*
-        ⚠ **The anticipated height is held until the keyboard actually arrives.**
-        Without this the next frame writes the full height straight back over it
-        — the keyboard has not opened yet — and the optimism is undone before
-        iOS has even looked. It is let go the moment the real height is no
-        bigger than what was anticipated, and unconditionally when the burst
-        ends, so a focus that never raises a keyboard corrects itself.
-      */
-      if (expecting && height > expecting) {
-        /* Held. */
-      } else {
-        expecting = 0
-        box.style.setProperty('--vv-height', `${height}px`)
-      }
-
-      /*
-        What to anticipate next time. ⚠ **At rest is only ever recorded while
-        nothing is focused**, or the shrunken height would become the resting
-        one and the screen would never grow back.
-      */
-      if (writing) {
-        const rest = AT_REST.get(width)
-        if (rest !== undefined && height < rest) WHILE_WRITING.set(width, height)
-      } else {
-        /*
-          ⚠ **The LARGEST height seen at this width, never the latest.** A blur
-          is instant and the keyboard takes a third of a second to leave, so for
-          those frames nothing is focused and the visible area is still short —
-          and a latest-wins record would file that as the resting height, after
-          which nothing is ever *smaller than rest* and the anticipation never
-          fires again. **It also makes an address bar collapsing during a scroll
-          a non-event**, which is the same trap in a second costume.
-        */
-        AT_REST.set(width, Math.max(AT_REST.get(width) ?? 0, height))
-      }
-
-      /*
-        ⚠ **Measured off a rendered box, never derived from `innerHeight` or
-        `clientHeight`.** Those numbers mean different things to different
-        browsers with a keyboard open; a rendered box does not. Five versions of
-        `keyboard-hem.ts` were falsified one after another for guessing here,
-        and the lesson outlived the code.
-      */
-      unscroll()
-
-      const overlap = Math.max(
-        0,
-        edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
-      )
-      box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
+      const covered = Math.max(0, document.documentElement.clientHeight - height)
+      box.style.setProperty('--keyboard-overlap', `${covered}px`)
     }
 
     const run = () => {
       frame = 0
       write()
-      if (performance.now() < until) {
-        frame = requestAnimationFrame(run)
-      } else if (expecting) {
-        /* The burst is over and no keyboard came. Take the real height. */
-        expecting = 0
-        write()
-      }
+      frame = performance.now() < until ? requestAnimationFrame(run) : 0
     }
 
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(run)
-    }
-
-    const scrolled = () => {
-      unscroll()
-      schedule()
-    }
-
-    /**
-     * **Put back a scroll this page cannot have.**
-     *
-     * ⚠⚠ **MEASURED ON A HANDSET, 7 September, AND IT OVERTURNED THE ASSUMPTION
-     * THE LAST FIX WAS BUILT ON.** The trace at `/?trace=1` read, on focus:
-     * `off 271, vvh 389, ch 660, top -271, sy 271` — **iOS invents scroll range
-     * exactly the height of the keyboard (660 − 389 = 271) and scrolls the
-     * document to the end of it.** `window.scrollY` is 271 on a page with
-     * nothing to scroll.
-     *
-     * ⚠⚠ **AND IT DOES IT EVEN WHEN THE FIELD IS ALREADY ABOVE THE KEYBOARD.**
-     * The same trace shows the anticipation working — `hh 389` at `t=60`, before
-     * any keyboard — and iOS panning anyway at `t=87`. **A field inside a
-     * `position: fixed` host cannot be brought into view by scrolling the
-     * document**, so iOS scrolls the whole invented range and gives up. That is
-     * why *make the field already visible* did not prevent it.
-     *
-     * ⚠ **This screen has no content outside the fixed host, so its document
-     * height is nothing and `scrollY` can only ever be zero.** Any other value
-     * is the platform's invention, and putting it back is a subtraction rather
-     * than a fight — the order *How things get fixed* asks for. ⚠ **It is
-     * synchronous, in the scroll event itself**, so the value is gone before the
-     * frame is composited; a `requestAnimationFrame` here would be the same one
-     * frame late that made the correction visible in the first place.
-     *
-     * ⚠ **It cannot loop**: `scrollTo` fires another scroll event, and on that
-     * one the value is already zero.
-     *
-     * ⚠ **The `--vv-top` correction stays.** If a build of iOS offsets the
-     * visual viewport without moving `scrollY`, this reaches nothing and the
-     * correction is what holds the screen together — the same reason it was
-     * built.
-     */
-    const unscroll = () => {
-      if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0)
     }
 
     /* Keep measuring for as long as a keyboard could still be arriving. */
@@ -287,81 +148,31 @@ export function useVisualViewport({
 
     hold()
 
-    /**
-     * **Shrink the screen in the focus's own frame, before iOS decides whether
-     * to pan.**
-     *
-     * ⚠⚠ **THIS IS THE WHOLE FIX FOR THE SCREEN GOING UP AND COMING BACK
-     * DOWN.** iOS looks at the focused field after this handler has run; if the
-     * host is already the height it will be with a keyboard up, the composer is
-     * above the keyboard's line and there is nothing to scroll into view.
-     *
-     * ⚠ **The layout is forced before returning.** Writing a style marks layout
-     * dirty and nothing is obliged to resolve it until the next frame — which
-     * is after iOS has looked. Reading `offsetHeight` is what makes the new
-     * height true *now* rather than in 16ms.
-     *
-     * ⚠ **Only a field inside this host.** A focus on the profile link or the
-     * record's door raises no keyboard, and shrinking the screen for one would
-     * be a bar jumping for a tap that did nothing.
-     */
-    const focused = (e: FocusEvent) => {
-      hold()
-      const box = host.current
-      const target = e.target
-      if (
-        !box ||
-        !(target instanceof Element) ||
-        !box.contains(target) ||
-        !target.matches('textarea, input')
-      ) {
-        return
-      }
-
-      writing = true
-      unscroll()
-      const remembered = WHILE_WRITING.get(Math.round(vv.width))
-      if (remembered === undefined || remembered >= vv.height) return
-
-      expecting = remembered
-      box.style.setProperty('--vv-height', `${remembered}px`)
-      void box.offsetHeight
-    }
-
-    const blurred = () => {
-      writing = false
-      expecting = 0
-      hold()
-    }
-
     /*
-      ⚠ **`focusin`/`focusout` are here because the pan has no event of its
-      own.** iOS decides to pan when a field takes focus, and it can do it
-      without `visualViewport` emitting anything on the same frame. The old hook
-      got this for free by mounting its effect on `writing`; this one runs
-      always, so the focus has to be listened for.
+      ⚠ **`focusin`/`focusout` are here because the keyboard has no event of its
+      own.** iOS raises one when a field takes focus, and it can begin without
+      `visualViewport` emitting anything on the same frame.
     */
-    window.addEventListener('focusin', focused)
-    window.addEventListener('focusout', blurred)
-    window.addEventListener('scroll', scrolled, { passive: true })
+    window.addEventListener('focusin', hold)
+    window.addEventListener('focusout', hold)
+    window.addEventListener('scroll', schedule, { passive: true })
     vv.addEventListener('resize', hold)
     vv.addEventListener('scroll', hold)
     window.addEventListener('resize', hold)
     window.addEventListener('orientationchange', hold)
 
     return () => {
-      window.removeEventListener('focusin', focused)
-      window.removeEventListener('focusout', blurred)
-      window.removeEventListener('scroll', scrolled)
+      window.removeEventListener('focusin', hold)
+      window.removeEventListener('focusout', hold)
+      window.removeEventListener('scroll', schedule)
       vv.removeEventListener('resize', hold)
       vv.removeEventListener('scroll', hold)
       window.removeEventListener('resize', hold)
       window.removeEventListener('orientationchange', hold)
       if (frame) cancelAnimationFrame(frame)
 
-      hostEl?.style.removeProperty('--vv-top')
       hostEl?.style.removeProperty('--vv-height')
       hostEl?.style.removeProperty('--keyboard-overlap')
     }
-  }, [host, floorAnchor])
+  }, [host])
 }

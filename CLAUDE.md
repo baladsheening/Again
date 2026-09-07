@@ -24,6 +24,65 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE SCREEN IS ANCHORED TO THE BOTTOM AND SIZED BY ONE NUMBER — 7
+September, AND IT IS THE FIX. THE TWO ENTRIES BELOW DESCRIBE MECHANISMS THAT ARE
+NOW DELETED; THEY ARE KEPT BECAUSE WHAT THEY GOT WRONG IS THE POINT.** A trace
+was put on the handset (`components/vv-trace.tsx`) after two fixes built on
+reasoning about iOS were both wrong, and it settled everything in one screenshot.
+
+- ⚠⚠ **THE INVARIANT, MEASURED IN EVERY SAMPLE OF EVERY TRACE:**
+  `visualViewport.offsetTop + visualViewport.height === clientHeight`.
+  `0 + 660`, `271 + 389`, `202 + 458`, `187 + 473` — **always 660.** The
+  visible region's bottom edge is always the layout viewport's bottom edge; a
+  keyboard only ever eats it from the top.
+- ⚠⚠ **SO `screen-viewport` IS `bottom: 0` WITH `height: var(--vv-height)`,
+  AND `--vv-top` IS DELETED.** One number, read at one instant, lands the host
+  on the visible region exactly. **Nothing is corrected, so nothing can lag.**
+  ⚠⚠ **DO NOT REINTRODUCE A TOP-ANCHORED CORRECTION** — any position taken from
+  `offsetTop` is a frame behind by construction, and that frame is what the
+  reader sees as the page going up and coming back down.
+- ⚠⚠ **ANTICIPATING THE KEYBOARD DOES NOT PREVENT THE PAN, AND THE TRACE PROVED
+  IT OUTRIGHT.** The entry below shrank the screen in the focus's own frame from
+  a remembered height, reasoning that iOS pans to reveal a covered field. The
+  anticipation **worked** — `hh 389` at `t=60`, before any keyboard — and **iOS
+  panned anyway at `t=87`.** A field inside a `position: fixed` host cannot be
+  brought into view by scrolling the document, so iOS scrolls the whole range it
+  invented and gives up. **The reveal was never the trigger.** `AT_REST`,
+  `WHILE_WRITING` and the whole anticipation are deleted.
+- ⚠⚠ **AND PUTTING THE INVENTED SCROLL BACK STARTS A FIGHT THAT LASTS SECONDS.**
+  iOS invents scroll range the height of the keyboard, so `window.scrollY` reads
+  271 on a page with nothing to scroll. A synchronous `scrollTo(0, 0)` in the
+  scroll handler **looked like a subtraction and was not**: the trace shows
+  `off` grinding down **one pixel per frame** — 202, 201, 200, … — **still going
+  2.5 seconds after the tap.** ⚠ **Never fight the platform's scroll here.** The
+  bottom anchor makes the scroll irrelevant rather than contested. Deployed and
+  reverted the same hour.
+- ⚠⚠ **A `fixed` ELEMENT'S RECT IS REPORTED AGAINST THE *VISUAL* VIEWPORT ON
+  iOS — a host at `top: 0` read `top: -271`.** That killed the floor anchor:
+  `--keyboard-overlap` was its `bottom` minus the visible region, so with the
+  page panned the ruler read `vvh`, the subtraction came out negative, the clamp
+  turned it into a confident zero, and **the notch's clearance was silently spent
+  under an open keyboard on every notched handset.** It is
+  `clientHeight − visualViewport.height` now, and the anchor is deleted.
+- ⚠ **The images still SNAP rather than gliding.** A transition on the host's
+  height was asked for and is not built; judge it on hardware now the movement is
+  gone.
+- ⚠ **`components/vv-trace.tsx` IS ON UNCONDITIONALLY AND IS MEANT TO BE
+  DELETED.** `?trace=0` turns it off. It went in behind `?trace=1` and could not
+  be reached — the manifest's `start_url` is `/`, so the installed app opens with
+  no query string. **A diagnostic nobody can turn on is not a diagnostic.**
+- ⚠⚠ **THE LESSON, AND IT COST A DAY: NO DESKTOP BROWSER CAN RAISE AN iOS
+  KEYBOARD, SO NOTHING ABOUT ONE MAY BE REASONED ABOUT.** Two fixes were built on
+  plausible accounts of what iOS does and both were falsified by the first
+  screenshot of real numbers. **Instrument the handset first.** This is
+  `keyboard-hem.ts`'s *five wrong versions* note happening again, in a different
+  file, to somebody who had read it.
+- **Proved by `node_modules/.probe/vvhost.mjs`, 56 assertions** against
+  `next start`: at visible heights of 844, 660, 458, 389 and 300 the host's
+  bottom stays flush with the layout viewport, the bar sits on its top edge, the
+  composer on its bottom edge, and the rail never reaches the composer.
+  `frontpage.mjs` all ok, `composercap.mjs` 51/51.
+
 ⚠⚠ **THE SCREEN SHRINKS BEFORE THE KEYBOARD, NOT AFTER IT — 7 September, and
 it is the only way to stop the page going up and coming back down.** Reported
 the same day, on the fix below: *I tap in the composer and the page, the images

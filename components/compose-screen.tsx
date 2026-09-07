@@ -261,7 +261,6 @@ export function ComposeScreen({
    */
   const box = useRef<HTMLDivElement | null>(null)
   const host = useRef<HTMLDivElement | null>(null)
-  const floorAnchor = useRef<HTMLDivElement | null>(null)
   const field = useRef<HTMLTextAreaElement | null>(null)
 
   /*
@@ -277,7 +276,7 @@ export function ComposeScreen({
     before anybody taps as well as after. A focus still starts a measuring
     burst — the hook listens for it itself.
   */
-  useVisualViewport({ host, floorAnchor })
+  useVisualViewport({ host })
 
   /*
     ⚠⚠ **THE COMPOSER USED TO MEASURE ITSELF INTO `--sheet-block`, AND THAT
@@ -648,15 +647,16 @@ export function ComposeScreen({
       </main>
 
       {/*
-        A zero-height `fixed` twin on the LAYOUT viewport's bottom edge — the
-        ruler `useVisualViewport` measures `--keyboard-overlap` against. ⚠ **It
-        is the one thing on this screen that is still allowed to be `fixed`,
-        because it is not drawn**: no size, no paint, no hit area. ⚠ **And it is
-        why the host takes `top` rather than a `transform`** — a transform would
-        make the host this element's containing block and the ruler would start
-        measuring the host instead of the viewport.
+        ⚠⚠ **THE FLOOR ANCHOR THAT USED TO SIT HERE IS DELETED — 7 September,
+        and it had been LYING.** It was a zero-height `fixed` twin on the
+        viewport's bottom edge, and `--keyboard-overlap` was its `bottom` minus
+        the visible region. **A `fixed` element's rect is reported against the
+        VISUAL viewport on iOS** — the trace proved it outright, a host at
+        `top: 0` reading `top: -271` — so with the page panned the ruler read
+        the visible height, the subtraction came out negative, and the clamp
+        turned it into a confident zero. The overlap is
+        `clientHeight − visualViewport.height` now.
       */}
-      <div ref={floorAnchor} aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-0" />
 
       {/*
         ⚠⚠ **`composer-sheet` IS `writing-sheet` WITH THE POSITIONING TAKEN OUT

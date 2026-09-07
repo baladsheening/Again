@@ -5194,20 +5194,35 @@
   composer at the flex end sits on the keyboard's top edge with no arithmetic,
   and a third of the host is a third of what the reader can see.
 
-  ⚠ **`top`, never `transform`.** A transform would make this the containing
-  block for every `position: fixed` descendant, and there are two inside it —
-  the floor anchor and the desk's tool stack in `foot.tsx`.
+  ⚠⚠ **ANCHORED TO THE BOTTOM, AND THAT IS A MEASURED FACT RATHER THAN A
+  PREFERENCE — 7 September.** It was `top: var(--vv-top)`, and the screen went
+  up and came back down on every tap, because iOS reports
+  `visualViewport.offsetTop` in the frame *after* it has already moved the page.
+  **A trace on the handset then showed the invariant that removes the problem
+  instead of correcting it:** `offsetTop + visualViewport.height` equalled
+  `clientHeight` in every sample of every trace — `0 + 660`, `271 + 389`,
+  `202 + 458`. **The visible region's bottom edge is always the layout
+  viewport's bottom edge**, so a box anchored there and sized by `height` lands
+  on it exactly, from one number read at one instant.
+
+  ⚠⚠ **`--vv-top` IS DELETED. DO NOT REINTRODUCE A TOP-ANCHORED CORRECTION** —
+  any position taken from `offsetTop` is a frame behind by construction. See
+  `components/visual-viewport.ts` for the two fixes that were built on top
+  anchoring and measured wrong.
+
+  ⚠ **No `transform`.** It would make this the containing block for every
+  `position: fixed` descendant, and the desk's tool stack in `foot.tsx` is one.
 
   ⚠ **The fallback is `100svh` and it is the conservative one**, held for the
-  frame before `useVisualViewport` first writes. ⚠ **`--vv-top` and
-  `--vv-height` are written on the element this lands on**, so they resolve;
-  they must never be lifted into `@theme`, where a `var()` would be
-  substituted against `:root` and freeze on the fallback.
+  frame before `useVisualViewport` first writes. ⚠ **`--vv-height` is written on
+  the element this lands on**, so it resolves; it must never be lifted into
+  `@theme`, where a `var()` would be substituted against `:root` and freeze on
+  the fallback.
 */
 @utility screen-viewport {
   position: fixed;
   inset-inline: 0;
-  top: var(--vv-top, 0px);
+  bottom: 0;
   height: var(--vv-height, 100svh);
   /*
     Nothing on this screen scrolls the document: the rail scrolls horizontally
