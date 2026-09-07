@@ -123,14 +123,22 @@ export function Bar({
         chasing it a frame behind.
       */
       /*
-        ⚠ **`chrome-ink` fades the contents and the glow, and NOT the glass —
-        7 September, reported.** The slide is symmetric by construction and
-        still reads quick going and certain returning, because the top edge
-        clips the exit during the curve's burst and hides its long settle. The
-        ink is the one property that edge cannot cut, so it plays whole in both
-        directions. **All of the reasoning is on the utility in `globals.css`;
-        the two things to know here are that it costs no new duration and that
-        `page-screen.tsx`'s bar gets it too.**
+        ⚠ **`chrome-ink` fades the WORDMARK AND THE PROFILE GLYPH — not the
+        glow, and not the glass. 7 September, reported and then clarified.** The
+        slide is symmetric by construction and still read quick going and
+        certain returning, because the top edge clips the exit during the
+        curve's burst and hides its long settle. The ink is the one property
+        that edge cannot cut.
+
+        ⚠ **It is `& > *` on this header, so it is the row and everything in
+        it.** A second child added here joins the fade, which is right — but a
+        child that must NOT fade has nowhere to go, and that is the sign this
+        wants an explicit target rather than a subtraction.
+
+        ⚠ **Two durations and a linear curve, and both differ from the slab's on
+        purpose** — `--ink-out`, `--ink-in` and the utility in `globals.css`
+        carry the whole argument. **`--recede` and `--ease-recede` here are the
+        travel and are untouched.** ⚠ **`page-screen.tsx`'s bar gets this too.**
       */
       className={`mark-glow chrome-ink fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
         receded ? '-translate-y-full chrome-ink-gone' : ''

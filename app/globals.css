@@ -1831,6 +1831,40 @@
   --recede: 340ms;
 
   /**
+   * **How long the bar's ink takes to go, and to come back — 7 September. TWO
+   * numbers, where the travel above is deliberately one.**
+   *
+   * Reported, after the fade shipped on `--recede` in both directions: *the
+   * fade is too slow for when it recedes and too fast for when it returns.*
+   *
+   * ⚠⚠ **THIS IS NOT THE RE-SPLIT `--recede` FORBIDS, AND THE DISTINCTION IS
+   * THE WHOLE JUSTIFICATION.** `--recede` is the chrome's **travel**, it is one
+   * number for both directions, and it is untouched. The ink is a different
+   * mover with a different job: it exists to correct an asymmetry that **is
+   * itself directional** — the top edge hides the exit's long tail and shows
+   * the return's — so a correction spelled the same in both directions cannot
+   * do it. ⚠ **If the slab's travel is ever wanted per-direction, that argument
+   * has to be made at `--recede` on its own terms; this is not a precedent for
+   * it.**
+   *
+   * ⚠ **`--recede / 3` = 113ms out, and it is derived rather than picked.** The
+   * bar is **90% travelled at 128ms** — it has visually gone by then — so the
+   * ink at a third is out *before* the slab clears, and what leaves the screen
+   * is an empty bar. That is what *too slow* was describing: ink still on a bar
+   * that was already going.
+   *
+   * ⚠ **`--recede` exactly on the way in, so the ink lands on the same tick the
+   * slab settles.** Not longer: the complaint was that it arrived **early**,
+   * not that it should outlast the furniture carrying it.
+   *
+   * ⚠ **Spelled as the base duration and one override**, so the class that
+   * removes the ink also names the shorter number and taking the class off
+   * restores the longer one. There is no state to keep in step.
+   */
+  --ink-out: calc(var(--recede) / 3);
+  --ink-in: var(--recede);
+
+  /**
    * **How much a control grows under a cursor — 1 September.** Directed for the
    * sign-in wall's three controls; the mechanism and its gate are on the
    * `control-lift` utility, which is where the reasoning lives.
@@ -6763,43 +6797,60 @@
 }
 
 /**
- * **The bar's ink goes with the bar, and comes back with it — 7 September.**
+ * **The bar's ink leaves before the bar and arrives with it — 7 September.**
+ *
+ * ⚠ **The ink is the wordmark and the profile glyph, and NOTHING else** —
+ * clarified when this shipped fading the glow as well. `mark-glow` is the
+ * bar's own light and stays lit; it is a pseudo-element of the header, so it
+ * travels off the top with the slab regardless. **The glass does not fade
+ * either**: on the record there is text under it, and glass that thinned while
+ * it slid would un-blur those words mid-move.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Why the ink exists at all
+ * ─────────────────────────────────────────────────────────────────────────────
  *
  * Reported from a handset: *the way it recedes is faster and more jittery,
- * whereas the return of the top bar is smooth and certain.* ⚠ **The two
- * directions are the same `--recede` on the same `--ease-recede` and always
- * have been** — `bar.tsx` puts both on the base class so that only `translate`
- * switches. **What differs is which half of the curve the viewport lets you
- * see.**
+ * whereas the return is smooth and certain.* ⚠ **The two directions are the
+ * same `--recede` on the same `--ease-recede` and always have been** —
+ * `bar.tsx` puts both on the base class so only `translate` switches. **What
+ * differs is which half of the curve the viewport lets you see.**
  *
  * `--ease-recede` is a quintic ease-out: **55% of the travel in the first three
- * frames, 90% gone by 128ms, and the last third of it spread over 272ms of the
- * 340.** Going, the bar clears the top edge during the burst and spends that
- * long tail off screen; coming back, the burst happens off screen and the tail
- * is the whole of what there is to watch. Same curve, opposite halves visible —
- * which is exactly *quick going, certain coming back*.
+ * frames, 90% gone by 128ms, and the last third spread over 272ms of the 340.**
+ * Going, the bar clears the top edge during the burst and spends that long tail
+ * off screen; coming back, the burst happens off screen and the tail is the
+ * whole of what there is to watch. Same curve, opposite halves visible.
  *
  * ⚠⚠ **THE FADE IS THE ONE PROPERTY OF THIS BAR THE TOP EDGE CANNOT CUT**, so
- * it plays whole in both directions. That is why it answers the report without
- * moving a number: the exit finally has a visible ending.
+ * it is the only thing that can answer a complaint about the exit's ending.
  *
- * ⚠ **Same duration and same curve, deliberately.** `--ease-recede`'s own rule
- * is *one curve, both directions, all four movers*; the ink is a fifth mover on
- * one piece of furniture, and a fade that disagreed with the slide carrying it
- * would be the disagreement the eye reads before it reads either. ⚠ **If it
- * reads as a blink rather than a fade, that is the front-load, and the lever is
- * `--recede` for the whole chrome — not a second duration here.**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Linear, and the reason is not taste
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **The glass does NOT fade, and that split is what was asked for: *its
- * contents*.** The slab is the bar's body. On the record there is text under it,
- * and glass that thinned while it slid would un-blur those words mid-move — two
- * things happening to the same pixels at once.
+ * It shipped on `--ease-recede` in both directions and was reported the same
+ * day: *too slow for when it recedes and too fast for when it returns.*
+ * ⚠⚠ **BOTH COMPLAINTS ARE THE ONE FRONT-LOAD, READ FROM ITS TWO ENDS.** On the
+ * way out that curve's last tenth drags from 128ms to 340ms, so ink lingers on
+ * a bar that has already gone — *slow*. On the way in 91% of it lands by 120ms
+ * against a slab still settling for another 220 — *fast*. **One shape, two
+ * opposite reports.**
  *
- * ⚠ **The glow DOES fade, because it is the mark's own light.** `mark-glow`
- * spills `--mark-glow-drop` **below** the bar, so a glow left lit under a faded
- * wordmark is a patch of light sliding up the page with nothing inside it.
+ * ⚠ **A fade has no momentum.** `--ease-recede` is a *travel* curve: it exists
+ * so that a moving object leaves at speed and settles into a position. Opacity
+ * has no position to settle into, and the settle is exactly the tail that reads
+ * as lingering. Linear has neither a tail nor a pop.
  *
- * ⚠ **Both bars get it: `page-screen.tsx` passes `receded` as well**, so the
+ * ⚠ **This does not breach *one curve, both directions, all four movers*.**
+ * Those four are movers. This is the one thing on the bar that does not travel,
+ * and it is the only linear timing in the chrome — if a second appears, that
+ * rule is the one to re-read first.
+ *
+ * See `--ink-out` and `--ink-in` for the two durations and why the ink may be
+ * directional where `--recede` may not.
+ *
+ * ⚠ **Both bars get this: `page-screen.tsx` passes `receded` as well**, so the
  * record's scroll-driven recede fades its ink on the same terms. That is the
  * *one piece of furniture* rule rather than an oversight — and it is the
  * surface to look at first if this reads wrong, because the trigger there is a
@@ -6810,20 +6861,40 @@
  * travel, which is what receding is about.
  */
 @utility chrome-ink {
-  &::before,
   & > * {
-    transition: opacity var(--recede) var(--ease-recede);
+    transition: opacity var(--ink-duration, var(--ink-in)) linear;
   }
 }
 
-/** The gone state, spelled once — see `chrome-ink` for all of the reasoning. */
+/**
+ * The gone state — see `chrome-ink` for the reasoning.
+ *
+ * ⚠⚠ **IT NAMES THE EXIT'S DURATION THROUGH A CUSTOM PROPERTY, AND A
+ * `transition-duration` OVERRIDE HERE DOES NOT WORK.** `@utility` output is
+ * ordered by Tailwind, not by this file: it emits `.chrome-ink-gone > *`
+ * **before** `.chrome-ink > *`, and at equal specificity the later rule wins —
+ * so the base's `transition` shorthand put `--ink-in` back and the exit ran at
+ * 340ms. **Measured, not reasoned**: `chromeink.mjs` read `0.34s` off the exit
+ * on both engines.
+ *
+ * ⚠ **The fix is that no two rules declare the same property.** This sets an
+ * inherited custom property on the header; the child's transition reads it with
+ * `--ink-in` as the fallback, so with the class off there is nothing declaring
+ * it and the return is the longer number by default. **Order-independent by
+ * construction rather than by specificity**, which is the subtraction *How
+ * things get fixed* asks for over `&.chrome-ink-gone` doubling.
+ *
+ * ⚠ **A transition reads its timing from the after-change style**, which is why
+ * one property can serve both directions: adding the class makes the new style
+ * say 113ms, removing it makes the new style say 340ms.
+ */
 @utility chrome-ink-gone {
-  &::before,
+  --ink-duration: var(--ink-out);
+
   & > * {
     opacity: 0;
   }
 }
-
 @utility grain-ground {
   position: fixed;
 
