@@ -49,12 +49,13 @@ import { getSessionUser } from '@/lib/db'
  * See `node_modules/.probe/keepmark.mjs`.
  *
  * ⚠ **The two-face inconsistency IS CLOSED — 1 September.** This note used to
- * say the bar set the mark in Jost while this screen set it in `--font-serif`,
+ * say the bar set the mark in Jost while this screen set it in `--font-mark`,
  * that a person never saw both at once, and that unifying them was the next job.
- * It was directed the next day and it is done: `--font-display` resolves to
- * Instrument Serif, so the mark is one face everywhere it appears. Splitting the
- * rename from the face swap is what let the record column's two moves be told
- * apart — 2.6592 was the rename's, 2.176 is this one's.
+ * It was directed the next day and it is done; `--font-display` resolves to a single
+ * face — Instrument Serif then, **Bricolage Grotesque 800 since 7 September** —
+ * so the mark is one face everywhere it appears. Splitting the rename from the
+ * face swap is what let the record column’s moves be told apart: 2.6592 was the
+ * rename’s, 2.176 the serif’s, 2.9351 the grotesque’s.
  *
  * ⚠ **The two screens still differ in CASE, and that is not an oversight.** This
  * one sets `Keep.` at 6.5rem with a full stop, in `zine-command`; the bar sets

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Bebas_Neue, IBM_Plex_Mono, Instrument_Serif, Schibsted_Grotesk } from 'next/font/google'
+import { Bebas_Neue, Bricolage_Grotesque, IBM_Plex_Mono, Schibsted_Grotesk } from 'next/font/google'
 
 import './globals.css'
 
@@ -137,35 +137,49 @@ const bodySansItalic = Schibsted_Grotesk({
 })
 
 /**
- * **The zine treatment's display face — 31 August. THE WORDMARK'S FACE TOO,
- * since 1 September.**
+/**
+ * **The mark's face, and the zine treatment's display face — Bricolage
+ * Grotesque 800 since 7 September.** It replaces Instrument Serif, which held
+ * this slot from 1 September.
  *
- * A high-contrast serif for the two screens that are composition rather than
- * record: the sign-in wall's mark and the first run's command. It is the free
- * face nearest the direction that was briefed (`Ogg`, which is licensed and not
- * on this machine) — narrow, sharply cut, and it holds together at the poster
- * sizes those two screens set it at.
+ * Directed: *a new unique font for the logo that works both on the sign-in
+ * screen as well as the post-sign-in screens.* Nine candidates were set as
+ * `KEEP.` at the poster's 6.5rem and as `KEEP` at the bar's 28px caps, then the
+ * shortlist was rendered on the real screens at 390×844.
  *
- * ⚠ **It is now the wordmark's face as well, and this note used to say the
- * opposite.** It read *it is NOT the wordmark's face… that is the same job as
- * the rename, and it wants doing with it rather than before it.* The rename went
- * first and this followed a day later, directed — which is the order that let the
- * record column's two moves be told apart. `--font-display` and `--font-serif`
- * both resolve here now; the fence at the top of globals.css is re-measured for
- * it, and the two tokens deliberately stay two.
+ * ⚠⚠ **SYNE 800 WAS THE FIRST CHOICE AND WAS ELIMINATED BY A MEASUREMENT, NOT
+ * A PREFERENCE: IT DOES NOT FIT.** At 6.5rem the poster runs off a 390px
+ * screen — `KEE` and half a P, the full stop gone. It sets far wider than the
+ * 2.176 this fence held, and the only fixes were shrinking the poster or
+ * re-composing the sign-in screen, both larger changes than a face swap.
+ * **Anton fitted and was refused as one of the most-used display faces on the
+ * web**, which is the opposite of what was asked for.
  *
- * ⚠ **One weight — 400 — and the fence carries it.** `--wordmark-weight` exists
- * because this family has no 500 and the `wordmark` utility used to ask for one.
+ * ⚠ **A GROTESQUE WHERE THERE WAS A SERIF, AND THE TOKEN NAMES FOLLOWED.**
+ * `--font-serif-face` and `--font-serif` are now `--font-mark-face` and
+ * `--font-mark`: a token called *serif* resolving to a grotesque is the kind of
+ * name this repository does not leave lying about, and the fence's whole
+ * discipline is that a number — or a name — must describe the face that is
+ * actually there.
  *
- * **Preloaded, unlike the two reserve faces.** The sign-in wall is the first
- * page a new account ever sees and this face is the largest thing on it, so a
- * swap here is the swap a stranger watches — and it is now on the bar of every
- * signed-in screen as well, which is a second reason not to let it flash.
+ * ⚠ **800, and the weight is a fence number.** Instrument Serif had one cut and
+ * it was 400; Bricolage's `wght` axis runs 200–800, so **900 does not exist on
+ * it** and asking for one fails silently by matching down. `--wordmark-weight`
+ * carries the 800.
+ *
+ * ⚠ **The variable axes are pinned to `wght` alone.** The family also carries
+ * `opsz` and `wdth`; taking the whole variable file for one weight is bytes
+ * spent on axes nothing in this app moves.
+ *
+ * **Preloaded, unlike the reserve face.** The sign-in wall is the first page a
+ * new account ever sees and this face is the largest thing on it, so a swap
+ * here is the swap a stranger watches — and it is on the bar of every signed-in
+ * screen as well, which is a second reason not to let it flash.
  */
-const instrumentSerif = Instrument_Serif({
-  variable: '--font-serif-face',
+const markFace = Bricolage_Grotesque({
+  variable: '--font-mark-face',
   subsets: ['latin'],
-  weight: '400',
+  weight: '800',
   display: 'swap',
 })
 
@@ -256,7 +270,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${bodySans.variable} ${bodySansItalic.variable} ${plexMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} h-full`}
+      className={`${bodySans.variable} ${bodySansItalic.variable} ${plexMono.variable} ${bebasNeue.variable} ${markFace.variable} h-full`}
     >
       {/*
         ⚠⚠ **`bg-bg` CAME OFF THE BODY ON 1 SEPTEMBER AND MUST NOT GO BACK.** It
