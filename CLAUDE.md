@@ -24,6 +24,73 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE SCREEN SHRINKS BEFORE THE KEYBOARD, NOT AFTER IT — 7 September, and
+it is the only way to stop the page going up and coming back down.** Reported
+the same day, on the fix below: *I tap in the composer and the page, the images
+and the logo row go up then come down. That's stupid. The logo row shouldn't
+move, and the images should simply resize smoothly.*
+
+- ⚠⚠ **THE EXCURSION IS THE PAN AND OUR CORRECTION, IN THAT ORDER, AND IT
+  CANNOT BE FIXED BY CORRECTING SOONER.** **iOS does not publish
+  `visualViewport.offsetTop` while it is animating** — the value lands when the
+  animation is over. So the rAF burst samples every frame and still gets one
+  number, at the end. **Anything that follows the pan lands after the excursion
+  has already been seen.** ⚠ **Do not answer this by sampling harder or by
+  listening for another event**; the information does not exist yet.
+- ⚠⚠ **SO THE PAN IS PREVENTED RATHER THAN FOLLOWED.** iOS pans to reveal a
+  focused field it believes the keyboard will cover. **If the field is already
+  above the keyboard's line when iOS looks, there is nothing to reveal.** The
+  host is shrunk **in the focus's own frame**, before that decision, and the
+  layout is forced with an `offsetHeight` read — writing a style marks layout
+  dirty and nothing is obliged to resolve it until the next frame, which is
+  after iOS has looked.
+- ⚠⚠ **IT REMEMBERS A VISIBLE HEIGHT, NEVER A KEYBOARD HEIGHT.** `AT_REST` and
+  `WHILE_WRITING`, keyed by viewport width so a rotation gets its own pair. A
+  keyboard height would have to be derived from
+  `innerHeight`/`clientHeight`/`offsetTop` arithmetic with a keyboard open —
+  **exactly the guessing that falsified five versions of `keyboard-hem.ts` one
+  after another.** `visualViewport.height` is one number the platform states
+  outright, and *what it was last time somebody wrote* needs no arithmetic.
+- ⚠ **Not a tuned constant, and self-gating on the desk.** Nothing is typed in;
+  both numbers are the device's own measurements. A pointer device never shrinks
+  its visible area on focus, so `WHILE_WRITING` is never filled up there and the
+  anticipation never fires — **there is no pointer sniff and there must not be
+  one.**
+- ⚠⚠ **`AT_REST` IS THE LARGEST HEIGHT SEEN, NEVER THE LATEST, AND THAT IS A
+  REAL TRAP RATHER THAN A TIDINESS.** A blur is instant and the keyboard takes a
+  third of a second to leave, so for those frames nothing is focused and the
+  visible area is still short. Latest-wins would file **380** as the resting
+  height, after which nothing is ever *smaller than rest* and the anticipation
+  never fires again. It also makes an address bar collapsing during a scroll a
+  non-event.
+- ⚠ **The anticipated height is HELD until the keyboard actually arrives.**
+  Without that the next frame writes the full height straight back over it — the
+  keyboard has not opened yet — and the optimism is undone before iOS looks. It
+  is let go when the real height is no bigger than what was anticipated, and
+  unconditionally when the 700ms burst ends, **so a focus that raises no
+  keyboard corrects itself** rather than leaving the screen wrong.
+- ⚠⚠ **THE RESIZE SNAPS, AND A TRANSITION ON IT WOULD UNDO THE FIX.** *The
+  images should resize smoothly* was asked for and is **not** built. A
+  transition means the host is still tall at the instant iOS decides, the
+  composer is still low, and **the pan comes back** — the two are the same
+  property read at the same moment. ⚠ **Do not add `transition: height` to
+  `screen-viewport`.** Making the pictures glide while the composer arrives
+  instantly needs the tiles animated off a concrete pixel height, which is the
+  layout arithmetic this screen just deleted. **Judge the snap on hardware
+  first.**
+- ⚠ **The first focus after a COLD LOAD still pans once**, because there is
+  nothing to remember yet. Module scope rather than storage, so it survives a
+  client navigation and a resume but not a reload — **this app introduces no web
+  storage anywhere** and that was not worth breaking for this.
+- **Proved by `node_modules/.probe/vvhost.mjs`, now 38 assertions**, against
+  `next start`. The keyboard is played by `setViewportSize`, and what is under
+  test is the bookkeeping and the timing rather than iOS: a first focus
+  anticipates nothing, one keyboard is measured, the screen grows back, **the
+  second focus shrinks to 380 while `visualViewport.height` still reads 844**,
+  and a focus that raises no keyboard corrects itself. ⚠ **No desktop browser can
+  raise an iOS keyboard; the handset is the only thing that can say whether the
+  pan is gone.**
+
 ⚠⚠ **ONE BOX IS PINNED TO THE VISUAL VIEWPORT AND EVERYTHING ELSE IS IN FLOW
 INSIDE IT — 7 September, BUILT AND MEASURED, AND IT IS THE FIX FOR A SCREEN THAT
 WORKED ONE TAP IN FOUR.** Reported with five screenshots from a handset: the
