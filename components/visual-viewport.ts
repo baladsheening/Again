@@ -140,8 +140,23 @@ export function useVisualViewport({
       if (!frame) frame = requestAnimationFrame(run)
     }
 
-    /* Keep measuring for as long as a keyboard could still be arriving. */
+    /**
+     * **Write in the event's own task, then keep measuring.**
+     *
+     * ⚠⚠ **THE SYNCHRONOUS `write()` IS NOT A TIDINESS — IT IS THE LAST FRAME
+     * OF LAG.** This only *scheduled* a frame, so when `visualViewport` fired
+     * `resize` the new height was already readable and the host was still the
+     * old size until the next `requestAnimationFrame`. The trace caught it:
+     * `t=137` reading `vvh 389` with `hh 660`, corrected at `t=169` — **two
+     * frames with the host taller than the visible area, which puts the bar
+     * above the top of the screen.** Writing here applies it in the same task
+     * the platform dispatched, before the frame is composited.
+     *
+     * ⚠ **The burst still follows**, because iOS emits nothing when the
+     * keyboard animation ends and the height can keep moving after the event.
+     */
     const hold = () => {
+      write()
       until = performance.now() + KEYBOARD_ARRIVAL_MS
       schedule()
     }
