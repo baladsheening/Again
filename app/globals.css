@@ -2906,30 +2906,24 @@
   );
 
   /*
-    ⚠⚠ **`--tile-width` IS BACK — 7 September, and the direction that deleted
-    it is reversed with the reason stated.** From 6 September it read: *a tile
-    is no longer a width at all; it is as tall as the space between the bar and
-    the composer, and `aspect-2/3` makes the width follow. Do not put a width
-    token back.* **That made the tile's height a percentage of a box whose
-    height changes when a keyboard opens, and iOS does not re-resolve it.**
-    Reported from a handset: *the images don't even resize properly; the left
-    image is the only one properly resized, and that only happened after tapping
-    in and out of the composer repeatedly.* The tiles stayed at their at-rest
-    height and were **clipped** by the shortened band — a 253pt-wide slice in a
-    143pt band, measured off the screenshot.
+    ⚠⚠ **`--tile-width` WAS BROUGHT BACK ON 7 September AND TAKEN OUT AGAIN THE
+    SAME HOUR. A TILE IS NOT A WIDTH.** It was reintroduced to escape a bug —
+    tiles keeping their at-rest height and being clipped when the keyboard
+    opened — and it made them small and fixed, which is the opposite of what was
+    asked for: *they're meant to be bigger, but never so big as to overlap the
+    strip below, and when the user taps in the composer, the images resize
+    smoothly.*
 
-    ⚠ **It also answers a complaint from the same day at the other end.** Asked
-    which of five screenshots was right, the answer was the one with four
-    legible posters; the one with a single tile 334pt wide on a 390pt screen was
-    wrong. **A band-derived height is what produced that**, because a tall band
-    makes a huge tile. A width makes the rail read the same at every band
-    height, on every device, with nothing resolved through a flexible ancestor.
+    ⚠ **A tile is as tall as the space between the bar and the composer**, and
+    `aspect-2/3` makes the width follow — so *big*, *never overlapping the
+    strip* and *resizes with the band* are one answer rather than three numbers.
+    **The clipping was never the height's fault**: the band was changing in one
+    step, so the percentage had nothing to re-resolve through. It eases on
+    `--keyboard-rise` now, which is a layout change every frame.
 
-    ⚠ **8rem is measured off the screenshot that was picked**, not chosen: the
-    tiles there ran ~127pt at a device pixel ratio of 2.37. **If it wants
-    changing, change it here** — it is one number and it is the only one.
+    ⚠⚠ **DO NOT PUT A WIDTH TOKEN BACK.** This is the second time; the first is
+    recorded in `docs/build-log.md` for 6 September.
   */
-  --tile-width: 8rem;
 
   /**
    * ───────────────────────────────────────────────────────────────────────────
@@ -3390,26 +3384,23 @@
  * as too much or too little, this is the one number to move** — and it is the
  * only one in the effect.
  */
-/*
-  ⚠⚠ **`rail-focus` IS DELETED — 7 September, and it is a suspect being
-  removed rather than a decoration being tidied.** It was a scroll-driven
-  animation — `animation-timeline: view(x)` on every tile — scaling a tile
-  0.92 → 1 → 0.92 as it crossed the scroller, so a tile's drawn size depended on
-  where it sat in the view.
+@keyframes rail-focus {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
 
-  Reported from a handset, with the keyboard open: *the images don't even
-  resize properly; the left image is the only one properly resized, and that
-  only happened after tapping in and out of the composer repeatedly.* **The
-  leftmost tile is the only one whose view timeline is settled**, and the tiles
-  behind it stayed at their old height and were clipped by the band rather than
-  resized. Nothing else on the rail is per-tile and position-dependent.
+  50% {
+    transform: scale(1);
+  }
+}
 
-  ⚠ **Not proved on the device — no local WebKit could be made to reproduce
-  it** (the one on this machine loads the page unstyled), so this is the
-  suspect removed first because it costs nothing: **the scale was never asked
-  for.** ⚠ **If the tiles still fail to resize, this is what was taken out**,
-  and the next suspect is the percentage height itself.
-*/
+@utility rail-focus {
+  @supports (animation-timeline: view()) {
+    animation: rail-focus linear both;
+    animation-timeline: view(x);
+  }
+}
 
 
 
@@ -5238,6 +5229,21 @@
   the element this lands on**, so it resolves; it must never be lifted into
   `@theme`, where a `var()` would be substituted against `:root` and freeze on
   the fallback.
+*/
+/*
+  ⚠⚠ **UNUSED SINCE THE RESTORE OF 7 September, AND KEPT ON PURPOSE.** The
+  front page went back to the arrangement of `812b1a1` — `main` on the layout
+  viewport, the sheet `fixed` on `--keyboard-overlap`, the bar and the rail
+  corrected by `--viewport-top`, and the band easing on `--keyboard-rise` —
+  because that is the version that was seen doing what was asked: **big tiles
+  that resize smoothly and a page that does not jolt.**
+
+  ⚠ **What this pair got right and should not be lost:** one box pinned to the
+  visible area means nothing can disagree about where the page is, and
+  `offsetTop + visualViewport.height === clientHeight` was measured true in
+  every sample on the handset. ⚠ **What it got wrong:** the band then changes
+  height in one step, so there is nothing to ease and the tiles have nothing to
+  resize through — which is the whole of what was being asked for.
 */
 @utility screen-viewport {
   position: fixed;

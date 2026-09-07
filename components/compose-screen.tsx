@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
 import { AttachGlyph, SendGlyph, UndoGlyph, WriteGlyph } from './glyphs'
-import { useVisualViewport } from './visual-viewport'
+import { useKeyboardHem } from './keyboard-hem'
 import { captureAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
 
@@ -31,11 +31,8 @@ import type { PortalWaiting } from '@/lib/db'
  * forbids explaining an absence and a temporary occupant is work to delete.
  *
  * ⚠ **This is not `PageScreen` with the record removed.** It shares the
- * mutation (`captureAction`) and nothing else. Its strip is `composer-sheet`
- * and the record's is `writing-sheet`; the two parted on 7 September, when the
- * front page moved into a host pinned to the visual viewport and the record —
- * which scrolls a document — did not. The record's strip is a **one-line field
- * bound to an existing
+ * mutation (`captureAction`) and the strip's positioning (`writing-sheet`), and
+ * nothing else. The record's strip is a **one-line field bound to an existing
  * capture** — rewriting is all it has left to do; this is a **wrapping composer
  * for new ones**. Two single-purpose objects where there was one that did both.
  */
@@ -260,36 +257,139 @@ export function ComposeScreen({
    */
   const box = useRef<HTMLDivElement | null>(null)
   const host = useRef<HTMLDivElement | null>(null)
+  const floorAnchor = useRef<HTMLDivElement | null>(null)
   const field = useRef<HTMLTextAreaElement | null>(null)
 
   /*
-    ⚠⚠ **ONE ELEMENT IS PINNED TO THE VISUAL VIEWPORT AND EVERYTHING ELSE IS IN
-    FLOW INSIDE IT — 7 September.** `host` wears `screen-viewport`, so its box
-    **is** the visible area: the bar, the rail and the composer are ordinary
-    flex children of it and not one of them positions itself against a viewport.
-    See `components/visual-viewport.ts` for the three `fixed` boxes this
-    replaced, and the handset screenshot of them disagreeing.
-
-    ⚠ **It takes no `writing`.** The old hook mounted its effect on the
-    gesture; this one runs always, because the host has to be the right size
-    before anybody taps as well as after. A focus still starts a measuring
-    burst — the hook listens for it itself.
+    ⚠ **`writing`, never `focused`.** Four things on the capture page broke by
+    keying off focus and all four for one reason — focus is a resting state, not
+    an event. Here the field is not autofocused, so the two happen to coincide;
+    the hook still takes the gesture's word rather than the DOM's.
   */
-  useVisualViewport({ host })
+  useKeyboardHem({ writing, host, floorAnchor })
 
   /*
-    ⚠⚠ **THE COMPOSER USED TO MEASURE ITSELF INTO `--sheet-block`, AND THAT
-    WHOLE MECHANISM IS DELETED — 7 September.** A `ResizeObserver` wrote the
-    sheet's border-box height onto `host` so that `main` could reserve it as
-    bottom padding. **It existed only because the sheet was `fixed` and
-    therefore out of flow**, so the page had to be told how much room something
-    it could not see was taking.
+    ⚠⚠ **THE COMPOSER MEASURES ITSELF, AND THE RAIL FILLS WHAT IS LEFT — 6
+    September.** Directed: *there's a big space between the rail and the top of
+    the sheet the composer lays on.* There was, and `main` was reserving
+    `--foot-height + 3 lines` for a strip that is really **a card, a hem and a
+    foot** — a guess at somebody else's height, and wrong by whatever the card
+    happened to be.
 
-    The sheet is an ordinary flex child now and the rail is `flex-1` beside it,
-    so the reservation *is* the layout. ⚠ **Do not reintroduce a measurement
-    here.** If the rail and the composer ever overlap again the cause is a box
-    that has left the flow, not a number that is out of date.
+    ⚠ **So it is read off the element rather than computed from the tokens.**
+    The same rule `readRoll` and the swipe's detent were built on: *measure the
+    thing, never re-derive it.* The composer grows a line when somebody writes,
+    and this follows it with nothing told about that.
+
+    ⚠ **A `ResizeObserver`, not an effect that runs once.** The strip changes
+    height when the field grows, when the failure line appears, and when the
+    desk's root scale ramps — three occasions, one observer.
+
+    ⚠ **Written through the CSSOM onto `host`, which is what `--keyboard-overlap`
+    already does** — §10 blocks inline `style` attributes, and this is the door
+    that rule leaves open. ⚠ **It must NOT be lifted into `@theme`**: a
+    custom property's `var()` is substituted where it is *declared*, so a token
+    on `:root` would resolve this against `:root`, where nothing writes it. That
+    bug cost a day on 29 August.
   */
+  /*
+    ⚠⚠ **THE RAIL KEEPS ITS PLACE BY ARITHMETIC, AND SCROLL-SNAP WAS TRIED
+    FIRST AND FAILED ON THE DEVICE — 6 September.** The tiles derive their width
+    from the rail's height, so a keyboard collapses the content width **44%**
+    — measured 7488px → 4227px — while `scrollLeft` stays the number it was.
+    Nothing scrolls; **the content moves out from under the offset**, sliding
+    the corpus two and a half tiles under a stationary eye.
+
+    ⚠ **`snap-x snap-mandatory` held it in both engines here and was reported
+    worse from the phone** — *"sliding the rail feels worse, less intuitive"*,
+    because mandatory snap takes the free flick off a browsing surface, and
+    *"after repeated taps it occurs randomly"*, because re-snapping is
+    best-effort: which target the engine re-resolves to depends on where the
+    offset sat when the relayout began. **Right most times and wrong some is
+    worse than wrong every time**, because it cannot be learnt.
+
+    ⚠ **A `ResizeObserver` on the strip is exact and has no opinion.** It scales
+    the offset by the ratio of the content width, so the same *fraction* of the
+    corpus stays under the eye whatever the tiles now measure — and because the
+    tiles are uniform, that is the same tile. ⚠ **The correction must happen in
+    the observer's own callback**, which the spec runs **after layout and before
+    paint**: a frame later — in an effect, or a `requestAnimationFrame` — is a
+    frame of the rail in the wrong place, once per frame for the whole
+    animation.
+
+    ⚠ **It watches the STRIP, not the track.** The track's width never changes;
+    the `w-max` strip inside it is the content, and the content width is the
+    number the offset is a fraction of.
+  */
+  const browse = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const track = browse.current?.querySelector<HTMLElement>('.rail-track')
+    const strip = track?.querySelector('ul')
+    if (!track || !strip) return
+    let width = strip.getBoundingClientRect().width
+    let ratio = width > 0 ? track.scrollLeft / width : 0
+    let applied = track.scrollLeft
+    const observer = new ResizeObserver(([entry]) => {
+      const next = entry.contentRect.width
+      if (next <= 0 || width <= 0) return
+      /*
+        ⚠⚠ **THE RATIO IS RE-APPLIED, NEVER RE-MULTIPLIED, AND THAT IS THE
+        WHOLE OF A REPORTED BUG.** Scaling the *current* offset at every step
+        compounds its rounding: measured in WebKit, the rail crept **6.3px left
+        over one downsize**, always the same way, so a run of taps in the
+        composer walks the corpus off its place — *"after repeated taps it
+        occurs randomly"*. Chromium hid it at 1.3px. Capturing the fraction once
+        and re-applying it bounds the error at a single rounding however many
+        times the keyboard comes and goes.
+
+        ⚠ **The offset moving on its own is somebody SCROLLING**, which is the
+        only thing that may change where we think the rail is. Comparing against
+        what we last wrote is how that is told from our own correction — there
+        is no scroll event to trust here, because setting `scrollLeft` fires one
+        too.
+      */
+      if (Math.abs(track.scrollLeft - applied) > 0.5) ratio = track.scrollLeft / width
+      if (next !== width) track.scrollLeft = ratio * next
+      applied = track.scrollLeft
+      width = next
+    })
+    observer.observe(strip)
+    return () => observer.disconnect()
+  }, [])
+
+  const sheet = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const box = sheet.current
+    const root = host.current
+    if (!box || !root) return
+    const observer = new ResizeObserver(([entry]) => {
+      /*
+        ⚠⚠ **THE BORDER BOX, NOT `contentRect` — reported 6 September:** *the
+        part of screen we dedicated to the composer, sheet and glyphs should be
+        completely in view.* It was not. `writing-sheet` spends the notch's
+        clearance as `padding-block`, and `contentRect` is the **content** box,
+        so the reserve was short by that padding and the last pictures sat under
+        the composer on every notched handset. **The strip occupies its border
+        box; that is the number to keep clear of.**
+      */
+      const box = entry.borderBoxSize?.[0]
+      root.style.setProperty(
+        '--sheet-block',
+        `${box ? box.blockSize : entry.contentRect.height}px`,
+      )
+    })
+    /*
+      ⚠⚠ **`box: 'border-box'`, OR THE NOTCH'S CLEARANCE IS NEVER SEEN.** The
+      default is the **content** box, so a change that is purely
+      `padding-block` — which is exactly what `env(safe-area-inset-bottom)`
+      is here — moves nothing the observer is watching and **no callback ever
+      fires**. The reserve then keeps whatever it was measured at before the
+      inset existed. Found by emulating a notch: the strip measured 199.9px and
+      `--sheet-block` still read 181.5.
+    */
+    observer.observe(box, { box: 'border-box' })
+    return () => observer.disconnect()
+  }, [])
 
   /**
    * **Put the undo at the end of the words, on whichever line they end on.**
@@ -548,14 +648,21 @@ export function ComposeScreen({
   }
 
   return (
-    <div ref={host} className="screen-viewport flex flex-col">
-      {/*
-        ⚠ **In flow, not `fixed`.** It is a flex child of a host that is already
-        the visible area; a second `fixed` box inside the first is a second
-        thing for iOS's keyboard pan to move differently, which is exactly what
-        put the wordmark off the top of a handset on 7 September.
-      */}
-      <Bar flow />
+    /*
+      ⚠ **`overflow-clip`, and it clips nothing anybody can see.** The browse
+      half is translated down by the pan, and a transform contributes to the
+      scrollable overflow area — an unclipped page would grow a scroll while
+      somebody writes, which is a page iOS may choose to *scroll* instead of
+      pan. This box is exactly the layout viewport, and the visible band is
+      always inside it, so what is cut is always below the screen.
+
+      ⚠ **`clip`, never `hidden`** — hidden makes a scroll container, which is
+      the thing being prevented. ⚠ **Neither clips the bar, the strip or the
+      foot**: they are `position: fixed` with no transformed ancestor, so their
+      containing block is the viewport and this box is not in their chain.
+    */
+    <div ref={host} className="overflow-clip">
+      <Bar />
 
       {/*
         ⚠ **The browse half, filled since 6 September.** It held the column open
@@ -576,18 +683,52 @@ export function ComposeScreen({
         belongs to the tile rather than to the page.
       */}
       {/*
-        ⚠⚠ **NO HEIGHT, NO BAR CLEARANCE, NO RESERVE FOR THE COMPOSER — 7
-        September.** All three were arithmetic standing in for boxes that had
-        left the flow: `h-svh` for a page whose height nothing measured,
-        `pt-[--bar-height]` for a `fixed` bar, and a `pb` of
-        `--sheet-block + --keyboard-overlap` for a `fixed` sheet. The bar is a
-        sibling above and the sheet a sibling below, so `flex-1` is all three.
+        ⚠⚠ **THE PAN IS CANCELLED BY A TRANSFORM AND THE KEYBOARD IS EASED BY A
+        MARGIN, AND KEEPING THOSE TWO APART IS THE WHOLE DESIGN — 6 September.**
+        Reported: *it looks like the row is being replaced; I want the effect of
+        it being resized smoothly* — and, decisively, *when I tap outside to
+        collapse the keyboard it looks like the rail resizes to its larger self
+        smoothly.* **One direction smooth and the other not, on one transition,
+        is the tell.**
 
-        ⚠ **`min-h-0` is what lets this be SMALLER than its content.** A flex
-        item's floor is its content by default, so without it the rail would set
-        the height and push the composer off the bottom of the host.
+        ⚠⚠ **iOS PANS THE VISUAL VIEWPORT TO REVEAL THE FIELD, AND
+        `--keyboard-overlap` HAS THE PAN SUBTRACTED OUT OF IT** —
+        `floorAnchor.bottom − (offsetTop + vv.height)`. Pan 300 of a 336px
+        keyboard and the overlap is **36**. So a rail easing on the overlap eased
+        36px and **jumped the other 300**: a hard cut wearing a transition. On
+        the way out the pan returns and the same arithmetic runs the other way,
+        which is why one direction looked right.
+
+        ⚠ **So the two terms are separated by what they physically are.** The pan
+        is a **displacement** and is cancelled by `translate-y`, instantly,
+        because it cancels something instantaneous — a duration there would show
+        the page jump and slide back. The keyboard is a **size** and is eased,
+        on `--keyboard-rise` = `overlap + pan`, which steps once from nothing to
+        the whole keyboard however iOS chose to split it.
+
+        ⚠⚠ **A `translate-y` HERE WAS BUILT AND MEASURED WRONG ONCE ALREADY, AND
+        THE DIFFERENCE IS THE MARGIN BESIDE IT.** With `mb` on the overlap it
+        drove the rail `offsetTop` px into the sheet, because the pan was then
+        counted twice. With `mb` on the rise the margin carries the pan back and
+        the floor lands on the composer's top edge at any offset. **The two must
+        change together or not at all** — `viewporttop.mjs` asserts the floor.
+
+        ⚠ **Padding could not do this.** `<main>` is `h-svh`, anchored to the
+        layout viewport's bottom, so a top padding moves the ceiling and leaves
+        the floor where the screen has just moved away from it. **A transform
+        moves both edges**, which is what an unmoved rail needs.
+
+        ⚠ **The dim keys on `writing`, the geometry keys on the measurement** —
+        `--keyboard-overlap`, `--viewport-top` and `--keyboard-rise` are
+        **lengths**, never a keyboard detector.
+
+        ⚠ **The bar is fixed at `top-0` and is anchored the same way, so it pans
+        off too and is deliberately NOT corrected here** — nothing has seen it
+        happen. If the wordmark is gone from the top edge while somebody writes,
+        the fix is `top-[var(--viewport-top,0px)]` on `bar.tsx`, a different
+        property from the `translate` its recede owns.
       */}
-      <main className="gutter mx-auto flex min-h-0 w-full max-w-[var(--record-measure)] flex-1 flex-col">
+      <main className="gutter mx-auto flex h-svh w-full max-w-[var(--record-measure)] flex-col pt-[var(--bar-height)] pb-[var(--sheet-block,calc(var(--foot-height)+var(--leading-line)*3))]">
         {/*
           ⚠⚠ **WRITING DOWNSIZES THE RAIL AND DIMS IT; IT DOES NOT MOVE IT — 6
           September, directed: *when tapping in the composer, the rail should not
@@ -596,18 +737,21 @@ export function ComposeScreen({
           moving* — nothing translates and the first picture does not shift a
           pixel.
 
-          ⚠⚠ **THE HEIGHT IS FLEX AND READS NOTHING — 7 September.** It was
-          `--keyboard-overlap`, used as a length, to put the rail's floor on the
-          composer's real top edge. **The composer's real top edge is where this
-          box stops now**: it is `flex-1` between a bar and a sheet inside a
-          host whose box is the visible area, so what is left over is what is
-          left over and there is no term anybody can forget.
+          ⚠⚠ **THE HEIGHT READS `--keyboard-overlap` AND THE DIM READS
+          `writing`, AND THAT SPLIT IS DELIBERATE.** CLAUDE.md's rule is *keyed
+          on `writing`, never on `--keyboard-overlap`* — and it is a rule
+          about using that property as a **keyboard detector**, which it is not:
+          it measures a gap that also opens when a Safari tab's address bar
+          collapses during a scroll. **Here it is used as a LENGTH**, to put the
+          rail's floor on the composer's real top edge, which is the one thing
+          it does measure honestly. ⚠ **Read it as a boolean here and this page
+          re-acquires the bug it shipped on 24 August.**
 
-          ⚠ **The dim still reads `writing`, and that is still the rule** —
-          CLAUDE.md's *keyed on `writing`, never on `--keyboard-overlap`*, which
-          is about using that property as a **keyboard detector**. Nothing on
-          this screen reads it as one; its one remaining reader spends the
-          notch's clearance with it.
+          ⚠ **Without the overlap term the composer sits ON the rail.** The
+          sheet rides to the top of the keyboard while `--sheet-block` is only
+          its own height, so the rail's floor stayed at the glass and 336px of
+          picture went behind the keys — *the rail overlaps it*, reported once
+          already and reintroduced by every fix that forgets this term.
 
           ⚠ **60%, because that is the app's one existing fade.**
           `--color-muted` is the ink at 60%, so a rail that recedes to the same
@@ -617,60 +761,69 @@ export function ComposeScreen({
           ⚠ **`--recede` on `--ease-recede`, the app's one duration and one
           curve**, collapsed from two on 24 August precisely so nobody sets a
           second equal to it.
-        */}
-        {/*
-          ⚠⚠ **THE `translate-y` ON THIS DIV IS DELETED, AND THE DELETION IS
-          THE FIX — 7 September.** It corrected the rail for iOS's keyboard pan
-          by pushing it **down** by `visualViewport.offsetTop`, while the
-          composer's sheet corrected itself **up** by `--keyboard-overlap` and
-          the bar did not correct at all. Three boxes, three answers: on a
-          panned tap the wordmark left the screen and the rail walked into the
-          composer, showing through its glass. **Reported from a handset with
-          the screenshot.**
 
-          ⚠ **The pan is answered once now, on the host, by `screen-viewport`.**
-          ⚠⚠ **DO NOT PUT A PER-ELEMENT CORRECTION BACK HERE OR ANYWHERE ELSE ON
-          THIS SCREEN.** One correction cannot disagree with itself; the second
-          one is the bug, whichever element it lands on.
+          ⚠⚠ **THE KEYBOARD IS A MARGIN HERE RATHER THAN A TERM IN `<main>`'S
+          PADDING, AND THE WHOLE POINT IS THAT A MARGIN CAN BE TRANSITIONED —
+          6 September.**
+
+          ⚠⚠ **iOS DOES NOT REPORT THE KEYBOARD AS IT RISES; IT REPORTS IT WHEN
+          IT ARRIVES.** `visualViewport` steps, so the whole change lands in one
+          frame and every tile re-derived its size in that frame. **There was
+          never anything to be smooth** — the rail was not animating badly, it
+          was not animating at all. Measuring the rail against a *ramped* overlap
+          in a desk browser shows a smooth shrink and is measuring the wrong
+          thing; the probe steps it now.
+
+          ⚠⚠ **SO THIS IS THE ONE PLACE A DURATION OF OURS IS RIGHT, AND IT
+          READS LIKE A CONTRADICTION OF THE TRANSFORM ON THIS SAME ELEMENT.**
+          The transform takes **no** transition because the pan is instantaneous
+          and a clock of ours would chase it. This eases because **a step has no
+          motion to chase.** ⚠ **The test is not *is there a transition* but *is
+          the source continuous*** — continuous, track it; stepped, ease it.
+
+          ⚠ **It costs 30ms a frame in WebKit against 26ms for a pure-opacity
+          control**, and a flat 16.7ms in Chromium — measured by
+          `railframes.mjs`, because animating a margin that resizes 24
+          aspect-ratio tiles is a layout per frame and had to be shown to be
+          affordable rather than assumed. ⚠ **An earlier reading of 95–127ms was
+          the probe's own cost**, not the page's.
+
+          ⚠ **A margin on this element, not padding on `<main>`.** Both take the
+          same height off the rail, but `<main>`'s padding also carries
+          `--sheet-block`, which the composer's own `ResizeObserver` already
+          moves smoothly as the field grows a line — transitioning that too would
+          put a second 340ms lag on a thing that is already gliding. **One
+          property, one owner.**
+
+          ⚠ **It eases the rail and NOT the composer, deliberately.** The sheet
+          keeps riding `--keyboard-overlap` with no duration, so it lands on the
+          keys the instant iOS says where they are; a lagging composer is a field
+          sitting over the keyboard for a third of a second. The price is that
+          for that third of a second the rail's floor is **below** the composer's
+          top edge — it passes **under** the sheet, which is `z-20` over an
+          unlayered `<main>`, and is what the direction *if it impedes, it
+          should go under it* asks for anyway.
         */}
         <div
-          className={`flex min-h-0 flex-col overflow-hidden ${writing ? 'h-0 flex-none' : 'flex-1'}`}
+          ref={browse}
+          className={`mb-[var(--keyboard-rise,0px)] flex min-h-0 flex-1 translate-y-[var(--viewport-top,0px)] flex-col transition-[opacity,margin-block-end] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+            writing ? 'opacity-60' : 'opacity-100'
+          }`}
         >
           {rail}
         </div>
       </main>
 
-      {/*
-        ⚠⚠ **THE FLOOR ANCHOR THAT USED TO SIT HERE IS DELETED — 7 September,
-        and it had been LYING.** It was a zero-height `fixed` twin on the
-        viewport's bottom edge, and `--keyboard-overlap` was its `bottom` minus
-        the visible region. **A `fixed` element's rect is reported against the
-        VISUAL viewport on iOS** — the trace proved it outright, a host at
-        `top: 0` reading `top: -271` — so with the page panned the ruler read
-        the visible height, the subtraction came out negative, and the clamp
-        turned it into a confident zero. The overlap is
-        `clientHeight − visualViewport.height` now.
-      */}
+      {/* A zero-height fixed twin on the viewport's bottom edge — see `useKeyboardHem`. */}
+      <div ref={floorAnchor} aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-0" />
 
       {/*
-        ⚠⚠ **`composer-sheet` IS `writing-sheet` WITH THE POSITIONING TAKEN OUT
-        — 7 September.** It was the record's own box: `fixed`, riding
-        `--keyboard-overlap` so as to sit on the keyboard's top edge. **It sits
-        there by being last in a flex column now**, inside a host whose box is
-        the visible area — no position, no offset, and nothing to get wrong when
-        iOS pans.
-
-        ⚠ **The record still wears `writing-sheet`, and the two must not be
-        merged yet.** `/record` scrolls a document, so moving it into a pinned
-        host means giving it an inner scroller: the same fix, a bigger change,
-        and deliberately not this one.
-
-        ⚠ **What survives is the notch's clearance**, still reading
-        `--keyboard-overlap` as a length so that it is spent when the bottom of
-        the screen is the bottom of the *device* and not when it is the top of a
-        keyboard. That expression must stay on the element and never move into a
-        token — a `var()` is substituted where it is *declared*, and
-        `--keyboard-overlap` is written onto `host`.
+        ⚠ **`writing-sheet`, the same box the record's strip uses**, so the
+        composer sits on the bottom edge, rides `--keyboard-overlap` while the
+        keys are up, and spends the notch's clearance only while the notch is
+        what is underneath. That expression must stay on this element and never
+        move into a token — a `var()` is substituted where it is *declared*, and
+        `--keyboard-overlap` is written onto `host` below `<body>`.
       */}
       {/*
         ⚠⚠ **THE STRIP HAS NO GROUND, AND THAT IS THE CONSOLE'S ARRANGEMENT —
@@ -690,42 +843,7 @@ export function ComposeScreen({
         under the foot or stops above the composer. **Do not pre-build a ground
         for it; look at it then.**
       */}
-      {/*
-        ⚠⚠ **THE BOTTOM THIRD OF THE SCREEN BELONGS TO THE COMPOSER — 6
-        September, directed:** *I want the bottom third of the screen to the
-        composer and the sheet and that part of the screen; the images can exist
-        in the top two thirds between the logo row and the bottom third.* The
-        strip was content-sized — 231px of an 852px screen, a shade over a
-        quarter — so the split was whatever the card, the hem and the foot
-        happened to add up to.
-
-        ⚠ **A floor, not a height.** `min-block-size` leaves the strip free to be
-        taller when it needs to be — a failure line, a third line of writing, the
-        desk's root scale — and only holds the third when the content is shorter
-        than that. **The composer never shrinks to fit a fraction.**
-
-        ⚠⚠ **A THIRD OF WHAT IS ON SCREEN, NOT A THIRD OF THE DISPLAY — AND
-        IT IS A PLAIN PERCENTAGE SINCE 7 September.** It was
-        `calc((100svh − --keyboard-overlap) / 3)`, which is that sentence
-        written out as arithmetic because nothing on the page knew what was on
-        screen. **The host's box is what is on screen**, so a third of it is
-        `33.3333%` and the keyboard does not appear in the expression at all.
-
-        ⚠ **A percentage needs its parent to have a definite height, and this
-        one does** — `--vv-height`, or `100svh` for the frame before the hook
-        first writes.
-
-        ⚠ **`justify-end`, so the room goes ABOVE the content.** The card, the
-        hem and the foot keep the bottom edge they have always had; what the
-        floor adds is empty strip over the band. **Nothing about the composer
-        moves.**
-
-        ⚠ **Below `--breakpoint-stack` only.** Up there the strip is the field
-        alone with no foot bar, so a third of a tall window would be a great
-        empty pane of glass over a single line. **`--breakpoint-stack` is one of
-        the app's own three**, not a fourth invented for this.
-      */}
-      <div className="composer-sheet z-20 flex flex-col justify-end max-stack:min-h-[33.3333%]">
+      <div ref={sheet} className="writing-sheet z-20">
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
           the air between the box and the foot, which were touching; writing it is
@@ -736,81 +854,18 @@ export function ComposeScreen({
           edge.
         */}
         <div className="gutter mx-auto w-full max-w-[var(--record-measure)] pb-[calc(var(--line-hem)*1.5)]">
-          {/*
-            ⚠⚠ **THE BAND ABOVE THE COMPOSER IS BACK, AND NOTHING LANDS IN IT —
-            6 September, directed:** *I want the old sheet back but I don't want
-            any receipts to land in it; leave the receipt flow we have now
-            intact.* The strip carried this space until 5 September, when *a
-            capture stops being a draft and becomes a statement, in place* moved
-            the whole moment **inside** the composer and the receipt was deleted.
-            **The receipt flow is untouched** — the words still dim, go solid,
-            blink twice and offer their undo in the field. Only the space came
-            back.
-
-            ⚠⚠ **IT IS ALWAYS THERE, WHICH IS THE DIFFERENCE FROM THE OLD ONE.**
-            The strip used to be content-sized, so the band existed only while
-            something was in it and **the sheet changed shape between the two
-            states** — which is the fault `receipt-line` was written to answer.
-            Reserved unconditionally, the sheet is one height, the rail's floor
-            is one height, and nothing moves when a capture fails.
-
-            ⚠ **The failure line renders INTO this slot rather than beside it.**
-            It is the one thing still allowed above the composer, and two bands
-            would be two answers to *what is this space for*. Its `pb` moved onto
-            the band, so the box is the same whether the line is there or not.
-
-            ⚠ **`--leading-line` plus `--line-hem × 1.5`, and neither is a new
-            number** — one line of the record's own leading, and the gap the
-            strip already spends between the card and the foot. **No pixel in
-            it**, so it follows the desk's root scale.
-          */}
-          {/*
-            ⚠⚠ **THE BAND CLOSES TO THE COMPOSER'S OWN SIDE GAP WHILE SOMEBODY
-            WRITES — 6 September, directed:** *when the keyboard is up the band
-            above the composer should reduce in height so it's the same size as
-            the padding between the sides of the composer and the edges of the
-            phone.* **It is the same token, not the same number** —
-            `--gutter-l` is what `gutter` puts on the card's sides, so the gap
-            over the composer and the gap beside it cannot drift apart, and
-            neither is written here.
-
-            ⚠ **`--gutter-l` rather than an average of the two.** The gutters are
-            `max(1.25rem, env(safe-area-inset-*))` and are equal in portrait; in
-            landscape a notch makes one side wider, and the band takes the start
-            side rather than inventing a third value.
-
-            ⚠ **Keyed on `writing`, not on `--keyboard-overlap`.** The direction
-            says *when the keyboard is up*, but that property measures a gap that
-            also opens when a Safari tab's address bar collapses during a scroll
-            — `useKeyboardHem` says in writing that it is not a keyboard
-            detector. This is the same key the dim and the composer's third line
-            already use, so the three cannot disagree about what state the screen
-            is in.
-
-            ⚠ **It transitions on the app's one duration and curve**, because the
-            field's own height already does: the strip's top edge is the rail's
-            floor, and two things moving it on different clocks is the fault
-            `--recede` was collapsed to one value to avoid.
-
-            ⚠ **A failure line still fits, and that is by the flow rather than by
-            the box.** A commit blurs the field, so `writing` is false by the
-            time a failure can be shown and the band is at its full height. **If
-            a failure is ever raised without ending the writing mode, this height
-            has to become a `min`.**
-          */}
-          <div
-            className={`transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-              writing
-                ? 'h-[var(--gutter-l)]'
-                : 'h-[calc(var(--leading-line)+var(--line-hem)*1.5)]'
-            }`}
-          >
-            {failed !== null && (
-              <p className="text-decline px-[calc(var(--line-hem)*2.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
-                {failed}
-              </p>
-            )}
-          </div>
+          {failed !== null && (
+            /*
+              ⚠ **The one thing still ABOVE the composer, and it is the failure.**
+              A landed capture stays in the box now; a capture that did not land
+              puts its words back in the field, so there is nothing in the box to
+              say it with. This is the exception, and it is rare enough to be
+              allowed to change the strip's height when it appears.
+            */
+            <p className="text-decline px-[calc(var(--line-hem)*2.5)] pb-[calc(var(--line-hem)*1.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
+              {failed}
+            </p>
+          )}
 
           {/*
             ⚠⚠ **A BOX, AND IT IS A LIFTED GROUND RATHER THAN GLASS — reported
@@ -1009,7 +1064,7 @@ export function ComposeScreen({
               only one of them is the thing *How things get fixed* rules out.
             */
             onBlur={(e) => {
-              const strip = e.currentTarget.closest('.composer-sheet')
+              const strip = e.currentTarget.closest('.writing-sheet')
               if (
                 e.relatedTarget instanceof Node &&
                 strip !== null &&
