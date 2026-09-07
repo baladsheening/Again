@@ -212,6 +212,8 @@ export function useVisualViewport({
         `keyboard-hem.ts` were falsified one after another for guessing here,
         and the lesson outlived the code.
       */
+      unscroll()
+
       const overlap = Math.max(
         0,
         edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
@@ -233,6 +235,48 @@ export function useVisualViewport({
 
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(run)
+    }
+
+    const scrolled = () => {
+      unscroll()
+      schedule()
+    }
+
+    /**
+     * **Put back a scroll this page cannot have.**
+     *
+     * ⚠⚠ **MEASURED ON A HANDSET, 7 September, AND IT OVERTURNED THE ASSUMPTION
+     * THE LAST FIX WAS BUILT ON.** The trace at `/?trace=1` read, on focus:
+     * `off 271, vvh 389, ch 660, top -271, sy 271` — **iOS invents scroll range
+     * exactly the height of the keyboard (660 − 389 = 271) and scrolls the
+     * document to the end of it.** `window.scrollY` is 271 on a page with
+     * nothing to scroll.
+     *
+     * ⚠⚠ **AND IT DOES IT EVEN WHEN THE FIELD IS ALREADY ABOVE THE KEYBOARD.**
+     * The same trace shows the anticipation working — `hh 389` at `t=60`, before
+     * any keyboard — and iOS panning anyway at `t=87`. **A field inside a
+     * `position: fixed` host cannot be brought into view by scrolling the
+     * document**, so iOS scrolls the whole invented range and gives up. That is
+     * why *make the field already visible* did not prevent it.
+     *
+     * ⚠ **This screen has no content outside the fixed host, so its document
+     * height is nothing and `scrollY` can only ever be zero.** Any other value
+     * is the platform's invention, and putting it back is a subtraction rather
+     * than a fight — the order *How things get fixed* asks for. ⚠ **It is
+     * synchronous, in the scroll event itself**, so the value is gone before the
+     * frame is composited; a `requestAnimationFrame` here would be the same one
+     * frame late that made the correction visible in the first place.
+     *
+     * ⚠ **It cannot loop**: `scrollTo` fires another scroll event, and on that
+     * one the value is already zero.
+     *
+     * ⚠ **The `--vv-top` correction stays.** If a build of iOS offsets the
+     * visual viewport without moving `scrollY`, this reaches nothing and the
+     * correction is what holds the screen together — the same reason it was
+     * built.
+     */
+    const unscroll = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0)
     }
 
     /* Keep measuring for as long as a keyboard could still be arriving. */
@@ -275,6 +319,7 @@ export function useVisualViewport({
       }
 
       writing = true
+      unscroll()
       const remembered = WHILE_WRITING.get(Math.round(vv.width))
       if (remembered === undefined || remembered >= vv.height) return
 
@@ -298,7 +343,7 @@ export function useVisualViewport({
     */
     window.addEventListener('focusin', focused)
     window.addEventListener('focusout', blurred)
-    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('scroll', scrolled, { passive: true })
     vv.addEventListener('resize', hold)
     vv.addEventListener('scroll', hold)
     window.addEventListener('resize', hold)
@@ -307,7 +352,7 @@ export function useVisualViewport({
     return () => {
       window.removeEventListener('focusin', focused)
       window.removeEventListener('focusout', blurred)
-      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('scroll', scrolled)
       vv.removeEventListener('resize', hold)
       vv.removeEventListener('scroll', hold)
       window.removeEventListener('resize', hold)
