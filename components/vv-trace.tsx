@@ -11,8 +11,14 @@ import { useEffect, useRef } from 'react'
  * desktop browser can raise an iOS keyboard, so the handset is the only
  * instrument — this is the instrument.
  *
- * Open `/?trace=1`, tap in the composer, screenshot. Everything else on the
- * page behaves exactly as it does without the parameter.
+ * ⚠⚠ **IT IS ON UNCONDITIONALLY, AND THAT IS DELIBERATE FOR ONE ROUND.** It
+ * was behind `?trace=1` and could not be reached: the manifest's `start_url`
+ * is `/`, so the installed app opens without a query string and there is no way
+ * to add one to a home-screen tap. **A diagnostic nobody can turn on is not a
+ * diagnostic.** `?trace=0` turns it off.
+ *
+ * Tap in the composer, screenshot. Nothing else on the page behaves any
+ * differently.
  *
  * ⚠ **It draws OUTSIDE the host and follows the visual viewport itself**, so it
  * stays on screen whatever the host does, and it can never be the thing being
@@ -33,7 +39,7 @@ export function VvTrace() {
       state: the server cannot know the query string, so a state read of it is a
       hydration mismatch waiting to happen.
     */
-    if (!vv || new URLSearchParams(window.location.search).get('trace') !== '1') return
+    if (!vv || new URLSearchParams(window.location.search).get('trace') === '0') return
     el.hidden = false
 
     const rows: string[] = []
