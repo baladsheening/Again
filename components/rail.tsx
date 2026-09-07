@@ -67,7 +67,7 @@ export function Rail({ tiles }: { tiles: RailTile[] }) {
       would push past the composer instead of fitting the space `flex-1` gives
       it, and the height the tiles derive from would be the wrong one.
     */
-    <div className="rail-track @container -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
+    <div className="rail-track -mx-[var(--gutter-l)] min-h-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain">
       {/*
         ⚠ **`gap-0`, written rather than omitted.** The tiles touching is the
         direction, not the absence of a decision — a gap is what a reader would
@@ -137,7 +137,7 @@ function Tile({ tile }: { tile: RailTile }) {
       own edge* (6 September) is no longer true wherever the width binds. **The
       floor was chosen over the ceiling** because that is what was asked for.
     */
-    <li className="rail-focus flex h-full w-fit shrink-0 flex-col justify-end">
+    <li className="flex h-full w-fit shrink-0 flex-col justify-end">
       {/*
         ⚠ **Nothing is drawn for a zero, and that is the density rule rather
         than taste.** *Cut anything the screen already says* — a `0` above every
@@ -215,7 +215,18 @@ function Tile({ tile }: { tile: RailTile }) {
         a landscape image letterboxes onto the frame's ground. **The reverse
         reads broken and there is no bespoke art to crop to.**
       */}
-      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(100cqw*1.5))] overflow-hidden">
+      {/*
+        ⚠⚠ **`100cqw` BECAME `100vw` AND THE `@container` WENT WITH IT — 7
+        September.** The cap is *a tile may not be wider than the screen*, and
+        the screen is what it was always reaching for; the container query unit
+        bought nothing and brought `container-type: inline-size` — layout
+        containment — onto a horizontally scrolling flex row whose children
+        resolve a **percentage height** through it. Reported from a handset:
+        *the images don't even resize properly; the left image is the only one
+        properly resized.* ⚠ **Do not reintroduce a container here** to make the
+        cap read more precisely.
+      */}
+      <div className="bg-surface relative aspect-2/3 h-[min(calc(100%-var(--text-micro)*1.3),calc(100vw*1.5))] overflow-hidden">
         {/*
           ⚠⚠ **THE NAME LIVES INSIDE THIS `relative` BOX, AND PUTTING IT ON THE
           `<li>` BROKE THE WHOLE PAGE.** `sr-only` is `position: absolute` **with

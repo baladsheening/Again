@@ -3375,23 +3375,28 @@
  * as too much or too little, this is the one number to move** — and it is the
  * only one in the effect.
  */
-@keyframes rail-focus {
-  0%,
-  100% {
-    transform: scale(0.92);
-  }
+/*
+  ⚠⚠ **`rail-focus` IS DELETED — 7 September, and it is a suspect being
+  removed rather than a decoration being tidied.** It was a scroll-driven
+  animation — `animation-timeline: view(x)` on every tile — scaling a tile
+  0.92 → 1 → 0.92 as it crossed the scroller, so a tile's drawn size depended on
+  where it sat in the view.
 
-  50% {
-    transform: scale(1);
-  }
-}
+  Reported from a handset, with the keyboard open: *the images don't even
+  resize properly; the left image is the only one properly resized, and that
+  only happened after tapping in and out of the composer repeatedly.* **The
+  leftmost tile is the only one whose view timeline is settled**, and the tiles
+  behind it stayed at their old height and were clipped by the band rather than
+  resized. Nothing else on the rail is per-tile and position-dependent.
 
-@utility rail-focus {
-  @supports (animation-timeline: view()) {
-    animation: rail-focus linear both;
-    animation-timeline: view(x);
-  }
-}
+  ⚠ **Not proved on the device — no local WebKit could be made to reproduce
+  it** (the one on this machine loads the page unstyled), so this is the
+  suspect removed first because it costs nothing: **the scale was never asked
+  for.** ⚠ **If the tiles still fail to resize, this is what was taken out**,
+  and the next suspect is the percentage height itself.
+*/
+
+
 
 /**
  * The masthead's own box — the air above and below its row, with the notch
