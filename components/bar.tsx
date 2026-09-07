@@ -122,8 +122,18 @@ export function Bar({
         somebody writes.** A platform problem answered by design rather than by
         chasing it a frame behind.
       */
-      className={`mark-glow fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-        receded ? '-translate-y-full' : ''
+      /*
+        ⚠ **`chrome-ink` fades the contents and the glow, and NOT the glass —
+        7 September, reported.** The slide is symmetric by construction and
+        still reads quick going and certain returning, because the top edge
+        clips the exit during the curve's burst and hides its long settle. The
+        ink is the one property that edge cannot cut, so it plays whole in both
+        directions. **All of the reasoning is on the utility in `globals.css`;
+        the two things to know here are that it costs no new duration and that
+        `page-screen.tsx`'s bar gets it too.**
+      */
+      className={`mark-glow chrome-ink fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+        receded ? '-translate-y-full chrome-ink-gone' : ''
       }`}
     >
       {/*

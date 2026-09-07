@@ -6762,6 +6762,68 @@
   }
 }
 
+/**
+ * **The bar's ink goes with the bar, and comes back with it — 7 September.**
+ *
+ * Reported from a handset: *the way it recedes is faster and more jittery,
+ * whereas the return of the top bar is smooth and certain.* ⚠ **The two
+ * directions are the same `--recede` on the same `--ease-recede` and always
+ * have been** — `bar.tsx` puts both on the base class so that only `translate`
+ * switches. **What differs is which half of the curve the viewport lets you
+ * see.**
+ *
+ * `--ease-recede` is a quintic ease-out: **55% of the travel in the first three
+ * frames, 90% gone by 128ms, and the last third of it spread over 272ms of the
+ * 340.** Going, the bar clears the top edge during the burst and spends that
+ * long tail off screen; coming back, the burst happens off screen and the tail
+ * is the whole of what there is to watch. Same curve, opposite halves visible —
+ * which is exactly *quick going, certain coming back*.
+ *
+ * ⚠⚠ **THE FADE IS THE ONE PROPERTY OF THIS BAR THE TOP EDGE CANNOT CUT**, so
+ * it plays whole in both directions. That is why it answers the report without
+ * moving a number: the exit finally has a visible ending.
+ *
+ * ⚠ **Same duration and same curve, deliberately.** `--ease-recede`'s own rule
+ * is *one curve, both directions, all four movers*; the ink is a fifth mover on
+ * one piece of furniture, and a fade that disagreed with the slide carrying it
+ * would be the disagreement the eye reads before it reads either. ⚠ **If it
+ * reads as a blink rather than a fade, that is the front-load, and the lever is
+ * `--recede` for the whole chrome — not a second duration here.**
+ *
+ * ⚠ **The glass does NOT fade, and that split is what was asked for: *its
+ * contents*.** The slab is the bar's body. On the record there is text under it,
+ * and glass that thinned while it slid would un-blur those words mid-move — two
+ * things happening to the same pixels at once.
+ *
+ * ⚠ **The glow DOES fade, because it is the mark's own light.** `mark-glow`
+ * spills `--mark-glow-drop` **below** the bar, so a glow left lit under a faded
+ * wordmark is a patch of light sliding up the page with nothing inside it.
+ *
+ * ⚠ **Both bars get it: `page-screen.tsx` passes `receded` as well**, so the
+ * record's scroll-driven recede fades its ink on the same terms. That is the
+ * *one piece of furniture* rule rather than an oversight — and it is the
+ * surface to look at first if this reads wrong, because the trigger there is a
+ * moving finger rather than a focus.
+ *
+ * `prefers-reduced-motion` catches it for free: the global block cuts every
+ * `transition-duration` to 0.01ms, so those readers get the state without the
+ * travel, which is what receding is about.
+ */
+@utility chrome-ink {
+  &::before,
+  & > * {
+    transition: opacity var(--recede) var(--ease-recede);
+  }
+}
+
+/** The gone state, spelled once — see `chrome-ink` for all of the reasoning. */
+@utility chrome-ink-gone {
+  &::before,
+  & > * {
+    opacity: 0;
+  }
+}
+
 @utility grain-ground {
   position: fixed;
 
