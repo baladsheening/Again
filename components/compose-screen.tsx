@@ -569,7 +569,44 @@ export function ComposeScreen({
 
   return (
     <div ref={host}>
-      <Bar />
+      {/*
+        ⚠⚠ **THE BAR LEAVES ON PURPOSE WHILE SOMEBODY WRITES — 7 September,
+        directed, and it is a DESIGN ANSWER TO A PLATFORM PROBLEM RATHER THAN A
+        CORRECTION OF IT.**
+
+        Established on a front page stripped to nothing but the strip, which is
+        the only reason it could be established at all. iOS does not shrink the
+        layout viewport for a keyboard; it pans the **visual** viewport down
+        inside it, on the compositor. A `fixed` box is anchored to the layout
+        one, so:
+
+        - with `top: 0` the bar left the screen and **never came back** —
+          reported in those words;
+        - with `top: var(--viewport-top)` it left and came back **a frame
+          later**, which is the jolt, reported in those words too.
+
+        ⚠⚠ **THERE IS NO CSS LENGTH THAT TRACKS THE VISUAL VIEWPORT, SO EVERY
+        CORRECTION IS MAIN-THREAD AND THEREFORE LATE.** That is not a bug to
+        find; it is the shape of the platform. **So the bar is not corrected —
+        it is sent away.** It recedes on the app's own `--recede` and
+        `--ease-recede` at the moment of focus, iOS then pans a bar that is not
+        on screen, and there is nothing left to jolt.
+
+        ⚠ **`receded` already existed and this is its second tenant.**
+        `useChromeRecede` decides it on the record; here the gesture decides it,
+        which is the same rule the foot already follows — it is unmounted while
+        somebody writes, for the same reason: **nothing in the chrome can act
+        while a keyboard is up.**
+
+        ⚠ **The stated cost, which was weighed and accepted:** the top of the
+        screen is empty while you write. That is chosen rather than imposed.
+
+        ⚠ **`top-[var(--viewport-top)]` stays on `bar.tsx` and must not be
+        removed as redundant.** It is what puts the bar back on the screen's
+        edge for the frames around the blur, when it is on its way in and iOS
+        has not finished putting the page back.
+      */}
+      <Bar receded={writing} />
 
       {/*
         ⚠⚠ **THE BROWSE HALF IS GONE FROM THIS PAGE — 7 September, directed:
