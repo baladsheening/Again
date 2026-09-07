@@ -5255,6 +5255,56 @@
 }
 
 @utility writing-sheet {
+  /*
+    ⚠⚠ **THE COMPOSER'S STRIP WAS TAKEN OUT OF `fixed` ON 7 SEPTEMBER AND PUT
+    BACK THE SAME DAY. A TOMBSTONE — DO NOT TRY IT AGAIN WITHOUT READING THIS.**
+
+    **The reasoning was sound and the result was worse.** Measured: the composer
+    page does not scroll — `scrollHeight 844` against `clientHeight 844`, where
+    the record's is 1994 — so a `fixed` box positioned by a per-frame measurement
+    of the visual viewport was solving a problem that page does not have, and a
+    pan drags a fixed box and re-resolves it, which is the jolt. So the strip
+    became the last in-flow child of an `h-dvh` flex column, and
+    `useKeyboardHem`, the floor anchor and `--keyboard-overlap` came off that
+    screen. **It did fix the jolt on the way in — confirmed on the device.**
+
+    ⚠⚠ **AND IT BROKE THREE OTHER THINGS. TWO OF THEM ARE ONE ROOT CAUSE, AND
+    THEY ARE BOTH ON THE WAY IN.** Reported from the installed app, tapping the
+    card: the strip **lands too high**, with the gap under it much larger than
+    the band above — and sometimes it **vanishes altogether and does not come
+    back**. Both say the container's height while a keyboard is up is not what
+    was assumed. On the way out, the third: the strip **doubles and flickers**,
+    two of it on screen until the lower one wins. **A composer that disappears on
+    being tapped is worse than any jolt**, which is why this went back the same
+    hour rather than being iterated on.
+
+    ⚠⚠ **THE LESSON IS THE UNIT, NOT THE POSITION — AND A MEASUREMENT PREDICTED
+    IT AND WAS TALKED OUT OF.** Chromium under `isMobile` reported
+    `innerHeight 931` against a `clientHeight` of 844, and it was written off as
+    an emulation artefact because every viewport unit, the visual viewport and
+    WebKit all said 844. **The handset's own screenshots then showed the strip
+    sitting ~87px above the bottom of the installed app** — the same number.
+    **The emulator was reproducing the device, not lying about it.**
+
+    ⚠ **A `fixed` box at `bottom` resolves against the layout viewport at paint
+    time. An in-flow box at the foot of a container sized by a CSS viewport
+    length inherits every way iOS gets that length wrong** — and
+    `keep-ios-standalone-short-viewport` records that the installed app lays out
+    short, with `100dvh`, `100svh`, `100lvh`, `inset: 0` and `100%` all wrong
+    together. **That immunity is what the fixed strip had and what was traded
+    away.** With a keyboard up the shortfall and the pan compound, and the strip
+    leaves the screen altogether.
+
+    ⚠⚠ **SO THE RULE IS: DO NOT SIZE THIS PAGE WITH A VIEWPORT LENGTH AND HANG
+    THE STRIP OFF THE BOTTOM OF IT.** If in-flow is tried again it needs a height
+    that is not a CSS viewport length — and the thing to establish first, from
+    the device rather than from a desk browser, is what iOS is actually giving
+    the container in the installed app while a keyboard is up.
+
+    ⚠ **When a desktop reading disagrees with itself, that is data.** Two numbers
+    that should have been equal were not, and the explanation offered — *it is
+    the emulator* — was the comfortable one rather than the tested one.
+  */
   position: fixed;
   inset-inline: 0;
   bottom: var(--keyboard-overlap, 0px);
@@ -5533,67 +5583,6 @@
     background: linear-gradient(to top, var(--color-bg), transparent);
     pointer-events: none;
   }
-}
-
-/**
- * **The composer's strip, and it is IN FLOW — 7 September.**
- *
- * ⚠⚠ **THIS PAGE DOES NOT SCROLL, WHICH IS WHY IT DOES NOT GET
- * `writing-sheet`.** Measured at 390×844 with the notch on: the composer's
- * document is `scrollHeight 844` against `clientHeight 844` — **nothing to
- * scroll** — where the record's is 1994 against 844. `writing-sheet` is a
- * `fixed` box whose `bottom` is a per-frame, main-thread measurement of the
- * visual viewport, and every part of that exists to hold a strip above content
- * moving underneath it. **There is no content here.** The composer inherited
- * that box from the record when the two screens split, and went on carrying it
- * after the browse half was deleted on 6 September took the last scrollable
- * thing off the page.
- *
- * ⚠⚠ **AND THE INHERITANCE IS WHAT PRODUCED THE JOLT.** Reported: tapping the
- * card in the installed app makes the strip travel up toward the top and then
- * back down, more often than not, and never in a Safari tab. **A pan is a
- * scroll.** iOS pans the visual viewport to reveal a focused field; in-flow
- * content simply moves with the view, which reads as scrolling, while a `fixed`
- * box is dragged by the compositor and then **re-resolved against the layout
- * viewport** — which is the snap. Correcting for it is ruled out by measurement
- * rather than by opinion: see `bar.tsx`, where `top: var(--viewport-top)` was
- * tried the same day and made it worse, because iOS pans on the compositor and
- * a property written from the main thread is late by construction.
- *
- * ⚠ **So this is a subtraction, in the order *How things get fixed* asks for:
- * remove the mechanism, then the condition.** What went with the `fixed`
- * positioning on this screen: `useKeyboardHem`, the zero-height floor anchor,
- * `--keyboard-overlap`, and a `ResizeObserver` writing `--sheet-block` — whose
- * only reader was the rail's floor and had been dead since 6 September.
- *
- * ⚠⚠ **THE RECORD KEEPS ALL OF IT AND MUST.** `page-screen.tsx` genuinely
- * scrolls, `page-hem` reserves this strip's height against it, and a static
- * strip there would sit at the foot of a 1994px document instead of on the
- * glass. **Do not unify these two boxes.**
- *
- * ⚠ **It relies on the page being exactly one viewport tall** — `h-svh` on the
- * host with the strip as its last child — so the strip's bottom edge is the
- * screen's bottom edge with no positioning at all. **If anything scrollable ever
- * returns to this page, this box is wrong again** and the question is not how to
- * patch it but whether the strip is still the right shape for a screen that
- * scrolls.
- *
- * ⚠ **No `::before` fade.** `writing-sheet` hangs one off its top edge to say
- * *there is more below*; there is nothing below here, and the gradient ends on
- * `--color-bg`, so it was the ground drawn on the ground.
- *
- * The clearance is `writing-sheet`'s own, for `writing-sheet`'s own reasons —
- * see it, and `sheet-over-keys`, which both boxes wear while somebody writes.
- */
-@utility composer-strip {
-  --sheet-clearance: var(
-    --sheet-clearance-writing,
-    max(
-      0px,
-      calc(env(safe-area-inset-bottom) - var(--sheet-air) / 2 - var(--sheet-drop))
-    )
-  );
-  padding-block: 0 var(--sheet-clearance);
 }
 
 /**
