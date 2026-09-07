@@ -134,6 +134,47 @@ export function useKeyboardHem({
       box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
 
       /*
+        ⚠⚠ **THE KEYBOARD'S OWN HEIGHT, BECAUSE `--keyboard-overlap` IS ZERO ON
+        iOS AND THE CLEARANCE ABOVE READS IT — 7 September.** Reported from a
+        handset: *why, when writing, does the composer foot look bigger than the
+        band on the home app? On the Safari page it looks the same.*
+
+        ⚠ **The overlap cancels to nothing on iOS, and two measured facts say
+        why.** `visualViewport.offsetTop + visualViewport.height` equalled
+        `clientHeight` in every sample of every trace on the device; and a
+        `fixed` element's rect is reported against the **visual** viewport
+        there — a host at `top: 0` read `top: -271`. So the ruler's `bottom` is
+        the visible height, the subtraction above is
+        `visible − (offset + visible)`, and the clamp turns that into a
+        confident **0**.
+
+        ⚠ **Which is harmless for the strip's position and wrong for its
+        clearance.** At zero the strip sits on the layout viewport's bottom edge,
+        which the invariant makes the visible bottom, so it lands right. But
+        `writing-sheet` also spends `env(safe-area-inset-bottom)` **less the
+        overlap** — so with the overlap stuck at zero it keeps the home
+        indicator's clearance while a keyboard is covering the indicator. **In
+        the installed app that is ~34px of dead space under the card; in a
+        Safari tab the inset is 0 and nothing shows.** That is exactly the pair
+        of behaviours reported.
+
+        ⚠⚠ **THIS IS A SECOND MEASUREMENT, NOT A CORRECTION OF THE FIRST. DO NOT
+        MAKE `--keyboard-overlap` EQUAL THIS.** The strip's `bottom` reads the
+        overlap, and at 271 rather than 0 it would ride a keyboard's height
+        **above** the keyboard.
+
+        ⚠ **`clientHeight`, and here that is defensible where `keyboard-hem`'s
+        own note warns against it.** The warning is about deriving a *position*
+        from numbers browsers disagree on with a keyboard open. This is the
+        layout viewport's height, which the traces showed constant at 660
+        through every state, minus a height the platform states outright.
+      */
+      box.style.setProperty(
+        '--keyboard-height',
+        `${Math.max(0, Math.round(document.documentElement.clientHeight - vv.height))}px`,
+      )
+
+      /*
         ⚠⚠ **HOW FAR iOS HAS PANNED THE PAGE UP TO REVEAL THE FIELD — 6
         September, and this is `head()` returning under its own terms.** The
         note below says it in writing: *if a top-pinned field ever comes back,
@@ -244,6 +285,7 @@ export function useKeyboardHem({
         keyboard's worth of dead space under it for the rest of the session.
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
+      hostEl?.style.removeProperty('--keyboard-height')
       hostEl?.style.removeProperty('--viewport-top')
     }
   }, [writing, host, floorAnchor])
