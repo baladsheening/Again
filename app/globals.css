@@ -1869,20 +1869,27 @@
    * slow, the next step is `/ 8` (43ms) and then it stops being a fade** — at
    * 60Hz that is two and a half frames.
    *
-   * ⚠ **`--recede × 1.25` = 425ms IN, so the bar arrives BEFORE its own ink.**
-   * Directed as *a tad slower*, and the quarter is what makes the pair state one
-   * rule rather than two adjustments: **the furniture leaves already empty and
-   * lands before the ink catches up.** ⚠ **It is the one number here with no
-   * derivation behind it** — *a tad* has no landmark — so it is expressed as a
-   * multiple of `--recede` rather than typed, and it follows the travel if that
-   * ever moves.
+   * ⚠ **`--recede × 1.125` = 382.5ms IN, so the bar still arrives BEFORE its
+   * own ink.** Asked for at *maybe 380*, and 1.125 is the nearest eighth — 2.5ms
+   * out, a fraction of a frame on any display. ⚠ **A typed `380ms` was the
+   * obvious spelling and is refused**: this is the one number here with no
+   * derivation behind it, so the only thing keeping it honest is that it stays a
+   * multiple of the travel and moves if `--recede` ever does. **The relationship
+   * is what is load bearing, not the digits.**
+   *
+   * ⚠ **It went 340 → 425 → 382.5 in one sitting, and the middle value is why
+   * this reads the way it does.** *A tad slower* overshot; *a tad faster* came
+   * back past where it started. **The pair still states one rule** — the
+   * furniture leaves already empty and lands before the ink catches up — and
+   * that rule survives as long as this stays above `--recede`. ⚠ **Below it,
+   * the ink starts arriving before the bar does and the rule is broken.**
    *
    * ⚠ **Spelled as a base duration and one inherited override** — see
    * `chrome-ink-gone`, and the ordering trap it records. There is no state to
    * keep in step.
    */
   --ink-out: calc(var(--recede) / 6);
-  --ink-in: calc(var(--recede) * 1.25);
+  --ink-in: calc(var(--recede) * 1.125);
 
   /**
    * **How much a control grows under a cursor — 1 September.** Directed for the
