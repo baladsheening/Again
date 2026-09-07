@@ -5176,6 +5176,92 @@
   }
 }
 
+/*
+  ─────────────────────────────────────────────────────────────────────────────
+   THE SCREEN IS ONE BOX PINNED TO THE VISUAL VIEWPORT — 7 September
+  ─────────────────────────────────────────────────────────────────────────────
+
+  ⚠⚠ **THE FRONT PAGE HAD THREE `fixed` BOXES EACH CORRECTING FOR THE SAME iOS
+  PAN, AND TWO OF THEM CORRECTED IT IN OPPOSITE DIRECTIONS.** The bar did not
+  correct at all and left the screen; the composer's sheet went up by
+  `--keyboard-overlap`; the rail went down by `--viewport-top`. So the rail
+  walked into the composer, the composer is glass, and the pictures showed
+  through it. See `components/visual-viewport.ts` for the account.
+
+  ⚠ **The answer is not a fourth correction.** One box is pinned to the visual
+  viewport and everything else lives in ordinary flow inside it, so there is
+  nothing left that can disagree. **The host's box IS the visible area** — a
+  composer at the flex end sits on the keyboard's top edge with no arithmetic,
+  and a third of the host is a third of what the reader can see.
+
+  ⚠ **`top`, never `transform`.** A transform would make this the containing
+  block for every `position: fixed` descendant, and there are two inside it —
+  the floor anchor and the desk's tool stack in `foot.tsx`.
+
+  ⚠ **The fallback is `100svh` and it is the conservative one**, held for the
+  frame before `useVisualViewport` first writes. ⚠ **`--vv-top` and
+  `--vv-height` are written on the element this lands on**, so they resolve;
+  they must never be lifted into `@theme`, where a `var()` would be
+  substituted against `:root` and freeze on the fallback.
+*/
+@utility screen-viewport {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--vv-top, 0px);
+  height: var(--vv-height, 100svh);
+  /*
+    Nothing on this screen scrolls the document: the rail scrolls horizontally
+    inside itself and the composer is capped to its own box. With no scrollable
+    overflow there is less for iOS to pan in the first place — and what it pans
+    anyway is answered by `top` above rather than by anything in here.
+  */
+  overflow: hidden;
+}
+
+/*
+  **The composer's sheet, in flow — 7 September.**
+
+  ⚠ **This is `writing-sheet` with the positioning taken out, not a second
+  design.** The record still uses `writing-sheet`, because `/record` scrolls a
+  document and moving it into a fixed host means giving it an inner scroller —
+  a bigger change and a separate one. **Do not merge the two until that is
+  done.**
+
+  ⚠ **`position: relative` is load bearing and is the one thing added.** The
+  fade below is `position: absolute`, and an absolute box with no positioned
+  ancestor resolves against the initial containing block and escapes — which is
+  exactly what an `sr-only` span did to the rail on 6 September, stretching the
+  document to 3792px on a 390px handset.
+
+  ⚠ **The safe-area clearance still reads `--keyboard-overlap`, and that is the
+  one job that property keeps.** It is spent when the bottom of the screen is
+  the bottom of the *device*, and not when it is the top of a keyboard, which is
+  already covering the home indicator. ⚠ **STILL WRITTEN HERE AND NOT IN A
+  TOKEN** — see `writing-sheet` for the evening this cost.
+*/
+@utility composer-sheet {
+  position: relative;
+  padding-block: 0
+    max(
+      0px,
+      calc(
+        env(safe-area-inset-bottom) - var(--keyboard-overlap, 0px) -
+          var(--sheet-air) / 2 - var(--sheet-drop)
+      )
+    );
+
+  /* The record's foot fade, unchanged — a line dissolves over its own height. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: var(--leading-line);
+    background: linear-gradient(to top, var(--color-bg), transparent);
+    pointer-events: none;
+  }
+}
+
 @utility writing-sheet {
   position: fixed;
   inset-inline: 0;

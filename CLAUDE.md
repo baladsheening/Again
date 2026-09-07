@@ -24,6 +24,91 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **ONE BOX IS PINNED TO THE VISUAL VIEWPORT AND EVERYTHING ELSE IS IN FLOW
+INSIDE IT — 7 September, BUILT AND MEASURED, AND IT IS THE FIX FOR A SCREEN THAT
+WORKED ONE TAP IN FOUR.** Reported with five screenshots from a handset: the
+wordmark gone off the top, the picture rail enlarged and sliding, and the
+composer floating **translucent over the pictures** with posters above it,
+behind it and below it. Asked which of the five was right; the answer was the
+one where the bar is on the top edge, the picture band's bottom edge is the
+composer's sheet, and the tiles are small enough to tell apart.
+
+- ⚠⚠ **THE CAUSE WAS A HALF-REVERT AND IT COULD BE READ STRAIGHT OUT OF THE
+  LOG.** `--viewport-top` did not exist at the revert point `830e62b`; it came
+  back in `b6c7a11` **with one of its two consumers**. The rail kept its
+  `translate-y` correction and `bar.tsx` never got its `top-[var(--viewport-top)]`
+  back. So on a panned tap the bar had **no** correction and left the screen,
+  the rail was corrected **down**, the sheet corrected itself **up**, and the two
+  met — over glass, which is why the pictures showed through.
+- ⚠⚠ **THE ANSWER IS NOT A FOURTH CORRECTION, AND THAT WAS THE WHOLE DECISION.**
+  *How things get fixed* asks for the mechanism to be removed before it is
+  corrected, and the mechanism was **many boxes each pinned to the wrong
+  viewport**. iOS does not shrink the layout viewport for a keyboard — measured
+  11 August and recorded in `app/layout.tsx` — it offsets the **visual** one, and
+  every `position: fixed` box is anchored to the layout one. **Three fixed boxes
+  is three chances to disagree; one is none.**
+- ⚠ **`screen-viewport` is the one pinned box.** `position: fixed`,
+  `top: var(--vv-top)`, `height: var(--vv-height)`, `overflow: hidden` — so **the
+  host's box IS the visible area**, and the bar, the rail and the composer are
+  ordinary flex children of it. `components/visual-viewport.ts` writes the two
+  lengths from one rAF loop.
+- ⚠⚠ **`top`, NEVER A `transform`, AND THIS IS THE TRAP TO REMEMBER.** A
+  transform makes its element the containing block for every `position: fixed`
+  descendant, and there are two inside this host: the floor anchor that measures
+  `--keyboard-overlap`, and the desk's tool stack in `foot.tsx`. Both would
+  silently start resolving against the host. A transform is the cheaper property
+  to animate; a trap that fires only on the desk is not worth the frames.
+- ⚠⚠ **THREE PIECES OF ARITHMETIC DIED WITH THE POSITIONING, AND THE
+  SUBTRACTION IS THE POINT.** `main` was `h-svh` with `pt-[--bar-height]` and a
+  `pb` of `--sheet-block + --keyboard-overlap`; it is `flex-1 min-h-0` now. The
+  `ResizeObserver` that measured the sheet into `--sheet-block` is **deleted** —
+  it existed only because the sheet was out of flow, so the page had to be told
+  how much room something it could not see was taking. ⚠ **If the rail and the
+  composer ever overlap again the cause is a box that has left the flow, not a
+  number that is out of date.**
+- ⚠ **The bottom third is a plain `33.3333%` now**, where it was
+  `calc((100svh − --keyboard-overlap) / 3)` — that expression was the sentence
+  *a third of what is on screen* written out as arithmetic because nothing on
+  the page knew what was on screen. ⚠ **A percentage needs its parent to have a
+  definite height and it has one**; `100svh` is the fallback for the frame
+  before the hook first writes.
+- ⚠ **`--keyboard-overlap` SURVIVES and keeps exactly one job: the notch's
+  clearance.** It positions nothing any more. It is still spent when the bottom
+  of the screen is the bottom of the *device* and not when it is the top of a
+  keyboard, and it is still **a length and never a keyboard detector**.
+- ⚠ **`Bar` takes `flow`, and the flow variant is `relative` rather than
+  nothing.** `mark-glow` hangs an `absolute` pseudo-element off the header, and
+  an absolute box with no positioned ancestor escapes to the initial containing
+  block — the `sr-only` bug the rail had on 6 September, which stretched the
+  document to 3792px. ⚠ **The safe-area padding is UNCHANGED**: a panned visual
+  viewport still starts at the physical top of the screen, so the notch is still
+  over the bar and still wants its full inset.
+- ⚠ **`composer-sheet` is `writing-sheet` with the positioning taken out, and
+  the record still wears `writing-sheet`.** `/record` scrolls a document, so
+  moving it into a pinned host means giving it an inner scroller — **the same
+  defect, a bigger change, and deliberately not this one.** ⚠ **Do not merge the
+  two utilities until that is done**, and do not read two hooks as a duplication
+  to tidy.
+- ⚠⚠ **PROVED ON THE REAL PAGE, AND THE PROOF IS A RIGID-BODY TEST RATHER THAN A
+  SIMULATED KEYBOARD.** `node_modules/.probe/vvhost.mjs` — **32 assertions on
+  both surfaces** — writes `--vv-top` and `--vv-height` through the CSSOM and
+  asserts that at pans of 0, 120 and 220 **every box moves by exactly the pan and
+  none changes height**, the bar stays on the host's top edge, the composer stays
+  on its bottom edge, and the rail never reaches the composer. ⚠ **A desktop
+  browser cannot raise an iOS keyboard and the probe does not pretend to** — what
+  is under test is that a pan of *any* size cannot make two things disagree,
+  which is the property the bug violated. ⚠ **It must not focus anything during
+  the simulation**: a focus starts the hook's own burst and overwrites the values
+  being tested.
+- ⚠ **`composersent.mjs` is 36/38 and both failures are PRE-EXISTING** —
+  `aboveCard` 119.8 and 75.8, measured identical on a stash of this work. They
+  are from `970f5bb`, the bottom-third commit: the strip is taller than its
+  content by design and `justify-end` puts the room above the card. **Not from
+  this change and not fixed by it.**
+- **`frontpage.mjs` all ok, `composercap.mjs` 51/51, `vvhost.mjs` 32/32 —
+  against `next start`, not `next dev`.** Two probes were querying
+  `.writing-sheet` on a screen that no longer has one and now match either class.
+
 ⚠⚠ **A FILM IS NOWHERE; A SCREENING IS SOMEWHERE — 6 September, Amendment 9,
 AND IT IS THE SHORTEST ROUTE TO A LOCAL RAIL.** Asked: *why isn't a film
 somewhere you can go if it's in the cinema?* **It is, and the entry above this
