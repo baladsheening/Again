@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Bar, OFF } from './bar'
 import { Foot } from './foot'
 import { AttachGlyph, SendGlyph, UndoGlyph, WriteGlyph } from './glyphs'
-import { useKeyboardHem } from './keyboard-hem'
 import { captureAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
 
@@ -245,7 +244,6 @@ export function ComposeScreen({
    */
   const box = useRef<HTMLDivElement | null>(null)
   const host = useRef<HTMLDivElement | null>(null)
-  const floorAnchor = useRef<HTMLDivElement | null>(null)
   const field = useRef<HTMLTextAreaElement | null>(null)
 
   /*
@@ -254,62 +252,25 @@ export function ComposeScreen({
     an event. Here the field is not autofocused, so the two happen to coincide;
     the hook still takes the gesture's word rather than the DOM's.
   */
-  useKeyboardHem({ writing, host, floorAnchor })
 
   /*
-    ⚠⚠ **THE COMPOSER MEASURES ITSELF, AND THE RAIL FILLS WHAT IS LEFT — 6
-    September.** Directed: *there's a big space between the rail and the top of
-    the sheet the composer lays on.* There was, and `main` was reserving
-    `--foot-height + 3 lines` for a strip that is really **a card, a hem and a
-    foot** — a guess at somebody else's height, and wrong by whatever the card
-    happened to be.
+    ⚠⚠ **`--sheet-block` AND ITS `ResizeObserver` ARE DELETED — 7 September. A
+    TOMBSTONE, NOT A GAP.** The strip measured its own border box every time it
+    changed height and wrote the number onto `host`, so **the rail's floor** could
+    be a picture's edge rather than empty page — directed 6 September, *there's a
+    big space between the rail and the top of the sheet the composer lays on.*
 
-    ⚠ **So it is read off the element rather than computed from the tokens.**
-    The same rule `readRoll` and the swipe's detent were built on: *measure the
-    thing, never re-derive it.* The composer grows a line when somebody writes,
-    and this follows it with nothing told about that.
+    ⚠ **`components/rail.tsx` was deleted later the same day (`a7be55c`), and
+    with it the only reader.** The observer went on running, and the property went
+    on being written, for a day with nothing anywhere consuming either. Confirmed
+    by grep before removing: one write, no reads.
 
-    ⚠ **A `ResizeObserver`, not an effect that runs once.** The strip changes
-    height when the field grows, when the failure line appears, and when the
-    desk's root scale ramps — three occasions, one observer.
-
-    ⚠ **Written through the CSSOM onto `host`, which is what `--keyboard-overlap`
-    already does** — §10 blocks inline `style` attributes, and this is the door
-    that rule leaves open. ⚠ **It must NOT be lifted into `@theme`**: a
-    custom property's `var()` is substituted where it is *declared*, so a token
-    on `:root` would resolve this against `:root`, where nothing writes it. That
-    bug cost a day on 29 August.
+    ⚠ **If a browse half returns it comes back with it** — and what it must carry
+    back is the reason it was hard: the **border box, not `contentRect`**, because
+    the strip spends the notch's clearance as `padding-block` and a content-box
+    observer fires no callback at all for a change that is purely padding. That
+    cost 18px of floor on every notched handset once already.
   */
-  const sheet = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    const box = sheet.current
-    const root = host.current
-    if (!box || !root) return
-    const observer = new ResizeObserver(([entry]) => {
-      /*
-        ⚠⚠ **THE BORDER BOX, NOT `contentRect`.** `writing-sheet` spends the
-        notch's clearance as `padding-block`, and `contentRect` is the
-        **content** box — so the reserve was short by that padding and the rail's
-        floor sat **18px below the strip's top edge** on every notched handset.
-        The strip occupies its border box; that is the number to keep clear of,
-        and the rail's floor is now a picture's edge rather than empty page.
-      */
-      const measured = entry.borderBoxSize?.[0]
-      root.style.setProperty(
-        '--sheet-block',
-        `${measured ? measured.blockSize : entry.contentRect.height}px`,
-      )
-    })
-    /*
-      ⚠⚠ **`box: 'border-box'`, OR THE CLEARANCE IS NEVER SEEN.** The default is
-      the **content** box, so a change that is purely `padding-block` — which
-      `env(safe-area-inset-bottom)` is — moves nothing being watched and **fires
-      no callback at all**, leaving the reserve at whatever it was before the
-      inset existed.
-    */
-    observer.observe(box, { box: 'border-box' })
-    return () => observer.disconnect()
-  }, [])
 
   /**
    * **Put the undo at the end of the words, on whichever line they end on.**
@@ -568,7 +529,7 @@ export function ComposeScreen({
   }
 
   return (
-    <div ref={host}>
+    <div ref={host} className="flex h-dvh flex-col">
       {/*
         ⚠⚠ **THE BAR LEAVES ON PURPOSE WHILE SOMEBODY WRITES — 7 September,
         directed, and it is a DESIGN ANSWER TO A PLATFORM PROBLEM RATHER THAN A
@@ -636,10 +597,8 @@ export function ComposeScreen({
         padding for a bar or a reserve for the sheet any more, because it has
         nothing in it to keep clear of them.
       */}
-      <main className="gutter mx-auto h-svh w-full max-w-[var(--record-measure)]" />
+      <main className="gutter mx-auto w-full max-w-[var(--record-measure)] flex-1" />
 
-      {/* A zero-height fixed twin on the viewport's bottom edge — see `useKeyboardHem`. */}
-      <div ref={floorAnchor} aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-0" />
 
       {/*
         ⚠ **`writing-sheet`, the same box the record's strip uses**, so the
@@ -705,8 +664,8 @@ export function ComposeScreen({
         there. **Only the idle glass moved**, and nothing about the composer did.
       */}
       <div
-        ref={sheet}
-        className={`writing-sheet z-20 flex flex-col justify-end ${writing ? 'sheet-over-keys' : ''}`}
+
+        className={`composer-strip z-20 flex flex-col justify-end ${writing ? 'sheet-over-keys' : ''}`}
       >
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
@@ -1010,7 +969,7 @@ export function ComposeScreen({
               only one of them is the thing *How things get fixed* rules out.
             */
             onBlur={(e) => {
-              const strip = e.currentTarget.closest('.writing-sheet')
+              const strip = e.currentTarget.closest('.composer-strip')
               if (
                 e.relatedTarget instanceof Node &&
                 strip !== null &&
