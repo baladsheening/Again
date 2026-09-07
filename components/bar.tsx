@@ -68,6 +68,7 @@ export const OFF = 'text-[color-mix(in_srgb,var(--color-text)_28%,transparent)]'
 
 export function Bar({
   receded = false,
+  flow = false,
 }: {
   /**
    * Off the top of the glass while the record is being read — see
@@ -81,6 +82,26 @@ export function Bar({
    * grows a scroll, it passes the prop.
    */
   receded?: boolean
+  /**
+   * In ordinary flow rather than pinned to the layout viewport — 7 September.
+   *
+   * ⚠⚠ **THE FRONT PAGE PASSES THIS BECAUSE ITS WHOLE SCREEN IS ALREADY PINNED
+   * TO THE VISUAL VIEWPORT.** `screen-viewport` is the one `fixed` box there,
+   * and a second one inside it is a second thing for iOS's keyboard pan to move
+   * differently — which is exactly what put the wordmark off the top of a
+   * handset. See `components/visual-viewport.ts`.
+   *
+   * ⚠ **`relative`, not nothing.** `mark-glow` hangs an `absolute`
+   * pseudo-element off this header, and an absolute box with no positioned
+   * ancestor resolves against the initial containing block and escapes the
+   * layout entirely.
+   *
+   * ⚠ **The safe-area padding is unchanged and must stay that way.** A panned
+   * visual viewport still starts at the physical top of the screen, so the
+   * notch is still over this bar and still wants its full inset; subtracting
+   * the pan from it would open a gap that only a notched handset could show.
+   */
+  flow?: boolean
 }) {
   return (
     /*
@@ -95,36 +116,7 @@ export function Bar({
         340ms — see `--recede` for why the two tokens collapsed rather than being
         set equal, and why re-splitting them needs a hardware reason.
       */
-      /*
-        ⚠⚠ **`top` IS THE PAN, NOT ZERO — 6 September, and it is the whole of
-        *the page jumps up*.** Reported from the installed app: *the logo row
-        goes up and off screen and stays off screen until the user taps outside
-        the composer.* **iOS pans the visual viewport to reveal a focused
-        field**, and this bar is fixed to the **layout** viewport, so it leaves
-        with it. `--viewport-top` is that pan, written by `useKeyboardHem`;
-        putting it in `top` holds the bar on the top edge of what is actually on
-        screen.
-
-        ⚠⚠ **THE TELL WAS THAT IT WORKED ABOUT ONE TIME IN FOUR.** Those are the
-        taps where **iOS did not pan at all** — the whole keyboard then lands in
-        `--keyboard-overlap`, the browse half eases the lot, and nothing is
-        anchored wrongly. **A bug that is intermittent on a handset and absent on
-        a desk is a viewport bug**, and the frequency is the evidence.
-
-        ⚠ **`top`, NOT the `translate` below.** That slot belongs to the chrome's
-        recede and the two would resolve by their order in the compiled sheet,
-        which a class attribute cannot state — the trap `--bar-gutter` is a token
-        to avoid. Two properties, two owners, no collision.
-
-        ⚠ **No transition on it**, for the same reason the browse half's
-        translate has none: the pan is instantaneous, and a duration of ours
-        would show the page jump and then slide back.
-
-        ⚠ **`0px` everywhere else, and that is not a special case.** The property
-        is only written while somebody is writing, and only on the surface whose
-        host the hook holds; every other route falls through to the fallback.
-      */
-      className={`mark-glow fixed inset-x-0 top-[var(--viewport-top,0px)] z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+      className={`mark-glow ${flow ? 'relative' : 'fixed inset-x-0 top-0'} z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
         receded ? '-translate-y-full' : ''
       }`}
     >

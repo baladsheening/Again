@@ -153,30 +153,6 @@ export function useKeyboardHem({
         than a transform applied here. **Nothing is moved by this function.**
       */
       box.style.setProperty('--viewport-top', `${Math.round(vv.offsetTop)}px`)
-
-      /*
-        ⚠⚠ **THE KEYBOARD'S OWN HEIGHT, WHICH IS THE ONLY ONE OF THE THREE
-        THAT IS A SINGLE SMOOTH FACT — 6 September.** `--keyboard-overlap` is
-        `layout bottom − (offsetTop + vv.height)`, so **the pan is subtracted
-        out of it**: when iOS reveals the field by panning 300px of a 336px
-        keyboard, the overlap is 36. Anything easing on the overlap therefore
-        eases 36px and **jumps the other 300**, which is exactly the difference
-        between a resize and a replacement.
-
-        ⚠ **This is `layout bottom − vv.height` — the overlap and the pan added
-        back together** — and it is what the browse half eases on. It steps once,
-        from nothing to the whole keyboard, so one duration covers the whole
-        change however iOS chose to split it.
-
-        ⚠ **Do not give the SHEET this number.** The sheet is fixed to the layout
-        viewport and must land on the keys the instant iOS says where they are;
-        it rides the overlap, undelayed, and that is a different question from
-        how tall the space above it is.
-      */
-      box.style.setProperty(
-        '--keyboard-rise',
-        `${Math.max(0, Math.round(edge.getBoundingClientRect().bottom - vv.height))}px`,
-      )
     }
 
     /*
@@ -269,7 +245,6 @@ export function useKeyboardHem({
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
       hostEl?.style.removeProperty('--viewport-top')
-      hostEl?.style.removeProperty('--keyboard-rise')
     }
   }, [writing, host, floorAnchor])
 }
