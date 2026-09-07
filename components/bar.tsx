@@ -96,25 +96,33 @@ export function Bar({
         set equal, and why re-splitting them needs a hardware reason.
       */
       /*
-        ⚠⚠ **`top` IS THE PAN, NOT ZERO — 7 September, and it is the ONLY
-        change on a page stripped to the strip.** Reported with nothing else on
-        the front page: *the logo row goes off screen; it doesn't come back.*
-        iOS does not shrink the layout viewport for a keyboard — it pans the
-        **visual** viewport down inside it — and a `fixed` box is anchored to
-        the layout one, so the bar ends up above everything the reader can see
-        and stays there.
+        ⚠⚠ **`top` IS ZERO, AND `top: var(--viewport-top)` WAS TRIED HERE ON 7
+        September AND IS DEAD. DO NOT PUT IT BACK.** It was one line, on a front
+        page stripped to nothing but the composer's strip, and it was measured
+        from the handset at each step:
 
-        ⚠ **`--viewport-top` is `visualViewport.offsetTop`, already written by
-        `useKeyboardHem` and until now read by nothing.** The writer went in on
-        6 September and its consumer here was lost in a revert; this is that
-        line coming back on its own, on a page with one variable on it, rather
-        than as part of a stack of five corrections.
+        - `top: 0` alone — *the logo row goes off screen; it doesn't come back.*
+        - `top: var(--viewport-top)` — *now the logo row goes up and comes back.
+          The jolt has returned.* iOS pans on the compositor and the property is
+          written from the main thread, so the correction is **late by
+          construction**. There is no CSS length that tracks the visual
+          viewport.
+        - `top: var(--viewport-top)` **together with the recede** — *the bar
+          slides up then down then up again.* The two fight: the recede takes
+          the bar away, the correction jumps it back down by the pan and
+          re-reveals it mid-slide, and the recede carries it up a second time.
 
-        ⚠ **The fallback is `0px`, so every other surface is untouched** — the
-        property is only written while somebody is writing, and only onto the
-        host that asked for it.
+        ⚠ **It cannot help on the way back, either.** `useKeyboardHem` mounts its
+        effect on `writing` and removes the property on cleanup, so by the time
+        the bar is sliding down the value is already gone. **The correction only
+        ever exists during the one state where this bar is deliberately off
+        screen.**
+
+        ⚠ **What replaced it is in `compose-screen.tsx`: the bar recedes while
+        somebody writes.** A platform problem answered by design rather than by
+        chasing it a frame behind.
       */
-      className={`mark-glow fixed inset-x-0 top-[var(--viewport-top,0px)] z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
+      className={`mark-glow fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] ${
         receded ? '-translate-y-full' : ''
       }`}
     >
