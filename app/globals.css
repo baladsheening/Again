@@ -5322,7 +5322,45 @@
     not take it to 100; that is `--color-text`, and the draft and the statement
     become the same thing.
   */
-  color: color-mix(in srgb, var(--color-text) 75%, transparent);
+  /*
+    ⚠⚠ **AND A HUE OF THE COMPOSER'S OWN PURPLE — 8 September, asked: *what
+    about a translucent hue of blue/purple, if that's a thing.***
+
+    ⚠⚠ **IT IS A THING PRECISELY BECAUSE IT IS NOT A NEW COLOUR.**
+    `--composer-glow-colour` is `#8a7fd4` and has been the composer's own light
+    since the glow was built — it is already on this screen, already behind this
+    card, and already spent on this one component. **Tinting the draft toward it
+    borrows the colour that is lighting the box the words are in**, which is why
+    it does not open §11's door.
+
+    ⚠⚠ **AND §11's SCARCITY RULE IS WHY NO OTHER BLUE WOULD DO.** *Amber marks
+    overlap state and nothing else; `--color-chrome` means a control and never a
+    state; everything else on the page is `--color-text` or a fade of it.* A
+    fresh blue for a draft would be a fifth pigment in an app that rations
+    itself to four, and the day it appeared the other four would each mean a
+    little less. **A tint of a colour already present is a fade, not a fifth.**
+
+    ⚠ **25% of the glow into the ink, then 75% alpha — in that order, and the
+    order matters.** The hue is mixed into the *pigment* and the translucency is
+    applied to the result, so the tint is the same at every opacity; mixing a
+    transparent purple into a transparent ink would make the hue depend on the
+    alpha and drift the moment either number moved.
+
+    Measured on true black: **7.52:1**, down from 9.36 for the untinted ink and
+    against the landed line's 16.83. **Well past 4.5**, and the gap that tells a
+    draft from a statement is now carried by hue as well as weight — which is
+    more signal than before, not less.
+
+    ⚠ **Two numbers to move by eye, and they are independent**: the 25% is how
+    purple, the 75% is how bright. Take the hue to 0 and this is exactly the
+    previous line. ⚠ **Do not take the hue past ~40%** — the ink stops reading as
+    ink and starts reading as a coloured label, which is the thing §11 rations.
+  */
+  color: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--composer-glow-colour) 25%, var(--color-text)) 75%,
+    transparent
+  );
 }
 
 @utility composer-refused {
