@@ -2878,6 +2878,32 @@
   --composer-glow-colour: #8a7fd4;
 
   /**
+   * **The ink a capture is written in, before it is sent — 8 September.**
+   *
+   * ⚠⚠ **IT IS A TOKEN BECAUSE IT HAS TWO READERS NOW, AND FOR NO OTHER
+   * REASON.** `composer-draft` draws the words with it, and the `+` that
+   * replaces the send arrow while the undo window is open is drawn with it too —
+   * directed: *make the plus sign, when it appears, the same colour as the text
+   * that's written before the arrow is pressed.* **Written out twice they would
+   * drift the first time either was tuned**, and this expression has been tuned
+   * four times in a day.
+   *
+   * ⚠ **The core only. The halo is NOT in here**, and that is deliberate: it is
+   * a `text-shadow` on a rule that also owns the field's reserve, and a glyph
+   * wants the colour without the corona. **If the `+` is ever wanted lit as well
+   * as tinted, that is a second token and a second decision.**
+   *
+   * 18% of the composer's own glow into the app's ink, at 92% — 12.04:1 on true
+   * black. See `composer-draft` for why the colour sits here rather than in the
+   * halo, and for the three numbers.
+   */
+  --draft-ink: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--composer-glow-colour) 18%, var(--color-text)) 92%,
+    transparent
+  );
+
+  /**
    * The reading column above `rail`. 680px — the same measure the design's
    * `LandingRail` artboard holds the lines and the foot's glyphs to, so the
    * glyphs stay over the column of text they act on rather than stranded at the
@@ -5427,11 +5453,7 @@
     glow is the two halo numbers, not the core's hue** — putting purple back in
     the core is the thing this setting was chosen over.
   */
-  color: color-mix(
-    in srgb,
-    color-mix(in srgb, var(--composer-glow-colour) 18%, var(--color-text)) 92%,
-    transparent
-  );
+  color: var(--draft-ink);
   text-shadow:
     0 0 0.3em color-mix(in srgb, var(--composer-glow-colour) 85%, transparent),
     0 0 0.9em color-mix(in srgb, var(--composer-glow-colour) 48%, transparent),

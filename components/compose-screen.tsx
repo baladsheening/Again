@@ -1309,8 +1309,34 @@ export function ComposeScreen({
                 something to do as off.
               */
               disabled={landedId === null && draft.trim() === ''}
+              /*
+                ⚠⚠ **THE `+` IS THE DRAFT'S OWN INK, NOT THE CHROME — 8
+                September, directed:** *make the plus sign, when it appears, the
+                same colour as the text that's written before the arrow is
+                pressed.* The arrow keeps `--color-chrome`; only the `+` changes.
+
+                ⚠ **It reads as a link between the control and the words it is
+                about.** The `+` means *I meant it, let me write the next one* —
+                it is the answer to a capture that has just landed, so wearing
+                that capture's own ink says which words it is answering. **The
+                arrow is a submit and belongs to the chrome; the `+` belongs to
+                the line.**
+
+                ⚠⚠ **AND IT IS A DEPARTURE FROM §11's SCARCITY RULE, STATED
+                RATHER THAN SLIPPED IN.** `--color-chrome` *means a control,
+                never a state*, and this is a control not wearing it. What makes
+                it affordable is that `--draft-ink` is not a new pigment — it is
+                the app's ink tinted with the composer's own glow, already on
+                this screen and already in this box. ⚠ **If a second control ever
+                wants it, that is the point at which the rule has actually been
+                broken**, not this one.
+              */
               className={`tap-target col-start-4 flex items-center justify-self-center transition-colors ${
-                landedId === null && draft.trim() === '' ? OFF : 'text-chrome'
+                landedId === null && draft.trim() === ''
+                  ? OFF
+                  : landedId === null
+                    ? 'text-chrome'
+                    : 'text-[var(--draft-ink)]'
               }`}
             >
               {/*
