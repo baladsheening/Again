@@ -5382,11 +5382,28 @@
     it is the reading the 33% core could not give because the colour was in the
     wrong place.
 
+    ⚠⚠ **THREE STOPS, BECAUSE THE CARD'S GLOW HAS THREE — 8 September, and this
+    is the reason it is three rather than two turned up.** Asked, of the
+    placeholder: *I liked the placeholder glow; could the text be something akin
+    to it.* **The placeholder glows because the engine fades its core to about
+    half while it wears the full halo** — `text-shadow` inherits into
+    `::placeholder` — so glow is a **ratio of corona to core**, and there are two
+    ways to raise one. **Dimming the core is what the placeholder does and it
+    costs contrast**, which is the direction this whole treatment was chosen away
+    from. Raising the corona costs nothing, so the core is untouched at 12.04:1.
+
     ⚠ **The halo is the card's own glow at text scale, not a new effect.**
-    `composer-glow` is a tight rim plus a diffuse pool; this is the same two
-    layers on the same colour — 0.28em and 0.85em. **Still one pigment**,
-    `--composer-glow-colour`, which has lit this card since the glow was built,
-    so §11's scarcity rule is untouched.
+    `composer-glow` is a tight rim over a pool of **three** stops; the text had
+    two and now has three — 0.3em at 85%, 0.9em at 48%, 1.6em at 20%. **The wide
+    faint layer is what reads as light in the air** rather than an outline
+    hugging the letters, and it is structure copied from the card rather than a
+    number turned up. **Still one pigment**, `--composer-glow-colour`, which has
+    lit this card since the glow was built, so §11's scarcity rule is untouched.
+
+    ⚠ **The placeholder keeps its halo, deliberately.** Taking it off was built
+    and reverted the same hour: it was read as a fault and was the thing being
+    pointed at. `::placeholder` inherits the shadow, so it follows these three
+    numbers for free and the two states of the field stay lit by one rule.
 
     ⚠ **Radii in `em`, so they are the type's own.** A halo measured in px would
     be a different halo at the desk's root scale; in `em` the corona is the same
@@ -5399,10 +5416,11 @@
     What holds them apart is that **the landed line has no halo**. ⚠ **So the
     halo may not be given to the sent line, ever**, or the two states become one.
 
-    ⚠ **What it costs: a two-layer `text-shadow` repainting on every keystroke.**
-    Cheap for one line of text, and real — **if typing ever feels less than
-    instant on a handset, this is the first thing to switch off**, before the
-    measured cap or anything in the composer's own state.
+    ⚠ **What it costs: a three-layer `text-shadow` repainting on every
+    keystroke**, and the widest layer is the expensive one. Cheap for one line of
+    text, and real — **if typing ever feels less than instant on a handset, drop
+    the 1.6em layer first**, then the whole shadow, before touching the measured
+    cap or anything in the composer's own state.
 
     ⚠ **Four numbers, and they are independent:** 18 is how purple the core is,
     92 is how bright it is, and the halo's 60/30 are how lit it looks. **More
@@ -5415,8 +5433,9 @@
     transparent
   );
   text-shadow:
-    0 0 0.28em color-mix(in srgb, var(--composer-glow-colour) 60%, transparent),
-    0 0 0.85em color-mix(in srgb, var(--composer-glow-colour) 30%, transparent);
+    0 0 0.3em color-mix(in srgb, var(--composer-glow-colour) 85%, transparent),
+    0 0 0.9em color-mix(in srgb, var(--composer-glow-colour) 48%, transparent),
+    0 0 1.6em color-mix(in srgb, var(--composer-glow-colour) 20%, transparent);
 }
 
 @utility composer-refused {
