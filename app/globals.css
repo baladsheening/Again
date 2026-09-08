@@ -5460,6 +5460,54 @@
     0 0 1.6em color-mix(in srgb, var(--composer-glow-colour) 20%, transparent);
 }
 
+/**
+ * **A glyph lit the way a draft is lit — 8 September.**
+ *
+ * ⚠⚠ **`--draft-ink` ALONE WAS INVISIBLE ON THE GLYPH, AND THE REASON IS THE
+ * WHOLE POINT OF THE TREATMENT.** Reported: *the plus is still white.* It was
+ * the draft's colour already — but `--color-chrome` is `--color-text` (#eae6da)
+ * and `--draft-ink` resolves to #d9d3d9, **a 15% drop in luminance and a slight
+ * mauve shift.** Across a paragraph that reads; across a 1.25px stroke it does
+ * not.
+ *
+ * ⚠⚠ **THE WRITTEN TEXT DOES NOT LOOK PURPLE BECAUSE OF ITS COLOUR. IT LOOKS
+ * PURPLE BECAUSE OF ITS HALO** — variant 3 deliberately moved the hue out of the
+ * core and into the corona, so a core-only match was always going to match the
+ * half that carries none of the look.
+ *
+ * ⚠ **`drop-shadow`, not `text-shadow`, because this is a stroke and not a
+ * glyph run.** `text-shadow` does nothing to an `<svg>`; `filter: drop-shadow`
+ * follows the drawn alpha, which for a stroked path is the stroke itself. **The
+ * three stops are the text's three**, so the two are lit by one description
+ * even though they cannot share one property.
+ *
+ * ⚠ **The radii are fractions of `--glyph`, not `em`.** The text's halo is
+ * 0.3/0.9/1.6em of an 18px field — 5.4, 16.2 and 28.8px. Against a 26px drawing
+ * those are 0.21, 0.62 and 1.11 of it, so the corona is the same *size* beside
+ * the words rather than the same *multiple* of a different type size. ⚠ **`em`
+ * here would read the button's font-size, which is the interface's and has
+ * nothing to do with how big the drawing is.**
+ *
+ * ⚠ **Still one pigment.** `--composer-glow-colour`, as everywhere else in this
+ * box.
+ */
+@utility draft-lit {
+  color: var(--draft-ink);
+
+  filter: drop-shadow(
+      0 0 calc(var(--glyph) * 0.21)
+        color-mix(in srgb, var(--composer-glow-colour) 85%, transparent)
+    )
+    drop-shadow(
+      0 0 calc(var(--glyph) * 0.62)
+        color-mix(in srgb, var(--composer-glow-colour) 48%, transparent)
+    )
+    drop-shadow(
+      0 0 calc(var(--glyph) * 1.11)
+        color-mix(in srgb, var(--composer-glow-colour) 20%, transparent)
+    );
+}
+
 @utility composer-refused {
   animation: composer-refuse calc(var(--recede) / 2) var(--ease-recede) 1;
 }

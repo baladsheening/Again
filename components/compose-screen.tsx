@@ -1336,7 +1336,7 @@ export function ComposeScreen({
                   ? OFF
                   : landedId === null
                     ? 'text-chrome'
-                    : 'text-[var(--draft-ink)]'
+                    : 'draft-lit'
               }`}
             >
               {/*
