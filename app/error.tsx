@@ -81,7 +81,7 @@ export default function Error({
         <div>
           <p className="zine-beat text-muted mb-2">fault</p>
           <p className="text-sm">
-            This is a bug in Keep, not something you did. Nothing was lost — a failure
+            This is a bug in Juce, not something you did. Nothing was lost — a failure
             here costs a screen, never a line, and your captures are on the server where
             you left them.
           </p>

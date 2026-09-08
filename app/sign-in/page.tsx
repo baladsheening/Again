@@ -43,27 +43,36 @@ import { getSessionUser } from '@/lib/db'
  * result or a link preview reads it; the note there says the two were one
  * string, and now there is one string in one place.
  *
- * ⚠ **The mark is `Keep.` — the rename landed 31 August**, and the fence at the
- * top of globals.css was re-measured with it: KEEP is a different word, so the
- * advance, the trim and the inked bounds all moved even though the face did not.
- * See `node_modules/.probe/keepmark.mjs`.
+ * ⚠ **The mark is `Juce.` — the second rename landed 8 September**, and the
+ * fence at the top of globals.css was re-measured with it, as it was for `Keep.`
+ * on 31 August: **a different word moves the advance, the trim and the inked
+ * bounds even though the face does not.** Twice over now, which is why the fence
+ * warns about the word as loudly as about the face. See
+ * `node_modules/.probe/jucemark.mjs`.
  *
  * ⚠ **The two-face inconsistency IS CLOSED — 1 September.** This note used to
  * say the bar set the mark in Jost while this screen set it in `--font-mark`,
  * that a person never saw both at once, and that unifying them was the next job.
  * It was directed the next day and it is done; `--font-display` resolves to a single
  * face — Instrument Serif then, **Bricolage Grotesque 800 since 7 September** —
- * so the mark is one face everywhere it appears. Splitting the rename from the
- * face swap is what let the record column’s moves be told apart: 2.6592 was the
- * rename’s, 2.176 the serif’s, 2.9351 the grotesque’s.
+ * so the mark is one face everywhere it appears. Splitting each rename from each
+ * face swap is what lets the record column’s moves be told apart: 2.6592 was the
+ * first rename’s, 2.176 the serif’s, 2.9351 the grotesque’s, 2.75 the second
+ * rename’s.
  *
  * ⚠ **The two screens still differ in CASE, and that is not an oversight.** This
- * one sets `Keep.` at 6.5rem with a full stop, in `zine-command`; the bar sets
- * `KEEP` in caps through `wordmark`, whose fence is measured for capitals. The
- * poster is a sentence and the bar is a mark. **Making them agree would move
- * every vertical number in the fence** — `serifmark.mjs` reads drop 0.205 and
- * slack −0.045 for `Keep` against 0 and 0.16 for `KEEP` — so it is a measured
- * job and not a string edit.
+ * one sets `Juce.` at 6.5rem with a full stop, in `zine-command`; the bar sets
+ * `JUCE` in caps through `wordmark`, whose fence is measured for capitals. The
+ * poster is a sentence and the bar is a mark.
+ *
+ * ⚠ **What the case costs got much smaller with the rename, and the note here
+ * used to put it at every vertical number.** Under `Keep` the two cases
+ * disagreed on drop (0.205 against 0) and slack (−0.045 against 0.16), because
+ * the `p` hung a descender below the baseline. **`Juce` has no descender**, so
+ * `jucemark.mjs` reads drop, tail and slack identically in both cases and only
+ * lead and ink move — −0.2581 / 0.6875 for `Juce` against −0.2425 / 0.7031 for
+ * `JUCE`, which is the `uce` stopping at the x-height rather than the cap line.
+ * ⚠ **Still a measured job and not a string edit**, and still two numbers.
  */
 export default async function SignInPage() {
   if (await getSessionUser()) redirect('/')
@@ -192,7 +201,7 @@ export default async function SignInPage() {
             would take 2px off the tops of the letters before it took anything
             off a sentence. The beats absorb instead; see `WallBeats`.
           */}
-          <h1 className="zine-command shrink-0 text-[6.5rem] stack:text-[10rem]">Keep.</h1>
+          <h1 className="zine-command shrink-0 text-[6.5rem] stack:text-[10rem]">Juce.</h1>
 
           {/*
             **Three beats: write, match, keep?** — the product's whole loop, and

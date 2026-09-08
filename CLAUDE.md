@@ -24,6 +24,74 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE APP IS **JUCE** — 8 September, directed, AND THE RENAME MOVED SIX
+NUMBERS THAT ARE NOT STRINGS.** *Change the name of the app to 'juce'.* Nine
+user-facing strings, one icon glyph, and **the wordmark fence at the top of
+`app/globals.css`** — which is the half a rename does not look like it touches.
+
+- ⚠⚠ **A RENAME MOVES THAT FENCE EXACTLY AS A CHANGE OF FACE DOES, AND ONLY ONE
+  OF THE TWO ANNOUNCES ITSELF.** Six of the nine `--wordmark-*` numbers are the
+  inked bounds of *one word in one face*; the face did not move and six of them
+  did. **A change of face is a decision about type and nobody ships one without
+  opening that block; a rename reads as a sweep of strings, and `2.9351` is not
+  a string.** Bricolage Grotesque 800, KEEP → JUCE at 0.08em: lead −0.2581 →
+  −0.2425, tail −0.27 → −0.2544, ink 0.6719 → 0.7031, drop 0 → **0.0156**,
+  slack 0.17 → 0.1544, advance 2.9351 → **2.75**. `line`, `track` and `weight`
+  are the face's and did not move.
+- ⚠⚠ **`--wordmark-drop-ratio` IS NOT ZERO FOR THE FIRST TIME SINCE AGAIN, AND
+  THE FENCE PREDICTED IT IN THE WRONG WORDS.** It said *if the mark ever returns
+  to a lowercase word this stops being zero*. **The axis is round letters, not
+  case**: KEEP's K, E and P start flat at the cap line and stop flat on the
+  baseline; JUCE's U and C overshoot at both ends, and `Juce` in sentence case
+  reads the same 0.0156 rather than more. ⚠ **Nothing on screen moves because of
+  it** — the one thing that read `--wordmark-drop` was `cinema-wall.tsx`,
+  deleted with the poster wall — but the token is live rather than dormant, and
+  **do not delete it on the grounds that the mark is set in capitals.**
+- ⚠⚠ **THE INK RATIO REACHES THE HANDSET AND NOT THE DESK, AND THE FENCE CLAIMED
+  BOTH.** `--text-mark` is `--glyph-bar / --wordmark-ink-ratio`, **but above
+  `--breakpoint-rail` it is overridden to the literal `--text-mark-rail`** — so
+  from 720px up the band moves on the advance alone. Measured under both fences:
+  at 390 the mark's font-size goes 32.73 → 31.28 and the band 116.09 → 106.05;
+  at 1440 the font-size is 34.66 either way and the band 144.41 → 137.98.
+  ⚠ **`--record-floor` is the exception and reads both**, because it writes the
+  below-rail band out in full rather than going through `--text-mark`: 503.36 →
+  **513px**, so the desk's reading column widens.
+- ⚠ **The mark's INK is unchanged and only its font-size moved.** That is the
+  ratio doing its job — the mark is set so its ink is the height of the glyphs
+  beside it, so a word that inks *more* of its em is set *smaller*. **Do not read
+  31.28 against 32.73 as the mark shrinking.**
+- ⚠ **`keepcolumn.mjs` and `markgap.mjs` were re-run and both pass** — the
+  column never widens as the window narrows, the band is held from 720px up, and
+  nothing steps at the rail. ⚠ **`keepcolumn.mjs` pins the advance as a literal
+  and FAILED, which is exactly what it is for**; `markgap.mjs` and `logocol.mjs`
+  find the mark by its text and could not see it at all.
+- ⚠⚠ **THE ICON SAID `A` ALL THROUGH THE *KEEP* RENAME AND NOBODY SAW IT.**
+  `app/apple-icon.tsx` draws the mark's initial as a single letter, so a rename
+  that greps for the word finds nothing there to find. It is `J` now and the file
+  carries the warning. **Check it by eye, not by search.**
+- ⚠ **Nine strings: `metadata.title`, `appleWebApp.title`, the manifest's `name`
+  and `short_name`, the bar's mark, both auth posters, the error screen's prose
+  and the record's `sr-only` heading.** The posters are `Juce.` in sentence case
+  and the CSS uppercases — **the word is spelled as a word in the DOM
+  everywhere**, which is `wordmark`'s own rule.
+- ⚠ **The case costs less than it did, because the word lost a descender.** Under
+  `Keep` the two cases disagreed on drop (0.205 against 0) and slack (−0.045
+  against 0.16) on the `p`'s tail. **`Juce` has no descender**, so only lead and
+  ink move between the poster's sentence case and the bar's capitals.
+- ⚠ **`package.json` still reads `again` and is deliberately untouched** — it is
+  the npm identifier of a private package, it survived the last rename for the
+  same reason, and changing it is lockfile churn nothing reads.
+- ⚠ **`keep?` is still the third beat on the sign-in wall and `Keeping it?` is
+  still the console's question.** Both are the product's own verb rather than the
+  old name, and `lib/vocabulary.ts` owns them. **Renaming the app does not rename
+  a verb.**
+- **Measured by `node_modules/.probe/jucemark.mjs`**, which prints KEEP and JUCE
+  side by side in the shipping face and **reproduces the KEEP column of the
+  shipped fence to the digit** — the check that it is reading what ships rather
+  than a canvas default. ⚠ **`zine.mjs` had 8 assertions red since the 7
+  September face swap**, all of them asserting *Instrument Serif*; pre-existing,
+  fixed here, and green on both surfaces.
+
 ⚠⚠ **A FILM IS NOWHERE; A SCREENING IS SOMEWHERE — 6 September, Amendment 9,
 AND IT IS THE SHORTEST ROUTE TO A LOCAL RAIL.** Asked: *why isn't a film
 somewhere you can go if it's in the cinema?* **It is, and the entry above this

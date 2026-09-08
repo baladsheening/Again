@@ -723,31 +723,59 @@
     — and next/font would have gone on *preloading* it on every page. The reserve
     below is one slot and it is Bebas Neue's. Jost is in git.
 
-    ⚠⚠ **EVERY NUMBER BELOW IS MEASURED FOR INSTRUMENT SERIF SETTING **KEEP**,
-    and not one of them survived the change of face.** Six of the eight moved;
-    the two that did not are `--wordmark-track`, which is a look and not a
-    reading, and `--wordmark-drop-ratio`, which is zero for the reason below.
-    Jost against Instrument Serif, KEEP in caps at 0.08em:
+    ⚠⚠ **THE MARK READS **JUCE** SINCE 8 SEPTEMBER, AND A RENAME MOVES THIS
+    FENCE EXACTLY AS A CHANGE OF FACE DOES.** The word is half of every reading
+    in this block — six of the nine numbers are the inked bounds of *one word in
+    one face* — so renaming the app and leaving them alone would have left six
+    numbers describing a word that is no longer there. **That is the failure this
+    fence exists to prevent, arriving from the side nobody watches**: a rename
+    reads as a sweep of strings, and not one of these nine is a string. Bricolage
+    Grotesque 800, KEEP against JUCE, both in caps at 0.08em:
 
-        line   1.445  →  1.3        lead   −0.37    →  −0.27
-        tail  −0.375  →  −0.31      ink     0.7     →   0.72
-        drop   0      →   0         slack   0.1525  →   0.16
-        advance  2.6592  →  2.176
+        line   1.2     →   1.2        lead  −0.2581  →  −0.2425
+        tail  −0.27    →  −0.2544     ink    0.6719  →   0.7031
+        drop   0       →   0.0156     slack  0.17    →   0.1544
+        advance  2.9351  →  2.75
 
-    **Measured by `node_modules/.probe/serifmark.mjs`**, which prints both faces
-    in three cases side by side so neither is reasoned into the other. It
-    supersedes `keepmark.mjs` for this job — that one hardcodes `--font-jost`,
-    which no longer resolves.
+    ⚠⚠ **`--wordmark-drop-ratio` IS NOT ZERO ANY MORE, FOR THE FIRST TIME SINCE
+    AGAIN, AND THE PARAGRAPH BELOW PREDICTED IT IN WRITING.** It said *if the
+    mark ever returns to a lowercase word this stops being zero* — and the cause
+    turned out to be **round letters, not case**. KEEP has none: K, E and P start
+    flat at the cap line and stop flat on the baseline. **JUCE has two, U and C,
+    and a round letter overshoots at both ends** — which is the same reading that
+    lifts the ink ratio 0.6719 → 0.7031 on a word of identical cap height. The
+    token stopped being a no-op the day the app was renamed, and
+    `--wordmark-drop` is live rather than dormant.
 
-    ⚠ **KEEP is size-stable in this face too, which is the check that these are
-    real.** `actualBoundingBox*` rounds to whole pixels, so a number that moves
-    between 200px and 1000px is a rounding rather than a reading — AGAIN read
-    0.775 ink at 200 and 0.797 at 1000, on the round G's sub-pixel overshoot.
-    Instrument Serif setting KEEP reads **drop, slack, tail and line identically
-    at both sizes**; lead and ink differ in the fourth decimal (−0.27 / −0.27125
-    and 0.72 / 0.71875), which is a whole pixel at 200px. **The fence holds the
-    200px column**, as it has since AGAIN, and the discrepancy is 0.04px at the
-    bar's own mark size.
+    **Measured by `node_modules/.probe/jucemark.mjs`**, which prints both words
+    side by side in the shipping face so neither is reasoned into the other. ⚠ **It
+    reproduces the KEEP column of this fence to the digit, and that is the check
+    that it is reading what shipped** rather than a canvas default.
+    `serifmark.mjs` did the same job across two faces and is the one to copy for
+    a change of face; `keepmark.mjs` before it hardcodes `--font-jost`, which no
+    longer resolves.
+
+    ⚠ **What this fence has held, KEEP in caps at 0.08em, for the rule rather than
+    the numbers** — line / lead / tail / ink / drop / slack / advance:
+
+        Jost 500          1.445 / −0.37   / −0.375 / 0.7    / 0 / 0.1525 / 2.6592
+        Instrument 400    1.3   / −0.27   / −0.31  / 0.72   / 0 / 0.16   / 2.176
+        Bricolage 800     1.2   / −0.2581 / −0.27  / 0.6719 / 0 / 0.17   / 2.9351
+
+    **Not one number has ever survived a change of face, and the rename moved six
+    of the nine without touching the face at all.** Do not scale one face's set
+    into another, and do not carry one word's set onto another word.
+
+    ⚠ **JUCE is size-stable, which is the check that these are real.**
+    `actualBoundingBox*` quantises, so a number that moves between 200px and
+    1000px is a rounding rather than a reading — AGAIN read 0.775 ink at 200 and
+    0.797 at 1000, on the round G's sub-pixel overshoot. JUCE reads **line
+    identically at both sizes** and the other five within one pixel of the 200px
+    grid: lead −0.255 / −0.2425, tail −0.255 / −0.254375, ink 0.69 / 0.703125,
+    drop 0.015 / 0.015625, slack 0.155 / 0.154375. ⚠ **The fence holds the 1000px
+    column**, where a pixel is 0.001em against 0.005em — which is what the
+    Bricolage set above already did, and the note that used to say *200px here*
+    was describing the Instrument Serif set, two faces back.
 
     ⚠ **A serif in caps is not the risk it sounds like, but it is thinner.**
     Instrument Serif has one weight — 400 — where Jost was set at 500, and it is
@@ -791,85 +819,97 @@
     400 for the serif; a run at the wrong weight measures a cut that does not
     ship.
 
-    ⚠ **Capitals are why `drop` is zero, and under KEEP it is zero exactly.**
-    `--wordmark-drop` exists to take a descender's tail back off a row, because
-    the eye reads a word between its cap line and its baseline and discounts the
-    tail. Neither word has a tail — but AGAIN still measured 0.035 below the
-    baseline, which was the round G's overshoot, half a pixel at 28px and read by
-    the eye as sitting *on* the baseline. **KEEP measures a true 0**: no round
-    letter reaches the baseline in it. It has now stayed 0 through **two** changes
-    of face — a serif's K, E and P sit on the baseline as squarely as a
-    geometric sans's, and so do a grotesque's. **If the mark ever returns to a
-    lowercase word this stops being zero**, which is why the token stays rather
-    than being deleted: the probe reads **0.17** for `Keep` in this face against
-    0 for `KEEP`, so the case is worth a sixth of the em and the token would earn
-    its keep the day it changed.
+    ⚠ **`drop` is what a round letter costs, and that is why the token survived
+    three words that had no use for it.** `--wordmark-drop` exists to take a
+    descender's tail back off a row, because the eye reads a word between its cap
+    line and its baseline and discounts the tail. **No mark this app has had owns
+    a real descender** — but AGAIN measured 0.035 below the baseline on the round
+    G's overshoot, KEEP measured a true 0 through two changes of face, and **JUCE
+    measures 0.0156 on its U and its C**. Half a pixel at the bar's own mark size,
+    and read by the eye as sitting *on* the baseline in all three.
+
+    ⚠ **The note here used to say this would only come back with a lowercase word,
+    and that was the wrong axis.** Case is not what does it; **a curve is** — the
+    probe reads 0.0156 for `JUCE` in caps against 0 for `KEEP` in the same face
+    at the same size, and `Juce` in sentence case reads the same 0.0156 rather
+    than more. **Do not delete this token on the grounds that the mark is set in
+    capitals.**
 
     ⚠ **The slack is POSITIVE, where Ojuju's was −0.135, and the sign is the
     whole meaning of it.** Ojuju hung `Again`'s g below its own box; capitals stop
     short of it. Everything that reads this adds it, so the sign carries the case
     without anyone branching on it — see the token's own note at the foot of this
-    block. It is **0.17** in Bricolage against Instrument Serif's 0.16 and Jost's
-    0.1525, which moves the gap under the mark on both auth pages by that much.
+    block. It is **0.1544** for JUCE in Bricolage, against 0.17 for KEEP in that
+    same face, Instrument Serif's 0.16 and Jost's 0.1525 — so the rename moved the
+    gap under the mark on both auth pages by more than the last change of face
+    did.
   */
   --font-display: var(--font-mark-face), ui-sans-serif, system-ui, sans-serif;
   --wordmark-weight: 800;
   --wordmark-track: 0.08em;
   --wordmark-line: 1.2;
-  --wordmark-lead: -0.2581em;
-  --wordmark-tail: -0.27em;
-  --wordmark-ink-ratio: 0.6719;
-  --wordmark-drop-ratio: 0;
-  --wordmark-slack-ratio: 0.17;
+  --wordmark-lead: -0.2425em;
+  --wordmark-tail: -0.2544em;
+  --wordmark-ink-ratio: 0.7031;
+  --wordmark-drop-ratio: 0.0156;
+  --wordmark-slack-ratio: 0.1544;
   /*
     ⚠ **The seventh, and the first horizontal one — 28 August.** Every other
     number in this fence is vertical, because until now nothing needed to know
     how *wide* the mark sets. The record column and the tool stack do: directed,
     neither may cross into the mark's own band on the desk. See `--mark-column`.
 
-    **How wide KEEP sets, per 1px of font-size, in this face at this tracking.**
-    Measured by `node_modules/.probe/serifmark.mjs` at 20, 24, 32 and 64px —
-    2.9352 / 2.9355 / 2.9351 / 2.9351, which is the check that it is a *ratio*
-    and not a size. It has to be: the tracking is in `em`, so the whole advance
-    scales with the type.
+    **How wide JUCE sets, per 1px of font-size, in this face at this tracking.**
+    Measured by `node_modules/.probe/jucemark.mjs` at 20, 24, 32 and 64px —
+    2.75 / 2.75 / 2.75 / 2.75, flat to four decimals at every size, which is the
+    check that it is a *ratio* and not a size. It has to be: the tracking is in
+    `em`, so the whole advance scales with the type.
 
-    ⚠⚠ **THE BAND GREW 35% ON 7 SEPTEMBER AND THAT IS THE ONE CHANGE IN THE
-    FACE SWAP THAT MOVES LAYOUT.** 2.9351 against Instrument Serif's 2.176.
-    `--mark-column` derives from this ratio and `--record-measure` derives from
-    that, so the desk's reading column **narrows** — the band it has to clear has
-    now moved three times in a week, and none of the three is a bug to chase.
+    ⚠⚠ **THE RENAME IS THE ONE PART OF ITSELF THAT MOVES LAYOUT — 8 September.**
+    2.75 against KEEP's 2.9351 in the same face. `--mark-column` derives from
+    this ratio and `--record-measure` clamps against that, so the desk's reading
+    column **widens** — a shorter word reserves less band. It has now moved four
+    times in a fortnight and none of the four is a bug to chase.
     `--record-floor` reads the ratio too, so it follows without being re-typed.
 
-    ⚠⚠ **IT COMPOUNDS WITH `--wordmark-ink-ratio`, WHICH IS THE HALF THAT IS
-    EASY TO MISS.** `--text-mark` is `--glyph-bar / --wordmark-ink-ratio`, so a
-    face that inks *less* of its em is set **larger** to keep the mark's ink the
-    height of the glyphs beside it: 0.6719 against 0.72 is a 7% bigger
-    font-size, and the band is that 7% on top of the 35%. **Measured at 1440 the
-    band went 110 → 144.41px.** Neither number alone predicts it.
+    ⚠⚠ **IT COMPOUNDS WITH `--wordmark-ink-ratio` ON THE HANDSET AND NOT ON THE
+    DESK, AND THE NOTE HERE USED TO CLAIM BOTH.** `--text-mark` is `--glyph-bar /
+    --wordmark-ink-ratio`, so a word that inks *more* of its em is set **smaller**
+    to keep the mark's ink the height of the glyphs beside it — 0.7031 against
+    0.6719 is a 4.4% smaller font-size at the same ink. ⚠ **But above
+    `--breakpoint-rail` `--text-mark` is overridden to the literal
+    `--text-mark-rail`**, so from 720px up the ink ratio reaches nothing and the
+    band moves on the advance alone. Measured under both fences:
+
+        at 390   text-mark 32.73 → 31.28    band 116.09 → 106.05   (both terms)
+        at 1440  text-mark 34.66 → 34.66    band 144.41 → 137.98   (advance only)
+
+    ⚠ **`--record-floor` is the exception and reads BOTH**, because it writes
+    `--glyph-bar / --wordmark-ink-ratio` out in full rather than going through
+    `--text-mark` — it has to, since the term it is comparing is the *below*-rail
+    band. So the floor moves by the compounded amount at every width.
 
     ⚠ **Re-run `keepcolumn.mjs` and `markgap.mjs` after touching this number**:
     the floor's whole justification is that it is the lowest one that stays
     continuous across `--breakpoint-rail`, and continuity is a property of the
-    ratio. Both were re-run and both pass — `--record-floor` resolved 537.24 →
-    503.36px and nothing steps at the rail.
+    ratio. Both were re-run on the rename and both pass — `--record-floor`
+    resolved 503.36 → 513px and nothing steps at the rail.
 
     ⚠ **It is the advance, not the ink**, so it includes the trailing 0.08em the
-    tracking adds after the final P. That is deliberate: a band reserved for the
-    mark should err wide, and the alternative is a second number describing the
-    same word.
+    tracking adds after the final letter. That is deliberate: a band reserved for
+    the mark should err wide, and the alternative is a second number describing
+    the same word.
 
-    ⚠ **A grotesque widens the band where the serif narrowed it, and both are
-    the face.** Instrument Serif's caps were drawn on a narrow body with no extra
-    sidebearing; Bricolage's are a wide, heavy grotesque at 800. **The swing is
-    the largest this fence has recorded** — which is exactly why nine numbers are
-    fenced together rather than one.
-
-    ⚠ **Measured, like its seven neighbours, and not reasoned from them.** The
-    four faces this fence has held disagree on it as they disagree on the rest:
-    2.9351 against Instrument Serif's 2.176, Jost's 2.6592 and Bebas Neue's
-    2.447. Do not scale one face's set into another's.
+    ⚠ **The word moves this as surely as the face does, and only one of the two
+    announces itself.** A change of face is a decision about type and nobody
+    ships it without opening this block; **a rename reads as a sweep of strings**,
+    and 2.9351 is not a string. The four faces and two words this fence has held
+    disagree on it as they disagree on the rest: 2.75 (Bricolage, JUCE) against
+    2.9351 (Bricolage, KEEP), 2.176 (Instrument Serif), 2.6592 (Jost) and Bebas
+    Neue's 2.447 — the last four all measured on KEEP. Do not scale one set into
+    another.
   */
-  --wordmark-advance-ratio: 2.9351;
+  --wordmark-advance-ratio: 2.75;
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -879,10 +919,16 @@
     **Held on purpose for a refresh later, directed 21 August.** Bebas Neue has
     no lowercase at all: the family is capitals, so it is the one face that
     cannot be set in the wrong case. It was chosen against AGAIN, where the `I`
-    carried the same weight as the `N` beside it; **it has not been looked at set
-    as KEEP**, which is a four-letter word with two identical middle letters and
-    a different problem. Declared with `preload: false` in app/layout.tsx, so it
-    is declared and not downloaded.
+    carried the same weight as the `N` beside it. Declared with `preload: false`
+    in app/layout.tsx, so it is declared and not downloaded.
+
+    ⚠⚠ **EVERY NUMBER IN THIS RESERVE IS NOW MEASURED FOR A WORD THIS APP DOES
+    NOT HAVE.** Four of them were still AGAIN's and were marked so; **the other
+    four became stale on 8 September when the mark became JUCE**, and the advance
+    below is the dangerous one because it silently re-derives the record column.
+    The whole set wants re-running against JUCE before it is swapped in — which
+    is the same instruction the reserve has always carried, now true of all of
+    it rather than half.
 
     Swap these nine in for the nine above, and flip `preload` there:
 
@@ -893,25 +939,27 @@
         --wordmark-lead: -0.24em;      ← still AGAIN
         --wordmark-tail: -0.34em;      ← still AGAIN
         --wordmark-ink-ratio: 0.72;    ← still AGAIN
-        --wordmark-drop-ratio: 0;
+        --wordmark-drop-ratio: 0;      ← and JUCE has round letters
         --wordmark-slack-ratio: 0.19;  ← still AGAIN
-        --wordmark-advance-ratio: 2.447;
+        --wordmark-advance-ratio: 2.447;  ← measured on KEEP
 
-    ⚠⚠ **FOUR OF THOSE ARE STILL MEASURED FOR AGAIN AND ARE MARKED SO — do not
-    swap this set in without re-running the probe.** The advance is re-measured
-    for KEEP (2.447, against AGAIN's 2.8875) because it was cheap and because a
-    wrong number here would silently re-derive the record column. The four
-    vertical ones are the inked bounds of a word this face is not currently
-    setting, and **guessing them is precisely the failure this fence exists to
-    prevent** — six numbers describing a typeface, or a word, that is no longer
-    there. `node_modules/.probe/keepmark.mjs` prints the set; point it at
+    ⚠⚠ **NOT ONE OF THOSE IS MEASURED FOR THE WORD THE MARK CURRENTLY SETS — do
+    not swap this set in without re-running the probe.** Four are AGAIN's and say
+    so; the advance was re-measured for KEEP (2.447, against AGAIN's 2.8875)
+    because it was cheap and because a wrong number here silently re-derives the
+    record column, **and KEEP stopped being the mark on 8 September**. The drop
+    is 0 for a word with no round letters in it and JUCE has two. They are the
+    inked bounds of a word this face is not setting, and **guessing them is
+    precisely the failure this fence exists to prevent** — numbers describing a
+    typeface, or a word, that is no longer there.
+    `node_modules/.probe/jucemark.mjs` prints the set; point its `VAR` at
     `--font-bebas-neue` and read them off.
 
     ⚠ **The advance is measured at Bebas's own 0.1em tracking**, so it is only
     right if the tracking above is swapped in with it. It is condensed — 2.447
-    against Jost's 2.6592 — which is now only about 8% narrower, where under
-    AGAIN it was nearly a fifth. **The rename took most of that margin already**:
-    a four-letter word closes the gap between a condensed face and a normal one.
+    against Jost's 2.6592 — which is only about 8% narrower, where under AGAIN it
+    was nearly a fifth. **A four-letter word closes the gap between a condensed
+    face and a normal one**, and both marks since have been four letters.
 
     ⚠ **Seven of those eight are measured; the tracking is not.** 0.1em is a
     starting point rather than a reading — Bebas is condensed, so its caps want
@@ -3973,9 +4021,10 @@
 
     The mark appears in four places: the phone header, the rail, `/sign-in` and
     `/reset-password`. Four literals are four things that can drift, and a
-    transform keeps them one thing. It is also why the DOM text stays "Again"
-    everywhere — `<title>`, prose and the accessible name all get the app's name
-    spelled as a word, whatever this line is currently doing to it.
+    transform keeps them one thing. It is also why the DOM text is the app's name
+    spelled as a word — "Juce" since 8 September, "Keep" before it, "Again"
+    before that — so `<title>`, prose and the accessible name all read as a word
+    whatever this line is currently doing to it.
 
     ⚠ **Case moved every number this time, and the note that said it would not is
     the one being corrected.** It read *case is free; the word is not*, and that
@@ -4136,12 +4185,15 @@
     margin is the dead space at that end — `-(ascent − inkAbove)` and
     `-(descent − inkBelow)`.
 
-    Instrument Serif 400 setting `KEEP` reads 1.3 / −0.27 / −0.31, against Jost
-    500 setting the same word at 1.445 / −0.37 / −0.375, Jost setting `AGAIN` at
-    1.445 / −0.33 / −0.34, Ojuju setting `Again` at 1.41 / −0.42 / −0.07 and
-    Space Grotesk setting `need` at 1.2778 / −0.25 / −0.0833. **Not one number
-    has ever survived a change of face**, which is four faces' worth of evidence
-    for never scaling one set into another.
+    Bricolage Grotesque 800 setting `JUCE` reads 1.2 / −0.2425 / −0.2544,
+    against **the same face setting `KEEP` at 1.2 / −0.2581 / −0.27**, Instrument
+    Serif 400 setting `KEEP` at 1.3 / −0.27 / −0.31, Jost 500 setting it at
+    1.445 / −0.37 / −0.375, Jost setting `AGAIN` at 1.445 / −0.33 / −0.34, Ojuju
+    setting `Again` at 1.41 / −0.42 / −0.07 and Space Grotesk setting `need` at
+    1.2778 / −0.25 / −0.0833. **Not one number has ever survived a change of
+    face**, which is five faces' worth of evidence for never scaling one set into
+    another — ⚠ **and the KEEP/JUCE pair is the evidence that a change of WORD
+    does the same thing** at a face that did not move at all.
 
     ⚠⚠ **THE LINE-HEIGHT IS SET THROUGH A VARIABLE AND MUST NOT GO BACK TO BEING
     A PROPERTY HERE — 1 September.** This rule declared `line-height:

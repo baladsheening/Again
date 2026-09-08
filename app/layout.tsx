@@ -147,6 +147,12 @@ const bodySansItalic = Schibsted_Grotesk({
  * `KEEP.` at the poster's 6.5rem and as `KEEP` at the bar's 28px caps, then the
  * shortlist was rendered on the real screens at 390×844.
  *
+ * ⚠ **The mark is `JUCE` since 8 September, so the test word below is not the
+ * one that ships.** It is a narrower word — 2.75 against KEEP's 2.9351 — which
+ * means the fitting test that eliminated Syne was run against the wider of the
+ * two. **Nothing about the choice is reopened by that**, but a future candidate
+ * has to be fitted against JUCE, not against this account of it.
+ *
  * ⚠⚠ **SYNE 800 WAS THE FIRST CHOICE AND WAS ELIMINATED BY A MEASUREMENT, NOT
  * A PREFERENCE: IT DOES NOT FIT.** At 6.5rem the poster runs off a 390px
  * screen — `KEE` and half a P, the full stop gone. It sets far wider than the
@@ -196,7 +202,7 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Keep',
+  title: 'Juce',
   /*
     The tagline, and it is the tagline that lives here rather than a description
     written for this slot — see `app/sign-in/page.tsx`, where the same line sits
@@ -219,7 +225,7 @@ export const metadata: Metadata = {
   */
   appleWebApp: {
     capable: true,
-    title: 'Keep',
+    title: 'Juce',
     /*
       The web view extends under the status bar rather than being pushed below a
       black strip, which is the same arrangement `viewportFit: 'cover'` already

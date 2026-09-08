@@ -2833,7 +2833,7 @@ export function PageScreen({
         */
         className="gutter page-hem mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+var(--page-lead))]"
       >
-        <h1 className="sr-only">Keep</h1>
+        <h1 className="sr-only">Juce</h1>
 
         {/*
           ───────────────────────────────────────────────────────────────────────

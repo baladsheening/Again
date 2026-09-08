@@ -52,7 +52,13 @@ export default function AppleIcon() {
           /*
             The wordmark's own initial, in the wordmark's own case. The mark was
             in caps for part of 10 August, read `Need` for a few hours on
-            15 August and reads `Again` — if it moves again, this moves with it.
+            15 August, `Again` until 31 August, `Keep` until 8 September, and
+            reads `Juce` — if it moves again, this moves with it.
+
+            ⚠ **It still said `A` all through the Keep rename**, and that is the
+            failure this note exists to prevent. The icon is the only place the
+            mark is a single letter, so a rename that greps for the word finds
+            nothing here to find. **Check this file by eye, not by search.**
 
             ⚠ **`fontSize` here does not follow `--text-wordmark`, deliberately.**
             An icon is sized to fill a 180px square, not to sit in a header, so
@@ -62,7 +68,7 @@ export default function AppleIcon() {
           letterSpacing: '-0.04em',
         }}
       >
-        A
+        J
       </div>
     ),
     size,

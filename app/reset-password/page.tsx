@@ -24,9 +24,9 @@ import { getSessionUser } from '@/lib/db'
  * `app/sign-in/page.tsx` and `components/sign-in-form.tsx`.
  *
  * ⚠⚠ **THE MARK MOVED FROM `wordmark` TO `zine-command`, AND THAT IS A CHANGE OF
- * FENCE, NOT OF SIZE.** `wordmark` is the BAR's mark: KEEP in capitals, and the
+ * FENCE, NOT OF SIZE.** `wordmark` is the BAR's mark: JUCE in capitals, and the
  * `--wordmark-*` tokens are measurements of that word in that case. This screen
- * now sets `Keep.` the way the wall does — a sentence rather than a mark — so
+ * now sets `Juce.` the way the wall does — a sentence rather than a mark — so
  * **the `gap-[calc(14px - var(--wordmark-slack))]` that used to sit under it is
  * deleted rather than re-derived.** That correction held 14px of visible air
  * under a mark whose ink stops short of its box, and it measured a face and a
@@ -81,13 +81,13 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<'/re
       <div className="my-auto flex w-full flex-col">
         <div className="flex flex-col gap-9">
           {/*
-            ⚠ **`Keep.` with the full stop, and the capitals come from CSS.**
+            ⚠ **`Juce.` with the full stop, and the capitals come from CSS.**
             `zine-command` is `text-transform: uppercase`, so the markup holds
             the word as it is written and the screen shows the mark — the same
             arrangement `zine.mjs` asserts on the wall, because a word typed in
             capitals is a word that cannot be set any other way later.
           */}
-          <h1 className="zine-command text-[6.5rem] stack:text-[10rem]">Keep.</h1>
+          <h1 className="zine-command text-[6.5rem] stack:text-[10rem]">Juce.</h1>
 
           {/*
             The wall's beat sentence, at the wall's size and at full strength.

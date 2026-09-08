@@ -169,7 +169,7 @@ export function Bar({
           href="/"
           className="wordmark wordmark-trim text-chrome text-[length:var(--text-mark)]"
         >
-          Keep
+          Juce
         </Link>
 
         {/*
