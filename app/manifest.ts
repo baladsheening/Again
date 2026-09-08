@@ -28,8 +28,27 @@ import type { MetadataRoute } from 'next'
  * that wants real raster assets at fixed sizes rather than a generated route.
  * Worth doing when Android is a target; it is not one today (§2).
  *
- * No `orientation`. The shell has a landscape dock at 45rem and handsets cross
- * that turned sideways, so locking it would remove a layout that already exists.
+ * ⚠⚠ **`orientation: 'portrait'` SINCE 8 SEPTEMBER — directed: *the home app
+ * shouldn't be rotatable.* The note that used to sit here is DELETED, not
+ * overruled: it read *the shell has a landscape dock at 45rem and handsets cross
+ * that turned sideways, so locking it would remove a layout that already
+ * exists.* **`components/shell.tsx` was deleted in Phase 1**, so there has been
+ * no landscape dock to protect for weeks and the reason had outlived the thing
+ * it was about.
+ *
+ * ⚠⚠ **THIS IS THE ONLY LEVER THERE IS, AND IT MAY NOT REACH iOS.** The manifest
+ * member is what Chrome and Android obey. Safari's support for it in an
+ * installed web app is **not something this repository has verified**, and the
+ * Screen Orientation API — `screen.orientation.lock('portrait')` — is **not
+ * implemented in Safari at all**, so there is no JavaScript fallback to reach
+ * for. ⚠ **There is no CSS answer either:** a page cannot refuse to be rotated,
+ * and counter-rotating the whole app with a transform in a landscape media query
+ * is the sort of correction *How things get fixed* rules out.
+ *
+ * ⚠ **So the honest status is: set, correct, and unverified on the surface it
+ * was asked for.** Rotate the installed app; if it still turns, iOS is ignoring
+ * it and the answer is that a web app cannot do this — **not that a bigger hammer
+ * is available.**
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -40,6 +59,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     scope: '/',
     display: 'standalone',
+    orientation: 'portrait',
     /*
       Both black, and both matter. `background_color` paints the splash screen
       while the app boots, `theme_color` tints the system furniture around it —
