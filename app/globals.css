@@ -6023,47 +6023,12 @@
  * own screen corners are already round — a radius there would open two slivers
  * of black inside curves that are not ours to match, and no browser can read the
  * device's corner radius.
- *
- * ⚠⚠ **THE GROUND BLEEDS PAST THE BOTTOM EDGE, AND THAT IS A DIAGNOSTIC AS MUCH
- * AS A FIX — 8 September.** Asked, within minutes of the panel landing: *can you
- * move the ground so it's closer to the home indicator.* **The strip is
- * `bottom: 0`, so if its ground reached the screen's edge there would be nothing
- * to move.** Something is ending short, and the only thing known to do that is
- * `keep-ios-standalone-short-viewport`: iOS lays a `black-translucent` standalone
- * app out at `screen − safe-area-inset-top`, **798 where the screen is 844**, so
- * everything `fixed` to `bottom: 0` is pinned 46px up. The panel is the first
- * thing on this screen with a painted edge, so it is the first thing that could
- * ever show it.
- *
- * ⚠ **`box-shadow`, not height.** A spread shadow in the ground's own colour
- * paints below the box **without changing the layout** — nothing that measures
- * the strip, reserves room for it or rides its top edge sees any difference. A
- * taller box or a padded one would move all three.
- *
- * ⚠ **The bleed is `--bar-height`, not a typed 46 or 100.** What is being
- * covered is the top inset that iOS wrongly subtracts, and `--bar-height` already
- * contains `env(safe-area-inset-top)` plus the bar's own row — so it is always
- * larger than the shortfall on any device that has one, and **zero-ish on devices
- * that do not**, where there is nothing under the strip to paint anyway. ⚠ **A
- * pixel here would be the 46px constant that CLAUDE.md rules out** — right on
- * this handset, wrong on the next inset.
- *
- * ⚠ **It follows the ground automatically**, because the shadow's colour is the
- * same `color-mix` the background is. If one moves the other must; they are
- * written once each and read from the same expression.
- *
- * ⚠⚠ **IF THE GAP DOES NOT CLOSE, THE SHORT VIEWPORT IS NOT THE CAUSE** and the
- * next suspect is the strip's own box — read `--keyboard-overlap` off the element
- * before changing anything, exactly as `writing-sheet` says.
  */
 @utility sheet-panel {
   @media (display-mode: standalone) {
-    --panel-ground: color-mix(in srgb, var(--color-text) 6%, var(--color-bg));
-
-    background-color: var(--panel-ground);
+    background-color: color-mix(in srgb, var(--color-text) 6%, var(--color-bg));
     border-start-start-radius: calc(var(--radius-2xl) + var(--gutter-l));
     border-start-end-radius: calc(var(--radius-2xl) + var(--gutter-l));
-    box-shadow: 0 var(--bar-height) 0 0 var(--panel-ground);
   }
 }
 
