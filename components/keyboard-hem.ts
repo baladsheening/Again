@@ -127,6 +127,46 @@ export function useKeyboardHem({
       const box = host.current
       const edge = floorAnchor.current
       if (!box || !edge) return
+      /*
+        ⚠⚠⚠ **THE `Math.max(0, …)` IS A TOMBSTONE. UNCLAMPING THIS WAS TRIED ON
+        8 SEPTEMBER AND THE STRIP DISAPPEARED. DO NOT DO IT AGAIN.**
+
+        **The reasoning was sound and the result was much worse.** The raw
+        quantity is where the visible bottom of the screen is in the layout
+        coordinates a `fixed` box paints in — `H − offsetTop − vv.height` — and
+        while iOS pans with no keyboard yet that value is **negative**: the strip
+        would have to be pushed *below* the layout bottom to stay still on screen
+        while every `fixed` box is dragged up. The clamp forbids exactly that,
+        which is why the strip rode the whole pan upward. **All of that is true.**
+
+        ⚠⚠ **AND IT MADE THE ERROR TWO-SIDED.** Reported within minutes: *it goes
+        up significantly above the keyboard before disappearing altogether.*
+        Clamped, the worst case is riding the pan **up**. Unclamped, a negative
+        lift applied in a frame where the pan has already unwound pushes the
+        strip **down** by the same magnitude — behind the keyboard, off the
+        screen. **A composer that vanishes when you tap it is worse than any
+        jolt**, which is the same verdict the in-flow attempt got on 7 September
+        and for the same underlying reason.
+
+        ⚠⚠ **THIS IS THE THIRD INDEPENDENT CONFIRMATION OF ONE LAW: A MAIN-THREAD
+        CORRECTION CANNOT CANCEL A COMPOSITOR PAN.** `top: var(--viewport-top)`
+        on the bar, measured worse three ways (7 Sep, `bar.tsx`); the strip taken
+        out of `fixed` into an `h-dvh` column, which fixed the jolt and broke
+        three things (7 Sep, `writing-sheet`); and this. **The frame of lateness
+        is not a tuning problem, it is the whole of the mechanism.**
+
+        ⚠ **So the clamp is not conservatism, it is the cheaper error.** It keeps
+        every mistake on one side and bounded by the pan; without it the same
+        lateness costs twice as much in both directions.
+
+        ⚠⚠ **WHAT IS LEFT IS TO STOP THE PAN, NOT TO CHASE IT.** iOS pans to
+        reveal the focused field; it has nothing to reveal if the strip is
+        already clear of where the keyboard will be **at the moment focus
+        happens**. That needs the keyboard's height before the keyboard exists,
+        which can only come from remembering the last one this device reported.
+        **Not built, and it is a mechanism rather than a subtraction** — read
+        `docs/re-direction/the-rail-and-the-keyboard.md` before starting.
+      */
       const overlap = Math.max(
         0,
         edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
