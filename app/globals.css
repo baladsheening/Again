@@ -5975,6 +5975,63 @@
 @utility sheet-over-keys {
   --sheet-clearance-writing: 0px;
 }
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The composer's strip as a PANEL, in the installed app only — 8 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *Round the corners of the strip* — the strip being, in the direction's own
+ * words, **the thing that contains the band, the card and the foot**. That box
+ * has had no ground since 5 September, so there were no corners to round: this
+ * gives it one. Directed a second time: ***only apply to the home app version.***
+ *
+ * ⚠⚠ **`(display-mode: standalone)` IS THE GATE, AND IT IS THE PLATFORM'S OWN
+ * ANSWER TO THE QUESTION BEING ASKED.** Not a width, not a pointer, not a user
+ * agent — the browser reports whether it is running as an installed app, which
+ * is exactly what *the home app version* means. iOS honours it for a home-screen
+ * web app. ⚠ **A Safari tab and the desk get nothing at all**, because the rule
+ * does not exist for them rather than being overridden back.
+ *
+ * ⚠⚠ **A GROUND, NEVER GLASS, AND THE 5 SEPTEMBER NOTE IS WHY.** The strip wore
+ * `--glass-tint` with a `backdrop-filter` once and it was taken off: *a backdrop
+ * filter filters what is behind it including the outer one's result, so the card
+ * would have been 38% over 38% at 24px blur under 18px more. A glass card inside
+ * a glass box is not the console.* **That argument is untouched** — this is an
+ * opaque mix with no filter, so nothing nests.
+ *
+ * ⚠⚠ **THE TINTS COULD NOT HAVE DONE IT.** `--sheet-tint` and `--glass-tint` are
+ * both `color-mix(in srgb, var(--color-bg) 38%, transparent)` — on a handset
+ * whose ground is `#000000` that is **black at 38% over black**, which draws
+ * nothing at all. They work by darkening what is *behind* them, and on this
+ * screen there is nothing behind. A visible panel has to be a lift, not a tint.
+ *
+ * ⚠ **6% of the ink, which is under the card and over the page.** The card's own
+ * lift comes from `composer-glow`, so the panel has to sit below it or the card
+ * reads as a well cut into the strip rather than a surface on it. **If the card
+ * stops reading as lifted, this number is the first thing to move, not the
+ * card's.**
+ *
+ * ⚠⚠ **THE RADIUS IS CONCENTRIC AND THEREFORE DERIVED.** An outer corner
+ * enclosing an inner one wants the inner radius plus the gap between them, or
+ * the two curves are not parallel and the eye reads the inset as uneven. The
+ * card is `rounded-2xl` and sits `--gutter-l` from the strip's sides, so the
+ * panel is `--radius-2xl + --gutter-l` = 36px on a handset. **No number is typed
+ * here**, so it follows the card's radius, the gutter and the desk's root scale
+ * without being re-derived.
+ *
+ * ⚠ **Top corners only.** The strip's bottom edge is the screen's, and a phone's
+ * own screen corners are already round — a radius there would open two slivers
+ * of black inside curves that are not ours to match, and no browser can read the
+ * device's corner radius.
+ */
+@utility sheet-panel {
+  @media (display-mode: standalone) {
+    background-color: color-mix(in srgb, var(--color-text) 6%, var(--color-bg));
+    border-start-start-radius: calc(var(--radius-2xl) + var(--gutter-l));
+    border-start-end-radius: calc(var(--radius-2xl) + var(--gutter-l));
+  }
+}
+
 @utility sheet-lit {
   background-color: var(--sheet-tint);
   backdrop-filter: blur(var(--sheet-blur));
