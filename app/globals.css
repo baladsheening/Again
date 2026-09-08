@@ -5370,43 +5370,53 @@
 
     ⚠⚠ **SO GLOWIER IS ALSO MORE LEGIBLE, WHICH IS THE OPPOSITE OF WHAT IT
     SOUNDS LIKE.** Brightness goes to the core and colour goes to the halo, so
-    the ink's own contrast **rises**: 7.03:1 tinted at 75%, **9.62:1 here at
-    88%**, against 9.36 for the untinted ink it started from and the landed
-    line's 16.83. It reads as ink *more* than the version it replaces.
+    the ink's own contrast **rises**: 7.03:1 when the purple was in the core at
+    75%, 9.62:1 with a 33% core at 88%, and **12.04:1 here** — a 18% core at 92%,
+    against 9.36 for the untinted ink this began as and the landed line's 16.83.
+
+    ⚠⚠ **THE COLOUR IS NOW ALMOST ENTIRELY IN THE HALO, WHICH IS THE WHOLE
+    POINT OF THIS SETTING — chosen by eye on 8 September from three renders.**
+    The core is 18% purple and 92% bright, so the letterform is very nearly the
+    app's own ink; the corona at 60% and 30% carries the hue. **A letter that is
+    white-hot inside and mauve at its edge is what a lit thing looks like**, and
+    it is the reading the 33% core could not give because the colour was in the
+    wrong place.
 
     ⚠ **The halo is the card's own glow at text scale, not a new effect.**
     `composer-glow` is a tight rim plus a diffuse pool; this is the same two
-    layers on the same colour — 0.28em at 45% and 0.85em at 22%. **Still one
-    pigment**, `--composer-glow-colour`, which has lit this card since the glow
-    was built, so §11's scarcity rule is untouched.
+    layers on the same colour — 0.28em and 0.85em. **Still one pigment**,
+    `--composer-glow-colour`, which has lit this card since the glow was built,
+    so §11's scarcity rule is untouched.
 
     ⚠ **Radii in `em`, so they are the type's own.** A halo measured in px would
     be a different halo at the desk's root scale; in `em` the corona is the same
     fraction of a letter everywhere.
 
-    ⚠⚠ **AND IT STRENGTHENS THE DRAFT/STATEMENT DISTINCTION RATHER THAN SPENDING
-    IT.** §11's two states of one set of words were told apart by weight of ink
-    alone; **the landed line has no halo at all**, so there is now a second axis
-    doing the same job. Raising the core's alpha costs less than it looks.
+    ⚠⚠ **AND THE HALO IS NOW CARRYING THE DRAFT/STATEMENT DISTINCTION, WHICH IS
+    A REAL SHIFT AND NOT A FREE ONE.** §11's two states of one set of words were
+    told apart by weight of ink alone, and at 12.04 against the landed line's
+    16.83 **that difference is thin** — much thinner than the 6.09 it began at.
+    What holds them apart is that **the landed line has no halo**. ⚠ **So the
+    halo may not be given to the sent line, ever**, or the two states become one.
 
     ⚠ **What it costs: a two-layer `text-shadow` repainting on every keystroke.**
     Cheap for one line of text, and real — **if typing ever feels less than
     instant on a handset, this is the first thing to switch off**, before the
     measured cap or anything in the composer's own state.
 
-    ⚠ **Three numbers, and they are independent:** 33 is how purple the core is,
-    88 is how bright it is, and the halo's two alphas are how lit it looks. Hue
-    at 0 with the halo kept is variant 3 from the day this was chosen — most lit,
-    least tinted — and it is the direction to go if this reads too mauve.
+    ⚠ **Four numbers, and they are independent:** 18 is how purple the core is,
+    92 is how bright it is, and the halo's 60/30 are how lit it looks. **More
+    glow is the two halo numbers, not the core's hue** — putting purple back in
+    the core is the thing this setting was chosen over.
   */
   color: color-mix(
     in srgb,
-    color-mix(in srgb, var(--composer-glow-colour) 33%, var(--color-text)) 88%,
+    color-mix(in srgb, var(--composer-glow-colour) 18%, var(--color-text)) 92%,
     transparent
   );
   text-shadow:
-    0 0 0.28em color-mix(in srgb, var(--composer-glow-colour) 45%, transparent),
-    0 0 0.85em color-mix(in srgb, var(--composer-glow-colour) 22%, transparent);
+    0 0 0.28em color-mix(in srgb, var(--composer-glow-colour) 60%, transparent),
+    0 0 0.85em color-mix(in srgb, var(--composer-glow-colour) 30%, transparent);
 }
 
 @utility composer-refused {
