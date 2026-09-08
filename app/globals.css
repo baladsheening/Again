@@ -5292,7 +5292,37 @@
   --undo-reserve: calc(var(--glyph-line) + var(--line-hem) * 2);
 
   padding-inline-end: var(--undo-reserve);
-  color: var(--color-muted);
+  /*
+    ⚠⚠ **75%, NOT `--color-muted`'S 60% — 8 September, directed:** *when typing
+    in the composer, the last letter typed shouldn't be dim… maybe make the text
+    slightly less dim.*
+
+    ⚠ **The first reading of that was impossible and is worth recording.** A
+    `<textarea>` holds **one colour for all of its text** — there is no way to
+    style a range inside one — so *the last letter stays solid while the rest
+    dims* is not a colour change but an overlay, a transparent field with a
+    two-span layer over it. **That is buildable** (the sent line already
+    positions itself over this field and inherits its content box to the pixel)
+    **and it was refused for a cheaper answer**, because on iOS the marked text
+    of an autocorrect in progress would not reach the overlay and the two would
+    disagree mid-word.
+
+    ⚠ **Written out rather than reusing `--color-muted`, because this is not that
+    quantity any more.** That token is the app's secondary ink and has its own
+    consumers; a draft's ink is now its own reading and moving one must not move
+    the other.
+
+    Measured on the composer's ground, which is true black on a handset:
+    **6.09:1 at 60%, 9.36:1 at 75%**, against the landed line's 16.83:1. **The
+    gap that carries the meaning survives** — §11's two states of one set of
+    words are still told apart by weight of ink, and by nothing else — it is just
+    a smaller gap at a legible starting point.
+
+    ⚠ **One number to move by eye**: 60 → 75 → 85 walks 6.09 → 9.36 → 11.9. Do
+    not take it to 100; that is `--color-text`, and the draft and the statement
+    become the same thing.
+  */
+  color: color-mix(in srgb, var(--color-text) 75%, transparent);
 }
 
 @utility composer-refused {
