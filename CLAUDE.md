@@ -24,6 +24,86 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE COMPOSER'S FOOT ROW CLOSES RATHER THAN LEAVING — 8 September, AND IT
+IS THE JOLT.** For two days the strip's jolt on tapping in was put down to iOS
+panning the visual viewport and dragging the `fixed` strip. **The pan is the
+amplifier; the cause was ours, and it is visible on a desk browser with no
+keyboard anywhere near it.**
+
+- ⚠⚠ **MEASURED AT 1440×900, WHERE NOTHING iOS DOES CAN REACH.** The strip's top
+  fell **44px in one frame** and climbed **31px back over 300ms**, settling
+  12.68px lower. **The 44 is exactly the foot row**, which unmounted instantly
+  while the band, the card's third line and the hem under it all eased over
+  `--recede`. Reported from the desk with two screenshots — *the strip drops
+  down when you tap in* — after being reported from a handset as *up, then down,
+  then up again*. `node_modules/.probe/deskstrip.mjs`.
+- ⚠ **On a handset the same step is 62.5px**, because `sheet-over-keys` cancels
+  the notch's 18.375px clearance in the same frame. `stripstep.mjs`, at inset 34
+  and at 0.
+- ⚠⚠ **THE ROW'S OWN DOCBLOCK NOMINATED THE FIX BEFORE ANYBODY MEASURED IT:**
+  *it does not fade, and that is a known rough edge — `hidden` carries the
+  opacity transition and cannot carry a height, so this is a hard swap where
+  everything else on the bottom edge moves on `--recede`. **If it reads badly,
+  the fix is a collapsing row and not a reserved gap.*** It read badly.
+- ⚠ **`composer-foot` / `composer-foot-away`:** `block-size` gated on
+  `--foot-open`, `overflow: clip`, transitioned on `--recede`/`--ease-recede`.
+  `foot-clear`'s margin reads the same gate, so a row's height and its air can
+  never disagree. ⚠ **A custom property, never a second declaration** —
+  `@utility` output is ordered by Tailwind, which is the trap `chrome-ink-gone`
+  records.
+- ⚠ **`min-block-size` could not do it.** A minimum cannot be interpolated to
+  zero, because the content holds it open. An explicit `block-size` is what makes
+  the close animatable, and it is the same 44px.
+- ⚠ **`overflow: clip` does a second job the row used to do by arithmetic** —
+  `tap-target`'s 44px hit area, 9px past the drawing at each end, is contained by
+  construction at every height including the half-closed ones. ⚠ **`clip` and not
+  `hidden`**: `hidden` makes a scroll container, and a 0-height scroll container
+  is one `scrollIntoView` from shifting its own contents.
+- ⚠ **The glyphs' fade is `Foot`'s own `hidden` prop** — `opacity-0` on
+  `--recede` and `--ease-recede`, the same duration and curve as the close.
+  **No new fade was written**; the record's strip has faded its foot that way
+  since the split, and this is the composer finally using it.
+- ⚠⚠ **`arrived` IS GATED ON `!writing`, AND WITHOUT IT THE BOUNCE WOULD BE
+  SPENT ON NOBODY.** A mounted row plays the animation behind `opacity-0` and
+  `onAnimationEnd` puts the flag down — *a signal nobody could have seen is not a
+  signal*, which is the guarantee the unmount used to give for free.
+- ⚠ **`inert` while it is closed**, because `pointer-events: none` answers a
+  thumb and not a keyboard user — and focus landing inside the strip is read by
+  the field's `onBlur` guard as *not leaving*, which is a trap rather than a
+  rough edge.
+- ⚠ **The strip's `padding-block-end` travels too**, so the notch's clearance
+  joins the one curve. ⚠ **This does not re-open the `--keyboard-height`
+  mistake:** that was a *continuous measurement* answering a binary question, so
+  the whole step landed at whichever frame a per-frame ramp crossed a clamp. A
+  transition is deterministic and starts at the gesture. ⚠⚠ **`padding-block-end`
+  BY NAME, NEVER `all` AND NEVER `bottom`** — `bottom` is `--keyboard-overlap`,
+  written per frame off the visual viewport, and transitioning it would add 340ms
+  of lag to a measurement that is already a frame late against a compositor pan.
+- ⚠⚠ **THE ASSERTION IS MONOTONICITY, NOT A NUMBER.** The card still ends 50px
+  lower than it started and that is correct — with the keys up the strip rides
+  `--keyboard-overlap` back over them. **The defect was going PAST it and coming
+  back**, and only a per-frame sample can see a path. `stripstep.mjs` and
+  `deskstrip.mjs` fail on any overshoot; measured after, **0px on the desk and
+  0.02px on both handset surfaces.**
+- ⚠⚠ **A PROBE BUG THAT HAD BEEN INVALIDATING MEASUREMENTS: STRIPPING THE CSP
+  THROUGH `ctx.route` BREAKS HYDRATION IN CHROMIUM.** No `__react*` props on any
+  element, so `onFocus` never runs, `writing` never flips, and the page is dead
+  server HTML **that still looks completely correct**. `sheetjolt.mjs` had three
+  failures that were entirely its own; it is rewritten and green at 16/16.
+  ⚠ **Chromium treats `http://localhost` as a secure context and needs no strip;
+  it is WebKit that does** — see `keep-ios-standalone-short-viewport`. Any probe
+  that DRIVES this page through a route handler is testing markup, not the app.
+- ⚠ **WHAT IS NOT FIXED: iOS's reveal-pan.** It still drags the `fixed` strip on
+  the taps where it happens, and whether it happens is a heuristic — the rail
+  session measured *one tap in four* where it does not. **The down phase is gone;
+  whether what is left still reads as a jolt is a handset question**, and the
+  three approaches ruled out on 7 September are still ruled out.
+- **Unchanged end state, asserted:** `bandink.mjs` still reads band 44, air below
+  the card 44, the strip on the bottom edge, the notch spent at inset 34 and zero
+  at inset 0. `composercap.mjs` 51/51, `traysightline.mjs` 5/5, `frontpage.mjs`
+  green. `composersent.mjs` stays 36/38 on the two stale assertions recorded on
+  7 September.
+
 ⚠⚠ **THE APP IS **JUCE** — 8 September, directed, AND THE RENAME MOVED SIX
 NUMBERS THAT ARE NOT STRINGS.** *Change the name of the app to 'juce'.* Nine
 user-facing strings, one icon glyph, and **the wordmark fence at the top of

@@ -1310,83 +1310,117 @@ export function ComposeScreen({
           composer is the page's whole purpose and is never swapped out, so the
           foot sits under it and the box is as tall as both.
 
-          ⚠ **So the foot may be unmounted here, where on the record it may
-          not.** The record's rule is about a shared cell: unmounting either
-          occupant lets the strip resize, which is the one thing that design
-          removed. A row that leaves is *meant* to change the height — while
-          somebody writes, the strip is parked on the keyboard's top edge and a
-          reserved 44px of glass below the field would be the *gap under the
-          characters* bug rebuilt.
+          ⚠ **The row no longer LEAVES; it CLOSES — 8 September.** This block
+          used to say the foot may be unmounted here where on the record it may
+          not, because the record's two states share one cell and this page has
+          two rows. **That is still true of unmounting and it is no longer what
+          happens.** The row stays in the flow and collapses to zero over
+          `--recede`, so the end state is what it always was — no reserved 44px
+          of glass below the field, which would be the *gap under the
+          characters* bug rebuilt — and the way there is a travel rather than a
+          step.
 
-          ⚠ **It does not fade, and that is a known rough edge.** `hidden`
-          carries the opacity transition and cannot carry a height, so this is a
-          hard swap where everything else on the bottom edge moves on
-          `--recede`. **If it reads badly, the fix is a collapsing row and not a
-          reserved gap.**
+          ⚠⚠ **BECAUSE THE HARD SWAP WAS THE JOLT, AND THE PARAGRAPH THAT USED
+          TO SIT HERE SAID SO IN ADVANCE:** *it does not fade, and that is a
+          known rough edge — `hidden` carries the opacity transition and cannot
+          carry a height, so this is a hard swap where everything else on the
+          bottom edge moves on `--recede`. **If it reads badly, the fix is a
+          collapsing row and not a reserved gap.*** Reported from a handset as
+          *the strip jolts — up, then down, then up again* and, with two
+          screenshots, from the desk as *the strip drops down when you tap in*.
+          **Measured at 1440×900, where there is no keyboard and no pan to
+          blame: the strip's top fell 44px in one frame — exactly this row —
+          then climbed 31px back over 300ms** as the band, the third line and
+          the hem under the card eased in. See `composer-foot` in globals.css.
+
+          ⚠ **`hidden` rather than a fade of our own.** `Foot` has carried that
+          prop since the split — `opacity-0` on `--recede` and `--ease-recede`,
+          the same duration and curve as the close. Without it the row would
+          guillotine a full-opacity drawing from both edges as it shuts.
+
+          ⚠⚠ **`arrived` IS GATED ON `!writing`, AND THAT IS THE GUARANTEE THE
+          UNMOUNT USED TO GIVE FOR FREE.** CLAUDE.md: *a capture committed with
+          the keyboard up has no door to animate when its window closes, so
+          `arrived` survives until the foot is on screen and plays on mount — a
+          signal nobody could have seen is not a signal.* A mounted row would
+          play the bounce behind `opacity-0` and `onAnimationEnd` would put the
+          flag down, so **the bounce would be spent on nobody.** Passing the
+          flag only while the row is open restores it exactly: the class goes on
+          when writing ends, which restarts the animation the same way a remount
+          did.
+
+          ⚠ **`inert` while it is closed.** `hidden` gives
+          `pointer-events: none` and `composer-foot` clips the box, which
+          between them answer the thumb; neither answers a keyboard user tabbing
+          into a row that is not there — and focus landing inside the strip
+          would also be read by the field's `onBlur` guard as *not leaving*,
+          which is a trap rather than a rough edge.
         */}
-        {!writing && (
-          <>
-            {/*
-              ⚠⚠ **THE DOOR IS HERE AND THE PORTAL IS NOT — 5 September.** The
-              portal's rows open **consoles**, and a console only exists where
-              the record is. So this door **navigates** to the record with the
-              box already open, rather than opening a box it could not fill.
+          {/*
+            ⚠⚠ **THE DOOR IS HERE AND THE PORTAL IS NOT — 5 September.** The
+            portal's rows open **consoles**, and a console only exists where
+            the record is. So this door **navigates** to the record with the
+            box already open, rather than opening a box it could not fill.
 
-              ⚠ **A door that landed you on a page where you had to find the
-              door again would be worse than no door**, which is why this is not
-              a plain link to `/record`. See `portalOpen` in `page-screen.tsx`.
+            ⚠ **A door that landed you on a page where you had to find the
+            door again would be worse than no door**, which is why this is not
+            a plain link to `/record`. See `portalOpen` in `page-screen.tsx`.
 
-              ⚠ **It has to be lit HERE, whatever it costs.** This is the
-              landing page: a portal whose door only exists on a screen you have
-              to choose to visit is the *silent failure* every one of §9's
-              findings turned out to be.
-            */}
-            {/*
-              ⚠⚠ **THE ROW IS `--tap-floor` TALL, AND THAT IS WHAT STOPPED IT
-              EATING THE FIELD — reported from a handset, 5 September: *it says
-              'Anything' but it's partially obscured by the bottom bar.*** The
-              glyph drawing is `--glyph-foot` (26px) and `tap-target` hangs a
-              44px hit area off it, **9px past the drawing at each end** — so with
-              the row only as tall as its glyphs, the foot's invisible targets
-              reached up over the composer's last line and took the taps meant for
-              it. Nothing was drawn over the words; **the box that was over them
-              was the one you cannot see.**
+            ⚠ **It has to be lit HERE, whatever it costs.** This is the
+            landing page: a portal whose door only exists on a screen you have
+            to choose to visit is the *silent failure* every one of §9's
+            findings turned out to be.
+          */}
+          {/*
+            ⚠⚠ **THE ROW IS `--tap-floor` TALL, AND THAT IS WHAT STOPPED IT
+            EATING THE FIELD — reported from a handset, 5 September: *it says
+            'Anything' but it's partially obscured by the bottom bar.*** The
+            glyph drawing is `--glyph-foot` (26px) and `tap-target` hangs a
+            44px hit area off it, **9px past the drawing at each end** — so with
+            the row only as tall as its glyphs, the foot's invisible targets
+            reached up over the composer's last line and took the taps meant for
+            it. Nothing was drawn over the words; **the box that was over them
+            was the one you cannot see.**
 
-              ⚠ **On the record this could not happen and the reason is
-              structural.** There the foot and the field are two states of **one
-              cell**, never on screen together, so the overhang has only the
-              record above it — which is why `sheet-glyph` hangs its whole
-              target *upward* on purpose. Here they are two **rows**, both
-              present, so the row has to contain its own reach.
+            ⚠ **On the record this could not happen and the reason is
+            structural.** There the foot and the field are two states of **one
+            cell**, never on screen together, so the overhang has only the
+            record above it — which is why `sheet-glyph` hangs its whole
+            target *upward* on purpose. Here they are two **rows**, both
+            present, so the row has to contain its own reach.
 
-              ⚠ **44px is the thumb, and it does not scale with the desk's root.**
-              That is `--tap-floor`'s whole point: hardware does not get bigger
-              because a window did.
-            */}
-            {/*
-              ⚠⚠ **`foot-clear` IS WHAT MAKES THE BAND AND THE FOOT READ EQUAL
-              IN A SAFARI TAB — 7 September, reported from a handset.** The band
-              above the card is `--tap-floor`; the air below it is this row's
-              hem, its own air around a `--glyph-foot` drawing, and the notch's
-              clearance. On a notched handset that came to 43.875 against the
-              band's 44 and looked right; **in a tab the inset is zero, so it
-              was 25.5** and the band read as nearly twice the foot. See
-              `foot-clear` for the derivation and why the air is here rather
-              than on the strip's padding.
-            */}
-            <div className="max-stack:foot-clear flex min-h-[var(--tap-floor)] items-center">
-              <Foot
-                home="here"
-                record="away"
-                arrived={arrived}
-                onArrived={() => setArrived(false)}
-                searchable={searchable}
-                portal={() => router.push('/record?portal=1')}
-                portalWaiting={portalWaiting}
-              />
-            </div>
-          </>
-        )}
+            ⚠ **44px is the thumb, and it does not scale with the desk's root.**
+            That is `--tap-floor`'s whole point: hardware does not get bigger
+            because a window did.
+          */}
+          {/*
+            ⚠⚠ **`foot-clear` IS WHAT MAKES THE BAND AND THE FOOT READ EQUAL
+            IN A SAFARI TAB — 7 September, reported from a handset.** The band
+            above the card is `--tap-floor`; the air below it is this row's
+            hem, its own air around a `--glyph-foot` drawing, and the notch's
+            clearance. On a notched handset that came to 43.875 against the
+            band's 44 and looked right; **in a tab the inset is zero, so it
+            was 25.5** and the band read as nearly twice the foot. See
+            `foot-clear` for the derivation and why the air is here rather
+            than on the strip's padding.
+          */}
+          <div
+            className={`max-stack:foot-clear composer-foot flex items-center ${
+              writing ? 'composer-foot-away' : ''
+            }`}
+            inert={writing}
+          >
+            <Foot
+              hidden={writing}
+              home="here"
+              record="away"
+              arrived={arrived && !writing}
+              onArrived={() => setArrived(false)}
+              searchable={searchable}
+              portal={() => router.push('/record?portal=1')}
+              portalWaiting={portalWaiting}
+            />
+          </div>
       </div>
     </div>
   )

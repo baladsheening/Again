@@ -5566,6 +5566,31 @@
     )
   );
   padding-block: 0 var(--sheet-clearance);
+  /*
+    ⚠⚠ **THE CLEARANCE TRAVELS NOW — 8 September, and it is one of the two
+    instant steps that made the strip jolt.** `sheet-over-keys` cancels it at the
+    gesture, so on a notched handset the strip lost 18.375px **in a single
+    frame** while the band, the card's third line, the hem under it and the foot
+    row were all moving on `--recede`. **Measured on the desk, where there is no
+    keyboard and no pan to blame: the strip's top fell 44px in one frame and
+    climbed 31px back over 300ms** — `node_modules/.probe/deskstrip.mjs`. That
+    down-then-up is what the handset reports as a jolt; iOS's reveal-pan is the
+    amplifier, not the cause.
+
+    ⚠ **This does NOT re-open the `--keyboard-height` mistake recorded below.**
+    That failure was a *continuous measurement* answering a binary question, so
+    the whole step landed at whichever frame a per-frame ramp crossed a clamp —
+    non-deterministic, which is why it was intermittent. A transition is
+    deterministic and starts at the gesture, alongside every other mover. **The
+    state stays a state; only its arrival is spread.**
+
+    ⚠⚠ **`padding-block-end` BY NAME, NEVER `all` AND NEVER `bottom`.** `bottom`
+    is `--keyboard-overlap`, written per frame by `useKeyboardHem` off the visual
+    viewport — transitioning it would add 340ms of lag to a measurement that is
+    already a frame late against a compositor pan, which is the exact fault
+    `--viewport-top` on the bar was reverted for.
+  */
+  transition: padding-block-end var(--recede) var(--ease-recede);
 
   /*
     ─────────────────────────────────────────────────────────────────────────
@@ -5680,13 +5705,96 @@
  * glyph.
  */
 @utility foot-clear {
-  margin-block-end: max(
-    0px,
-    calc(
-      var(--tap-floor) - var(--line-hem) * 1.5 -
-        (var(--tap-floor) - var(--glyph-foot)) - var(--sheet-clearance)
-    )
+  /*
+    ⚠⚠ **GATED ON `--foot-open`, BECAUSE AIR UNDER A ROW THAT IS NOT THERE IS A
+    GAP OVER THE KEYBOARD — 8 September.** This margin belongs to the foot row;
+    when `composer-foot-away` closes that row it has to close with it, or the
+    strip keeps up to 18.5px of dead glass below the field in a Safari tab.
+    **One property drives both**, so the height and its air can never disagree.
+
+    ⚠ **A multiply rather than a second rule.** `@utility` output is ordered by
+    Tailwind and not by this file — the trap `chrome-ink-gone` records — so a
+    `composer-foot-away` that re-declared `margin-block-end` would win or lose by
+    emission order. Nothing else declares this property; the gate is read inside
+    the one declaration that does.
+  */
+  margin-block-end: calc(
+    max(
+      0px,
+      calc(
+        var(--tap-floor) - var(--line-hem) * 1.5 -
+          (var(--tap-floor) - var(--glyph-foot)) - var(--sheet-clearance)
+      )
+    ) * var(--foot-open, 1)
   );
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The composer's foot row, and why it closes rather than leaving — 8 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠⚠ **THIS IS THE FIX FOR THE JOLT, AND THE ROW'S OWN DOCBLOCK NOMINATED IT
+ * BEFORE ANYBODY MEASURED IT:** *it does not fade, and that is a known rough
+ * edge — `hidden` carries the opacity transition and cannot carry a height, so
+ * this is a hard swap where everything else on the bottom edge moves on
+ * `--recede`. **If it reads badly, the fix is a collapsing row and not a
+ * reserved gap.***
+ *
+ * ⚠⚠ **IT READ BADLY, AND THE PROOF IS ON THE DESK.** Reported with two
+ * screenshots: *the strip drops down when you tap in.* Measured at 1440×900,
+ * where there is no keyboard, no visual viewport and no pan — so every pixel
+ * that moves is ours:
+ *
+ *     strip top   628.7 → 672.7  in ONE frame     (44px down)
+ *                 672.7 → 642.0  over ~300ms      (31px back up)
+ *
+ * **The 44 is exactly this row.** It unmounted instantly while the band, the
+ * card's third line and the hem under it all eased over `--recede`, so the strip
+ * fell a whole row and climbed back as the transitions caught up. On a handset
+ * that down-then-up collides with iOS's reveal-pan and reads as *up, then down,
+ * then up again* — intermittent, because whether iOS pans is a heuristic.
+ *
+ * ⚠ **A `block-size`, not a `min-block-size`.** The row was
+ * `min-h-[var(--tap-floor)]`, and a minimum cannot be interpolated to zero — the
+ * content holds it open. An explicit size is what makes the close animatable,
+ * and it is the same 44px: `--tap-floor` is a thumb and does not scale with the
+ * desk's root.
+ *
+ * ⚠ **`overflow: clip`, and it is doing a second job the row used to do by
+ * arithmetic.** `tap-target` hangs a 44px hit area off a pseudo-element, 9px
+ * past a `--glyph-foot` drawing at each end; the row's own 44px is what stopped
+ * those reaching up into the composer's last line on 5 September. Clipping
+ * contains them by construction at every height, including the half-closed ones
+ * this now passes through. ⚠ **`clip` and not `hidden`**: `hidden` makes a
+ * scroll container, and a 0-height scroll container is one `scrollIntoView` away
+ * from shifting its own contents.
+ *
+ * ⚠ **The glyphs' fade is `Foot`'s own `hidden` prop**, which is `opacity-0` on
+ * `--recede` and `--ease-recede` — the same duration and curve as this. **No new
+ * fade was written**: the record's strip has faded its foot that way since the
+ * split, and this is the composer finally using it. Without it the row would
+ * guillotine a full-opacity drawing from both edges as it closes.
+ *
+ * ⚠⚠ **A CUSTOM PROPERTY, NOT A SECOND DECLARATION OF `block-size`.** `@utility`
+ * output is ordered by Tailwind and not by this file, so `.composer-foot-away`
+ * may be emitted **before** `.composer-foot` and lose at equal specificity —
+ * exactly the trap `chrome-ink-gone` records, where an exit duration silently
+ * ran at 340ms instead of 113ms. Order-independent by construction.
+ *
+ * ⚠ **`prefers-reduced-motion` catches it for free**: the global block cuts
+ * every `transition-duration` to 0.01ms, so those readers get the hard swap this
+ * row had before, which is the correct reading of the preference.
+ */
+@utility composer-foot {
+  block-size: calc(var(--tap-floor) * var(--foot-open, 1));
+  overflow: clip;
+  transition:
+    block-size var(--recede) var(--ease-recede),
+    margin-block-end var(--recede) var(--ease-recede);
+}
+@utility composer-foot-away {
+  --foot-open: 0;
 }
 
 /**
