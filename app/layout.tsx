@@ -217,79 +217,26 @@ export const metadata: Metadata = {
     Installed to the home screen, the app runs without Safari's chrome — see
     `app/manifest.ts` for why that is worth having rather than merely tidy.
 
-    ⚠⚠ **THE COMMENT HERE CLAIMED THIS EMITS `apple-mobile-web-app-capable` AND
-    IT DOES NOT — checked 8 September against the served HTML.** Next 16.3 emits
-    the **unprefixed** `mobile-web-app-capable`; the only `apple-` metas on the
-    page are `-title` and `-status-bar-style`. **A comment describing a mechanism
-    that is not there is worse than no comment**, so it is corrected rather than
-    trimmed.
-
-    ⚠ **Standalone still works, which is the point:** it is the manifest's
-    `display: 'standalone'` doing it, honoured by Safari from 16.4, together with
-    WebKit's acceptance of the unprefixed name. ⚠ **What is genuinely out of
-    reach is anything older than 16.4**, and nothing in Next's own `appleWebApp`
-    object can emit the prefixed name — it would want a hand-written `<meta>`.
-    **Named, not fixed**, because no such device has been reported using this.
+    ⚠ **This is the half iOS actually obeys.** The manifest's `display:
+    'standalone'` is only honoured from 16.4; `apple-mobile-web-app-capable`,
+    which this emits, is what has decided it for a decade and still decides it
+    on anything older. Setting one without the other silently half-works, which
+    is the worst of the three outcomes because it looks done.
   */
   appleWebApp: {
     capable: true,
     title: 'Juce',
     /*
-      ⚠⚠ **`black-translucent` IS GONE — 8 September, AND THE PARAGRAPH THAT USED
-      TO SIT HERE WAS FALSIFIED BY ITS OWN PROMISE.** It read: *the web view
-      extends under the status bar rather than being pushed below a black strip…
-      on a pure-black app the visible difference is nil either way. The reason to
-      prefer this one is that the two modes then behave identically,* **so a
-      spacing fault cannot appear in the installed app and nowhere else.** That
-      is precisely the fault it caused, three times over.
+      The web view extends under the status bar rather than being pushed below a
+      black strip, which is the same arrangement `viewportFit: 'cover'` already
+      sets up for the browser — and every surface that needs to keep clear of it
+      already spends `env(safe-area-inset-top)` to do so.
 
-      ⚠⚠ **iOS LAYS A `black-translucent` STANDALONE APP OUT AT
-      `screen − safe-area-inset-top`.** The app says *I extend under the status
-      bar* and iOS subtracts the status bar from the height anyway — measured
-      **798 where the screen is 844** on a 390×844 iPhone with a 47px inset. Every
-      CSS viewport length is short together: `100dvh`, `100svh`, `100lvh`,
-      `inset: 0` and `100%`. **No stylesheet can ask for the real number**, and no
-      desk browser reproduces it.
-
-      ⚠ **Three faults, all recorded, all this:** a 46px strip of naked ground
-      under the fixed paper (1 Sep); the sign-in wall's beats taking a **59px**
-      bite where the desk's emulation saw 13 (see `wall-fold` in globals.css);
-      and, reported 8 Sep, **the composer's strip floating 46px above the bottom
-      of the screen with the home indicator stranded below it** — *seems like a
-      waste of space*, and it was, on every Face-ID iPhone.
-
-      ⚠⚠ **A DRAG DOES NOT FIX IT, AND THE RECORD USED TO SAY IT DID.** The note
-      in globals.css said iOS lays it out short *until something forces a
-      re-layout*. Tested on the handset: dragging down **shows** the strip at the
-      true bottom and it **springs back on release**. So the correction does not
-      stick, which rules out answering this with a programmatic nudge at load.
-
-      ⚠ **The removal, not a correction.** With `black` the web view starts below
-      the status bar, so `env(safe-area-inset-top)` is legitimately **0** in
-      standalone and the layout viewport is the web view's real height. All nine
-      readers of that inset spend it to clear the status bar, so zero is the
-      right value for every one of them and the arithmetic self-corrects —
-      `--bar-height` shrinks by the inset and the bar still lands where it
-      should. **Phones with no inset are untouched, because nothing about them
-      changes.**
-
-      ⚠ **What it costs, and it is nearly nothing.** The status bar becomes an
-      opaque black strip, so `grain-ground`'s paper stops at it rather than
-      running under it. **The paper is the two auth screens' alone since 3
-      September** — everything signed in is plain black — and it is a `screen`
-      blend lifting most of its field by 2.9%. So the trade is a barely-visible
-      texture in a 47px band on screens you see once, against 46px of every
-      screen in daily use.
-
-      ⚠ **`viewportFit: 'cover'` STAYS.** It is what makes
-      `env(safe-area-inset-bottom)` report the home indicator at all, and the
-      landscape side insets with it. Only the status-bar half is being given up.
-
-      ⚠⚠ **IF THIS IS EVER PUT BACK, THE 46px COMES BACK WITH IT** — and so do
-      the sign-in wall's fold and the paper's naked ground. It is not a taste
-      setting.
+      On a pure-black app the visible difference is nil either way. The reason to
+      prefer this one is that the two modes then behave identically, so a
+      spacing fault cannot appear in the installed app and nowhere else.
     */
-    statusBarStyle: 'black',
+    statusBarStyle: 'black-translucent',
   },
 }
 
