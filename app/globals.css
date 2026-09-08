@@ -5485,7 +5485,17 @@
   */
   position: fixed;
   inset-inline: 0;
-  bottom: var(--keyboard-overlap, 0px);
+  /*
+    ⚠⚠ **`--keyboard-lift`, NOT `--keyboard-overlap` — 8 September.** The two are
+    one measurement written twice: the overlap is clamped at zero because
+    `page-hem` adds it to a scrolling document's bottom padding, and the lift is
+    **unclamped because this box has to be pushed BELOW the layout bottom while
+    iOS pans and no keyboard has arrived yet.** Clamped, the strip rode the whole
+    pan upward and then sat low as the pan unwound — *too high, then too low,
+    then settles*, reported from the installed app and traced to that one
+    `Math.max`. See `useKeyboardHem`, which carries the whole argument.
+  */
+  bottom: var(--keyboard-lift, 0px);
   /*
     ⚠ **No air of its own — 28 August.** The sheet's box is the row's box. It
     carried 12px above and 12px below on top of the row's own hem, which was the

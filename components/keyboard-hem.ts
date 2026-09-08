@@ -127,11 +127,55 @@ export function useKeyboardHem({
       const box = host.current
       const edge = floorAnchor.current
       if (!box || !edge) return
-      const overlap = Math.max(
-        0,
-        edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height),
-      )
-      box.style.setProperty('--keyboard-overlap', `${Math.round(overlap)}px`)
+      /*
+        ⚠⚠ **TWO PROPERTIES OFF ONE MEASUREMENT — 8 September, and the second
+        one is the jolt.** Reported from the installed app, with the viewport
+        finally telling the truth: *tap in the composer and it goes too high,
+        drops too low, settles in place above the keyboard.* **All three phases
+        are this line.**
+
+        The raw quantity is where the visible bottom of the screen is, in the
+        layout coordinates a `fixed` box is painted in. A strip that wants its
+        bottom edge on that line wants exactly `H − offsetTop − vv.height`, and
+        **that value is negative while iOS is panning and no keyboard has
+        arrived yet** — the strip has to be pushed *below* the layout bottom to
+        stay still on screen while everything `fixed` is dragged up.
+
+        ⚠⚠ **THE OLD `Math.max(0, …)` FORBADE EXACTLY THAT, WHICH IS THE FIRST
+        PHASE.** Clamped at zero, the strip could not answer the pan at all and
+        rode the whole of it upward — *too high*. Then the keyboard lands and
+        iOS unwinds the pan; while `offsetTop` is still positive the clamped
+        value computes **less** lift than the keyboard needs, so the strip sits
+        below where it will end — *too low*. It settles when `offsetTop` reaches
+        zero. **One clamp, three phases.**
+
+        ⚠ **Unclamped it is self-bounding, which is why no floor replaces it.**
+        `vv.height` is never larger than the layout height, so the expression is
+        never below `−offsetTop`: the strip can be pushed down by the pan and by
+        nothing else. A floor would be a number guarding an inequality the
+        arithmetic already guarantees.
+
+        ⚠⚠ **IT IS STILL A MAIN-THREAD CORRECTION AGAINST A COMPOSITOR PAN, AND
+        THAT IS THE HONEST CAVEAT.** `bar.tsx` records `top: var(--viewport-top)`
+        being measured worse three ways for this reason, and the objection
+        applies here too. **What is different is the baseline:** clamped, the
+        strip rides the *entire* pan; unclamped, it rides one frame of it. A
+        frame late is worse than perfect and much better than not correcting.
+        ⚠ **If it now wobbles instead of jolting, that is this trade showing**,
+        and the answer is to stop iOS panning rather than to chase it faster.
+
+        ⚠⚠ **`--keyboard-overlap` KEEPS ITS CLAMP AND MUST.** Its consumer is
+        `page-hem`, which adds it to the record's bottom padding so the last
+        lines can be scrolled clear of the keys. A negative there would *shrink*
+        the page's hem mid-pan and move a scrolling document under the reader's
+        finger. **The two answer different questions** — *how much is covered*
+        is never negative; *where should the strip sit* can be — which is the
+        one justification for a second property off one measurement, and the
+        bar for a third is the same.
+      */
+      const raw = edge.getBoundingClientRect().bottom - (vv.offsetTop + vv.height)
+      box.style.setProperty('--keyboard-overlap', `${Math.round(Math.max(0, raw))}px`)
+      box.style.setProperty('--keyboard-lift', `${Math.round(raw)}px`)
 
       /*
         ⚠⚠ **`--keyboard-height` WAS WRITTEN HERE AND IS DELETED — 7 September,
@@ -275,6 +319,7 @@ export function useKeyboardHem({
         keyboard's worth of dead space under it for the rest of the session.
       */
       hostEl?.style.removeProperty('--keyboard-overlap')
+      hostEl?.style.removeProperty('--keyboard-lift')
       hostEl?.style.removeProperty('--viewport-top')
     }
   }, [writing, host, floorAnchor])
