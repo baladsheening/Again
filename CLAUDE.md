@@ -24,6 +24,54 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **THE BAR'S INK FADES WHERE IT USED TO POP — 8 September, `--ink-out` GOES
+`--recede / 6` → `--recede / 3`, 57ms → 113ms.** Directed: *could the logo and
+profile icon fade out as they recede more quickly — **the fade out should be
+noticeable to the human eye.*** **At 57ms it was not.** That is 3.4 frames at
+60Hz, and the eye reads three frames as a disappearance rather than a fade.
+
+- ⚠⚠ **THE NOTE ON THAT TOKEN PREDICTED THIS AND PUT THE BOUNDARY ONE STEP TOO
+  LOW.** It said *if it still reads slow, the next step is `/ 8` (43ms) and then
+  it stops being a fade.* **It had already stopped.** 57ms was on the wrong side
+  of the line, not one step from it — and the measurement that chose it was of
+  *where the bar is*, never of *whether a fade can be seen*, which is the
+  question it was answering.
+- ⚠⚠ **113ms IS SIZED TO THE WINDOW IN WHICH ANYTHING CAN BE SEEN, AND THAT
+  WINDOW IS FAR SHORTER THAN THE TRAVEL.** `--ease-recede` is
+  `cubic-bezier(0.22, 1, 0.36, 1)`, a hard ease-out, so the bar spends most of
+  its 340ms creeping the last few pixels. Measured at 390×844 with the inset
+  overridden — `node_modules/.probe/inkcurve.mjs` — the header's bottom edge runs
+  **95 → 74.9 → 43.2 → 16.6px at 0 / 8 / 42 / 99ms**: it is 83% gone by 100ms and
+  the remaining 240ms is invisible. ⚠ **A fade longer than ~120ms spends its tail
+  off screen**, which is why this is not `/ 2`.
+- ⚠ **The out rule survives and is the reason to stop at a third.** *The ink is
+  out as the bar clears rather than while it is still in view* — at 113ms the
+  row's bottom is ~13px, so the fade ends exactly as the row leaves. It is now
+  spread across the whole of the visible slide instead of finishing before the
+  slide starts. Measured after: **half gone at 58ms, out at 106ms, row off screen
+  at 287ms.**
+- ⚠⚠ **WHAT IS ABANDONED, STATED RATHER THAN QUIETLY DROPPED: the status-bar
+  landmark.** 7 September directed *basically faded by the time the logo and
+  profile icons approach the status bar*; under 113ms the letters are at ~0.88
+  opacity as they cross it. **The two asks cannot both hold**, because a fade
+  completed inside the 14–34px of travel before that crossing is a fade nobody
+  can see. If the crossing ever matters more, this goes back to `/ 6` and the
+  fade goes back to being a cut.
+- ⚠ **Still a fraction of the travel, never a typed number**, so it moves if
+  `--recede` does; still linear, which `chrome-ink` argues for — an ease has a
+  tail or a pop and this has neither. ⚠ **`--ink-in` is untouched at 382.5ms**,
+  so the bar still lands before its own ink.
+- ⚠ **`page-screen.tsx`'s bar gets this too**, and its trigger is a moving finger
+  rather than a focus. That is the surface to look at first if it reads wrong.
+- ⚠⚠ **AND `chromeink.mjs` WAS LYING IN BOTH ENGINES, IN TWO DIFFERENT WAYS.**
+  Chromium: the `ctx.route` CSP strip **breaks hydration**, so every Chromium
+  assertion read a page that had never come alive — the strip is now WebKit's
+  alone. WebKit: it waited **600ms** after load before calling `field.focus()`
+  and had not hydrated either, so `receded` never flipped; 1500ms fixes it.
+  **Both failure modes look like a passing screenshot.** 16/16 green in both
+  engines on both surfaces afterwards, with 3–6 frames of interpolation where
+  57ms could scrape one.
+
 ⚠⚠ **THE COMPOSER'S FOOT ROW CLOSES RATHER THAN LEAVING — 8 September, AND IT
 IS THE JOLT.** For two days the strip's jolt on tapping in was put down to iOS
 panning the visual viewport and dragging the `fixed` strip. **The pan is the

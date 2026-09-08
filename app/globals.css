@@ -1912,48 +1912,85 @@
    * has to be made at `--recede` on its own terms; this is not a precedent for
    * it.**
    *
+   * ⚠⚠ **`--recede / 3` = 113ms OUT — 8 September, AND IT IS A REVERSAL OF THE
+   * NUMBER BELOW BY THE PERSON WHO ASKED FOR IT.** Directed: *could the logo and
+   * profile icon fade out as they recede more quickly — **the fade out should be
+   * noticeable to the human eye.*** At 57ms it was not. That is 3.4 frames at
+   * 60Hz, and the eye reads three frames as a disappearance, not as a fade.
    *
-   * ⚠⚠ **`--recede / 6` = 57ms OUT, AND THE LITERAL LANDMARK WAS MEASURED AND
-   * REFUSED.** Directed: *basically faded by the time the logo and profile
-   * icons approach the status bar.* Driven at 390×844 with the inset overridden
-   * — `node_modules/.probe/_where.mjs` — **the row starts 13px under the status
-   * bar in the installed app** (top 60 against an inset of 47) **and crosses it
-   * at ~14ms.** A 14ms fade is **one frame**: that is a cut, not a fade, and it
-   * would remove the very thing the ink was added for.
+   * ⚠⚠ **THE PARAGRAPH BELOW PREDICTED THIS AND PUT THE BOUNDARY ONE STEP TOO
+   * LOW.** It said *if it still reads slow, the next step is `/ 8` (43ms) and
+   * then it stops being a fade.* **It had already stopped**; 57ms was on the
+   * wrong side of the line, not one step from it. The measurement that chose it
+   * was of *where the bar is* and never of *whether a fade can be seen*, which
+   * is the question that was actually being answered.
    *
-   * ⚠ **There is no surface-stable geometric landmark here, which is why this
-   * is a fraction of the travel and not a distance.** The bar is 48px tall in a
-   * tab and 95px installed, so the same *fraction* of the slide puts the ink in
-   * completely different places against the status bar: the mark's letters
-   * cross the top of the screen at ~12ms with no notch and ~34ms with one. **A
-   * length derived from either surface is wrong on the other.**
+   * ⚠⚠ **113ms IS SIZED TO THE WINDOW IN WHICH ANYTHING CAN BE SEEN AT ALL, AND
+   * THAT WINDOW IS MUCH SHORTER THAN THE TRAVEL.** `--ease-recede` is
+   * `cubic-bezier(0.22, 1, 0.36, 1)`, a hard ease-out, so the bar spends most of
+   * its 340ms creeping the last few pixels. Measured at 390×844 with the inset
+   * overridden — `node_modules/.probe/inkcurve.mjs` — the header's bottom edge
+   * runs **95 → 74.9 → 43.2 → 16.6px at 0 / 8 / 42 / 99ms**: it is 83% gone by
+   * 100ms and the remaining 240ms is invisible. **A fade longer than ~120ms
+   * spends its tail off screen**, which is why this is not `/ 2`.
    *
-   * ⚠ **57ms is the nearest landmark that is still a fade**: measured, the row
-   * is above the top of the screen by then on both insets, so the ink is out as
-   * the bar clears rather than while it is still in view. ⚠ **If it still reads
-   * slow, the next step is `/ 8` (43ms) and then it stops being a fade** — at
-   * 60Hz that is two and a half frames.
+   * ⚠ **The out rule survives, and it is the reason to stop at a third.** *The
+   * ink is out as the bar clears rather than while it is still in view* — at
+   * 113ms the row's bottom is ~13px, so the fade ends exactly as the row leaves.
+   * It is now spread across the whole of the visible slide instead of being
+   * finished before the slide starts.
    *
-   * ⚠ **`--recede × 1.125` = 382.5ms IN, so the bar still arrives BEFORE its
-   * own ink.** Asked for at *maybe 380*, and 1.125 is the nearest eighth — 2.5ms
-   * out, a fraction of a frame on any display. ⚠ **A typed `380ms` was the
-   * obvious spelling and is refused**: this is the one number here with no
-   * derivation behind it, so the only thing keeping it honest is that it stays a
-   * multiple of the travel and moves if `--recede` ever does. **The relationship
-   * is what is load bearing, not the digits.**
+   * ⚠ **Still a fraction of the travel, never a typed number**, so it moves if
+   * `--recede` ever does. ⚠ **Still linear** — `chrome-ink` carries the argument:
+   * an ease has a tail or a pop and this has neither.
+   *
+   * ─────────────────────────────────────────────────────────────────────────
+   *  What it was, and the reasoning that got it wrong — kept, not deleted
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * ⚠ **`--recede / 6` = 57ms, 7 September.** Directed then: *basically faded by
+   * the time the logo and profile icons approach the status bar.* Driven at
+   * 390×844 with the inset overridden — `node_modules/.probe/_where.mjs` — **the
+   * row starts 13px under the status bar in the installed app** (top 60 against
+   * an inset of 47) **and crosses it at ~14ms.** A 14ms fade is one frame: a cut,
+   * not a fade, and it would remove the very thing the ink was added for. 57ms
+   * was chosen as the nearest landmark that was *thought* to still be a fade.
+   *
+   * ⚠ **There is no surface-stable geometric landmark here, which is why this is
+   * a fraction of the travel and not a distance.** The bar is 48px tall in a tab
+   * and 95px installed, so the same *fraction* of the slide puts the ink in
+   * completely different places against the status bar: the mark's letters cross
+   * the top of the screen at ~12ms with no notch and ~34ms with one. **A length
+   * derived from either surface is wrong on the other.** That argument is
+   * unchanged and is why the new number is also a fraction.
+   *
+   * ⚠ **The status-bar landmark is what is abandoned.** Under 113ms the letters
+   * are at ~0.88 opacity as they cross it, where the 7 September direction asked
+   * for *basically faded* there. **Stated rather than quietly dropped**: the two
+   * asks cannot both hold, because a fade completed inside 14–34px of travel is
+   * a fade nobody can see. If the crossing ever matters more than the fade, this
+   * goes back to `/ 6` and the fade goes back to being a cut.
+   *
+   * ⚠ **`--recede × 1.125` = 382.5ms IN, so the bar still arrives BEFORE its own
+   * ink.** Asked for at *maybe 380*, and 1.125 is the nearest eighth — 2.5ms out,
+   * a fraction of a frame on any display. ⚠ **A typed `380ms` was the obvious
+   * spelling and is refused**: this is the one number here with no derivation
+   * behind it, so the only thing keeping it honest is that it stays a multiple of
+   * the travel and moves if `--recede` ever does. **The relationship is what is
+   * load bearing, not the digits.**
    *
    * ⚠ **It went 340 → 425 → 382.5 in one sitting, and the middle value is why
    * this reads the way it does.** *A tad slower* overshot; *a tad faster* came
    * back past where it started. **The pair still states one rule** — the
    * furniture leaves already empty and lands before the ink catches up — and
-   * that rule survives as long as this stays above `--recede`. ⚠ **Below it,
-   * the ink starts arriving before the bar does and the rule is broken.**
+   * that rule survives as long as this stays above `--recede`. ⚠ **Below it, the
+   * ink starts arriving before the bar does and the rule is broken.**
    *
    * ⚠ **Spelled as a base duration and one inherited override** — see
    * `chrome-ink-gone`, and the ordering trap it records. There is no state to
    * keep in step.
    */
-  --ink-out: calc(var(--recede) / 6);
+  --ink-out: calc(var(--recede) / 3);
   --ink-in: calc(var(--recede) * 1.125);
 
   /**
