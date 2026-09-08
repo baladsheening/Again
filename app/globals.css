@@ -2025,8 +2025,28 @@
    *
    * ⚠ **1 restores 7 September exactly.** 0 puts the glyph ink 9px off the
    * screen's edge, which overlaps the indicator; do not go there.
+   *
+   * ⚠⚠ **0.35 WAS SETTLED BY EYE AGAINST A DRAWN INDICATOR, AND THE DRAWING WAS
+   * WRONG BEFORE IT WAS RIGHT.** `node_modules/.probe/indicatorlook.mjs` paints
+   * the pill over the real page at the commonly cited portrait geometry —
+   * ~134×5px, its bottom ~8px from the edge, so its top ~13px up. Held against
+   * an iPhone 12 the verdict was **the real indicator sits lower than that**, so
+   * every clearance figure derived from 13 is an over-estimate. **Do not treat
+   * the 13 as measured; it is the probe's assumption and the phone disagreed
+   * with it.**
+   *
+   * ⚠ **What that leaves is a number chosen by looking, which is the honest
+   * position rather than a failure of rigour.** No browser draws the indicator,
+   * Apple publishes no figure, and `env(safe-area-inset-bottom)` is a reserved
+   * zone rather than the pill — 34px against a pill that ends around 13. **The
+   * structure is derived and holds everywhere; only the proportion is a
+   * preference**, which is exactly what `--control-hover-scale` is.
+   *
+   * At 0.35 the glyph ink lands **15.5px above the screen's edge** on a 390×844
+   * handset. The ladder, for the next person moving it: 1 → 27.5, 0.75 → 22.9,
+   * 0.5 → 18.25, **0.35 → 15.5**, 0.25 → 13.6 and touching.
    */
-  --foot-sink: 0.5;
+  --foot-sink: 0.35;
 
   --ink-out: calc(var(--recede) / 3);
   --ink-in: calc(var(--recede) * 1.125);
