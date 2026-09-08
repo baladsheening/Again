@@ -7294,6 +7294,53 @@
 @utility chrome-ink-gone {
   --ink-duration: var(--ink-out);
 
+  /*
+    ⚠⚠ **THE INK LEAVES, THEN THE SLAB LEAVES — 8 September, AND IT IS THE ONLY
+    ARRANGEMENT THAT SATISFIES BOTH DIRECTIONS GIVEN ABOUT THIS FADE.**
+    Reported from an iPhone 12 installed: *the logo is still too bright as it
+    slides under the time.* Measured, `node_modules/.probe/inkcrossing.mjs`:
+
+        the mark sits at top 52.4 — 5.4px clear of the status bar
+        it crosses that line at 2.6ms, still at 0.96 opacity
+
+    ⚠⚠ **5.4px IS THE WHOLE DISTANCE AVAILABLE, AND AT `--ease-recede` IT IS A
+    SIXTH OF A FRAME.** So *dim by the status bar* and *a fade the eye can see*
+    are *geometrically* incompatible while the ink fades during the travel: to
+    be at 0.2 by 2.6ms a fade has to be 97% done inside one frame, which is the
+    cut that 57ms already was. **Neither direction was wrong; they cannot both
+    be answered by a duration.**
+
+    ⚠ **So they are separated in time rather than traded off.** The ink fades in
+    place over `--ink-out` with nothing moving to distract from it, and the slab
+    does not start travelling until it is out — so **nothing bright ever passes
+    under the clock**, on any inset, because the mark is at zero before the bar
+    has moved at all.
+
+    ⚠⚠ **IT IS DECLARED HERE, ON THE EXIT STATE, SO THE RETURN IS UNTOUCHED.** A
+    transition reads its timing from the after-change style: adding this class
+    makes the new style say *wait for the ink*, removing it makes the new style
+    say *go now*. **The bar still comes back immediately and its ink still
+    arrives after it** — `--ink-in` at 382.5ms against a 340ms slide, which is
+    the rule `--ink-in` exists for and is not touched by this.
+
+    ⚠ **A custom property read by the header's own `delay-[…]`, never a second
+    `transition-delay` rule** — the ordering trap this utility already records:
+    `@utility` output is ordered by Tailwind and not by this file.
+
+    ⚠ **What it costs, stated: the exit is now `--ink-out` + `--recede` = 453ms
+    end to end**, against 340. The extra 113ms is spent on an already-empty
+    slab, so nothing legible is on screen for longer than before. ⚠ **Both bars
+    get it** — `page-screen.tsx`'s recede is driven by a moving finger rather
+    than a focus, so if the record's bar reads sticky on a scroll, this is the
+    line, and the answer is a prop rather than a smaller number.
+
+    ⚠ **The glow is still not faded by any of this.** `mark-glow` is on the
+    header itself, not in the row, so it slides under the clock at full
+    strength — deliberate since 7 September, and **the first suspect if the mark
+    still reads bright there.**
+  */
+  --recede-delay: var(--ink-out);
+
   & > * {
     opacity: 0;
   }
