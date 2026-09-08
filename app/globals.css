@@ -2026,6 +2026,37 @@
    * ⚠ **1 restores 7 September exactly.** 0 puts the glyph ink 9px off the
    * screen's edge, which overlaps the indicator; do not go there.
    *
+   * ⚠⚠⚠ **BACK TO 1 — 8 September. IT WENT 1 → 0.5 → 0.35 → 0.2 CHASING A GAP
+   * THAT WAS NEVER SPACING, AND EVERY ONE OF THOSE STEPS WAS COMPENSATION FOR A
+   * PLATFORM BUG.** A screenshot from the handset, **scanned rather than
+   * eyeballed** (1170×2532, exactly 3× of 390×844), put the strip's painted
+   * bottom edge at **CSS y 796.7 on an 844 screen — 47.3px up, where
+   * `env(safe-area-inset-top)` is 47.** The strip was never sitting high because
+   * of its own air; it was pinned to a layout viewport short by exactly the top
+   * inset. See `app/layout.tsx`, where `black-translucent` was the condition.
+   *
+   * ⚠⚠ **SO THE LADDER BELOW IS A RECORD OF BEING WRONG FOUR TIMES, KEPT ON
+   * PURPOSE.** With the viewport telling the truth, 0.2 would put the glyph ink
+   * **12.7px above the screen's edge against a home indicator whose top the same
+   * scan puts at 11.7** — touching it. **1 puts the ink at 27.5, about 15.8px
+   * clear**, which is what 7 September drew and what the screen was always meant
+   * to look like.
+   *
+   * ⚠⚠ **THE LESSON IS ONE CLAUDE.md ALREADY STATES, AND IT WAS BROKEN ANYWAY:**
+   * *a change that makes the symptom go away on the handset in front of you is
+   * not a fix.* Four times this token was moved to close a gap a platform bug was
+   * opening. **The pixel scan that settled it took thirty seconds and could have
+   * been the first move rather than the fifth.**
+   *
+   * ⚠ **The token stays, because the mechanism is sound and was worth building:**
+   * two expressions conspired to hold the air under the foot constant, and
+   * nothing could move it until both read one number. **It is simply back at its
+   * no-op value.**
+   *
+   * ⚠ **What survives from below:** `indicatorlook.mjs` draws the pill slightly
+   * high, so every clearance figure taken from its 13px is a shade generous — the
+   * scan puts the real one's top at 11.7px.
+   *
    * ⚠⚠ **0.35 WAS SETTLED BY EYE AGAINST A DRAWN INDICATOR, AND THE DRAWING WAS
    * WRONG BEFORE IT WAS RIGHT.** `node_modules/.probe/indicatorlook.mjs` paints
    * the pill over the real page at the commonly cited portrait geometry —
@@ -2046,7 +2077,7 @@
    * handset. The ladder, for the next person moving it: 1 → 27.5, 0.75 → 22.9,
    * 0.5 → 18.25, 0.35 → 15.45, **0.2 → 12.7**, 0 → 9, which is the floor.
    */
-  --foot-sink: 0.2;
+  --foot-sink: 1;
 
   --ink-out: calc(var(--recede) / 3);
   --ink-in: calc(var(--recede) * 1.125);
