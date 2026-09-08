@@ -757,9 +757,7 @@ export function ComposeScreen({
       */}
       <div
         ref={sheet}
-        className={`writing-sheet sheet-panel z-20 flex flex-col justify-end ${
-          makingRoom ? 'sheet-over-keys' : ''
-        }`}
+        className={`writing-sheet z-20 flex flex-col justify-end ${makingRoom ? 'sheet-over-keys' : ''}`}
       >
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
