@@ -24,6 +24,63 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **ONLY A SURFACE THAT RAISES A KEYBOARD REARRANGES ITSELF — 8 September,
+directed, AND IT REVERSES A DECISION MADE ON 5 SEPTEMBER.** Asked: *when I tap
+in the composer it expands but it also drops slightly — is that to accommodate
+the band and foot being the same height? Do we need the desktop version's
+composer to expand? If not, leave it as is, including leaving the strip as is,
+no need even to have the bar recede.*
+
+- ⚠ **The drop was real, and the answer to the question is yes.** The band is
+  `--tap-floor` at rest **precisely so it matches the foot row**; while writing
+  the foot goes and the inset becomes `--gutter-l` on all four sides. Measured at
+  1440×900, `node_modules/.probe/deskstrip.mjs`: the row closes (−44), the band
+  shrinks (−17.34), the card grows a line (+32) and the hem under it opens
+  (+16.67) — so the strip's top landed **12.68px lower** and the card's bottom
+  **27.32px lower**.
+- ⚠⚠ **AND ON THE DESK THAT 44px ROW IS AN EMPTY BOX.** The `<footer>` is
+  `stack:hidden` up there, so the whole rearrangement was **moving air around a
+  foot nobody can see.** Measured after: every one of the nine readings is
+  **+0.00**, and the strip's frame-by-frame is *one step, no transition*.
+- ⚠⚠ **THE NOTE THIS REVERSES SAID: *the desk grows too, which is deliberate — a
+  pointer-type branch would be a device sniff for a behaviour that reads
+  correctly on both.* THE FIRST HALF WAS RIGHT AND THE SECOND WAS BACKWARDS.**
+  `pointer.ts` has argued since 18 August that `(pointer: coarse)` is **a
+  capability, not a device**, and it is exactly the capability at issue: every
+  one of these movements exists because **a software keyboard is about to cover
+  the bottom of the screen.** Asking is not sniffing; assuming was what was
+  wrong.
+- ⚠⚠ **A HAND, NOT A WIDTH, AND THE TWO DISAGREE HERE.** A desk window dragged
+  narrow raises no keyboard and must not move; **an iPad in landscape is wider
+  than `--breakpoint-stack` and does.** A width gate gets both of those wrong —
+  `pointer.ts`'s founding argument arriving in a second place. ⚠ **So this is
+  NOT a `stack:` variant**, and it is not design rule 6 being bent: it is not a
+  breakpoint at all.
+- ⚠ **What is gated is only *the screen making room*.** `writing` still means
+  what it always did and the field's handlers are untouched — a desk click still
+  focuses, commits and blurs. `makingRoom = writing && touch` feeds the bar's
+  recede, `useKeyboardHem`, `sheet-over-keys`, the band, the hem under the card,
+  the glow's tightening, the foot's close and its `inert`; the third line reads
+  `touch && (writing || draft || landed)`, because a desk box that never grows
+  must not grow on typing either — **that is the deleted growing box, and the
+  clipping guard it exists for cannot fire on a box that is always two lines.**
+- ⚠ **`false` until mount, and nothing may read it before then.** Every consumer
+  is downstream of a focus, which is always after the correction — the same
+  condition `page-screen.tsx` states for its own copy of this hook.
+- ⚠ **The known imprecision, stated: a touchscreen laptop reports coarse** and
+  will get the phone's behaviour with a physical keyboard under it. `pointer.ts`
+  already records that trade — *both get the layout that suits what is in their
+  hand* — and there is no better question the platform answers.
+- ⚠ **`chromeink.mjs` grew a third surface and it is the point of it now:** a
+  **fine-pointer desk must not recede at all**, asserted in both engines, while a
+  *touch* desk at 1440 still does and is where the ink contract is measured up
+  there. ⚠ **`composercap.mjs`'s "desk" is a TOUCH desk** — `open()` passes
+  `hasTouch: true` to every context — so its 51/51 is not evidence about a real
+  one; noted in the file.
+- **Unchanged, asserted:** `stripstep.mjs` 50px and no overshoot on both handset
+  insets, `sheetjolt.mjs` 16/16, `frontpage.mjs` green, `composersent.mjs` still
+  36/38 on the two stale assertions.
+
 ⚠⚠ **THE INK LEAVES, THEN THE SLAB LEAVES — 8 September, AND IT IS THE ONLY
 ARRANGEMENT THAT ANSWERS BOTH DIRECTIONS GIVEN ABOUT THIS FADE.** Reported from
 an iPhone 12 installed: *the logo is still too bright as it slides under the

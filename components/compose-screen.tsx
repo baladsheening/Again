@@ -7,6 +7,7 @@ import { Bar, OFF } from './bar'
 import { Foot } from './foot'
 import { AttachGlyph, SendGlyph, UndoGlyph, WriteGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
+import { touchQuery, useMatches } from './pointer'
 import { captureAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
 
@@ -254,7 +255,52 @@ export function ComposeScreen({
     an event. Here the field is not autofocused, so the two happen to coincide;
     the hook still takes the gesture's word rather than the DOM's.
   */
-  useKeyboardHem({ writing, host, floorAnchor })
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   *  Only a surface that raises a keyboard rearranges itself — 8 September
+   * ─────────────────────────────────────────────────────────────────────────
+   *
+   * ⚠⚠ **THE DESK DOES NOT MOVE WHEN YOU CLICK IN THE COMPOSER, AND THAT
+   * REVERSES A DECISION MADE ON 5 SEPTEMBER.** Reported: *when I tap in the
+   * composer it expands but it also drops slightly — do we need the desktop
+   * version's composer to expand? If not, leave it as is, including leaving the
+   * strip as is, no need even to have the bar recede.*
+   *
+   * ⚠ **The drop was real and it was the foot row.** Measured at 1440×900,
+   * `node_modules/.probe/deskstrip.mjs`: the row closes (−44), the band shrinks
+   * to `--gutter-l` (−17.34), the card grows a line (+32) and the hem under it
+   * opens (+16.67) — so the strip's top lands **12.68px lower** and the card's
+   * bottom **27.32px lower**. ⚠ **On the desk the `<footer>` is `stack:hidden`,
+   * so that 44px row is an empty box that exists only to balance the band** —
+   * the whole rearrangement was moving air around a foot nobody can see.
+   *
+   * ⚠⚠ **THE NOTE THIS REVERSES SAID: *the desk grows too, which is deliberate
+   * — a pointer-type branch would be a device sniff for a behaviour that reads
+   * correctly on both.* THE FIRST HALF WAS RIGHT AND THE SECOND WAS BACKWARDS.**
+   * `pointer.ts` has argued since 18 August that `(pointer: coarse)` is **a
+   * capability, not a device**, and it is exactly the capability at issue:
+   * every one of these movements exists because **a software keyboard is about
+   * to cover the bottom of the screen**, and that is what a coarse pointer
+   * predicts. Asking it is not sniffing; assuming it is what was wrong.
+   *
+   * ⚠⚠ **A HAND, NOT A WIDTH, AND THE TWO GIVE DIFFERENT ANSWERS HERE.** A desk
+   * window dragged narrow raises no keyboard and must not move; **an iPad in
+   * landscape is wider than `--breakpoint-stack` and does**. A width gate would
+   * get both of those wrong, which is `pointer.ts`'s own founding argument
+   * arriving in a second place.
+   *
+   * ⚠ **`false` until mount, and nothing here may read it before then.** Every
+   * consumer below is downstream of a focus, which is always after the
+   * correction — the same condition `page-screen.tsx` states for its own copy.
+   *
+   * ⚠ **`writing` still means what it always did**, and the field's own
+   * handlers are untouched: a desk click still focuses, still commits, still
+   * blurs. **What is gated is only the screen making room.**
+   */
+  const touch = useMatches(touchQuery)
+  const makingRoom = writing && touch
+
+  useKeyboardHem({ writing: makingRoom, host, floorAnchor })
 
   /*
     ⚠⚠ **THE COMPOSER MEASURES ITSELF, AND THE RAIL FILLS WHAT IS LEFT — 6
@@ -611,7 +657,7 @@ export function ComposeScreen({
         THAT WAS TRIED ON 7 SEPTEMBER AND REVERTED — see the tombstone on
         `writing-sheet`'s `position`.**
       */}
-      <Bar receded={writing} />
+      <Bar receded={makingRoom} />
 
       {/*
         ⚠⚠ **THE BROWSE HALF IS GONE FROM THIS PAGE — 7 September, directed:
@@ -711,7 +757,7 @@ export function ComposeScreen({
       */}
       <div
         ref={sheet}
-        className={`writing-sheet z-20 flex flex-col justify-end ${writing ? 'sheet-over-keys' : ''}`}
+        className={`writing-sheet z-20 flex flex-col justify-end ${makingRoom ? 'sheet-over-keys' : ''}`}
       >
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
@@ -739,7 +785,7 @@ export function ComposeScreen({
         */}
         <div
           className={`gutter mx-auto w-full max-w-[var(--record-measure)] transition-[padding-bottom] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-            writing ? 'pb-[var(--gutter-l)]' : 'pb-[calc(var(--line-hem)*1.5)]'
+            makingRoom ? 'pb-[var(--gutter-l)]' : 'pb-[calc(var(--line-hem)*1.5)]'
           }`}
         >
           {/*
@@ -806,7 +852,7 @@ export function ComposeScreen({
           */}
           <div
             className={`transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-              writing
+              makingRoom
                 ? 'h-[var(--gutter-l)]'
                 : 'h-[var(--tap-floor)]'
             }`}
@@ -866,7 +912,7 @@ export function ComposeScreen({
           */}
           <div
             ref={box}
-            className={`composer-glow ${writing ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none`}
+            className={`composer-glow ${makingRoom ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none`}
           >
           {/*
             ⚠ **A positioning context for the line that lands.** The card cannot
@@ -1126,7 +1172,9 @@ export function ComposeScreen({
               third line leaves the control nowhere to go but a fourth.
             */
             className={`page-input composer-draft block h-[calc(var(--leading-line)*var(--composer-lines,2))] w-full resize-none overflow-y-hidden text-[length:var(--text-line)] leading-[var(--leading-line)] transition-[height] duration-[var(--recede)] ease-[var(--ease-recede)] ${
-              writing || draft !== '' || landed !== null ? '[--composer-lines:3]' : ''
+              touch && (writing || draft !== '' || landed !== null)
+                ? '[--composer-lines:3]'
+                : ''
             }`}
           />
 
@@ -1406,15 +1454,15 @@ export function ComposeScreen({
           */}
           <div
             className={`max-stack:foot-clear composer-foot flex items-center ${
-              writing ? 'composer-foot-away' : ''
+              makingRoom ? 'composer-foot-away' : ''
             }`}
-            inert={writing}
+            inert={makingRoom}
           >
             <Foot
-              hidden={writing}
+              hidden={makingRoom}
               home="here"
               record="away"
-              arrived={arrived && !writing}
+              arrived={arrived && !makingRoom}
               onArrived={() => setArrived(false)}
               searchable={searchable}
               portal={() => router.push('/record?portal=1')}
