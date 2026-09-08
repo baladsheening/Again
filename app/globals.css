@@ -1990,6 +1990,44 @@
    * `chrome-ink-gone`, and the ordering trap it records. There is no state to
    * keep in step.
    */
+  /**
+   * **How much of the air under the foot row to actually spend — 8 September,
+   * reported from the installed app:** *there's a noticeable gap between the
+   * home indicator and the bottom of the strip, seems like a waste of space.*
+   *
+   * ⚠⚠ **THE GAP WAS NOT SLACK. IT WAS HELD, BY TWO EXPRESSIONS THAT EXIST TO
+   * HOLD IT.** `--sheet-clearance` spends the notch's inset and `foot-clear`
+   * tops up whatever the notch does not give, so the air under the glyph ink
+   * came to **18.5px on every surface** and reducing either one made the other
+   * grow back by exactly the same amount. **That is why nothing moved when the
+   * obvious levers were pulled** — they were built on 7 September to make the
+   * band above the composer and the foot below it read equal, and they were
+   * doing it.
+   *
+   * ⚠ **So this is the number they are both told to defend**, and it is the one
+   * lever that moves the foot without touching anything else. Both expressions
+   * multiply by it: the notch's half and the tab's half sink together, so the
+   * two surfaces cannot drift apart.
+   *
+   * ⚠ **A RATIO, NEVER A PIXEL, WHICH IS WHAT KEEPS IT HONEST ON EVERY PHONE.**
+   * The air it scales is derived from `--tap-floor`, `--line-hem` and
+   * `--glyph-foot`, so a phone with a different inset, a different root size or
+   * a different glyph gets the same *proportion* rather than the same gap — and
+   * with no inset at all it still lands on the same number, because `foot-clear`
+   * pays what the notch did not.
+   *
+   * ⚠ **It is meant to be moved by eye and that is legitimate here.** Where the
+   * foot sits above the home indicator cannot be derived: no browser draws the
+   * indicator, the safe-area inset is far more generous than the indicator needs
+   * (iOS's own tab bars sit well inside it), and the app was already 6.5px
+   * inside it before this. `--control-hover-scale` is the precedent — one token,
+   * named, so tuning it does not mean reading a paragraph first.
+   *
+   * ⚠ **1 restores 7 September exactly.** 0 puts the glyph ink 9px off the
+   * screen's edge, which overlaps the indicator; do not go there.
+   */
+  --foot-sink: 0.5;
+
   --ink-out: calc(var(--recede) / 3);
   --ink-in: calc(var(--recede) * 1.125);
 
@@ -5597,9 +5635,11 @@
   */
   --sheet-clearance: var(
     --sheet-clearance-writing,
-    max(
-      0px,
-      calc(env(safe-area-inset-bottom) - var(--sheet-air) / 2 - var(--sheet-drop))
+    calc(
+      max(
+        0px,
+        calc(env(safe-area-inset-bottom) - var(--sheet-air) / 2 - var(--sheet-drop))
+      ) * var(--foot-sink, 1)
     )
   );
   padding-block: 0 var(--sheet-clearance);
@@ -5755,12 +5795,22 @@
     emission order. Nothing else declares this property; the gate is read inside
     the one declaration that does.
   */
+  /*
+    ⚠⚠ **THE TARGET SINKS WITH THE CLEARANCE, OR NOTHING MOVES — 8 September.**
+    This tops the air under the row up to what the band above the composer is,
+    so **sinking `--sheet-clearance` alone made this grow back by exactly the
+    same amount** and the foot stayed where it was. Both halves read
+    `--foot-sink` now, so the notch's surface and the tab's arrive at the same
+    smaller number rather than one chasing the other.
+  */
   margin-block-end: calc(
     max(
       0px,
       calc(
-        var(--tap-floor) - var(--line-hem) * 1.5 -
-          (var(--tap-floor) - var(--glyph-foot)) - var(--sheet-clearance)
+        (
+            var(--tap-floor) - var(--line-hem) * 1.5 -
+              (var(--tap-floor) - var(--glyph-foot))
+          ) * var(--foot-sink, 1) - var(--sheet-clearance)
       )
     ) * var(--foot-open, 1)
   );
