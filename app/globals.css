@@ -5417,35 +5417,6 @@
   text-shadow:
     0 0 0.28em color-mix(in srgb, var(--composer-glow-colour) 60%, transparent),
     0 0 0.85em color-mix(in srgb, var(--composer-glow-colour) 30%, transparent);
-
-  /*
-    ⚠⚠ **THE PLACEHOLDER GETS NO HALO, AND IT LOOKED GLOWIER THAN THE WRITING
-    UNTIL IT DIDN'T — 8 September, reported within minutes of the glow landing.**
-    `text-shadow` **inherits into `::placeholder`**, so *Anything* was wearing
-    the same 60/30 corona while the engine faded its core to roughly half. **Less
-    core against the same halo is a higher glow ratio**, which is the very
-    relationship variant 3 was chosen for — arriving by accident, on the one
-    piece of text that has not been written.
-
-    ⚠ **The glow belongs to what somebody has written.** A placeholder that
-    glows is the app lighting up its own invitation, and it puts the brightest
-    thing on the screen where there is no content at all. **It is an absence, and
-    an absence does not get the treatment the presence gets.**
-
-    ⚠ **`none`, not a fainter halo.** A dimmer corona would still be a glow on
-    the placeholder and would still have to be kept in step with the two numbers
-    above; the honest statement is that this text is not lit, which is one word
-    and cannot drift.
-
-    ⚠ **The core colour is left to the engine deliberately.** There is no
-    `::placeholder` colour rule anywhere in this file — a field names itself from
-    its placeholder and the browser's own fade of the used colour has been what
-    draws it since the start. **Setting one here to fix a shadow would be two
-    changes for one fault.**
-  */
-  &::placeholder {
-    text-shadow: none;
-  }
 }
 
 @utility composer-refused {
