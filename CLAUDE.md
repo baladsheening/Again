@@ -24,6 +24,65 @@ flag the decision rather than inventing scope.
 
 ## Where the build stands — 31 August
 
+⚠⚠ **`black-translucent` IS GONE, AND WITH IT THE 46px THE INSTALLED APP HAS
+BEEN THROWING AWAY SINCE IT WAS INSTALLABLE — 8 September.** Reported: *the strip
+sits high in the home app, there's a noticeable gap between the home indicator
+and the bottom of the strip, seems like a waste of space.* ⚠ **Only there** — not
+the phone browser, not the desk.
+
+- ⚠⚠ **iOS LAYS A `black-translucent` STANDALONE APP OUT AT
+  `screen − safe-area-inset-top`.** The app says *I extend under the status bar*
+  and iOS subtracts the status bar from the height anyway — **798 where the
+  screen is 844** on a 390×844 iPhone with a 47px inset. So everything
+  `position: fixed; bottom: 0` is pinned 46px above the real bottom, and every
+  CSS viewport length is short together: `100dvh`, `100svh`, `100lvh`,
+  `inset: 0` and `100%`. **No stylesheet can ask for the real number and no desk
+  browser reproduces it.**
+- ⚠⚠ **THIS IS THE THIRD TIME IT HAS BITTEN AND THE FIRST TIME THE CONDITION HAS
+  BEEN REMOVED.** A 46px strip of naked ground under the fixed paper (1 Sep); the
+  sign-in wall's beats taking a **59px** bite where the desk's emulation saw 13
+  (`wall-fold`); and now the strip. **Twice it was worked around at the call
+  site.**
+- ⚠⚠ **`app/layout.tsx`'S OWN JUSTIFICATION WAS FALSIFIED BY ITS OWN PROMISE.**
+  It read: *the reason to prefer this one is that the two modes then behave
+  identically,* **so a spacing fault cannot appear in the installed app and
+  nowhere else.** That is precisely the fault it caused.
+- ⚠⚠ **A DRAG DOES NOT FIX IT, AND THE RECORD SAID IT DID.** `globals.css` said
+  iOS lays it out short *until something forces a re-layout*. Tested on the
+  handset: dragging down **shows** the strip at the true bottom and it **springs
+  back on release.** The correction does not stick — **which is what rules out
+  answering this with a programmatic nudge at load**, and the old wording would
+  have sent the next person to build one.
+- ⚠ **The removal, not a correction** — *How things get fixed*'s own order. With
+  `black` the web view starts below the status bar, so `env(safe-area-inset-top)`
+  is legitimately **0** in standalone and the layout viewport is the web view's
+  real height. **All nine readers of that inset spend it to clear the status bar,
+  so zero is right for every one of them** and the arithmetic self-corrects:
+  `--bar-height` shrinks by the inset and the bar still lands where it should.
+  ⚠ **Phones with no inset are untouched, because nothing about them changes** —
+  which is the test a 46px constant in the spacing would have failed.
+- ⚠ **What it costs, and it is nearly nothing.** The status bar becomes an opaque
+  black strip, so `grain-ground`'s paper stops at it rather than running under
+  it. **The paper has been the two auth screens' alone since 3 September** —
+  everything signed in is plain black — and it is a `screen` blend lifting most
+  of its field by 2.9%. A barely-visible texture in a 47px band on screens you
+  see once, against 46px of every screen in daily use.
+- ⚠ **`viewportFit: 'cover'` STAYS.** It is what makes
+  `env(safe-area-inset-bottom)` report the home indicator at all, and the
+  landscape side insets with it. Only the status-bar half is given up.
+- ⚠⚠ **AND A SECOND FALSE CLAIM IN THE SAME BLOCK, CHECKED AGAINST THE SERVED
+  HTML: Next 16.3 EMITS `mobile-web-app-capable`, NOT
+  `apple-mobile-web-app-capable`.** The comment said the prefixed name was *the
+  half iOS actually obeys*. The only `apple-` metas on the page are `-title` and
+  `-status-bar-style`. **Standalone works anyway** — the manifest's
+  `display: 'standalone'` from Safari 16.4, plus WebKit accepting the unprefixed
+  name — **and anything older than 16.4 is out of reach of Next's `appleWebApp`
+  object entirely.** Named, not fixed.
+- ⚠ **This is not a taste setting. If `black-translucent` ever goes back, the
+  46px goes with it**, and so do the wall's fold and the paper's naked ground.
+- **Unverified from here, and it cannot be:** no browser draws a status bar, so
+  whether the band reads badly on the auth screens is the handset's answer.
+
 ⚠⚠ **ONLY A SURFACE THAT RAISES A KEYBOARD REARRANGES ITSELF — 8 September,
 directed, AND IT REVERSES A DECISION MADE ON 5 SEPTEMBER.** Asked: *when I tap
 in the composer it expands but it also drops slightly — is that to accommodate
