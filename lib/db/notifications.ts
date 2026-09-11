@@ -8,6 +8,7 @@ import { db } from './client'
 import {
   captures,
   notificationMatchesCapture,
+  notificationMatchesLiveCapture,
   notifications,
   possibilities,
   profiles,
@@ -151,7 +152,7 @@ export async function listMyPortal(
     */
     .innerJoin(
       captures,
-      and(eq(captures.userId, sessionUser.id), notificationMatchesCapture()),
+      and(eq(captures.userId, sessionUser.id), notificationMatchesLiveCapture()),
     )
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
     .where(and(eq(notifications.userId, sessionUser.id), isNull(notifications.readAt)))
@@ -530,7 +531,7 @@ export async function portalWaiting(sessionUser: SessionUser): Promise<PortalWai
       .select({ one: sql<number>`1` })
       .from(notifications)
       /*
-        ⚠⚠ **`notificationMatchesCapture()`, AND WRITING THE JOIN OUT BY HAND
+        ⚠⚠ **`notificationMatchesLiveCapture()`, AND WRITING THE JOIN OUT BY HAND
         HERE IS WHAT BROKE THE DOOR — 11 September.** This read
         `possibility_id::text = payload ->> 'itemId'`, which is the possibility
         leg alone. Amendment 4 gave a convergence a second subject — the words —
@@ -549,7 +550,7 @@ export async function portalWaiting(sessionUser: SessionUser): Promise<PortalWai
       */
       .innerJoin(
         captures,
-        and(eq(captures.userId, sessionUser.id), notificationMatchesCapture()),
+        and(eq(captures.userId, sessionUser.id), notificationMatchesLiveCapture()),
       )
       .where(and(eq(notifications.userId, sessionUser.id), isNull(notifications.readAt)))
       .limit(1),

@@ -251,6 +251,64 @@ describe('convergence on words (Amendment 4)', () => {
     })
   })
 
+  it('a crossed-off twin does not list beside the live line', async () => {
+    /*
+      ⚠⚠ **REPORTED FROM A HANDSET, 11 September:** *I see two listings for
+      `learn to sail` despite one of them being crossed off.* Matching is by
+      SUBJECT, never by capture id, so one notification finds every capture of
+      the viewer's that normalises alike — and `group()` keys on the capture, so
+      two rows became two portal lines for one convergence.
+
+      ⚠ **The mark is deliberately NOT part of this.** §5: the portal is
+      arrival, the mark is memory — `mark.test.ts` asserts that a line keeps its
+      mark through being crossed off and settled, because a resolution is not an
+      erasure. **What a struck line must not do is ask to be acted on again.**
+    */
+    await wipe()
+    await capture(adaId, 'Learn to sail')
+    await capture(boId, 'learn to sail')
+    await converge()
+
+    const struck = await lineOn(adaId, A, 'Learn to sail')
+    await pool.query(
+      `update captures set state = 'dropped', status = 'dropped', verdict = null where id = $1`,
+      [struck!.id],
+    )
+    await capture(adaId, 'learn to sail')
+    await converge()
+
+    const portal = await dal.listMyPortal(viewer(adaId, A))
+    expect(portal).toHaveLength(1)
+    expect(portal[0].text).toBe('learn to sail')
+    expect(portal.some((l) => l.state === 'dropped')).toBe(false)
+
+    /* And the door still lights, off the live one. */
+    expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(true)
+  })
+
+  it('a crossed-off line alone empties the portal but keeps its mark', async () => {
+    /*
+      The other half of the pair above, and the reason the term went on a second
+      fragment rather than into `notificationMatchesCapture()`: with nothing live
+      to converge on, the portal has nothing to offer — but the record still says
+      this line once met somebody.
+    */
+    await wipe()
+    await capture(adaId, 'learn to sail')
+    await capture(boId, 'learn to sail')
+    await converge()
+
+    const line = await lineOn(adaId, A, 'learn to sail')
+    await pool.query(
+      `update captures set state = 'dropped', status = 'dropped', verdict = null where id = $1`,
+      [line!.id],
+    )
+
+    expect(await dal.listMyPortal(viewer(adaId, A))).toHaveLength(0)
+    expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(false)
+    expect((await lineOn(adaId, A, 'learn to sail'))?.converged).toBe(true)
+  })
+
   it('different words are not a match, however close they read', async () => {
     await wipe()
     await capture(adaId, 'learn to sail')

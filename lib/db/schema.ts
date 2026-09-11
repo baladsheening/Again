@@ -897,12 +897,59 @@ export const pushSubscriptions = pgTable(
  * pin both to the session. A notification names a counterpart and must never be
  * a door to the counterpart's row (§3); leaving that at the call sites keeps it
  * visible at each one rather than buried in a shared fragment.
+ *
+ * ⚠⚠ **IT MATCHES EVERY CAPTURE OF THE VIEWER'S THAT POINTS AT THE SUBJECT, AND
+ * THAT IS NOT A ROUNDING ERROR — 11 September.** Write *Learn to sail*, cross it
+ * off, write it again: both rows normalise alike, so one notification finds
+ * both. **The mark is right to do that** — see `mark.test.ts`, *a resolution is
+ * not an erasure* — but the PORTAL is not, which is what
+ * {@link notificationMatchesLiveCapture} exists for.
+ *
+ * ⚠ **Telling *this row converged* from *a row just like it converged* needs a
+ * capture id on the notification, and there is none by construction.** A match
+ * is about a subject two people's captures both point at; neither side's row id
+ * means anything to the other. **So the mark cannot distinguish them**, and a
+ * struck line beside a live one wears the live one's mark. Named rather than
+ * fixed: the alternative is identity on the payload, which is a migration and a
+ * change to what a notification *is*.
  */
 export function notificationMatchesCapture() {
   return sql`(
     ${notifications.payload} ->> 'itemId' = ${captures.possibilityId}::text
     or ${notifications.payload} ->> 'normalisedText' = ${captures.normalisedText}
   )`
+}
+
+/**
+ * **The same rule, for the two reads that are about an OPPORTUNITY rather than
+ * a memory** — 11 September, reported from a handset: *I see two listings for
+ * `learn to sail` despite one of them being crossed off.*
+ *
+ * ⚠⚠ **THE PORTAL IS ARRIVAL AND THE MARK IS MEMORY (§5), AND THAT DIVIDES
+ * THIS.** The mark answers *why is this line special* and survives the line
+ * being settled or crossed off, because a resolution is not an erasure. The
+ * portal answers *what should I do about this* — and **a line with a rule
+ * through it is one you have already answered.** Listing it is the app offering
+ * back something you crossed off, twice over when the live twin is there too.
+ *
+ * ⚠ **`<> 'dropped'`, NOT `= 'active'`, and the difference is a whole path.** A
+ * go-back-to is `completed` with `verdict = 'again'` and converges through
+ * `isGoBackToSee`; an `active` test would have been right about the words path
+ * and silently dropped every guide out of the portal. **The struck state is
+ * `dropped` and this excludes exactly it.**
+ *
+ * ⚠ **Both portal reads or neither.** `listMyPortal` fills the card and
+ * `portalWaiting` lights the door; they are two queries answering one question,
+ * and 11 September is the day they disagreed and the door stayed dark. **A term
+ * added to one of them and not the other rebuilds that bug.**
+ *
+ * ⚠ **What this does NOT fix: two LIVE captures of the same words.** `group()`
+ * keys on the capture, so one convergence would still list twice. That needs a
+ * decision about which line owns the event rather than a term in a join, and
+ * nobody has hit it.
+ */
+export function notificationMatchesLiveCapture() {
+  return sql`(${notificationMatchesCapture()} and ${captures.status} <> 'dropped')`
 }
 
 export type Profile = typeof profiles.$inferSelect
