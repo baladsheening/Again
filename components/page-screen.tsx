@@ -2705,6 +2705,7 @@ export function PageScreen({
           loading={portalLoading}
           failed={portalFailed}
           onOpen={openPortalLine}
+          opened={opened}
         >
           {(line) =>
             opened === line.id && (
@@ -3067,7 +3068,27 @@ export function PageScreen({
           {lines.map((line, i) => {
             const stamped = i === 0 || lines[i - 1].day !== line.day
             const crossedOff = line.state === 'dropped'
-            const isOpen = line.id !== '' && line.id === opened
+            /*
+              ⚠⚠ **`&& !portal`, AND WITHOUT IT ONE TAP OPENED TWO CONSOLES — 11
+              September.** `opened` is one capture id for the whole screen, and a
+              capture in the portal is nearly always in the record as well — so a
+              tap on a portal line satisfied this row too, and the record's
+              console and the portal's both mounted. Both are `position: fixed`
+              at the same band on a handset, so they stacked: the same words
+              twice, two glyph rows, one card carrying `Lock` and the other not,
+              because the portal passes `onLock={null}` by construction.
+
+              ⚠ **That was the report** — *the console is positioned such that I
+              can't see any text, just a blurred screen* — and it reads as a
+              positioning fault, which is what sent two rounds of measurement
+              after the geometry. The geometry was right and there were two of
+              them.
+
+              ⚠ **The portal wins because it is the surface being looked at.**
+              While it is up the record is behind a scrim; a console belonging to
+              a row nobody can see is the one that should not exist.
+            */
+            const isOpen = line.id !== '' && line.id === opened && !portal
 
             /*
               ⚠ **The last word used to be split off the rest and bound to the

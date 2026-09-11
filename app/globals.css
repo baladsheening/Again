@@ -6558,6 +6558,20 @@
 @utility portal-card {
   display: flex;
   flex: 0 1 auto;
+  /*
+    ⚠⚠ **`min-height: 0`, AND WITHOUT IT `portal-list` NEVER SCROLLS — 11
+    September.** A flex item's `min-height` is `auto`, which means *never
+    shrink below your content*: the card grew to the full height of every row
+    in it, **926px inside a 615px sheet on a 390x844 handset**, and ran 200px
+    off the bottom of the screen with the last lines unreachable. The list
+    below already says `min-height: 0` for exactly this reason — but it can
+    only shrink if its parent does, and its parent would not.
+
+    ⚠ **The overflow is silent and looks like a design.** Nothing clips, so the
+    card simply extends past the glass; it took a measured box to see it, and
+    the shorter the portal the longer it hides.
+  */
+  min-height: 0;
   flex-direction: column;
   width: 100%;
   max-width: var(--record-measure);

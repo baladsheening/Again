@@ -134,6 +134,7 @@ export function Portal({
   loading,
   failed,
   onOpen,
+  opened,
   children,
 }: {
   lines: PortalLineView[]
@@ -153,6 +154,19 @@ export function Portal({
   failed: string | null
   onOpen: (line: PortalLineView) => void
   /**
+   * Which row's console is open, or `null`.
+   *
+   * ⚠⚠ **THE PORTAL HAS TO KNOW, AND UNTIL 11 SEPTEMBER IT DID NOT.**
+   * `console-sheet` is `position: fixed` on a handset and `static` on the desk
+   * — so up there the console opens in flow inside the row and everything
+   * below it moves down, which is right. **On a handset it escapes the row and
+   * paints over the portal card, which is fixed at the same band**, and the two
+   * drew on top of each other: the line's own words twice, the glyph row across
+   * the matching rule, nothing legible. Reported as *the console is positioned
+   * such that I can't see any text, just a blurred screen.*
+   */
+  opened: string | null
+  /**
    * The console for whichever row is open, rendered by the page.
    *
    * ⚠ **A render prop, because the console's controls are the PAGE's.** Cross
@@ -166,7 +180,26 @@ export function Portal({
 }) {
   return (
     <div className="portal-sheet z-10">
-      <div className="portal-card">
+      {/*
+        ⚠⚠ **`visibility`, AND IT IS THE ONE PROPERTY THAT CAN DO THIS.** While a
+        console is open the card behind it must not draw — but the console is a
+        DESCENDANT of the card (it is `children(line)`, rendered in the row it
+        belongs to), so `hidden`, `display: none` and `opacity-0` would all take
+        the console with them. **`visibility` is inherited and a descendant can
+        take it back**, which is what `portal-console` does.
+
+        ⚠ **Not a restructure.** Lifting the console out of the row was the other
+        way, and it would break the render prop's whole argument — the portal
+        decides *where* a console goes; the page decides *what it does*. The
+        console still belongs to its line.
+
+        ⚠ **The desk is untouched and must stay so.** Up there `console-sheet` is
+        `static`: it opens in flow, pushes the rows below it down, and the card
+        around it is exactly what should stay on screen. So this is gated on the
+        console being `fixed`, which is the handset — `stack:visible` puts the
+        card back above `--breakpoint-stack`.
+      */}
+      <div className={`portal-card ${opened !== null ? 'invisible stack:visible' : ''}`}>
         {/*
           ⚠ **A heading, on a page that refuses copy everywhere else.** The
           record needs none — the caret is the instruction and the words are the
@@ -485,7 +518,12 @@ export function Portal({
                 <AskThem text={line.text} />
               </p>
 
-              {children(line)}
+              {/*
+                ⚠ **Visibility taken back, so the console draws while the card
+                around it does not.** See the card's own note: it is hidden
+                rather than removed precisely so this can override it.
+              */}
+              <div className="visible">{children(line)}</div>
             </li>
           ))}
         </ol>
