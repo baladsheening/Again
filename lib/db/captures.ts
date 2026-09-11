@@ -20,6 +20,7 @@ import { db } from './client'
 import {
   captures,
   normalised,
+  notificationMatchesCapture,
   notifications,
   possibilities,
   profiles,
@@ -30,7 +31,7 @@ import {
 } from './schema'
 import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
-import { runOverlap } from '@/lib/overlap'
+import { runOverlap, type Subject } from '@/lib/overlap'
 import { DEFAULT_INTENT, specFor } from '@/lib/vocabulary'
 import {
   legacyState,
@@ -462,26 +463,37 @@ export async function listMyCapturesForExternalId(
  * row at somebody, which is why the rule lives here in one sentence rather
  * than as a judgement made separately at each caller.
  *
- * ⚠ **Three guards, and each of them is a reason there is nothing to fan out
- * rather than an optimisation.** A capture that resolved to nothing has no
- * canonical thing to converge on — that is the Phase 2 possible-match path,
- * which reads `normalised_text` and is not this. A capture with no intention
- * cannot be classified, because `classify` decides on the pair of intents. And
- * **a private capture is not a signal to anybody**: convergence is two people
- * who have each shared an intention, so fanning out from an unshared one would
- * notify someone about a list its owner never opened.
+ * ⚠ **A private capture is not a signal to anybody**, and that guard is the one
+ * that never moves: convergence is two people who have each shared an
+ * intention, so fanning out from an unshared one would notify someone about a
+ * list its owner never opened.
  *
- * ⚠ The counterpart side carries the same three conditions in SQL. Both halves
- * are needed: this one stops the query, that one filters its result.
+ * ⚠⚠ **THE OTHER TWO GUARDS INVERTED ON AMENDMENT 4, AND THIS BLOCK USED TO
+ * ARGUE FOR THEM.** It read: *a capture that resolved to nothing has no
+ * canonical thing to converge on — that is the Phase 2 possible-match path,
+ * which reads `normalised_text` and is not this.* **That path is this one
+ * now.** An unresolved capture converges on its words; only a resolved one
+ * needs an intention, because only a resolved one can be classified by a pair
+ * of them. So the branch is *which subject*, never *whether*.
+ *
+ * ⚠ **A capture whose words normalise to nothing is the one real exclusion
+ * left, and it is not a nicety.** `normalised_text` strips everything that is
+ * not alphanumeric, so a capture reading `???` or `...` normalises to the empty
+ * string — and without this guard **every such capture in the app would
+ * converge with every other one**, which is a fan-out to strangers' junk rows
+ * wearing the shape of a real match.
+ *
+ * ⚠ The counterpart side carries the same conditions in SQL. Both halves are
+ * needed: this one stops the query, that one filters its result.
  */
 async function fireOverlap(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   sessionUser: SessionUser,
   capture: Capture,
 ) {
-  if (!capture.possibilityId) return
-  if (!capture.intent) return
   if (!(SHARED_SCOPES as readonly string[]).includes(capture.visibility)) return
+  if (capture.possibilityId && !capture.intent) return
+  if (!capture.possibilityId && capture.normalisedText === '') return
 
   // `displayName` as well as the handle: notifications only cross mutual
   // tracks, which is the condition §5 attaches names to — see `nameFor`.
@@ -491,13 +503,27 @@ async function fireOverlap(
     .where(eq(profiles.id, sessionUser.id))
     .limit(1)
 
-  const [possibility] = await tx
-    .select({ id: possibilities.id, title: possibilities.title })
-    .from(possibilities)
-    .where(eq(possibilities.id, capture.possibilityId))
-    .limit(1)
+  if (!me) return
 
-  if (!me || !possibility) return
+  /*
+    ⚠ **The possibility is read here rather than carried on the capture**
+    because the payload needs its *name*, and the capture holds only its id.
+    On the words path there is nothing to read: the title is the capture's own
+    text, which is already in hand.
+  */
+  let subject: Subject
+  if (capture.possibilityId) {
+    const [possibility] = await tx
+      .select({ id: possibilities.id, title: possibilities.title })
+      .from(possibilities)
+      .where(eq(possibilities.id, capture.possibilityId))
+      .limit(1)
+
+    if (!possibility) return
+    subject = { on: 'possibility', id: possibility.id, title: possibility.title }
+  } else {
+    subject = { on: 'words', normalised: capture.normalisedText, title: capture.text }
+  }
 
   await runOverlap(
     tx,
@@ -511,7 +537,7 @@ async function fireOverlap(
       source: capture.source,
       sourceUserId: capture.sourceUserId,
     },
-    possibility,
+    subject,
   )
 }
 
@@ -560,11 +586,11 @@ const PAGE_STATUSES = ['active', 'dropped'] as const satisfies readonly CaptureS
  * at all. See `console.tsx`, which was built expecting exactly this — *when who
  * else arrives it has to arrive into a space that is already there.*
  *
- * ⚠ **The join is `payload->>'itemId'`, the same one `listMyPortal` makes, and
- * for the same reason: a notification carries no capture id and cannot.** A
- * match is about a *possibility* that two people's captures both point at, so
- * the viewer's own capture is found at read time. Every payload written before
- * any of this existed works unchanged.
+ * ⚠ **The subject join is `notificationMatchesCapture()`, the same fragment
+ * `listMyPortal` and `getConvergence` use**, because a notification carries no
+ * capture id and cannot: a match is about a *subject* two people's captures
+ * both point at, so the viewer's own capture is found at read time. Every
+ * payload written before any of this existed works unchanged.
  *
  * ⚠ **`notifications.user_id = captures.user_id` is the privacy term**, and it
  * is written against the capture rather than against the session so that it
@@ -573,16 +599,19 @@ const PAGE_STATUSES = ['active', 'dropped'] as const satisfies readonly CaptureS
  * subquery is right even if one ever stopped. A notification names a
  * counterpart — it must never be a door to the counterpart's row (§3).
  *
- * ⚠ **An unresolved capture is `false` by arithmetic, not by a guard.**
- * `possibility_id` is null on most lines, the comparison is then null, and `exists`
- * over no rows is false. Two people can only converge on a possibility (§13), so
- * a raw capture having no mark is the truth rather than a missing case.
+ * ⚠⚠ **AN UNRESOLVED CAPTURE CAN NOW BE MARKED, AND THIS BLOCK USED TO SAY IT
+ * COULD NOT.** It read: *two people can only converge on a possibility (§13),
+ * so a raw capture having no mark is the truth rather than a missing case.*
+ * **Amendment 4 made that false** — a line that never resolved converges on its
+ * words, and the mark is exactly as much its due. The arithmetic still holds
+ * the other way round: a possibility row's payload has no `normalisedText`, so
+ * that term is null on it, and vice versa.
  */
 const converged = sql<boolean>`exists (
   select 1
   from ${notifications}
   where ${notifications.userId} = ${captures.userId}
-    and ${notifications.payload} ->> 'itemId' = ${captures.possibilityId}::text
+    and ${notificationMatchesCapture()}
 )`
 
 /**
@@ -1549,18 +1578,35 @@ export async function setCaptureNote(
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠ **No overlap trigger, and that is a finding rather than an omission.**
- * `fireOverlap` returns early without a `possibilityId`, so **convergence keys on
- * the possibility and never on raw text.** An edit cannot change what a capture
- * matches, so there is nothing to announce. Do not add a `fireOverlap` call here
- * on the assumption that a changed line is a changed signal — it is not, and the
- * fan-out's own rule is that it runs when a capture *becomes a signal it was not
- * already*.
+ * ⚠⚠ **AN EDIT IS THE FOURTH MOMENT, AND THIS BLOCK USED TO FORBID IT IN SO
+ * MANY WORDS.** It read: *no overlap trigger, and that is a finding rather than
+ * an omission — `fireOverlap` returns early without a `possibilityId`, so
+ * convergence keys on the possibility and never on raw text. An edit cannot
+ * change what a capture matches, so there is nothing to announce. **Do not add
+ * a `fireOverlap` call here.*** Amendment 4 made every sentence of that false:
+ * **the words are now what an unresolved capture matches on, so changing them
+ * changes what it matches.** `fireOverlap`'s own rule — it runs when a capture
+ * *becomes a signal it was not already* — is what now requires the call rather
+ * than forbidding it.
+ *
+ * ⚠ **Gated on the NORMALISED text changing, not on the text changing.** The
+ * normaliser eats case, punctuation and runs of whitespace, so *Learn to sail!*
+ * → *learn to sail* is not a new signal and must not fan out again. The common
+ * edit is a typo — and a typo fixed is the commonest route *into* a match,
+ * which is the whole reason this fires.
+ *
+ * ⚠ **The stated cost: editing away and back announces twice.** This module
+ * deliberately does not deduplicate, so *learn to sial* → *learn to sail* →
+ * *learn to sial* → *learn to sail* is two notifications. It is the same
+ * behaviour a state change already has, and it is mild against the alternative
+ * — a mistyped line that silently never converges, which is a failure with no
+ * symptom.
  *
  * ⚠ **`normalised_text` re-derives itself.** It is a generated column over
- * `text`, so Phase 2's possible-match path stays correct after an edit with no
- * second write and no chance of the two disagreeing. That is the column comment's
- * argument for generating it, arriving exactly where it was predicted to.
+ * `text`, so the before/after comparison below is reading the database's own
+ * answer rather than re-implementing the rule in TypeScript — which is exactly
+ * the argument the column comment makes for generating it, arriving where it
+ * was predicted to.
  *
  * ⚠ **No state filter, unlike `dropCapture`.** Any capture you own can be
  * rewritten, crossed off or settled included: a typo in a line is a typo whatever
@@ -1584,14 +1630,35 @@ export async function setCaptureText(
   if (trimmed === '') return err('invalid', 'A capture needs some words.')
   if (trimmed.length > TEXT_MAX) return err('invalid', 'That is too long.')
 
-  const [updated] = await db
-    .update(captures)
-    .set({ text: trimmed })
-    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
-    .returning()
+  return db.transaction(async (tx) => {
+    /*
+      ⚠ **Read inside the transaction, not before it.** The comparison decides
+      whether a notification is written, so the row it reads has to be the row
+      the update then changes — two statements outside a transaction can be
+      interleaved by a second edit and fan out against words nobody wrote.
+    */
+    const [before] = await tx
+      .select({ normalisedText: captures.normalisedText })
+      .from(captures)
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .limit(1)
 
-  if (!updated) return err('not_found', 'No such capture.')
-  return ok(updated)
+    if (!before) return err('not_found', 'No such capture.')
+
+    const [updated] = await tx
+      .update(captures)
+      .set({ text: trimmed })
+      .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
+      .returning()
+
+    if (!updated) return err('not_found', 'No such capture.')
+
+    if (updated.normalisedText !== before.normalisedText) {
+      await fireOverlap(tx, sessionUser, updated)
+    }
+
+    return ok(updated)
+  })
 }
 
 /* -------------------------------------------------------------------------- */

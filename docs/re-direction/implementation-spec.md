@@ -7,7 +7,7 @@ Amended: 22 August 2026 — Amendment 1, §13; 31 August 2026 — Amendment 2, �
 §6 / §8 / §13; 5 September 2026 — Amendment 5, §5; 6 September 2026 — Amendment 6,
 §3 / §5; 6 September 2026 — Amendment 7, §1 / §5 / §7; 6 September 2026 —
 Amendment 8, §5 / §7; 6 September 2026 — Amendment 9, §3 / §5 / §7 (see
-*Amendments* below)
+*Amendments* below; 11 September 2026 — Amendment 10, product reset)
 
 This document defines the product that the implementation should deliver. It
 turns the product-direction and implementation notes into requirements that can
@@ -15,12 +15,21 @@ be built, tested, and handed off.
 
 Documentation precedence:
 
-1. This document owns future product behaviour and delivery scope.
-2. CLAUDE.md owns engineering invariants: database access, session handling,
+0. `product-truth.md` is one page and wins over every other document,
+   this one included. It is the thing to hand somebody; everything below is how
+   it gets built.
+1. `consumer-product-strategy.md` owns the audience, promise, core loop,
+   Release 1 boundary, consumer success criteria, the funding model, and the
+   conditions on any public research-mission claim. Amendment 10 below is its
+   implementation-specification translation.
+2. This document owns the build, data, privacy, and delivery requirements that
+   realise that strategy. Where an earlier requirement conflicts with Amendment
+   10, Amendment 10 wins.
+3. CLAUDE.md owns engineering invariants: database access, session handling,
    privacy enforcement, transactionality, validation, testing, and responsive
-   quality. Its legacy film-only product rules must be updated in Phase 0.
-3. product-direction.md and implementation-of-product-implementation.md are
-   retained as product rationale. They are not competing build instructions.
+   quality.
+4. The remaining documents in this directory are retained as rationale or
+   implementation history. They are not competing sources of new product scope.
 
 No implementation phase may rely on a legacy product rule when it conflicts
 with this specification.
@@ -258,7 +267,7 @@ absence — including an empty browse half.
 ⚠ **This is not a new phase and it blocks nothing.** It revises Phase 1's
 surface. Phase 2's outstanding work — the words, and push delivery — is
 independent of it and can be built before, after or beside it. The design brief
-is `docs/re-direction/the-front-page.md`, which carries the sequence, and it is
+is `docs/re-direction/inactive/the-front-page.md`, which carries the sequence, and it is
 meant to die as it is built.
 
 ⚠ **One dependency is lodged rather than scheduled**, under the standing
@@ -555,46 +564,88 @@ gate on the rail; *the rail may rank, the fan-out may not*; and §1's Release 1
 exclusions, including that local offers and occurrences require provenance,
 freshness and an approved location launch contract before they can be shown.
 
+**Amendment 10 — 11 September 2026, product reset.** The product is now
+defined by `consumer-product-strategy.md`: **Again turns private things a person
+wants to do into real-world opportunities when someone they trust wants the
+same thing.** This amendment changes the Release 1 decision rather than quietly
+adding features to the earlier plan.
+
+- **Release 1 proves a trusted-group loop, not a corpus or discovery product.**
+  Free-form capture, reciprocal known-person connection, exact convergence, and
+  a respectful post-match action are the whole product. A user must be able to
+  carry an overlap into their normal communication channel without Again building
+  chat, calendars, RSVPs, or payments.
+- **An earned service-notification path belongs in Release 1.** A new contact
+  request and a new mutual convergence are user-relevant arrivals, not generic
+  re-engagement. Push permission is requested only after a person can understand
+  the value and is never used for streaks, digests, or a prompt to return.
+- **The global browse rail is deferred.** Release 1 does not show a random or
+  global corpus, image-only tiles, opening counts, or a popularity proxy.
+  Amendments 5, 7, 8, and 9 remain useful future discovery research, but their
+  rail requirements do not authorise a Release 1 Home surface. Discovery returns
+  only with a bounded, sourced, actionably explained reason for every item.
+- **Matching consent must be comprehensible, not merely technically enforced.**
+  The mutual relationship remains the consent boundary and an individual lock
+  remains necessary, but creating that relationship must explain that
+  independently written captures can produce a one-line overlap. The current
+  matching state and the individual control must be easy to find, not exposed
+  solely through an undiscovered gesture.
+- **The launch claim narrows.** Until the Phase 6 safety gates are met, Again is
+  for trusted people a user already knows; it is not marketed as stranger
+  networking or like-minded-person discovery. Before broad release, the product
+  owner must choose one named high-density beta community and an actionable
+  context in which to test the loop with real people.
+- **Success is an offline consequence, not attention.** Release 1 is accepted
+  only when real users save useful captures, form reciprocal connections, receive
+  welcome accurate overlaps, and use the resulting action to start a
+  conversation or plan. Opens, notification clears, and time spent are not the
+  primary product measures.
+- **The loop is never paywalled.** Capture, the record, adding a trusted person,
+  convergence, and the action after it are free permanently. Whatever Again
+  eventually charges for sits outside the loop, because a priced connection is a
+  connection that does not get made and network density is the first thing a
+  paywall removes. `consumer-product-strategy.md` §9 carries the funding model
+  and §10 the conditions on any public research-mission claim; no Release 1
+  surface may be shaped around a price nobody has chosen.
+
+The new strategy does not weaken the existing privacy, provenance, exact-match,
+or no-marketplace constraints. It reorders delivery around the thing those
+constraints are meant to make safe: an actual human opportunity.
+
 ## 1. Product definition
 
-Again is a calm, private-first social app for recording things a person wants
-to do, try, experience, learn, visit, or buy.
+Again is a calm, private-first product for recording things a person wants to
+do, try, experience, learn, visit, or buy -- and making a trusted overlap useful
+in the real world.
 
 The core loop is:
 
-> capture an intention → optionally resolve it to a possibility → discover
-> meaningful overlap with people → notice relevant possibilities nearby
+> capture an intention → form a reciprocal trusted connection → discover an
+> exact meaningful overlap → take an intentional next step together
 
-The app is not primarily a search engine, catalogue, recommendation feed, or
-marketplace. The user already has an intention. Catalogue results make capture
-faster and make overlap possible; they do not define what the user is allowed to
-record.
+Optional resolution makes capture faster and exact matching more likely. It does
+not decide what a person may record. Catalogue, local discovery, and stranger
+matching are possible later products; none defines Release 1.
 
-The social value comes from four progressively stronger loops:
-
-1. **Friend convergence:** people who mutually track each other have the same
-   explicit intention.
-2. **In-person exchange:** two people who meet can deliberately add each other
-   as mutual tracks or transfer selected intentions.
-3. **Location-aware discovery:** the user sees possibilities available near
-   them, including a subset connected to their own list.
-4. **Distal matching:** consenting strangers discover explainable overlap in
-   their lists.
-
-The first loop must work before the later three are treated as successful.
+The app is not primarily a search engine, catalogue, recommendation feed,
+marketplace, chat app, calendar, or public social network. It is a private
+possibility record with a social action layer.
 
 ### Release boundary
 
 This is a staged product plan, not one undifferentiated implementation.
 
-**Release 1 is the commitment:** free-form capture, optional resolution,
-private-by-default personal records, exact convergence between mutual tracks,
-and an optional QR/code contact handshake for people who meet. It ends at
-Phase 2.
+**Release 1 is the commitment:** free-form capture, optional resolution, a
+durable personal record, reciprocal connections between known people, exact and
+explained convergence, understandable matching controls, a one-tap external
+action after convergence, and limited earned service notifications for requests
+and convergences.
 
-The contributed catalogue, local discovery, and distal matching are later
-releases. They must not delay Release 1 or be represented as already available
-to users.
+Release 1 does **not** include a global browse rail, opening counts, generic
+recommendation, complete catalogue claims, local discovery, list transfer,
+public people discovery, or stranger matching. The contributed catalogue, local
+opportunity, and distal matching remain separate launch decisions and must not
+delay or be represented as available in Release 1.
 
 ## 2. Product principles
 
@@ -627,12 +678,11 @@ There are no likes, comments, follower counts, public activity feeds, scores,
 streaks, or engagement loops. Social information appears when it is relevant to
 an intention.
 
-⚠ **Narrowed 6 September — see Amendment 7, and this is the only exception.**
-A tile in the rail shows **how many times that possibility has been opened**. It
-is about a world record and never about a person, a capture, a track or a
-notification; it is **never a sort key**; and §5's *the portal is never given a
-count* is untouched. **The day it orders a rail it is a trending feed and this
-principle has been broken.**
+**Amended 11 September — Amendment 10.** Release 1 has no opening count or
+other popularity proxy. A number of openings does not explain an opportunity or
+help a person decide what to do next, and it creates pressure toward the feed
+behaviour this principle excludes. Any later discovery signal must be useful,
+explained, and never become a person-level engagement metric.
 
 ### No marketplace behaviour
 
@@ -781,6 +831,22 @@ product must provide these surfaces.
 
 ### Home / Capture
 
+**Amended 11 September — Amendment 10.** Release 1 Home is writing-first. It
+contains a prominent free-form composer, optional non-gating suggestions, an
+unambiguous confirmation that a capture landed, an obvious route to the durable
+record, and a quiet indication of a newly arrived request or convergence.
+
+It does **not** render a global corpus, random browse rail, image-only tile,
+opening count, or popularity signal. A discovery surface is deferred until every
+item can carry one of the three admissible explanations in
+`consumer-product-strategy.md` §5 — the person's own record, a sourced current
+local opportunity, or the trusted-relationship layer. Capture and the record
+must remain useful when there is no discovery supply at all.
+
+The paragraphs below preserve the design work from Amendments 5–9. They are not
+Release 1 requirements where they describe the browse half, image-only tiles,
+or opening counts; Amendment 10 governs those decisions.
+
 ⚠ **Amended 5 September — see Amendment 5.** The primary screen is **two
 halves**: the corpus above, a composer below. It contains:
 
@@ -804,7 +870,7 @@ assume an image.** §3 specifies seven; the catalogue serves posters for one of
 them, and a user-contributed experience or an article has none. The container is
 text-first with the image as enrichment, **one height whatever is in it**,
 carrying §7's confidence states only when they are not the default. The design
-is `docs/re-direction/the-front-page.md`.
+is `docs/re-direction/inactive/the-front-page.md`.
 
 ⚠ **Amended 6 September — see Amendment 6. The container branches on nothing.**
 Title, a qualifier the possibility carries, and an image if there is one. One
@@ -1195,14 +1261,29 @@ treated as the same possibility merely because they are semantically related.
 case-folding and punctuation-stripping, by the one rule in `lib/db/schema.ts`
 that search already uses.
 
+An unresolved text match must be worded as agreement in what the two people
+wrote, not certainty about an external thing. A resolved possibility may name
+the possibility. This distinction is how the app stays useful without claiming
+that two ambiguous phrases mean the same real-world plan.
+
 Existing overlap logic should remain the single owner of classification and
 notification writing. The code must support both triggers:
 
 - a new or changed capture
 - a transition into mutual tracking
 
-Notifications should initially be in-app. Push delivery remains a background
-worker concern and must not run inside the capture mutation or undo window.
+Every newly surfaced convergence must offer a respectful next action that
+bridges into the user's normal communication channel: for example, sharing a
+pre-filled invitation mentioning the common possibility. It must be explicit,
+one-to-one, and initiated by the user. It does not create an in-app conversation,
+calendar event, RSVP, or payment flow.
+
+Convergences are first written in-app. Release 1 also provides an earned,
+opt-in push/service-notification delivery path for a new convergence. Delivery
+runs through a background worker and never inside the capture mutation or undo
+window. It may notify only about a new mutual convergence or a direct contact
+request; generic re-engagement, digests, streaks, and reminders to open the app
+remain prohibited.
 
 ### Visibility
 
@@ -1227,6 +1308,16 @@ a change to what may *match*, never to what may be *read*. The data layer still
 enforces it. And **a capture whose provenance is another person stays private**:
 a received list is not an independent common intention, so a copy or a transfer
 is shareable only by a deliberate act.
+
+**Amended 11 September — Amendment 10.** Mutuality is the technical consent
+boundary, but a hidden lock gesture is not sufficient consumer explanation.
+Before a connection becomes mutual, each person must be told that independently
+written captures can create one-line overlaps with that person; no full record
+is exposed. The current matching state and the control to withdraw one capture
+from matching must be visible from the normal record/detail experience as well
+as available through any shortcut gesture. A person can also remove the
+connection, and future safety work adds block/report without changing ownership
+of their own captures.
 
 Required default:
 
@@ -1523,12 +1614,28 @@ The first ranking pass should use explicit evidence from the user's list:
 4. freshness and confidence
 5. distance and time relevance
 
-The result should explain itself:
+The result should explain itself, in one of three admissible shapes:
 
 > Because you saved “try pottery”.
 
+> Available near you this week.
+
+> Three things you and Maya could do.
+
 Inferred taste, embeddings, and opaque recommendation models are not required
 for the first release.
+
+⚠ **Amended 11 September — Amendment 10.** The third shape comes from the
+trusted-relationship layer rather than from the viewer's own history or a
+location feed, and it is the one this product is uniquely able to say. It is
+recorded here so that a later discovery surface is not built able to explain
+itself only two ways. ⚠⚠ **IT MAY RESTATE ONLY OVERLAPS BOTH PEOPLE HAVE
+ALREADY BEEN TOLD ABOUT.** A pair reason computed from the counterpart's
+unconverged captures is the banned form — *three of your friends want this*
+discloses what somebody else wrote, to somebody who was never told — and no
+ranking exemption reaches it, because §2's rule is that similarity proposes to
+the person who wrote the line and never speaks to anybody else. The safe form
+restates a disclosure that has already happened and adds none.
 
 ⚠ **Reaffirmed 6 September — see Amendment 8.** The first three terms above are
 **joins on records the app already holds** and need no semantic parsing.
@@ -1660,11 +1767,25 @@ Each phase must be deployed and verified before the next phase begins.
 Phases 0 through 2 are Release 1. Phases 3 through 6 are separate launch
 decisions, each gated by the evidence and operating requirements in that phase.
 
+**Amended 11 September — Amendment 10.** The presence of Phase 1 or Phase 2
+code is not evidence that Release 1 has proven its consumer promise. Before a
+trusted-group beta is accepted, it must add and test:
+
+- clear matching consent and a discoverable individual matching control;
+- a post-convergence external action;
+- limited, earned background delivery for requests and convergences; and
+- a real-user beta in one named high-density community, evaluated by meaningful
+  overlap-to-conversation or plan outcomes rather than attention metrics.
+
+The global browse work described in the front-page amendments is deferred from
+Release 1. Phases 3 onward remain later launch decisions; no later phase starts
+because a visual discovery surface happens to be available.
+
 ### Phase 0 — product and data migration
 
 ⚠ **Status: done, deployed and verified — 22 August, `origin/main` at
 `33ff151`.** The runbook and its record are
-`docs/re-direction/phase-0-production-migration.md`.
+`docs/re-direction/inactive/phase-0-production-migration.md`.
 
 Deliver:
 
@@ -2034,6 +2155,12 @@ Exit criteria:
 - A copied capture does not notify its source user.
 - Mutual tracking after both captures already exist triggers the match.
 - Untracking removes future visibility without generating a loss notification.
+- An unresolved text match says only that both people wrote the same words; it
+  does not claim an ambiguous external possibility.
+- A convergence exposes an explicit user-initiated external action and never
+  sends a message on the user's behalf.
+- Push permission is requested only after its value is clear; delivery can carry
+  a new request or convergence but never a generic re-engagement prompt.
 
 ### Proximity transfer
 
@@ -2077,6 +2204,8 @@ Exit criteria:
 - Images have useful alternative text or are marked decorative correctly.
 - Reduced motion, zoom, large text, and touch target requirements remain
   satisfied.
+- Matching consent and the individual lock are understandable and usable without
+  discovering a swipe gesture.
 
 ### Engineering quality
 

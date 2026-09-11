@@ -172,12 +172,16 @@ describe('the mark (Phase 2 step 4)', () => {
     expect(bo?.converged).toBe(true)
   })
 
-  it('an unresolved capture is not marked, and neither is a resolved one nobody shares', async () => {
+  it('a line nobody else wrote is not marked, resolved or not', async () => {
     /*
-      Two people can only converge on a *possibility* (§13), so a raw capture
-      having no mark is the truth rather than a case the read misses. The second
-      is the one that proves the join is doing work: it has a possibility, and
-      nobody else has written it down.
+      ⚠ **This case used to read *an unresolved capture is not marked*, and its
+      reason — *two people can only converge on a possibility (§13)* — stopped
+      being true at Amendment 4.** An unresolved line converges on its words and
+      is marked exactly as much as a resolved one; `tests/words.test.ts` proves
+      that half. What survives here is the weaker and still-necessary claim:
+      **a line nobody else has written is marked either way.** The first has no
+      possibility and no twin; the second has a possibility and no twin, which
+      is what proves the join is doing work rather than the null doing it.
     */
     await capture(adaId, null, 'ada wrote something raw')
     await capture(adaId, settledFilmId, 'ada alone on the settled film')

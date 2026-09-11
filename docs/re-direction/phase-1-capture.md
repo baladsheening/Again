@@ -1,5 +1,10 @@
 # Phase 1 — capture: the design
 
+Status: historical capture implementation register. Its device and interaction
+findings remain useful, but it does not define the current Release 1 scope. The
+active product tiebreaker is `consumer-product-strategy.md`, implemented through
+Amendment 10 to `implementation-spec.md`.
+
 Schema-free. This document decides what the landing screen is, what capturing
 does, and what the words are. No migration is written here and no column is
 added; the point of doing it first is that the migration which follows is a
@@ -1410,7 +1415,7 @@ it is wrong about the record**: every rule below still governs the record, on th
 route it moves to. What changes is which screen you land on. ⚠ **The record may
 never be more than one tap away** — the app is still record-first, and that glyph
 is the whole of what pays for the move. The design is
-`docs/re-direction/the-front-page.md`; §5 of the specification is normative.
+`docs/re-direction/inactive/the-front-page.md`; §5 of the specification is normative.
 
 **The landing screen is a blank page you type down.** Not a capture field
 pinned above a list — the page itself is the record, empty on first run and

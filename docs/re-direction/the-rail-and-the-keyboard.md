@@ -1,5 +1,9 @@
 # The rail and the keyboard — a failed session, recorded
 
+Status: historical, reverted interaction experiment. Its device findings may be
+reused only if a future, actionably explained discovery surface is approved.
+Amendment 10 defers the rail from Release 1.
+
 **6 September 2026.** Everything below was built, deployed and then **reverted to
 `1e7e329`** at the user's direction. Production and the working tree are back to
 where this session started. **Nothing here is in the software.**

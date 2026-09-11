@@ -22,7 +22,7 @@ import { viewerTimeZone } from '@/lib/region'
  * **Amendment 5**: the front page becomes the corpus above a composer, and the
  * record moves here behind a glyph in the foot. ⚠ **Nothing about the record
  * itself changed** — same read, same seed, same fifty-plus-one, same stamps,
- * same portal bit. See `docs/re-direction/the-front-page.md`.
+ * same portal bit. See `docs/re-direction/inactive/the-front-page.md`.
  *
  * ⚠ **§5 has always specified *Home / Capture* and *My things* as two
  * surfaces.** Phase 1 collapsed them because the record was the only screen

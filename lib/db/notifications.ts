@@ -5,7 +5,14 @@ import type { CaptureStatus, CaptureVerdict } from '@/lib/domain'
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 
 import { db } from './client'
-import { captures, notifications, possibilities, profiles, tracks } from './schema'
+import {
+  captures,
+  notificationMatchesCapture,
+  notifications,
+  possibilities,
+  profiles,
+  tracks,
+} from './schema'
 import type { SessionUser } from './session'
 import type { PageLine } from './captures'
 import { portalSentence } from '@/lib/overlap'
@@ -144,10 +151,7 @@ export async function listMyPortal(
     */
     .innerJoin(
       captures,
-      and(
-        eq(captures.userId, sessionUser.id),
-        sql`${captures.possibilityId}::text = ${notifications.payload} ->> 'itemId'`,
-      ),
+      and(eq(captures.userId, sessionUser.id), notificationMatchesCapture()),
     )
     .leftJoin(possibilities, eq(possibilities.id, captures.possibilityId))
     .where(and(eq(notifications.userId, sessionUser.id), isNull(notifications.readAt)))
@@ -298,7 +302,7 @@ export async function getConvergence(
       and(
         eq(captures.id, captureId),
         eq(captures.userId, sessionUser.id),
-        sql`${captures.possibilityId}::text = ${notifications.payload} ->> 'itemId'`,
+        notificationMatchesCapture(),
       ),
     )
     .where(eq(notifications.userId, sessionUser.id))

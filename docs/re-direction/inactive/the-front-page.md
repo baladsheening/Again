@@ -1,9 +1,9 @@
 # The front page — browse above, compose below
 
-Status: design brief, 5 September 2026. **It is meant to die.** Delete or strike
-each section as it is built, and move this file to `docs/re-direction/inactive/`
-when the front page is done. A design document that outlives its build reads as
-current and is not.
+Status: superseded front-page exploration. It remains for reusable interaction
+and device findings, but Amendment 10 defers its global rail, image-only tiles,
+and opening count from Release 1. The active product tiebreaker is
+`consumer-product-strategy.md`.
 
 Normative: **Amendment 5** to `docs/re-direction/implementation-spec.md`, §5
 *Home / Capture* and *My things*. Where this brief and the specification

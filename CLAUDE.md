@@ -22,7 +22,65 @@ specification. The re-direction specification is the complete brief for future
 product work. Where both are silent, prefer the simplest thing that works and
 flag the decision rather than inventing scope.
 
-## Where the build stands — 31 August
+## The direction — 11 September
+
+⚠⚠ **THE PRODUCT IS A POSSIBILITY NETWORK, NOT A PRIVATE CAPTURE APP WITH A
+SOCIAL FEATURE.** An outside read of the plan said the build was *a better
+private capture product than a social/networking product*, and it was right.
+**The central weakness named: a convergence produces a notification, not an
+opportunity.** The read is kept verbatim, with nine amendments, at
+`docs/re-direction/view.md`.
+
+⚠⚠ **`docs/re-direction/product-truth.md` IS ONE PAGE AND WINS OVER EVERY
+OTHER DOCUMENT IN THIS REPOSITORY, THIS FILE INCLUDED.** Read it first.
+`consumer-product-strategy.md` is its long form and the consumer tiebreaker;
+**Amendment 10** is the translation into the specification;
+`current-code-audit.md` is the comparison with the tree in four buckets —
+aligned, premature, missing, contradictory. ⚠ **The superseded briefs moved to
+`docs/re-direction/inactive/` on 11 September**, the front page's among them:
+a document in an active folder gets opened.
+
+> Again turns the private things I want to do into real-world opportunities when
+> someone I trust wants the same thing.
+
+- ⚠⚠ **THREE THINGS BLOCK RELEASE 1 AND NONE OF THEM IS A SCREEN THAT LOOKS
+  WRONG**, in the order they should be closed: **the matching consent and a
+  findable lock**; **an external action after a convergence** — there is no
+  `mailto:`, `sms:` or `navigator.share` anywhere in the tree; and **earned
+  push**, with no service worker in `public/`. ⚠ **The fourth was convergence
+  on wording and it is BUILT — 11 September**, see the entry below.
+  `docs/re-direction/current-code-audit.md` is the comparison in full.
+- ⚠ **The worker is the gate on the other three.** Push needs one, and so does
+  the LLM canonicalisation that would let *learn to sail* and *sailing lessons*
+  converge — one piece of infrastructure, two blockers. **Costed 11 September:
+  the embedding and model spend for a whole beta is under ten dollars; the
+  worker is what is actually missing.** Canonicalisation happens at CAPTURE
+  time so matching stays an exact join — ⚠ **never a cosine threshold at match
+  time**, which is a tuned number deciding a social claim about a third party,
+  and never transitive.
+- ⚠⚠ **THE BROWSE RAIL AND THE OPENING COUNT ARE OUT OF RELEASE 1 — Amendment
+  10 — AND THE ENTRIES BELOW THIS ONE PREDATE THAT.** The rail's rules from 6
+  September are historically accurate and are **not Release 1 requirements**;
+  the rail was already off Home from 7 September, and `listRail`,
+  `image_path`, `open_count` and `items_rail_idx` are dormant. ⚠ **Do not
+  delete them** — the discovery question is deferred, not answered.
+- ⚠ **Discovery returns only when every item can carry one of three
+  explanations**: the person's own record, a sourced current local opportunity,
+  or the trusted-relationship layer. ⚠⚠ **The third may restate ONLY overlaps
+  both people have already been told about** — computed from the other person's
+  unconverged captures it is *three of your friends want this*, which discloses
+  what somebody else wrote to somebody who was never told.
+- ⚠ **The loop is never paywalled** — capture, the record, adding a person,
+  convergence and the action after it, free permanently. A priced connection is
+  a connection that does not get made, and density is what this product is short
+  of. Funding is `consumer-product-strategy.md` §9; the research mission's
+  publication conditions are §10, and **revenue rather than profit**, because a
+  share of profit is not verifiable from outside.
+- ⚠ **Success is an offline consequence.** Opens, notification clears and time
+  spent are not measures. Craft still matters, and **no visual experiment
+  outranks proving the capture-to-real-world-action loop with real people.**
+
+## Where the build stands — 1 September
 
 ⚠⚠ **`black-translucent` IS GONE, AND WITH IT THE 46px THE INSTALLED APP HAS
 BEEN THROWING AWAY SINCE IT WAS INSTALLABLE — 8 September.** Reported: *the strip
@@ -430,7 +488,7 @@ it is not one.**
   §7 already requires provenance and attribution so the spirit is compatible —
   **but it is a decision to take before ingesting, not a free lunch.**
 - **Nothing is built by this entry.** Amendment 9; §3's *Occurrence* and §4 of
-  `docs/re-direction/the-front-page.md` carry it.
+  `docs/re-direction/inactive/the-front-page.md` carry it.
 
 ⚠⚠ **THE RAIL IS GLOBAL BY DEFAULT AND LOCATION IS A CONSTRAINT ON IT — 6
 September, directed, Amendment 8. THE COORDINATES AND THE EXPLANATION SLOT ARE
@@ -688,7 +746,7 @@ book, an object, a house, a car, even an ambition, and optionally the reason.*
   boat in Greece* is not, and matching on the reason would make convergence
   **rarer the more carefully somebody wrote**. Named, unscheduled.
 - **Nothing is built by this entry.** It is Amendment 6 to the implementation
-  specification, §3 rule 4 and §8 item 0 of `docs/re-direction/the-front-page.md`.
+  specification, §3 rule 4 and §8 item 0 of `docs/re-direction/inactive/the-front-page.md`.
 
 ⚠⚠ **A CAPTURE STOPS BEING A DRAFT AND BECOMES A STATEMENT, IN PLACE — directed
 5 September, and it DELETES THE RECEIPT ABOVE THE COMPOSER.** *When writing, text
@@ -877,7 +935,7 @@ scrolling in the composer.* The field asks itself on every keystroke and refuses
 the one that would not fit. **Deleted with the scroll: the roll-under,
 `roll-mark`, `composer-bar` and `readRoll`**; the field is `overflow-y-hidden`
 and there is a tombstone in `globals.css`. The account is §10 of
-`docs/re-direction/the-front-page.md`.
+`docs/re-direction/inactive/the-front-page.md`.
 
 - ⚠⚠ **THE CAP IS MEASURED AND MUST NEVER BECOME A NUMBER.** *"The number of
   characters that fit"* is not one — measured on the live page it is **73 in
@@ -1248,90 +1306,6 @@ is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
   undecided.** ⚠ **Blocking is also still open**, and it is named rather than
   quietly deferred.
 
-⚠⚠ **A CAPTURE IS SHAREABLE WHEN IT IS WRITTEN, AND THE SWIPE IS THE LOCK — 31
-August, directed. This overrules the specification's private-by-default and it
-was directed with that stated.** Until this, **the entire social half of the
-product was inert**: `captures.visibility` defaulted to `private`, `runOverlap`
-requires `SHARED_SCOPES`, and **nothing anywhere called
-`setCaptureVisibility`** — the scope existed, *share visibility* was a named
-Phase 2 deliverable in §13 of the implementation specification, and the control
-was never built. Production on 31 August: **79 captures, all private, 0
-notifications, 0 tracks.** The engine, the portal and the mark were all correct
-and all downstream of a gate that was shut.
-
-- ⚠ **The argument that won is the four-second capture.** A per-capture share act
-  is a beat *after* the capture, one you have to remember to come back for, and
-  its failure is **silent** — you never converge with anybody and never learn
-  why. **The consent is the mutual track**, which is deliberate, two-directional
-  and given by handle to somebody you chose. What a convergence discloses is one
-  overlap on one possibility, to one such person.
-- ⚠ **It is NOT a change to who can read a record.** `listCapturesForOtherUser`
-  keeps all four of its terms. Browsing still needs sharing; only *matching*
-  moved.
-- ⚠⚠ **A CAPTURE THAT CAME FROM SOMEBODY ELSE STAYS PRIVATE**, and that is now a
-  guarantee rather than a leftover default — `tests/guarantees.test.ts` names it.
-  Same reasoning as §6's suppression rule: **a received list is not an
-  independent common intention.** If a copy is not independent enough to notify
-  the person it was taken from, it is not independent enough to be republished to
-  *my* mutuals without my touching it. `writeCapture` branches on
-  `provenance.source`.
-- ⚠ **The revive path does not touch the scope.** A crossed-off capture written
-  again keeps whatever its owner last chose; re-sharing on revive would be a
-  control changing under somebody who did not touch it.
-- ⚠⚠ **THE SWIPE CARRIES THE LOCK AND CROSSING OFF IS THE CONSOLE'S — directed,
-  and it reverses `row-swipe.ts`'s own founding argument.** That file said the
-  swipe belonged to cross off because it was *the verb used fifty times a week*.
-  **That was an assumption about usage and it was wrong** — told by the person
-  using the app daily that lines are rarely crossed off. The rule did not change;
-  the frequencies did, and the gesture followed them. **`SwipeWay` is
-  `'lock' | 'unlock'`, the signs and the detent are untouched**, because the
-  mechanism was always right and the verb was not.
-- ⚠ **Lock fits the hook better than cross off did.** Cross off and restore share
-  one gesture between two *states of the record*; lock and unlock are one
-  property with two values. Away from the reader is out of the pool, back is in —
-  the same physical metaphor, fitting more exactly than before.
-- ⚠⚠ **THE PADLOCK IS NOT DECORATION AND MUST NOT BE REMOVED.** It was going to
-  show nothing, on the reasoning that locking is rare and an invisible state
-  fails safe. **That died the moment locking became the row's own gesture**:
-  crossing off confirmed itself by striking the line, iOS has no Vibration API,
-  and a swipe whose outcome is invisible is confirmed by nothing at all. It is in
-  the row's **tail** and not the gutter — `--color-accent` and that column belong
-  to the convergence mark, one thing per column — so it costs width on locked
-  lines only.
-- ⚠ **A padlock is right as a STATE and would have been wrong as a control
-  label.** On a button it says *security*; this is scope, and nothing about a
-  lock stops anybody reading a record they can already reach. As a mark on a line
-  it is the known icon for *held back*, which is what §11 permits known icons
-  for. It is the eleventh glyph on the one grid, drawn shorter than the rest
-  because it rides a line rather than standing in a bar.
-- ⚠ **No fourth haptic.** Locking borrows the crossed-off thud, unlocking borrows
-  the capture's tap — the precedent `lib/haptics.ts` already set for putting a
-  line back.
-- ⚠ **Unlocking is a fan-out trigger and locking is not.** `setCaptureVisibility`
-  runs overlap on the private→shared transition only, so **a line locked in March
-  converges the day it comes back**, and the same swipe twice writes nothing
-  twice. ⚠ **A line that already converged keeps its mark after it is locked** —
-  the mark is memory, the event happened, and a notification already sent cannot
-  be recalled.
-- ⚠ **`shared` is derived from `SHARED_SCOPES`, never compared to `'private'`.**
-  The question is *can this converge*, which is the same predicate `runOverlap`
-  applies; `= 'private'` would be a second definition, right today and wrong the
-  day a third scope exists. One expression, three reads — the page, the tray and
-  search — so the padlock travels with the line.
-- ⚠ **The action takes a boolean and names the scope itself.** A `Visibility` at
-  that boundary would let a client pick one, and the day a third exists that is a
-  way to publish a capture from a request body.
-- **Measured by `node_modules/.probe/swipe.mjs`** — rewritten for the lock, and
-  every mechanism assertion is the one it always was. It asserts the padlock is
-  **drawn** on the swipe, that crossing off does not touch the scope, and that
-  the console's × is the only door to crossing off. `tests/mark.test.ts` proves
-  the data half, including the case this design now leans on: **a crossed-off
-  line converges with nobody**, which falls out of `classify` being an allowlist
-  of three pairs and had never been asserted before.
-- ⚠ **Production's existing 79 captures were backfilled to `mutuals`** — a
-  default only touches new rows, so without it the record would have stayed
-  inert. Directed. Nothing else was touched, and no schema changed.
-
 **Phase 0 is done, deployed and verified.**
 
 **Phase 1 is built, deployed and in daily use on a handset.** `/` is the capture
@@ -1360,142 +1334,42 @@ the file to `docs/re-direction/inactive/` when the phase is done. A design
 document that outlives its build reads as current and is not — the same failure
 as a register that records what state production is in.
 
-⚠ **Phase 2 step 4 is built — THE MARK, 31 August, and the sequence is
-complete.** *The portal is arrival; the mark is memory.* A convergence can land
-on a line hundreds back, and once the portal has emptied **the record now says it
-happened**: a bar in the gutter, `--color-accent`, on every line that has ever
-converged. §11 reserved that colour and that column for this since 23 August and
-it is spent on it at last — `--color-accent` is used by exactly one thing.
-
-- ⚠⚠ **THE READ HAS NO `read_at` TERM, AND THAT ABSENCE IS THE MARK.**
-  `listMyPortal` filters unread because the portal empties; `converged` in
-  `lib/db/captures.ts` does not, because the mark is what is left when it has.
-  **Adding an unread filter there deletes the only durable record that a
-  convergence ever happened** — it is asserted in `tests/mark.test.ts` in the one
-  case named for it, and from the screen by `node_modules/.probe/mark.mjs`.
-- ⚠ **A BIT rides the record; the SENTENCE is a read behind the tap.** One
-  `exists` per line on the page's own query — the screen whose whole promise is
-  that Return lands in under a frame — and `getConvergence` for the one line
-  somebody opened. ⚠ **The bit gates the read**, so a record with no convergences
-  in it issues nothing on any tap. The portal action's own note says why the rows
-  do not ride the page; this is the same argument answered the other way, because
-  a mark has no *until they ask*.
-- ⚠ **The sentence lands in the slot `console.tsx` was built leaving.** Its
-  docblock predicted it in writing — *when who else arrives it has to arrive into
-  a space that is already there, never a spinner over the whole box.* It sits
-  directly under the words and above the day stamp. `portalSentence` is still its
-  one author, so the portal's row and the console's line cannot say one event two
-  ways.
-- ⚠ **The portal's console is handed `null` deliberately.** The portal draws the
-  sentence above the box already; the mark answers *why is this line special* on
-  a record where nothing else does, and in the portal everything else does.
-- ⚠ **A colour in a gutter is invisible to a reader, so the row says it.** The
-  record's row carries *Also on someone else's page.* in its `aria-label`; the
-  tray and search carry it as hidden text, because neither has a control to hang
-  a label on. **It names nobody** — the record knows *whether*, the console knows
-  *who* — and inventing a second sentence beside `portalSentence` is the drift §6
-  warns about.
-- ⚠ **One expression, three reads.** The page, the tray and search all select it,
-  so a settled or crossed-off line keeps its mark: **a resolution is not an
-  erasure**, and nothing about `state` is in that read.
-- ⚠ **It is on the ROW, so it travels with a swipe** — a mark that stayed put
-  while its line slid away would be marking whatever was underneath.
-- ⚠ **`--mark-width` is `2.5px`, like `--caret-width`, so the mark is the same
-  hairline on the desk as on the handset** while everything around it is
-  four-thirds the size. That is the caret's own rule inherited, it is **not** one
-  of the four exceptions the desk's scale names, and it has not been looked at on
-  a real desk. If it reads thin up there, that token is the thing to move — and
-  the caret moves with it.
-- **Measured: 6.77:1 on the desk's `#14140f`, 7.70:1 on the handset's true
-  black**, past the 3:1 WCAG 1.4.11 asks of a graphical object on both. The brief
-  asked for the re-measurement against the charcoal before shipping; it needed no
-  change. ⚠ **`mark.mjs` asserts the mark is `--color-accent` and NOT
-  `--color-chrome`** — the colour it wore for the eight days it was a pick — and
-  that no unconverged line draws anything at all.
-
-⚠ **Phase 2 step 3 is built — THE PORTAL, 30 August, and the engine finally has
-a reader.** For a week `lib/overlap.ts` has been deployed, running, and writing
-`notifications` rows that **no surface in the tree read**. One does now, and the
-fan-out is proved end to end with two accounts for the first time —
-`tests/portal.test.ts`, five cases including the suppression rule seen from a
-surface at last.
-
-- ⚠⚠ **THE DOOR IS IN THE BOTTOM BAR AND THAT IS AGAINST §2 OF THE BRIEF —
-  directed.** §2 reads: *the bottom edge is for what you do without looking, the
-  top edge is for what you go to on purpose… which is why the notification portal
-  goes at the top: it must never be given a reflex's real estate.* **The
-  direction was given with that stated and it stands; the law is not amended and
-  this is not a precedent.** The cost is written beside the control in
-  `foot.tsx`: the portal now sits next to the one control this app has to be
-  perfect at. ⚠ **If the `+` is ever mis-hit, this is the first suspect, and the
-  answer is the top edge — not a bigger gap.** It cost no layout: the foot's grid
-  has been three columns since settle left, so the `+` holds the centre by
-  construction and column one was empty.
-- ⚠ **A list of LINES, not events, and it is enforced in the READ.** `listMyPortal`
-  joins each notification to *the viewer's own capture for the same possibility*
-  and groups by that capture — so two people converging on one line is **one row
-  naming both**. ⚠ **The join is `payload->>'itemId'`, because a notification
-  carries no capture id and cannot**: a match is about a possibility, and the
-  viewer's own capture is found at read time. Every payload written before the
-  portal existed works unchanged.
-- ⚠ **`eq(captures.userId, …)` in that join is the privacy term.** A notification
-  names a counterpart; it must never be a door to the counterpart's row. Both
-  sides get their own notification, so each person's portal is built entirely out
-  of their own captures. Asserted.
-- ⚠ **It empties, and `notifications.read_at` was already in the schema** — so
-  Phase 2's *seen-state needs a column* is closed **with no migration**, and the
-  deferred vocabulary migration is not waiting to be batched with anything.
-- ⚠ **AN EMPTY PORTAL HAS NO DOOR.** Off is the drawing without the door, exactly
-  as search's is — *an empty portal is the resting state* is not a surface to
-  build, it is a surface that cannot be opened. The first version made it a live
-  `<button>` whatever the bit said and a probe caught it.
-- ⚠ **Never a count, and `portal.mjs` asserts the ABSENCE OF DIGITS on the
-  door.** `hasPortalLines` is an `exists` rather than a count for the same
-  reason: a counting function is one refactor from displaying one, and a badge is
-  an engagement metric under another name.
-- ⚠ **The console is handed down as a RENDER PROP.** The portal decides where a
-  console goes; the page decides what it does. Every control on it is the
-  record's own handler acting on the same capture through the same action — a
-  portal that built its own would be a second implementation of every mutation on
-  this screen. ⚠ **`crossedOff` is read off the portal's line and never off
-  `lines`**: the capture may be from March and outside the fifty this page
-  loaded.
-- ⚠ **The portal is the SCRIM'S THIRD OCCUPANT, and it is the only one that keeps
-  the scrim on the desk.** The console suppresses it up there because the record
-  around an expanded row is what a reader wants to keep seeing; the portal is a
-  floating card at every width — it is not a line, so there is no row for it to
-  expand into — and a floating card must sink what is behind it. `dismiss` asks
-  about the portal **first**, because a console inside it is the innermost thing
-  open.
-- ⚠ **`portal-sheet` is `pointer-events: none` with the card taking them back**,
-  which the console already knew and the portal did not inherit. Without it the
-  gutter and the band under a short card swallow the tap meant for the scrim, and
-  the box appears not to close. Found by the probe in one run.
-- ⚠ **Three sentences, not four.** *Sam too.*, *Sam has.*, *Sam wants to.* — and
-  §5's fourth, *Sam has too.*, **cannot fire**: `go_back_to × go_back_to`
-  produces no match at all, because both know. **Do not add the sentence to
-  complete the table** — it is a row in `classify` and a new `NotificationKind`,
-  decided there. `lend` had no row in the table and was given one, flagged in
-  the code the way `notificationCopy`'s unspecified lines are. `portalSentence`
-  lives beside `notificationCopy` in `lib/overlap.ts` deliberately: §6 warns
-  that the payload is what drifts, *because it is what the UI reads*.
-- **Measured by `node_modules/.probe/portal.mjs` on both surfaces**, and proved
-  by `tests/portal.test.ts` against the database — a browser cannot be driven
-  into a convergence quickly, and the two halves are tested where each can be.
-  `scripts/seed-portal.mjs` writes one locally, with the tests' production guard.
-
-⚠ **This paragraph said the engine had no reader and is corrected rather than
-deleted — 30 August.** It was true for a week and it is what the portal above
-answers: `tracks`, `lib/overlap.ts` on both triggers, the suppression rule and
-`notifications` rows written in the same transaction all exist, run, **and are
-now read**. The fan-out is proved end to end with two accounts —
-`tests/portal.test.ts`, and `tests/mark.test.ts` for the mark's side of it.
-**What is still not built:** no QR handshake, no push delivery, and **the words**
-— see below. ⚠ **The convergence mark was in this list until 31 August and is
-built** — see Phase 2 step 4 above.
-
 ⚠⚠ **A CAPTURE CONVERGES ON ITS WORDS — directed 5 September, Amendment 4,
-DOCUMENTED AND NOT YET BUILT.** This paragraph said *overlap joins on
+AND IT IS BUILT AS OF 11 SEPTEMBER.** `tests/words.test.ts` is the account —
+13 cases, and the build notes are at the top of this file under *The direction*.
+**No migration:** `normalised_text` was already a generated, indexed column,
+put there for exactly this. The five pieces: a fourth row in `classify`, a
+second predicate in `findMutualCounterparts`, a `union all` in the pair
+fan-out, `normalisedText` in the payload beside an untouched `itemId`, and
+`notificationMatchesCapture()` — **one fragment now read by all three of the
+mark, the portal and `getConvergence`**, where three literals of the same join
+used to sit in two files.
+
+- ⚠⚠ **THE WORDS PATH REQUIRES `possibility_id is null` ON BOTH SIDES, AND A
+  MUTATION TEST PROVED IT IS LOAD BEARING.** Removing it, a pair that resolved
+  to one possibility *and* typed one string is announced **four times instead of
+  two** — both legs of the union see them, and this module deliberately does not
+  deduplicate.
+- ⚠⚠ **`normalised_text = ''` IS EXCLUDED, AND IT IS NOT A NICETY.** The
+  normaliser strips everything non-alphanumeric, so `???` and `...` both
+  normalise to the empty string — without the guard **every punctuation-only
+  capture in the app would converge with every other one.**
+- ⚠ **An edit is the FOURTH moment**, gated on the *normalised* text changing.
+  `setCaptureText`'s docblock used to say *do not add a `fireOverlap` call
+  here* and gave a reason Amendment 4 falsified word for word. The stated cost:
+  editing away and back announces twice.
+- ⚠ **Either side's intent being null is enough**, not both — the amendment says
+  so in those words, and a both-null gate silently drops a real match. The three
+  intent rules still pick the richer sentence when both sides have one.
+- ⚠ **Each person is told their OWN words** in the payload's `title`; the two
+  normalise alike and may not be spelled alike. `portalSentence` does **not**
+  branch — *Sam too.* either way, because the row already shows the capture.
+  `notificationCopy` does, because it is the standalone register and *both want
+  to see learn to sail* is not English.
+
+This paragraph said *overlap joins on
+`possibility_id`, so only resolved captures converge, and TMDB is the only
+catalogue — today two people can converge on a film and on nothing else.* This paragraph said *overlap joins on
 `possibility_id`, so only resolved captures converge, and TMDB is the only
 catalogue — today two people can converge on a film and on nothing else.* **That
 is the bug, not the design.** Two conditions come out of `lib/overlap.ts`: the
@@ -1510,8 +1384,8 @@ normative statement is Amendment 4 in the implementation specification; §9b of
 holds the costs and the reopen points. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
-⚠⚠ **THE LOG FROM 30 AUGUST BACK IS IN `docs/build-log.md`, AND IT IS PART OF
-THIS FILE — 6 September.** `CLAUDE.md` had reached 182,000 characters against a
+⚠⚠ **THE LOG FROM 31 AUGUST BACK IS IN `docs/build-log.md`, AND IT IS PART OF
+THIS FILE — 6 September, cut again on 11 September.** `CLAUDE.md` had reached 182,000 characters against a
 150,000-character limit, so the harness was **truncating it**: the oldest
 entries were being silently dropped from every session. **A rule that is not
 loaded is not a rule**, so the split is the fix — every word moved is verbatim
@@ -1531,8 +1405,11 @@ archived.
   so a token on `:root` takes the fallback and freezes. Only a notched handset
   can tell.
 - ⚠ **Do not fix a future overflow by deleting entries.** The next cut is
-  another date boundary and another companion file, in the same order this one
-  went: newest stays here, oldest moves out, nothing is paraphrased.
+  another date boundary, in the same order these went: newest stays here, oldest
+  moves out, nothing is paraphrased. ⚠ **The second cut was 11 September**, at
+  the 31 August boundary — *a capture is shareable when it is written*, *the
+  mark*, *the portal* and the engine-had-no-reader correction went across, and
+  **every ⚠ in them still binds from there.**
 
 ⚠ **Read `docs/re-direction/phase-1-capture.md` before touching Phase 1.** Its
 *Build status* section is the register: what is built, what is still to build in
@@ -1756,6 +1633,11 @@ following are still out of scope for Release 1:
   ranking
 - a claim to complete local or worldwide coverage
 - likes, comments, public activity feeds, streaks, or engagement metrics
+- ⚠ **a global or random browse rail, image-only tiles, and the opening count —
+  added 11 September by Amendment 10.** A count of openings is neither social
+  proof nor a decision aid, and it is the engagement metric this list already
+  bans wearing a different word. Discovery returns only with a bounded, sourced,
+  actionably explained reason for every item
 - a forced search or catalogue match before a person can save a capture
 - continuous background location tracking
 - public stranger discovery or distal matching before Phase 6's adult,

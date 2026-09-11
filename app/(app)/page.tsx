@@ -23,7 +23,7 @@ import { imagesAvailable } from '@/lib/media'
  * ⚠ **§5 has always specified *Home / Capture* and *My things* as two
  * surfaces.** Phase 1 collapsed them because the record was the only screen
  * there was. This is not a departure from the specification; it is arriving at
- * it. See `docs/re-direction/the-front-page.md`.
+ * it. See `docs/re-direction/inactive/the-front-page.md`.
  *
  * ⚠ **The browse half is built as of 6 September** — `listRail` and
  * `components/rail.tsx`. The rail is **handed down as a node**, not

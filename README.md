@@ -1,34 +1,31 @@
 # Again
 
-Again is being redirected into a private-first social app for capturing things
-people want to do, try, experience, learn, visit, or buy. People save natural
-language intentions first; catalogue suggestions optionally resolve them to
-shared possibilities. People who meet can deliberately pair as contacts or
-transfer a selected list. Meaningful overlap between mutual tracks comes first,
-with sourced local discovery and opt-in distal matching following later.
+Again is a private possibility record that turns independently held intentions
+into real-world opportunities between people who trust each other. A person can
+save what they want to do, try, experience, learn, visit, or buy in natural
+language; when a mutual contact wants the same thing, Again helps them take the
+next action together.
 
-**Where it stands, 23 August.** Phase 0 — the migration of film entries into
-captures and possibilities — is done, deployed and verified. **Phase 1's capture
-page is deployed and works on a handset**, so `/` is the page rather than the
-poster wall. The target product, release sequence and acceptance criteria live
-in docs/re-direction/implementation-spec.md, whose §13 carries a status marker
-against every Phase 1 deliverable.
-
-⚠ **One acceptance criterion is still unmeasured**: the four-second capture the
-whole design answers to has never been stopwatched, and a desk cannot do it.
-docs/re-direction/phase-1-capture.md, *Build status*, is the register — it also
-records the two decisions the first handset session reversed: the record is
-newest-first, and a line is only as wide as its own words.
+Release 1 is a trusted-group beta: writing-first capture, reciprocal known-person
+connections, exact explained convergence, a respectful post-match action, and
+limited earned service notifications. It deliberately does not launch as a
+global discovery feed, marketplace, public social network, or stranger-matching
+service.
 
 ## Documentation
 
 | | |
 |---|---|
+| [docs/re-direction/product-truth.md](docs/re-direction/product-truth.md) | **One page. The product truth, and it wins over everything else here** |
+| [docs/re-direction/README.md](docs/re-direction/README.md) | **Current documentation map and precedence** |
+| [docs/re-direction/consumer-product-strategy.md](docs/re-direction/consumer-product-strategy.md) | **Active consumer-product direction, USP, Release 1, and launch evidence** |
 | [docs/re-direction/implementation-spec.md](docs/re-direction/implementation-spec.md) | **Normative product and build specification for the re-direction** |
-| [docs/re-direction/product-direction.md](docs/re-direction/product-direction.md) | Original product-direction discussion and rationale |
-| [docs/re-direction/implementation-of-product-implementation.md](docs/re-direction/implementation-of-product-implementation.md) | Supporting product rationale and sequencing |
-| [docs/re-direction/phase-0-production-migration.md](docs/re-direction/phase-0-production-migration.md) | Phase 0's runbook, and the record of it being run |
-| [docs/re-direction/phase-1-capture.md](docs/re-direction/phase-1-capture.md) | **Phase 1: the capture page's design, and what is built of it** |
+| [docs/re-direction/current-code-audit.md](docs/re-direction/current-code-audit.md) | Assessment of the implementation against active Release 1 requirements, in four buckets |
+| [docs/re-direction/view.md](docs/re-direction/view.md) | The outside read that caused the 11 September reset, verbatim, with amendments |
+| [docs/re-direction/inactive/product-direction.md](docs/re-direction/inactive/product-direction.md) | Historical original pivot rationale |
+| [docs/re-direction/inactive/implementation-of-product-implementation.md](docs/re-direction/inactive/implementation-of-product-implementation.md) | Historical product rationale and sequencing |
+| [docs/re-direction/inactive/phase-0-production-migration.md](docs/re-direction/inactive/phase-0-production-migration.md) | Historical migration runbook |
+| [docs/re-direction/phase-1-capture.md](docs/re-direction/phase-1-capture.md) | Historical capture implementation register |
 | [`docs/plan.md`](docs/plan.md) | Historical film-first build record and migration context |
 | [`docs/decisions.md`](docs/decisions.md) | Why things are the way they are, and what is still open |
 | [`docs/spec-sheet.md`](docs/spec-sheet.md) | Legacy film-first screen specification |

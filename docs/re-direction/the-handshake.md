@@ -1,5 +1,10 @@
 # The handshake — adding somebody becomes a request they answer
 
+Status: historical contact-request implementation record. It retains the
+reciprocal-consent and safety reasoning; Amendment 10 supplies the current
+consumer requirement for comprehensible matching consent and a real-world
+post-convergence action.
+
 ⚠⚠ **THIS IS A DESIGN BRIEF, NOT A REGISTER. IT IS MEANT TO DIE.** Same three
 endings as `phase-2-convergence.md`: delete a section when it is built, or strike
 it and mark it built while the rest is open, or move the file to

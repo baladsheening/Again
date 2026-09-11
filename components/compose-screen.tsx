@@ -19,7 +19,7 @@ import type { PortalWaiting } from '@/lib/db'
  * record itself from 23 August to 5 September — a blank page you typed down.
  * The direction: *the front page is a place where people can both lodge a
  * thought as quickly as possible and browse by swiping images of experiences
- * and productions.* See `docs/re-direction/the-front-page.md`.
+ * and productions.* See `docs/re-direction/inactive/the-front-page.md`.
  *
  * ⚠⚠ **THE APP IS STILL RECORD-FIRST, AND THAT IS THE TIEBREAK FOR EVERYTHING
  * ON THIS SCREEN.** *We exist so people can make a record of the things that
@@ -908,7 +908,7 @@ export function ComposeScreen({
 
             ⚠ **So if this reads as *the composer disappeared again*, that is the
             known price and not a regression.** The fix is the browse half, not a
-            ground. See `docs/re-direction/the-front-page.md` §5.
+            ground. See `docs/re-direction/inactive/the-front-page.md` §5.
           */}
           <div
             ref={box}

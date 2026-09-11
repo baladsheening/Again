@@ -1,5 +1,9 @@
 # Phase 0 — production migration
 
+Status: completed migration record. It is retained for data-safety and recovery
+history, not as a source of current product scope. See
+`consumer-product-strategy.md` for active direction.
+
 Status: **run, 22 August. Production is migrated and `origin/main` is at
 `33ff151`.** This document is kept as the record of what was done, in the order
 it was done, and as the shape the next production migration takes.

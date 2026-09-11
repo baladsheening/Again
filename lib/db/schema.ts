@@ -871,6 +871,40 @@ export const pushSubscriptions = pgTable(
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * **Is this notification about this capture?** — the rule, written once.
+ *
+ * Three reads ask it: the mark's `converged` bit on every line of the record,
+ * the portal's join, and `getConvergence` behind a console. ⚠ **They must not
+ * each spell it out.** A notification carries no capture id and cannot — a
+ * match is about a *subject* that two people's captures both point at, so the
+ * viewer's own capture is found at read time — and the day a third subject
+ * exists, three literals of this expression in two files is the drift that
+ * leaves the mark right on one surface and missing on another. Same argument
+ * `normalised()` makes above, applied to a join.
+ *
+ * ⚠⚠ **TWO TERMS SINCE AMENDMENT 4, AND `itemId` IS UNTOUCHED.** A possibility
+ * match carries `itemId`, a words match carries `normalisedText`, and neither
+ * carries both — so every notification written before the words path existed
+ * is still found by the first term, with no migration and no backfill.
+ *
+ * ⚠ **A missing key is `null`, and `null = anything` is not true**, so each
+ * term is self-excluding on rows of the other kind. That is arithmetic rather
+ * than a guard, which is why there is no `payload ? 'itemId'` test here.
+ *
+ * ⚠ **The privacy term is NOT in here.** Every caller adds its own — the mark
+ * correlates `notifications.user_id` to `captures.user_id`, the portal reads
+ * pin both to the session. A notification names a counterpart and must never be
+ * a door to the counterpart's row (§3); leaving that at the call sites keeps it
+ * visible at each one rather than buried in a shared fragment.
+ */
+export function notificationMatchesCapture() {
+  return sql`(
+    ${notifications.payload} ->> 'itemId' = ${captures.possibilityId}::text
+    or ${notifications.payload} ->> 'normalisedText' = ${captures.normalisedText}
+  )`
+}
+
 export type Profile = typeof profiles.$inferSelect
 export type Possibility = typeof possibilities.$inferSelect
 /** @deprecated The legacy name for {@link Possibility}. */

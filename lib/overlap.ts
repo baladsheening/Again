@@ -25,10 +25,24 @@ import { notifications } from '@/lib/db/schema'
  * ignored the scope would notify someone about a list its owner never opened —
  * which is the failure this whole model exists to prevent.
  *
- * ⚠ **Both also require a non-null intention.** `classify` decides on the pair
- * of intents, and a capture that has not been given one cannot be classified.
- * It is excluded in SQL rather than filtered afterwards, so the statement stays
- * one statement.
+ * ⚠ **Both also require a non-null intention *on the possibility path*.**
+ * `classify` decides on the pair of intents, and a resolved capture that has
+ * not been given one cannot be classified. It is excluded in SQL rather than
+ * filtered afterwards, so the statement stays one statement.
+ *
+ * ⚠⚠ **A CAPTURE CONVERGES ON ITS WORDS TOO — Amendment 4, and it is the
+ * second subject rather than a second matching module.** Two captures agree
+ * when they resolve to the same possibility **or** when their `normalised_text`
+ * is identical. Both subjects run through the same `findMutualCounterparts`,
+ * the same `classify`, the same `isSuppressed` and the same `writeNotifications`
+ * — §6's single-owner rule is about the *rules*, and there is still one copy of
+ * every one of them. **Do not add a second matching path for words.**
+ *
+ * ⚠ **The two subjects are mutually exclusive by construction.** The words path
+ * requires `possibility_id is null` on both sides, so a pair that resolved to
+ * the same thing *and* typed the same words matches once, on the possibility.
+ * Without that term the same pair would be notified twice — and this module
+ * deliberately does not deduplicate.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -53,12 +67,27 @@ type Counterpart = {
   userId: string
   handle: string
   displayName: string | null
-  intent: Intent
+  /** Null on the words path, where nothing has been resolved to categorise. */
+  intent: Intent | null
   status: CaptureStatus
   verdict: CaptureVerdict | null
   source: CaptureSource
   sourceUserId: string | null
+  /** Their own words, which is the title their side of a words match carries. */
+  text: string
 }
+
+/**
+ * **What two captures have in common.** A canonical possibility, or the words.
+ *
+ * ⚠ **`title` is per-recipient on the words path and shared on the other.** A
+ * possibility has one name both people see; a words match has no name but the
+ * two people's own lines, which normalise to the same string and may not be
+ * spelled the same. Each side is told its own — see `runOverlap`.
+ */
+export type Subject =
+  | { on: 'possibility'; id: string; title: string }
+  | { on: 'words'; normalised: string; title: string }
 
 /**
  * One set-based statement (§6, Performance). Joins `tracks` to itself for
@@ -68,14 +97,27 @@ type Counterpart = {
  * this is a rewrite rather than an optimisation, which is why it is written
  * this way while the table is empty.
  *
- * Uses `tracks (followed_id, follower_id)` for the reverse leg and
- * `captures (possibility_id, intent, state)` for the lookup — both indexed.
+ * Uses `tracks (followed_id, follower_id)` for the reverse leg and either
+ * `captures (possibility_id, intent, state)` or `captures_normalised_text_idx`
+ * for the lookup — both indexed.
+ *
+ * ⚠ **One statement, two predicates, and the difference is three lines of
+ * SQL.** The possibility path demands a non-null intention because `classify`
+ * needs a pair of them; the words path cannot, because an unresolved capture
+ * has none — that *is* the case it exists for. ⚠ **The words path also demands
+ * `possibility_id is null` on the counterpart**, which is what keeps the two
+ * subjects from both firing on one pair.
  */
 async function findMutualCounterparts(
   tx: Executor,
   userId: string,
-  possibilityId: string,
+  subject: Subject,
 ): Promise<Counterpart[]> {
+  const match =
+    subject.on === 'possibility'
+      ? sql`c.possibility_id = ${subject.id} and c.intent is not null`
+      : sql`c.normalised_text = ${subject.normalised} and c.possibility_id is null`
+
   const rows = await tx.execute(sql`
     select
       c.user_id        as "userId",
@@ -85,16 +127,16 @@ async function findMutualCounterparts(
       c.status         as "status",
       c.verdict        as "verdict",
       c.source         as "source",
-      c.source_user_id as "sourceUserId"
+      c.source_user_id as "sourceUserId",
+      c.text           as "text"
     from tracks outbound
     join tracks inbound
       on inbound.follower_id = outbound.followed_id
      and inbound.followed_id = outbound.follower_id
     join captures c
       on c.user_id = outbound.followed_id
-     and c.possibility_id = ${possibilityId}
+     and ${match}
      and c.visibility in (${sharedScopes})
-     and c.intent is not null
     join profiles p
       on p.id = c.user_id
     where outbound.follower_id = ${userId}
@@ -109,7 +151,13 @@ async function findMutualCounterparts(
 
 type Side = {
   userId: string
-  intent: Intent
+  /**
+   * ⚠ **Nullable since Amendment 4.** An unresolved capture has no intention —
+   * `resolveCapture` is what derives one — so the words path classifies pairs
+   * that have none at all. The three intent rules read `=== 'see'` / `=== 'own'`
+   * and are false for null without a guard, which is why they did not move.
+   */
+  intent: Intent | null
   status: CaptureStatus
   verdict: CaptureVerdict | null
   source: CaptureSource
@@ -189,6 +237,27 @@ const isWantSee = (s: Side) => s.intent === 'see' && s.status === 'active'
 const isGoBackToSee = (s: Side) => s.intent === 'see' && s.verdict === 'again'
 const isFixtureOwn = (s: Side) => s.intent === 'own' && s.verdict === 'have'
 
+const isLive = (s: Side) => s.status === 'active'
+
+/**
+ * **This pair cannot be read off a pair of intentions.**
+ *
+ * ⚠ **EITHER side being null is enough, not both — Amendment 4 says so in those
+ * words**: *where both sides state an intention the existing three pairs pick
+ * the richer sentence, and where either is null it is the plain one.* A capture
+ * with an intention and no resolution is rare but reachable, and the failure
+ * this amendment exists to fix is a match that silently does not happen — so
+ * the fallback has to cover the whole of what the three rules above cannot
+ * answer, not the tidy half of it.
+ *
+ * ⚠ **It cannot fire on the possibility path**, because that query excludes
+ * null intents in SQL before `classify` sees a row. That is what stops
+ * `want·own × want·own` from becoming a match now that a rule exists which does
+ * not name an intention — the exclusion CLAUDE.md §6 argues for as *a plan, not
+ * a coincidence*.
+ */
+const unclassifiable = (u: Side, v: Side) => u.intent === null || v.intent === null
+
 /**
  * Intent must be part of the match (§6). Two people wanting to *see* a film is
  * a plan. One wanting to see it and one wanting to own a disc is not a match at
@@ -244,6 +313,33 @@ export function classify(u: Side, v: Side): Match[] {
     }
   }
 
+  /*
+    ⚠⚠ **THE FOURTH ROW — Amendment 4, and it extends the table rather than
+    loosening it.** Two people who both wrote the same words and neither of whom
+    resolved them to anything: *learn to sail*, *try pottery*, an ambition no
+    catalogue will ever hold. It is `convergence`, the same kind the first row
+    writes, because the event is the same event — see D1 in the build log: the
+    portal already shows the words underneath, so a second sentence would say
+    what the screen says.
+
+    ⚠ **The allowlist property survives, which is the thing that had to.** This
+    is a fourth named pair, not an `else`: a pair that fails it still returns
+    nothing. A crossed-off line converges with nobody, because `isLive` demands
+    `active` exactly as `isWantSee` does — `tests/words.test.ts` names that case
+    and `tests/mark.test.ts` has relied on it since before there was a rule that
+    did not mention an intention.
+
+    ⚠ **Last, and the order is a reading order rather than a precedence.** It
+    cannot collide with the three above: each of those needs BOTH sides to state
+    an intention, and this needs at least one side not to.
+  */
+  if (isLive(u) && isLive(v) && unclassifiable(u, v)) {
+    return [
+      { kind: 'convergence', recipientId: u.userId, counterpartId: v.userId },
+      { kind: 'convergence', recipientId: v.userId, counterpartId: u.userId },
+    ]
+  }
+
   return []
 }
 
@@ -265,7 +361,7 @@ function notificationName(person: Named | undefined): string {
 }
 
 /** A match and the thing it is about. One notification row. */
-type Pending = { match: Match; item: { id: string; title: string } }
+type Pending = { match: Match; subject: Subject }
 
 /**
  * The single writer, and **one INSERT however many matches there are**. Both
@@ -273,10 +369,19 @@ type Pending = { match: Match; item: { id: string; title: string } }
  * row shape is written once — §6's warning about this module drifting applies
  * hardest to the payload, which is what the UI reads.
  *
- * Taking the item per match rather than for the batch is what lets the pair
- * fan-out below stay one statement: it spans many items, and a writer that
- * assumed one would have forced a query per item — the exact per-row shape §6
- * rules out for the fan-out itself.
+ * Taking the subject per match rather than for the batch is what lets the pair
+ * fan-out below stay one statement: it spans many subjects, and a writer that
+ * assumed one would have forced a query per subject — the exact per-row shape
+ * §6 rules out for the fan-out itself. **Amendment 4 leans on it a second
+ * time**: on the words path the title differs between the two recipients.
+ *
+ * ⚠⚠ **`itemId` IS UNCHANGED AND A WORDS MATCH SIMPLY HAS NONE.** Every
+ * notification written before Amendment 4 keeps working, and the three reads
+ * that join on it keep finding those rows — the words rows carry
+ * `normalisedText` instead and are found by a second term. **Do not "tidy"
+ * these into one `matchKey` field**: that rewrites history, and the reads would
+ * then have to migrate every payload ever written to keep the mark on a line
+ * from March.
  */
 async function writeNotifications(
   tx: Executor,
@@ -286,12 +391,14 @@ async function writeNotifications(
   if (pending.length === 0) return []
 
   await tx.insert(notifications).values(
-    pending.map(({ match, item }) => ({
+    pending.map(({ match, subject }) => ({
       userId: match.recipientId,
       kind: match.kind satisfies NotificationKind,
       payload: {
-        itemId: item.id,
-        title: item.title,
+        ...(subject.on === 'possibility'
+          ? { itemId: subject.id }
+          : { normalisedText: subject.normalised }),
+        title: subject.title,
         counterpartId: match.counterpartId,
         counterpartName: notificationName(names.get(match.counterpartId)),
         ...(match.guideHolder ? { guideHolder: true } : {}),
@@ -314,16 +421,34 @@ async function writeNotifications(
 export async function runOverlap(
   tx: Executor,
   actor: Side & Named,
-  possibility: { id: string; title: string },
+  subject: Subject,
 ): Promise<Match[]> {
-  const counterparts = await findMutualCounterparts(tx, actor.userId, possibility.id)
+  const counterparts = await findMutualCounterparts(tx, actor.userId, subject)
 
   const names = new Map<string, Named>([[actor.userId, actor]])
   for (const c of counterparts) names.set(c.userId, c)
 
   return writeNotifications(
     tx,
-    counterparts.flatMap((v) => classify(actor, v).map((match) => ({ match, item: possibility }))),
+    counterparts.flatMap((v) =>
+      classify(actor, v).map((match) => ({
+        match,
+        /*
+          ⚠ **Each person is told their own words.** `subject.title` is the
+          actor's line; the counterpart's notification carries theirs. The two
+          normalise to the same string and may differ in case and punctuation,
+          and a standalone line that quoted somebody else's spelling of your own
+          capture back at you reads as the app quoting them — see D2.
+
+          On the possibility path there is one title and both sides get it, so
+          this is a no-op there.
+        */
+        subject:
+          subject.on === 'words' && match.recipientId === v.userId
+            ? { ...subject, title: v.text }
+            : subject,
+      })),
+    ),
     names,
   )
 }
@@ -333,18 +458,30 @@ export async function runOverlap(
 /* -------------------------------------------------------------------------- */
 
 type PairRow = {
-  itemId: string
-  title: string
-  aIntent: Intent
+  /** Null on a words row, where there is no canonical thing. */
+  itemId: string | null
+  /** Null on a possibility row. */
+  normalisedText: string | null
+  /** The possibility's name, or each side's own words. */
+  aTitle: string
+  bTitle: string
+  aIntent: Intent | null
   aStatus: CaptureStatus
   aVerdict: CaptureVerdict | null
   aSource: CaptureSource
   aSourceUserId: string | null
-  bIntent: Intent
+  bIntent: Intent | null
   bStatus: CaptureStatus
   bVerdict: CaptureVerdict | null
   bSource: CaptureSource
   bSourceUserId: string | null
+}
+
+/** A pair row's subject, from whichever half of the union produced it. */
+function pairSubject(row: PairRow, title: string): Subject {
+  return row.itemId
+    ? { on: 'possibility', id: row.itemId, title }
+    : { on: 'words', normalised: row.normalisedText ?? '', title }
 }
 
 /**
@@ -379,10 +516,24 @@ export async function runOverlapForNewMutual(
   a: { userId: string } & Named,
   b: { userId: string } & Named,
 ): Promise<Match[]> {
+  /*
+    ⚠⚠ **A UNION, AND STILL ONE STATEMENT.** §6's rule is that the fan-out is
+    set-based — never a query per row — and a `union all` of two set-based legs
+    is one round trip and one plan. **Do not split this into two `tx.execute`
+    calls**: the second would be a second statement inside the same transaction
+    doing the same job, which is the shape that drifts.
+
+    ⚠ **The legs cannot overlap**, because the words leg requires
+    `possibility_id is null` on both sides and the possibility leg requires it
+    non-null on both. A pair that resolved to one thing *and* wrote one string
+    is announced once.
+  */
   const result = await tx.execute(sql`
     select
       i.id              as "itemId",
-      i.title           as "title",
+      null              as "normalisedText",
+      i.title           as "aTitle",
+      i.title           as "bTitle",
       ca.intent         as "aIntent",
       ca.status         as "aStatus",
       ca.verdict        as "aVerdict",
@@ -404,6 +555,34 @@ export async function runOverlapForNewMutual(
     where ca.user_id = ${a.userId}
       and ca.visibility in (${sharedScopes})
       and ca.intent is not null
+
+    union all
+
+    select
+      null              as "itemId",
+      ca.normalised_text as "normalisedText",
+      ca.text           as "aTitle",
+      cb.text           as "bTitle",
+      ca.intent         as "aIntent",
+      ca.status         as "aStatus",
+      ca.verdict        as "aVerdict",
+      ca.source         as "aSource",
+      ca.source_user_id as "aSourceUserId",
+      cb.intent         as "bIntent",
+      cb.status         as "bStatus",
+      cb.verdict        as "bVerdict",
+      cb.source         as "bSource",
+      cb.source_user_id as "bSourceUserId"
+    from captures ca
+    join captures cb
+      on cb.normalised_text = ca.normalised_text
+     and cb.possibility_id is null
+     and cb.user_id = ${b.userId}
+     and cb.visibility in (${sharedScopes})
+    where ca.user_id = ${a.userId}
+      and ca.possibility_id is null
+      and ca.visibility in (${sharedScopes})
+      and ca.normalised_text <> ''
   `)
 
   const names = new Map<string, Named>([
@@ -411,9 +590,8 @@ export async function runOverlapForNewMutual(
     [b.userId, b],
   ])
 
-  const pending = (result.rows as unknown as PairRow[]).flatMap((row) => {
-    const item = { id: row.itemId, title: row.title }
-    return classify(
+  const pending = (result.rows as unknown as PairRow[]).flatMap((row) =>
+    classify(
       {
         userId: a.userId,
         intent: row.aIntent,
@@ -430,8 +608,12 @@ export async function runOverlapForNewMutual(
         source: row.bSource,
         sourceUserId: row.bSourceUserId,
       },
-    ).map((match) => ({ match, item }))
-  })
+      /* Each side is told its own words — see `runOverlap`. */
+    ).map((match) => ({
+      match,
+      subject: pairSubject(row, match.recipientId === a.userId ? row.aTitle : row.bTitle),
+    })),
+  )
 
   return writeNotifications(tx, pending, names)
 }
@@ -578,11 +760,31 @@ function listNames(names: readonly string[]): string {
  */
 export function notificationCopy(
   kind: NotificationKind,
-  p: { counterpartName: string; title: string; guideHolder?: boolean },
+  p: { counterpartName: string; title: string; guideHolder?: boolean; onWords?: boolean },
 ): string {
   switch (kind) {
+    /*
+      ⚠⚠ **TWO SENTENCES FOR ONE KIND, AND THIS IS THE ONE PLACE THE WORDS PATH
+      NEEDS ITS OWN — Amendment 4.** *both want to see* is a film's verb welded
+      into a sentence, and *You and Sam both want to see learn to sail* is not
+      English. `onWords` is the same shape `guideHolder` already is: a
+      discriminator inside a kind, not an eighth `NotificationKind`.
+
+      ⚠ **`portalSentence` does NOT branch and must not learn to.** It says
+      *Sam too.* either way, because a portal row already shows the capture
+      underneath — the words are on the screen, so the sentence does not repeat
+      them. This register is the standalone one, which has to name the thing
+      because nothing else does. That asymmetry is the whole reason both
+      registers live in this file.
+
+      ⚠ **Quoted, where the other lines are not.** A title is a name and reads
+      as one bare; arbitrary words do not — *You and Sam both saved learn to
+      sail* loses where the capture starts.
+    */
     case 'convergence':
-      return `You and ${p.counterpartName} both want to see ${p.title}.`
+      return p.onWords
+        ? `You and ${p.counterpartName} both saved “${p.title}”.`
+        : `You and ${p.counterpartName} both want to see ${p.title}.`
     /*
       §6 gives the guide-holder's line as "…You've been back n times." The count
       was removed on 8 August, so the sentence cannot be written — and it would

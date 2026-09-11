@@ -1,7 +1,8 @@
 # Implementation of product implementation
 
-Status: product rationale. It records the reasoning that led to the build
-contract; implementation-spec.md in this folder is the normative specification.
+Status: historical product rationale. It records the reasoning that led to the
+first build contract. `consumer-product-strategy.md` and Amendment 10 to
+`implementation-spec.md` supersede it for active product decisions.
 
 I’d make this a deliberate product pivot, not a ground-up rewrite. The existing project has a useful engine; it has simply been wrapped in a film-specific interface.
 

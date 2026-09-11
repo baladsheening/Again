@@ -1,7 +1,9 @@
 # Product direction: intent capture and convergence
 
-Status: product rationale and record of the original re-direction discussion.
-For implementation decisions, use implementation-spec.md in this folder.
+Status: historical product rationale and record of the original re-direction
+discussion. It is superseded as active direction by
+`consumer-product-strategy.md`; retain it for the origin of the pivot only.
+For implementation decisions, use `implementation-spec.md` and Amendment 10.
 
 ## The original idea
 

@@ -263,7 +263,7 @@ export function SendGlyph() {
  *
  * ⚠ **It takes the `+`'s slot, and the `+` is gone.** Writing moved to `/`,
  * which is the composer now; the second slot is how you reach what you wrote.
- * See `foot.tsx` and `docs/re-direction/the-front-page.md`.
+ * See `foot.tsx` and `docs/re-direction/inactive/the-front-page.md`.
  */
 export function RecordGlyph() {
   return (

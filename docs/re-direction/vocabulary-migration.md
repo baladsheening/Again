@@ -1,5 +1,9 @@
 # The vocabulary migration
 
+Status: historical migration runbook. Retain for schema and rollout safety; it
+does not define consumer scope. See `consumer-product-strategy.md` and
+`implementation-spec.md` Amendment 10 for active direction.
+
 **Stage 1 is DONE except the final drop — A, B, C1 and C2 are all applied to
 production and deployed, 3–4 September. Only C3 remains, and it is deliberately
 not done.**
