@@ -12,6 +12,7 @@ import {
 } from '@/lib/db'
 import { dayStamper } from '@/lib/day'
 import { imagesAvailable } from '@/lib/media'
+import { portalAction } from '@/app/actions/portal'
 import { toPageLines } from '@/lib/page-line'
 import { viewerTimeZone } from '@/lib/region'
 
@@ -103,9 +104,33 @@ export default async function RecordPage({
 
   const { portal } = await searchParams
 
+  /*
+    ⚠⚠ **THE ROWS COME WITH THE NAVIGATION, AND WITHOUT THIS THE DOOR ON THE
+    COMPOSER OPENED AN EMPTY BOX — 11 September.** `portalOpen` put the card and
+    the scrim up on arrival; nothing fetched what goes in them, because
+    `openPortal` is wired to the door's own handler and the door here is a
+    *link*. So a tap on the composer's glyph gave a blurred screen with an empty
+    card, and a **second** tap — now on this screen, where the door is a button —
+    ran the read the navigation never did. Reported as *press it from home and
+    you get the blurred screen; press it again and it fixes itself.*
+
+    ⚠ **Only when `?portal=1` asked for it.** `portalAction`'s own docblock
+    refuses to put these rows in the route's payload, and it is right: that would
+    be a join to `notifications` in front of **every** capture, on the screen
+    whose whole promise is that Return lands in under a frame. **This is the one
+    arrival where the reader has already asked for the portal**, so the read is
+    the thing they are waiting for rather than a tax on the record.
+
+    ⚠ **A failure seeds nothing and is not an error here.** The card opens empty
+    and the door is still a button; tapping it runs `openPortal`, which has the
+    failure line this page has no way to draw.
+  */
+  const seeded = portal === '1' ? await portalAction() : null
+
   return (
     <PageScreen
       portalOpen={portal === '1'}
+      portalSeed={seeded?.ok ? seeded.value : null}
       lines={toPageLines(shown, stamp)}
       todayKey={todayKey}
       undoWindowMs={UNDO_WINDOW_MS}

@@ -32,6 +32,7 @@ import {
   emptyPortalLineAction,
   portalAction,
   type PortalLineView,
+  type PortalView,
   type TrackRequestView,
 } from '@/app/actions/portal'
 /*
@@ -370,6 +371,7 @@ export function PageScreen({
   undoWindowMs,
   portalWaiting,
   portalOpen = false,
+  portalSeed = null,
   earlier: earlierSeed,
   imagesOn,
 }: {
@@ -388,6 +390,20 @@ export function PageScreen({
    * simply a link.
    */
   portalOpen?: boolean
+  /**
+   * **The portal's rows, when the arrival itself asked for them.**
+   *
+   * ⚠⚠ **`portalOpen` WITHOUT THIS IS AN EMPTY BOX OVER A SCRIM.** The flag put
+   * the card and the blur up on arrival and nothing ever filled them, because
+   * `openPortal` hangs off the door's handler and the composer's door is a
+   * *link*. Two taps looked like a race and were not: the first navigated, the
+   * second ran the read.
+   *
+   * ⚠ **`null` on every other arrival**, which is the whole of `portalAction`'s
+   * rule about not putting a join to `notifications` in front of every capture.
+   * See the note in `app/(app)/record/page.tsx`.
+   */
+  portalSeed?: PortalView | null
   /**
    * Whether the app has anywhere to put a photograph.
    *
@@ -498,13 +514,15 @@ export function PageScreen({
    * the client can. One value, two writers, in that order.
    */
   const [portal, setPortal] = useState(portalOpen)
-  const [portalLines, setPortalLines] = useState<PortalLineView[]>([])
+  const [portalLines, setPortalLines] = useState<PortalLineView[]>(portalSeed?.lines ?? [])
   /*
     ⚠ **A second list, because a request is a second kind of row** — a question
     that leaves when it is answered, beside information that leaves when it is
     read. `portalAction` returns both from one read; see `PortalView`.
   */
-  const [portalRequests, setPortalRequests] = useState<TrackRequestView[]>([])
+  const [portalRequests, setPortalRequests] = useState<TrackRequestView[]>(
+    portalSeed?.requests ?? [],
+  )
   /*
     ⚠ **A third list, and it is the only thing in this box the server does not
     know about.** A decline deletes the row and remembers nothing — deliberately
