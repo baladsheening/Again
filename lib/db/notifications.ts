@@ -529,12 +529,27 @@ export async function portalWaiting(sessionUser: SessionUser): Promise<PortalWai
     db
       .select({ one: sql<number>`1` })
       .from(notifications)
+      /*
+        ⚠⚠ **`notificationMatchesCapture()`, AND WRITING THE JOIN OUT BY HAND
+        HERE IS WHAT BROKE THE DOOR — 11 September.** This read
+        `possibility_id::text = payload ->> 'itemId'`, which is the possibility
+        leg alone. Amendment 4 gave a convergence a second subject — the words —
+        and a words notification carries `normalisedText` with a **null**
+        `itemId`, so it matched nothing and `lines` was false however many were
+        waiting. **The portal filled correctly and the door stayed dark**,
+        because `listMyPortal` was moved onto the shared fragment and this was
+        not.
+
+        ⚠ **It is the same fragment or it is a second definition of *what a
+        notification is about*.** Three readers were moved when the fragment was
+        written — the mark, the portal and `getConvergence` — and this is the
+        fourth nobody counted. It is the reason the fragment exists: a literal
+        copy of the join is right on the day it is typed and wrong the day a
+        subject is added.
+      */
       .innerJoin(
         captures,
-        and(
-          eq(captures.userId, sessionUser.id),
-          sql`${captures.possibilityId}::text = ${notifications.payload} ->> 'itemId'`,
-        ),
+        and(eq(captures.userId, sessionUser.id), notificationMatchesCapture()),
       )
       .where(and(eq(notifications.userId, sessionUser.id), isNull(notifications.readAt)))
       .limit(1),

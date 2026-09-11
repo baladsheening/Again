@@ -226,6 +226,29 @@ describe('convergence on words (Amendment 4)', () => {
 
     const line = await lineOn(adaId, A, 'learn to sail')
     expect(await dal.getConvergence(viewer(adaId, A), line!.id)).toContain(B)
+
+    /*
+      ⚠⚠ **THE DOOR, AND THIS IS THE ASSERTION THAT WAS MISSING — 11 September.**
+      `portalWaiting` wrote its join out by hand instead of using
+      `notificationMatchesCapture()`, so it tested the possibility leg alone: a
+      words convergence has a null `itemId` and matched nothing. **The portal
+      above filled correctly and the door stayed dark**, which is the shape of
+      failure this product is least able to survive — the notification existed,
+      the mark was drawn, and the one control that says *come and look* never
+      lit. Found on a handset, because every reader here stopped at the contents.
+
+      ⚠ **Assert the door beside the contents, always.** They are two separate
+      queries answering one question, and only a test that asks both can see
+      them disagree.
+    */
+    expect(await dal.portalWaiting(viewer(adaId, A))).toEqual({
+      lines: true,
+      requests: false,
+    })
+    expect(await dal.portalWaiting(viewer(boId, B))).toEqual({
+      lines: true,
+      requests: false,
+    })
   })
 
   it('different words are not a match, however close they read', async () => {
