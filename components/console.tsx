@@ -98,6 +98,7 @@ export function Console({
   crossedOff,
   onCrossOff,
   onRewrite,
+  onLock,
   onSettle,
   onAgain,
   onDone,
@@ -127,6 +128,20 @@ export function Console({
   onCrossOff: () => void
   /** `null` while a rewrite is already open — reopening would discard it. */
   onRewrite: (() => void) | null
+  /**
+   * **Take this one line out of matching, or put it back** — the considered
+   * door to the swipe's reflex one, Amendment 10.
+   *
+   * ⚠ **`null` on the portal's console and nowhere else.** That surface holds
+   * `shared: true` by construction rather than by a read, so it has no real
+   * answer to change; see the block above the stamp row. The record's console
+   * always supplies it.
+   *
+   * ⚠ **It is the page's own `toggleLock`, not a second handler.** One verb,
+   * two doors — a console that wrote its own would be a second opinion about
+   * what locking means.
+   */
+  onLock: (() => void) | null
   onSettle: () => void
   onAgain: () => void
   onDone: () => void
@@ -347,10 +362,93 @@ export function Console({
             both answer *what is known about this capture* rather than *what it
             says*.
           */}
-          <p className="stamp text-muted mt-3">
-            {line.dayLabel}
-            {line.year !== null && <span className="ms-2">{line.year}</span>}
-          </p>
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             The lock, where a reader is actually looking — 11 September
+            ─────────────────────────────────────────────────────────────────
+
+            ⚠⚠ **THIS CLOSES A DEBT RECORDED ON 4 SEPTEMBER IN THE WORDS IT WAS
+            RECORDED IN.** The lock's teaching sentence was deleted that day and
+            the entry said: *what it costs — nothing now teaches the lock swipe…
+            if the lock proves undiscoverable, this is what was removed, and it
+            should come back **where a reader is actually looking.*** Amendment
+            10 made it binding: a hidden gesture cannot carry the one disclosure
+            that a private capture may become a social event.
+
+            ⚠⚠ **THE SWIPE IS UNTOUCHED AND THIS IS NOT A SECOND MECHANISM.**
+            Both doors call the page's one `toggleLock`. This console's own
+            docblock predicted the arrangement before the swipes existed: *these
+            controls stay as the considered door and the swipe becomes the reflex
+            one.* Amendment 10 asks for the control *as well as* the gesture, in
+            those words.
+
+            ⚠ **The stamp row, not a line of its own.** It already says *what is
+            known about this capture* and it already has room at its end — so an
+            ordinary capture gains **no copy at all**, which is the trade a line
+            of explanation on every console would have lost. Density rule 2:
+            reuse a row before adding a block.
+
+            ⚠⚠ **THE STATE IS MARKED ONLY AS THE EXCEPTION, AND THE VERB IS
+            ALWAYS A VERB.** `LOCKED` is a stamp in the row's own mono; `Lock` /
+            `Unlock` is a control in the interface face. That is design rule 1 —
+            *say the state and say the verb, as two things* — and it is the
+            record's existing grammar: a live line says nothing where a
+            crossed-off one is struck, and the × beside it still reads *Put it
+            back*.
+
+            ⚠ **No padlock on a button.** `docs`/CLAUDE.md settled this when the
+            mark was chosen: *a padlock is right as a STATE and would have been
+            wrong as a control label — on a button it says security, and this is
+            scope.* The padlock stays what it is, a mark in the row's tail.
+
+            ⚠⚠ **`onLock` IS `null` IN THE PORTAL, AND THAT IS NOT TIDINESS.**
+            `listMyPortal` sets `shared: true` **by construction** — a locked
+            capture cannot have produced the notification that put the row there,
+            so the read deliberately does not ask the database to confirm a row
+            it just returned. A control that changed that bit would make the
+            assumption false the moment somebody used it, and the portal's copy
+            of the line would then be lying. The record is the surface that holds
+            the real answer, and it is one tap away.
+          */}
+          {/*
+            ⚠ **The control runs on from the stamp; it is NOT pushed to the far
+            edge.** `justify-between` was tried and is wrong on the desk, where
+            the console expands in place across the whole reading column: the
+            word ended up ~800px from the stamp it belongs to, floating, and
+            **not** aligned with the settle glyph below it either — near enough
+            to look like an attempt at a column and far enough to miss. The glyph
+            row spans the full width for a reason it has (the tray's sight line);
+            this row has no such reason, so it reads as one run: what is known,
+            then the one thing in it you can change.
+          */}
+          <div className="mt-3 flex items-baseline gap-4">
+            <p className="stamp text-muted">
+              {line.dayLabel}
+              {line.year !== null && <span className="ms-2">{line.year}</span>}
+              {onLock !== null && !line.shared && <span className="ms-2">Locked</span>}
+            </p>
+
+            {onLock !== null && (
+              <button
+                type="button"
+                onClick={onLock}
+                /*
+                  ⚠ **The consequence, not the mechanism.** A screen reader gets
+                  the whole of what the tap does, because the visible word is one
+                  syllable and the thing it changes is the app's central privacy
+                  boundary.
+                */
+                aria-label={
+                  line.shared
+                    ? 'Lock this capture, so nobody is told you wrote it'
+                    : 'Unlock this capture, so you can both be told'
+                }
+                className="text-chrome tap-target shrink-0 text-[length:var(--text-micro)]"
+              >
+                {line.shared ? 'Lock' : 'Unlock'}
+              </button>
+            )}
+          </div>
 
           {/*
             ⚠ **The standing question, in full, because there is room.** On the

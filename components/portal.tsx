@@ -1,6 +1,7 @@
 'use client'
 
 import type { PortalLineView, TrackRequestView } from '@/app/actions/portal'
+import { MATCHING_RULE } from '@/lib/vocabulary'
 import { AskThem } from './ask-them'
 
 /**
@@ -294,6 +295,51 @@ export function Portal({
             </span>
           </div>
         ))}
+
+        {/*
+          ─────────────────────────────────────────────────────────────────────
+           What accepting actually does — Amendment 10, 11 September
+          ─────────────────────────────────────────────────────────────────────
+
+          ⚠⚠ **THE ONE PLACE THIS APP EXPLAINS ITSELF, AND IT IS HERE BECAUSE
+          THIS IS WHERE CONSENT IS GIVEN.** *Accept* makes a track mutual, and a
+          mutual track is the consent that lets two independently written
+          captures produce a one-line overlap. Amendment 10: *a hidden lock
+          gesture is not sufficient consumer explanation.* Somebody tapping
+          *Accept* is entitled to know what they are agreeing to, in the second
+          before they agree to it.
+
+          ⚠ **Once for the group, never once per row.** Design rule 4 — a
+          control, or a sentence, that repeats on every row does not belong on
+          the row. Three requests do not want three copies of one rule, and the
+          rule is about the act rather than about any one asker.
+
+          ⚠ **Under them rather than over them.** A heading above a list of
+          questions delays the questions; this is the small print on an answer
+          somebody is about to give, and it sits where small print sits. It also
+          keeps *requests come first* true — the rows waiting on the reader are
+          still the first thing in the box.
+
+          ⚠ **`MATCHING_RULE` is written once**, in `lib/vocabulary.ts`, and said
+          again under the handle field in People. Two literals of one promise is
+          two things to keep in step — §6's argument about `portalSentence`,
+          applied to a sentence rather than to a payload.
+
+          ⚠ **It is NOT an empty state.** It draws only where there is a request
+          to answer; a box holding no questions explains nothing, which is §6's
+          *silence stays silent*.
+        */}
+        {/*
+          ⚠ **No margin of its own.** This sits inside the requests' own
+          `flex flex-col gap-4`, so that gap is already the space between the
+          last question and this. An `mt-3` on top of it was a second
+          declaration of one gap and measured ~49px on a handset — the rule read
+          as adrift from the request rather than as its small print. *A margin
+          that separates two things belongs to one of them, not to both.*
+        */}
+        {requests.length > 0 && (
+          <p className="text-muted text-[0.8125rem]">{MATCHING_RULE}</p>
+        )}
 
         {/*
           ⚠ **Below the live questions, because it is not one.** Requests come

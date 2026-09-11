@@ -246,3 +246,40 @@ export const WHERE_IT_IS: Record<EntryState, { href: Route; label: string }> = {
 export function askDraft(text: string): string {
   return `We both saved “${text}”. Want to?`
 }
+
+/**
+ * **What a mutual connection actually does**, said once.
+ *
+ * ⚠⚠ **THE ONE DISCLOSURE THIS PRODUCT CANNOT LEAVE TO A GESTURE.** Amendment
+ * 10: *mutuality is the technical consent boundary, but a hidden lock gesture is
+ * not sufficient consumer explanation. Before a connection becomes mutual, each
+ * person must be told that independently written captures can create one-line
+ * overlaps with that person.* Somebody who writes *leave my job* deserves to
+ * have known, **before writing it**, that a friend who writes the same thing
+ * will be told they both did.
+ *
+ * ⚠⚠ **THE SECOND SENTENCE IS DOING AS MUCH WORK AS THE FIRST.** The likeliest
+ * misreading of *you'll both be told* is *they can see my list*, which is false
+ * — Amendment 2 drew that line and the data layer still enforces all four of its
+ * terms. **Saying what does not happen is what makes the disclosure trustworthy
+ * rather than alarming**, and a version that stated only the exposure would
+ * scare people out of a feature that is narrower than it sounds.
+ *
+ * ⚠ **Two call sites, one author** — sending a request and answering one. §6's
+ * argument about `portalSentence` applies to any sentence said in two places:
+ * two literals is two copies to keep in step, and the day the rule changes one
+ * of them keeps the old promise.
+ *
+ * ⚠ **Not at onboarding, and that is a decision rather than an oversight.** The
+ * harm needs *both* a sensitive capture and a mutual connection; at onboarding
+ * neither exists, so the sentence describes something that cannot yet happen to
+ * the reader — and a sentence you cannot act on is a sentence you do not read.
+ * **The first request is the first moment the rule can bite**, in either
+ * direction, and that is where it is said.
+ *
+ * ⚠ **It does not say *matching*.** That word was flagged on 4 September as not
+ * being in §3's vocabulary, and *write the same thing* is plainer than any term
+ * this app could coin for it.
+ */
+export const MATCHING_RULE =
+  'If you both write the same thing, you’ll both be told. Nobody can read your record.'

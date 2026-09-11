@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 
 import { trackAction } from '@/app/actions/tracks'
 import { HANDLE_ERROR_COPY, validateHandle } from '@/lib/handles'
+import { MATCHING_RULE } from '@/lib/vocabulary'
 
 /**
  * **Add somebody by their handle** — on `/profile`, inside People.
@@ -117,6 +118,26 @@ export function AddPerson() {
           Add
         </button>
       </div>
+
+      {/*
+        ⚠⚠ **THE ASKING SIDE OF THE SAME DISCLOSURE — Amendment 10.** Sending a
+        request is consent too: if they accept, the person typing here has opened
+        their own captures to the same one-line overlap. **Both sides are told,
+        and this is the earlier of the two moments.**
+
+        ⚠ **Under the field rather than above it.** The field is the point of
+        this block — an explanation over it delays the one thing somebody came
+        to do, which is design rule 2. It reads as what it is: what happens next.
+
+        ⚠ **Always, not only when something has been typed.** The rule is what
+        the control does, and a sentence that appeared on keystroke would arrive
+        after the decision to type a handle rather than before it.
+
+        ⚠ **`MATCHING_RULE` is the portal's own sentence**, written once in
+        `lib/vocabulary.ts`. Two literals of one promise is two things to keep in
+        step, and the day the rule changes one of them keeps the old one.
+      */}
+      <p className="text-muted text-[0.8125rem]">{MATCHING_RULE}</p>
 
       {/* Full strength at body size, as everywhere else a failure is reported. */}
       {error && <p className="text-sm">{error}</p>}

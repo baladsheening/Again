@@ -2728,6 +2728,13 @@ export function PageScreen({
                   live in the one place somebody was told to come and look at it.
                 */
                 crossedOff={line.state === 'dropped'}
+                /*
+                  ⚠ **Null, like `convergence` above and for a kindred reason:**
+                  the portal's line carries `shared: true` by construction, so
+                  there is no real answer here to change. The record's console is
+                  where the lock lives — see the block above its stamp row.
+                */
+                onLock={null}
                 onCrossOff={() => crossOff({ ...line, key: line.id })}
                 onRewrite={
                   editing === null
@@ -3685,6 +3692,14 @@ export function PageScreen({
                     }
                     asking={asking === line.id}
                     crossedOff={crossedOff}
+                    /*
+                      ⚠ **The same handler the swipe calls.** One verb, two
+                      doors — the swipe is the reflex one, this is the considered
+                      one, and Amendment 10 asks for both in those words. A
+                      console that wrote its own would be a second opinion about
+                      what locking means.
+                    */
+                    onLock={() => toggleLock(line)}
                     onCrossOff={() => crossOff(line)}
                     /*
                       Off while a rewrite is already open: reopening the line

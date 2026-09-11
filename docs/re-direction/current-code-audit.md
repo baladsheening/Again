@@ -72,13 +72,12 @@ bucket, and the account is `tests/words.test.ts` plus CLAUDE.md's entry. It
 needed no migration: `normalised_text` was already a generated, indexed column.
 The remaining three are still open.
 
-**2. Matching consent, and a lock you can find.** Two things, neither built.
-Nothing in `components/onboarding-form.tsx`, `components/track-button.tsx` or
-`components/add-person.tsx` tells anybody that independently written captures
-can produce a one-line overlap — the disclosure is nowhere on the path that
-creates the relationship. And the lock is reachable only by a swipe;
-`components/console.tsx` carries cross-off, rewrite and settle, and is the
-obvious home for it. See bucket 4, which is why this is not merely an omission.
+**2. Matching consent, and a lock you can find.** ⚠ **BUILT 11 September** —
+struck from this bucket, and from bucket 4 with it. The console carries the lock
+beside its day stamp (`LOCKED` as the state, `Lock`/`Unlock` as the verb),
+and `MATCHING_RULE` is stated under the requests in the portal and under the
+handle field in People. **The swipe is untouched**: two doors, one
+`toggleLock`.
 
 **3. The action after a convergence.** ⚠ **BUILT 11 September** — struck from
 this bucket. `components/ask-them.tsx`: *Ask them*, in the run of the
@@ -97,14 +96,6 @@ the dialogue can be truthful about what it will deliver.
 Present in the tree and at odds with Release 1 as now defined. These mislead a
 reader more than they cost to run.
 
-- **The swipe-only lock.** This is not an omission, which is why it is here
-  rather than in bucket 3. The current design *asserts* that the gesture is
-  sufficient: the lock's teaching sentence was deliberately deleted on 4
-  September, on the reasoning that a rare verb does not need teaching on a
-  person's first capture. Amendment 10 reverses that. What the reasoning did not
-  account for is that the gesture is the **only** disclosure that a private
-  capture can produce a social event, and a responsibility that size cannot be
-  carried by something nobody has been shown.
 - **`swaps`, `swapItems`, `getSwap`.** List transfer — an **explicit Release 1
   exclusion**. Unreachable from any screen: nothing in `app/` or `components/`
   imports them. Yet `getSwap` is one of only **two** functions CLAUDE.md §3 names

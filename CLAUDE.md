@@ -43,11 +43,68 @@ a document in an active folder gets opened.
 > Again turns the private things I want to do into real-world opportunities when
 > someone I trust wants the same thing.
 
-- ⚠⚠ **TWO THINGS BLOCK RELEASE 1 AND NEITHER IS A SCREEN THAT LOOKS WRONG**:
-  **the matching consent and a findable lock**, and **earned push** — no service
-  worker in `public/`. ⚠ **Two of the four are BUILT — 11 September**:
-  convergence on wording, and the way out. `current-code-audit.md` is the
-  comparison in full.
+- ⚠⚠ **ONE THING BLOCKS RELEASE 1: EARNED PUSH**, and it is the only one that
+  needs infrastructure — no service worker in `public/`. ⚠ **Three of the four
+  are BUILT on 11 September**: convergence on wording, the way out, and the
+  matching consent. `current-code-audit.md` is the comparison in full.
+
+⚠⚠ **THE MATCHING CONSENT AND A FINDABLE LOCK — 11 September, AND IT REVERSES A
+DECISION TAKEN ON 4 SEPTEMBER.** That day the lock's teaching sentence was
+deleted for firing at a record length of one, and the entry stated the cost:
+*nothing now teaches the lock swipe… if the lock proves undiscoverable, this is
+what was removed, and it should come back **where a reader is actually
+looking.*** Amendment 10 made it binding — a hidden gesture cannot carry the one
+disclosure that a private capture may become a social event.
+
+- ⚠⚠ **THE SWIPE IS UNTOUCHED.** `SwipeWay`, the detent, the signs, the
+  padlock confirmation and both haptics are exactly what they were. **Two doors,
+  one `toggleLock`** — the console is the considered door and the swipe the
+  reflex one, which is the arrangement `console.tsx`'s own docblock predicted
+  before the swipes existed. Amendment 10 asks for the control *as well as* the
+  gesture, in those words.
+- ⚠ **The stamp row, not a line of its own.** It already says *what is known
+  about this capture* and had room at its end, so **an ordinary capture gains no
+  copy at all.** Density rule 2: reuse a row before adding a block.
+- ⚠⚠ **THE STATE IS MARKED ONLY AS THE EXCEPTION AND THE VERB IS ALWAYS A
+  VERB.** `LOCKED` is a stamp in the row's mono; `Lock` / `Unlock` is a
+  control in the interface face. Design rule 1, and it is the record's existing
+  grammar — a live line says nothing where a crossed-off one is struck.
+- ⚠ **NO PADLOCK ON A BUTTON**, which this file settled when the mark was
+  chosen: *on a button it says security, and this is scope.* The padlock stays a
+  mark in the row's tail.
+- ⚠ **`justify-between` was tried and is wrong on the desk**, where the console
+  expands across the reading column: the word floated ~800px from its stamp and
+  did **not** align with the settle glyph below it either. It runs on from the
+  stamp instead.
+- ⚠⚠ **`onLock` IS `null` IN THE PORTAL AND THAT IS NOT TIDINESS.**
+  `listMyPortal` sets `shared: true` **by construction** — a locked capture
+  cannot have produced the notification that put the row there — so a control
+  that changed it would make the read's own assumption false.
+- ⚠⚠ **THE RULE IS SAID WHERE CONSENT IS GIVEN: under the requests, and under
+  the handle field.** `MATCHING_RULE` in `lib/vocabulary.ts` is the one
+  author. ⚠ **The second clause does as much work as the first** — *Nobody can
+  read your record* — because the likeliest misreading of the first is *they can
+  see my list*, which is false and is the boundary Amendment 2 drew.
+- ⚠ **NOT at onboarding**, and that is a decision. The harm needs both a
+  sensitive capture and a mutual connection; at onboarding neither exists, so
+  the sentence describes something that cannot yet happen — and a sentence you
+  cannot act on is a sentence you do not read. **The first request is the first
+  moment the rule can bite.**
+- ⚠ **Once for the group, never once per row** — design rule 4. Three requests
+  do not want three copies of one rule. ⚠ **No `mt-3` on it**: the requests'
+  own `gap-4` already owns that space, and declaring it twice measured ~49px.
+- ⚠ **It does not say *matching*** — flagged on 4 September as not being in §3's
+  vocabulary. *Write the same thing* is plainer than any term this app could
+  coin.
+- ⚠⚠ **AND `swipe.mjs` HAD BEEN RED SINCE THE FRONT-PAGE SPLIT ON 5 SEPTEMBER
+  — SIX DAYS, UNNOTICED.** It seeded through `button[aria-label="Write a
+  capture"]`, the `+` the split deleted, so every run timed out **before a
+  single assertion**. `console.mjs` had the identical rot and was fixed that
+  day; this is the same fix, a week late. Green now, and it pins **both** doors.
+- **Measured by `node_modules/.probe/matchingconsent.mjs`** — 17 assertions,
+  both surfaces, including a **2px scan of the band between `Ask them` and the
+  lock**: they sit 12px apart with 44px hit areas each, so the areas overlap and
+  what had to be shown is that every point belongs to exactly one of them.
 
 ⚠⚠ **THE WAY OUT — 11 September, AND IT IS THE ONE CONTROL THE WHOLE RESET WAS
 ABOUT.** *A convergence produces a notification, not an opportunity.* The
