@@ -85,11 +85,13 @@ convergence sentence, on the portal row and in the console. The system share
 sheet, the capture's own wording quoted, a clipboard fallback that says so, and
 a cancelled share treated as a change of mind rather than a fault.
 
-**4. Earned delivery.** No service worker in `public/`, and VAPID keys are
-optional in `lib/env.ts`. Delivery is in-app only, so a convergence arriving
-while the app is closed is a convergence nobody is told about. Permission is
-asked for at the **first convergence**, never at launch — it is the only moment
-the dialogue can be truthful about what it will deliver.
+**4. Earned delivery.** ⚠ **BUILT 11 September** — struck from this bucket, and
+with it the whole of bucket 3. `public/sw.js`, `lib/push.ts`,
+`lib/db/push.ts` and `components/turn-on-push.tsx`; delivery is scheduled
+with `after()` from inside `writeNotifications`, so every trigger gets it.
+Permission is asked at the first convergence, in the portal, and nowhere else.
+⚠ **Production is dark until the VAPID keys are added to Vercel** — all three
+stay optional, so the app is whole without them and simply does not buzz.
 
 ## 4. Actively contradictory
 

@@ -45,6 +45,28 @@ const schema = z.object({
     with `npx web-push generate-vapid-keys` and promotes these to required in
     the same commit. They stay optional here so nothing breaks in between.
   */
+  /**
+   * ⚠⚠ **AMENDMENT 10 MOVED PUSH INTO RELEASE 1 — 11 September — SO THE BLOCK
+   * ABOVE IS HISTORY RATHER THAN THE RULE.** It is not wrong about what it was
+   * written for: **Phase 6 gates STRANGER matching** behind adult eligibility,
+   * blocking, reporting and moderation. **None of that is in the path here.** A
+   * push only ever carries a convergence or a request between two people who
+   * are already mutually tracked, or who have already asked — *an earned
+   * service-notification path belongs in Release 1*, in the amendment's words.
+   *
+   * ⚠ **All three stay OPTIONAL, and that is what keeps the app whole without
+   * them.** `lib/push.ts` checks before it configures `web-push`, so a machine
+   * with no keys runs every screen and simply does not buzz — the state
+   * `lib/env.ts` has described since 25 August, now with something on the other
+   * end of it. **Promoting them to required is `scripts/preflight.mjs`'s call
+   * when the beta actually needs delivery**, not this file's.
+   *
+   * ⚠ **The public key is `NEXT_PUBLIC_` because the browser needs it** —
+   * `pushManager.subscribe` takes it as the application server key, so it is
+   * public by design and is in the client bundle. **The private key must never
+   * acquire that prefix**; it is what signs the VAPID token.
+   */
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
 

@@ -13,6 +13,8 @@ import {
   type NotificationKind,
 } from '@/lib/domain'
 import { notifications } from '@/lib/db/schema'
+import { after } from 'next/server'
+import { deliver } from '@/lib/push'
 
 /**
  * §6. All of it, in one module, called from the capture mutations. It is the
@@ -390,21 +392,70 @@ async function writeNotifications(
 ): Promise<Match[]> {
   if (pending.length === 0) return []
 
-  await tx.insert(notifications).values(
-    pending.map(({ match, subject }) => ({
-      userId: match.recipientId,
-      kind: match.kind satisfies NotificationKind,
-      payload: {
-        ...(subject.on === 'possibility'
-          ? { itemId: subject.id }
-          : { normalisedText: subject.normalised }),
-        title: subject.title,
-        counterpartId: match.counterpartId,
-        counterpartName: notificationName(names.get(match.counterpartId)),
-        ...(match.guideHolder ? { guideHolder: true } : {}),
-      },
-    })),
-  )
+  const rows = pending.map(({ match, subject }) => ({
+    userId: match.recipientId,
+    kind: match.kind satisfies NotificationKind,
+    payload: {
+      ...(subject.on === 'possibility'
+        ? { itemId: subject.id }
+        : { normalisedText: subject.normalised }),
+      title: subject.title,
+      counterpartId: match.counterpartId,
+      counterpartName: notificationName(names.get(match.counterpartId)),
+      ...(match.guideHolder ? { guideHolder: true } : {}),
+    },
+  }))
+
+  await tx.insert(notifications).values(rows)
+
+  /*
+    ⚠⚠ **DELIVERY IS SCHEDULED HERE, IN THE ONE PLACE THAT ALREADY KNOWS WHAT
+    WAS WRITTEN — earned push, Amendment 10.** Every path that produces a
+    notification goes through this function, so hanging the send off it means no
+    caller has to remember to, and a fifth trigger added later gets delivery for
+    free. The alternative was plumbing the rows back out through `runOverlap`,
+    `fireOverlap` and every action above them — five signatures changed so that
+    one of them could call a function this one could already call.
+
+    ⚠ **`after`, not `await`.** The send is a third-party HTTP call and this is
+    inside the capture's transaction; §6 says push delivery never happens
+    inline, and `lib/push.ts` carries the full argument for why `after` is the
+    honest reading of that. **The row is committed either way** — what is
+    scheduled is a copy of it, not the record.
+
+    ⚠⚠ **THE `try` IS FOR THE TESTS, AND IT IS NOT A SWALLOWED ERROR.** `after`
+    throws when there is no request to be after — which is exactly the case in
+    `tests/`, where the fan-out is driven straight against the database. **Not
+    scheduling a push in a test is correct**, and a bare call would have turned
+    every convergence test red for a reason that has nothing to do with
+    convergence. ⚠ **The catch is deliberately empty and must stay narrow**: the
+    only thing it may absorb is *there is no request here*.
+  */
+  try {
+    after(() =>
+      deliver(
+        rows.map((r) => ({
+          userId: r.userId,
+          title: notificationCopy(r.kind, {
+            counterpartName: r.payload.counterpartName,
+            title: r.payload.title,
+            guideHolder: r.payload.guideHolder === true,
+            onWords: 'normalisedText' in r.payload,
+          }),
+          /*
+            ⚠ **One line, and the standalone register is the whole of it.** The
+            portal's *Sam too.* reads correctly under a capture the screen is
+            already showing; a notification has no screen, so it gets
+            `notificationCopy` — which is what that register was written for and
+            why it has sat unused since Phase 2.
+          */
+          tag: r.kind,
+        })),
+      ),
+    )
+  } catch {
+    /* No request to be after — a test, or a script. Nothing to deliver into. */
+  }
 
   return pending.map((p) => p.match)
 }

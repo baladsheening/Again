@@ -3,6 +3,7 @@
 import type { PortalLineView, TrackRequestView } from '@/app/actions/portal'
 import { MATCHING_RULE } from '@/lib/vocabulary'
 import { AskThem } from './ask-them'
+import { TurnOnPush } from './turn-on-push'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -488,6 +489,28 @@ export function Portal({
             </li>
           ))}
         </ol>
+
+        {/*
+          ─────────────────────────────────────────────────────────────────────
+           The offer to be told — earned push, Amendment 10
+          ─────────────────────────────────────────────────────────────────────
+
+          ⚠⚠ **GATED ON THERE BEING A CONVERGENCE TO POINT AT.** Amendment 10
+          asks for push that is *earned* — *permission is requested only after a
+          person can understand the value* — and the value is the thing directly
+          above this line. **A prompt on an empty portal is the launch prompt
+          that wastes the one request a browser ever gives you**, and a denial
+          cannot be undone by anything this app can do.
+
+          ⚠ **Under the lines, where the requests' rule is under the requests.**
+          Each surface says its small print below the thing it is about.
+
+          ⚠ **It draws nothing in four cases** — no support, already granted,
+          already denied, and the first paint. See the component; every one of
+          them is §6's *silence stays silent*, and on iOS the no-support case is
+          everybody reading in a tab rather than an installed app.
+        */}
+        {lines.length > 0 && <TurnOnPush />}
 
         {/*
           Loading says nothing and draws nothing: the read is one query behind a

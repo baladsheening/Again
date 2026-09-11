@@ -103,10 +103,30 @@ const eslintConfig = defineConfig([
       under node, outside Next, never in a request and never in a bundle —
       which is the thing this rule exists to prevent.
     */
+    /*
+      ⚠⚠ **`lib/push.ts` IS EXEMPT FOR EXACTLY THE REASON `lib/overlap.ts` IS,
+      AND THE SHAPE IS WORTH NAMING BECAUSE IT IS THE ONLY ONE.** Every function
+      in `lib/db/` takes the authenticated `SessionUser` first and filters on it
+      (§3) — and **delivery reads the RECIPIENT's endpoints**, who is not the
+      actor. So it cannot be a `lib/db/` function without that layer growing one
+      whose first argument is somebody else, which is the single shape the
+      boundary exists to forbid.
+
+      The fan-out has the same problem and was solved the same way: it writes
+      other people's notification rows, from outside the layer, reached only
+      from inside a mutation that has already checked who is allowed to cause
+      one. **`lib/push.ts` is reached only from `lib/overlap.ts`**, so its blast
+      radius is that module's, not a new one.
+
+      ⚠ **The two WRITES are not here** — `savePushSubscription` and
+      `removePushSubscription` are ordinary session-filtered functions in
+      `lib/db/push.ts`, where they belong. It is only the read that had to move.
+    */
     ignores: [
       'lib/db/**',
       'lib/auth.ts',
       'lib/overlap.ts',
+      'lib/push.ts',
       'drizzle.config.ts',
       'scripts/**',
       'tests/**',

@@ -1,4 +1,4 @@
-# The build log — 31 August and earlier
+# The build log — 4 September and earlier
 
 ⚠⚠ **THIS IS PART OF `CLAUDE.md`, NOT A COMPANION TO IT.** It was split out on
 6 September because `CLAUDE.md` had passed the 150,000-character limit the
@@ -29,8 +29,209 @@ correction about the engine having no reader — moved here from *Where the buil
 stands* and are dated 31 August and 30 August. **They are not superseded by the
 move and every ⚠ in them still binds.**
 
-The newer entries — 1 September onward — stay in `CLAUDE.md` under *Where the
+⚠ **A THIRD CUT, THE SAME DAY AS THE SECOND — 11 September**, at the 4
+September boundary: *adding somebody is a request they answer*, the handshake,
+moved here when `CLAUDE.md` came back to within 3,500 characters of the limit.
+**Not superseded by the move; every ⚠ in it still binds, and the requests it
+describes are built and deployed.**
+
+The newer entries — 5 September onward — stay in `CLAUDE.md` under *Where the
 build stands*.
+
+⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
+built.** Until this, a mutual track was **two independent one-sided acts**: I add
+you, then *you* must separately remember my handle, go to my page and add me
+back. Nothing told you I had asked. The first time Phase 2 was used by a person
+rather than a fixture the result was **2 accounts, both holding *Scarface*, 0
+tracks, 0 notifications ever written** — the engine, the portal and the mark were
+all correct and all downstream of an introduction that never arrived. The design
+is `docs/re-direction/the-handshake.md`; it is a brief and it is meant to die.
+
+- ⚠⚠ **A ONE-SIDED TRACK ALREADY *WAS* A REQUEST AND NOTHING DELIVERED IT.** All
+  three consumers of the relation demand both rows — the §6 fan-out's self-join,
+  `listCapturesForOtherUser`'s two joins, and `nameFor` — so an outbound-only row
+  grants **nothing**. **So there is no pending column, no requests table and no
+  state machine, and no migration.** The pending object existed; what was missing
+  was the delivery and one control to answer it. *Remove the mechanism* read from
+  the other end: do not build a second one beside the one that is already there.
+- ⚠ **Accept is `trackUser`, unchanged, fan-out included.** There is deliberately
+  no `acceptAction` — a second entry point would be a second place deciding what
+  mutuality means, and mutuality is what runs the fan-out.
+- ⚠⚠ **`declineTrack` IS THE ONLY PLACE ONE PERSON DELETES ANOTHER PERSON'S ROW,
+  AND `followed_id = viewer` IS THE WHOLE SAFETY ARGUMENT.** There is no
+  parameter that can widen it — the `includeArchive` rule, applied to a delete —
+  and `tests/handshake.test.ts` asserts a bystander cannot reach a row that does
+  not point at them.
+- ⚠ **A decline remembers nothing and the asker is never told.** `untrackUser`'s
+  own reasoning: any state a declined request could sit in is a list of people
+  you turned down. **The price, stated: a declined person can ask again**, and
+  the honest answer is a block list, which does not exist — Phase 6 owns it, and
+  **a lower rate limit is not the fix.**
+- ⚠⚠ **A DECLINE LEAVES A STRUCK LINE IN THE OPEN CARD, AND IT IS A WINDOW
+  RATHER THAN A RECORD — 4 September.** *Decline* is a plain word one tap from
+  *Accept* with no confirmation, and **the request line is the only place
+  `@handle` ever appears for a non-mutual** — so a mis-tap destroyed the only
+  copy of it, unrecoverably, on both sides at once. The sentence stays struck
+  with **Add** beside it until the card closes. ⚠ **Nothing is written and
+  nothing is read back**: `declineTrack` is untouched, `DeclinedRequest` lives in
+  the client, and a residue that outlived the card would be the list of people
+  you turned down. ⚠ **`Add` is not an undo** — their row is gone and putting it
+  back would mean writing another person's statement; it asks them, through the
+  same `trackAction`, and the line then reads *Requested*. ⚠ **The
+  strike-through IS the word**, so `portalSentence` is still the only author —
+  `@sam — declined.` would be a second composition and reads ambiguously
+  besides; the word is spoken to a screen reader, which cannot see a strike.
+  ⚠ **So a decline does not close the card** where accepting the last row does:
+  *an empty card closes* is about a card with **nothing** in it, and closing over
+  the struck line would destroy the handle at the moment it exists to keep. The
+  door goes dark above it, which is right — nobody is waiting on you any more.
+- ⚠ **`declineTrack`'s claim that a decline is *indistinguishable* from an
+  unanswered request on the asker's side was only ever true of the BUTTON, and
+  is corrected in both places.** People reads `listMyTracks`, so unanswered is a
+  row tagged *Requested* and declined is **no row at all** — the fact leaks as an
+  absence while the word is withheld. Left that way deliberately: telling them
+  costs an eighth notification kind (a rejection with a timestamp) or a tombstone
+  column, which is the pending machine §1 removed **and** would break re-asking,
+  since `onConflictDoNothing` makes a second ask over a surviving row a silent
+  no-op. **Re-asking is the recovery and it works.**
+- ⚠⚠ **A REQUEST DOES NOT EMPTY ON OPEN, WHICH GENERALISES §5's *IT EMPTIES*
+  RATHER THAN BREAKING IT.** A row leaves when it has been **dealt with**; for a
+  convergence, reading it *is* dealing with it, because there is nothing to
+  answer. **A request that emptied on being looked at would be a request
+  destroyed by being read** — asserted from the screen by
+  `node_modules/.probe/handshake.mjs`.
+- ⚠ **It lands in the PORTAL because that is the only surface that says something
+  arrived.** On `/profile` it would have been as silent as the bug it fixes. The
+  cost is real and is paid in three places: the line read is a second query
+  (`listMyRequests`), the door answers for both kinds inside `hasPortalLines`
+  rather than being OR'd by a page, and the box now holds a row that is a
+  **person** rather than a line. ⚠ **`listMyPortal`'s join on
+  `payload->>'itemId'` carries the privacy term — do not relax it to let a
+  request through.** A request has no `itemId`, and that absence is what keeps it
+  out.
+- ⚠ **ONE LINE: *`@handle` wants to track you.* Accept / Decline** — directed,
+  replacing a borrowed `Ask` that spent two. `Ask`'s shape exists because the
+  console's questions are about a line already above them, so they must name what
+  they ask about; **this sentence already names it**. The answers are **plain
+  words, not boxed buttons** — a bordered control is a block and cannot sit in a
+  run of words — and the 44px is untouched because `tap-target` hangs its hit
+  area off a pseudo-element. ⚠ **It cannot fit on one line on a 390 phone**
+  (~394px of content into ~310px) and wraps there; one line from 430px up.
+- ⚠⚠ **THE DOOR SAYS WHICH: A DOT ABOVE THE CIRCLES WHEN SOMEBODY IS WAITING ON
+  YOU — directed 4 September.** One lit glyph stood for both kinds of row, which
+  made a reader open the box to find out whether anybody was waiting on them.
+  Three states, one drawing: circles off, circles lit, circles lit **with a dot**.
+  ⚠ **Letters over the glyph (`C`, `R`, `C/R`) were built and looked at first and
+  were a SMUDGE** — the counters collide with both circles' strokes at 26px; the
+  direction had anticipated it and named the dot as the fallback. A `+` was ruled
+  out before either: the capture control is a `+` two cells away and this app
+  cannot afford two plus-shapes side by side on the one control it has to be
+  perfect at.
+- ⚠⚠ **THE DOT IS GREEN, AND IT IS THE ONLY THING IN THE BAR THAT IS NOT
+  `currentColor`.** It is `--color-accept` — the colour of the *Accept* one tap
+  behind it, so the mark on the door and the action behind it say one thing
+  twice. ⚠ **A red one was raised for the convergence side and is refused**: red
+  is *no*, and on a mark reporting an event nobody has to answer it reads as an
+  alarm. **A convergence is not a problem.** ⚠ **And a convergence gets no dot at
+  all** — its colour is `--color-accent`, which already means *this converged* on
+  the line itself in the gutter, and a second tenant saying the same thing beside
+  a control is what the one-tenant rule exists to prevent.
+- ⚠⚠ **ANSWERING RE-READS THE PORTAL; IT DOES NOT PATCH THE ROW OUT LOCALLY.**
+  Removing it from state was wrong in a way only *accepting* shows: **accepting
+  runs the fan-out**, so the same tap can write convergences into the box being
+  looked at, and a local patch left the door dark over rows it had just created.
+  One read answers the rows, the door and the emptiness together. ⚠ **An empty
+  card then CLOSES** — directed: a card standing with nothing in it is §5's
+  *empty portal* reached from the other side, a surface you could not have
+  opened.
+- ⚠ **The lock's sentence — *swipe a line away and it stays out of matching* — is
+  DELETED, 4 September, directed.** It fired at a record length of exactly one,
+  which every existing account has passed forever. ⚠ **What it costs: nothing now
+  teaches the lock swipe.** Judged affordable rather than free — locking is a rare
+  verb and a person's *first* capture is not where a gesture they want months
+  later is learnt. **If the lock proves undiscoverable, this is what was removed,
+  and it should come back where a reader is actually looking.** It also said
+  *matching*, which is not a word in §3's vocabulary.
+- ⚠ **A margin that separates two things must belong to the thing that may not be
+  there.** The request row wore `mb-4`; with no convergence under it the card
+  measured 20px of air above the row and 36 below, so the one thing in the box
+  sat 16px high in it. The gap is the heading's `mt-4` now, and the space
+  *between* requests is a `gap` on their own container. Measured 20/20.
+- ⚠ **The dot's clearance is measured against the INK, not the bounding box, and
+  the first attempt got it wrong.** At the dot's x the two circles are crossing
+  near their tops, so the ink is at y 4.09 rather than 4.25 — a dot ending at 4.1
+  read as a **stem**. It is cy 1.75 r 1.15 now, 1.2 units clear. **Filled: the one
+  filled shape in the eleven**, because a ring that size is a grey blur.
+- ⚠ **Still not a count** — one dot however many people are asking, and
+  `portal.mjs`'s no-digits assertion holds. ⚠⚠ **It is nonetheless the closest
+  this app has come to a notification badge. If a second dot is ever proposed for
+  a second kind of row, the answer is that the door has run out of what it can
+  say and the surface behind it is where the distinction belongs.**
+- ⚠ **The door has three accessible names** — *Who else*, *Requests*, *Requests,
+  and who else* — because a dot is meaningless to a reader who cannot see it. **A
+  probe pinned to one of those strings reports a missing door** the first time the
+  account under test holds the other kind of row; both probes match the control
+  by prefix, and `seed-request.mjs` empties the account's other unread rows so
+  *a request alone* is a state the probe can actually reach.
+- ⚠⚠ **ACCEPT IS GREEN AND DECLINE IS RED — directed, and they are the FIRST
+  COLOURED CONTROLS IN THIS APP.** §11 gives every other control `--color-text`
+  or a fade of it and reserves `--color-accent` for a state. `--color-accept`
+  `#4f9860` and `--color-decline` `#cf5a4c` are the palette's own values
+  re-pitched — the lacquer red opened up because `#c1483c` measures 4.31:1 and
+  fails AA at 18px, and the green's own recorded ladder-back rather than
+  `--color-listed`'s neon, which was chosen to be *the loudest mark in the app*.
+  **5.95 and 5.25 on true black; 5.2 and 4.6 on the desk's charcoal.** ⚠ **The
+  scarcity rule binds them from day one: the moment green appears on a second
+  affirmative or red on a second dismissal, both stop meaning anything — and
+  neither is the error colour**, which `docs/decisions.md` has refused twice.
+- ⚠ **The handle is full ink, the rest of the sentence muted** — a request is
+  about a person. It is a **split of the one authored string** at the handle's own
+  length, never a second composition: `portalSentence` stays the only author.
+- ⚠ **THE SCREEN SAYS *ADD* AND THE CODE SAYS *TRACK* — directed, and it is the
+  first deliberate split of §4's vocabulary rule.** The **relation** is a track;
+  only the **act of asking for one** is called adding. `tracks`, `trackUser`,
+  `TrackState` and `track_request` all keep their names. ⚠ *Add* is not on the
+  banned list, so **the linter cannot hold this and it has to be held by hand.**
+- ⚠ **`Tracking` was a lie and is gone.** *Add* → **Requested** → *Added each
+  other*. The middle state used to claim a live relationship where there was an
+  offer nobody had been told about. ⚠ **It was *Added* for an hour and fell to
+  the same flaw**, which had been written down when it was chosen: it claims
+  something happened. *Add* is the verb; *Requested* is the state it leaves
+  behind, **and it is the same word on the row in People** so a relationship
+  reads the same in both places it appears.
+- ⚠⚠ **THE HANDLE FIELD SENDS THE REQUEST, AND IT SENT YOU TO THEIR PAGE FOR ITS
+  FIRST HOUR — reported and rebuilt the same day.** The detour existed so a
+  mistyped handle could be seen before being asked; **the destination could not
+  tell you anything**, because a non-mutual sees nothing of a record — so it was
+  the handle you had just typed, an *Add* button and *This list is not shared
+  with you*. **It read as done and nothing had been sent.** Production said so: 0
+  tracks, 0 notifications. *A typo is answered in place now* — **No such
+  person.** under the field — **and the confirmation is the row**, not a message.
+- ⚠ **A non-mutual is shown NO LISTS on `/u/[handle]`.** A heading and *This list
+  is not shared with you.* was two thirds of a screen explaining an absence over
+  the one control worth being there for. §6's *silence stays silent*, applied to
+  a surface; the four terms are untouched and are still the data layer's.
+- ⚠ **A pending request is named `@handle` and the handle is read LIVE from
+  `profiles`** — the one place this app departs from *the payload is the record*.
+  A convergence's name is history; a request is **a live question about a person
+  you are about to let in**, and a handle that has changed since would name
+  somebody you do not recognise and address somebody who is gone.
+- ⚠ **There was no in-app way to add anybody at all**, which is half the bug:
+  `/u/[handle]` was reached by typing the URL. `components/add-person.tsx` is a
+  handle field in People on `/profile`, and ⚠ **it goes to their page rather than
+  adding them** — a typo can reach a real person, and asking is what puts a
+  question in somebody's portal. **It is not search and must not become one.**
+- **Proved:** `tests/handshake.test.ts` — 8 cases, and the one that matters is
+  **accepting runs the fan-out**, which is the whole reason the feature exists
+  and cannot be seen from a screen. `node_modules/.probe/handshake.mjs` for the
+  surface; `scripts/seed-request.mjs` seeds one locally with the production
+  guard.
+- **Still open:** the QR, which is §2f of the brief and reduces to *a handle in a
+  URL, scanned by the phone's own camera* — `BarcodeDetector` is not in Safari,
+  so an opaque token would mean shipping a decoder to do what iOS does from the
+  lock screen. **The encoder is a tenth dependency or ~300 lines, and that is
+  undecided.** ⚠ **Blocking is also still open**, and it is named rather than
+  quietly deferred.
 
 ⚠⚠ **A CAPTURE IS SHAREABLE WHEN IT IS WRITTEN, AND THE SWIPE IS THE LOCK — 31
 August, directed. This overrules the specification's private-by-default and it

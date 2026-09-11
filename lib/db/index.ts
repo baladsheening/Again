@@ -179,3 +179,14 @@ export type {
   SwapStatus,
   Visibility,
 } from './schema'
+
+/**
+ * **Where a device says it can be reached** — earned push, Amendment 10.
+ *
+ * ⚠ **Only the two WRITES are here.** Delivery reads the *recipient's*
+ * endpoints, and the recipient is not the session user — so that read lives in
+ * `lib/push.ts` beside the fan-out that already writes other people's rows.
+ * A `lib/db/` function whose first argument is somebody else is the one shape
+ * §3 exists to forbid.
+ */
+export { savePushSubscription, removePushSubscription } from './push'
