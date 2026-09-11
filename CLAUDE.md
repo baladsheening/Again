@@ -43,13 +43,65 @@ a document in an active folder gets opened.
 > Again turns the private things I want to do into real-world opportunities when
 > someone I trust wants the same thing.
 
-- ⚠⚠ **THREE THINGS BLOCK RELEASE 1 AND NONE OF THEM IS A SCREEN THAT LOOKS
-  WRONG**, in the order they should be closed: **the matching consent and a
-  findable lock**; **an external action after a convergence** — there is no
-  `mailto:`, `sms:` or `navigator.share` anywhere in the tree; and **earned
-  push**, with no service worker in `public/`. ⚠ **The fourth was convergence
-  on wording and it is BUILT — 11 September**, see the entry below.
-  `docs/re-direction/current-code-audit.md` is the comparison in full.
+- ⚠⚠ **TWO THINGS BLOCK RELEASE 1 AND NEITHER IS A SCREEN THAT LOOKS WRONG**:
+  **the matching consent and a findable lock**, and **earned push** — no service
+  worker in `public/`. ⚠ **Two of the four are BUILT — 11 September**:
+  convergence on wording, and the way out. `current-code-audit.md` is the
+  comparison in full.
+
+⚠⚠ **THE WAY OUT — 11 September, AND IT IS THE ONE CONTROL THE WHOLE RESET WAS
+ABOUT.** *A convergence produces a notification, not an opportunity.* The
+engine, the portal and the mark were all correct and all stopped at the
+coincidence. `components/ask-them.tsx` is the step that was missing: **Ask
+them**, a word in the run of the convergence sentence, on both surfaces the
+sentence appears — the portal's row (arrival) and the console's slot (memory).
+
+- ⚠⚠ **THE SYSTEM SHARE SHEET, NEVER A CHANNEL THIS APP PICKS.** Naming WhatsApp
+  or SMS means asking for the contacts permission, which contradicts the privacy
+  stance the strategy spends a section protecting. **The sheet needs no
+  permission and no contact data**, and the person picks the recipient in their
+  own app. ⚠ **So the control does not know who it is messaging and does not need
+  to** — the counterpart is named in the sentence above it.
+- ⚠⚠ **A CANCELLED SHARE IS NOT A FAILURE.** Dismissing the sheet rejects with
+  `AbortError`; it is swallowed by name, and **only a real fault falls through
+  to the clipboard** — a cancelled share that silently copied would leave the
+  draft on the clipboard of somebody who decided against sending it.
+- ⚠ **The fallback is the clipboard and it says so.** `navigator.share` is
+  absent on Firefox; a control that did nothing there is the button that lies.
+  **`Copied` for two seconds** — a silent copy reads as a control that did
+  nothing, where the sheet is its own receipt.
+- ⚠⚠ **NOTHING RENDERS OFF `navigator`, SO THERE IS NO CAPABILITY STATE.** The
+  first draft read it in a `useEffect` and `react-hooks/set-state-in-effect`
+  refused it — **the lint rule was right and the real fault was upstream**: the
+  label is *Ask them* either way, so the capability decides only what the handler
+  does, and a handler runs in a browser by definition. **Do not reintroduce a
+  `canShare` flag.**
+- ⚠ **A word in the sentence, not a fourth glyph in the row.** `Accept` and
+  `Decline` are the precedent two lists up. The glyph row is the wrong home:
+  cross off, rewrite and settle act on **your line**, this acts on **the
+  overlap** — and that row is a measured sight line (`traysightline.mjs`) a
+  conditional fourth glyph would move.
+- ⚠ **`askDraft` is in `lib/vocabulary.ts`, not beside `portalSentence`**,
+  which is where §6's drift rule would put it — `lib/overlap.ts` is
+  `server-only` and this is read by a client component. **If a fourth register
+  is written, move all of them together.**
+- ⚠⚠ **IT DOES NOT BRANCH ON `NotificationKind`, AND THAT IS FORCED.**
+  `listMyPortal` groups every notification about one capture into one row, so
+  **a line can be a `convergence` and a `guide` at once** — there is no single
+  kind to read. ⚠ **The cost: for a `lend` the right question is *could I
+  borrow it*, not *want to?*** Affordable because `lend` and `guide` both need
+  a non-null intention and nothing has written one since 22 August. **If either
+  becomes reachable, this is the line to branch — and the branch needs a kind
+  the grouped line does not carry.**
+- ⚠ **The words are quoted, never injected into a sentence frame.** *Want to
+  `text` together?* breaks on *a trip to Japan*; quoting is what makes it total
+  over arbitrary text, and §6 requires that what somebody typed survives.
+  **Measured: `We both saved “portal seed 10:33:35”. Want to?`**
+- ⚠ **It does not name the app.** Both people are notified, so the recipient
+  already knows why it arrived; a sentence explaining Juce would be the product
+  talking inside somebody else's message.
+- **Measured by `node_modules/.probe/askthem.mjs`** — 13 assertions, both
+  surfaces, both placements, and the draft read back off the clipboard.
 - ⚠ **The worker is the gate on the other three.** Push needs one, and so does
   the LLM canonicalisation that would let *learn to sail* and *sailing lessons*
   converge — one piece of infrastructure, two blockers. **Costed 11 September:

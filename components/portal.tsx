@@ -1,6 +1,7 @@
 'use client'
 
 import type { PortalLineView, TrackRequestView } from '@/app/actions/portal'
+import { AskThem } from './ask-them'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -420,7 +421,22 @@ export function Portal({
                 the only thing on this surface that the record does not already
                 say.
               */}
-              <p className="text-muted mb-2.5 text-[0.8125rem]">{line.sentence}</p>
+              {/*
+                ⚠ **The way out rides the sentence — Amendment 10.** The portal
+                is *arrival*: this is the moment somebody learns, and it is where
+                the action is worth most. It sits inside the sentence's own line
+                rather than in a row of its own, which is `Accept` and `Decline`'s
+                precedent two lists up and the reason density rule 2 is satisfied
+                by reusing a line that is already here.
+
+                ⚠ **Every row in this list has something to act on**, so there is
+                no condition on it: `listMyPortal` reads overlaps, and a request
+                is a different row entirely.
+              */}
+              <p className="text-muted mb-2.5 text-[0.8125rem]">
+                {line.sentence}
+                <AskThem text={line.text} />
+              </p>
 
               {children(line)}
             </li>

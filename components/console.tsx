@@ -1,6 +1,7 @@
 'use client'
 
 import type { PageLineView } from '@/lib/page-line'
+import { AskThem } from './ask-them'
 import { CrossOffGlyph, LinkGlyph, RewriteGlyph, SettleGlyph } from './glyphs'
 
 /**
@@ -243,8 +244,25 @@ export function Console({
             absence, and a *no matches yet* here would be the most natural thing
             in the world to add and the exact thing that is forbidden.
           */}
+          {/*
+            ⚠ **The way out rides the sentence here too — Amendment 10**, and
+            the condition is the sentence's own. The portal is arrival and this
+            is memory: a convergence on a line from March is as actionable as one
+            that landed this morning, and the mark in the gutter is what sent the
+            reader here. **One control, both surfaces**, for the same reason
+            `portalSentence` is one author — see `components/ask-them.tsx` for
+            why it is a word in the run rather than a fourth glyph in the row
+            below.
+
+            ⚠ **A crossed-off line keeps it.** The mark survives crossing off
+            because a resolution is not an erasure, and somebody who struck a
+            line can still want to say *we both saved this*.
+          */}
           {convergence !== null && (
-            <p className="text-muted mt-3 text-[0.8125rem]">{convergence}</p>
+            <p className="text-muted mt-3 text-[0.8125rem]">
+              {convergence}
+              <AskThem text={line.text} />
+            </p>
           )}
 
           {/*

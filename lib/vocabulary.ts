@@ -200,3 +200,49 @@ export const WHERE_IT_IS: Record<EntryState, { href: Route; label: string }> = {
   fixture: { href: '/settled', label: 'Have' },
   done: { href: '/settled', label: 'Done' },
 }
+
+/* -------------------------------------------------------------------------- */
+/*  The way out — Amendment 10, 11 September                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * **The message a convergence hands you.**
+ *
+ * The product reset that produced Amendment 10 turned on one sentence: *a
+ * convergence currently produces a notification, not an opportunity.* Two people
+ * both wanting pottery is a coincidence; a message ready to send is the payoff.
+ * This is that message. Again builds no chat, no calendar and no RSVP — it
+ * writes the line and gets out of the way.
+ *
+ * ⚠⚠ **THE PERSON'S OWN WORDING, QUOTED, NEVER INJECTED INTO A SENTENCE
+ * FRAME.** *Want to `${text}` together?* breaks the moment somebody writes *a
+ * trip to Japan*, and rewriting *learn to sail* into *Sailing lessons* would
+ * break the provenance rule at the one moment the words leave the app — §6
+ * requires that what a person typed survives, and this is where that stops
+ * being an internal nicety. Quoting is what makes it total over arbitrary text.
+ *
+ * ⚠⚠ **IT DOES NOT BRANCH ON `NotificationKind`, AND THAT IS FORCED RATHER THAN
+ * LAZY.** `portalSentence` branches because it has one kind; **a portal line
+ * does not** — `listMyPortal` groups every notification about one capture into
+ * one row, so a line can be a `convergence` and a `guide` at once and there is
+ * no single kind to read. So the draft is about the *capture*, which every kind
+ * shares, rather than about the event. ⚠ **The cost, stated: for a `lend` —
+ * they own a copy, you want one — *Want to?* is the wrong question**, and the
+ * right one is *could I borrow it*. It is affordable because `lend` and `guide`
+ * both need a non-null intention and nothing has written one since 22 August.
+ * **If either becomes reachable, this is the line to branch — and the branch
+ * needs a kind the grouped line does not currently carry.**
+ *
+ * ⚠ **It does not name the app, and that is not modesty.** Both people are
+ * notified, so the recipient already knows why this arrived; a sentence
+ * explaining Again would be the product talking in somebody else's message.
+ *
+ * ⚠ **It lives here rather than beside `portalSentence`**, which is where §6's
+ * drift rule would put it: `lib/overlap.ts` is `server-only` and this is read by
+ * a client component. **If a fourth register is ever written, keep all of them
+ * in one place and move this one to it** — three ways of saying one event in
+ * three files is exactly what that rule exists to stop.
+ */
+export function askDraft(text: string): string {
+  return `We both saved “${text}”. Want to?`
+}

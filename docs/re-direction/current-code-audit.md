@@ -80,11 +80,11 @@ creates the relationship. And the lock is reachable only by a swipe;
 `components/console.tsx` carries cross-off, rewrite and settle, and is the
 obvious home for it. See bucket 4, which is why this is not merely an omission.
 
-**3. The action after a convergence.** There is no `mailto:`, no `sms:`, no
-`navigator.share` anywhere in the tree. The product currently stops at the
-sentence — the exact stopping point that caused this reset. The bridge carries
-the capture's **own wording**, and goes through the system share sheet rather
-than a channel Again picks; `view.md` amendments E and F carry the reasoning.
+**3. The action after a convergence.** ⚠ **BUILT 11 September** — struck from
+this bucket. `components/ask-them.tsx`: *Ask them*, in the run of the
+convergence sentence, on the portal row and in the console. The system share
+sheet, the capture's own wording quoted, a clipboard fallback that says so, and
+a cancelled share treated as a change of mind rather than a fault.
 
 **4. Earned delivery.** No service worker in `public/`, and VAPID keys are
 optional in `lib/env.ts`. Delivery is in-app only, so a convergence arriving
