@@ -49,6 +49,90 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **THE SAME WORDS TWICE IS NOT TWO CAPTURES — 12 September, directed, AND IT
+REVERSES `writeCapture`'S OWN DOCBLOCK.** *Maybe the app shouldn't accept an
+entry if it's exactly the same as a previous entry, instead alerting a user to
+the same previous entry.* That block read: *raw text is never deduplicated — two
+captures of the same words are two captures, because the same words can mean a
+different thing on a different day.*
+
+- ⚠⚠ **THE SECOND HALF OF THAT SENTENCE IS WHY IT HAD TO GO.** It ended *and the
+  unique key does not constrain rows whose possibility is null* — **which is
+  almost every capture** — so nothing anywhere stopped one record holding the
+  same line four times. `schema.ts` names the consequence at the far end: a
+  notification matches by SUBJECT, so **two live captures of the same words both
+  list in the portal and both wear a mark off one event.** This closes it at the
+  door, where the person can still see what they meant.
+- ⚠⚠ **AFTER THE MUTATION-ID CHECK, NEVER BEFORE IT.** That check is what makes a
+  retry idempotent (§10); ahead of it, the retry of a capture that landed would
+  be answered *you already wrote this*. **A duplicate check is not an
+  idempotency**, and `acceptance.test.ts` keeps one case of each to say so.
+- ⚠⚠ **`normalised_text`, THE APP'S ONE DEFINITION OF *THE SAME WORDS*.**
+  `Learn to sail!` and `learn  to  sail` are the same intention — that is what
+  the generated column says, what search compares against and what a convergence
+  joins on. ⚠ **The empty normalisation is excluded**, for the reason
+  `tests/words.test.ts` already proves: `???` and `...` both normalise to
+  nothing, so without the guard the second punctuation-only capture anybody wrote
+  would be refused as a duplicate of the first.
+- ⚠ **ON THE RECORD — `PAGE_STATUSES`, not a fourth spelling of it.** A settled
+  line is history and wanting a thing again next year is a new capture; a
+  crossed-off one is still on the page, struck, and is found and **reported as
+  struck**. Two sentences, because they ask for two different acts: *Already on
+  your record.* means there is nothing to do, *Crossed off on your record.* means
+  go and put it back.
+- ⚠ **What it costs, stated: retyping a crossed-off line no longer revives it.**
+  The unique key used to do that silently for a resolved capture. The revive is
+  still reached the way it always was — same possibility and intention,
+  **different words** — which is how `acceptance.test.ts` and
+  `guarantees.test.ts` enter it now.
+- ⚠⚠ **`self` ONLY, AND A COPY IS DELIBERATELY EXEMPT.** `copyCapture` carries
+  the one provenance movement §6 allows — *add something yourself, cross it off,
+  then copy it from the person who had it* — and refusing that copy would leave
+  the row claiming `self` for ever. ⚠ **And the rule CLOSES A SUPPRESSION HOLE
+  on the self path**: an unresolved lapsed copy has a null possibility, so the
+  unique key never constrained it and retyping its words wrote a second `self`
+  row that then notified the person it was taken from. `guarantees.test.ts`
+  asserts the refusal first and the revive second.
+- ⚠ **The words go back into the field**, which is the existing failure contract
+  — *a capture that failed is a capture somebody still means to make* — and it is
+  what makes a refusal answerable rather than a dead end.
+- **161 tests green**, and `node_modules/.probe/dupe.mjs` — 7 assertions on the
+  real page, both sentences, the normalisation and that the record holds one.
+  ⚠ **Its first run failed twice on its own bug**: a refused capture puts its
+  words back, so the next `type()` appended to them and submitted a string that
+  was nobody's duplicate. **Clear the field between writes.**
+
+⚠⚠ **AND THE FOOT'S GLYPHS SIT IN THE SAME PLACES ON BOTH SCREENS — 12
+September, directed:** *position the glyphs on the home screen, the landing
+page, identically to how they're positioned when users are on the recorder
+page.* `Foot` is one component with one set of classes, so the difference could
+only ever have been its container — and it was.
+
+- ⚠⚠ **THE COMPOSER'S FOOT ROW WAS THE ONLY FULL-BLEED THING ON THAT SCREEN.**
+  The record's footer sits inside `gutter mx-auto w-full
+  max-w-[var(--record-measure)]`; the composer puts that same wrapper round its
+  own card six hundred lines up and had nothing round the foot. **Measured at
+  390×844, `node_modules/.probe/footparity.mjs`: the footer ran 0→390 against
+  the record's 20→370**, so its five columns were 78px where the record's are 70
+  and the outer glyphs sat **20px further out** — the home glyph on the screen's
+  edge under a card held off by `--gutter-l`. After: every centre equal to the
+  pixel, 55 / 125 / 195 / 265 / 335 on both.
+- ⚠ **The same three classes as the card, never a `px-` of its own.**
+  `--gutter-l` holds every other box on that screen off the edge; a second
+  spelling of it is a number to keep in step.
+- ⚠⚠ **THE VERTICAL WAS ALREADY RIGHT WHERE IT MATTERS AND IS NOT TOUCHED.** At
+  inset 0 the composer's row sits 19.38px higher, and **all of it is
+  `foot-clear`'s `margin-block-end`** — `max(0px, … − --sheet-clearance)` — so
+  **the notch spends it and the two rows land 1px apart on a handset.** Measured
+  at `INSET=34` through `Emulation.setSafeAreaInsetsOverride`. That margin tops
+  the air under the row up to the band above the card (8 September,
+  `bandink.mjs`), and the record has no band to answer to. ⚠ **A desk browser
+  reports inset 0 and would have sent the next person to delete it.**
+- ⚠ **The probe pairs cells by POSITION, never by label.** Column one is the home
+  glyph and it is the one cell whose label differs by design — lit on the record,
+  drawn off on the composer, so a `<span>` with no `aria-label`. Matching on the
+  label reported a 140px difference between a glyph and itself.
+
 ⚠⚠ **A CROSSED-OFF LINE WEARS NO MARK — 12 September, directed, AND IT REVERSES
 WHAT `mark.test.ts` HAD ASSERTED SINCE 31 AUGUST.** Reported: *any crossed off
 item should also not have an amber vertical line next to it.* The mark was §5's

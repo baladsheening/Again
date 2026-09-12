@@ -239,18 +239,111 @@ describe('a retried submission is one capture', () => {
     expect(rows[0].n).toBe(1)
   })
 
-  it('keeps two captures of the same words when they are separate submissions', async () => {
+  it('⚠ REFUSES the same words as a separate submission, and says where they are', async () => {
     /*
-      The other half of the same paragraph: raw text is not deduplicated,
-      because the same words can mean a different thing on a different day.
+      ⚠⚠ **THIS ASSERTED `2` UNTIL 12 SEPTEMBER**, on the paragraph's other
+      half: *raw text is not deduplicated, because the same words can mean a
+      different thing on a different day.* **Directed otherwise** — *the app
+      shouldn't accept an entry if it's exactly the same as a previous entry,
+      instead alerting a user to the same previous entry.*
+
+      ⚠ **The distinction from the case above survives and is the point of
+      keeping both.** A retried submission carries the SAME mutation id and is
+      answered with the row that landed, `ok` and `created: false`; a second
+      submission carries a new one and is answered with a refusal. §10's
+      idempotency is not a duplicate check and this proves they are still two
+      things.
     */
-    await dal.addCapture(one(), { text: 'try pottery', clientMutationId: randomUUID() })
-    await dal.addCapture(one(), { text: 'try pottery', clientMutationId: randomUUID() })
+    const first = await dal.addCapture(one(), {
+      text: 'try pottery',
+      clientMutationId: randomUUID(),
+    })
+    expect(first.ok).toBe(true)
+
+    const second = await dal.addCapture(one(), {
+      text: 'try pottery',
+      clientMutationId: randomUUID(),
+    })
+    expect(second.ok).toBe(false)
+    if (second.ok) return
+    expect(second.error).toBe('conflict')
+    expect(second.message).toBe('Already on your record.')
 
     const { rows } = await pool.query('select count(*)::int as n from captures where user_id = $1', [
       oneId,
     ])
-    expect(rows[0].n).toBe(2)
+    expect(rows[0].n).toBe(1)
+  })
+
+  it('⚠ the same WORDS, not the same string — normalised, and the empty one is exempt', async () => {
+    /*
+      ⚠ **`normalised_text` is the app's one definition of *the same words***, so
+      punctuation and spacing do not make a second capture. ⚠ **And `???`
+      normalises to nothing**, which is the guard `tests/words.test.ts` proves on
+      the convergence side: without it the second punctuation-only capture
+      anybody wrote would be refused as a duplicate of the first.
+    */
+    await dal.addCapture(one(), { text: 'Learn to sail', clientMutationId: randomUUID() })
+    const loud = await dal.addCapture(one(), {
+      text: '  LEARN   to  sail!! ',
+      clientMutationId: randomUUID(),
+    })
+    expect(loud.ok).toBe(false)
+
+    expect((await dal.addCapture(one(), { text: '???', clientMutationId: randomUUID() })).ok).toBe(
+      true,
+    )
+    expect((await dal.addCapture(one(), { text: '...', clientMutationId: randomUUID() })).ok).toBe(
+      true,
+    )
+  })
+
+  it('⚠ a SETTLED line is history, so the same words may be captured again', async () => {
+    /*
+      The boundary is `PAGE_STATUSES` — *is this line still on your record* — and
+      not *have you ever written it*. Wanting a thing again a year later is a new
+      capture; the settled one is in the tray, where the record is not.
+    */
+    const first = await dal.addCapture(one(), { text: 'see the sea', clientMutationId: randomUUID() })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    await pool.query(
+      `update captures set state = 'done', status = 'completed', verdict = null, resolved_at = now()
+       where id = $1`,
+      [first.value.capture.id],
+    )
+
+    const again = await dal.addCapture(one(), {
+      text: 'see the sea',
+      clientMutationId: randomUUID(),
+    })
+    expect(again.ok).toBe(true)
+    if (!again.ok) return
+    expect(again.value.capture.id).not.toBe(first.value.capture.id)
+  })
+
+  it('⚠ a CROSSED-OFF line is on the record, so it is refused and reported as struck', async () => {
+    const first = await dal.addCapture(one(), {
+      text: 'walk the ridge',
+      clientMutationId: randomUUID(),
+    })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    expect((await dal.dropCapture(one(), first.value.capture.id)).ok).toBe(true)
+
+    const again = await dal.addCapture(one(), {
+      text: 'walk the ridge',
+      clientMutationId: randomUUID(),
+    })
+    expect(again.ok).toBe(false)
+    if (again.ok) return
+    /*
+      ⚠ **A different sentence, because it asks for a different act.** *Already
+      on your record* means there is nothing to do; this means go and put it
+      back — the console's × is where, and it is the same one tap that struck it.
+    */
+    expect(again.message).toBe('Crossed off on your record.')
   })
 
   /*
@@ -387,9 +480,18 @@ describe('undo takes back a new capture and nothing else', () => {
  * note, provenance and legacy link with it.
  */
 describe('a revive is not a creation', () => {
-  const resolved = () =>
-    dal.addCapture(one(), { text: 'An Acceptance', possibilityId: filmId, intent: 'see' })
+  const resolved = (text = 'An Acceptance') =>
+    dal.addCapture(one(), { text, possibilityId: filmId, intent: 'see' })
 
+  /*
+    ⚠⚠ **THE REVIVE IS REACHED WITH DIFFERENT WORDS SINCE 12 SEPTEMBER, AND
+    THAT IS THE WHOLE EDIT TO THIS BLOCK.** Re-adding the *identical* line is now
+    a refusal — see *the same words twice is not two captures* — so the path
+    these cases exist for is entered the way it still can be: the same
+    possibility and intention, a different sentence. **What is asserted is
+    unchanged**: the unique key finds the dropped row, updates it, and reports
+    `created: false` so no caller can offer an undo for somebody's March line.
+  */
   it('reports created: false, so no caller can offer an undo for it', async () => {
     const first = await resolved()
     expect(first.ok && first.value.created).toBe(true)
@@ -397,7 +499,7 @@ describe('a revive is not a creation', () => {
 
     expect((await dal.dropCapture(one(), first.value.capture.id)).ok).toBe(true)
 
-    const again = await resolved()
+    const again = await resolved('An Acceptance, said again')
     expect(again.ok).toBe(true)
     if (!again.ok) return
 

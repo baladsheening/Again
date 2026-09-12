@@ -1167,10 +1167,14 @@ export async function addCapture(
  * whenever it was saved. §6 asks for both, and neither substitutes for the
  * other.
  *
- * ⚠ **Raw text is never deduplicated.** Two captures of the same words are two
- * captures: the same words can mean a different thing on a different day, and
- * the unique key does not constrain rows whose possibility is null. Only a
- * resolved capture collides.
+ * ⚠⚠ **AND SINCE 12 SEPTEMBER THERE IS A THIRD, WHICH ANSWERS *IS THIS THE SAME
+ * LINE?*** This block used to read: *raw text is never deduplicated — two
+ * captures of the same words are two captures, because the same words can mean
+ * a different thing on a different day, and the unique key does not constrain
+ * rows whose possibility is null.* **Directed otherwise**, and the second half
+ * of that sentence is exactly why it had to be: nothing constrained an
+ * unresolved row, so one record could hold the same line four times. The check
+ * is in the transaction below and the full argument is on it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  Reviving a dropped capture does not rewrite where it came from
@@ -1221,6 +1225,94 @@ async function writeCapture(
         .limit(1)
 
       if (already) return ok({ capture: already, created: false })
+    }
+
+    /*
+      ─────────────────────────────────────────────────────────────────────────
+       The same words twice is not two captures — 12 September, directed
+      ─────────────────────────────────────────────────────────────────────────
+
+      ⚠⚠ **THIS REVERSES A RULE THIS FUNCTION'S OWN DOCBLOCK STATED**: *raw text
+      is never deduplicated — two captures of the same words are two captures,
+      because the same words can mean a different thing on a different day.*
+      Directed: *maybe the app shouldn't accept an entry if it's exactly the
+      same as a previous entry, instead alerting a user to the same previous
+      entry.*
+
+      ⚠⚠ **AND THE OLD RULE HAD A COST NOBODY HAD PRICED, WHICH IS WHY THIS IS
+      NOT ONLY A PREFERENCE.** The unique key is `(user, possibility, intent)`
+      and **does not constrain a row whose possibility is null** — which is
+      almost every capture — so nothing anywhere stopped one record holding the
+      same line four times. `schema.ts` names the consequence at the other end:
+      a notification matches by SUBJECT, so **two live captures of the same
+      words both list in the portal and both wear a mark off one event.** This
+      closes that at the door, where the person can still see what they meant.
+
+      ⚠ **After the mutation-id check, never before it.** That check is what
+      makes a retry idempotent; ahead of it, the retry of a capture that landed
+      would be answered *you already wrote this* — a §10 guarantee turned into
+      an error message.
+
+      ⚠⚠ **`normalised_text`, so it is the app's one definition of *the same
+      words*.** `Learn to sail!` and `learn  to  sail` are the same intention —
+      that is what the generated column says, what search compares against, and
+      what a convergence joins on. A raw `text` comparison here would be a
+      second, stricter definition of sameness in the one place a person meets
+      it. ⚠ **The empty normalisation is excluded for the reason
+      `tests/words.test.ts` proves**: `???` and `...` both normalise to nothing,
+      and without this guard the second punctuation-only capture anybody wrote
+      would be refused as a duplicate of the first.
+
+      ⚠ **ON THE RECORD, which is `PAGE_STATUSES` and not a fourth spelling of
+      it.** A settled line is history — wanting a thing again next year is a new
+      capture, not a duplicate — and the tray is where it lives. A crossed-off
+      one is still on the page, struck, so it is found and reported as struck:
+      the answer there is the console's ×, which puts it back where it was
+      rather than writing a second row beside it.
+
+      ⚠ **What it costs, stated: retyping a crossed-off line no longer revives
+      it.** For a RESOLVED capture the unique key used to do that silently.
+      Nothing is lost — the line is on the record and one tap puts it back — and
+      the message is what says where to look. The revive is still reachable the
+      way it always was for a line whose WORDS differ from the one on the page.
+
+      ⚠⚠ **`self` ONLY, AND A COPY IS DELIBERATELY EXEMPT.** The direction is
+      about writing an entry; `copyCapture` is another door, and it carries a
+      mechanism this must not break — *add something yourself, cross it off,
+      then copy it from the person who had it*, which is the one provenance
+      movement allowed and exists so the revived row does not claim to be
+      independently yours and notify the person you took it from (§6, and
+      `tests/guarantees.test.ts` names it). Refusing that copy would leave the
+      row claiming `self` for ever. **A copy of a line you already hold is
+      already answered by the unique key**, which returns the existing row.
+    */
+    const [twin] = provenance.source !== 'self'
+      ? []
+      : await tx
+          .select({ id: captures.id, status: captures.status })
+          .from(captures)
+          .where(
+            and(
+              eq(captures.userId, sessionUser.id),
+              inArray(captures.status, PAGE_STATUSES),
+              sql`${normalised(sql`${text}`)} <> ''`,
+              eq(captures.normalisedText, normalised(sql`${text}`)),
+            ),
+          )
+          .limit(1)
+
+    if (twin) {
+      /*
+        ⚠ **Two messages, because they ask for two different acts.** A live twin
+        means *it is already there and there is nothing to do*; a struck one
+        means *go and put it back*. Design rule 1 — say the state, and the verb
+        is what the reader supplies. See `compose-screen.tsx`, where the words
+        go back into the field either way, so the person can change them instead.
+      */
+      return err(
+        'conflict',
+        twin.status === 'dropped' ? 'Crossed off on your record.' : 'Already on your record.',
+      )
     }
 
     /* The existing row, not `excluded` — Postgres resolves an unqualified

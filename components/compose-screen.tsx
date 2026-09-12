@@ -1478,8 +1478,39 @@ export function ComposeScreen({
             `foot-clear` for the derivation and why the air is here rather
             than on the strip's padding.
           */}
+          {/*
+            ⚠⚠ **THE GUTTER, AND WITHOUT IT THIS ROW WAS THE ONLY FULL-BLEED
+            THING ON THE SCREEN — 12 September, reported: *position the glyphs
+            on the home screen, the landing page, identically to how they're
+            positioned when users are on the recorder page.*** `Foot` is one
+            component with one set of classes on both screens, so the difference
+            could only ever have been its container — and it was: the record's
+            footer sits inside `gutter mx-auto w-full
+            max-w-[var(--record-measure)]`, the same wrapper the composer puts
+            round its own card six hundred lines up, and this row had nothing.
+
+            ⚠ **Measured at 390×844, `node_modules/.probe/footparity.mjs`:** the
+            footer ran **0→390 against the record's 20→370**, so its five columns
+            were 78px where the record's are 70 and the outer glyphs sat
+            **20px** further out — the home glyph on the screen's edge while the
+            card above it was held off by `--gutter-l`. After: both 20→370, both
+            70px columns, every centre equal to the pixel.
+
+            ⚠ **The same three classes as the card above, not a `px-` of its
+            own.** `--gutter-l` is what holds every other box on this screen off
+            the edge; a second spelling of it here is a number to keep in step.
+
+            ⚠ **The VERTICAL was already right where it matters and is
+            deliberately not touched.** At inset 0 this row sits 19.38px higher
+            than the record's, and all of it is `foot-clear`'s
+            `margin-block-end` — which is `max(0px, … − --sheet-clearance)`, so
+            **on a notched handset it is spent and the two rows land 1px apart.**
+            Measured at `INSET=34`. That margin is what tops the air under the
+            row up to the band above the card (8 September, `bandink.mjs`), and
+            the record has no band to answer to.
+          */}
           <div
-            className={`max-stack:foot-clear composer-foot flex items-center ${
+            className={`max-stack:foot-clear composer-foot gutter mx-auto flex w-full max-w-[var(--record-measure)] items-center ${
               makingRoom ? 'composer-foot-away' : ''
             }`}
             inert={makingRoom}

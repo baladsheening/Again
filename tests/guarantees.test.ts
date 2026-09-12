@@ -417,8 +417,27 @@ describe('another user’s captures need all four positive terms', () => {
       [viewerId, itemId, ownerId],
     )
 
-    const result = await dal.addCapture(asViewer(viewerId, `${VIEWER}@example.com`), {
+    /*
+      ⚠⚠ **THE IDENTICAL WORDS ARE REFUSED SINCE 12 SEPTEMBER, AND FOR THIS
+      GUARANTEE THAT IS THE STRONGER ANSWER.** Re-adding a line already on the
+      record is a conflict now — see *the same words twice is not two captures*
+      — so the dangerous shape cannot even be attempted. **It closes a hole the
+      unique key never covered**: an UNRESOLVED lapsed copy has a null
+      possibility, so the key does not constrain it and typing the same words
+      used to write a second row claiming `self` — which then converges and
+      notifies the very person it was taken from, §6's suppression rule
+      inverted. Asserted first, then the revive path is entered the way it still
+      can be, with the same possibility and intention and different words.
+    */
+    const identical = await dal.addCapture(asViewer(viewerId, `${VIEWER}@example.com`), {
       text: 'a lapsed copy',
+      possibilityId: itemId,
+      intent: 'see',
+    })
+    expect(identical.ok).toBe(false)
+
+    const result = await dal.addCapture(asViewer(viewerId, `${VIEWER}@example.com`), {
+      text: 'a lapsed copy, reconsidered',
       possibilityId: itemId,
       intent: 'see',
     })
