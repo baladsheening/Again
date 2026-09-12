@@ -49,6 +49,67 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **THE LOCK STANDS ON THE TRAY'S SIGHT LINE AND SAYS THE STATE ITSELF — 12
+September, directed.** *The lock/unlock button should be vertically optically
+in-line with the tray glyph. The `UNLOCK` word next to `today/[date]` is
+superfluous — `Lock` becomes `Unlock` so it's obvious if an entry is locked or
+not, just make `UNLOCK` all capitals, and a suitable green colour.*
+
+- ⚠⚠ **THE ALIGNMENT IS THE GLYPH ROW'S OWN GRID, NOT A MEASUREMENT.** The words'
+  row is now `grid-cols-5` bled to the card's edges, with the control at
+  `col-start-5 justify-self-center` — **the settle glyph's exact declaration**,
+  so the two centres are the same number by construction. Measured: **335 = 335
+  at 390, 1061.32 against 1061.33 at 1440.** A `text-end` or a tuned inset would
+  be a constant waiting to be wrong the next time the foot's columns move, which
+  they did on 5 September.
+- ⚠⚠ **`UNLOCK` RENDERED AS `UNLOC` FOR ONE BUILD, AND THE FIX IS A CONDITION
+  REMOVED.** `overflow-y: auto` **forces `overflow-x` to `auto`**, so the
+  scrolling half clipped the bleed at its own padding box — scroller 40→350
+  against a card of 20→370, `scrollWidth 330` / `clientWidth 310`. **The
+  horizontal inset moved from `console-card` to the scroller** (`padding-block`
+  only on the card, `px-[var(--page-lead)]` on the scroller), so the clip edge
+  **is** the card's inner edge and a bled child lands exactly on it. ⚠ **No
+  `overflow-clip-margin`, no reserved gap, no number.**
+- ⚠⚠ **AND THAT MOVE BROKE THE SIGHT LINE FOR ONE BUILD TOO — caught by
+  measuring, not by looking.** Padding the glyph row shrank its grid to the
+  content box and the settle glyph went **335 → 319**, off the foot's tray. With
+  the card's sides gone the row needs *neither* a bleed nor a padding: it is
+  already the card's full width. `traysightline.mjs` is what said so.
+- ⚠⚠ **THE GREEN IS `--color-accept`, WIDENED BY DIRECTION, AND ITS DOCBLOCK
+  FORBADE EXACTLY THIS**: *the moment green appears on a second affirmative…
+  both stop meaning anything*, and *nothing borrows an existing token: a colour
+  with two tenants is the failure the rule above describes.* **A second green
+  was the alternative and is worse** — two greens meaning two things is what
+  this palette exists to avoid, and a new one would need its own contrast
+  measurement to say what this one already says. **Green is now *the affirmative
+  act on offer*: accept a request, unlock a line.** ⚠ **Cost, stated: the
+  portal's request is no longer the only place a decision is offered in colour**,
+  and the console's green reads as a state as much as a verb. **A third tenant
+  is refused.**
+- ⚠ **Only the locked face is loud.** `Lock` stays sentence-case chrome; the
+  exception is marked and the rule stays quiet, which is the stamp row's own
+  grammar. **An ordinary capture gains nothing.** ⚠ **Capitals in the INTERFACE
+  face with 0.08em of tracking, not `stamp`** — that utility is the voice of the
+  facts below, and 11 September's control/stamp distinction survives the caps.
+- ⚠ **`LOCKED` is deleted from the stamp row**, which overrides 11 September's
+  *the state is marked only as the exception and the verb is always a verb* and
+  design rule 1's *say the state and say the verb, as two things*. **What
+  replaces it is not nothing**: the control says the state three ways — word,
+  case and colour — in the one place a reader is already looking. ⚠ **The
+  `aria-label` is untouched**, because neither capitals nor colour reach a reader
+  who cannot see them.
+- ⚠⚠ **`innerText` vs `textContent` COST FIVE PROBE ASSERTIONS ACROSS TWO
+  FILES.** The locked face is uppercased **in CSS**, so `innerText` returns the
+  rendered `UNLOCK` where the DOM says `Unlock` — `matchingconsent.mjs` picked
+  the wrong read and reported the app as having neither capitals nor colour while
+  a direct dump showed both, and `swipe.mjs` failed on the shouting. **Read what
+  the component wrote; assert the capitals through `textTransform`, which is
+  where they actually are.** ⚠ Same rule as the wordmark's: **spell the word as
+  a word in the DOM.**
+- **168 tests green.** `traysightline.mjs` 8/8 — it now pins the lock as well as
+  the settle glyph, **and that it is not clipped**; `matchingconsent.mjs`,
+  `console.mjs`, `swipe.mjs`, `akin.mjs`, `reenter.mjs`, `dupe.mjs` all green.
+
 ⚠⚠ **THE CONSOLE IS REORGANISED — 12 September, directed, AND A SCREENSHOT IS
 WHAT SETTLED IT.** Asked: *how do we reorganise the console's contents so it's
 easily understandable and not too jampacked? Maybe move `lock` so it's optically

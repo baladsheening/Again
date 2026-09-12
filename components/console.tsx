@@ -224,7 +224,7 @@ export function Console({
           reaching its end is the end, not the page's turn. See the note on
           `console-sheet`.
         */}
-        <div className="stack:overflow-visible min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain">
+        <div className="stack:overflow-visible min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-[var(--page-lead)]">
           {/*
             ⚠ **The capture is the FIRST thing in the box, and that is what makes
             the alignment possible — 30 August.** The day stamp was here and is
@@ -293,10 +293,33 @@ export function Console({
 
             ⚠ **`min-w-0` on the words**, or a long unbroken string would refuse
             to shrink and push the control off the card.
+
+            ⚠⚠ **THE SAME FIVE-COLUMN GRID AS THE GLYPH ROW, AND THAT IS HOW THE
+            ALIGNMENT IS GUARANTEED RATHER THAN MEASURED — 12 September,
+            directed:** *the lock/unlock button should be vertically optically
+            in-line with the tray glyph.* The settle glyph sits at
+            `col-start-5 justify-self-center` of a row bled to the card's edges;
+            **this row is that row's geometry, so the two centres are the same
+            number by construction.** A `text-end` or a hand-tuned inset would be
+            a constant waiting to be wrong the day the foot's columns change
+            again — which they did on 5 September, when a home glyph moved the
+            tray from column four to five.
+
+            ⚠ **`-mx-[var(--page-lead)]` and `ps-[var(--page-lead)]` are the
+            glyph row's own pair**: the grid bleeds out to the card's edges and
+            the first cell pushes back in, so **the words end up exactly where
+            they were** and the alignment to the record's first line is
+            untouched.
+
+            ⚠ **The sight line is `traysightline.mjs`'s**, and this control now
+            stands on it too — see that probe's warning: *if a later change makes
+            the settle glyph sit anywhere but the foot's fifth column, the
+            reaction it exists for is dead before it is written.* There are two
+            things on that line now, not one.
           */}
-          <div className="flex items-baseline gap-3">
+          <div className="-mx-[var(--page-lead)] grid grid-cols-5 items-baseline">
             <p
-              className={`min-w-0 flex-1 text-[length:var(--text-line)]/[var(--leading-line)] tracking-[-0.01em] ${
+              className={`col-span-4 min-w-0 ps-[var(--page-lead)] text-[length:var(--text-line)]/[var(--leading-line)] tracking-[-0.01em] ${
                 crossedOff ? 'line-through opacity-50' : ''
               }`}
             >
@@ -311,14 +334,53 @@ export function Console({
                   ⚠ **The consequence, not the mechanism.** A screen reader gets
                   the whole of what the tap does, because the visible word is one
                   syllable and the thing it changes is the app's central privacy
-                  boundary.
+                  boundary. ⚠ **It is unchanged by the capitals and the colour**:
+                  neither reaches a reader who cannot see them, so the label is
+                  what has to carry the state to them — which it already did.
                 */
                 aria-label={
                   line.shared
                     ? 'Lock this capture, so nobody is told you wrote it'
                     : 'Unlock this capture, so you can both be told'
                 }
-                className="text-chrome tap-target shrink-0 text-[length:var(--text-micro)]"
+                /*
+                  ─────────────────────────────────────────────────────────────
+                   LOCKED IS SAID BY THE CONTROL — 12 September, directed
+                  ─────────────────────────────────────────────────────────────
+
+                  *The `UNLOCK` word that appears next to `today/[date]` is
+                  superfluous. `Lock` becomes `Unlock` so it's obvious if an
+                  entry is locked or not — just make `UNLOCK` all capitals, and
+                  a suitable green colour.*
+
+                  ⚠⚠ **THIS OVERRIDES 11 SEPTEMBER'S RULE AND DESIGN RULE 1, AND
+                  IT IS DIRECTED WITH THAT STATED.** Both say the same thing:
+                  *the state is marked only as the exception and the verb is
+                  always a verb* — say the state and say the verb, as two
+                  things. The `LOCKED` stamp in the row below was the state half
+                  and it is deleted. **What replaces it is not nothing**: the
+                  control changes its word, its case AND its colour, so the
+                  state is on screen three times over in the one place a reader
+                  is already looking. Design rule 1 asks whether a reader
+                  understands what this means or does; it does not require two
+                  elements to do it.
+
+                  ⚠ **Only the locked face is loud.** `Lock` on an ordinary line
+                  stays sentence-case chrome — the app's grammar of marking the
+                  exception and leaving the rule quiet, which is what the stamp
+                  row itself does with `Today`. **An ordinary capture gains
+                  nothing.**
+
+                  ⚠ **Capitals in the INTERFACE face, not `stamp`.** That
+                  utility is mono, tracked 0.22em and is the voice of the facts
+                  below; this is a control, and 11 September's distinction
+                  between the two survives the capitals. ⚠ **0.08em of tracking**
+                  because caps at 11px set solid are a wall — it is the wordmark's
+                  own figure, not a new one.
+                */
+                className={`tap-target col-start-5 justify-self-center text-[length:var(--text-micro)] ${
+                  line.shared ? 'text-chrome' : 'text-accept uppercase tracking-[0.08em]'
+                }`}
               >
                 {line.shared ? 'Lock' : 'Unlock'}
               </button>
@@ -589,10 +651,19 @@ export function Console({
             whether it is locked.** Today, a year, `LOCKED`. Nothing here is a
             verb.
           */}
+          {/*
+            ⚠⚠ **`LOCKED` STOOD HERE AND IS DELETED — 12 September, directed:**
+            *the `UNLOCK` word that appears next to `today/[date]` is
+            superfluous.* It was 11 September's state half, beside the control's
+            verb. **The control now says the state three ways** — its word, its
+            case and its colour — so the stamp was the fourth telling, in the row
+            whose whole job is the facts the control cannot show.
+
+            ⚠ **What is left is one register: when, and what it resolved to.**
+          */}
           <p className="stamp text-muted mt-3">
             {line.dayLabel}
             {line.year !== null && <span className="ms-2">{line.year}</span>}
-            {onLock !== null && !line.shared && <span className="ms-2">Locked</span>}
           </p>
 
           {/*
@@ -769,7 +840,7 @@ export function Console({
           console's with it.* **This is that move.** Both centres are asserted
           equal by `node_modules/.probe/traysightline.mjs`.
         */}
-        <div className="-mx-[var(--page-lead)] mt-4 grid grid-cols-5 items-center [--glyph:var(--glyph-foot)]">
+        <div className="mt-4 grid grid-cols-5 items-center [--glyph:var(--glyph-foot)]">
           <div className="col-span-4 flex items-center gap-5 ps-[var(--page-lead)]">
             <button
               type="button"

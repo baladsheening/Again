@@ -285,19 +285,37 @@
    * ⚠⚠ **THESE ARE THE FIRST COLOURS IN THIS APP ON A CONTROL, AND §11's
    * SCARCITY RULE MEANS THEY MUST NOT SPREAD.** Every other control is
    * `--color-text` or a fade of it; `--color-accent` is a state and lives in the
-   * gutter. **The moment green appears on a second affirmative or red on a
-   * second dismissal, both stop meaning anything and the portal's request stops
-   * being the one place in the app where a decision is offered in colour.** In
-   * particular: **not for errors** — `docs/decisions.md` has refused a red for
-   * failure twice and this makes that refusal harder to hold, not easier.
+   * gutter. **The moment red appears on a second dismissal it stops meaning
+   * anything.** In particular: **not for errors** — `docs/decisions.md` has
+   * refused a red for failure twice and this makes that refusal harder to hold,
+   * not easier.
+   *
+   * ⚠⚠ **THE GREEN HAS A SECOND TENANT SINCE 12 SEPTEMBER, DIRECTED, AND THIS
+   * BLOCK FORBADE IT IN THESE WORDS: *the moment green appears on a second
+   * affirmative… both stop meaning anything*, and *nothing borrows an existing
+   * token: a colour with two tenants is the failure the rule above
+   * describes.*** Directed: *`Lock` becomes `Unlock` so it's obvious if an entry
+   * is locked or not — make `UNLOCK` all capitals, and a suitable green colour.*
+   *
+   * ⚠ **A SECOND GREEN WAS THE ALTERNATIVE AND IS WORSE.** Two greens in one
+   * app, meaning two things, is the failure this palette is built to avoid —
+   * and the new one would need its own contrast measurement against two grounds
+   * to say something this one already says. **So the token is widened rather
+   * than copied**: green is *the affirmative act on offer* — accept a request,
+   * unlock a line into the pool — and it appears on exactly those two controls.
+   *
+   * ⚠ **What it costs, stated: the portal's request is no longer the one place
+   * in the app where a decision is offered in colour.** ⚠ **And the console's
+   * green reads as a STATE as much as a verb**, because it appears only when a
+   * line is locked — which is the point of it there, and is the reason the
+   * `LOCKED` stamp beside it could be deleted. **A third tenant is refused**:
+   * the rule now permits an affirmative verb and nothing else.
    *
    * ⚠ **They are the palette's own values, re-pitched, not new hues.** The red
    * is `--color-active`'s lacquer opened up; the green is the ladder-back
    * `--color-listed` records for itself, `#4f9860`, rather than its neon — a
    * control label is prose, and the neon was chosen to be *the loudest mark in
-   * the app*, which is not what a word beside a sentence should be. Nothing
-   * borrows an existing token: a colour with two tenants is the failure the rule
-   * above describes.
+   * the app*, which is not what a word beside a sentence should be.
    *
    * ⚠ **The lacquer at `#c1483c` measures 4.31:1 and that is below AA for 18px
    * text**, which is why this one is opened up rather than reused as-is.
@@ -6429,7 +6447,27 @@
   max-width: var(--record-measure);
   margin-inline: auto;
   border-radius: 1rem;
-  padding: var(--page-lead);
+  /*
+    ⚠⚠ **`padding-block` ONLY — THE SIDES MOVED TO THE SCROLLER ON 12 SEPTEMBER,
+    AND A CLIPPED WORD IS WHY.** They were `padding` on all four sides, and the
+    rows inside that need the card's full width — the glyph row, and since that
+    day the words' row — reached it with `-mx-[var(--page-lead)]`. **That works
+    for the glyph row, which sits outside the scrolling half, and is cut for
+    anything inside it**: `overflow-y: auto` forces `overflow-x` to `auto` as
+    well, so the scroller clips at its own padding box. Measured at 390: the
+    scroller ran 40→350 against a card of 20→370, `scrollWidth 330` against
+    `clientWidth 310`, and **`UNLOCK` rendered as `UNLOC`.**
+
+    ⚠ **The condition is removed rather than corrected.** With the inset on the
+    scroller, its clip edge **is** the card's inner edge, so a bled child lands
+    exactly on it and nothing is cut — no `overflow-clip-margin`, no reserved
+    gap, no number. ⚠ **The glyph row lost its own bleed in the same change**,
+    because it is outside the scroller and the card no longer insets it.
+
+    ⚠ **The sides are the SCROLLER's now — `px-[var(--page-lead)]` on it — so
+    everything that does not bleed sits exactly where it did.**
+  */
+  padding-block: var(--page-lead);
   background-color: var(--glass-tint);
   backdrop-filter: blur(var(--glass-blur));
 
