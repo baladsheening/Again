@@ -61,6 +61,11 @@ export type PageLineView = {
    * ⚠ **It does not empty when the portal does.** The portal is arrival, the
    * mark is memory (§5) — a line keeps its mark long after the row that
    * announced it has gone.
+   *
+   * ⚠ **False on a crossed-off line since 12 September, directed.** Settling a
+   * line keeps the mark and striking it out does not: the tray is a resolution
+   * and a rule through a line is an answer. See `converged` in
+   * `lib/db/captures.ts`.
    */
   converged: boolean
   /**

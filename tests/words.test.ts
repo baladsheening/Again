@@ -286,12 +286,21 @@ describe('convergence on words (Amendment 4)', () => {
     expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(true)
   })
 
-  it('a crossed-off line alone empties the portal but keeps its mark', async () => {
+  it('a crossed-off line alone empties the portal and loses its mark', async () => {
     /*
-      The other half of the pair above, and the reason the term went on a second
-      fragment rather than into `notificationMatchesCapture()`: with nothing live
-      to converge on, the portal has nothing to offer — but the record still says
-      this line once met somebody.
+      The other half of the pair above. ⚠⚠ **THIS SAID *BUT KEEPS ITS MARK*
+      UNTIL 12 SEPTEMBER**, and the reason given for the second fragment was
+      that the record still says this line once met somebody. **Directed
+      otherwise** — *any crossed off item should also not have an amber vertical
+      line next to it* — so the mark reads the live fragment too and all three
+      reads now agree about a struck line.
+
+      ⚠ **The two fragments stay two, and the subject join is not now
+      redundant.** `notificationMatchesCapture()` is the rule about *which
+      notification is about this line*, which nothing else states; the live one
+      composes it with *and the line is not struck*. Folding them together would
+      spell the subject join once and its state opinion four times over. See
+      `mark.test.ts`, which asserts the mark comes back when the line does.
     */
     await wipe()
     await capture(adaId, 'learn to sail')
@@ -306,7 +315,8 @@ describe('convergence on words (Amendment 4)', () => {
 
     expect(await dal.listMyPortal(viewer(adaId, A))).toHaveLength(0)
     expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(false)
-    expect((await lineOn(adaId, A, 'learn to sail'))?.converged).toBe(true)
+    /* ⚠ `true` until 12 September — see the note above. All three agree now. */
+    expect((await lineOn(adaId, A, 'learn to sail'))?.converged).toBe(false)
   })
 
   it('different words are not a match, however close they read', async () => {

@@ -49,6 +49,54 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **A CROSSED-OFF LINE WEARS NO MARK — 12 September, directed, AND IT REVERSES
+WHAT `mark.test.ts` HAD ASSERTED SINCE 31 AUGUST.** Reported: *any crossed off
+item should also not have an amber vertical line next to it.* The mark was §5's
+*memory* and survived everything — settling, crossing off, the portal emptying.
+**It now goes when a line is struck, and only then.**
+
+- ⚠⚠ **THE ENGINE HAD REFUSED THOSE LINES SINCE 31 AUGUST AND THE RECORD WAS
+  STILL FLAGGING THEM.** `lib/overlap.ts`'s allowlist names three pairs and **no
+  row names `dropped`** — so a crossed-off line converges with nobody, and the
+  bar on one was the record claiming a state the pool cannot produce. **A
+  disagreement removed, not a preference applied**, which is the difference
+  between this and a taste change.
+- ⚠⚠ **ONE FRAGMENT, FOUR READS NOW.** `notificationMatchesLiveCapture()` —
+  the two portal reads since 11 September, `converged` and `getConvergence`
+  since 12. ⚠ **All four or none of them**: 11 September is the day two of them
+  disagreed and the door stayed dark, and a term added to one rebuilds that bug.
+  ⚠ **The subject join now has exactly one caller and must not be inlined** —
+  folded together it would be written once and the state opinion four times.
+- ⚠⚠ **NOTHING IS DESTROYED, AND THAT IS WHAT MAKES IT CHEAP.** The bit is
+  computed at read time and a cross-off writes nothing to `notifications`, so
+  **putting the line back restores the mark and its sentence whole.** Asserted in
+  `mark.test.ts`. §5's *nothing is ever deleted* is untouched: a struck line is
+  un-flagged, not erased.
+- ⚠ **The SETTLED line keeps its mark, and that is the distinction rather than an
+  inconsistency.** `listMySettled` reads `status = 'completed'` and never sees a
+  `dropped` row. *A resolution is not an erasure* still holds — **a rule through
+  a line is an answer**, which is the judgement the portal made on 11 September.
+  ⚠ **`<> 'dropped'`, never `= 'active'`**: a go-back-to is `completed` with
+  verdict `again` and keeps everything.
+- ⚠⚠ **THE TERM IS ON THE ROW AS WELL, AND THAT IS NOT A SECOND DEFINITION.**
+  The record deliberately does not refresh on a cross-off — `router.refresh()`
+  is argued against twice in `page-screen.tsx` — so the server's `converged`
+  **stays true on the client for the rest of the session**. Without
+  `&& !crossedOff` the bar would sit beside the line you just struck until a
+  navigation. It is the same optimistic mirror the strike-through is. ⚠ **The
+  `sr-only` note carries it too** — *what the screen shows, the label says* cuts
+  both ways. ⚠ **`search-screen.tsx` gets NO term**: nothing there acts on a
+  line, so there is no optimistic state and the read is the whole answer.
+- ⚠ **What it costs, stated: the console on a struck line says nothing about
+  who, and `Ask them` is unreachable on it.** `askWhoElse` is gated on the bit
+  by design, so the sentence follows the bar. Tap the × again and both return.
+- ⚠ **It also closed half of an open item**: a struck line can no longer wear a
+  live twin's mark. **What survives is two LIVE captures of the same words**,
+  which still list twice and mark twice off one event — that needs identity on
+  the payload, a migration and a change to what a notification *is*.
+- **158 tests green**, typecheck, lint and build clean. `mark.test.ts` case 4 and
+  `words.test.ts`'s crossed-off pair are the two that flipped.
+
 ⚠⚠ **EARNED PUSH — 11 September, AND THE "BACKGROUND WORKER" IS `after()`.**
 §6 has said since it was written that *push delivery happens in a background
 worker, never inline*, and there has never been one. **What that rule forbids is

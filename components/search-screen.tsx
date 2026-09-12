@@ -227,6 +227,13 @@ export function SearchScreen() {
                 wrote in June. It draws nothing on a line that has not converged,
                 so a record with no convergences in it looks exactly as it did.
 
+                ⚠ **A struck result draws none either, and there is no term for
+                it here** — `converged` answers false for a crossed-off line
+                since 12 September. Nothing on this surface acts on a line, so
+                there is no optimistic state to mirror and the read is the whole
+                answer; the record holds the term as well only because a
+                cross-off there deliberately does not refresh.
+
                 ⚠ **The mark is the only thing on this surface that is not
                 already text**, so it is the one thing a reader could miss; the
                 row's own words carry it in the label the same way the record's

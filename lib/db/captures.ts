@@ -20,7 +20,7 @@ import { db } from './client'
 import {
   captures,
   normalised,
-  notificationMatchesCapture,
+  notificationMatchesLiveCapture,
   notifications,
   possibilities,
   profiles,
@@ -586,6 +586,35 @@ const PAGE_STATUSES = ['active', 'dropped'] as const satisfies readonly CaptureS
  * at all. See `console.tsx`, which was built expecting exactly this — *when who
  * else arrives it has to arrive into a space that is already there.*
  *
+ * ⚠⚠ **A CROSSED-OFF LINE WEARS NO MARK — 12 September, directed, AND IT
+ * REVERSES WHAT THIS BLOCK AND `mark.test.ts` BOTH USED TO ASSERT.** They said
+ * *a resolution is not an erasure*, and the line kept its bar through being
+ * struck. Reported: *any crossed off item should also not have an amber
+ * vertical line next to it.*
+ *
+ * ⚠⚠ **THE ENGINE HAD ALREADY REFUSED THOSE LINES AND THE RECORD WAS STILL
+ * FLAGGING THEM.** `lib/overlap.ts`'s allowlist names three pairs and **no row
+ * names `dropped`** — so a crossed-off line converges with nobody, and has
+ * since 31 August. The mark on it was the record claiming a state the pool
+ * cannot produce. **This is a disagreement removed, not a preference applied.**
+ *
+ * ⚠ **Nothing is destroyed, and that is what makes it cheap.** The bit is
+ * computed at read time and `notifications` is never written to by this — put
+ * the line back and the mark and its sentence return intact. Crossing off is
+ * still not an erasure; it simply stops being *flagged*.
+ *
+ * ⚠ **What it costs, stated: the console on a struck line says nothing about
+ * who.** `askWhoElse` is gated on this bit by design, so a crossed-off line no
+ * longer issues `getConvergence` and `Ask them` is unreachable on it — which is
+ * the same judgement the portal made on 11 September: **a line with a rule
+ * through it is one you have already answered.**
+ *
+ * ⚠ **`<> 'dropped'`, never `= 'active'`** — a go-back-to is `completed` with
+ * `verdict = 'again'` and keeps its mark, as does everything in the tray.
+ * `notificationMatchesLiveCapture()` is the one author of that term; the two
+ * portal reads and this one are now the three readers of it, and a term added
+ * to one and not the others is how 11 September's dark door was built.
+ *
  * ⚠ **The subject join is `notificationMatchesCapture()`, the same fragment
  * `listMyPortal` and `getConvergence` use**, because a notification carries no
  * capture id and cannot: a match is about a *subject* two people's captures
@@ -611,7 +640,7 @@ const converged = sql<boolean>`exists (
   select 1
   from ${notifications}
   where ${notifications.userId} = ${captures.userId}
-    and ${notificationMatchesCapture()}
+    and ${notificationMatchesLiveCapture()}
 )`
 
 /**

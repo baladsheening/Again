@@ -7,7 +7,6 @@ import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db } from './client'
 import {
   captures,
-  notificationMatchesCapture,
   notificationMatchesLiveCapture,
   notifications,
   possibilities,
@@ -300,10 +299,21 @@ export async function getConvergence(
     .from(notifications)
     .innerJoin(
       captures,
+      /*
+        ⚠ **`notificationMatchesLiveCapture()` since 12 September, so the
+        sentence goes where the mark went.** A crossed-off line draws no bar
+        (`converged` in `captures.ts`), and `askWhoElse` is gated on that bit —
+        so on a fresh read this is never reached for a struck line at all. What
+        this closes is the optimistic window: the record does not refresh on a
+        cross-off, so the client still believes the line converged and would
+        fetch a sentence for a line whose mark had just gone, with `Ask them`
+        live on it. **One rule on all four reads: a line with a rule through it
+        is one you have already answered.**
+      */
       and(
         eq(captures.id, captureId),
         eq(captures.userId, sessionUser.id),
-        notificationMatchesCapture(),
+        notificationMatchesLiveCapture(),
       ),
     )
     .where(eq(notifications.userId, sessionUser.id))

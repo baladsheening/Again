@@ -3167,8 +3167,17 @@ export function PageScreen({
               mark above and the ellipsis before it: what the screen shows, the
               label says.
             */
+            /*
+              ⚠ **`&& !crossedOff`, on the mark's own rule — 12 September.**
+              *What the screen shows, the label says* cuts both ways: a struck
+              line draws no bar now, so saying it does would leave a reader who
+              cannot see the gutter the only one being told about a convergence
+              the record has stopped flagging. The term is the row's, not a
+              second definition — see the `className` below for why it is held
+              on the client at all.
+            */
             const notes = [
-              line.converged ? 'Also on someone else’s page.' : null,
+              line.converged && !crossedOff ? 'Also on someone else’s page.' : null,
               line.shared ? null : 'Locked.',
             ].filter((n) => n !== null)
 
@@ -3343,13 +3352,25 @@ export function PageScreen({
                     it — a mark that stayed put while its line slid away would be
                     marking whatever row happened to be underneath.
 
-                    ⚠ **A struck line keeps its mark.** Crossing off is a
-                    resolution, not an erasure; the convergence still happened,
-                    and the line is still on the record for as long as the record
-                    is. See `converged` in `lib/db/captures.ts` — nothing about
-                    state is in that read.
+                    ⚠⚠ **A STRUCK LINE WEARS NO MARK — 12 September, directed,
+                    AND THIS BLOCK SAID THE OPPOSITE FOR TWELVE DAYS.** It read
+                    *a struck line keeps its mark; crossing off is a resolution,
+                    not an erasure.* Reported: *any crossed off item should also
+                    not have an amber vertical line next to it.* The read agrees
+                    — `converged` in `lib/db/captures.ts` carries the term now —
+                    and `lib/overlap.ts` has refused `dropped` since 31 August,
+                    so the bar was flagging a state the pool cannot produce.
+
+                    ⚠⚠ **AND THE TERM IS HERE TOO, WHICH IS NOT A SECOND
+                    DEFINITION.** This screen deliberately does not refresh on a
+                    cross-off — see `crossOff`, and the note on `router.refresh`
+                    above — so the server's `converged` stays true on the client
+                    for the rest of the session. **Without this the bar would sit
+                    beside the line you just struck until a navigation.** It is
+                    the same optimistic mirror the strike-through is: `state` is
+                    what the row already holds, and the mark follows it.
                   */
-                  className={`page-row ${line.converged ? 'converged' : ''}`}
+                  className={`page-row ${line.converged && !crossedOff ? 'converged' : ''}`}
                 >
                   {/*
                     ⚠ **A line of the record is never an input, not even

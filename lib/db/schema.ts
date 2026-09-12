@@ -874,9 +874,14 @@ export const pushSubscriptions = pgTable(
 /**
  * **Is this notification about this capture?** — the rule, written once.
  *
- * Three reads ask it: the mark's `converged` bit on every line of the record,
- * the portal's join, and `getConvergence` behind a console. ⚠ **They must not
- * each spell it out.** A notification carries no capture id and cannot — a
+ * Four reads ask it: the mark's `converged` bit on every line of the record,
+ * both portal reads, and `getConvergence` behind a console. ⚠⚠ **SINCE 12
+ * SEPTEMBER ALL FOUR REACH IT THROUGH {@link notificationMatchesLiveCapture},
+ * AND THIS HAS NO OTHER CALLER — WHICH IS NOT A REASON TO INLINE IT.** It is
+ * the rule about *which notification is about this line*, and nothing else
+ * states it; the live one composes it with *and the line is not struck*. Folded
+ * together, the subject join would be written once and the state opinion four
+ * times. ⚠ **They must not each spell it out.** A notification carries no capture id and cannot — a
  * match is about a *subject* that two people's captures both point at, so the
  * viewer's own capture is found at read time — and the day a third subject
  * exists, three literals of this expression in two files is the drift that
@@ -901,17 +906,20 @@ export const pushSubscriptions = pgTable(
  * ⚠⚠ **IT MATCHES EVERY CAPTURE OF THE VIEWER'S THAT POINTS AT THE SUBJECT, AND
  * THAT IS NOT A ROUNDING ERROR — 11 September.** Write *Learn to sail*, cross it
  * off, write it again: both rows normalise alike, so one notification finds
- * both. **The mark is right to do that** — see `mark.test.ts`, *a resolution is
- * not an erasure* — but the PORTAL is not, which is what
- * {@link notificationMatchesLiveCapture} exists for.
+ * both. **Every read that draws a conclusion from it now goes through
+ * {@link notificationMatchesLiveCapture}** — the two portal reads since 11
+ * September, the mark since 12 — so this fragment is the subject join alone and
+ * nothing renders straight off it.
  *
  * ⚠ **Telling *this row converged* from *a row just like it converged* needs a
  * capture id on the notification, and there is none by construction.** A match
  * is about a subject two people's captures both point at; neither side's row id
- * means anything to the other. **So the mark cannot distinguish them**, and a
- * struck line beside a live one wears the live one's mark. Named rather than
- * fixed: the alternative is identity on the payload, which is a migration and a
- * change to what a notification *is*.
+ * means anything to the other. ⚠ **The struck half of that is gone** — a
+ * crossed-off line is excluded now, so it can no longer wear a live twin's
+ * mark. **What survives is two LIVE captures of the same words**, which both
+ * list and both mark off one event. Named rather than fixed: the alternative is
+ * identity on the payload, which is a migration and a change to what a
+ * notification *is*.
  */
 export function notificationMatchesCapture() {
   return sql`(
@@ -921,16 +929,26 @@ export function notificationMatchesCapture() {
 }
 
 /**
- * **The same rule, for the two reads that are about an OPPORTUNITY rather than
- * a memory** — 11 September, reported from a handset: *I see two listings for
- * `learn to sail` despite one of them being crossed off.*
+ * **The same rule, for every read that decides whether a crossed-off line is
+ * still offered or still flagged** — 11 September, reported from a handset:
+ * *I see two listings for `learn to sail` despite one of them being crossed
+ * off.*
  *
- * ⚠⚠ **THE PORTAL IS ARRIVAL AND THE MARK IS MEMORY (§5), AND THAT DIVIDES
- * THIS.** The mark answers *why is this line special* and survives the line
- * being settled or crossed off, because a resolution is not an erasure. The
- * portal answers *what should I do about this* — and **a line with a rule
- * through it is one you have already answered.** Listing it is the app offering
- * back something you crossed off, twice over when the live twin is there too.
+ * ⚠⚠ **THREE READERS SINCE 12 SEPTEMBER, AND THE MARK IS THE THIRD.** This
+ * block read *the two reads that are about an opportunity rather than a
+ * memory*, and divided the portal from the mark on §5's sentence — the mark
+ * survives the line being struck, because a resolution is not an erasure.
+ * **Directed otherwise:** *any crossed off item should also not have an amber
+ * vertical line next to it.* The line each of the three asks is the same one —
+ * **a line with a rule through it is one you have already answered** — and
+ * `lib/overlap.ts`'s allowlist has refused `dropped` since 31 August, so a
+ * struck line could not converge while the record was still flagging that it
+ * had. See `converged` in `lib/db/captures.ts`.
+ *
+ * ⚠ **What §5's division still buys is `read_at`, which is not in here and
+ * never will be.** The portal empties when it is read and the mark does not:
+ * that is the difference between arrival and memory, and it survives this
+ * whole.
  *
  * ⚠ **`<> 'dropped'`, NOT `= 'active'`, and the difference is a whole path.** A
  * go-back-to is `completed` with `verdict = 'again'` and converges through
@@ -938,10 +956,11 @@ export function notificationMatchesCapture() {
  * and silently dropped every guide out of the portal. **The struck state is
  * `dropped` and this excludes exactly it.**
  *
- * ⚠ **Both portal reads or neither.** `listMyPortal` fills the card and
- * `portalWaiting` lights the door; they are two queries answering one question,
- * and 11 September is the day they disagreed and the door stayed dark. **A term
- * added to one of them and not the other rebuilds that bug.**
+ * ⚠ **All three or none of them.** `listMyPortal` fills the card,
+ * `portalWaiting` lights the door and `converged` draws the bar; they are three
+ * queries answering one question, and 11 September is the day two of them
+ * disagreed and the door stayed dark. **A term added to one and not the others
+ * rebuilds that bug.**
  *
  * ⚠ **What this does NOT fix: two LIVE captures of the same words.** `group()`
  * keys on the capture, so one convergence would still list twice. That needs a

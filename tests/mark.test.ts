@@ -14,8 +14,12 @@
  *   2. ⚠ **Emptying the portal does not take the mark with it.** The central
  *      claim, and the whole reason the mark's read has no `read_at` term.
  *   3. The sentence names everybody, with no number and no *and 4 others*.
- *   4. It survives the line being settled and crossed off — a resolution is not
- *      an erasure, and the tray and search draw the mark for that reason.
+ *   4. ⚠ **It survives the line being SETTLED and goes when it is CROSSED OFF**
+ *      — 12 September, directed. A resolution is not an erasure, so the tray
+ *      and search draw the mark; a rule through a line is an answer, and the
+ *      engine has refused `dropped` rows since 31 August. **Putting the line
+ *      back restores it**, which is asserted in the same test: un-flagged, not
+ *      erased.
  *   5. ⚠ **Somebody else's capture id answers `null`**, not their convergence.
  *      The capture id arrives from a client; without both terms of that join
  *      this is a door to the counterpart's row (§3).
@@ -234,17 +238,47 @@ describe('the mark (Phase 2 step 4)', () => {
     expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(false)
   })
 
-  it('survives being crossed off, and follows the line into the tray', async () => {
+  it('⚠ GOES when the line is crossed off, comes back when it is put back, and follows it into the tray', async () => {
     const live = await lineOn(adaId, A, 'ada remembers the convergence film')
     await pool.query(
       `update captures set state = 'dropped', status = 'dropped', verdict = null where id = $1`,
       [live!.id],
     )
 
-    /* Struck lines stay on the page (§5), and a resolution is not an erasure. */
+    /*
+      ⚠⚠ **THIS ASSERTED `true` UNTIL 12 SEPTEMBER — directed: *any crossed off
+      item should also not have an amber vertical line next to it.*** The old
+      claim was *a resolution is not an erasure*, and it is still the reason a
+      SETTLED line keeps its mark below. What it got wrong is the struck state:
+      `lib/overlap.ts`'s allowlist names no `dropped` row, so a crossed-off line
+      converges with nobody — the record was flagging a state the pool cannot
+      produce. See `notificationMatchesLiveCapture` in `schema.ts`, which the
+      two portal reads have used since 11 September and the mark since 12.
+    */
     const struck = await lineOn(adaId, A, 'ada remembers the convergence film')
     expect(struck?.state).toBe('dropped')
-    expect(struck?.converged).toBe(true)
+    expect(struck?.converged).toBe(false)
+
+    /*
+      ⚠ **And the sentence goes with the bar**, so `Ask them` is unreachable on
+      a line you have crossed off — `getConvergence` carries the same term.
+    */
+    expect(await dal.getConvergence(viewer(adaId, A), struck!.id)).toBeNull()
+
+    /*
+      ⚠⚠ **NOTHING WAS DESTROYED, AND THIS IS THE ASSERTION THAT SAYS SO.** The
+      bit is computed at read time and `notifications` is untouched by a
+      cross-off, so putting the line back restores the mark and its sentence
+      whole. **A struck line is un-flagged, not erased** — which is what keeps
+      this reversible and §5's *nothing is ever deleted* intact.
+    */
+    await pool.query(
+      `update captures set state = 'want', status = 'active', verdict = null where id = $1`,
+      [live!.id],
+    )
+    const back = await lineOn(adaId, A, 'ada remembers the convergence film')
+    expect(back?.converged).toBe(true)
+    expect(await dal.getConvergence(viewer(adaId, A), back!.id)).toContain(B)
 
     /*
       And settled: the tray's read carries the same expression, which is why the

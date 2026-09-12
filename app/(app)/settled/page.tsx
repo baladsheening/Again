@@ -56,6 +56,13 @@ export default async function SettledPage() {
             was settled still happened. Nothing here acts on a line, so the mark
             says *there is something* and the record is where the sentence is
             read.
+
+            ⚠ **A crossed-off line lost its mark on 12 September and this did
+            not, which is the distinction rather than an inconsistency.** This
+            read is `status = 'completed'` and never sees a `dropped` row:
+            settling is a resolution and the convergence is part of the story of
+            it, where a rule through a line is *I have answered this*. See
+            `converged` in `lib/db/captures.ts`.
           */
           <ol>
             {rows.map((row) => (
