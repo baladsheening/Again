@@ -4381,6 +4381,69 @@
 }
 
 /**
+ * The app's name, in the mark's face, wherever it is a word in a sentence —
+ * 12 September, directed: *wherever is 'juce', it should be in the font used
+ * for the logo.*
+ *
+ * The mark already holds four places — the bar, the two auth posters and the
+ * icon's initial — and every one of them is set in `--font-mark-face` through
+ * `wordmark` or `zine-command`. **Two places were not**: the error screen's
+ * *This is a bug in Juce* and the push offer's *Juce can tell you when this
+ * happens*, both of which sat in the body face because they are prose and
+ * nothing said otherwise.
+ *
+ * ⚠ **A utility, not a class string at each call site.** `wordmark`'s own note
+ * is the rule — *one declaration, not four JSX strings* — and the name will
+ * appear in a third sentence one day. It is also the thing a rename has to
+ * find: the DOM text stays the name **spelled as a word**, so `<title>`, prose
+ * and the accessible name all read as a word whatever this is doing to it.
+ *
+ * ⚠⚠ **NOT `wordmark`, AND THAT IS THE WHOLE REASON THIS EXISTS.** That
+ * utility carries the fence — `--wordmark-line`, and `wordmark-trim`'s two
+ * negative margins — all of it measured for **the mark set in its own box at
+ * its own size**. Inline, the line box belongs to the paragraph, so a trim
+ * measured against a 32px mark would subtract from a 13px sentence and pull
+ * the line off its leading. **The face is shared; the box is not.**
+ *
+ * ⚠ **Nor `zine-command`**, which is the same face and looks like the answer:
+ * it uppercases, sets `line-height: 0.86` and tracks −0.015em. That is a
+ * poster treatment for a word that is the whole screen, and a sentence is not
+ * a mark.
+ *
+ * ⚠⚠ **NO SIZE CORRECTION, AND IT IS MEASURED RATHER THAN HOPED FOR.** The
+ * two faces have **the same x-height** — 0.53 of the type size in both
+ * Schibsted Grotesk 400 and Bricolage Grotesque 800 — so the name sits on the
+ * run's own x-line at the paragraph's own size with nothing declared. What
+ * differs is the cap (0.66 against 0.705, so the `J` is a little shorter than
+ * the sentence's own capitals) and the advance, 2.1741 against 2.2393 per 1px,
+ * so the word sets **2.9% narrower**. Both are small enough to leave. ⚠ **If
+ * the interface face ever moves, this is the pair to re-measure** — an
+ * x-height that agreed here is not a property of either face alone.
+ *
+ * ⚠⚠ **THE FACE HAS ONE CUT AND IT IS 800, SO THE WEIGHT IS NOT A CHOICE.**
+ * `layout.tsx` loads Bricolage Grotesque at `weight: '800'` and nothing else;
+ * asking for 400 renders the same file and asking for 900 gets a synthesised
+ * bold. The declaration states what is painted rather than leaving a 400 to
+ * look like a decision — and it reads `--wordmark-weight`, so a second cut
+ * moves the mark and the name together. **A lighter name inline is a second
+ * font file, not a declaration.**
+ *
+ * ⚠ **What it costs, stated: the name reads heavier than the sentence around
+ * it**, because the only cut of the mark's face is a black one. That is the
+ * name being the name — the alternative is the brand face at a weight the
+ * brand does not use.
+ *
+ * **Measured by `node_modules/.probe/namemark.mjs`** — 9 assertions: both
+ * faces, the utility as the sheet compiled it, the x-heights agreeing, the
+ * cap and the advance, and the five weights measuring identical, which is the
+ * one cut said as evidence rather than as a claim.
+ */
+@utility name-mark {
+  font-family: var(--font-mark);
+  font-weight: var(--wordmark-weight);
+}
+
+/**
  * ─────────────────────────────────────────────────────────────────────────────
  *  The capture page
  * ─────────────────────────────────────────────────────────────────────────────

@@ -164,7 +164,8 @@ export function TurnOnPush() {
         about notifications in the abstract is the launch prompt this exists to
         avoid.
       */}
-      Juce can tell you when this happens, even when it is closed.
+      <span className="name-mark">Juce</span> can tell you when this happens, even when it
+      is closed.
       <button
         type="button"
         onClick={turnOn}

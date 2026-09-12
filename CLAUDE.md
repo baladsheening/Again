@@ -49,6 +49,53 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **THE NAME IS ALWAYS IN THE MARK'S FACE — 12 September, directed:**
+*wherever is 'juce', it should be in the font used for the logo.* Four places
+already were — the bar, the two auth posters, the icon's initial. **Two were
+not**, and both are prose: the error screen's *This is a bug in Juce* and the
+push offer's *Juce can tell you when this happens*. `name-mark` is the one
+declaration, and it is two properties.
+
+- ⚠⚠ **NOT `wordmark`, AND THAT IS THE WHOLE REASON A SECOND UTILITY EXISTS.**
+  That one carries the fence — `--wordmark-line` and `wordmark-trim`'s two
+  negative margins — **measured for the mark set in its own box at its own
+  size**. Inline, the line box belongs to the paragraph, so a trim sized
+  against a 32px mark would subtract from a 13px sentence and pull the line off
+  its leading. **The face is shared; the box is not.** ⚠ **Nor `zine-command`**,
+  which is the same face and looks like the answer: it uppercases, sets
+  `line-height: 0.86` and tracks −0.015em. A sentence is not a poster.
+- ⚠⚠ **NO SIZE CORRECTION, AND IT IS MEASURED RATHER THAN HOPED FOR.** The two
+  faces have **the same x-height — 0.53 of the type size** in both Schibsted
+  Grotesk 400 and Bricolage Grotesque 800, so the name sits on the run's own
+  x-line at the paragraph's own size with nothing declared. The cap is shorter
+  (0.66 against 0.705) and the word sets **2.9% narrower** (2.1740 against
+  2.2393 per 1px) — both small enough to leave. ⚠ **An x-height that agreed
+  here is not a property of either face alone**: move the interface face and
+  this pair wants re-measuring.
+- ⚠⚠ **THE FACE HAS ONE CUT AND IT IS 800, SO THE WEIGHT IS NOT A CHOICE.**
+  `layout.tsx` loads Bricolage at `weight: '800'` and nothing else; asking for
+  400 renders the same file. **Five weights measuring an identical advance is
+  the evidence**, and it is in the probe so it cannot be mistaken later for a
+  broken reading. The declaration reads `--wordmark-weight`, so a second cut
+  would move the mark and the name together. ⚠ **A lighter name inline is a
+  second font file, not a declaration.**
+- ⚠ **What it costs, stated: the name reads heavier than the sentence around
+  it**, because the only cut of the mark's face is a black one. That is the
+  name being the name — the alternative is the brand face at a weight the brand
+  does not use.
+- ⚠ **The three places left are not misses.** `metadata.title`, the manifest's
+  `name`/`short_name` and the record's `sr-only` heading are drawn by the
+  operating system or by nothing; **there is no font to set.** ⚠ **The icon IS
+  a miss and is untouched here**: `app/apple-icon.tsx` draws the mark's initial
+  in Satori's own bundled face, because `ImageResponse` needs real font bytes
+  to use another and that means committing a TTF. Its docblock has called
+  itself a placeholder since it was written. **Named, not fixed.**
+- **Measured by `node_modules/.probe/namemark.mjs`** — 9 assertions, including
+  the utility as the sheet compiled it, because a Tailwind `@utility` that
+  nothing references is never emitted and a screenshot of that failure looks
+  exactly like the body face. **168 tests green**, typecheck, lint and build
+  clean.
+
 ⚠⚠ **THE LOCK STANDS ON THE TRAY'S SIGHT LINE AND SAYS THE STATE ITSELF — 12
 September, directed.** *The lock/unlock button should be vertically optically
 in-line with the tray glyph. The `UNLOCK` word next to `today/[date]` is
