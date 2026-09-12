@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { eq } from 'drizzle-orm'
+import { cache } from 'react'
 
 import { db } from './client'
 import { profiles, user, type Profile } from './schema'
@@ -8,7 +9,31 @@ import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { validateHandle } from '@/lib/handles'
 
-export async function getMyProfile(sessionUser: SessionUser): Promise<Profile | null> {
+/**
+ * ⚠⚠ **REQUEST-SCOPED SINCE 12 September, AND IT WAS RUNNING TWICE ON EVERY
+ * SCREEN.** `app/(app)/layout.tsx` is an auth gate that reads it and renders no
+ * UI at all; every page under it then reads it again for the handle. **Two
+ * identical round trips to Neon per render, on the record, the composer, search,
+ * settled and the profile** — and on a handset they are serial, in front of the
+ * first paint, which is the *investigate why it takes so long* report.
+ *
+ * ⚠ **`cache()` is the mechanism `getSessionUser` has always used**, three lines
+ * away, with the reason already written there: dedupe across every Server
+ * Component and DAL call in one request. **The asymmetry was the oversight**,
+ * not this.
+ *
+ * ⚠⚠ **IT DEDUPES BECAUSE `SessionUser` IS THE SAME OBJECT.** `cache()` keys on
+ * argument identity, and `getSessionUser` is itself cached, so every caller in a
+ * request is handed the **same reference** and the second call is a hit. ⚠ **A
+ * caller that built its own `SessionUser` would miss silently** — which cannot
+ * happen: the brand's constructor is private to `session.ts` (§3), and that
+ * rule is what makes this safe rather than lucky.
+ *
+ * ⚠ **Request-scoped, never cross-request.** A profile is per-user mutable data
+ * and `cache()` lives and dies with the request; nothing here is a data cache
+ * and this must not become one.
+ */
+export const getMyProfile = cache(async (sessionUser: SessionUser): Promise<Profile | null> => {
   const [profile] = await db
     .select()
     .from(profiles)
@@ -16,7 +41,7 @@ export async function getMyProfile(sessionUser: SessionUser): Promise<Profile | 
     .limit(1)
 
   return profile ?? null
-}
+})
 
 /**
  * Public by handle. There is no discovery and no search for strangers (§2) —

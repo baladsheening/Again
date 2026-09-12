@@ -1489,15 +1489,30 @@ export function ComposeScreen({
             because a window did.
           */}
           {/*
-            ⚠⚠ **`foot-clear` IS WHAT MAKES THE BAND AND THE FOOT READ EQUAL
-            IN A SAFARI TAB — 7 September, reported from a handset.** The band
-            above the card is `--tap-floor`; the air below it is this row's
-            hem, its own air around a `--glyph-foot` drawing, and the notch's
-            clearance. On a notched handset that came to 43.875 against the
-            band's 44 and looked right; **in a tab the inset is zero, so it
-            was 25.5** and the band read as nearly twice the foot. See
-            `foot-clear` for the derivation and why the air is here rather
-            than on the strip's padding.
+            ⚠⚠ **`foot-clear` IS GONE FROM THIS ROW — 12 September, directed,
+            AND IT REVERSES 7 SEPTEMBER.** That day it was added here because,
+            reported from a handset, *idle, in Safari on the phone, the band
+            looks bigger than the foot*: the band above the card is
+            `--tap-floor`, and the air below this row was 25.5 in a tab where
+            the inset pays nothing. **The margin topped that air up to the band
+            — and in doing so lifted this row 18.5px off the bottom edge that
+            every other screen's foot sits on.**
+
+            ⚠⚠ **THE TWO ASKS CANNOT BOTH HOLD, AND THE NEW ONE IS ABOUT A
+            COMPARISON THE OLD ONE COULD NOT SEE.** *The band looks bigger than
+            the foot* is a judgement inside one screen; *the bar must be where
+            it is on the record* is a judgement across two, and it is the one a
+            person makes every time they tap a glyph. **A margin that exists to
+            balance a band this screen alone has is exactly what makes this
+            screen's bar sit somewhere else.**
+
+            ⚠ **What it costs, stated: the band above the card reads bigger
+            than the air below the foot again, in a Safari tab, where the notch
+            pays nothing.** The lever if that returns is **the band**, not this
+            row — shrinking `--tap-floor`'s worth of air above the card closes
+            the same gap without moving the bar off the edge it shares with
+            every other screen. It was not touched here because nothing asked
+            for the card to move.
           */}
           {/*
             ⚠⚠ **THE GUTTER, AND WITHOUT IT THIS ROW WAS THE ONLY FULL-BLEED
@@ -1521,17 +1536,26 @@ export function ComposeScreen({
             own.** `--gutter-l` is what holds every other box on this screen off
             the edge; a second spelling of it here is a number to keep in step.
 
-            ⚠ **The VERTICAL was already right where it matters and is
-            deliberately not touched.** At inset 0 this row sits 19.38px higher
-            than the record's, and all of it is `foot-clear`'s
-            `margin-block-end` — which is `max(0px, … − --sheet-clearance)`, so
-            **on a notched handset it is spent and the two rows land 1px apart.**
-            Measured at `INSET=34`. That margin is what tops the air under the
-            row up to the band above the card (8 September, `bandink.mjs`), and
-            the record has no band to answer to.
+            ⚠⚠ **AND THE VERTICAL IS SETTLED HERE TOO — 12 September, directed.
+            THAT PARAGRAPH SAID IT WAS "ALREADY RIGHT WHERE IT MATTERS" AND IT
+            WAS WRONG ON THREE OF THE FOUR SURFACES.** It read: *at inset 0 this
+            row sits 19.38px higher than the record's, and all of it is
+            `foot-clear`'s `margin-block-end` — so on a notched handset it is
+            spent and the two rows land 1px apart.* **Inset 0 is not only the
+            desk.** It is iOS Safari in a tab, where the bottom toolbar takes the
+            area and `env(safe-area-inset-bottom)` reports zero, and it is
+            Android. **19.38px on three surfaces, reported as the bar dropping
+            when you leave the home screen.**
+
+            ⚠ **The last 0.875px was never the inset's to pay**, which is why
+            even the installed app measured 1px rather than 0: this row was
+            `--tap-floor` and the record's is `--sheet-air` around a
+            `--glyph-foot`, 1.75px shorter, so its centre sat half of that
+            higher. `composer-foot` reads the record's own terms now. **Measured
+            0.00 at inset 0 and at 34** — `node_modules/.probe/footparity.mjs`.
           */}
           <div
-            className={`max-stack:foot-clear composer-foot gutter mx-auto flex w-full max-w-[var(--record-measure)] items-center ${
+            className={`composer-foot gutter mx-auto flex w-full max-w-[var(--record-measure)] items-center ${
               makingRoom ? 'composer-foot-away' : ''
             }`}
             inert={makingRoom}

@@ -1,6 +1,7 @@
 'use client'
 
-import Link from 'next/link'
+import Link, { useLinkStatus } from 'next/link'
+import type { ReactNode } from 'react'
 
 import { OFF } from './bar'
 import { HomeGlyph, PortalGlyph, PortalMark, RecordGlyph, SearchGlyph, TrayGlyph } from './glyphs'
@@ -205,6 +206,52 @@ type Tools = {
 }
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The tap is answered before the screen is — 12 September, reported
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *Investigate why it takes so long for the screen to change after tapping a
+ * glyph in the bottom bar, more noticeable on the handset phone app.*
+ *
+ * ⚠⚠ **NOTHING HERE MAKES THE NAVIGATION FASTER, AND IT CANNOT.** Every route
+ * in this app is dynamic — the record is a query — and Next's own guide says
+ * what that costs: *without Cache Components… a dynamic route is skipped [for
+ * prefetch] unless it has a `loading.js` boundary*, and *the client must wait
+ * for the server response before showing the result.* **There is no
+ * `loading.tsx` anywhere in this tree**, so a tap prefetches nothing and paints
+ * nothing until the round trip lands. **Measured against production: 0.35s to
+ * 1.74s to first byte.** What is fixable here is the silence, not the wait.
+ *
+ * ⚠ **`useLinkStatus`, which is the case Next documents for exactly this** —
+ * *the destination route is dynamic and doesn't include a `loading.js` file
+ * that would allow an instant navigation.* It must live in a **descendant** of
+ * the `<Link>`, which is the whole reason this is a component rather than a
+ * class on the link itself.
+ *
+ * ⚠⚠ **THE GLYPH PULSES; NOTHING IS ADDED TO THE ROW.** The docs warn that
+ * *inline indicators can easily introduce layout shifts* and to *prefer a
+ * fixed-size, always-rendered hint element*. This wraps the drawing that is
+ * already there and animates its opacity, so the row's geometry is untouched —
+ * which matters more here than anywhere, because the five columns are a
+ * measured sight line (`traysightline.mjs`) and the bar's position is now
+ * asserted equal on every screen (`footparity.mjs`).
+ *
+ * ⚠ **No colour.** `--color-chrome` means *a control* and `--color-accent`
+ * means *this converged*; a third reading of either is what §11's scarcity rule
+ * exists to refuse. **Motion is what is left**, which is the same answer the
+ * composer's refusal bump reached.
+ *
+ * ⚠ **It waits 120ms before it shows anything**, the debounce the docs suggest,
+ * so a navigation that lands quickly is not a flicker. A prefetched route skips
+ * the pending state altogether, so if `loading.tsx` is ever added this stops
+ * firing on its own rather than needing to be removed.
+ */
+function Pending({ children }: { children: ReactNode }) {
+  const { pending } = useLinkStatus()
+  return <span className={`flex items-center ${pending ? 'glyph-pending' : ''}`}>{children}</span>
+}
+
+/**
  * The two, in order, with nothing said about how they are arranged. Both
  * placements render this and neither may reorder it.
  *
@@ -288,7 +335,9 @@ function ToolSet({
           aria-label="Home"
           className={`text-chrome tap-target ${at(1)} flex items-center transition-colors`}
         >
-          <HomeGlyph />
+          <Pending>
+            <HomeGlyph />
+          </Pending>
         </Link>
       ) : (
         <span aria-hidden className={`tap-target ${at(1)} flex items-center ${OFF}`}>
@@ -307,7 +356,9 @@ function ToolSet({
           aria-label="Search"
           className={`text-chrome tap-target ${at(2)} flex items-center transition-colors`}
         >
-          <SearchGlyph />
+          <Pending>
+            <SearchGlyph />
+          </Pending>
         </Link>
       ) : (
         /*
@@ -386,7 +437,9 @@ function ToolSet({
           }`}
           onAnimationEnd={onArrived}
         >
-          <RecordGlyph />
+          <Pending>
+            <RecordGlyph />
+          </Pending>
         </Link>
       ) : (
         <span aria-hidden className={`tap-target ${at(3)} flex items-center ${OFF}`}>
@@ -479,7 +532,9 @@ function ToolSet({
         aria-label="Settled"
         className={`text-chrome tap-target ${at(5)} flex items-center transition-colors`}
       >
-        <TrayGlyph />
+        <Pending>
+          <TrayGlyph />
+        </Pending>
       </Link>
     </>
   )

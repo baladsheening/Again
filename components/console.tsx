@@ -365,11 +365,36 @@ export function Console({
                   understands what this means or does; it does not require two
                   elements to do it.
 
-                  ⚠ **Only the locked face is loud.** `Lock` on an ordinary line
-                  stays sentence-case chrome — the app's grammar of marking the
-                  exception and leaving the rule quiet, which is what the stamp
-                  row itself does with `Today`. **An ordinary capture gains
-                  nothing.**
+                  ⚠⚠ **BOTH FACES CARRY COLOUR SINCE 12 September, directed:**
+                  *put `lock` in an appropriate red.* **That reverses the rule
+                  this block stated the same day** — *only the locked face is
+                  loud; `Lock` on an ordinary line stays sentence-case chrome,
+                  the app's grammar of marking the exception and leaving the rule
+                  quiet. An ordinary capture gains nothing.*
+
+                  ⚠ **What survives is the distinction, moved off colour and
+                  onto CASE.** `Lock` is sentence case and `UNLOCK` is
+                  capitals, so the locked line is still the loud one and the
+                  exception is still marked. **Colour now says which way the
+                  tap goes** — red withdraws the line from the pool, green puts
+                  it back — which is a second reading of the two words, not a
+                  replacement for them.
+
+                  ⚠⚠ **`--color-decline`, WIDENED, AND A SECOND RED IS REFUSED
+                  ON THE GREEN'S OWN ARGUMENT.** That token's note reads: *the
+                  moment green appears on a second affirmative both stop meaning
+                  anything*, and it answered that by widening rather than
+                  copying — green became *the affirmative act on offer*. **Red
+                  takes the symmetric widening: the withdrawing act on offer**,
+                  which is decline a request and lock a line out of the pool.
+                  Two reds meaning two things is what this palette exists to
+                  avoid, and a new one would need its own contrast measurement
+                  to say what this one already says.
+
+                  ⚠ **Cost, stated: `--color-chrome` no longer reaches this
+                  control at all**, so the console's one brass word is gone and
+                  colour here is entirely a statement about consequence. ⚠ **A
+                  third tenant is refused on both tokens.**
 
                   ⚠ **Capitals in the INTERFACE face, not `stamp`.** That
                   utility is mono, tracked 0.22em and is the voice of the facts
@@ -379,7 +404,7 @@ export function Console({
                   own figure, not a new one.
                 */
                 className={`tap-target col-start-5 justify-self-center text-[length:var(--text-micro)] ${
-                  line.shared ? 'text-chrome' : 'text-accept uppercase tracking-[0.08em]'
+                  line.shared ? 'text-decline' : 'text-accept uppercase tracking-[0.08em]'
                 }`}
               >
                 {line.shared ? 'Lock' : 'Unlock'}

@@ -311,6 +311,25 @@
    * `LOCKED` stamp beside it could be deleted. **A third tenant is refused**:
    * the rule now permits an affirmative verb and nothing else.
    *
+   * ⚠⚠ **AND THE RED TOOK THE SYMMETRIC WIDENING ON 12 September, directed:**
+   * *put `lock` in an appropriate red.* `--color-decline` is **the withdrawing
+   * act on offer** — decline a request, lock a line out of the pool — where it
+   * was *the one dismissal in the app*. **A second red was the alternative and
+   * is worse for the reason the paragraph above gives about green**, word for
+   * word: two reds meaning two things is what this palette exists to avoid, and
+   * a new one would need its own contrast measurement to say what this one
+   * already says. ⚠ **Three reds are already declared and two of them are
+   * DORMANT** — `--color-active`'s lacquer and `--color-live` are read by
+   * nothing, which is the strongest possible argument against declaring a
+   * fourth. ⚠ **The composer's failure line keeps it too**, and that is the
+   * same register rather than a third meaning: a capture that did not land is
+   * the app declining it.
+   *
+   * ⚠ **So the console now spends both**, and the pair reads as a direction
+   * rather than as a decision: red takes the line out of the pool, green puts
+   * it back. **The two words still say it in full** — nothing depends on seeing
+   * the colour, which is the term both of these arrived on.
+   *
    * ⚠ **They are the palette's own values, re-pitched, not new hues.** The red
    * is `--color-active`'s lacquer opened up; the green is the ladder-back
    * `--color-listed` records for itself, `#4f9860`, rather than its neon — a
@@ -2013,26 +2032,30 @@
    * reported from the installed app:** *there's a noticeable gap between the
    * home indicator and the bottom of the strip, seems like a waste of space.*
    *
-   * ⚠⚠ **THE GAP WAS NOT SLACK. IT WAS HELD, BY TWO EXPRESSIONS THAT EXIST TO
+   * ⚠⚠ **THE GAP WAS NOT SLACK. IT WAS HELD, BY TWO EXPRESSIONS THAT EXISTED TO
    * HOLD IT.** `--sheet-clearance` spends the notch's inset and `foot-clear`
-   * tops up whatever the notch does not give, so the air under the glyph ink
+   * topped up whatever the notch did not give, so the air under the glyph ink
    * came to **18.5px on every surface** and reducing either one made the other
    * grow back by exactly the same amount. **That is why nothing moved when the
    * obvious levers were pulled** — they were built on 7 September to make the
    * band above the composer and the foot below it read equal, and they were
    * doing it.
    *
-   * ⚠ **So this is the number they are both told to defend**, and it is the one
-   * lever that moves the foot without touching anything else. Both expressions
-   * multiply by it: the notch's half and the tab's half sink together, so the
-   * two surfaces cannot drift apart.
+   * ⚠⚠ **`foot-clear` WAS DELETED ON 12 SEPTEMBER and the pair is a single
+   * expression now** — see its tombstone below. Nothing about this token
+   * changed: it was always the one lever that moves the foot without touching
+   * anything else, and with one reader rather than two there is no longer a
+   * second half that can grow back.
    *
    * ⚠ **A RATIO, NEVER A PIXEL, WHICH IS WHAT KEEPS IT HONEST ON EVERY PHONE.**
    * The air it scales is derived from `--tap-floor`, `--line-hem` and
    * `--glyph-foot`, so a phone with a different inset, a different root size or
-   * a different glyph gets the same *proportion* rather than the same gap — and
-   * with no inset at all it still lands on the same number, because `foot-clear`
-   * pays what the notch did not.
+   * a different glyph gets the same *proportion* rather than the same gap.
+   * ⚠ **The clause that used to end this sentence — *and with no inset at all
+   * it still lands on the same number, because `foot-clear` pays what the notch
+   * did not* — died with `foot-clear` on 12 September.** With no inset the
+   * clearance is zero and the foot sits on the strip's own edge, which is where
+   * every other screen's foot sits and is the point of the deletion.
    *
    * ⚠ **It is meant to be moved by eye and that is legitimate here.** Where the
    * foot sits above the home indicator cannot be derived: no browser draws the
@@ -5961,10 +5984,12 @@
     unchanged and this obeys it — what must never happen is the expression moving
     to an element the script does not write to.
 
-    ⚠ **`foot-clear` is why it has a name at all**, and one reader is the whole
-    justification: the foot's own air has to know what the notch already gave it,
-    and writing the expression twice is two things to keep in step. **A second
-    reader is the point at which this should be looked at again**, not a licence.
+    ⚠ **`foot-clear` was why it had a name at all** — the foot's own air had to
+    know what the notch already gave it, and writing the expression twice is two
+    things to keep in step. ⚠⚠ **THAT READER WAS DELETED ON 12 SEPTEMBER**, so
+    the name now earns itself the ordinary way: it is the strip's bottom padding,
+    read once, with `--foot-sink` as the lever over it. **A second reader is the
+    point at which this should be looked at again**, not a licence.
 
     ⚠ **Proved with the inset overridden**, because the 30 August bug was
     invisible without one — `Emulation.setSafeAreaInsetsOverride` in
@@ -6009,9 +6034,10 @@
     property that nothing else sets, and with the class off there is nothing to
     resolve and the fallback is the expression.
 
-    ⚠ **`foot-clear` still reads `--sheet-clearance` and is unaffected**: the
-    foot row is mounted only when nobody is writing, so it never sees the
-    cancelled value.
+    ⚠ **This used to add that `foot-clear` still read `--sheet-clearance` and
+    was unaffected**, because the foot row is mounted only when nobody is
+    writing. **`foot-clear` was deleted on 12 September** and the strip's own
+    padding is the only reader left.
   */
   --sheet-clearance: var(
     --sheet-clearance-writing,
@@ -6120,81 +6146,34 @@
 }
 
 /**
- * **The air under the foot's glyphs, so the band and the foot read equal on a
- * surface with no home indicator — 7 September, reported from a handset:** *when
- * idle, in Safari on the phone, the band looks bigger than the foot.*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  `foot-clear` is DELETED — 12 September, directed
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * ⚠⚠ **THE EQUALITY WAS AN ACCIDENT OF THE NOTCH, AND THAT IS WHY IT HELD IN
- * ONE PLACE AND NOT THE OTHER.** The band above the composer is `--tap-floor`.
- * The air below it is the card's hem, the foot row's own air either side of a
- * `--glyph-foot` drawing, and then whatever `--sheet-clearance` gave. Measured
- * idle at 390×844 with the inset overridden: **44 above against 43.875 below in
- * the installed app, and 44 against 25.5 in a tab**, where the inset is zero and
- * there is no clearance to spend. The installed app has always looked right by
- * arithmetic nobody chose — the iPhone's 34px happening to land where the band
- * already was.
+ * It was air under the composer's foot row, added 7 September so the band above
+ * the card and the air below the foot read equal on a surface with no home
+ * indicator — reported: *when idle, in Safari on the phone, the band looks
+ * bigger than the foot.* It was `max(0px, (--tap-floor − --line-hem × 1.5 −
+ * (--tap-floor − --glyph-foot)) × --foot-sink − --sheet-clearance)`, gated on
+ * `--foot-open` so the row's height and its air could not disagree.
  *
- * ⚠ **It completes the band rather than adding to it**, so it is a `max()` down
- * to zero and not a hem: on a notched handset the clearance has already paid
- * nearly all of it and this contributes 0.125px. **The installed app does not
- * move**, which is the test of a fix aimed at the other surface.
+ * ⚠⚠ **WHAT IT COST IS THE REASON IT IS GONE: it lifted the composer's bar
+ * 18.5px off the bottom edge every other screen's bar sits on**, and a tab and
+ * an Android handset both read inset 0. Directed: *have the home screen landing
+ * page bottom bar be positioned such that it's exactly where the bottom bar is
+ * when users are on the record or convergence screens.* **A margin that exists
+ * to balance a band only one screen has is what put that screen's bar somewhere
+ * else.**
  *
- * ⚠ **On the FOOT ROW and never on the strip's own padding.** That padding is
- * the notch's clearance and is cancelled by `sheet-over-keys` while somebody
- * writes — a floor under it would put dead space above the keyboard, which is
- * the 6 September bug rebuilt. The foot row is mounted only when nobody is
- * writing, so the air arrives and leaves with the thing it is spacing.
+ * ⚠ **The complaint it answered is live again**, in a tab, where the notch pays
+ * nothing. ⚠⚠ **DO NOT ANSWER IT BY PUTTING THIS BACK.** The other lever is the
+ * band above the card, which is this screen's own and moves nothing shared; see
+ * `compose-screen.tsx` at the foot row.
  *
- * ⚠ **Below `--breakpoint-stack` only, applied as `max-stack:foot-clear`.** Up
- * there the `<footer>` is `stack:hidden` and the row is an empty 44px box, so
- * this would be air under nothing.
- *
- * ⚠⚠ **A MARGIN, AND IT WAS A PADDING FOR A BUILD.** The row is
- * `min-h-[var(--tap-floor)]` and everything here is `border-box`, so a padding
- * sat **inside** the 44px and pushed the glyphs up the row instead of adding air
- * under it — measured 18.5px of padding buying 0px of height. The row's 44 is a
- * thumb's reach and may not be spent; the air belongs outside it. **The strip is
- * a flex column, so there is nothing for the margin to collapse into.**
- *
- * ⚠ **No pixel in it.** `--tap-floor` is the band, `--line-hem` × 1.5 is the gap
- * the card already spends, and `--tap-floor − --glyph-foot` is the row's own air
- * around its drawing. It follows the desk's root scale and any change to the
- * glyph.
+ * ⚠ **`--foot-sink` and `--sheet-clearance` are untouched and still have
+ * readers** — the strip's own padding is the notch's clearance and is a
+ * different mechanism from this one.
  */
-@utility foot-clear {
-  /*
-    ⚠⚠ **GATED ON `--foot-open`, BECAUSE AIR UNDER A ROW THAT IS NOT THERE IS A
-    GAP OVER THE KEYBOARD — 8 September.** This margin belongs to the foot row;
-    when `composer-foot-away` closes that row it has to close with it, or the
-    strip keeps up to 18.5px of dead glass below the field in a Safari tab.
-    **One property drives both**, so the height and its air can never disagree.
-
-    ⚠ **A multiply rather than a second rule.** `@utility` output is ordered by
-    Tailwind and not by this file — the trap `chrome-ink-gone` records — so a
-    `composer-foot-away` that re-declared `margin-block-end` would win or lose by
-    emission order. Nothing else declares this property; the gate is read inside
-    the one declaration that does.
-  */
-  /*
-    ⚠⚠ **THE TARGET SINKS WITH THE CLEARANCE, OR NOTHING MOVES — 8 September.**
-    This tops the air under the row up to what the band above the composer is,
-    so **sinking `--sheet-clearance` alone made this grow back by exactly the
-    same amount** and the foot stayed where it was. Both halves read
-    `--foot-sink` now, so the notch's surface and the tab's arrive at the same
-    smaller number rather than one chasing the other.
-  */
-  margin-block-end: calc(
-    max(
-      0px,
-      calc(
-        (
-            var(--tap-floor) - var(--line-hem) * 1.5 -
-              (var(--tap-floor) - var(--glyph-foot))
-          ) * var(--foot-sink, 1) - var(--sheet-clearance)
-      )
-    ) * var(--foot-open, 1)
-  );
-}
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -6254,7 +6233,30 @@
  * row had before, which is the correct reading of the preference.
  */
 @utility composer-foot {
-  block-size: calc(var(--tap-floor) * var(--foot-open, 1));
+  /*
+    ⚠⚠ **THE HEIGHT IS THE RECORD'S FOOT ROW, WRITTEN IN THE RECORD'S OWN
+    TERMS — 12 September, directed:** *have the home screen landing page bottom
+    bar be positioned such that it's exactly where the bottom bar is when users
+    are on the record or convergence screens.* On the record the foot sits in a
+    `sheet-row`, which is `--sheet-air` of padding around a `--glyph-foot`
+    drawing; here it was `--tap-floor`. **1.75px taller, so its glyphs sat
+    0.875px higher**, and that was the half of the drop no inset could pay.
+
+    ⚠ **A derivation and not the literal 42.25.** Change `--sheet-air` or the
+    glyph and the two rows move together; a number typed here would be the next
+    thing to disagree with the screen it is copying. ⚠ **It is deliberately
+    NOT `sheet-row` itself**: that utility is a padding, and a padding cannot be
+    animated to zero from content — the explicit `block-size` is what makes the
+    close a transition rather than the 44px hard swap this file records as the
+    jolt.
+
+    ⚠ **What it costs, stated: the row is 1.75px shorter than `--tap-floor`, so
+    with `overflow: clip` the glyphs' hit areas are 42.25px tall rather than
+    44.** On the record the same pseudo-elements overhang into the strip's hem
+    uncllipped. **Measured either side of this change** —
+    `node_modules/.probe/footparity.mjs`.
+  */
+  block-size: calc((var(--glyph-foot) + var(--sheet-air)) * var(--foot-open, 1));
   overflow: clip;
   transition:
     block-size var(--recede) var(--ease-recede),
@@ -6832,6 +6834,59 @@
   }
   100% {
     opacity: 1;
+  }
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The foot glyph, while its route is in flight — 12 September, reported
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *Investigate why it takes so long for the screen to change after tapping a
+ * glyph in the bottom bar.* **Every route in this app is dynamic and there is no
+ * `loading.tsx` in the tree**, so Next prefetches nothing for them and the click
+ * blocks on the whole server render — 0.35s to 1.74s to first byte, measured
+ * against production. The old screen simply stands there. This is what the tap
+ * gets back in the meantime; see `Pending` in `components/foot.tsx`.
+ *
+ * ⚠ **Opacity and nothing else — no colour, no size, no element.** `--color-
+ * chrome` means *a control* and `--color-accent` means *this converged*, and
+ * §11's scarcity rule refuses a third reading of either. **Motion is what is
+ * left**, the same answer `composer-refuse` reached for the same reason.
+ *
+ * ⚠⚠ **NOTHING MAY CHANGE THE ROW'S GEOMETRY.** The five columns are a measured
+ * sight line — `traysightline.mjs` pins the console's settle glyph to the tray's
+ * centre — and `footparity.mjs` now asserts the bar is in the same place on
+ * every screen to the pixel. A hint that grew the row would break both, which is
+ * also what Next's own guide warns about: *inline indicators can easily
+ * introduce layout shifts.*
+ *
+ * ⚠ **The 120ms delay is the whole reason this is not a flicker.** A navigation
+ * that lands in under it never shows anything, because the animation has not
+ * begun; the docs suggest exactly this debounce. ⚠ **`both`, so the delay holds
+ * the glyph at full strength rather than at the keyframe's start.**
+ *
+ * ⚠ **It never reaches zero**, which is `line-landed`'s rule on the record: a
+ * control that vanishes and returns reads as a fault. 0.4 is a glyph that is
+ * plainly doing something and is still legible throughout.
+ *
+ * ⚠ **`--ease-recede` and a multiple of `--recede`**, so it belongs to the same
+ * family as every other movement on this edge rather than carrying a second
+ * curve. ⚠ **If `loading.tsx` is ever added this stops firing on its own** —
+ * a prefetched route skips the pending state — so it does not need removing
+ * first.
+ */
+@utility glyph-pending {
+  animation: glyph-pending calc(var(--recede) * 3) var(--ease-recede) 120ms infinite both;
+}
+
+@keyframes glyph-pending {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
   }
 }
 

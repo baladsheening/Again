@@ -49,6 +49,142 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **`Lock` IS RED — 12 September, directed:** *put `lock` in an appropriate
+red.* `--color-decline`, widened, and **a second red is refused on the green's
+own argument** — that token's note reads *the moment green appears on a second
+affirmative both stop meaning anything*, and answered it by widening rather than
+copying. **Red takes the symmetric widening: *the withdrawing act on offer***,
+which is decline a request and lock a line out of the pool.
+
+- ⚠⚠ **IT REVERSES THE RULE THIS FILE SET THE SAME MORNING**: *only the locked
+  face is loud; `Lock` on an ordinary line stays sentence-case chrome… an
+  ordinary capture gains nothing.* **What survives is the distinction, moved off
+  colour and onto CASE** — `Lock` sentence, `UNLOCK` capitals, so the locked line
+  is still the loud one and the exception is still marked. **Colour now says
+  which way the tap goes**, red out of the pool and green back into it.
+- ⚠ **Three reds are declared and two are DORMANT** — `--color-active`'s lacquer
+  and `--color-live` are read by nothing, which is the strongest argument
+  available against declaring a fourth. ⚠ **The composer's failure line keeps
+  `--color-decline` too, and that is the same register rather than a third
+  meaning:** a capture that did not land is the app declining it.
+- ⚠ **Cost, stated: `--color-chrome` no longer reaches this control**, so the
+  console's one brass word is gone and colour there is now entirely a statement
+  about consequence. **A third tenant is refused on both tokens.**
+- ⚠⚠ **MEASURED ON THE CARD, WHICH IS A GROUND NEITHER TOKEN HAD EVER BEEN
+  MEASURED AGAINST — AND THE DESK FAILS AA.** On the handset the console is
+  `--glass-tint` over near-black: **red 5.22:1, green 5.99:1.** On the desk it is
+  the opaque `--color-surface`, `rgb(43,42,37)`: **red 3.56:1 and green 4.09:1,
+  both under 4.5 at 14.67px.** ⚠ **The green has been failing there since 11
+  September and this did not cause it** — the tokens' own note measured them
+  against the page ground (5.25 and 4.6), and the console card is a lighter
+  surface sitting on it. ⚠⚠ **FLAGGED, NOT SILENTLY RE-PITCHED**: opening either
+  one moves the portal's `Accept`/`Decline` and the composer's failure line with
+  it, which is a palette decision rather than a fix to this control. **Nothing
+  depends on seeing the colour** — the two words say it in full, which is the
+  term both tokens arrived on.
+
+⚠⚠ **WHY THE SCREEN TAKES SO LONG TO CHANGE — 12 September, reported:**
+*investigate why it takes so long for the screen to change after tapping a glyph
+in the bottom bar, more noticeable on the handset phone app.* **Two causes, one
+of them free to fix and one of them structural.**
+
+- ⚠⚠ **EVERY ROUTE IS DYNAMIC AND THERE IS NO `loading.tsx` IN THIS TREE.**
+  Next's own guide, read at `node_modules/next/dist/docs`: *without Cache
+  Components… a dynamic route is skipped [for prefetch] unless it has a
+  `loading.js` boundary*, and *when navigating to a dynamic route, the client
+  must wait for the server response before showing the result. This can give the
+  users the impression that the app is not responding.* **So a foot tap
+  prefetches nothing and paints nothing until the whole render lands.** Measured
+  against production: **0.35s to 1.74s to first byte**, and that is the static
+  sign-in page — an authed screen adds the layout's queries and its own.
+- ⚠⚠ **`getMyProfile` WAS RUNNING TWICE ON EVERY SCREEN AND IS NOW REQUEST-
+  SCOPED.** `app/(app)/layout.tsx` is an auth gate that reads it and **renders no
+  UI at all**; every page under it reads it again for the handle. **Two identical
+  Neon round trips per render**, serial, in front of the first paint. `cache()`
+  is the mechanism `getSessionUser` has used all along, three lines away — **the
+  asymmetry was the oversight.** ⚠ **Proved rather than assumed: a counter in the
+  query, one `/record` load, 2 before and 1 after.**
+- ⚠ **It dedupes because `SessionUser` is the same object.** `cache()` keys on
+  argument identity and `getSessionUser` is itself cached, so every caller in a
+  request is handed the same reference. ⚠ **A caller that built its own would
+  miss silently** — which §3 makes impossible: the brand's constructor is private
+  to `session.ts`. **That rule is what makes this safe rather than lucky.**
+- ⚠⚠ **THE REST OF THE WAIT CANNOT BE REMOVED, SO WHAT IS REMOVED IS THE
+  SILENCE.** `Pending` in `foot.tsx` reads `useLinkStatus` — Next documents it
+  for exactly this case, *the destination route is dynamic and doesn't include a
+  `loading.js` file* — and `glyph-pending` pulses the tapped glyph's opacity
+  while the route is in flight.
+- ⚠ **Opacity and nothing else — no colour, no element, no size.**
+  `--color-chrome` means *a control* and `--color-accent` means *this converged*;
+  §11's scarcity rule refuses a third reading of either, so **motion is what is
+  left**, the same answer `composer-refuse` reached. ⚠⚠ **AND NOTHING MAY MOVE
+  THE ROW**: the five columns are `traysightline.mjs`'s measured sight line and
+  the bar's position is now asserted equal on every screen. Next's guide warns
+  about the same thing — *inline indicators can easily introduce layout shifts.*
+- ⚠ **120ms of delay is what stops it being a flicker**, the debounce the docs
+  suggest: a navigation that lands inside it never shows anything. ⚠ **It never
+  reaches zero** — `line-landed`'s rule, because a control that vanishes and
+  comes back reads as a fault.
+- ⚠⚠ **`loading.tsx` IS THE REMAINING LEVER AND IT IS NOT BUILT, DELIBERATELY.**
+  It would enable partial prefetch and make the navigation itself immediate — but
+  the fallback **replaces the destination's content**, so the screen a person
+  left goes before the one they asked for arrives, and what it draws is a design
+  decision this repository has strong views about (§6, and *an empty rail draws
+  NOTHING — not a message, not a skeleton*). ⚠ **It would want the chrome per
+  route, or the chrome hoisted into the layout** — which today renders `children`
+  and nothing else. **Named, costed, not taken.** ⚠ **When it is taken the pulse
+  retires itself**, because a prefetched route skips the pending state.
+- **Measured by `node_modules/.probe/navpending.mjs`** — 8 assertions, with the
+  RSC response **held open by a route handler**, because on localhost the render
+  lands in ~40ms and the debounce correctly shows nothing. ⚠ **A probe that
+  measured the fast case would assert the hint does not exist.**
+
+⚠⚠ **THE BAR IS IN THE SAME PLACE ON EVERY SCREEN — 12 September, directed:**
+*make it so the bottom bar doesn't drop a bit when toggling between the home
+screen and any other screen; have the home screen landing page bottom bar be
+positioned such that it's exactly where the bottom bar is when users are on the
+record or convergence screens.* **Two causes, and the probe that should have
+caught both was excusing them.**
+
+- ⚠⚠ **18.5px OF IT WAS `foot-clear`, WHICH IS NOW DELETED.** That margin was
+  added on 7 September so the band above the composer card and the air below its
+  foot read equal in a Safari tab. **It did that by lifting this screen's bar off
+  the bottom edge every other screen's bar sits on.** ⚠ **The two asks cannot
+  both hold**: *the band looks bigger than the foot* is a judgement inside one
+  screen, *the bar must be where it is on the record* is a judgement across two —
+  and it is the one a person makes on every tap. **Stated cost: the band reads
+  bigger than the foot again, in a tab. The lever if that returns is the BAND,
+  not the bar** — it belongs to this screen alone and moves nothing shared.
+- ⚠⚠ **THE LAST 0.875px WAS NEVER THE INSET'S TO PAY**, which is why even the
+  installed app measured 1px rather than 0. The composer's foot row was
+  `--tap-floor`; the record's is a `sheet-row`, `--sheet-air` around a
+  `--glyph-foot` — **1.75px shorter, so its centre sat half of that higher.**
+  `composer-foot` reads the record's own terms now:
+  `calc((var(--glyph-foot) + var(--sheet-air)) * var(--foot-open, 1))`. ⚠ **A
+  derivation, never the literal 42.25**, or the next change to either token is a
+  number to keep in step. ⚠ **Still an explicit `block-size` and not
+  `sheet-row`'s padding**, because a padding cannot be animated to zero from
+  content — the explicit height is what makes the close a transition rather than
+  the 44px hard swap this file records as the jolt.
+- ⚠ **What it costs, stated:** with `overflow: clip` the composer's glyphs now
+  have 42.25px hit areas rather than 44. On the record the same pseudo-elements
+  overhang into the strip's hem uncllipped. **1.75px of a thumb, against a 19px
+  jump on three of the four surfaces.**
+- ⚠⚠ **THE PROBE IS WHY THIS SHIPPED, AND IT IS THE MOST IMPORTANT LINE HERE.**
+  `footparity.mjs` asserted y **only at INSET=34 and only to within 1px**, with
+  the note *at inset 0 the composer's row sits ~19px higher, and all of it is
+  `foot-clear`'s margin, which the notch spends.* ⚠ **INSET 0 IS NOT ONLY THE
+  DESK** — it is iOS Safari in a tab, where the bottom toolbar takes the area and
+  `env(safe-area-inset-bottom)` reports zero, and it is Android. **The probe was
+  excusing three of the four shipping surfaces, and the 1px it did allow was the
+  second fault.** It asserts `=== 0` at every inset now.
+- ⚠ **`bandink.mjs` had two assertions about `foot-clear` and both flipped.**
+  They said the notch pays on one surface and `foot-clear` on the other and *they
+  land on the same number* — which is exactly the agreement that caused this. It
+  asserts the strip now, which is where the air actually is.
+- **Measured 0.00 at inset 0 and at inset 34** — `footparity.mjs` 13/13 twice,
+  `bandink.mjs` all green, `stripstep.mjs` and `traysightline.mjs` unchanged.
+
 ⚠⚠ **THE NAME IS ALWAYS IN THE MARK'S FACE AND THE MARK'S CASE — 12 September,
 directed twice within the hour:** *wherever is 'juce', it should be in the font
 used for the logo*, and then *make all instances capitalised, except user-made
