@@ -68,6 +68,36 @@ export function dayStamper(now: Date, timeZone: string | undefined) {
     year: 'numeric',
   })
 
+  /**
+   * **The same day in numbers** — 12 September, directed: *the date of the
+   * previous entry should read in numbers.*
+   *
+   * ⚠ **A second face for a date, not a second rule about days.** `stamp` is the
+   * record's voice — *Today*, *Yesterday*, *5 September* — and it is what every
+   * day heading and the console's own first word are drawn in. This is for the
+   * **console's history**, where a run of worded dates after *Today* reads as
+   * prose and a run of numbers reads as what it is: a list of days. Both come
+   * off the same `timeZone` and the same instant, so the two can never disagree
+   * about which day something happened on.
+   *
+   * ⚠⚠ **THE YEAR IS ALWAYS THERE, WHICH REVERSES `stamp`'s RULE ON PURPOSE.**
+   * That rule reads: *a date carrying a year every time reads as a filing
+   * reference; a date without one, three years back, reads as a lie.* **A
+   * numeric date IS a filing reference** — that is the whole of what numbers
+   * buy — and `05/09` with no year is the lie that rule is about, not the cure
+   * for it.
+   *
+   * ⚠ **`en-GB` like everything else in this file**, so the order is the one the
+   * rest of the app's dates are written in. Building the string by hand would
+   * be picking a day/month order for the world.
+   */
+  const numbers = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  })
+
   const todayKey = key.format(now)
   const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
@@ -86,5 +116,8 @@ export function dayStamper(now: Date, timeZone: string | undefined) {
     return { key: k, label: (k.slice(0, 4) === nowYear ? thisYear : otherYear).format(at) }
   }
 
-  return { todayKey, stamp }
+  /** One day, in numbers, with its key — so a caller can dedupe on the day. */
+  const numeric = (at: Date) => ({ key: key.format(at), label: numbers.format(at) })
+
+  return { todayKey, stamp, numeric }
 }

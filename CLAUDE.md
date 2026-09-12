@@ -107,15 +107,38 @@ Migration `0019`, production then dev.
   `created_at` — **a control that is lit and refuses** is the exact failure this
   file already records about client clocks. The landing is otherwise unchanged.
 - ⚠ **The earlier days go in the STAMP ROW** — density rule 2, reuse a row
-  before adding a block — as a run of middle-dotted days after *Today*. **An
-  ordinary capture gains no copy at all**, the same test the lock's stamp passed
-  on 11 September. ⚠ **No label**: *Previously:* would be a heading over a list
-  that reads as a list.
-- ⚠⚠ **REDUCED TO DISTINCT DAYS, AND A PROBE FOUND WHY** — it read back
-  *Today· Today· Today*, three re-entries in one afternoon each filing a genuine
-  instant of the same day. **The table is right to hold instants and the console
-  is right to show days**; the action dedupes and the row drops the day it is
-  already showing. Measured after: `Today· 5 September· 3 August`.
+  before adding a block. **An ordinary capture gains no copy at all**, the same
+  test the lock's stamp passed on 11 September.
+- ⚠⚠ **IN NUMBERS, WITH A WORD IN FRONT — directed:** *the date of the previous
+  entry should read in numbers and should have wording that provides context for
+  the date.* **`TODAY · PREVIOUSLY 05/09/26, 03/08/26`.** ⚠ **This reverses what
+  this block said four hours earlier** — *no label; `Previously:` would be a
+  heading over a list that reads as a list* — and the reversal is design rule 1
+  beating rule 2: **a bare second date does not read as itself.** Beside today's
+  it could as easily be when the line was settled, when somebody converged on it,
+  or when a photograph was attached.
+- ⚠ **One word for the whole run** (design rule 4 — the matching rule's own
+  precedent), and **the `·` marks the group once, never each date**: without it
+  a screenshot read `TODAY PREVIOUSLY 05/09/26`, two facts running into one
+  phrase, because `ms-2`'s space is not enough between a word and a word. The
+  dates inside take commas.
+- ⚠ **`numeric` is a second FACE for a date in `lib/day.ts`, not a second rule
+  about days** — same timezone, same instant as `stamp`, so the two can never
+  disagree about which day something happened on. ⚠⚠ **THE YEAR IS ALWAYS
+  THERE, REVERSING `stamp`'s RULE ON PURPOSE**: that rule says *a date carrying
+  a year every time reads as a filing reference*, and **a numeric date IS a
+  filing reference** — `05/09` with no year is the lie that rule is about.
+- ⚠ **A long history wraps and is not truncated.** `items-baseline` keeps `Lock`
+  on the first line, which is right — it acts on the line, not the dates.
+- ⚠⚠ **REDUCED TO DISTINCT DAYS AND THE ROW'S OWN DAY DROPPED, AND A PROBE
+  FOUND BOTH** — it read back *Today· Today· Today*, three re-entries in one
+  afternoon each filing a genuine instant of the same day. **The table is right
+  to hold instants and the console is right to show days**, so the reduction is
+  the action's, between them. ⚠ **Keyed on the timezone-resolved DAY, never on
+  the printed label** — two instants twelve hours apart can print the same
+  numbers and be different days depending on where the reader is. ⚠ **That is
+  also why `getPriorDates` returns the line's own `captured_at`**: the client
+  may not decide what day something happened on.
 - ⚠ **`PageLine.createdAt` is renamed `capturedAt` and the keyset cursor walks
   it**, with `captures_user_captured_idx` replacing the old index — the record,
   search and the cursor all order by the date on screen, or a moved line would

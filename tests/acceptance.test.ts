@@ -392,9 +392,16 @@ describe('a retried submission is one capture', () => {
     const moved = await dal.listMyPage(one())
     expect(moved[0].capturedAt.getTime()).toBeGreaterThan(Date.now() - 60_000)
 
+    /*
+      ⚠ **The line's own date comes back with the history**, so the caller can
+      drop a filed instant whose *day* is the one the row is already showing —
+      which needs a timezone, so it cannot be done here or in the browser. See
+      `getPriorDates`, and `priorDatesAction` for where that reduction happens.
+    */
     const prior = await dal.getPriorDates(one(), id)
-    expect(prior).toHaveLength(1)
-    expect(Date.now() - prior[0].getTime()).toBeGreaterThan(6 * 24 * 60 * 60 * 1000)
+    expect(prior).not.toBeNull()
+    expect(prior?.prior).toHaveLength(1)
+    expect(Date.now() - prior!.prior[0].getTime()).toBeGreaterThan(6 * 24 * 60 * 60 * 1000)
 
     /*
       ⚠ **`created_at` did NOT move, and that is what keeps the undo honest.**
@@ -439,7 +446,7 @@ describe('a retried submission is one capture', () => {
     if (!moved.ok) return
     expect(moved.value.id).toBe(id)
     expect(moved.value.capturedAt.getTime()).toBeGreaterThan(Date.now() - 60_000)
-    expect(await dal.getPriorDates(one(), id)).toHaveLength(1)
+    expect((await dal.getPriorDates(one(), id))?.prior).toHaveLength(1)
 
     /* Still one line. The record gained a date, not a row. */
     const { rows } = await pool.query(
@@ -466,7 +473,7 @@ describe('a retried submission is one capture', () => {
       expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
     }
 
-    expect(await dal.getPriorDates(one(), id)).toHaveLength(2)
+    expect((await dal.getPriorDates(one(), id))?.prior).toHaveLength(2)
 
     /*
       ⚠ **The key is `(capture, at)`**, so writing the same line twice inside one
@@ -475,7 +482,7 @@ describe('a retried submission is one capture', () => {
     */
     expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
     expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
-    expect((await dal.getPriorDates(one(), id)).length).toBeLessThanOrEqual(4)
+    expect((await dal.getPriorDates(one(), id))!.prior.length).toBeLessThanOrEqual(4)
   })
 
   /*

@@ -760,21 +760,44 @@ export async function priorDatesAction(
   const parsed = captureIdSchema.safeParse(captureId)
   if (!parsed.success) return { ok: false, message: 'Unknown line.' }
 
-  const dates = await getPriorDates(sessionUser, parsed.data)
-  const { stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
+  const found = await getPriorDates(sessionUser, parsed.data)
+  if (!found) return { ok: true, value: [] }
+
+  const { numeric } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
 
   /*
-    ⚠⚠ **DEDUPLICATED TO DAYS, AND A PROBE FOUND WHY.** It read back
-    *Today· Today· Today* — three re-entries inside one afternoon, each filing a
-    distinct instant, all of them the same day. **The table is right to hold
-    every timestamp** (it is a record of what happened, and an instant is not a
-    day) **and the console is right to show days**, because that is what the
-    stamp row speaks in. A repeated label says nothing twice, which is the
-    density rule at its plainest.
+    ⚠⚠ **IN NUMBERS — 12 September, directed: *the date of the previous entry
+    should read in numbers*.** They were the record's own worded stamps for a
+    few hours, which put a run of prose after *Today* where what is wanted is a
+    list of days. `numeric` is the second face `lib/day.ts` grew for it, off the
+    same timezone and the same instant as `stamp`, so the two cannot disagree
+    about which day something happened on.
 
-    ⚠ **A `Set` over the already-sorted labels keeps the order** — newest first,
-    reading backwards away from the present, which is the direction the record
-    itself reads.
+    ⚠⚠ **DEDUPLICATED TO DAYS, AND THE LINE'S OWN DAY IS DROPPED — A PROBE FOUND
+    BOTH.** It read back *Today· Today· Today*: three re-entries inside one
+    afternoon, each filing a distinct instant, all of them the same day. **The
+    table is right to hold instants** — it is a record of what happened — **and
+    the console is right to show days**, so the reduction belongs here, between
+    them.
+
+    ⚠ **Keyed on the day, never on the printed label.** The key is the
+    timezone-resolved calendar day; two instants twelve hours apart can print
+    the same numbers and be different days, or different numbers and be the
+    same one, depending on where the reader is.
+
+    ⚠ **Order is preserved** — newest first, reading backwards away from the
+    present, which is the direction the record itself reads.
   */
-  return { ok: true, value: [...new Set(dates.map((d) => stamp(d).label))] }
+  const own = numeric(found.capturedAt).key
+  const seen = new Set<string>([own])
+  const days: string[] = []
+
+  for (const at of found.prior) {
+    const { key, label } = numeric(at)
+    if (seen.has(key)) continue
+    seen.add(key)
+    days.push(label)
+  }
+
+  return { ok: true, value: days }
 }

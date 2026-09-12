@@ -2420,22 +2420,35 @@ export async function recaptureWords(
 export async function getPriorDates(
   sessionUser: SessionUser,
   captureId: string,
-): Promise<Date[]> {
+): Promise<{ capturedAt: Date; prior: Date[] } | null> {
+  /*
+    ⚠⚠ **THE LINE'S OWN DATE COMES BACK WITH THEM, AND IT IS NOT A CONVENIENCE.**
+    A line written again on the day it was first written files a genuine earlier
+    *instant* whose **day** is the one the row is already showing — so the caller
+    has to be able to drop it, and *which day is this* is a question only a
+    timezone can answer. The action holds the viewer's; this hands it the one
+    fact it cannot otherwise get. ⚠ **The client must not do this filtering**:
+    `lib/day.ts`'s rule is that the browser never decides what day something
+    happened on, because its timezone is not the server's.
+
+    ⚠ **A LEFT join, so a line with no history still answers.** An inner join
+    would make *this capture has never moved* and *this capture is not yours*
+    the same answer, and the second is the one that has to be `null`.
+  */
   const rows = await db
-    .select({ at: capturePriorDates.at })
-    .from(capturePriorDates)
-    .innerJoin(
-      captures,
-      and(
-        eq(captures.id, capturePriorDates.captureId),
-        eq(captures.id, captureId),
-        eq(captures.userId, sessionUser.id),
-      ),
-    )
+    .select({ capturedAt: captures.capturedAt, at: capturePriorDates.at })
+    .from(captures)
+    .leftJoin(capturePriorDates, eq(capturePriorDates.captureId, captures.id))
+    .where(and(eq(captures.id, captureId), eq(captures.userId, sessionUser.id)))
     .orderBy(desc(capturePriorDates.at))
     .limit(PRIOR_DATES_LIMIT)
 
-  return rows.map((r) => r.at)
+  if (rows.length === 0) return null
+
+  return {
+    capturedAt: rows[0].capturedAt,
+    prior: rows.map((r) => r.at).filter((at): at is Date => at !== null),
+  }
 }
 
 /** How much history the console will draw. See `getPriorDates`. */

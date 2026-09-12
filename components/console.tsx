@@ -545,22 +545,48 @@ export function Console({
                 depends on a timezone and the browser's is not the server's.
               */}
               {/*
-                ⚠ **Today's own label is filtered out, and a probe is why.** A
-                line written again on the day it was first written files a
-                genuine prior instant whose *day* is the one already on the row
-                — so the stamp read *Today · Today*, which is the first word
-                said twice. `priorDatesAction` reduces the instants to distinct
-                days; this drops the one the row is already showing. **Two
-                halves of one rule: the history is a list of days, and a day
-                already on screen is not one of them.**
+                ⚠⚠ **A WORD IN FRONT OF THEM — 12 September, directed: *the date
+                of the previous entry should have wording that provides context
+                for the date*.** For a few hours it was a bare run of days after
+                *Today*, and this block argued for that: *no label — Previously:
+                would be a heading over a list that reads as a list.* **It does
+                not read as itself.** A second date beside today's could as
+                easily be when the line was settled, when somebody converged on
+                it, or when a photograph was attached. Density rule 2 bans a
+                heading over a list that explains itself; **design rule 1 is the
+                tiebreak, and the second word is usually free.**
+
+                ⚠ **One word, once, for the whole run** — design rule 4, the
+                same reason the matching rule is said once under a group of
+                requests rather than once per row. Two dates do not want two
+                labels.
+
+                ⚠ **In numbers, and the filtering is NOT here.**
+                `priorDatesAction` reduces the instants to distinct days, drops
+                the day the row is already showing, and prints them through
+                `lib/day.ts`'s `numeric`. The client never decides what day
+                something happened on — its timezone is not the server's, which
+                is that file's founding rule.
               */}
-              {priorDates
-                .filter((d) => d !== line.dayLabel)
-                .map((d) => (
-                  <span key={d} className="ms-2">
-                    · {d}
-                  </span>
-                ))}
+              {/*
+                ⚠ **The `·` separates the two FACTS, once, and a screenshot is
+                why it is there.** Without it the row read `TODAY PREVIOUSLY
+                05/09/26` — the day and the history running into one phrase,
+                because the stamp row's only other separator is the space
+                `ms-2` gives it and that is not enough between a word and a
+                word. **It marks the group, never each date**: the dates inside
+                it are a list and take commas.
+
+                ⚠ **A long history wraps, and that is accepted rather than
+                truncated.** `items-baseline` keeps `Lock` on the first line's
+                baseline, which is right — it acts on the line, not on the
+                dates. The common case is one date; a line written twelve times
+                is a line whose history stops being readable, and hiding it
+                would be worse than a second row of stamp.
+              */}
+              {priorDates.length > 0 && (
+                <span className="ms-2">· Previously {priorDates.join(', ')}</span>
+              )}
               {line.year !== null && <span className="ms-2">{line.year}</span>}
               {onLock !== null && !line.shared && <span className="ms-2">Locked</span>}
             </p>
