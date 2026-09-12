@@ -153,6 +153,53 @@ handset** — black.
   all ok, `footparity` 13/13, `traysightline` 8/8, `sheetjolt`, `askthem`,
   `recordfade`, `matchingconsent`, `console`, `akin`, `dupe`, `reenter` and
   `navpending` all green.
+- ⚠⚠ **AND THE BAND IS A CARD — 12 September, directed:** *some separation from
+  the list below, maybe by positioning the textbox inbetween the two?* **The
+  instinct was right and the mechanism is refused by a tombstone.** They did run
+  together: a convergence line and a record line are the same type at the same
+  size, so the only thing parting them was `TODAY` in tracked mono.
+- ⚠⚠ **THE TEXTBOX CANNOT BE THE DIVIDER, TWO WAYS.** In flow it is the 7
+  September revert — `writing-sheet`'s tombstone: *it landed too high, sometimes
+  VANISHED ON TAP and never came back, and doubled on the way out.* Kept `fixed`
+  but moved up, **the composer's position becomes a function of how many
+  convergences you have: measured at 62.84px each**, so the send arrow sits at
+  y=198 with none and y=512 with five, and on the ordinary day it is at the top
+  of the screen, out of the thumb. ⚠ **Everything keyed to the bottom edge goes
+  with it** — `--keyboard-overlap`, `sheet-over-keys`, the band's close, the
+  foot's close, the recede — and those exist because a software keyboard is about
+  to cover the bottom of the screen.
+- ⚠⚠ **A CARD IS WHAT THIS APP ALREADY SAYS FOR *THIS IS NOT THE RECORD*, TWICE**
+  — the console is one, the portal is one on a scrim, the composer is one. So the
+  screen reads **[opportunities] · TODAY · your lines · [composer]**: the two
+  cards are the two things that are not your record. ⚠ **It also bounds a long
+  band**, which a run of loose lines could not.
+- ⚠⚠ **`--color-surface` AND NO FILTER, WHICH IS THE ONE DETAIL THAT IS NOT
+  OPTIONAL.** The console and the composer are glass because the record passes
+  under them at full strength; **this card is in flow with nothing behind it but
+  the page**, and 38% black over black is black — the 5 September bug exactly,
+  and the console's own answer: *its ground lifts toward `--color-surface`
+  rather than sinking toward the page, because a floating card has no borrowed
+  edge.* ⚠ **`1rem` and `--page-lead`, which is what `portal-card` declares** —
+  but **not that utility**, whose `flex: 0 1 auto`, `min-height: 0` and own
+  measure are all about living inside a fixed positioner.
+- ⚠ **One number on all four edges — measured 20 / 20 / 20 / 20**: the lead under
+  the bar, the card's padding head and foot, and the gap down to the record's
+  first stamp. ⚠ **`last:mb-0` on the sentence**, or the row gap lands inside the
+  card's own padding and the foot reads 30 against the head's 20. ⚠ **Stated
+  cost: the band's words are inset 20px from the record's**, which is the card
+  being a card. ⚠ **It scrolls away rather than pinning**, because the portal is
+  arrival.
+- ⚠⚠ **AND TWO MORE PROBES WERE DEPENDING ON WHAT OTHER SEEDS LEFT BEHIND.**
+  `askthem.mjs` needed a converged line on the record and **there were 0 in a
+  page of 50**; `akin.mjs` carried *seed first: `node scripts/seed-akin.mjs`* in
+  its header and timed out the moment a portal seed added three rows, an hour
+  after passing 10/10. **Both run their own seed now** — a seeded line is the
+  newest capture and therefore on page one by construction. ⚠ **A precondition a
+  person has to remember is one that quietly stops holding.** ⚠ **And the
+  portal's console was the wrong route to test**: `page-screen.tsx` passes it
+  `convergence={null}` deliberately, *so a console inside the portal would not
+  say the sentence twice*. `reenter.mjs` has the same dependency but **reports
+  its skip out loud** (9/9, not 11/11), which is why it is left alone.
 
 
 ⚠⚠ **`Lock` IS RED — 12 September, directed:** *put `lock` in an appropriate

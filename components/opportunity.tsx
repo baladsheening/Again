@@ -46,7 +46,48 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
   if (lines.length === 0) return null
 
   return (
-    <ol className="flex flex-col">
+    /*
+      ⚠⚠ **A CARD — directed 12 September**, after the band and the record were
+      reported as running together. They do: a convergence line and a record line
+      are the same type at the same size, so the only thing parting them was
+      `TODAY` in tracked mono.
+
+      ⚠⚠ **THE SHAPE IS NOT A NEW ONE — THIS APP HAS ANSWERED *THIS IS NOT THE
+      RECORD* TWICE AND BOTH TIMES IT WAS A CARD.** The console is a card, the
+      portal is a card on a scrim, and the composer is a card. So the screen now
+      reads **[opportunities] · TODAY · your lines · [composer]** — the two cards
+      are the two things that are not your record, and the list between them is.
+      ⚠ **It also bounds a long band**, which a run of loose lines could not: five
+      convergences are one object you can see the end of rather than a list with
+      no bottom.
+
+      ⚠⚠ **`--color-surface`, NEVER THE CONSOLE'S GLASS, AND THAT IS THE ONE
+      DETAIL THAT IS NOT OPTIONAL.** The console and the composer are glass
+      because the record passes under them at full strength; **this card is in
+      flow with nothing behind it but the page**, and 38% black over black is
+      black. That is the 5 September bug in full — *the composer itself isn't
+      especially visible* — and the answer this repository already wrote for the
+      console: *its ground lifts toward `--color-surface` rather than sinking
+      toward the page, because a floating card has no borrowed edge.* ⚠ **No
+      `backdrop-filter` either**: a filter over the page's own ground costs a
+      compositor layer to blur nothing.
+
+      ⚠ **The radius and the padding are the two cards' own** — `1rem` and
+      `--page-lead`, which is what `portal-card` declares. ⚠ **Not the
+      `portal-card` utility itself**: that one is a flex child of a sheet and
+      carries `flex: 0 1 auto`, `min-height: 0` and its own `max-width` and
+      centring, all of which are about living inside a fixed positioner. **This
+      is a block in a column that already has the measure and the gutter.**
+
+      ⚠ **The air below it is the air above it** — `--page-lead` either way,
+      which is the same token `<main>` spends under the bar. One number for the
+      lead, so the card cannot sit closer to one neighbour than the other.
+
+      ⚠ **It scrolls away with the record rather than pinning**, because the
+      portal is *arrival*: it is read once and moved past. A pinned band would
+      spend the top of every screen on something already seen.
+    */
+    <ol className="mb-[var(--page-lead)] flex flex-col rounded-2xl bg-[var(--color-surface)] p-[var(--page-lead)]">
       {lines.map((line) => (
         <li key={line.id}>
           {/*
@@ -63,7 +104,13 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
             the first thing an ellipsis ate — and the sentence is the only thing
             on this band that the record below does not already say.
           */}
-          <p className="text-muted mb-2.5 text-[0.8125rem]">
+          {/*
+            ⚠ **`last:mb-0`, or the card is lopsided.** The gap under each
+            sentence is the gap to the NEXT line; on the last one it lands inside
+            the card's own padding and reads as 30px at the foot against 20 at
+            the head. **The margin is between rows, so the last row has none.**
+          */}
+          <p className="text-muted mb-2.5 text-[0.8125rem] last:mb-0">
             {line.sentence}
             <AskThem text={line.text} />
           </p>
