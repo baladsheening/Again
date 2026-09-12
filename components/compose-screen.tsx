@@ -42,6 +42,8 @@ export function ComposeScreen({
   searchable,
   imagesOn,
   undoWindowMs,
+  opportunity,
+  record,
 }: {
   /** Phase 2 step 3: is there anything to say. One bit — never a count. */
   portalWaiting: PortalWaiting
@@ -65,6 +67,27 @@ export function ComposeScreen({
    * would show as a control that is lit and refuses.
    */
   undoWindowMs: number
+  /**
+   * **What you can act on, above the record.** See `components/opportunity.tsx`.
+   *
+   * ⚠ **A node, not rows**, for the reason the rail was going to be one: this
+   * screen is `'use client'` because the composer is, and the band is pure
+   * server markup. It renders nothing when there is nothing waiting.
+   */
+  opportunity: React.ReactNode
+  /**
+   * **The first page of the record, under the band and over the composer.**
+   *
+   * ⚠⚠ **THE HOLE THIS FILLS WAS 572px — 68% OF A 390×844 HANDSET — AND IT
+   * WAS BEING HELD FOR THE RAIL.** See the front page's own docblock. The rail
+   * is out of Release 1 by Amendment 10, so the space was reserved against
+   * something that is not coming back.
+   *
+   * ⚠ **A node, for the same reason as the band above it.** `PageLines` is
+   * shared with `SearchScreen` so a line is one object with one height in all
+   * three places it now appears — design rule 3.
+   */
+  record: React.ReactNode
 }) {
   const router = useRouter()
   const [draft, setDraft] = useState('')
@@ -708,7 +731,49 @@ export function ComposeScreen({
         padding for a bar or a reserve for the sheet any more, because it has
         nothing in it to keep clear of them.
       */}
-      <main className="gutter mx-auto h-svh w-full max-w-[var(--record-measure)]" />
+      <main
+        /*
+          ⚠⚠ **THE RECORD IS IN HERE SINCE 12 SEPTEMBER, AND THE BOX IS THE
+          RECORD'S OWN.** `--record-measure` rather than `--page-measure`, the
+          bar's height plus a lead at the top, a column: byte for byte what
+          `page-screen.tsx`'s `<main>` wears, because what is inside it is the
+          same lines. A second arrangement here would be two opinions about
+          where the reading column is.
+
+          ⚠⚠ **THE FOOT RESERVE IS `--sheet-block`, WHICH THIS COMPONENT
+          ALREADY MEASURES AND HAS NOT USED SINCE THE RAIL WENT.** The observer
+          fifty lines up reads the strip's **border box** and writes it onto
+          `host`; the rail was what it was written for. **Measure the thing,
+          never re-derive it** — the composer is a band, a card, a hem and a
+          foot whose heights change when somebody writes, when a failure line
+          appears and when the desk's root scale ramps, and a `calc` of six
+          tokens here would be a sum to keep in step with all four.
+
+          ⚠ **Plus `--keyboard-overlap`, because the strip rides up over the
+          keys and its height does not change when it does.** That is what
+          `page-hem` adds on the record for the same reason, and it is why this
+          is not simply `page-hem`: that utility reserves the record's strip,
+          and this screen's is the composer.
+
+          ⚠ **Both are read here, where they are inherited from `host`** —
+          never lifted into `@theme`. A `var()` is substituted where the
+          property is *declared*, so a token on `:root` would resolve against
+          `:root`, where nothing writes either of them. That bug cost a day on
+          29 August.
+        */
+        className="gutter mx-auto flex min-h-[calc(100svh_+_env(safe-area-inset-top))] w-full max-w-[var(--record-measure)] flex-col pt-[calc(var(--bar-height)+var(--page-lead))] pb-[calc(var(--sheet-block,0px)+var(--keyboard-overlap,0px)+var(--page-lead))]"
+      >
+        {/*
+          ⚠ **The band first, and it draws nothing on the ordinary day.** The
+          product's own order: an opportunity outranks the record, and the
+          record outranks the space the rail was holding. ⚠ **No rule between
+          them and no heading over either** — the record parts lines by rhythm
+          (design rule 3), the day stamp already reads as a boundary, and a
+          heading over a list that reads as a list is density rule 2.
+        */}
+        {opportunity}
+        {record}
+      </main>
 
       {/* A zero-height fixed twin on the viewport's bottom edge — see `useKeyboardHem`. */}
       <div ref={floorAnchor} aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-0" />
@@ -778,7 +843,41 @@ export function ComposeScreen({
       */}
       <div
         ref={sheet}
-        className={`writing-sheet z-20 flex flex-col justify-end ${makingRoom ? 'sheet-over-keys' : ''}`}
+        /*
+          ⚠⚠ **THE GLASS IS ON THE STRIP AND THE BLUR IS ON NOTHING ELSE — 12
+          September, and it REVERSES the arrangement of 5 September.** That day
+          the strip was stripped bare and the card took the console's recipe,
+          on this reasoning: *a backdrop filter filters what is behind it
+          INCLUDING the outer one's result, so the card would have been 38% over
+          38% at 24px blur under 18px more — a glass card inside a glass box is
+          not the console.* **The nesting argument is still right; what changed
+          is what is behind the strip.**
+
+          ⚠⚠ **THE RECORD IS BEHIND IT NOW, AND THE FOOT HAD NO GROUND.** This
+          file has said since 5 September, in writing: *what this costs, and it
+          is not payable yet: the foot loses its ground. On the record the foot
+          rides inside the strip's glass because the record scrolls under it.
+          Here it sits on the page. **Invisible today** — the page behind it is
+          black — and the question comes back the day the browse half lands …
+          **Do not pre-build a ground for it; look at it then.*** It was looked
+          at: **record lines ran straight through the hem and collided with the
+          foot's glyphs.** It is the record rather than the browse half, and the
+          note is otherwise exact.
+
+          ⚠ **ONE backdrop filter, not two, which is what keeps the 5 September
+          argument intact.** The strip is the lens; the card is a tint **on** it
+          and declares no filter of its own. So the card reads as 38% over the
+          strip's already-tinted, already-blurred 38% — **darker than it was,
+          not lighter** — and the hem and the foot below it get exactly the
+          ground the record's strip gives its own foot. Byte for byte the
+          record's idle strip: `--glass-tint` over `--glass-blur`.
+
+          ⚠ **No `stack:translate-y-full` and no `pointer-events-none`**, which
+          is where this stops copying the record. That strip hides on the desk
+          because the record's is a rewrite field with nothing to rewrite; this
+          one is the composer and is the reason the screen exists.
+        */
+        className={`writing-sheet z-20 flex flex-col justify-end bg-[var(--glass-tint)] backdrop-blur-[var(--glass-blur)] ${makingRoom ? 'sheet-over-keys' : ''}`}
       >
         {/*
           ⚠ **A hem under the box, and it is doing two jobs at once.** Idle it is
@@ -933,7 +1032,7 @@ export function ComposeScreen({
           */}
           <div
             ref={box}
-            className={`composer-glow ${makingRoom ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] backdrop-blur-[var(--glass-blur)] stack:bg-[var(--color-surface)] stack:backdrop-blur-none`}
+            className={`composer-glow ${makingRoom ? 'composer-glow-tight' : ''} rounded-2xl bg-[var(--glass-tint)] p-[var(--page-lead)] stack:bg-[var(--color-surface)]`}
           >
           {/*
             ⚠ **A positioning context for the line that lands.** The card cannot

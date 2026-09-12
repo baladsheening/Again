@@ -49,6 +49,112 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **THE FRONT PAGE SHOWS WHAT YOU CAN ACT ON, THEN THE RECORD — 12 September,
+directed:** *we really need to redesign the front page handset home app layout.*
+**Measured first, and the number is the whole argument: at 390×844 the bar ran
+0–48, then NOTHING until the composer's strip at 620.** 572px — **68% of a
+handset** — black.
+
+- ⚠⚠ **THE HOLE WAS DUG FOR THE RAIL AND AMENDMENT 10 THEN BANNED IT.** 7
+  September cleared this page so the keyboard could be judged with one variable
+  on screen; 11 September put *a global or random browse rail, image-only tiles,
+  and the opening count* in the Release 1 exclusions. **So two thirds of the
+  screen were being reserved against a feature that is not coming back.** That is
+  the bottom-third floor's fault exactly — *holding a third of the screen against
+  nothing* — deleted the same week on the same grounds, at half the size.
+- ⚠⚠ **AND THE PAYOFF WAS NOT ON THE SCREEN PEOPLE OPEN MOST.**
+  `product-truth.md`: *a convergence has to produce an opportunity, not a
+  notification.* It was a 26px glyph in the foot whose door is
+  `router.push('/record?portal=1')` — two screens away — with 572px of black
+  above it. **The band is that thing, on that screen.**
+- ⚠ **Three bands, in the product's own order: the convergences, then your
+  record, then the composer in the thumb.** ⚠⚠ **AN OPPORTUNITY-ONLY HOME WAS
+  THE OTHER READING AND IS REFUSED: on the median day there are none, and the
+  void comes back with a better excuse.** The space has to be filled by something
+  that exists on an ordinary day, and only your own record qualifies.
+- ⚠ **`PAGE_SIZE`, never a home-sized number**, and **no `earlier` cursor** — the
+  record has a screen and the foot is one tap from it. **Home is a window on the
+  record, not a second copy of it.** ⚠ `searchable` went from a `limit: 1` read
+  to `rows.length > 0` and now costs nothing.
+- ⚠⚠ **`PageLines` IS EXTRACTED FROM `search-screen.tsx` VERBATIM AND THAT IS
+  DESIGN RULE 3 MADE TRUE BY CONSTRUCTION.** *One object has one height wherever
+  it appears* — **34px on home, on search and on the record**, asserted. ⚠ **No
+  `'use client'` in it**, which is what lets both have it: search pulls it into
+  the bundle, home renders it to markup that never crosses the boundary. **Do not
+  add a hook to that file** or home starts paying for search's interactivity.
+- ⚠⚠ **A ROW ON HOME DOES NOT OPEN A CONSOLE, AND THAT IS `foot.tsx`'S OWN RULE
+  RATHER THAN AN OMISSION** — *a console only exists where the record is*, which
+  is why the portal's door here navigates rather than opening a box it cannot
+  fill. Search sets the same precedent: *a control that cannot act is worse than
+  no control, because it looks like one.* ⚠ **The alternative is a navigation on
+  every row tap**, at the 0.35–1.74s this file measured the same morning.
+- ⚠⚠ **`--sheet-block` WAS ALREADY THERE AND HAD NOTHING TO RESERVE FOR SINCE THE
+  RAIL WENT.** The composer has measured its own **border box** with a
+  `ResizeObserver` since 6 September; `<main>`'s reserve reads it. **A `calc` of
+  the band, the card's padding, two lines, the foot row and the hem would be five
+  numbers to keep in step** with a box that changes height when somebody writes,
+  when a failure line appears and when the desk's root scale ramps. *Measure the
+  thing, never re-derive it.* ⚠ **Plus `--keyboard-overlap`**, because the strip
+  rides up over the keys and its height does not change when it does.
+- ⚠⚠ **THE FOOT LOST ITS GROUND, AND THIS FILE'S OWN DOCBLOCK PREDICTED IT IN
+  WRITING.** `compose-screen.tsx`, 5 September: *what this costs, and it is not
+  payable yet: the foot loses its ground… **invisible today** — the page behind
+  it is black — and the question comes back the day the browse half lands. **Do
+  not pre-build a ground for it; look at it then.*** It was looked at: **record
+  lines ran straight through the hem and collided with the glyphs.** ⚠ **It is
+  the record rather than the browse half and the note is otherwise exact.**
+- ⚠⚠ **ONE BACKDROP FILTER, MOVED FROM THE CARD TO THE STRIP — WHICH KEEPS THE 5
+  SEPTEMBER ARGUMENT RATHER THAN BREAKING IT.** That day said *a backdrop filter
+  filters what is behind it including the outer one's result… a glass card inside
+  a glass box is not the console.* **The nesting argument still holds; what
+  changed is what is behind the strip.** The strip is the lens (`--glass-tint`
+  over `--glass-blur`, byte for byte the record's idle strip) and the card is a
+  **tint on it with no filter of its own** — so the card reads **darker** than it
+  did, the hem and foot get the ground the record's foot already has, and there is
+  still exactly one filter. ⚠ **No `stack:translate-y-full`**: the record's strip
+  hides on the desk because it has nothing to rewrite; this one is the composer.
+- ⚠ **The band has no cap, no count and no heading**, and draws **nothing at all**
+  when nothing is waiting — §5 forbids the portal a number, §6 forbids explaining
+  an absence, density rule 2 forbids a heading over a list that reads as one. ⚠
+  **Requests stay behind the door**: `Accept` and `Decline` act on a relationship
+  rather than on a line. ⚠ **Nothing is marked read by being seen here** —
+  `readPortalLine` is the portal's alone, so the band is the unread queue and
+  self-bounding.
+- ⚠ **The portal's rows are read only when the cheap bit says there are any.**
+  `listMyPortal` is a join the record's page refuses to put in front of every
+  capture. **Stated cost: whoever HAS a convergence pays a second, serial round
+  trip before first paint** — it cannot join the `Promise.all`, being conditional
+  on its answer. ⚠ **The lever if it shows is one `Promise.all` and everybody
+  pays the join** — not a cache, and not a client fetch after paint, which would
+  make the band arrive late on the screen whose content must not move.
+- ⚠⚠ **FOUR PROBES WERE ALREADY RED BEFORE THIS SESSION TOUCHED ANYTHING, AND
+  THAT IS THE MOST IMPORTANT LINE HERE.** `sheetjolt.mjs` and `frontpage.mjs`
+  pinned `--tap-floor` for a foot row that became **42.25px that same morning** —
+  the entry that changed it re-ran footparity, bandink, stripstep and
+  traysightline, and **those two were not in the list**; `frontpage.mjs` also
+  compared the composer's padding to a console whose horizontal inset had moved
+  to its scroller hours earlier; `recordfade.mjs` clicked
+  `button[aria-label="Write a capture"]` — **the `+` the 5 September split
+  deleted** — and had timed out before a single assertion for seven days, the
+  third instance of the rot `swipe.mjs` and `console.mjs` carried; `askthem.mjs`
+  clicked **row one** and expected a convergence there, which twenty probe seeds
+  had pushed off the top. ⚠ **A probe that pins what another seed left at the top
+  is asserting what other seeds do.** All four fixed against derivations and
+  states rather than literals.
+- ⚠ **`recordfade.mjs`'s desk half drove `/` while asserting the RECORD's
+  translate-off** — it moved to `/record`, which is where that claim lives.
+- **Measured by `node_modules/.probe/homerecord.mjs`** — 12 assertions: the
+  record is drawn, the page scrolls, a line is the same object on all three
+  surfaces, the reserve **is** the measurement, the last line clears the strip,
+  the strip is the lens and the card declares no filter, and the band is asserted
+  **both ways**. ⚠ **Its first run read `.page-row` and reported the record as
+  five lines long** — that is the band's box, the portal's own; the record's is
+  `.page-line`. **168 tests green**, typecheck, lint and build clean; `frontpage`
+  all ok, `footparity` 13/13, `traysightline` 8/8, `sheetjolt`, `askthem`,
+  `recordfade`, `matchingconsent`, `console`, `akin`, `dupe`, `reenter` and
+  `navpending` all green.
+
+
 ⚠⚠ **`Lock` IS RED — 12 September, directed:** *put `lock` in an appropriate
 red.* `--color-decline`, widened, and **a second red is refused on the green's
 own argument** — that token's note reads *the moment green appears on a second

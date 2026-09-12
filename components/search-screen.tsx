@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { searchAction } from '@/app/actions/captures'
-import { LockGlyph } from './glyphs'
+import { PageLines } from './page-lines'
 import type { PageLineView } from '@/lib/page-line'
-import { STATE_WORD } from '@/lib/vocabulary'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -201,98 +200,19 @@ export function SearchScreen() {
         <p className="page-line text-muted">Nothing.</p>
       )}
 
-      <ol className="flex flex-col">
-        {lines.map((line, i) => {
-          const stamped = i === 0 || lines[i - 1].day !== line.day
-          const crossedOff = line.state === 'dropped'
-          const word = STATE_WORD[line.state]
+      {/*
+        ⚠⚠ **THE ROWS ARE `PageLines` SINCE 12 SEPTEMBER, AND THE FRONT PAGE
+        DRAWS THE SAME COMPONENT.** They were written here first; home showing
+        the record under its composer gave them a second caller, and a second
+        copy would have been design rule 3 broken by construction — *one object
+        has one height wherever it appears*.
 
-          return (
-            <li key={line.id}>
-              {stamped && (
-                <p className={`stamp text-muted mb-2.5 ${i === 0 ? 'mt-6' : 'mt-[26px]'}`}>
-                  {line.dayLabel}
-                </p>
-              )}
-
-              {/*
-                ⚠ **A row, not a button.** Nothing here acts on a line — see the
-                head of this file — and a control that cannot act is worse than
-                no control, because it looks like one.
-              */}
-              {/*
-                ⚠ **The mark travels here — 31 August.** A result is a line of
-                the record, and *why is this line special* is exactly the
-                question somebody has when a search hands back something they
-                wrote in June. It draws nothing on a line that has not converged,
-                so a record with no convergences in it looks exactly as it did.
-
-                ⚠ **A struck result draws none either, and there is no term for
-                it here** — `converged` answers false for a crossed-off line
-                since 12 September. Nothing on this surface acts on a line, so
-                there is no optimistic state to mirror and the read is the whole
-                answer; the record holds the term as well only because a
-                cross-off there deliberately does not refresh.
-
-                ⚠ **The mark is the only thing on this surface that is not
-                already text**, so it is the one thing a reader could miss; the
-                row's own words carry it in the label the same way the record's
-                do. There is no console here to say *who* — nothing on this
-                surface acts on a line — so the mark says *there is something*
-                and the record is where it is read.
-              */}
-              <div
-                className={`page-line flex items-baseline gap-3 ${
-                  line.converged ? 'converged' : ''
-                }`}
-              >
-                <span
-                  className={`min-w-0 flex-1 ${crossedOff ? 'line-through opacity-50' : ''}`}
-                >
-                  {line.text}
-                  {line.year !== null && (
-                    <span className="text-muted ms-2 text-[0.8125rem] leading-none">
-                      {line.year}
-                    </span>
-                  )}
-                  {/*
-                    ⚠ **Hidden text, not an `aria-label`.** There is no control
-                    on this row — an `aria-label` on a generic element is ignored
-                    by most of what would read it — so the mark is said the only
-                    way a plain row can say anything: in the row.
-                  */}
-                  {line.converged && (
-                    <span className="sr-only">. Also on someone else’s page.</span>
-                  )}
-                  {/* The lock travels here too — it is a property of the line. */}
-                  {!line.shared && <span className="sr-only">. Locked.</span>}
-                </span>
-                {/*
-                  ⚠ **`self-center`, because this row is `items-baseline`.** A
-                  drawing has no baseline worth aligning to, and the flex item
-                  says so for itself rather than the row being re-aligned around
-                  it. See `line-glyph` on the record, which solves the same thing
-                  the other way because a record row is a line box.
-                */}
-                {!line.shared && (
-                  <span
-                    aria-hidden
-                    className="text-muted ms-2 inline-flex shrink-0 self-center [--glyph:0.875rem]"
-                  >
-                    <LockGlyph />
-                  </span>
-                )}
-                {/*
-                  The word the state is called on screen, as the tray sets it.
-                  `null` is a word too: a live want says nothing, because a result
-                  that is still on the page needs no label to say so.
-                */}
-                {word !== null && <span className="micro text-muted shrink-0">{word}</span>}
-              </div>
-            </li>
-          )
-        })}
-      </ol>
+        ⚠ **The lead is the caller's, which is why it is a class here.** Under a
+        search field the list wants `mt-6`; under the bar the front page already
+        has `--page-lead`. ⚠ **And it is gated on there being lines** — a margin
+        on an empty `<ol>` still takes its 24px, under *Nothing.*
+      */}
+      {lines.length > 0 && <PageLines lines={lines} className="mt-6" />}
 
       {/* The record continues, here as on the page. See `readEarlier` there. */}
       {showing?.earlier != null && (

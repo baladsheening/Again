@@ -1,18 +1,24 @@
 import { redirect } from 'next/navigation'
 
 import { ComposeScreen } from '@/components/compose-screen'
+import { Opportunity } from '@/components/opportunity'
+import { PageLines } from '@/components/page-lines'
+import { portalAction } from '@/app/actions/portal'
 import {
   getMyProfile,
   portalWaiting,
   getSessionUser,
   listMyPage,
+  PAGE_SIZE,
   UNDO_WINDOW_MS,
 } from '@/lib/db'
+import { dayStamper } from '@/lib/day'
 import { imagesAvailable } from '@/lib/media'
+import { toPageLines } from '@/lib/page-line'
+import { viewerTimeZone } from '@/lib/region'
 
 /**
- * **The front page: the corpus above, a composer below.** Amendment 5, 5
- * September.
+ * **The front page: what you can act on, your record, and a composer.**
  *
  * ⚠⚠ **THIS WAS THE RECORD UNTIL 5 SEPTEMBER AND THE RECORD IS AT `/record`.**
  * Directed: *the front page is a place where people can both lodge a thought as
@@ -25,16 +31,18 @@ import { imagesAvailable } from '@/lib/media'
  * there was. This is not a departure from the specification; it is arriving at
  * it. See `docs/re-direction/inactive/the-front-page.md`.
  *
- * ⚠ **The browse half is built as of 6 September** — `listRail` and
- * `components/rail.tsx`. The rail is **handed down as a node**, not
- * imported by `ComposeScreen`: that screen is `'use client'`
- * because the composer is, and the rail is pure server markup, so crossing the
- * boundary as a prop keeps it out of the client bundle entirely. **The portal
- * hands its console down the same way.**
+ * ⚠⚠ **THE BROWSE HALF IS NOT COMING BACK AND ITS HOLE IS FILLED — 12
+ * September, directed.** It was pulled on 7 September so the keyboard could be
+ * judged with one variable on screen, and Amendment 10 then put *a global or
+ * random browse rail, image-only tiles, and the opening count* in the Release 1
+ * exclusions. **Measured before this change, at 390×844: header 0–48, nothing
+ * until 620, composer and foot below it — 572px, 68% of the handset, held
+ * against a feature the product had banned.** That is the bottom-third floor's
+ * fault exactly, deleted the same week on the same grounds.
  *
- * There is still no seed for the composer, because there is no list on that
- * half: what gets written goes to the record, and the confirmation is one line
- * in the box.
+ * ⚠ **What fills it is what already existed**, in the order `product-truth.md`
+ * puts it: the convergences you can act on, then your own record, then the
+ * composer in the thumb. **No new query, no new feature, no discovery.**
  */
 export default async function ComposePage() {
   const sessionUser = await getSessionUser()
@@ -44,38 +52,72 @@ export default async function ComposePage() {
   if (!profile) redirect('/onboarding')
 
   /*
-    ⚠ **One row, not a count.** The only question is *is there a record to
-    search* — search dims on an empty one because the only answer it could give
-    is *Nothing.* A `count(*)` would be a second definition of the same bit and
-    a table scan to answer it.
+    ⚠ **One bit for search, and it is now free.** The only question is *is there
+    a record to search* — search dims on an empty one because the only answer it
+    could give is *Nothing.* A `count(*)` would be a second definition of the
+    same bit and a table scan to answer it; it used to read one row to derive it
+    and now derives it from the rows the page draws anyway.
 
     ⚠ **The portal's bit rides down with it and is a pair of `exists`**, never a
     count: §5 forbids the portal a number, and a counting function is one
     refactor from displaying one. The door has to be right on the first paint,
     which only the server can know.
+
+    ⚠ **`PAGE_SIZE`, never a home-sized number.** This is the first page of the
+    record, which is a thing that already exists; a budget chosen for a handset
+    would be a fourth breakpoint wearing a list's clothes. ⚠ **And no `earlier`
+    cursor** — there is no tail control on this screen, because the record has a
+    screen of its own and the foot is one tap from it. **Home is a window on the
+    record, not a second copy of it.**
   */
-  /*
-    ⚠ **The corpus read is gone from this page — 7 September.** The browse half
-    was taken off the front page so the keyboard could be judged with one
-    variable on screen; `listRail` and everything under it is untouched in
-    `lib/db` and comes back with the rail.
-  */
-  const [firstRow, waiting] = await Promise.all([
-    listMyPage(sessionUser, { limit: 1 }),
+  const [rows, waiting] = await Promise.all([
+    listMyPage(sessionUser, { limit: PAGE_SIZE }),
     portalWaiting(sessionUser),
   ])
 
+  /*
+    The stamps are computed here and only here. Grouping by day depends on a
+    timezone, and the server's and the browser's are not the same — a page that
+    formatted on both sides would disagree about how many groups there are for
+    anything written after 23:00 local, which is a structural hydration mismatch
+    in a list. See `lib/day.ts`, and the record's page over the same call.
+  */
+  const { stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
+
+  /*
+    ⚠⚠ **THE PORTAL'S ROWS ARE READ ONLY WHEN THE CHEAP BIT SAYS THERE ARE
+    ANY.** `listMyPortal` is a join to `notifications`, and the record's page
+    refuses in writing to put one in front of every capture — the same promise
+    holds here, because this is the screen where Return has to land in under a
+    frame. **The stated cost: whoever HAS a convergence pays a second, serial
+    round trip before first paint.** It cannot join the `Promise.all` above,
+    because it is conditional on that call's answer. ⚠ **If that latency ever
+    shows, the lever is one `Promise.all` and everybody pays the join** — not a
+    cache, and not a client fetch after paint, which would make the band arrive
+    late on the one screen whose content must not move.
+
+    ⚠ **A failure draws nothing, and that is not an error here.** §6: the band
+    is silent when there is nothing to say and silent when the read did not
+    answer. The door in the foot is lit either way, off the bit that did.
+  */
+  const seeded = waiting.lines ? await portalAction() : null
+  const opportunities = seeded?.ok ? seeded.value.lines : []
+
   return (
     <ComposeScreen
-      /*
-        ⚠ **A NODE, not a list of rows.** The rail is a server component and
-        `ComposeScreen` is a client one; handing the finished markup down
-        keeps the corpus read, the image URLs and the markup itself off the
-        client entirely. Passing `tiles` instead would pull all of it
-        across the boundary to render the same thing.
-      */
       portalWaiting={waiting}
-      searchable={firstRow.length > 0}
+      searchable={rows.length > 0}
+      /*
+        ⚠⚠ **NODES, NOT ROWS — the arrangement the rail was going to use, and it
+        is finally carrying something.** `ComposeScreen` is `'use client'`
+        because the composer is; both of these are pure server markup, so
+        crossing the boundary as props keeps the reads, the sentences and the
+        markup itself out of the client bundle entirely. Passing rows instead
+        would pull all of it across to render the same thing. **The portal hands
+        its console down the same way.**
+      */
+      opportunity={<Opportunity lines={opportunities} />}
+      record={<PageLines lines={toPageLines(rows, stamp)} />}
       /*
         ⚠ **Handed down, because the number belongs to the delete.**
         `undoCapture` bounds itself in SQL against `created_at`, and a second
