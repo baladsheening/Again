@@ -61,16 +61,30 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
       convergences are one object you can see the end of rather than a list with
       no bottom.
 
-      ⚠⚠ **`--color-surface`, NEVER THE CONSOLE'S GLASS, AND THAT IS THE ONE
-      DETAIL THAT IS NOT OPTIONAL.** The console and the composer are glass
-      because the record passes under them at full strength; **this card is in
-      flow with nothing behind it but the page**, and 38% black over black is
-      black. That is the 5 September bug in full — *the composer itself isn't
-      especially visible* — and the answer this repository already wrote for the
-      console: *its ground lifts toward `--color-surface` rather than sinking
-      toward the page, because a floating card has no borrowed edge.* ⚠ **No
-      `backdrop-filter` either**: a filter over the page's own ground costs a
-      compositor layer to blur nothing.
+      ⚠⚠ **AN OUTLINE, NOT A FILL — AND IT SHIPPED AS A GREY SLAB FIRST.**
+      Reported within the hour: *the console is grey. Why did you give it a
+      different aesthetic?* It was `--color-surface`, `#20201d`, and the mistake
+      was precise: **that is the console's DESK branch.** On a handset
+      `console-card` is `--glass-tint` over `blur(--glass-blur)` — measured,
+      `rgba(0,0,0,0.38)` and `blur(18px)` — and `--color-surface` only arrives
+      above `--breakpoint-stack` through `stack:`. The note quoted in support of
+      it (*its ground lifts toward `--color-surface` rather than sinking toward
+      the page*) is about that branch. **A phone got the desk's recipe, and an
+      opaque grey plane is a surface this app does not otherwise have.**
+
+      ⚠⚠ **AND GLASS CANNOT SIMPLY BE PUT BACK, WHICH IS WHY THIS IS A THIRD
+      THING.** The console and the composer read as objects because the record
+      passes under them at full strength; **this card is in flow with nothing
+      behind it but the page**, and 38% black over black is black — it would
+      vanish, and the separation it exists for with it. That is the 5 September
+      bug exactly: *the composer itself isn't especially visible.*
+
+      ⚠ **So the boundary is drawn rather than filled: `border-rule`, the ink
+      this app already draws boundaries with** — the handle field in
+      `add-person.tsx` and the console's own footer button both wear it. **No new
+      plane, no new colour, and the page's ground runs straight through the
+      card.** ⚠ **No `backdrop-filter`**: a filter over the page's own ground
+      costs a compositor layer to blur nothing.
 
       ⚠ **The radius and the padding are the two cards' own** — `1rem` and
       `--page-lead`, which is what `portal-card` declares. ⚠ **Not the
@@ -87,7 +101,7 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
       portal is *arrival*: it is read once and moved past. A pinned band would
       spend the top of every screen on something already seen.
     */
-    <ol className="mb-[var(--page-lead)] flex flex-col rounded-2xl bg-[var(--color-surface)] p-[var(--page-lead)]">
+    <ol className="border-rule mb-[var(--page-lead)] flex flex-col rounded-2xl border p-[var(--page-lead)]">
       {lines.map((line) => (
         <li key={line.id}>
           {/*

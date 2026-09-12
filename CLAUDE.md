@@ -200,6 +200,50 @@ handset** — black.
   `convergence={null}` deliberately, *so a console inside the portal would not
   say the sentence twice*. `reenter.mjs` has the same dependency but **reports
   its skip out loud** (9/9, not 11/11), which is why it is left alone.
+- ⚠⚠ **THREE FAULTS IN THE FIRST MESSAGE BACK, AND ALL THREE WERE MINE — 12
+  September:** *the console is grey. Why did you give it a different aesthetic?
+  And why on the home page can I scroll horizontally unlike on the record page?
+  And why should crossed out entries have locks?*
+- ⚠⚠ **THE GREY WAS THE CONSOLE'S DESK BRANCH ON A PHONE.** `console-card` is
+  `--glass-tint` over `blur(--glass-blur)` on a handset — measured
+  `rgba(0,0,0,0.38)` / `blur(18px)` — and `--color-surface` arrives only above
+  `--breakpoint-stack`. **The note quoted in support of the fill (*its ground
+  lifts toward `--color-surface`*) is about that branch**, and an opaque grey
+  plane is a surface this app does not otherwise have. ⚠ **Glass could not
+  simply go back**: this card is in flow with nothing behind it but the page, and
+  38% black over black is black. **So the boundary is drawn rather than filled —
+  `border-rule`, the ink `add-person.tsx` and the console's own footer button
+  already use.** The page's ground runs straight through the card.
+- ⚠⚠ **THE HORIZONTAL SCROLL WAS `page-lines.tsx` MISSING `truncate`, AND THE
+  ROOT IS THAT SEARCH'S ROW HAD NEVER BEEN MEASURED AGAINST THE RECORD'S.** It
+  was extracted verbatim from `search-screen.tsx` — `min-w-0 flex-1`, no
+  truncation — so a capture with one long unbroken token had nothing to wrap at
+  and **took the document's width with it**. The record's rule is from 28
+  August: *the record is an index, not a document. Every line truncates to one
+  line.* ⚠ **Two further divergences went with it**: `flex-1` pushed the year and
+  the padlock to the far right where the record draws them beside the words, and
+  **the year sat INSIDE the truncating span**, so a long line ate its own year
+  first. ⚠⚠ **EXTRACTING A COMPONENT FOR DESIGN RULE 3 AND THEN TAKING THE
+  LOOSER OF THE TWO ROWS IS THE WHOLE MISTAKE** — the point was one object, and
+  the object was the record's.
+- ⚠⚠ **NO PADLOCK ON A CROSSED-OFF LINE, ON THE RECORD TOO.** `lib/overlap.ts`
+  names no `dropped` row, so **a struck line converges with nobody** and being
+  held out of the pool can have no consequence while it is struck. **It is 12
+  September's own ruling about the mark arriving at the other glyph in the same
+  row** — the akin asterisk two blocks down was already gated on `crossedOff`;
+  the padlock was the last thing there claiming something the engine has refused.
+  ⚠ **Nothing is destroyed** — `shared` is untouched, so the same `×` brings it
+  back. ⚠ **The `sr-only` note takes the term too**: *what the screen shows, the
+  label says* cuts both ways.
+- **Measured by `node_modules/.probe/rowparity.mjs`** — 9 assertions on all three
+  surfaces. ⚠⚠ **ITS SEED IS ONE 90-CHARACTER UNBROKEN TOKEN, AND THAT IS THE
+  POINT OF THE FILE**: a long *sentence* wraps at its spaces and widens nothing,
+  so **a probe seeded with ordinary words passes on the broken build** — the
+  first diagnosis found no overflow at all, because every seeded capture was
+  three short words. ⚠ **It reads `whiteSpace`/`textOverflow` off the computed
+  style, never the class attribute**, and it **drives** the lock and the
+  cross-off rather than seeding them, then puts the line back and proves the
+  padlock returns. **168 tests green; every probe green.**
 
 
 ⚠⚠ **`Lock` IS RED — 12 September, directed:** *put `lock` in an appropriate
@@ -1065,361 +1109,6 @@ sentence appears — the portal's row (arrival) and the console's slot (memory).
 
 ## Where the build stands — 8 September
 
-⚠⚠ **`black-translucent` IS GONE, AND WITH IT THE 46px THE INSTALLED APP HAS
-BEEN THROWING AWAY SINCE IT WAS INSTALLABLE — 8 September.** Reported: *the strip
-sits high in the home app, there's a noticeable gap between the home indicator
-and the bottom of the strip, seems like a waste of space.* ⚠ **Only there** — not
-the phone browser, not the desk.
-
-- ⚠⚠ **iOS LAYS A `black-translucent` STANDALONE APP OUT AT
-  `screen − safe-area-inset-top`.** The app says *I extend under the status bar*
-  and iOS subtracts the status bar from the height anyway — **798 where the
-  screen is 844** on a 390×844 iPhone with a 47px inset. So everything
-  `position: fixed; bottom: 0` is pinned 46px above the real bottom, and every
-  CSS viewport length is short together: `100dvh`, `100svh`, `100lvh`,
-  `inset: 0` and `100%`. **No stylesheet can ask for the real number and no desk
-  browser reproduces it.**
-- ⚠⚠ **THIS IS THE THIRD TIME IT HAS BITTEN AND THE FIRST TIME THE CONDITION HAS
-  BEEN REMOVED.** A 46px strip of naked ground under the fixed paper (1 Sep); the
-  sign-in wall's beats taking a **59px** bite where the desk's emulation saw 13
-  (`wall-fold`); and now the strip. **Twice it was worked around at the call
-  site.**
-- ⚠⚠ **`app/layout.tsx`'S OWN JUSTIFICATION WAS FALSIFIED BY ITS OWN PROMISE.**
-  It read: *the reason to prefer this one is that the two modes then behave
-  identically,* **so a spacing fault cannot appear in the installed app and
-  nowhere else.** That is precisely the fault it caused.
-- ⚠⚠ **A DRAG DOES NOT FIX IT, AND THE RECORD SAID IT DID.** `globals.css` said
-  iOS lays it out short *until something forces a re-layout*. Tested on the
-  handset: dragging down **shows** the strip at the true bottom and it **springs
-  back on release.** The correction does not stick — **which is what rules out
-  answering this with a programmatic nudge at load**, and the old wording would
-  have sent the next person to build one.
-- ⚠ **The removal, not a correction** — *How things get fixed*'s own order. With
-  `black` the web view starts below the status bar, so `env(safe-area-inset-top)`
-  is legitimately **0** in standalone and the layout viewport is the web view's
-  real height. **All nine readers of that inset spend it to clear the status bar,
-  so zero is right for every one of them** and the arithmetic self-corrects:
-  `--bar-height` shrinks by the inset and the bar still lands where it should.
-  ⚠ **Phones with no inset are untouched, because nothing about them changes** —
-  which is the test a 46px constant in the spacing would have failed.
-- ⚠ **What it costs, and it is nearly nothing.** The status bar becomes an opaque
-  black strip, so `grain-ground`'s paper stops at it rather than running under
-  it. **The paper has been the two auth screens' alone since 3 September** —
-  everything signed in is plain black — and it is a `screen` blend lifting most
-  of its field by 2.9%. A barely-visible texture in a 47px band on screens you
-  see once, against 46px of every screen in daily use.
-- ⚠ **`viewportFit: 'cover'` STAYS.** It is what makes
-  `env(safe-area-inset-bottom)` report the home indicator at all, and the
-  landscape side insets with it. Only the status-bar half is given up.
-- ⚠⚠ **AND A SECOND FALSE CLAIM IN THE SAME BLOCK, CHECKED AGAINST THE SERVED
-  HTML: Next 16.3 EMITS `mobile-web-app-capable`, NOT
-  `apple-mobile-web-app-capable`.** The comment said the prefixed name was *the
-  half iOS actually obeys*. The only `apple-` metas on the page are `-title` and
-  `-status-bar-style`. **Standalone works anyway** — the manifest's
-  `display: 'standalone'` from Safari 16.4, plus WebKit accepting the unprefixed
-  name — **and anything older than 16.4 is out of reach of Next's `appleWebApp`
-  object entirely.** Named, not fixed.
-- ⚠ **This is not a taste setting. If `black-translucent` ever goes back, the
-  46px goes with it**, and so do the wall's fold and the paper's naked ground.
-- **Unverified from here, and it cannot be:** no browser draws a status bar, so
-  whether the band reads badly on the auth screens is the handset's answer.
-
-⚠⚠ **ONLY A SURFACE THAT RAISES A KEYBOARD REARRANGES ITSELF — 8 September,
-directed, AND IT REVERSES A DECISION MADE ON 5 SEPTEMBER.** Asked: *when I tap
-in the composer it expands but it also drops slightly — is that to accommodate
-the band and foot being the same height? Do we need the desktop version's
-composer to expand? If not, leave it as is, including leaving the strip as is,
-no need even to have the bar recede.*
-
-- ⚠ **The drop was real, and the answer to the question is yes.** The band is
-  `--tap-floor` at rest **precisely so it matches the foot row**; while writing
-  the foot goes and the inset becomes `--gutter-l` on all four sides. Measured at
-  1440×900, `node_modules/.probe/deskstrip.mjs`: the row closes (−44), the band
-  shrinks (−17.34), the card grows a line (+32) and the hem under it opens
-  (+16.67) — so the strip's top landed **12.68px lower** and the card's bottom
-  **27.32px lower**.
-- ⚠⚠ **AND ON THE DESK THAT 44px ROW IS AN EMPTY BOX.** The `<footer>` is
-  `stack:hidden` up there, so the whole rearrangement was **moving air around a
-  foot nobody can see.** Measured after: every one of the nine readings is
-  **+0.00**, and the strip's frame-by-frame is *one step, no transition*.
-- ⚠⚠ **THE NOTE THIS REVERSES SAID: *the desk grows too, which is deliberate — a
-  pointer-type branch would be a device sniff for a behaviour that reads
-  correctly on both.* THE FIRST HALF WAS RIGHT AND THE SECOND WAS BACKWARDS.**
-  `pointer.ts` has argued since 18 August that `(pointer: coarse)` is **a
-  capability, not a device**, and it is exactly the capability at issue: every
-  one of these movements exists because **a software keyboard is about to cover
-  the bottom of the screen.** Asking is not sniffing; assuming was what was
-  wrong.
-- ⚠⚠ **A HAND, NOT A WIDTH, AND THE TWO DISAGREE HERE.** A desk window dragged
-  narrow raises no keyboard and must not move; **an iPad in landscape is wider
-  than `--breakpoint-stack` and does.** A width gate gets both of those wrong —
-  `pointer.ts`'s founding argument arriving in a second place. ⚠ **So this is
-  NOT a `stack:` variant**, and it is not design rule 6 being bent: it is not a
-  breakpoint at all.
-- ⚠ **What is gated is only *the screen making room*.** `writing` still means
-  what it always did and the field's handlers are untouched — a desk click still
-  focuses, commits and blurs. `makingRoom = writing && touch` feeds the bar's
-  recede, `useKeyboardHem`, `sheet-over-keys`, the band, the hem under the card,
-  the glow's tightening, the foot's close and its `inert`; the third line reads
-  `touch && (writing || draft || landed)`, because a desk box that never grows
-  must not grow on typing either — **that is the deleted growing box, and the
-  clipping guard it exists for cannot fire on a box that is always two lines.**
-- ⚠ **`false` until mount, and nothing may read it before then.** Every consumer
-  is downstream of a focus, which is always after the correction — the same
-  condition `page-screen.tsx` states for its own copy of this hook.
-- ⚠ **The known imprecision, stated: a touchscreen laptop reports coarse** and
-  will get the phone's behaviour with a physical keyboard under it. `pointer.ts`
-  already records that trade — *both get the layout that suits what is in their
-  hand* — and there is no better question the platform answers.
-- ⚠ **`chromeink.mjs` grew a third surface and it is the point of it now:** a
-  **fine-pointer desk must not recede at all**, asserted in both engines, while a
-  *touch* desk at 1440 still does and is where the ink contract is measured up
-  there. ⚠ **`composercap.mjs`'s "desk" is a TOUCH desk** — `open()` passes
-  `hasTouch: true` to every context — so its 51/51 is not evidence about a real
-  one; noted in the file.
-- **Unchanged, asserted:** `stripstep.mjs` 50px and no overshoot on both handset
-  insets, `sheetjolt.mjs` 16/16, `frontpage.mjs` green, `composersent.mjs` still
-  36/38 on the two stale assertions.
-
-⚠⚠ **THE INK LEAVES, THEN THE SLAB LEAVES — 8 September, AND IT IS THE ONLY
-ARRANGEMENT THAT ANSWERS BOTH DIRECTIONS GIVEN ABOUT THIS FADE.** Reported from
-an iPhone 12 installed: *the logo is still too bright as it slides under the
-time.* The entry below had just made the fade visible at 113ms; this is what
-that cost, and the two asks turned out to be **geometrically** incompatible
-rather than a matter of taste.
-
-- ⚠⚠ **5.4px. THAT IS THE WHOLE DISTANCE BETWEEN THE MARK AND THE STATUS BAR,
-  AND IT DECIDES EVERYTHING.** Measured, `node_modules/.probe/inkcrossing.mjs`:
-  the mark sits at top 52.4 against an inset of 47, and **crosses that line
-  2.6ms into the travel, still at 0.96 opacity.** At `--ease-recede` 5.4px is a
-  sixth of a frame.
-- ⚠⚠ **SO NO DURATION CAN SATISFY BOTH.** *Dim by the status bar* needs the fade
-  97% done inside one frame — which is the cut 57ms already was — and *a fade the
-  eye can see* needs several frames. **Neither direction was wrong.** The mistake
-  was trying to answer both with one number, twice.
-- ⚠ **They are separated in time instead.** `chrome-ink-gone` sets
-  `--recede-delay: var(--ink-out)` and the header's `delay-[…]` reads it, so the
-  ink fades **in place** with nothing moving to distract from it and the slab
-  does not start travelling until it is out. Measured after: the mark holds at
-  top 52.42 through 1 → 0.855 → 0.708 → 0.559 → 0.412 → 0.264 → 0.119 → 0, then
-  crosses the line **at 0 opacity**. ⚠ **Nothing bright passes under the clock on
-  any inset**, because the mark is at zero before the bar has moved at all.
-- ⚠⚠ **DECLARED ON THE EXIT STATE, SO THE RETURN IS UNTOUCHED.** A transition
-  reads its timing from the after-change style: adding the class says *wait for
-  the ink*, removing it says *go now*. **The bar still comes back immediately and
-  its ink still arrives after it** — `--ink-in` 382.5ms against a 340ms slide,
-  which is the rule `--ink-in` exists for. ⚠ **A custom property read by the
-  header's own `delay-[…]`, never a second `transition-delay` rule** — the
-  ordering trap `chrome-ink-gone` already records.
-- ⚠ **What it costs, stated: the exit is `--ink-out` + `--recede` = 453ms end to
-  end**, against 340. The extra 113ms is spent on an already-empty slab, so
-  **nothing legible is on screen for longer than it was.**
-- ⚠ **Both bars get it**, and `page-screen.tsx`'s recede is driven by a moving
-  finger rather than a focus. **If the record's bar reads sticky on a scroll,
-  `--recede-delay` is the line, and the answer is a prop rather than a smaller
-  number.**
-- ⚠⚠ **THE GLOW IS STILL NOT FADED BY ANY OF THIS, AND IT IS THE FIRST SUSPECT IF
-  THE MARK STILL READS BRIGHT THERE.** `mark-glow` is on the header itself rather
-  than in the row `chrome-ink` fades, so it slides under the clock at full
-  strength — deliberate since 7 September, *reported and then clarified*, and
-  unexamined against this complaint.
-
-⚠⚠ **THE BAR'S INK FADES WHERE IT USED TO POP — 8 September, `--ink-out` GOES
-`--recede / 6` → `--recede / 3`, 57ms → 113ms.** Directed: *could the logo and
-profile icon fade out as they recede more quickly — **the fade out should be
-noticeable to the human eye.*** **At 57ms it was not.** That is 3.4 frames at
-60Hz, and the eye reads three frames as a disappearance rather than a fade.
-
-- ⚠⚠ **THE NOTE ON THAT TOKEN PREDICTED THIS AND PUT THE BOUNDARY ONE STEP TOO
-  LOW.** It said *if it still reads slow, the next step is `/ 8` (43ms) and then
-  it stops being a fade.* **It had already stopped.** 57ms was on the wrong side
-  of the line, not one step from it — and the measurement that chose it was of
-  *where the bar is*, never of *whether a fade can be seen*, which is the
-  question it was answering.
-- ⚠⚠ **113ms IS SIZED TO THE WINDOW IN WHICH ANYTHING CAN BE SEEN, AND THAT
-  WINDOW IS FAR SHORTER THAN THE TRAVEL.** `--ease-recede` is
-  `cubic-bezier(0.22, 1, 0.36, 1)`, a hard ease-out, so the bar spends most of
-  its 340ms creeping the last few pixels. Measured at 390×844 with the inset
-  overridden — `node_modules/.probe/inkcurve.mjs` — the header's bottom edge runs
-  **95 → 74.9 → 43.2 → 16.6px at 0 / 8 / 42 / 99ms**: it is 83% gone by 100ms and
-  the remaining 240ms is invisible. ⚠ **A fade longer than ~120ms spends its tail
-  off screen**, which is why this is not `/ 2`.
-- ⚠ **The out rule survives and is the reason to stop at a third.** *The ink is
-  out as the bar clears rather than while it is still in view* — at 113ms the
-  row's bottom is ~13px, so the fade ends exactly as the row leaves. It is now
-  spread across the whole of the visible slide instead of finishing before the
-  slide starts. Measured after: **half gone at 58ms, out at 106ms, row off screen
-  at 287ms.**
-- ⚠⚠ **WHAT IS ABANDONED, STATED RATHER THAN QUIETLY DROPPED: the status-bar
-  landmark.** 7 September directed *basically faded by the time the logo and
-  profile icons approach the status bar*; under 113ms the letters are at ~0.88
-  opacity as they cross it. **The two asks cannot both hold**, because a fade
-  completed inside the 14–34px of travel before that crossing is a fade nobody
-  can see. If the crossing ever matters more, this goes back to `/ 6` and the
-  fade goes back to being a cut.
-- ⚠ **Still a fraction of the travel, never a typed number**, so it moves if
-  `--recede` does; still linear, which `chrome-ink` argues for — an ease has a
-  tail or a pop and this has neither. ⚠ **`--ink-in` is untouched at 382.5ms**,
-  so the bar still lands before its own ink.
-- ⚠ **`page-screen.tsx`'s bar gets this too**, and its trigger is a moving finger
-  rather than a focus. That is the surface to look at first if it reads wrong.
-- ⚠⚠ **AND `chromeink.mjs` WAS LYING IN BOTH ENGINES, IN TWO DIFFERENT WAYS.**
-  Chromium: the `ctx.route` CSP strip **breaks hydration**, so every Chromium
-  assertion read a page that had never come alive — the strip is now WebKit's
-  alone. WebKit: it waited **600ms** after load before calling `field.focus()`
-  and had not hydrated either, so `receded` never flipped; 1500ms fixes it.
-  **Both failure modes look like a passing screenshot.** 16/16 green in both
-  engines on both surfaces afterwards, with 3–6 frames of interpolation where
-  57ms could scrape one.
-
-⚠⚠ **THE COMPOSER'S FOOT ROW CLOSES RATHER THAN LEAVING — 8 September, AND IT
-IS THE JOLT.** For two days the strip's jolt on tapping in was put down to iOS
-panning the visual viewport and dragging the `fixed` strip. **The pan is the
-amplifier; the cause was ours, and it is visible on a desk browser with no
-keyboard anywhere near it.**
-
-- ⚠⚠ **MEASURED AT 1440×900, WHERE NOTHING iOS DOES CAN REACH.** The strip's top
-  fell **44px in one frame** and climbed **31px back over 300ms**, settling
-  12.68px lower. **The 44 is exactly the foot row**, which unmounted instantly
-  while the band, the card's third line and the hem under it all eased over
-  `--recede`. Reported from the desk with two screenshots — *the strip drops
-  down when you tap in* — after being reported from a handset as *up, then down,
-  then up again*. `node_modules/.probe/deskstrip.mjs`.
-- ⚠ **On a handset the same step is 62.5px**, because `sheet-over-keys` cancels
-  the notch's 18.375px clearance in the same frame. `stripstep.mjs`, at inset 34
-  and at 0.
-- ⚠⚠ **THE ROW'S OWN DOCBLOCK NOMINATED THE FIX BEFORE ANYBODY MEASURED IT:**
-  *it does not fade, and that is a known rough edge — `hidden` carries the
-  opacity transition and cannot carry a height, so this is a hard swap where
-  everything else on the bottom edge moves on `--recede`. **If it reads badly,
-  the fix is a collapsing row and not a reserved gap.*** It read badly.
-- ⚠ **`composer-foot` / `composer-foot-away`:** `block-size` gated on
-  `--foot-open`, `overflow: clip`, transitioned on `--recede`/`--ease-recede`.
-  `foot-clear`'s margin reads the same gate, so a row's height and its air can
-  never disagree. ⚠ **A custom property, never a second declaration** —
-  `@utility` output is ordered by Tailwind, which is the trap `chrome-ink-gone`
-  records.
-- ⚠ **`min-block-size` could not do it.** A minimum cannot be interpolated to
-  zero, because the content holds it open. An explicit `block-size` is what makes
-  the close animatable, and it is the same 44px.
-- ⚠ **`overflow: clip` does a second job the row used to do by arithmetic** —
-  `tap-target`'s 44px hit area, 9px past the drawing at each end, is contained by
-  construction at every height including the half-closed ones. ⚠ **`clip` and not
-  `hidden`**: `hidden` makes a scroll container, and a 0-height scroll container
-  is one `scrollIntoView` from shifting its own contents.
-- ⚠ **The glyphs' fade is `Foot`'s own `hidden` prop** — `opacity-0` on
-  `--recede` and `--ease-recede`, the same duration and curve as the close.
-  **No new fade was written**; the record's strip has faded its foot that way
-  since the split, and this is the composer finally using it.
-- ⚠⚠ **`arrived` IS GATED ON `!writing`, AND WITHOUT IT THE BOUNCE WOULD BE
-  SPENT ON NOBODY.** A mounted row plays the animation behind `opacity-0` and
-  `onAnimationEnd` puts the flag down — *a signal nobody could have seen is not a
-  signal*, which is the guarantee the unmount used to give for free.
-- ⚠ **`inert` while it is closed**, because `pointer-events: none` answers a
-  thumb and not a keyboard user — and focus landing inside the strip is read by
-  the field's `onBlur` guard as *not leaving*, which is a trap rather than a
-  rough edge.
-- ⚠ **The strip's `padding-block-end` travels too**, so the notch's clearance
-  joins the one curve. ⚠ **This does not re-open the `--keyboard-height`
-  mistake:** that was a *continuous measurement* answering a binary question, so
-  the whole step landed at whichever frame a per-frame ramp crossed a clamp. A
-  transition is deterministic and starts at the gesture. ⚠⚠ **`padding-block-end`
-  BY NAME, NEVER `all` AND NEVER `bottom`** — `bottom` is `--keyboard-overlap`,
-  written per frame off the visual viewport, and transitioning it would add 340ms
-  of lag to a measurement that is already a frame late against a compositor pan.
-- ⚠⚠ **THE ASSERTION IS MONOTONICITY, NOT A NUMBER.** The card still ends 50px
-  lower than it started and that is correct — with the keys up the strip rides
-  `--keyboard-overlap` back over them. **The defect was going PAST it and coming
-  back**, and only a per-frame sample can see a path. `stripstep.mjs` and
-  `deskstrip.mjs` fail on any overshoot; measured after, **0px on the desk and
-  0.02px on both handset surfaces.**
-- ⚠⚠ **A PROBE BUG THAT HAD BEEN INVALIDATING MEASUREMENTS: STRIPPING THE CSP
-  THROUGH `ctx.route` BREAKS HYDRATION IN CHROMIUM.** No `__react*` props on any
-  element, so `onFocus` never runs, `writing` never flips, and the page is dead
-  server HTML **that still looks completely correct**. `sheetjolt.mjs` had three
-  failures that were entirely its own; it is rewritten and green at 16/16.
-  ⚠ **Chromium treats `http://localhost` as a secure context and needs no strip;
-  it is WebKit that does** — see `keep-ios-standalone-short-viewport`. Any probe
-  that DRIVES this page through a route handler is testing markup, not the app.
-- ⚠ **WHAT IS NOT FIXED: iOS's reveal-pan.** It still drags the `fixed` strip on
-  the taps where it happens, and whether it happens is a heuristic — the rail
-  session measured *one tap in four* where it does not. **The down phase is gone;
-  whether what is left still reads as a jolt is a handset question**, and the
-  three approaches ruled out on 7 September are still ruled out.
-- **Unchanged end state, asserted:** `bandink.mjs` still reads band 44, air below
-  the card 44, the strip on the bottom edge, the notch spent at inset 34 and zero
-  at inset 0. `composercap.mjs` 51/51, `traysightline.mjs` 5/5, `frontpage.mjs`
-  green. `composersent.mjs` stays 36/38 on the two stale assertions recorded on
-  7 September.
-
-⚠⚠ **THE APP IS **JUCE** — 8 September, directed, AND THE RENAME MOVED SIX
-NUMBERS THAT ARE NOT STRINGS.** *Change the name of the app to 'juce'.* Nine
-user-facing strings, one icon glyph, and **the wordmark fence at the top of
-`app/globals.css`** — which is the half a rename does not look like it touches.
-
-- ⚠⚠ **A RENAME MOVES THAT FENCE EXACTLY AS A CHANGE OF FACE DOES, AND ONLY ONE
-  OF THE TWO ANNOUNCES ITSELF.** Six of the nine `--wordmark-*` numbers are the
-  inked bounds of *one word in one face*; the face did not move and six of them
-  did. **A change of face is a decision about type and nobody ships one without
-  opening that block; a rename reads as a sweep of strings, and `2.9351` is not
-  a string.** Bricolage Grotesque 800, KEEP → JUCE at 0.08em: lead −0.2581 →
-  −0.2425, tail −0.27 → −0.2544, ink 0.6719 → 0.7031, drop 0 → **0.0156**,
-  slack 0.17 → 0.1544, advance 2.9351 → **2.75**. `line`, `track` and `weight`
-  are the face's and did not move.
-- ⚠⚠ **`--wordmark-drop-ratio` IS NOT ZERO FOR THE FIRST TIME SINCE AGAIN, AND
-  THE FENCE PREDICTED IT IN THE WRONG WORDS.** It said *if the mark ever returns
-  to a lowercase word this stops being zero*. **The axis is round letters, not
-  case**: KEEP's K, E and P start flat at the cap line and stop flat on the
-  baseline; JUCE's U and C overshoot at both ends, and `Juce` in sentence case
-  reads the same 0.0156 rather than more. ⚠ **Nothing on screen moves because of
-  it** — the one thing that read `--wordmark-drop` was `cinema-wall.tsx`,
-  deleted with the poster wall — but the token is live rather than dormant, and
-  **do not delete it on the grounds that the mark is set in capitals.**
-- ⚠⚠ **THE INK RATIO REACHES THE HANDSET AND NOT THE DESK, AND THE FENCE CLAIMED
-  BOTH.** `--text-mark` is `--glyph-bar / --wordmark-ink-ratio`, **but above
-  `--breakpoint-rail` it is overridden to the literal `--text-mark-rail`** — so
-  from 720px up the band moves on the advance alone. Measured under both fences:
-  at 390 the mark's font-size goes 32.73 → 31.28 and the band 116.09 → 106.05;
-  at 1440 the font-size is 34.66 either way and the band 144.41 → 137.98.
-  ⚠ **`--record-floor` is the exception and reads both**, because it writes the
-  below-rail band out in full rather than going through `--text-mark`: 503.36 →
-  **513px**, so the desk's reading column widens.
-- ⚠ **The mark's INK is unchanged and only its font-size moved.** That is the
-  ratio doing its job — the mark is set so its ink is the height of the glyphs
-  beside it, so a word that inks *more* of its em is set *smaller*. **Do not read
-  31.28 against 32.73 as the mark shrinking.**
-- ⚠ **`keepcolumn.mjs` and `markgap.mjs` were re-run and both pass** — the
-  column never widens as the window narrows, the band is held from 720px up, and
-  nothing steps at the rail. ⚠ **`keepcolumn.mjs` pins the advance as a literal
-  and FAILED, which is exactly what it is for**; `markgap.mjs` and `logocol.mjs`
-  find the mark by its text and could not see it at all.
-- ⚠⚠ **THE ICON SAID `A` ALL THROUGH THE *KEEP* RENAME AND NOBODY SAW IT.**
-  `app/apple-icon.tsx` draws the mark's initial as a single letter, so a rename
-  that greps for the word finds nothing there to find. It is `J` now and the file
-  carries the warning. **Check it by eye, not by search.**
-- ⚠ **Nine strings: `metadata.title`, `appleWebApp.title`, the manifest's `name`
-  and `short_name`, the bar's mark, both auth posters, the error screen's prose
-  and the record's `sr-only` heading.** The posters are `Juce.` in sentence case
-  and the CSS uppercases — **the word is spelled as a word in the DOM
-  everywhere**, which is `wordmark`'s own rule.
-- ⚠ **The case costs less than it did, because the word lost a descender.** Under
-  `Keep` the two cases disagreed on drop (0.205 against 0) and slack (−0.045
-  against 0.16) on the `p`'s tail. **`Juce` has no descender**, so only lead and
-  ink move between the poster's sentence case and the bar's capitals.
-- ⚠ **`package.json` still reads `again` and is deliberately untouched** — it is
-  the npm identifier of a private package, it survived the last rename for the
-  same reason, and changing it is lockfile churn nothing reads.
-- ⚠ **`keep?` is still the third beat on the sign-in wall and `Keeping it?` is
-  still the console's question.** Both are the product's own verb rather than the
-  old name, and `lib/vocabulary.ts` owns them. **Renaming the app does not rename
-  a verb.**
-- **Measured by `node_modules/.probe/jucemark.mjs`**, which prints KEEP and JUCE
-  side by side in the shipping face and **reproduces the KEEP column of the
-  shipped fence to the digit** — the check that it is reading what ships rather
-  than a canvas default. ⚠ **`zine.mjs` had 8 assertions red since the 7
-  September face swap**, all of them asserting *Instrument Serif*; pre-existing,
-  fixed here, and green on both surfaces.
-
 **Phase 0 is done, deployed and verified.**
 
 **Phase 1 is built, deployed and in daily use on a handset.** `/` is the capture
@@ -1498,8 +1187,8 @@ normative statement is Amendment 4 in the implementation specification; §9b of
 holds the costs and the reopen points. See §13 of the implementation
 specification, which now carries this as Phase 2's status.
 
-⚠⚠ **THE LOG FROM 6 SEPTEMBER BACK IS IN `docs/build-log.md`, AND IT IS PART
-OF THIS FILE — 6 September, cut twice on 11 September and once on 12
+⚠⚠ **THE LOG FROM 8 SEPTEMBER BACK IS IN `docs/build-log.md`, AND IT IS PART
+OF THIS FILE — 6 September, cut twice on 11 September and twice on 12
 September.** `CLAUDE.md` had reached 182,000 characters against a
 150,000-character limit, so the harness was **truncating it**: the oldest
 entries were being silently dropped from every session. **A rule that is not
@@ -1533,6 +1222,21 @@ archived.
   the capture that becomes a statement in place, the three handset reports, the
   composer's cap and the undo's return to the front page. **122,106 characters
   afterwards.**
+- ⚠⚠ **THE FIFTH WAS THE SAME DAY, AT THE 8 SEPTEMBER BOUNDARY, AND IT IS THE
+  ONLY ONE MADE WITH THE FILE ALREADY OVER.** Every cut before it was taken at
+  a measured warning; this one was taken at **150,741 against 150,000**, after
+  three fixes were written up on top of a file that had been flagged twice in
+  the same session as having under 3,000 characters left. ⚠ **A limit that is
+  announced and then walked into is worse than one nobody saw**, because the
+  truncation is silent and it eats the OLDEST rules — the ones nothing in the
+  session will remind you of. **Everything dated 8 September went across in one
+  block:** `black-translucent` and the installed app's 46px, the keyboard-only
+  rearrangement, the ink leaving before the slab, the bar's ink fade, the
+  composer's foot row learning to close, and the rename to **JUCE** with the six
+  wordmark numbers it moved. **125,470 afterwards.**
+- ⚠ **Budget the entry against the file before writing it, not after.**
+  `wc -c CLAUDE.md` is the whole discipline, and the next boundary is 11
+  September.
 
 ⚠ **Read `docs/re-direction/phase-1-capture.md` before touching Phase 1.** Its
 *Build status* section is the register: what is built, what is still to build in

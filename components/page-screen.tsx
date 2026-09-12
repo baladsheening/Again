@@ -3286,7 +3286,14 @@ export function PageScreen({
                 its sentence.
               */
               line.akin && !crossedOff ? 'Nearly the same as another of yours.' : null,
-              line.shared ? null : 'Locked.',
+              /*
+                ⚠ **`!crossedOff` here too, because the padlock below carries it
+                — 12 September.** *What the screen shows, the label says* cuts
+                both ways: the other two notes in this list are already gated on
+                it, and a reader who cannot see the row would otherwise be told a
+                struck line is locked when the screen has stopped saying so.
+              */
+              !crossedOff && !line.shared ? 'Locked.' : null,
             ].filter((n) => n !== null)
 
             /*
@@ -3676,7 +3683,31 @@ export function PageScreen({
                   words' own label already carries it, the same arrangement the
                   year is drawn under.
                 */}
-                {!line.shared && (
+                {/*
+                  ⚠⚠ **NOT ON A CROSSED-OFF LINE — 12 September, reported: *why
+                  should crossed out entries have locks?*** This read
+                  `!line.shared` alone and drew a padlock on a struck line for as
+                  long as the lock has existed.
+
+                  ⚠⚠ **IT IS THE SAME RULING THE MARK TOOK ON 12 SEPTEMBER,
+                  ARRIVING AT THE OTHER GLYPH IN THE SAME ROW.** `lib/overlap.ts`
+                  names no `dropped` row in its allowlist, so **a struck line
+                  converges with nobody** — whether it is held out of the pool
+                  can have no consequence while it is struck, and a mark for a
+                  state that can do nothing is furniture. ⚠ **The asterisk two
+                  blocks down already said so** (`line.akin && !crossedOff`); the
+                  padlock was the one glyph in this row still claiming something
+                  on a line the engine has refused.
+
+                  ⚠ **Nothing is destroyed**, exactly as with the mark: `shared`
+                  is untouched, so the same `×` that struck the line brings the
+                  padlock back with it.
+
+                  ⚠ **`components/page-lines.tsx` draws it under the same
+                  condition**, so the record, home and search cannot disagree
+                  about it. **Both or neither.**
+                */}
+                {!crossedOff && !line.shared && (
                   <span
                     {...quiet}
                     className="line-glyph text-muted ms-2 shrink-0 [--glyph:var(--glyph-line)]"

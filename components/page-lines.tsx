@@ -72,17 +72,32 @@ export function PageLines({
               where it is read.
             */}
             <div
-              className={`page-line flex items-baseline gap-3 ${
-                line.converged ? 'converged' : ''
-              }`}
+              className={`page-line flex items-baseline ${line.converged ? 'converged' : ''}`}
             >
-              <span className={`min-w-0 flex-1 ${crossedOff ? 'line-through opacity-50' : ''}`}>
+              {/*
+                ⚠⚠ **`min-w-0 truncate`, AND THIS ROW WENT OUT WITHOUT IT — 12
+                September, reported: *why on the home page can I scroll
+                horizontally unlike on the record page?*** Because this markup
+                came from `search-screen.tsx`, which had `min-w-0 flex-1` and no
+                truncation, and **search's row was never measured against the
+                record's box.** A capture with one long unbroken token has
+                nothing to wrap at, so it ran past the gutter and took the
+                document's width with it.
+
+                ⚠ **The record's own rule since 28 August: *the record is an
+                index, not a document. Every line truncates to one line.*** That
+                is what `page-row` has always done — `truncate` is nowrap,
+                clipped, with an ellipsis, and `min-w-0` is what lets a flex item
+                shrink below its content so the clip can happen at all. **Both or
+                neither.**
+
+                ⚠ **`flex-1` is GONE with it**, and it was the second divergence:
+                growing to fill pushed the year and the lock to the far right
+                edge, where the record draws them immediately after the words.
+                One object, one arrangement.
+              */}
+              <span className={`min-w-0 truncate ${crossedOff ? 'line-through opacity-50' : ''}`}>
                 {line.text}
-                {line.year !== null && (
-                  <span className="text-muted ms-2 text-[0.8125rem] leading-none">
-                    {line.year}
-                  </span>
-                )}
                 {/*
                   ⚠ **Hidden text, not an `aria-label`.** There is no control on
                   this row — an `aria-label` on a generic element is ignored by
@@ -90,17 +105,48 @@ export function PageLines({
                   plain row can say anything: in the row.
                 */}
                 {line.converged && <span className="sr-only">. Also on someone else’s page.</span>}
-                {/* The lock travels here too — it is a property of the line. */}
-                {!line.shared && <span className="sr-only">. Locked.</span>}
+                {/*
+                  ⚠ **The lock travels here too, and it goes when the line is
+                  struck** — *what the screen shows, the label says*, which cuts
+                  both ways.
+                */}
+                {!crossedOff && !line.shared && <span className="sr-only">. Locked.</span>}
               </span>
               {/*
+                ⚠⚠ **THE YEAR IS A SIBLING, NOT A CHILD OF THE TRUNCATING SPAN.**
+                Inside it, a long capture eats its own year before it eats any of
+                its own words — the ellipsis lands after the text and the year is
+                simply gone. The record has always drawn it beside the words for
+                this reason. `shrink-0`, so the words give up width and the year
+                does not.
+              */}
+              {line.year !== null && (
+                <span className="text-muted ms-2 shrink-0 text-[0.8125rem] leading-none">
+                  {line.year}
+                </span>
+              )}
+              {/*
+                ⚠⚠ **NO PADLOCK ON A CROSSED-OFF LINE — 12 September, reported:
+                *why should crossed out entries have locks?*** It is 12
+                September's own ruling about the mark, arriving at the other
+                glyph in the same row: **a struck line converges with nobody** —
+                `lib/overlap.ts`'s allowlist names no `dropped` row — so whether
+                it is held out of the pool has no consequence while it is struck.
+                **A mark for a state that can do nothing is furniture.** ⚠ **The
+                record draws it under the same condition**, so the two cannot
+                disagree; see `page-screen.tsx`.
+
+                ⚠ **Nothing is destroyed**, exactly as the mark's removal was
+                not: `shared` is untouched on the row, so putting the line back
+                brings the padlock back with it.
+
                 ⚠ **`self-center`, because this row is `items-baseline`.** A
                 drawing has no baseline worth aligning to, and the flex item says
                 so for itself rather than the row being re-aligned around it. See
                 `line-glyph` on the record, which solves the same thing the other
                 way because a record row is a line box.
               */}
-              {!line.shared && (
+              {!crossedOff && !line.shared && (
                 <span
                   aria-hidden
                   className="text-muted ms-2 inline-flex shrink-0 self-center [--glyph:0.875rem]"
@@ -113,7 +159,7 @@ export function PageLines({
                 `null` is a word too: a live want says nothing, because a result
                 that is still on the page needs no label to say so.
               */}
-              {word !== null && <span className="micro text-muted shrink-0">{word}</span>}
+              {word !== null && <span className="micro text-muted ms-2 shrink-0">{word}</span>}
             </div>
           </li>
         )
