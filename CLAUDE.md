@@ -49,6 +49,64 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **THE CONSOLE IS REORGANISED — 12 September, directed, AND A SCREENSHOT IS
+WHAT SETTLED IT.** Asked: *how do we reorganise the console's contents so it's
+easily understandable and not too jampacked? Maybe move `lock` so it's optically
+in-line with the entry? Maybe `previously` should be `prev`, and both it and its
+dates in a smaller font than `today`?* **Both instincts were right and the
+screenshot said why.** `scripts/seed-console-full.mjs` writes the dense case —
+converged, with kin, resolved, locked, and moved twice — because it cannot be
+reached by hand and **a console with two facts in it cannot be judged.**
+
+- ⚠⚠ **WHAT THE DENSE CASE ACTUALLY LOOKED LIKE at 390:** `TODAY · PREVIOUSLY
+  03/09/26,` / `14/07/26 1983 LOCKED` with `Unlock` **stranded mid-line**. The
+  row wrapped, and the year fell below where it read as **one more date**. Four
+  facts and a control in one run of micro mono.
+- ⚠⚠ **THE REAL FAULT WAS A CONTROL IN A ROW OF FACTS.** The stamp answers
+  *what is known about this capture* — today, the year, `LOCKED`. **A verb is
+  not one of those.** `Lock` / `Unlock` now rides the words' line, right-aligned
+  and baseline-aligned to the first line of a capture that wraps: *a control
+  belongs where its effect appears*.
+- ⚠ **11 September's placement had a PRECONDITION and it expired.** That entry
+  read: *the stamp row, not a line of its own — it already says what is known
+  about this capture **and had room at its end**.* The prior dates took the room
+  the same week. ⚠ **The `justify-between` finding still stands** and is why the
+  control did not simply move right within the row: on the desk the word ended
+  ~800px from its stamp.
+- ⚠ **`LOCKED` stays below and the verb goes up, which is 11 September's rule
+  rather than a break with it** — *the state is marked only as the exception and
+  the verb is always a verb.* Two things, said in two places.
+- ⚠⚠ **THE WORDS ARE STILL THE FIRST THING IN THE BOX.** The alignment to the
+  record's first line depends on it, so the control is a flex row **around** the
+  same `<p>`, never a row above it. Words `flex-1 min-w-0`, control `shrink-0`.
+- ⚠ **The history gets its own line**, which reverses that block's own morning
+  note (*in the stamp row, because it is the same fact — reuse a row before
+  adding a block*). **Reuse a row that has room**: density rule 2's precondition
+  failed, which is the one thing that licenses a second line.
+- ⚠⚠ **QUIETER, NOT SMALLER, AND THAT IS THE TYPE SCALE'S ANSWER RATHER THAN A
+  REFUSAL OF THE DIRECTION.** `--text-micro` is **0.6875rem — 11px — and it is
+  the floor**; its own note calls it *the caption tier* and nothing in
+  `globals.css` goes below it. A tracked, uppercased mono under 11px stops being
+  readable, and a step below the scale for one line is the fourth-breakpoint
+  problem in a type face. **What makes the stamp loud is its 0.22em tracking,
+  not its size** — so the history keeps the size and drops the tracking, and
+  reads markedly quieter beside the row above. ⚠ **If it must genuinely be
+  smaller, that is a new token and a decision about the floor.**
+- ⚠ **`Prev`, directed**, and it is the grammar the row was already speaking:
+  `TODAY`, `1983`, `LOCKED` are all telegraphic.
+- **The result:** `[words] … Unlock` / `Sam too. Ask them` / `You also wrote
+  "…"` / `TODAY 1983 LOCKED` / `PREV 03/09/26, 14/07/26` / `[× ✎ … ⌂]` —
+  **six rows, each one kind of thing.**
+- ⚠⚠ **THREE PROBES WENT RED AND NONE OF THEM WAS THE APP.** `dupe.mjs` and
+  `reenter.mjs` anchored their failure-line match on `$`, and the refusal's
+  paragraph now carries *Update* **inside** it; `reenter.mjs` read only the
+  stamp `<p>` where the history is now its own; `akin.mjs` asserted an exact
+  count of marked lines on a record a second seed had added to. ⚠ **A probe
+  that pins another seed's wording, or counts everything on a shared record, is
+  asserting what other seeds do.** `console.mjs` 18/18 and `matchingconsent.mjs`
+  all green untouched — including its 2px scan for a shared band between the two
+  controls.
+
 ⚠⚠ **A LINE WRITTEN AGAIN MOVES TO TODAY — 12 September, directed, AND IT
 REPLACES THE REFUSAL SHIPPED FOUR HOURS EARLIER.** Asked what happens when
 somebody types `scarface`, crosses it off and types it again a week later; the

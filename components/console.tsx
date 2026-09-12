@@ -250,13 +250,80 @@ export function Console({
             ⚠ **A struck line is struck here too**, with the identical pair of
             classes the row uses rather than two rules that agree.
           */}
-          <p
-            className={`text-[length:var(--text-line)]/[var(--leading-line)] tracking-[-0.01em] ${
-              crossedOff ? 'line-through opacity-50' : ''
-            }`}
-          >
-            {line.text}
-          </p>
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             The lock's control rides the words — 12 September, directed
+            ─────────────────────────────────────────────────────────────────
+
+            Asked: *how do we reorganise the console's contents so it's easily
+            understandable and not too jampacked? Maybe move `lock` so it's
+            optically in-line with the entry?*
+
+            ⚠⚠ **IT WAS IN THE STAMP ROW AND THAT ROW'S OWN JUSTIFICATION HAD
+            EXPIRED.** 11 September put it there in these words: *the stamp row,
+            not a line of its own — it already says what is known about this
+            capture **and had room at its end**.* The prior dates took that room
+            the same week. **Screenshotted at 390: the row wrapped, `Unlock`
+            was stranded mid-line, and `1983 LOCKED` fell to a second line
+            where the year read as one more date.** The premise changed; the
+            placement follows it.
+
+            ⚠⚠ **AND THE REAL FAULT IS THAT A CONTROL WAS IN A ROW OF FACTS.**
+            The stamp answers *what is known about this capture* — today, the
+            year it resolved to, that it is locked. **A verb is not one of
+            those.** Up here it sits on the object it acts on, which is this
+            repository's own rule twice over: *a control belongs where its
+            effect appears*, and design rule 5's *a tap on a row acts on that
+            row*.
+
+            ⚠ **The state stays below and the verb comes up, which is 11
+            September's rule rather than a break with it:** *the state is marked
+            only as the exception and the verb is always a verb.* `LOCKED` is a
+            fact and stays with the facts; `Lock` / `Unlock` is a control and
+            goes with the thing. **They are two things, said in two places,
+            which is what that rule asks for.**
+
+            ⚠⚠ **THE WORDS ARE STILL THE FIRST THING IN THE BOX.** The alignment
+            to the record's first line depends on it — *anything above them
+            pushes it out by its own height* — so this is a flex row **around**
+            the same `<p>`, not a row above it. The words are `flex-1` and the
+            control `shrink-0`, so the text's left edge and first baseline are
+            exactly where they were. `items-baseline` puts the control on the
+            first line of a capture that wraps to three.
+
+            ⚠ **`min-w-0` on the words**, or a long unbroken string would refuse
+            to shrink and push the control off the card.
+          */}
+          <div className="flex items-baseline gap-3">
+            <p
+              className={`min-w-0 flex-1 text-[length:var(--text-line)]/[var(--leading-line)] tracking-[-0.01em] ${
+                crossedOff ? 'line-through opacity-50' : ''
+              }`}
+            >
+              {line.text}
+            </p>
+
+            {onLock !== null && (
+              <button
+                type="button"
+                onClick={onLock}
+                /*
+                  ⚠ **The consequence, not the mechanism.** A screen reader gets
+                  the whole of what the tap does, because the visible word is one
+                  syllable and the thing it changes is the app's central privacy
+                  boundary.
+                */
+                aria-label={
+                  line.shared
+                    ? 'Lock this capture, so nobody is told you wrote it'
+                    : 'Unlock this capture, so you can both be told'
+                }
+                className="text-chrome tap-target shrink-0 text-[length:var(--text-micro)]"
+              >
+                {line.shared ? 'Lock' : 'Unlock'}
+              </button>
+            )}
+          </div>
 
           {/*
             ─────────────────────────────────────────────────────────────────
@@ -502,116 +569,83 @@ export function Console({
             the real answer, and it is one tap away.
           */}
           {/*
-            ⚠ **The control runs on from the stamp; it is NOT pushed to the far
-            edge.** `justify-between` was tried and is wrong on the desk, where
-            the console expands in place across the whole reading column: the
-            word ended up ~800px from the stamp it belongs to, floating, and
-            **not** aligned with the settle glyph below it either — near enough
-            to look like an attempt at a column and far enough to miss. The glyph
-            row spans the full width for a reason it has (the tray's sight line);
-            this row has no such reason, so it reads as one run: what is known,
-            then the one thing in it you can change.
+            ─────────────────────────────────────────────────────────────────
+             The facts, and then the history — 12 September, directed
+            ─────────────────────────────────────────────────────────────────
+
+            ⚠⚠ **THE CONTROL HAS GONE UP TO THE WORDS AND THIS ROW IS FACTS
+            ALONE.** It used to end with `Lock` — 11 September's *reuse a row
+            before adding a block*, taken when the row had room at its end. The
+            prior dates took that room the same week and a screenshot showed
+            what was left: **the row wrapped, the control was stranded mid-line,
+            and `1983 LOCKED` fell below where the year read as one more
+            date.** The note this replaces argued only about *where* the control
+            sat in the run — *it is not pushed to the far edge;
+            `justify-between` was tried and is wrong on the desk, where the
+            word ended ~800px from its stamp.* **That argument is still true and
+            it is why the control did not simply move right.**
+
+            ⚠ **What is left is one register: when, what it resolved to, and
+            whether it is locked.** Today, a year, `LOCKED`. Nothing here is a
+            verb.
           */}
-          <div className="mt-3 flex items-baseline gap-4">
-            <p className="stamp text-muted">
-              {line.dayLabel}
-              {/*
-                ─────────────────────────────────────────────────────────────
-                 And the days it was written before — 12 September, directed
-                ─────────────────────────────────────────────────────────────
+          <p className="stamp text-muted mt-3">
+            {line.dayLabel}
+            {line.year !== null && <span className="ms-2">{line.year}</span>}
+            {onLock !== null && !line.shared && <span className="ms-2">Locked</span>}
+          </p>
 
-                *The previous date of entry/entries preserved and presented in
-                the console.*
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             And the days it was written before — 12 September, directed
+            ─────────────────────────────────────────────────────────────────
 
-                ⚠⚠ **IN THE STAMP ROW, BECAUSE IT IS THE SAME FACT.** That row
-                already answers *what is known about this capture* and its first
-                word is the day this line was written; these are the days it was
-                written before. **Density rule 2: reuse a row before adding a
-                block** — an ordinary capture, written once and never again,
-                gains no copy at all, which is the same test the lock's stamp
-                passed on 11 September.
+            *The previous date of entry/entries preserved and presented in the
+            console… should read in numbers and should have wording that
+            provides context for the date… in a smaller font than `today` or
+            the date to their left.*
 
-                ⚠ **A middle dot between them and no label.** *Previously:* or
-                *Also written on* would be a heading over a list that reads as a
-                list. The row's grammar is already a run of facts separated by
-                space; this is more of them.
+            ⚠⚠ **ITS OWN LINE, WHICH REVERSES WHAT THIS BLOCK SAID THIS
+            MORNING.** It read: *in the stamp row, because it is the same fact —
+            density rule 2, reuse a row before adding a block.* **Reuse a row
+            that has room**, and the screenshot is what settled it: with a year,
+            a `LOCKED` and two dates the row wrapped and the facts interleaved
+            with the history. Density rule 2's own precondition failed, which is
+            the one thing that licenses a second line.
 
-                ⚠ **Newest first**, so the day before today's is next to today's
-                and the history reads backwards away from the present — which is
-                the direction the record itself reads.
+            ⚠⚠ **QUIETER, NOT SMALLER, AND THAT IS THE TYPE SCALE'S ANSWER
+            RATHER THAN A REFUSAL OF THE DIRECTION.** `--text-micro` is
+            **0.6875rem — 11px — and it is the floor**: its own note calls it
+            *the caption tier*, and there is nothing below it in
+            `globals.css`. A tracked, uppercased mono under 11px stops being
+            readable, and inventing a step below the scale for one line is the
+            fourth breakpoint problem in a type face. **What makes the stamp
+            loud is its 0.22em tracking, not its size** — so this drops the
+            tracking and keeps the size, and reads markedly quieter beside the
+            row above it. ⚠ **If it must genuinely be smaller, that is a new
+            token and a decision about the scale's floor, not a class here.**
 
-                ⚠ **Stamped on the server, like every other date in this app.**
-                `lib/day.ts` says why the client never formats one: the grouping
-                depends on a timezone and the browser's is not the server's.
-              */}
-              {/*
-                ⚠⚠ **A WORD IN FRONT OF THEM — 12 September, directed: *the date
-                of the previous entry should have wording that provides context
-                for the date*.** For a few hours it was a bare run of days after
-                *Today*, and this block argued for that: *no label — Previously:
-                would be a heading over a list that reads as a list.* **It does
-                not read as itself.** A second date beside today's could as
-                easily be when the line was settled, when somebody converged on
-                it, or when a photograph was attached. Density rule 2 bans a
-                heading over a list that explains itself; **design rule 1 is the
-                tiebreak, and the second word is usually free.**
+            ⚠ **`Prev`, directed**, and it is the abbreviation the row's own
+            grammar was already speaking: `TODAY`, `1983`, `LOCKED` are
+            all telegraphic. ⚠ **One word for the whole run** — design rule 4,
+            the matching rule's precedent: two dates do not want two labels.
 
-                ⚠ **One word, once, for the whole run** — design rule 4, the
-                same reason the matching rule is said once under a group of
-                requests rather than once per row. Two dates do not want two
-                labels.
+            ⚠ **In numbers, and the filtering is NOT here.**
+            `priorDatesAction` reduces the instants to distinct days, drops the
+            day the row above is already showing, and prints them through
+            `lib/day.ts`'s `numeric`. **The client never decides what day
+            something happened on** — its timezone is not the server's, which is
+            that file's founding rule.
 
-                ⚠ **In numbers, and the filtering is NOT here.**
-                `priorDatesAction` reduces the instants to distinct days, drops
-                the day the row is already showing, and prints them through
-                `lib/day.ts`'s `numeric`. The client never decides what day
-                something happened on — its timezone is not the server's, which
-                is that file's founding rule.
-              */}
-              {/*
-                ⚠ **The `·` separates the two FACTS, once, and a screenshot is
-                why it is there.** Without it the row read `TODAY PREVIOUSLY
-                05/09/26` — the day and the history running into one phrase,
-                because the stamp row's only other separator is the space
-                `ms-2` gives it and that is not enough between a word and a
-                word. **It marks the group, never each date**: the dates inside
-                it are a list and take commas.
-
-                ⚠ **A long history wraps, and that is accepted rather than
-                truncated.** `items-baseline` keeps `Lock` on the first line's
-                baseline, which is right — it acts on the line, not on the
-                dates. The common case is one date; a line written twelve times
-                is a line whose history stops being readable, and hiding it
-                would be worse than a second row of stamp.
-              */}
-              {priorDates.length > 0 && (
-                <span className="ms-2">· Previously {priorDates.join(', ')}</span>
-              )}
-              {line.year !== null && <span className="ms-2">{line.year}</span>}
-              {onLock !== null && !line.shared && <span className="ms-2">Locked</span>}
+            ⚠ **Nothing at all when a line has never moved**, which is every
+            ordinary capture: no label, no empty line, no space reserved. §6 —
+            silence stays silent.
+          */}
+          {priorDates.length > 0 && (
+            <p className="text-muted mt-1 font-mono text-[length:var(--text-micro)] uppercase">
+              Prev {priorDates.join(', ')}
             </p>
-
-            {onLock !== null && (
-              <button
-                type="button"
-                onClick={onLock}
-                /*
-                  ⚠ **The consequence, not the mechanism.** A screen reader gets
-                  the whole of what the tap does, because the visible word is one
-                  syllable and the thing it changes is the app's central privacy
-                  boundary.
-                */
-                aria-label={
-                  line.shared
-                    ? 'Lock this capture, so nobody is told you wrote it'
-                    : 'Unlock this capture, so you can both be told'
-                }
-                className="text-chrome tap-target shrink-0 text-[length:var(--text-micro)]"
-              >
-                {line.shared ? 'Lock' : 'Unlock'}
-              </button>
-            )}
-          </div>
+          )}
 
           {/*
             ⚠ **The standing question, in full, because there is room.** On the
