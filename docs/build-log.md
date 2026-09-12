@@ -1,4 +1,4 @@
-# The build log — 4 September and earlier
+# The build log — 6 September and earlier
 
 ⚠⚠ **THIS IS PART OF `CLAUDE.md`, NOT A COMPANION TO IT.** It was split out on
 6 September because `CLAUDE.md` had passed the 150,000-character limit the
@@ -35,8 +35,694 @@ moved here when `CLAUDE.md` came back to within 3,500 characters of the limit.
 **Not superseded by the move; every ⚠ in it still binds, and the requests it
 describes are built and deployed.**
 
-The newer entries — 5 September onward — stay in `CLAUDE.md` under *Where the
+⚠⚠ **A FOURTH CUT — 12 September, at the 6 September boundary**, when
+`CLAUDE.md` reached 170,985 characters against the 150,000 the harness loads.
+Everything dated **6 and 5 September** moved here in one block, newest first
+and verbatim: the two rail amendments and the screening/corpus pair (Amendments
+6 to 9), the rail as it was drawn, and the whole of 5 September — the capture
+that becomes a statement in place, the three handset reports, the composer's
+measured cap, and the undo's return to the front page. ⚠ **Not superseded by
+the move.** Amendment 10 had already taken the browse rail and the opening
+count out of Release 1; `CLAUDE.md` says so where it is decided, and **the
+rail's code is dormant rather than deleted**. Everything else in the block is
+live behaviour and **every ⚠ in it still binds.**
+
+The newer entries — 7 September onward — stay in `CLAUDE.md` under *Where the
 build stands*.
+
+⚠⚠ **A FILM IS NOWHERE; A SCREENING IS SOMEWHERE — 6 September, Amendment 9,
+AND IT IS THE SHORTEST ROUTE TO A LOCAL RAIL.** Asked: *why isn't a film
+somewhere you can go if it's in the cinema?* **It is, and the entry above this
+one was wrong to say the corpus is nowhere.** §3 already had the word and its
+first example is exactly this: *an occurrence — a time-bound experience
+connected to a possibility: **a screening**, workshop, concert, event.*
+
+- ⚠⚠ **THE 71 FILMS ALREADY IN THE CORPUS BECOME *THINGS TO DO NEAR ME* THE
+  MOMENT OCCURRENCES EXIST.** No new possibilities, no contributed data, no
+  local catalogue — **only when and where they are on.** It was missed because
+  the film and the showing of it had been treated as one object.
+- ⚠ **A screening inherits the film's poster**, so it clears Amendment 7's image
+  gate **for free**. It is the one vertical where the picture problem solves
+  itself; everywhere else the picture is the constraint.
+- ⚠ **Two objects, two locations.** `possibilities.latitude/longitude` are for a
+  possibility that genuinely sits somewhere — **a place**. An occurrence carries
+  its own location **and a time**. ⚠ **Do not try to make the possibility's
+  columns hold a screening**: a film shown in forty cinemas is forty occurrences
+  and one possibility.
+- ⚠ **`occurrences` and `offers` do not exist as tables** and are **deferred,
+  not designed away** — shape decided (possibility, place, start, provenance,
+  expiry), built when there is a source. ⚠ **Nothing is lost by waiting, which
+  is the difference from the coordinates**: nobody is generating occurrence data
+  today, so no unrecoverable moment is passing.
+- ⚠ **Showtimes are their own supply problem** — TMDB does not carry them and
+  there is no dependable free feed. **One narrow dependency rather than local
+  data for the whole world**, which is the reason to prefer it.
+
+⚠⚠ **AND THE CORPUS IS TWO LAYERS, NOT A CHOICE — asked: *why not both the free
+sources and people adding it themselves?*** **Because it was put as a choice and
+it is not one.**
+
+- **The free source is the SKELETON** — OpenStreetMap and the like give names,
+  coordinates and categories with **no images**.
+- ⚠ **Amendment 7 read as it was actually given is what makes this work:** the
+  image is a gate on the **rail**, never on the corpus. Skeleton rows live in
+  the corpus, are searchable, are resolvable and converge — **they simply do not
+  show.**
+- **A photograph is what ADMITS one.** The picture attaches to a row that
+  already has the right name and the right coordinates, and that row can now
+  enter the rail.
+- ⚠⚠ **THE PAYOFF IS CANONICAL IDENTITY, AND IT REPAIRS A WEAKNESS RECORDED THE
+  SAME DAY.** Without a skeleton, two people photographing one café make **two
+  rows and never converge**. With one they attach to the **same** row, so they
+  do — and §7's *Corroborated by several people* has something to corroborate
+  rather than two strangers to merge.
+- ⚠ **The licence is a real check, named rather than assumed.** OpenStreetMap is
+  **ODbL**: attribution required, share-alike obligations on a derived database.
+  §7 already requires provenance and attribution so the spirit is compatible —
+  **but it is a decision to take before ingesting, not a free lunch.**
+- **Nothing is built by this entry.** Amendment 9; §3's *Occurrence* and §4 of
+  `docs/re-direction/inactive/the-front-page.md` carry it.
+
+⚠⚠ **THE RAIL IS GLOBAL BY DEFAULT AND LOCATION IS A CONSTRAINT ON IT — 6
+September, directed, Amendment 8. THE COORDINATES AND THE EXPLANATION SLOT ARE
+BUILT; NOTHING ELSE IS.** Directed: *find things to do based on their own
+record… as for location, there should be an option to constrain what the rail
+shows to their current location, otherwise the default is a global presentation
+of things to do, see, eat, try, buy.*
+
+- ⚠⚠ **§7 ALREADY HELD THE ANSWER AND IT RULES OUT THE EXPENSIVE HALF.** The
+  relevance ladder, in priority order: **exact active possibility match; same
+  place or activity linked to an active possibility; same explicit intention or
+  type; freshness and confidence; distance and time relevance** — with the copy
+  mandated as *Because you saved "try pottery".* **The top three are joins on
+  records the app already holds.** §7 then says in its own words that *inferred
+  taste, embeddings, and opaque recommendation models are not required for the
+  first release.*
+- ⚠ **So semantic parsing is the fallback, not the mechanism**, and it is a
+  **paid dependency** — a model, a vector index, a re-embed on every
+  contribution. **Lodged beside the Blob store and the vision model**, under the
+  standing direction not to build what costs money.
+- ⚠ **The tension Amendment 6 left behind, named: most captures have no type.**
+  A capture is words and most never resolve, so **term 3 reaches only the
+  minority that did** — and deriving a type from free text *is* the inference
+  being deferred. Not an argument against the ladder; the reason terms 1 and 2
+  are above term 3.
+- ⚠⚠ **THE RAIL MAY RANK; THE FAN-OUT MAY NOT.** §2 as amended: similarity
+  *proposes to the person who wrote the line and never writes a notification to
+  anybody else.* **An inferred match that wrote one would tell somebody *Sam
+  wants this too* when Sam wrote something merely similar** — the app making an
+  untrue claim about a third party. **This is the one failure here that damages
+  trust rather than function.**
+- ⚠ **The constraint is what makes the rail legal.** Amendment 5's test is *a
+  rail ordered by something the reader chose, or by nothing at all, is not* a
+  feed, and §2 permits recommendation only as *an explained, user-controlled*
+  result. **The reader switching location on is the control half.** Distance is
+  §7's weakest term, so a filter rather than a sort is what the ladder already
+  asks for.
+- ⚠⚠ **`RailTile.why` EXISTS, IS `null` ON EVERY TILE, AND THAT IS THE POINT.**
+  §7 gives the copy and Phase 5 requires that *For you here can explain its
+  relation to the user's list* — **and an explanation retrofitted onto a rail
+  that already ranks is the thing that never gets done.** The field ships before
+  the ranking so every consumer has to decide what an empty one looks like;
+  `console.tsx` did exactly this for the convergence sentence a phase early. ⚠
+  **A sentence, never a score** — *0.82 relevant* is §7's banned numeric score
+  renamed. ⚠ **About the reader's own record only**: *three of your friends want
+  this* is a disclosure nobody consented to make.
+- ⚠⚠ **`latitude` / `longitude` ON THE POSSIBILITY — `0017`, AND IT IS THE ONE
+  UNRECOVERABLE COST IN THIS AREA.** Nothing reads them and no rail is gated on
+  them. **But a possibility contributed without coordinates can never be given
+  them** — you cannot retroactively locate somebody else's photograph — so every
+  row added between now and the day location ships would be permanently
+  un-locatable.
+- ⚠ **On the POSSIBILITY, never on the capture.** §1 excludes continuous
+  background location tracking, and where a person was when they wrote something
+  is a different fact from where the thing is. **Do not add a location to
+  `captures` because this is here.**
+- ⚠ **`double precision`, not PostGIS, and no index.** A geography column with a
+  GiST index is what this should become, but that is an extension, an index and
+  a query taken before one located row exists. ⚠ **Upgrading is a BACKFILL from
+  these two columns** (`ST_MakePoint(longitude, latitude)`), not a
+  re-collection — the expensive half is bought by having them at all. Whether
+  the index wants a composite btree for a bounding box or a GiST for a KNN order
+  is a decision that belongs **with the query**.
+- ⚠ **Null is the ordinary case.** A film is nowhere, and most of the corpus
+  always will be — so a rail constrained to a location removes most of it, which
+  is exactly why the constraint is optional. ⚠ **A constrained rail that empties
+  is §6's *silence stays silent*, not an empty state to write copy for**, and
+  Phase 5's *an area without source coverage does not render a misleading rail*
+  binds the default too.
+
+⚠⚠ **THE RAIL IS IMAGES AND NOTHING ELSE, AND THE WORDS ARE BEHIND THE TAP — 6
+September, directed, Amendment 7. DOCUMENTED, NOT BUILT.** *What's presented is
+the image on the front page; for users to find out what each image signifies
+they have to tap it, at which point the card details — the title, qualifier —
+appear beneath the enlarged, almost full-screen image. Above each image is a
+number showing how many openings it has received.* And the gate, given after:
+***any entry that doesn't have an attached image can never enter the front page
+rail.***
+
+- ⚠⚠ **THE GATE IS ON THE RAIL, NOT ON THE CORPUS.** A possibility with no image
+  still exists, is still searchable, is still what a capture resolves to, and
+  still converges. **It never appears in the rail.** One term in the rail's own
+  read — nothing near `lib/overlap.ts`, nothing near the capture path. ⚠ **And
+  never a gate on capture**: §1 bans a forced catalogue match before saving, and
+  Amendment 6 is what keeps the two apart.
+- ⚠ **It reverses §3 of the brief, whose founding line was *THE CORPUS CANNOT
+  PROMISE AN IMAGE*.** Three rules die with it: *no image is not an error
+  state*, *the name set in the frame is the drawing*, and the imageless card as
+  a thing to design. **Two states to judge now, not four** — an image that fits
+  the frame and one that letterboxes.
+- ⚠⚠ **THE TILE SAYS NOTHING, AND THAT IS THE DIRECTION.** No title, no
+  qualifier, no caption, no hover. ⚠ **Do not answer *I can't tell what these
+  are* by putting the title back** — the answer is one tap away. **Stated price:
+  browsing is exploratory rather than scannable.**
+- ⚠ **Amendment 6 is untouched.** The qualifier is still a field the possibility
+  carries and the opened view still branches on nothing; only where it prints
+  moved.
+- ⚠⚠ **THE OPENED VIEW BORROWS THE CONSOLE'S GRAMMAR AND IS NOT THE CONSOLE** —
+  fixed over a blurred page on a handset, expanding in place on the desk. **Not
+  routed through `components/console.tsx`**, which acts on the viewer's own
+  capture; **and it must not resurrect `film-screen.tsx`**, deleted in Phase 2
+  step 1.
+- ⚠⚠ **THE OPENING COUNT IS THE ONE ENGAGEMENT NUMBER IN THIS APP, AND IT
+  NARROWS A RELEASE 1 EXCLUSION.** §2's *social without a feed* bans engagement
+  loops and §1 bans engagement metrics; Amendment 5 bans a trending rail by
+  name. **Directed with that stated.** What survives: it counts openings of a
+  **possibility**, which belongs to nobody; it may never appear on a person, a
+  capture, a track or a notification; **§5's *the portal is never given a count*
+  is untouched**. ⚠⚠ **IT IS NEVER A SORT KEY — the day it orders the rail, the
+  rail is a trending feed and the exclusion has been broken.** ⚠ It is
+  `--color-muted`: brass means *a control*, the accent means *this converged*,
+  and a count is neither.
+- ⚠⚠ **THE BROWSE HALF SHRINKS WHEN SOMEBODY WRITES — *sort of parallax style*,
+  and §9's last open question is closed.** ⚠ **Keyed on `writing`, NEVER on
+  `--keyboard-overlap`** — that property measures a gap that also opens when a
+  Safari tab's address bar collapses during a scroll, and `useKeyboardHem` says
+  in writing that it is not a keyboard detector. The composer's third line
+  already follows this rule; the rail follows the same one so the two halves
+  cannot disagree. ⚠ **One duration and one curve** — `--recede` on
+  `--ease-recede`: **parallax is a difference of distance, not of timing.** ⚠
+  **It must not unmount.**
+- ⚠ **`fixture` is §4's word for a thing you own** — an `EntryState` the linter
+  enforces. A hand-made row for judging a tile is a **sample possibility**. The
+  brief said *fixture* and has been corrected.
+- ⚠⚠ **THE MIGRATION IS BUILT AND APPLIED — 6 September, `0015`, THREE
+  COLUMNS ON `items` AND TWO BACKFILLS.** `qualifier`, `image_path` and
+  `open_count`. **Production first, then dev**, in that order; both read 16 of
+  16 afterwards. ⚠ **`0014` had never been applied to dev** and went with it —
+  pre-existing, not from this work.
+- ⚠⚠ **`image_path` IS A THIRD COLUMN THE BRIEF DID NOT ASK FOR, AND IT IS THE
+  SAME FAULT `year` HAD.** The picture lives at `metadata->>'posterPath'` —
+  **a film-shaped location for a universal thing**, exactly as `year` was a
+  film-shaped qualifier. The rail's gate has to be **one term**, so it reads a
+  column. ⚠ **The rail must never read `metadata->>'posterPath'`**: a JSON term
+  is a branch on kind wearing a different hat.
+- ⚠ **A PATH, NOT A URL, AND THAT IS LOAD BEARING.** `lib/posters.ts` picks the
+  CDN size at **render** time — `rungFor` measures the viewport and multiplies
+  by `devicePixelRatio` — so a URL resolved at ingest would freeze the size and
+  undo that whole mechanism.
+- ⚠ **Both backfills are re-runnable**, guarded on `target IS NULL`. **Measured
+  on production: 71 possibilities, 71 with a qualifier, 71 with an image** — so
+  the rail's gate excludes nothing that exists today, and every one of them had
+  both a year and a poster to take.
+- ⚠ **The ingest writes them, stated by the CALLER and never derived in
+  `lib/db/`.** `PossibilityInput` gained two required fields, so the compiler
+  asks at every call site — a `String(year)` inside `upsertPossibility` would
+  put the film-shaped assumption back one layer down, where it is harder to see.
+  Without this, only the 71 backfilled rows would ever reach the rail.
+- ⚠ **`onConflictDoNothing` STAYS, and it is not an oversight to upgrade to a
+  `DO UPDATE`.** A possibility is shared and canonical; letting the second
+  person to resolve to a film overwrite its picture is one account editing the
+  corpus every other account reads.
+- ⚠⚠ **THE CORPUS HAS A READER — `listRail`, 6 September, `0016`.** The
+  admission rule lives in it **and nowhere else**: `image_path is not null`.
+  Keyset cursor on `id` — *by nothing at all*, which is what §2 permits — so a
+  walk shows no row twice and skips none. ⚠ **A seed with no cursor starts at a
+  RANDOM point and wraps**, because a stable order read from its start shows
+  every reader the same 24 tiles for ever: **a shelf, not a feeder.** Paging
+  onward does not wrap.
+- ⚠⚠ **MEASURED RATHER THAN ASSERTED, AND THE SMALL TABLE LIED.** The docblock
+  first claimed *an indexed range scan with no sort at any corpus size* and
+  `EXPLAIN` did not support it: at 58 rows the planner takes a **Seq Scan plus
+  a Sort**, and `enable_seqscan = off` only gets a **Bitmap** Index Scan, which
+  does not preserve order — so the Sort stays. **Built the shape at 300,000 rows
+  and asked again: plain Index Scan, no Sort, 27 buffers, 0.126 ms** for a page
+  of 24 from a random start. ⚠ **A `Seq Scan` in a local `EXPLAIN` is not a
+  regression** — it is what a 58-row table costs.
+- ⚠ **`items_rail_idx` is PARTIAL on the gate**, so on a corpus that is mostly
+  imageless — which is what Phase 4 makes it — the index stays the size of the
+  rail rather than the size of the catalogue.
+- ⚠ **The start uuid is generated in NODE.** `gen_random_uuid()` was tried
+  first and is **a round trip to Neon spent before the read it exists to
+  begin**; `crypto.randomUUID()` is built in and the same uniform 122 bits.
+- ⚠ **`open_count` gets no index**, so the ordering that would break the
+  never-a-sort-key rule is also the one that gets slow enough to notice.
+⚠⚠ **THE RAIL IS DRAWN — 6 September, and two things only a screenshot could
+have found.** `components/rail.tsx` is a **server component handed into
+`ComposeScreen` as a node**, so the corpus read, the image URLs and the
+markup itself stay off the client — the arrangement the portal already uses for
+its console. 24 tiles, `--tile-width` 9rem, `aspect-2/3`,
+`object-contain`, bleeding past the column so a tile is cut at the edge.
+
+- ⚠⚠ **AN `sr-only` SPAN ON THE `<li>` BROKE THE ENTIRE PAGE, AND
+  NOTHING BUT A PROBE SAW IT.** `sr-only` is **`position: absolute`
+  with no offsets**, so with no positioned ancestor each span resolved against
+  the **initial containing block** and **escaped the rail's clipping**:
+  twenty-four of them at their static positions stretched the document to
+  **3792px on a 390px handset**, the mobile viewport zoomed out to fit at 4×,
+  and **the composer and the foot went off the bottom of the screen.** ⚠ **The
+  tiles still looked correct in the screenshot**; what found it was
+  `frontpage.mjs` reporting that `<main>` intercepted a click meant
+  for the composer. **Typecheck, lint and build all passed.** The fix is one
+  word: the span lives inside the frame, which is already `relative`.
+- ⚠⚠ **THE TITLE IS NOT ON `alt`, AND PUTTING IT BACK IS THE BUG.** With
+  it there, a poster path TMDB no longer serves draws **the alt text and a
+  broken-image icon** — words, on a tile whose whole design is that it has none.
+  Two of the first three tiles on the dev database did it. `alt=""` marks
+  the image decorative so a failed one renders **nothing at all**, and the
+  frame's ground is what is left. ⚠ **Not a data problem**: TMDB withdraws
+  artwork, so a path that resolved at ingest can stop at any time.
+- ⚠ **An empty rail draws NOTHING** — not a message, not a skeleton. §6's
+  *silence stays silent*, and Phase 5's *an area without source coverage does
+  not render a misleading rail* from the other end.
+- ⚠ **`touch-pan-x` and no verb.** The record's rows own the horizontal
+  swipe for the lock, so this is a **scroller**. **The day a swipe on a tile is
+  given a verb it collides with that**, and design rule 5 is what it answers to.
+- ⚠ **Nothing is drawn for a zero opening count**, and the row keeps its height
+  either way so the pictures stay on one line. Mono at `--text-micro` but
+  **not `stamp`** — that utility is tracked +0.22em and uppercased, which
+  reads as spaced-out digits on a number. `--color-muted`: brass means a
+  control, the accent means *this converged*, and a count is neither.
+- ⚠ **There is no tap yet**, so a tile is not a `<button>` — a control
+  that does nothing is worse than no control. The opened view is next.
+- **Measured on both surfaces**: 24 tiles, first tile on the column's text edge
+  at 20 and 293, `touch-action: pan-x`, no page overflow, and
+  `frontpage.mjs`'s 23 assertions all green after the fix.
+
+⚠⚠ **THE CARD BRANCHES ON NOTHING, AND STEP 0 OF THE FRONT PAGE'S SEQUENCE IS
+DISSOLVED RATHER THAN ANSWERED — 6 September, Amendment 6.** The sequence said
+*decide `Kind` — four values today, seven in §3 — before the card is written or
+it is re-touched afterwards.* **The premise was false in the model this app
+already has**, and asking it from the origin is what showed it: *I see things
+that interest me and want to make a record of them — an aesthetic, a film, a
+book, an object, a house, a car, even an ambition, and optionally the reason.*
+
+- ⚠⚠ **`captures` HAS NO KIND COLUMN AND MUST NOT BE GIVEN ONE.** A type is a
+  property of the **possibility** — `lib/db/captures.ts` reads it as
+  `possibility?.kind ?? null` — and most captures never resolve to one. **An
+  ambition never will**: no external id, no image, no year, and no catalogue
+  will ever hold it. It is a complete capture today and, under Amendment 4, a
+  first-class convergence, because the words are what match.
+- ⚠ **A closed enumeration of *interest* grows an `other` that swallows the
+  majority**, and a majority in `other` is the taxonomy saying it was never the
+  right axis. §2's *capture before categorisation* is strengthened by this, not
+  bent.
+- ⚠⚠ **THE QUALIFIER WAS A SLOT SOLVED AS A TAXONOMY.** §3 of the brief derived
+  the card's one line from the kind — year for a film, author for a paper,
+  locality for a place. **That branch is what made the union look load-bearing.**
+  The possibility carries a `qualifier` instead, written at ingest, and the card
+  prints `title + qualifier + image?` with **no branch anywhere in it** — which
+  is design rule 3, *one object has one height*, made true by construction
+  rather than by care.
+- ⚠ **`possibilities.year` is that column with a film's meaning welded into it**
+  — superseded, not deleted, and nothing migrates away from it. The new column
+  is additive and **the migration still goes before the deploy**.
+- ⚠ **`Kind` stays at four and keeps two jobs, both BEHIND A RESOLUTION:** the
+  console's resolve question (`VOCABULARY` / `specFor` / `DEFAULT_INTENT` /
+  `landsIn`) and catalogue identity. Neither is on the card; neither is reached
+  by an unresolved capture. It is widened by the ingest that needs it, with a
+  real example in hand.
+- ⚠⚠ **AND THE ORIGIN NAMED SOMETHING NOTHING IN THE TREE SERVES: *optionally
+  the reason*.** `captures.note` exists and **has no door** — nothing in
+  `components/` or `app/` writes it. ⚠ **When it gets one it stays out of
+  `normalised_text`**: *learn to sail* is the common intention, *because I saw a
+  boat in Greece* is not, and matching on the reason would make convergence
+  **rarer the more carefully somebody wrote**. Named, unscheduled.
+- **Nothing is built by this entry.** It is Amendment 6 to the implementation
+  specification, §3 rule 4 and §8 item 0 of `docs/re-direction/inactive/the-front-page.md`.
+
+⚠⚠ **A CAPTURE STOPS BEING A DRAFT AND BECOMES A STATEMENT, IN PLACE — directed
+5 September, and it DELETES THE RECEIPT ABOVE THE COMPOSER.** *When writing, text
+that has passed is partially dimmed, so that when the arrow is tapped it all goes
+solid, blinks twice, and the optically in-line undo appears. This all stays inside
+the composer, never outside.* **A capture no longer travels on being sent.**
+
+- ⚠⚠ **THE TWO STATES OF ONE SET OF WORDS ARE TOLD APART BY WEIGHT OF INK, AND BY
+  NOTHING ELSE.** A draft is `--color-muted` and provisional; what has landed is
+  `--color-text` and is a statement. ⚠ **The words must not MOVE between them** —
+  the sent line is absolutely positioned over the field and inherits its content
+  box to the pixel, so a capture that filled three lines while it was typed does
+  not settle into two the instant it lands. Asserted: same top, same left, same
+  right.
+- ⚠ **A layer over the field, never a replacement for it.** The `<textarea>` is
+  mounted at all times — iOS raises a keyboard only for a focus inside the
+  gesture that asked for it — so undo can put the words back **and focus the
+  field in one handler**. ⚠ **The placeholder is emptied while a line is landed**:
+  it showed *through* the words the first time this was built, which is two texts
+  in one box, one of them inviting you to write while the last capture was still
+  being offered back.
+- ⚠⚠ **THE UNDO FOLLOWS THE WORDS, MEASURED FROM THE LAST CHARACTER.** A `Range`
+  over the final character gives where the words actually stop, written through
+  the CSSOM as `--undo-x`/`--undo-y` — §10 blocks inline `style` attributes, and
+  this is the door the roll mark used. ⚠ **Direction is read off the element**, so
+  in Arabic the control goes to the left end of the last line; one
+  `getComputedStyle` rather than a locale branch. ⚠ **The gap belongs to the
+  control, not to the measurement** — `--undo-x` is literally where the words
+  stop, and `padding-inline-start` puts the drawing clear of them.
+- ⚠ **The cap reserves the control's room** — directed: *adequate space left at
+  the end of the third line if a user writes on three lines.* `composer-draft`
+  puts `--undo-reserve` (the glyph plus two hems) on the field's end, and the cap
+  measures against that box, so the last line always has somewhere to put it.
+  **Reserved on every line, not just the last**, because a per-line reservation is
+  `shape-outside` on a text field and there is no such thing; the price is a
+  measure one glyph narrower throughout.
+- ⚠⚠ **UNDO RE-ENGAGES RATHER THAN ERASES**, which is where it parts company with
+  the record's: *if a user taps undo, s/he doesn't delete the text written but
+  re-engages it so they can edit it as they please.* The row is deleted; the
+  words go back into the field, the field takes focus and the caret goes to the
+  end. **The record's undo leaves nothing behind; this one leaves you mid-
+  sentence.**
+- ⚠ **Left alone, the line LEAVES rather than being cut.** `composer-sent-leaving`
+  fades and drifts a hem downward — toward the foot, where the record's door is —
+  and the door bounces on the same tick. ⚠ **The component clears the line on
+  `animationend`, never on a timer**, so the duration lives in the stylesheet and
+  nothing in JavaScript holds a copy of it. ⚠ **It is not a literal flight to the
+  glyph**, which would mean positioning against a control in another subtree and
+  re-measuring on every resize.
+- ⚠ **Two blinks, each at `--recede`.** One dip reads as a glitch, three is a toy,
+  and the opacity never reaches zero — `line-landed`'s rule on the record — so the
+  words stay legible for somebody reading what they just wrote.
+- ⚠ **The failure line is the ONE thing still above the composer.** A capture that
+  did not land puts its words back in the field, so there is nothing in the box to
+  say it with.
+- ⚠⚠ **THE ARROW BECOMES A `+` FOR AS LONG AS THE UNDO IS THERE — directed:**
+  *a `+` replaces the arrow for the duration that the undo is available, so users
+  can tap it if they don’t want to wait ten seconds for the transfer to happen.*
+  **The two controls are the two answers to one question** — the undo says *give
+  it back*, the `+` says *I meant it, let me write the next one* — and waiting
+  out a countdown was the only other way to say the second.
+- ⚠⚠ **`SendGlyph`’S OWN NOTE ARGUES AGAINST A `+` HERE AND DOES NOT BIND.** It
+  reads: *a `+` in a composer means attach, everywhere it appears, so spending it
+  on submit would put two meanings on one drawing in the one row that has both.*
+  **That is about submit**, and nothing is being submitted in this state — the
+  capture has already landed. `WriteGlyph`’s own note says a plus means *another
+  one*, which is exactly what this is. ⚠ **So the arrow keeps submit and must not
+  be replaced by a `+` in the ordinary state**, and the two can never be seen
+  together: one drawing holds the slot at a time.
+- ⚠ **`acceptNow` is the timer’s own ending run by hand** — the same three effects
+  in the same order, so there is one description of what the end of a window is
+  and two ways to reach it. **Do not let them drift apart.** ⚠ **It is lit while
+  the field is empty**, because the draft test would otherwise draw the one
+  control that has something to do as off.
+- ⚠⚠ **IT MUST NOT RAISE THE KEYBOARD, AND IT DID FOR AN HOUR — reported:**
+  *why when I press + does the keyboard pop up again?* It focused the field, on
+  the reasoning that a `+` means *start another one*. **That reasoning cost the
+  control the one thing it exists for:** focus raises the keyboard, the keyboard
+  unmounts the foot, and the foot is where the door is — so tapping *do the
+  transfer now* hid the only thing that says the transfer happened.
+- ⚠ **What it skips is the WAIT, not the next capture** — confirmed: *the `+` is
+  for users to short circuit the ten second undo wait.* The box is left empty and
+  lit and writing again is the tap it has always been. ⚠ **The label went with
+  the behaviour**: it said *Write another* while it focused the field, and a
+  control promising a keyboard that does not arrive is the button that lies. The
+  pair reads as a pair now — *Undo the last capture* against *Keep it*.
+- **Proved by `node_modules/.probe/composersent.mjs`** — 38 assertions, including
+  that the sent line is the field's own box, that the drawing sits on the last
+  line's centre, that undo re-engages with the caret at the end, and that the
+  capture is really gone from the record afterwards. ⚠ **Its text is stamped at
+  the FRONT**, because the cap trims from the end and a probe searching the record
+  for text an earlier run also wrote reports its own leftovers as a bug. It did.
+- ⚠ **`frontpage.mjs` was reading the composer's card as `field.parentElement`**
+  and silently began measuring the new positioning wrapper — reporting the
+  composer as having no glass, no radius and no padding. It finds the card by name
+  now.
+
+⚠⚠ **THREE REPORTS FROM A HANDSET, AND ONE OF THEM WAS ANSWERED BY A RULE THIS
+SCREEN NEVER INHERITED — 5 September.** *The bounce of the record glyph cannot be
+seen when the keyboard is up; is the undo icon optically in-line with the line?;
+add a home glyph to the left of the bottom bar.*
+
+- ⚠⚠ **A COMMIT ENDS THE WRITING MODE HERE TOO, WHICH IT SHOULD HAVE DONE ON DAY
+  ONE.** Directed 27 August for the record's strip — *once a line is submitted
+  the person is presumed done* — and the front page was written without it. **The
+  foot is unmounted while somebody writes**, so the door that acknowledges the
+  capture was not on screen at the moment it had something to say. `commit`
+  calls `field.current?.blur()`, and the receipt, its undo, the window closing
+  and the bounce all now happen on a screen that is showing them. **Nothing new
+  is drawn.** ⚠ **What it costs, stated: a run of captures is a tap back into the
+  field between each** — the 27 August trade exactly, and the reason the field is
+  mounted at all times.
+- ⚠ **`blur()`, never `setWriting(false)`.** The mode has one exit and it is the
+  field losing focus; setting the state directly leaves a focused field on a
+  screen that thinks nobody is writing, which is the state iOS's own *Done* used
+  to produce.
+- ⚠⚠ **THE UNDO WAS FIVE PIXELS HIGH, AND `items-baseline` WAS DOING IT.** A
+  flex item is aligned on **its** baseline, and a box holding only an `<svg>` has
+  no text baseline — so the engine used its bottom margin edge and put the
+  drawing's centre at 662.5 against the words' ink centre at 667.5. `items-start`
+  lets `line-glyph` do the job it exists for: the holder is exactly one line box
+  tall, so top-aligned against a line of the same leading **the drawing lands on
+  the line's own centre with no face metric anywhere in it.** Measured 0.00px
+  after. ⚠ **It reads ~2px above the CAP-ink centre and that is correct**, not a
+  residue: it is the relationship every glyph on a record row has, and
+  `UndoGlyph` was redrawn on its own grid for it. **Do not nudge a glyph from
+  outside the glyph.**
+- ⚠⚠ **A HOME GLYPH ON THE FAR LEFT, AND IT TOOK THE BAR FROM FOUR COLUMNS TO
+  FIVE.** `HomeGlyph` is a house — deliberately the most conventional drawing in
+  the file, because §11 permits *known* icons and the leftmost slot of a bottom
+  bar is where nobody should have to learn anything. Drawn on the one grid,
+  viewBox 20, stroke 1.25. Off on the composer, lit on the record: **the mirror
+  of `record`**, so the app is two surfaces each holding a lit door to the other
+  and a dark drawing of itself.
+- ⚠ **It duplicates the wordmark, which is the stated cost.** `foot.tsx` has said
+  since the split that *the way back to the composer is the wordmark — no new
+  control for it*. This is a second door to the same place, at the bottom edge
+  because that is where reflexes live.
+- ⚠⚠ **AND IT MOVED THE TRAY, SO THE CONSOLE'S SETTLE MOVED WITH IT.** `foot.tsx`
+  has warned since 2 September that *moving this glyph out of column four breaks
+  something that is not written yet, so move the console's with it* — the settle
+  glyph sits on the tray's x centre as a sight line for a reaction that is not
+  built. Both are column **five** of a five-column grid now, measured equal at
+  **335** on a 390 handset. ⚠ **The composer's own control row stayed FOUR
+  columns**: send is aligned to nothing, so there was nothing for a fifth column
+  to keep in step with.
+- ⚠⚠ **THE RECEIPT IS CENTRED IN ITS BAND, AND ON THE INK RATHER THAN THE BOX
+  — directed:** *when the line lands in the area above the composer, it has to be
+  centred between the top of the composer and the top of the sheet behind it.* It
+  was not: the strip is content-sized, so the receipt sat hard on its top edge —
+  **0px above the line box and 5px below it.** ⚠ **Equal padding would not have
+  fixed it**, which is `sheet-writing`’s own lesson said twice: at 18/24 the ink
+  sits 5.8px below the box’s top and 1.8px above its bottom, so equal padding
+  leaves the words 4px high in their own band. `receipt-line` spends one optical
+  gap on both sides, less what the line box already provides, using the derived
+  `--line-ink-lead`/`--line-ink-foot` — **no pixel in it**, so it follows the
+  desk’s root scale and any change of leading. Measured **7.49 above, 7.49
+  below**. ⚠ **The gap is `--line-hem × 1.5`, which the strip already spends
+  between the card and the foot** — not a new number. ⚠ **The composer does not
+  move**: the strip is anchored to the bottom edge, so the 2.4px it grows moves
+  its top. ⚠ **The failure line wears it too**, because the two are alternatives
+  in one slot and the strip must not change shape between them.
+- **Proved by `node_modules/.probe/traysightline.mjs`** (5 assertions, and it
+  exists so the next person to add a glyph finds out immediately) and by
+  `composerundo.mjs`, now 21, which asserts the commit lets go, the door is on
+  screen to be bounced, and the undo is on the line's centre.
+- ⚠⚠ **`console.mjs` HAD BEEN RED SINCE THE SPLIT AND IS FIXED.** It opened
+  `/` — which has been the composer since Amendment 5 — and seeded through
+  `button[aria-label="Write a capture"]`, the `+` the split deleted, so it timed
+  out **before a single assertion ran**. It writes its seed on the composer and
+  reads it on `/record` now, and clicks back into the field between lines
+  because a commit ends the writing mode. ⚠ **Its foot block was anchored on the
+  `+` too**, and asks about even spacing rather than that control’s distance
+  from the centre; it counts `children` rather than `button, a`, because a glyph
+  drawn OFF is a `<span>` and a query for controls reports a five-cell bar as
+  four and the grid as uneven. **All assertions pass on both surfaces.**
+- ⚠ **`portal.mjs` and `handshake.mjs` still need their local seeds** —
+  `scripts/seed-portal.mjs` and `scripts/seed-request.mjs` — and are red without
+  them. Not a regression from this work.
+
+⚠⚠ **A CAPTURE IS AS LONG AS THE BOX, AND THE BOX GROWS A LINE TO WRITE IN —
+5 September, two directions, built and measured. THE COMPOSER NO LONGER SCROLLS
+AT ALL.** Directed: *limit the number of
+characters to the number that can fit in the given space so we have no need for
+scrolling in the composer.* The field asks itself on every keystroke and refuses
+the one that would not fit. **Deleted with the scroll: the roll-under,
+`roll-mark`, `composer-bar` and `readRoll`**; the field is `overflow-y-hidden`
+and there is a tombstone in `globals.css`. The account is §10 of
+`docs/re-direction/inactive/the-front-page.md`.
+
+- ⚠⚠ **THE CAP IS MEASURED AND MUST NEVER BECOME A NUMBER.** *"The number of
+  characters that fit"* is not one — measured on the live page it is **73 in
+  Latin, 92 in Arabic, 38 of `m`, 142 of `i` on a 390 handset and 146 on the
+  desk**, five answers from one rule. A `maxLength` would be a constant tuned
+  until one handset looked right, which *How things get fixed* rules out by name.
+  It is `readRoll`'s own rule — **read off the element, never computed from the
+  text** — kept after `readRoll` went.
+- ⚠ **The measurement is synchronous, and that was checked rather than assumed.**
+  `readRoll` ran in a `requestAnimationFrame` because `scrollHeight` is not right
+  until the new text is laid out; a cap has to refuse a keystroke *during* it, a
+  frame later being a character that appears and then vanishes. Measured in
+  Chromium and WebKit: **at the boundary the two reads agree**, because reading
+  `scrollHeight` forces the layout it needs. They differ only deep inside an
+  overflow, which the cap makes unreachable.
+- ⚠⚠ **THE CAP IS STICKY, AND THAT IS THE DIFFERENCE BETWEEN STOPPING AND
+  SIEVING.** *Does this exact string fit* is right about every string and wrong
+  about typing: at the cap a wide letter does not fit and a narrow one does, so
+  `mike` arrived as `m` refused, `i` **accepted**, `k` and `e` refused —
+  **62 letters kept out of a prefix of 74, in no order a reader could explain.**
+  A full field stops taking input rather than sieving it. The latch is the length
+  at which the box first said no, in a `useRef`; a deletion clears it, and it is
+  also what closed a leak where a trailing space fitted for ever.
+- ⚠ **A paste is TRIMMED, not refused** — refusing it would be silent, which is
+  this screen's own recorded failure. It keeps a prefix, so a paste into the
+  middle loses the tail; stated rather than solved.
+- ⚠ **What it costs, and it is the one hole:** a capture that fitted when it was
+  typed can stop fitting if the type reflows under it — a rotation, a desk window
+  narrowed — and is then **clipped rather than scrolled to**. The alternative was
+  trimming somebody's words on a resize. **The cap governs what can be written,
+  not every width it is later read at.**
+- ⚠ **Do not answer *the composer feels short* by putting the scroll back.** That
+  asks for a taller box or a shorter rule, both one number in
+  `compose-screen.tsx`. The scroll brings the readout back, and the readout is
+  what the cap was chosen over.
+- ⚠⚠ **THE SWIPE-ANYWHERE FIX IS DEAD RATHER THAN DEFERRED, AND SO IS THE `ance`
+  MIRROR.** Both were open questions about a scroll that no longer exists. **A
+  transparent border on the field was built for the swipe and deleted the same
+  hour**: it put every point of the card on the field by hit-test in both
+  engines — and **a hit-test is not a gesture**. Measured: Chromium starts a
+  touch scroll only from inside the **padding box**; a drag beginning in a
+  border scrolls nothing. If a scroller in a padded card ever needs its air to be
+  swipeable again, that is the finding to start from.
+- ⚠⚠ **TWO LINES AT REST, THREE WHILE IT IS BEING WRITTEN IN — directed the
+  same day: *when a user taps in the composer and the keyboard rises, the
+  composer itself should increase in size just enough to add one extra line of
+  writing.*** Measured: field 48 → 72, card 130 → 154 on a handset; 64 → 96 on
+  the desk, which is the same one line at the desk's root scale. **The cap reads
+  the box, so the third line is a third line of writing** — 106 characters of
+  Latin where two lines took 73.
+- ⚠⚠ **THIS IS NOT THE GROWING BOX THAT WAS DELETED, AND THE DIFFERENCE IS THE
+  TRIGGER.** That one measured `scrollHeight` and grew two lines to six **as the
+  words arrived**, moving the card, the glow and the strip on every keystroke.
+  This moves **once, when you tap in**, and never again while you type. *The box
+  does not follow the words* is the rule that survived; *the box has one height*
+  was never the point of it.
+- ⚠⚠ **IT STAYS TALL WHILE THERE IS A DRAFT IN IT — `writing || draft !== ''` —
+  AND THAT IS NOT A THIRD STATE.** The field is `overflow-y-hidden`, so three
+  lines of draft in a box that shrank to two is a line of somebody's words
+  **clipped with nothing saying so**. The short box is only ever the empty one.
+  ⚠ **Do not tidy this to `writing` alone.**
+- ⚠ **Keyed on `writing`, NEVER on `--keyboard-overlap`.** The direction says
+  *the keyboard rises*, but that property measures a gap that also opens when a
+  Safari tab's address bar collapses during a scroll — `useKeyboardHem` says in
+  writing that it is not a keyboard detector. ⚠ **So the desk grows too**, which
+  is deliberate: a pointer-type branch would be a device sniff for a behaviour
+  that reads correctly on both.
+- ⚠ **The latch is cleared by `commit`, and that was a bug for an hour.**
+  `fullAt` is a *length*, and a length outlives the words it measured: left
+  behind, a capture that filled the box at 106 characters made the **next**
+  capture stop dead at 106 — including 106 narrow ones the box had room for.
+  The deletion path clears it because the field is getting shorter; a commit is
+  the other way the field empties.
+- ⚠⚠ **THE BOX BUMPS WHEN IT SAYS NO, AND A COUNTER WAS ASKED FOR FIRST AND
+  REFUSED — 5 September.** Asked: *can there be a counter that appears as the
+  user is about to approach the last allowed character?* **There is no such
+  number.** The cap is measured, so *characters remaining* is 106 in Latin, 213
+  of `i`, 57 of `m`, 214 on the desk — it depends on which ones you type next,
+  and a digit in that corner would have to pick one and lie. ⚠ **Do not add one.**
+- ⚠ **What was real in the question is that the cap is SILENT** — a keystroke
+  past the end simply does not appear. `composer-refused` is the answer: the card
+  moves down half a hem and back, over half of `--recede`, once per refused
+  keystroke. **Down rather than sideways** — a shake says *rejected as invalid*,
+  and what happened is that the words reached the bottom of the box.
+- ⚠ **No colour, and that is forced rather than restrained.** `--color-accent` is
+  a convergence, `--color-chrome` is a control, `--color-decline` is the one
+  dismissal in the app, and `docs/decisions.md` has twice refused to make red the
+  error colour. §11's scarcity rule takes all three; **motion is what is left.**
+- ⚠ **It fires only when NOTHING landed**, which is both the honest case and the
+  safe one: a refusal changes no state, so the class survives the animation,
+  where after a `setDraft` React reconciles it away mid-bump. A trimmed paste put
+  words in and can be seen to have done so.
+- ⚠ **Restarted through `classList` — remove, force a reflow, add.** A counter in
+  state would be re-rendering the screen in order to say *nothing happened*.
+- **Proved by `node_modules/.probe/composercap.mjs`** — 50 assertions, two
+  surfaces, three scripts, both heights.
+
+⚠⚠ **THE UNDO IS BACK ON THE FRONT PAGE, AND A CONTROL IN THE COMPOSER'S STRIP
+COULD NOT BE CLICKED AT ALL UNTIL IT WAS — 5 September.** §5's *nothing is ever
+deleted* has exactly one exception, a ten-second undo on creation for typos, and
+it lived on the record's own row. **The record moved to `/record` and the front
+page kept the receipt without it**, so for a day the only way to take back a
+mistyped capture was to navigate to another screen and find it there. It is
+beside the receipt now, in the record's own slot geometry.
+
+- ⚠⚠ **THE BUG THIS UNCOVERED IS THE IMPORTANT HALF.** `onBlur` was
+  unconditional, so a click on the undo blurred the field → `writing` went false
+  → **the composer shrank three lines to two** → the button moved ~20px out from
+  under the pointer between mousedown and mouseup → **no click event was ever
+  dispatched.** The control was lit, correctly placed, hit-tested to itself, and
+  dead. ⚠ **It took the send arrow with it**, which had been failing the same way
+  and was written off as a probe artefact. **Any control in that strip would
+  have been.**
+- ⚠ **The fix is the record's own guard, arriving a day late:** `relatedTarget`
+  inside the strip is not leaving. `page-screen.tsx` has said so in writing since
+  30 August, for its own chips; this screen was written without it and the cost
+  stayed invisible until the box learnt to change height. ⚠ **iOS never had the
+  bug and still needs the guard** — it does not focus a button on tap at all, so
+  the field never blurs there; the desk and Android do.
+- ⚠ **The window is a PROP, not a second `10_000`.** `undoCapture` bounds the
+  delete in SQL against `created_at`, so a number typed in the client is a clock
+  that can disagree with the one that decides — and the disagreement shows as a
+  control that is lit and refuses. `app/(app)/page.tsx` hands `UNDO_WINDOW_MS`
+  down exactly as the record's page does.
+- ⚠⚠ **THE RECEIPT GOES WITH THE WINDOW, AND THAT REVERSES WHAT WAS WRITTEN
+  HERE THE SAME MORNING — directed.** This entry read: *the receipt stays until
+  the next capture replaces it; a confirmation that vanished after ten seconds
+  would be the toast this screen refuses to be.* The direction is that it should
+  go, **and the reasoning survives because something takes its place**: the
+  record's own door bounces at that instant, so the screen stops saying *here is
+  what you wrote* and starts saying *it is in there*. **A toast leaves nothing
+  behind; this hands over.** One timer fires all three — two clocks on one moment
+  is two clocks to keep in step.
+- ⚠ **The bounce is STATE, not an event, because the foot is unmounted while
+  somebody writes.** A capture committed with the keyboard up has no door to
+  animate when its window closes; `arrived` survives until the foot is on screen
+  and plays on mount. **A signal nobody could have seen is not a signal.** It is
+  put down by `onAnimationEnd`, never by a second timer holding a copy of
+  `--recede`. ⚠ **An undo clears it** — a door announcing an arrival at the
+  moment one is taken back is the screen contradicting itself.
+- ⚠ **UP, where the composer's refusal bump is DOWN**: same family, opposite
+  reading — down is *the words hit the bottom of the box*, up is *it went
+  somewhere*. ⚠ **It is not a badge and must not become one**; §5 forbids the
+  portal a count and the same reasoning holds here.
+- ⚠⚠ **THE WORDS COME BACK INTO THE COMPOSER, WHICH THE RECORD'S UNDO DOES NOT
+  DO.** Same act, finished on a surface that can finish it: the undo exists *for
+  a typo*, and on the record there is no field to put the words back into. ⚠
+  **Only into an EMPTY composer** — if something is already being written the
+  words stay taken back, and **appending is not the fix**: a capture is one line
+  and two run together are neither.
+- ⚠ **A refusal puts the receipt back.** `undoCapture` bounds itself in SQL, so
+  the clock here and the clock there can disagree; the honest answer to *too
+  late* is the capture still being there. The record says this in the same words.
+- ⚠⚠ **AND THE `relatedTarget` GUARD WAS NOT ENOUGH — reported from a handset
+  within the hour: *tapping the undo only collapses the keyboard; I have to press
+  it again to actually undo.*** The tap blurred the field, iOS took the keyboard
+  down, **the strip travelled from the top of the keyboard to the bottom of the
+  glass**, and the button was no longer under the finger when the tap completed.
+  The second tap worked because by then nothing was moving.
+- ⚠⚠ **THE GUARD COULD NOT REACH IT, AND THE REASON IS WORTH KEEPING.**
+  `relatedTarget` says *where the focus went*, and **on iOS a tap on a button
+  focuses nothing at all** — it simply blurs the field, so `relatedTarget` is
+  `null` and the guard reads it as leaving. **A fix had to stop the blur, not
+  classify it.** `onMouseDown={keepFocus}` on every control in the strip:
+  `preventDefault` on the compatibility `mousedown` every engine synthesises
+  from a tap cancels the focus change and leaves the click alone. ⚠ **The guard
+  stays** — it is still what a keyboard user tabbing to a control needs.
+- ⚠ **Every control in the strip needs it, not just the one that was reported.**
+  Send and attach sit in the same box and move the same way.
+- **Proved by `node_modules/.probe/composerundo.mjs`** — 19 assertions,
+  including that pressing a control **does not move the focus**, that ONE tap
+  undoes, that the capture is really gone from the record, that a full composer
+  keeps its draft, that the receipt goes with the window, and that the door
+  bounces once and leaves no mark.
 
 ⚠⚠ **ADDING SOMEBODY IS A REQUEST THEY ANSWER — 4 September, directed, and it is
 built.** Until this, a mutual track was **two independent one-sided acts**: I add
