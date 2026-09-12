@@ -418,24 +418,31 @@ describe('another user’s captures need all four positive terms', () => {
     )
 
     /*
-      ⚠⚠ **THE IDENTICAL WORDS ARE REFUSED SINCE 12 SEPTEMBER, AND FOR THIS
-      GUARANTEE THAT IS THE STRONGER ANSWER.** Re-adding a line already on the
-      record is a conflict now — see *the same words twice is not two captures*
-      — so the dangerous shape cannot even be attempted. **It closes a hole the
-      unique key never covered**: an UNRESOLVED lapsed copy has a null
-      possibility, so the key does not constrain it and typing the same words
-      used to write a second row claiming `self` — which then converges and
-      notifies the very person it was taken from, §6's suppression rule
-      inverted. Asserted first, then the revive path is entered the way it still
-      can be, with the same possibility and intention and different words.
+      ⚠⚠ **THE IDENTICAL WORDS BRING THE ROW BACK SINCE 12 SEPTEMBER, AND THAT
+      IS THE SHAPE THIS GUARANTEE MOST HAD TO SURVIVE.** Directed: a crossed-off
+      line written again is accepted. **Written the literal way — destroy the
+      old row, insert a new one — this case is the disaster**: a lapsed `copy`
+      reborn as `self` is independently yours, so it converges and notifies the
+      very person you took it from, §6's suppression rule inverted. `reenter`
+      touches the text and two dates and **nothing else**, so provenance cannot
+      move; there is one row throughout and it never stops being a copy.
+
+      ⚠ **It also closes a hole the unique key never covered**: an UNRESOLVED
+      lapsed copy has a null possibility, so the key does not constrain it and
+      typing the same words used to write a **second** row claiming `self`.
     */
     const identical = await dal.addCapture(asViewer(viewerId, `${VIEWER}@example.com`), {
       text: 'a lapsed copy',
       possibilityId: itemId,
       intent: 'see',
     })
-    expect(identical.ok).toBe(false)
+    expect(identical.ok).toBe(true)
+    if (!identical.ok) return
+    /* The row that was already there, not a new one. */
+    expect(identical.value.capture.id).toBe(rows[0].id)
+    expect(identical.value.created).toBe(false)
 
+    /* And the revive path by the unique key still works, with different words. */
     const result = await dal.addCapture(asViewer(viewerId, `${VIEWER}@example.com`), {
       text: 'a lapsed copy, reconsidered',
       possibilityId: itemId,

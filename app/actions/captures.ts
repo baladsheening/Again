@@ -5,6 +5,8 @@ import { z } from 'zod'
 
 import {
   addCapture,
+  getPriorDates,
+  recaptureWords,
   dropCapture,
   listMyPage,
   pageCursor,
@@ -102,9 +104,29 @@ export type CaptureInput = z.infer<typeof captureSchema>
  * one. A resolution may be offered afterwards; ignoring it leaves the capture
  * raw, permanently and legitimately.
  */
-export async function captureAction(
-  input: CaptureInput,
-): Promise<ActionResult<{ id: string; createdAt: string; created: boolean }>> {
+/**
+ * **What the composer gets back**, and it is `ActionResult` with one field
+ * added to the failure.
+ *
+ * ⚠⚠ **`update: true` MARKS THE ONE REFUSAL THAT HAS AN ANSWER — 12
+ * September.** *Already on your record.* is the only message in this app a
+ * control hangs off: the composer draws **Update** beside it, which brings the
+ * line into today. Every other failure is a sentence and nothing else.
+ *
+ * ⚠ **A field, not a parsed message.** The action could have string-matched the
+ * copy it was handed; that makes the wording load-bearing the day somebody
+ * improves it. The data layer's own `already` code is what this reads, added
+ * to `ErrorCode` for the same reason.
+ *
+ * ⚠ **Local to this action rather than widening `ActionResult`.** One caller
+ * needs it and a shared type that grows a field for one caller is a type
+ * everything else has to ignore.
+ */
+type CaptureResult =
+  | { ok: true; value: { id: string; createdAt: string; created: boolean } }
+  | { ok: false; message: string; update?: true }
+
+export async function captureAction(input: CaptureInput): Promise<CaptureResult> {
   const sessionUser = await requireSessionUser()
 
   const parsed = captureSchema.safeParse(input)
@@ -121,7 +143,11 @@ export async function captureAction(
     sourceUrl: parsed.data.sourceUrl,
   })
 
-  if (!result.ok) return { ok: false, message: result.message }
+  if (!result.ok) {
+    return result.error === 'already'
+      ? { ok: false, message: result.message, update: true }
+      : { ok: false, message: result.message }
+  }
 
   return {
     ok: true,
@@ -670,4 +696,85 @@ export async function captureWithImageAction(
   }
 
   return { ok: true, value: { id: result.value.capture.id, created: result.value.created } }
+}
+
+/**
+ * **Bring a line that is already on the record into today** — 12 September,
+ * directed, and it is the yes to the composer's *Update*.
+ *
+ * ⚠ **It takes the WORDS, not an id.** A refused capture puts its words back in
+ * the field, so the composer already holds everything this needs — and nothing
+ * has to be plumbed out through an error to get an id back in. `recaptureWords`
+ * finds the one twin those words can have, which the duplicate rule is what
+ * guarantees.
+ *
+ * ⚠ **Rate limited like a capture**, because it is one: it writes to the same
+ * table on the same gesture, and an unlimited door beside a limited one is the
+ * limited one being decorative.
+ *
+ * ⚠ **The new date comes back as the server's**, for `captureAction`'s own
+ * reason: the record's day stamps are computed from this column, and a line
+ * moved near midnight has to land under the day the next cold open will compute.
+ */
+export async function updateCaptureDateAction(
+  words: string,
+): Promise<ActionResult<{ id: string; capturedAt: string }>> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = z.string().min(1).max(TEXT_MAX).safeParse(words)
+  if (!parsed.success) return { ok: false, message: 'Type something first.' }
+
+  for (const identifier of [sessionUser.id, clientIp(await headers())]) {
+    const limit = await rateLimit('entryCreate', identifier)
+    if (!limit.ok) return { ok: false, message: 'Slow down a moment.' }
+  }
+
+  const result = await recaptureWords(sessionUser, parsed.data)
+  if (!result.ok) return { ok: false, message: result.message }
+
+  return {
+    ok: true,
+    value: { id: result.value.id, capturedAt: result.value.capturedAt.toISOString() },
+  }
+}
+
+/**
+ * **The dates this line was written before today's** — the console's read.
+ *
+ * ⚠ **Behind the tap**, like the convergence sentence and the akin grouping: a
+ * record whose lines have never moved issues nothing, and one line that has
+ * issues one read. `getPriorDates` filters the session against the owner of the
+ * capture, which is what makes an id from a client safe (§3).
+ *
+ * ⚠⚠ **STAMPED HERE, NEVER HANDED OVER AS DATES.** `lib/day.ts` is explicit
+ * that the client never formats one: the label depends on a timezone and the
+ * browser's is not the server's, so a date formatted in the browser can name a
+ * different day from the stamp the record drew two lines above it. The same
+ * `dayStamper` the record's own stamps come from, on the same viewer timezone.
+ */
+export async function priorDatesAction(
+  captureId: string,
+): Promise<ActionResult<string[]>> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = captureIdSchema.safeParse(captureId)
+  if (!parsed.success) return { ok: false, message: 'Unknown line.' }
+
+  const dates = await getPriorDates(sessionUser, parsed.data)
+  const { stamp } = dayStamper(new Date(), (await viewerTimeZone()) ?? undefined)
+
+  /*
+    ⚠⚠ **DEDUPLICATED TO DAYS, AND A PROBE FOUND WHY.** It read back
+    *Today· Today· Today* — three re-entries inside one afternoon, each filing a
+    distinct instant, all of them the same day. **The table is right to hold
+    every timestamp** (it is a record of what happened, and an instant is not a
+    day) **and the console is right to show days**, because that is what the
+    stamp row speaks in. A repeated label says nothing twice, which is the
+    density rule at its plainest.
+
+    ⚠ **A `Set` over the already-sorted labels keeps the order** — newest first,
+    reading backwards away from the present, which is the direction the record
+    itself reads.
+  */
+  return { ok: true, value: [...new Set(dates.map((d) => stamp(d).label))] }
 }

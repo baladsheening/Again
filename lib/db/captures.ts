@@ -19,6 +19,7 @@ import { alias, type PgColumn } from 'drizzle-orm/pg-core'
 import { db } from './client'
 import {
   captureAkin,
+  capturePriorDates,
   captures,
   normalised,
   notificationMatchesLiveCapture,
@@ -174,7 +175,7 @@ const SHARED_CAPTURE_COLUMNS = {
   returnCount: captures.returnCount,
   source: captures.source,
   sourceUserId: captures.sourceUserId,
-  createdAt: captures.createdAt,
+  capturedAt: captures.capturedAt,
   resolvedAt: captures.resolvedAt,
 } as const
 
@@ -283,11 +284,11 @@ function orderFor(view: OwnerView) {
   if (view === 'live') {
     return [
       asc(sql`case when ${captures.verdict} = 'again' then 1 else 0 end`),
-      desc(captures.createdAt),
+      desc(captures.capturedAt),
     ]
   }
 
-  return [desc(captures.createdAt)]
+  return [desc(captures.capturedAt)]
 }
 
 /* -------------------------------------------------------------------------- */
@@ -704,7 +705,7 @@ export type PageLine = {
   text: string
   state: CaptureState
   year: number | null
-  createdAt: Date
+  capturedAt: Date
   /**
    * **A question standing on this line**, or `null` — which is the ordinary
    * case and always will be.
@@ -795,13 +796,13 @@ export type PageLine = {
  *
  * It is opaque to the client, which only ever passes it back.
  */
-export type PageCursor = { createdAt: Date; id: string }
+export type PageCursor = { capturedAt: Date; id: string }
 
 const CURSOR_SEP = '|'
 
 /** The place *after* a line — i.e. where the next, earlier slice starts. */
 export function pageCursor(line: PageLine): string {
-  return `${line.createdAt.toISOString()}${CURSOR_SEP}${line.id}`
+  return `${line.capturedAt.toISOString()}${CURSOR_SEP}${line.id}`
 }
 
 /**
@@ -812,10 +813,10 @@ export function pageCursor(line: PageLine): string {
 export function parsePageCursor(raw: string): PageCursor | null {
   const at = raw.indexOf(CURSOR_SEP)
   if (at < 1) return null
-  const createdAt = new Date(raw.slice(0, at))
+  const capturedAt = new Date(raw.slice(0, at))
   const id = raw.slice(at + 1)
-  if (Number.isNaN(createdAt.getTime()) || id === '') return null
-  return { createdAt, id }
+  if (Number.isNaN(capturedAt.getTime()) || id === '') return null
+  return { capturedAt, id }
 }
 
 /**
@@ -863,7 +864,7 @@ export async function listMyPage(
       status: captures.status,
       verdict: captures.verdict,
       year: possibilities.year,
-      createdAt: captures.createdAt,
+      capturedAt: captures.capturedAt,
       resolved: captures.possibilityId,
       declinedAt: captures.resolutionDeclinedAt,
       offerTitle: suggested.title,
@@ -891,13 +892,13 @@ export async function listMyPage(
         */
         before
           ? or(
-              lt(captures.createdAt, before.createdAt),
-              and(eq(captures.createdAt, before.createdAt), lt(captures.id, before.id)),
+              lt(captures.capturedAt, before.capturedAt),
+              and(eq(captures.capturedAt, before.capturedAt), lt(captures.id, before.id)),
             )
           : undefined,
       ),
     )
-    .orderBy(desc(captures.createdAt), desc(captures.id))
+    .orderBy(desc(captures.capturedAt), desc(captures.id))
     .limit(limit)
 
   return rows.map(({ resolved, declinedAt, offerTitle, offerYear, imagePath, status, verdict, ...line }) => ({
@@ -945,7 +946,7 @@ export async function listMySettled(
       status: captures.status,
       verdict: captures.verdict,
       year: possibilities.year,
-      createdAt: captures.createdAt,
+      capturedAt: captures.capturedAt,
       offer: sql<null>`null`,
       hasImage: sql<boolean>`${captures.imagePath} is not null`,
       /*
@@ -1047,7 +1048,7 @@ export async function searchMyCaptures(
       status: captures.status,
       verdict: captures.verdict,
       year: possibilities.year,
-      createdAt: captures.createdAt,
+      capturedAt: captures.capturedAt,
       offer: sql<null>`null`,
       hasImage: sql<boolean>`${captures.imagePath} is not null`,
       /*
@@ -1076,13 +1077,13 @@ export async function searchMyCaptures(
         sql`${captures.normalisedText} LIKE '%' || ${normalised(sql`${q}`)} || '%'`,
         before
           ? or(
-              lt(captures.createdAt, before.createdAt),
-              and(eq(captures.createdAt, before.createdAt), lt(captures.id, before.id)),
+              lt(captures.capturedAt, before.capturedAt),
+              and(eq(captures.capturedAt, before.capturedAt), lt(captures.id, before.id)),
             )
           : undefined,
       ),
     )
-    .orderBy(desc(captures.createdAt), desc(captures.id))
+    .orderBy(desc(captures.capturedAt), desc(captures.id))
     .limit(limit)
 
   /* ⚠ Step C2: `state` is derived rather than selected — one implementation,
@@ -1334,7 +1335,7 @@ async function writeCapture(
     const [twin] = provenance.source !== 'self'
       ? []
       : await tx
-          .select({ id: captures.id, status: captures.status })
+          .select({ id: captures.id, status: captures.status, capturedAt: captures.capturedAt })
           .from(captures)
           .where(
             and(
@@ -1348,16 +1349,68 @@ async function writeCapture(
 
     if (twin) {
       /*
-        ⚠ **Two messages, because they ask for two different acts.** A live twin
-        means *it is already there and there is nothing to do*; a struck one
-        means *go and put it back*. Design rule 1 — say the state, and the verb
-        is what the reader supplies. See `compose-screen.tsx`, where the words
-        go back into the field either way, so the person can change them instead.
+        ─────────────────────────────────────────────────────────────────────
+         A crossed-off line written again comes BACK — 12 September, directed
+        ─────────────────────────────────────────────────────────────────────
+
+        ⚠⚠ **THIS ANSWERED *Crossed off on your record.* FOR A FEW HOURS AND
+        THE DIRECTION REPLACED IT.** Asked what happens when somebody types
+        `scarface`, crosses it off, and types it again a week later; the answer
+        then was a refusal and three steps to undo it — find the line, open the
+        console, tap the ×. **Directed: it should be accepted, the previous
+        entry deleted, and its date preserved.**
+
+        ⚠⚠ **NOTHING IS DELETED AND THE DIRECTION IS ANSWERED IN FULL.** The row
+        the person already has *is* the line: it comes back, takes the words
+        just typed, moves to today, and files the date it had. Written the
+        literal way — destroy the old row, insert a new one — it would lose the
+        note, the photograph, the link, the possibility it resolved to and,
+        decisively, **its provenance**: a lapsed `copy` reborn as `self`
+        converges and notifies the very person it was taken from, which is the
+        §6 hole this same function closed at the door. See `capture_prior_dates`.
+
+        ⚠ **It is `created: false`, so no undo is offered.** §5.1's ten seconds
+        are for a typo on a *creation*; undo deletes, and deleting this would
+        destroy a line with a history on it. `compose-screen.tsx` reads that
+        flag and leaves the glyph off rather than lighting a control that would
+        refuse — the disagreement that file already records about client clocks.
+
+        ⚠⚠ **NO FAN-OUT, AND A TEST CAUGHT THIS THE FIRST TIME IT WAS WRITTEN
+        WITH ONE.** It looked obvious that a line coming back is a line entering
+        the pool — trigger 1. `acceptance.test.ts` says otherwise in its own
+        name: *announces nothing, because dropping never withdrew the first
+        notification.* **The counterpart was told when the line was first
+        written and crossing it off never un-told them**, so announcing again is
+        the app manufacturing an event out of somebody changing their mind
+        twice. The same act through the × — `restoreCapture` — fires nothing
+        either, and a re-entry that behaved differently from the × would be two
+        answers to one question.
+
+        ⚠ **What that costs, stated: a convergence that arose WHILE the line was
+        struck stays silent.** Somebody else writing the same words at a moment
+        when yours was out of the pool announces to neither of you, and bringing
+        yours back does not go looking. **That gap is `restoreCapture`'s too and
+        is older than this** — the fix belongs there, for both doors at once,
+        and folding it in here would be scope nobody asked for.
+
+        ⚠ **No `scheduleAkin` either.** The words normalise identically to what
+        was already on the row — that is what found it — so the vector cannot
+        have moved, and the pairs are already written. `recaptureWords` says the
+        same at the other door.
       */
-      return err(
-        'conflict',
-        twin.status === 'dropped' ? 'Crossed off on your record.' : 'Already on your record.',
-      )
+      if (twin.status === 'dropped') {
+        return ok({ capture: await reenter(tx, twin, text, true), created: false })
+      }
+
+      /*
+        ⚠ **A LIVE twin is still refused, and that asymmetry is the direction's
+        own.** Re-typing something you crossed off is unambiguous — you want it
+        back. Re-typing something already on your record is as likely to be
+        forgetting you had it, so the app says so and **offers** the update
+        rather than moving somebody's line under them: *the user should be able
+        to update the entry*, in those words. `recaptureWords` is the yes.
+      */
+      return err('already', 'Already on your record.')
     }
 
     /* The existing row, not `excluded` — Postgres resolves an unqualified
@@ -2230,3 +2283,160 @@ export async function getAkin(
  * equal today and a change to one is a decision about the other.
  */
 const AKIN_LIMIT_READ = 8
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Writing a line again — 12 September, directed
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **One line, moved to today, with the date it had filed behind it.**
+ *
+ * ⚠⚠ **THE ONE PLACE A LINE MOVES, AND BOTH DOORS GO THROUGH IT.** A
+ * crossed-off twin written again comes here from `writeCapture`; a live one
+ * comes from `recaptureWords` when somebody takes the offer. **Two callers, one
+ * description of what re-entering means** — written twice they would drift the
+ * first time either was touched, and the drift would be silent: a date filed by
+ * one path and not the other is a history with a hole nobody can see.
+ *
+ * ⚠ **`captured_at` moves and `created_at` does not.** See the column's own
+ * docblock: the undo bounds itself on the row's age, and a line from March
+ * whose clock had been reset would be deletable — with its note, its
+ * photograph, its provenance and this whole history on it.
+ *
+ * ⚠ **The prior date is filed BEFORE the column moves**, and from the value
+ * read in the same transaction. Reading it afterwards would file today's date
+ * as a past one, which is the kind of off-by-one that looks right in every test
+ * that writes two rows a second apart.
+ *
+ * ⚠ **`onConflictDoNothing` on the file, because the key is `(capture, at)`.**
+ * Writing the same line twice inside one clock tick files one date rather than
+ * two — a date is a fact about a day, not an event to count.
+ *
+ * ⚠ **The words are replaced by the ones just typed.** They normalise alike but
+ * may not be spelled alike, and what somebody wrote today is what they meant
+ * today. §6 requires that what somebody typed survives; this is that rule
+ * arriving at the newer sentence rather than the older one.
+ */
+async function reenter(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  twin: { id: string; capturedAt: Date },
+  text: string,
+  revive: boolean,
+): Promise<Capture> {
+  await tx
+    .insert(capturePriorDates)
+    .values({ captureId: twin.id, at: twin.capturedAt })
+    .onConflictDoNothing()
+
+  const [updated] = await tx
+    .update(captures)
+    .set({
+      text,
+      capturedAt: sql`now()`,
+      /*
+        ⚠ **Only when it was struck.** A live line is already active, and
+        writing the lifecycle again would clear a verdict on a go-back-to that
+        nobody resolved.
+      */
+      ...(revive ? { ...lifecycle('active', null), resolvedAt: null } : {}),
+    })
+    .where(eq(captures.id, twin.id))
+    .returning()
+
+  return updated
+}
+
+/**
+ * **Take the offer: bring this line into today** — 12 September, directed.
+ *
+ * *If an item isn't crossed when it's re-entered, the user should be able to
+ * update the entry and bring it into today's date.*
+ *
+ * ⚠⚠ **IT TAKES THE WORDS, NOT AN ID, AND THAT IS WHAT KEEPS THE REFUSAL
+ * SIMPLE.** The composer already holds the text — a refused capture puts its
+ * words back in the field — so nothing has to be plumbed out through the error
+ * to get an id back in. **There can only be one twin to find**, because the
+ * duplicate rule above is what makes two impossible.
+ *
+ * ⚠ **The same normalised lookup, spelled the same way**, including the
+ * `<> ''` guard: `???` normalises to nothing, and without it this would move
+ * whichever punctuation-only line it found first.
+ *
+ * ⚠ **`'active'` only.** A crossed-off twin never reaches here — writing it
+ * again brings it back on its own — and a settled one is history rather than a
+ * line to move. The one case this serves is the one the composer refused.
+ *
+ * ⚠ **No fan-out.** Nothing about the pool changed: the line was active and it
+ * is active. What moved is a date. ⚠ **No `scheduleAkin` either** — the words
+ * normalise identically to what was already there, so the vector cannot have
+ * changed. If a future edit path reaches this, that reasoning goes with it.
+ */
+export async function recaptureWords(
+  sessionUser: SessionUser,
+  words: string,
+): Promise<Result<Capture>> {
+  const text = words.trim()
+  if (text === '') return err('invalid', 'Type something first.')
+  if (text.length > TEXT_MAX) return err('invalid', 'That is too long to capture.')
+
+  return db.transaction(async (tx) => {
+    const [twin] = await tx
+      .select({ id: captures.id, capturedAt: captures.capturedAt })
+      .from(captures)
+      .where(
+        and(
+          eq(captures.userId, sessionUser.id),
+          eq(captures.status, 'active'),
+          sql`${normalised(sql`${text}`)} <> ''`,
+          eq(captures.normalisedText, normalised(sql`${text}`)),
+        ),
+      )
+      .limit(1)
+
+    if (!twin) return err('not_found', 'That is not on your record.')
+
+    return ok(await reenter(tx, twin, text, false))
+  })
+}
+
+/**
+ * **The dates this line was written before today's**, newest first.
+ *
+ * ⚠ **Behind the tap, like everything else the console adds.** The record draws
+ * one date per line and nothing says a line has moved; the earlier ones arrive
+ * when a console opens, for the one line somebody tapped. An ordinary capture
+ * has no rows here at all, so a record that has never been re-entered issues
+ * this read and gets nothing — which draws nothing (§6).
+ *
+ * ⚠⚠ **THE SESSION TERM IS ON THE CAPTURE, NOT ON THIS TABLE**, because
+ * `capture_prior_dates` has no owner column — deliberately, see its docblock.
+ * The join to `captures` is what scopes it, and without it a capture id from a
+ * client would hand back when a stranger wrote something.
+ *
+ * ⚠ **Bounded (§10).** A line somebody has written twenty times is a line whose
+ * history stops being readable; the console draws these as a list a person
+ * reads, not as an audit log.
+ */
+export async function getPriorDates(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<Date[]> {
+  const rows = await db
+    .select({ at: capturePriorDates.at })
+    .from(capturePriorDates)
+    .innerJoin(
+      captures,
+      and(
+        eq(captures.id, capturePriorDates.captureId),
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+      ),
+    )
+    .orderBy(desc(capturePriorDates.at))
+    .limit(PRIOR_DATES_LIMIT)
+
+  return rows.map((r) => r.at)
+}
+
+/** How much history the console will draw. See `getPriorDates`. */
+const PRIOR_DATES_LIMIT = 12

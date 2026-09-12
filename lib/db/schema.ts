@@ -735,6 +735,34 @@ export const captures = pgTable(
       .$onUpdate(() => new Date()),
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
     /**
+     * ─────────────────────────────────────────────────────────────────────────
+     *  When this line was last written — 12 September, directed
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * **Directed:** *if an item isn't crossed when it's re-entered, the user
+     * should be able to update the entry and bring it into today's date, with
+     * the previous entry deleted and the previous date of entry/entries
+     * preserved and presented in the console.*
+     *
+     * **The date the record shows and orders by.** Equal to `created_at` for
+     * every capture written once, and moved to now each time the same words are
+     * written again.
+     *
+     * ⚠⚠ **`created_at` IS NOT MOVED, AND THAT IS NOT TIDINESS — IT IS WHAT
+     * KEEPS THE UNDO HONEST.** §5.1 allows exactly one deletion, a ten-second
+     * undo **on creation**, and `undoCapture` bounds itself in SQL against this
+     * row's age. If re-entering a line from March reset that clock, the undo
+     * would accept it — and undo *deletes*, so it would destroy a line with its
+     * note, its photograph, its provenance and its whole history on it.
+     * `acceptance.test.ts` has asserted since Phase 0 that *a revive is not a
+     * creation*; two columns is how that survives a line that moves.
+     *
+     * ⚠ **So `created_at` means what its name says — when this row began** —
+     * and it is read by exactly one thing, the undo's bound. Everything a person
+     * sees is this column.
+     */
+    capturedAt: timestamp('captured_at', { withTimezone: true }).notNull().defaultNow(),
+    /**
      * **What these words mean, as 1024 numbers** — 12 September, directed.
      *
      * Written by `lib/embed.ts` in an `after()`, never in the capture's
@@ -776,8 +804,17 @@ export const captures = pgTable(
     /* The convergence fan-out drives off this one (§6). */
     index('captures_possibility_intent_state_idx').on(t.possibilityId, t.intent, t.state),
     index('captures_user_state_idx').on(t.userId, t.state),
-    /* Home is reverse-chronological and paginated (§10), not a poster wall. */
-    index('captures_user_created_idx').on(t.userId, t.createdAt),
+    /*
+      Home is reverse-chronological and paginated (§10), not a poster wall.
+
+      ⚠ **On `captured_at` since 12 September, because that is what the record
+      orders by.** The keyset cursor walks the same pair, so an index on
+      `created_at` would leave every page of a long record sorting by hand. ⚠
+      **The old index is DROPPED in the migration rather than left beside this
+      one**: nothing orders by `created_at` any more — only `undoCapture`'s
+      ten-second bound reads it, and a bound on `now()` is not a range scan.
+    */
+    index('captures_user_captured_idx').on(t.userId, t.capturedAt),
     /*
       The possible-match path (Phase 2) joins on this, for the captures that
       resolved to nothing and have only their words in common.
@@ -895,6 +932,55 @@ export const captureAkin = pgTable(
     check('capture_akin_not_self', sql`${t.captureId} <> ${t.akinId}`),
     /* The console's read: everything akin to one line, nearest first. */
     index('capture_akin_capture_idx').on(t.captureId, t.distance),
+  ],
+)
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The dates a line was written before today's — 12 September, directed
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *The previous entry deleted and the previous date of entry/entries preserved
+ * and presented in the console.*
+ *
+ * ⚠⚠ **NOTHING IS DELETED, AND THE DIRECTION IS ANSWERED IN FULL ANYWAY.**
+ * Read literally it means two rows and then one: write the new capture, destroy
+ * the old, keep its date. **That loses more than a date.** A capture carries a
+ * private note, a photograph, a link, a possibility it resolved to, and —
+ * decisively — its **provenance**: a row that came off somebody's page says so,
+ * and §6's suppression rule is built on it. Destroy a lapsed `copy` and write a
+ * fresh `self` row in its place and the app converges on it and **notifies the
+ * very person it was taken from.** That is the hole this same file closed on 12
+ * September at the door.
+ *
+ * ⚠⚠ **SO THERE IS ONE ROW THROUGHOUT AND IT MOVES.** Re-entering a line sets
+ * its `captured_at` to now and files the date it had here. From the record it is
+ * indistinguishable from what was asked for — one line, today's date, the
+ * earlier dates in the console — and nothing about the capture is lost, which
+ * also leaves §5's *nothing is ever deleted* standing rather than carved into.
+ *
+ * ⚠ **Superseded dates ONLY. The current one is on the row.** The two are
+ * disjoint by construction, so there is no question of them agreeing: the
+ * console shows `captures.captured_at` and then these, newest first. An
+ * ordinary capture — written once and never again — has no row here at all.
+ *
+ * ⚠ **`(capture_id, at)` is the key**, so writing the same line twice inside
+ * one clock tick files one date rather than two. A date is a fact about a day,
+ * not an event to count.
+ */
+export const capturePriorDates = pgTable(
+  'capture_prior_dates',
+  {
+    captureId: uuid('capture_id')
+      .notNull()
+      .references(() => captures.id, { onDelete: 'cascade' }),
+    /** The `captured_at` this line used to have, before it was written again. */
+    at: timestamp('at', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.captureId, t.at] }),
+    /* The console's read: this line's earlier dates, newest first. */
+    index('capture_prior_dates_capture_idx').on(t.captureId, t.at),
   ],
 )
 

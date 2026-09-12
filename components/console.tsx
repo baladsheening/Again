@@ -96,6 +96,7 @@ export function Console({
   line,
   convergence,
   akin,
+  priorDates,
   asking,
   crossedOff,
   onCrossOff,
@@ -138,6 +139,19 @@ export function Console({
    * words handed back, and quoting them is the whole content.
    */
   akin: { id: string; text: string; state: EntryState }[]
+  /**
+   * **The days this line was written before today's**, newest first, already
+   * stamped — 12 September, directed.
+   *
+   * ⚠ **Strings, not dates.** `lib/day.ts`'s rule: the client never formats a
+   * date, because the grouping depends on a timezone and the browser's is not
+   * the server's. These arrive through `priorDatesAction` in the record's own
+   * stamp voice.
+   *
+   * ⚠ **Empty is the ordinary case and draws nothing.** A capture written once
+   * and never again has no history, so the stamp row is exactly what it was.
+   */
+  priorDates: string[]
   /** The *Again?* question is standing on this line. */
   asking: boolean
   crossedOff: boolean
@@ -501,6 +515,52 @@ export function Console({
           <div className="mt-3 flex items-baseline gap-4">
             <p className="stamp text-muted">
               {line.dayLabel}
+              {/*
+                ─────────────────────────────────────────────────────────────
+                 And the days it was written before — 12 September, directed
+                ─────────────────────────────────────────────────────────────
+
+                *The previous date of entry/entries preserved and presented in
+                the console.*
+
+                ⚠⚠ **IN THE STAMP ROW, BECAUSE IT IS THE SAME FACT.** That row
+                already answers *what is known about this capture* and its first
+                word is the day this line was written; these are the days it was
+                written before. **Density rule 2: reuse a row before adding a
+                block** — an ordinary capture, written once and never again,
+                gains no copy at all, which is the same test the lock's stamp
+                passed on 11 September.
+
+                ⚠ **A middle dot between them and no label.** *Previously:* or
+                *Also written on* would be a heading over a list that reads as a
+                list. The row's grammar is already a run of facts separated by
+                space; this is more of them.
+
+                ⚠ **Newest first**, so the day before today's is next to today's
+                and the history reads backwards away from the present — which is
+                the direction the record itself reads.
+
+                ⚠ **Stamped on the server, like every other date in this app.**
+                `lib/day.ts` says why the client never formats one: the grouping
+                depends on a timezone and the browser's is not the server's.
+              */}
+              {/*
+                ⚠ **Today's own label is filtered out, and a probe is why.** A
+                line written again on the day it was first written files a
+                genuine prior instant whose *day* is the one already on the row
+                — so the stamp read *Today · Today*, which is the first word
+                said twice. `priorDatesAction` reduces the instants to distinct
+                days; this drops the one the row is already showing. **Two
+                halves of one rule: the history is a list of days, and a day
+                already on screen is not one of them.**
+              */}
+              {priorDates
+                .filter((d) => d !== line.dayLabel)
+                .map((d) => (
+                  <span key={d} className="ms-2">
+                    · {d}
+                  </span>
+                ))}
               {line.year !== null && <span className="ms-2">{line.year}</span>}
               {onLock !== null && !line.shared && <span className="ms-2">Locked</span>}
             </p>

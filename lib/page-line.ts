@@ -100,7 +100,7 @@ type Stampable = {
   text: string
   state: EntryState
   year: number | null
-  createdAt: Date
+  capturedAt: Date
   offer?: { title: string; year: number | null } | null
   hasImage?: boolean
   sourceUrl?: string | null
@@ -121,7 +121,7 @@ export function toPageLines(
   stamp: (at: Date) => Day,
 ): PageLineView[] {
   return rows.map((row) => {
-    const day = stamp(row.createdAt)
+    const day = stamp(row.capturedAt)
     return {
       id: row.id,
       text: row.text,

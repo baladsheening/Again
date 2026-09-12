@@ -8,7 +8,7 @@ import { Foot } from './foot'
 import { AttachGlyph, SendGlyph, UndoGlyph, WriteGlyph } from './glyphs'
 import { useKeyboardHem } from './keyboard-hem'
 import { touchQuery, useMatches } from './pointer'
-import { captureAction, undoCaptureAction } from '@/app/actions/captures'
+import { captureAction, updateCaptureDateAction, undoCaptureAction } from '@/app/actions/captures'
 import type { PortalWaiting } from '@/lib/db'
 
 /**
@@ -128,6 +128,15 @@ export function ComposeScreen({
   const sentLine = useRef<HTMLParagraphElement | null>(null)
   const sentUndo = useRef<HTMLSpanElement | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
+  /**
+   * **The one refusal that has an answer** — 12 September.
+   *
+   * ⚠ **Its own flag rather than a second message state.** The sentence and
+   * whether a control hangs off it are two facts: every other failure sets
+   * `failed` alone, and folding them into one string would put the verb inside
+   * the copy where no handler can reach it.
+   */
+  const [update, setUpdate] = useState(false)
   /**
    * **Does what is in the field fit the two lines it has?**
    *
@@ -406,6 +415,40 @@ export function ComposeScreen({
    * idempotent; it does not protect against two submissions in one gesture, so
    * `sending` guards that instead.
    */
+  /**
+   * **Take the offer: bring the line already on the record into today** — 12
+   * September, directed.
+   *
+   * ⚠ **It sends the WORDS, which are still in the field.** A refused capture
+   * puts them back — that is the failure contract — so the composer already
+   * holds what identifies the line, and `recaptureWords` finds the one twin they
+   * can have. Nothing had to be plumbed out through an error to get an id back.
+   *
+   * ⚠ **The field is cleared only on success**, and the message goes with it.
+   * A failed update leaves the words where they are, which is the same rule as
+   * a failed capture: what somebody meant to save stays somewhere they can send
+   * it again.
+   *
+   * ⚠ **No receipt and no undo.** Nothing landed — a line moved, and the record
+   * is where that is visible. The screen says what it did by the offer going
+   * away, which is the smallest true signal available.
+   */
+  async function updateDate() {
+    const words = draft.trim()
+    if (!words) return
+    setUpdate(false)
+
+    const result = await updateCaptureDateAction(words)
+    if (!result.ok) {
+      setFailed(result.message)
+      return
+    }
+
+    setDraft('')
+    setFailed(null)
+    field.current?.blur()
+  }
+
   const sending = useRef(false)
   async function commit() {
     const text = draft.trim()
@@ -424,6 +467,8 @@ export function ComposeScreen({
     setDraft('')
     setLanded(text)
     setFailed(null)
+    /* The offer goes with the message it hung off. */
+    setUpdate(false)
     /*
       ⚠⚠ **A COMMIT ENDS THE WRITING MODE, AND THIS SCREEN SHOULD HAVE INHERITED
       THAT ON DAY ONE.** Directed 27 August for the record's own strip — *once a
@@ -465,6 +510,7 @@ export function ComposeScreen({
       setLanded(null)
       setLandedId(null)
       setFailed(result.message)
+      setUpdate(result.update === true)
       setDraft(text)
       return
     }
@@ -477,7 +523,22 @@ export function ComposeScreen({
       no id is a control that cannot act.
     */
     if (undoTimer.current) clearTimeout(undoTimer.current)
-    setLandedId(result.value.id)
+    /*
+      ⚠⚠ **NO UNDO ON A LINE THAT CAME BACK — 12 September.** A crossed-off line
+      written again is accepted, and `created` is `false` on it: the row is the
+      one that was already there, moved to today with its earlier date filed
+      behind it. **Undo DELETES**, so lighting the glyph would offer to destroy
+      a line with a note, a photograph, provenance and a history on it — and
+      `undoCapture` bounds itself on `created_at`, so it would refuse anyway.
+      **A control that is lit and refuses** is the exact failure this file
+      already records about client clocks disagreeing with the one that decides.
+
+      ⚠ **The landing itself is unchanged.** The words still go solid, blink and
+      leave, and the door still bounces — what is missing is a glyph for an act
+      that does not exist. The `+` goes with it, because it exists only to skip
+      the undo's wait.
+    */
+    if (result.value.created) setLandedId(result.value.id)
     /*
       ⚠⚠ **THE RECEIPT GOES WITH THE WINDOW — directed 5 September, and it
       REVERSES what was written here this morning.** That note read: *the receipt
@@ -860,6 +921,52 @@ export function ComposeScreen({
             {failed !== null && (
               <p className="text-decline px-[calc(var(--line-hem)*2.5)] text-[length:var(--text-line)] leading-[var(--leading-line)]">
                 {failed}
+                {/*
+                  ─────────────────────────────────────────────────────────────
+                   Update — 12 September, directed
+                  ─────────────────────────────────────────────────────────────
+
+                  *If an item isn't crossed when it's re-entered, the user
+                  should be able to update the entry and bring it into today's
+                  date.*
+
+                  ⚠⚠ **A WORD IN THE RUN OF THE SENTENCE, NOT A SECOND CONTROL
+                  IN THE STRIP.** `ask-them.tsx` settled this shape: *Accept*
+                  and *Decline* are the precedent, and a glyph row is the wrong
+                  home for a verb that acts on the sentence beside it. **The
+                  message is the state and this is the verb** — design rule 1,
+                  said as two things.
+
+                  ⚠ **Only on the one refusal that has an answer.** `update` is
+                  a field on the action's result, set from the data layer's own
+                  `already` code — never a match on the copy, which would make
+                  the wording load-bearing the day somebody improves it. Every
+                  other failure is a sentence and nothing else.
+
+                  ⚠⚠ **`keepFocus` ON MOUSEDOWN, LIKE EVERY OTHER CONTROL IN
+                  THIS STRIP.** Reported 5 September of the undo: *tapping it
+                  only collapses the keyboard; I have to press it again.* On iOS
+                  a tap on a button focuses nothing, so the field blurs, the
+                  keyboard leaves, **the strip travels to the bottom of the
+                  glass, and the finger is no longer over the control.** The
+                  guard on `relatedTarget` cannot reach that — it classifies a
+                  blur and the fix has to prevent one.
+
+                  ⚠ **The words stay in the field while it runs**, because they
+                  are what identifies the line: `updateCaptureDateAction` takes
+                  the WORDS, not an id, so nothing had to be plumbed out through
+                  an error to get an id back in. They are cleared when it lands.
+                */}
+                {update && (
+                  <button
+                    type="button"
+                    onMouseDown={keepFocus}
+                    onClick={updateDate}
+                    className="text-chrome ms-2 underline underline-offset-2"
+                  >
+                    Update
+                  </button>
+                )}
               </p>
             )}
           </div>

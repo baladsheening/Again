@@ -104,6 +104,8 @@ export {
   setCaptureVisibility,
   undoCapture,
   getAkin,
+  recaptureWords,
+  getPriorDates,
   toCaptureCard,
   pageCursor,
   parsePageCursor,

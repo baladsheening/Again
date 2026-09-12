@@ -93,7 +93,7 @@ type Row = {
   status: CaptureStatus
   verdict: CaptureVerdict | null
   year: number | null
-  createdAt: Date
+  capturedAt: Date
   hasImage: boolean
   sourceUrl: string | null
   notifiedAt: Date
@@ -136,7 +136,7 @@ export async function listMyPortal(
       status: captures.status,
       verdict: captures.verdict,
       year: possibilities.year,
-      createdAt: captures.createdAt,
+      capturedAt: captures.capturedAt,
       hasImage: sql<boolean>`${captures.imagePath} is not null`,
       sourceUrl: captures.sourceUrl,
       notifiedAt: notifications.createdAt,
@@ -186,7 +186,7 @@ function group(rows: Row[]): PortalLine[] {
           text: row.text,
           state: legacyState(row.status, row.verdict),
           year: row.year,
-          createdAt: row.createdAt,
+          capturedAt: row.capturedAt,
           /*
             ⚠ **No offer on a portal line, and it is a `null` written down.** A
             standing question is *this capture may be that possibility*; a

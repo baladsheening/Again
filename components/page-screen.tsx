@@ -13,6 +13,7 @@ import {
   earlierAction,
   editCaptureAction,
   offerAction,
+  priorDatesAction,
   setCaptureSharedAction,
   settleCaptureAction,
   undoCaptureAction,
@@ -511,6 +512,14 @@ export function PageScreen({
     id: string
     lines: { id: string; text: string; state: EntryState }[]
   } | null>(null)
+  /**
+   * **The days the open line was written before today's** — 12 September.
+   *
+   * ⚠ **Its own state, like the two reads beside it**, and checked against the
+   * line it was fetched for: three taps in quick succession are three reads in
+   * flight and they can return in any order.
+   */
+  const [priorDates, setPriorDates] = useState<{ id: string; days: string[] } | null>(null)
   /**
    * ─────────────────────────────────────────────────────────────────────────
    *  The portal — Phase 2 step 3
@@ -1852,6 +1861,7 @@ export function PageScreen({
     setAsking(null)
     askWhoElse(line)
     askAkin(line)
+    askPriorDates(line)
     /* The keyboard follows liveness: gone the moment a saved line is opened. */
     input.current?.blur()
   }
@@ -1908,6 +1918,32 @@ export function PageScreen({
     void akinAction(line.id).then((result) => {
       if (!result.ok || result.value.length === 0) return
       setAkin({ id: line.id, lines: result.value })
+    })
+  }
+
+  /**
+   * **The days this line was written before today's** — 12 September, directed.
+   *
+   * ⚠⚠ **UNGATED, AND IT IS THE ONE READ HERE THAT HAS NO BIT IN FRONT OF
+   * IT.** The mark and the asterisk each ride the record's own query, so the
+   * console knows before it asks whether there is anything to fetch. **A line
+   * that has moved carries no such bit** — the record draws one date per line
+   * and says nothing about whether it is the first — so this asks every time a
+   * console opens.
+   *
+   * ⚠ **What it costs, and why it was judged affordable:** one indexed lookup
+   * on a tap, returning nothing for the overwhelming majority of lines. The
+   * alternative is a fifth `exists` on every line of every page read to save a
+   * query on the one line somebody touched, which is the wrong side of the
+   * trade the mark's own docblock makes. **If a bit is ever wanted, it belongs
+   * beside `akin` and not here.**
+   */
+  function askPriorDates(line: { id: string }) {
+    setPriorDates(null)
+    if (line.id === '') return
+    void priorDatesAction(line.id).then((result) => {
+      if (!result.ok || result.value.length === 0) return
+      setPriorDates({ id: line.id, days: result.value })
     })
   }
 
@@ -2794,6 +2830,12 @@ export function PageScreen({
                   so a console over it has nothing to show and says nothing (§6).
                 */
                 akin={[]}
+                /*
+                  ⚠ **Empty here too.** A portal line is a capture of yours seen
+                  from the arrival surface; its history belongs to the record,
+                  where the console that draws it lives.
+                */
+                priorDates={[]}
                 asking={asking === line.id}
                 /*
                   ⚠ **Read off the line the portal holds, not off the record.**
@@ -3875,6 +3917,8 @@ export function PageScreen({
                       nothing — see `askAkin`.
                     */
                     akin={akin?.id === line.id ? akin.lines : []}
+                    /* Checked against its own line, like the two reads above. */
+                    priorDates={priorDates?.id === line.id ? priorDates.days : []}
                     asking={asking === line.id}
                     crossedOff={crossedOff}
                     /*

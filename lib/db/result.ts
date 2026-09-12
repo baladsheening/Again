@@ -15,6 +15,18 @@ export type ErrorCode =
   | 'conflict'
   | 'invalid'
   | 'rate_limited'
+  /**
+   * **This is already on your record** — 12 September, and it is deliberately
+   * not `conflict`.
+   *
+   * ⚠ **A code rather than a message, because a CONTROL hangs off it.** The
+   * composer offers *Update* on this one refusal and on no other, and the
+   * alternative was the action string-matching the copy it was handed —
+   * brittle, and it would make the wording load-bearing the day somebody
+   * improves it. `conflict` is what every other collision in the layer returns,
+   * so it cannot carry a meaning only one of them has.
+   */
+  | 'already'
 
 export function ok<T>(value: T): Result<T, never> {
   return { ok: true, value }

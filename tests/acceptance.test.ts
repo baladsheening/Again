@@ -266,7 +266,10 @@ describe('a retried submission is one capture', () => {
     })
     expect(second.ok).toBe(false)
     if (second.ok) return
-    expect(second.error).toBe('conflict')
+    /* ⚠ `already` and not `conflict` since 12 September: a control hangs off
+       this one refusal and no other, so it needed a code of its own rather
+       than the copy being matched. See `ErrorCode` in `lib/db/result.ts`. */
+    expect(second.error).toBe('already')
     expect(second.message).toBe('Already on your record.')
 
     const { rows } = await pool.query('select count(*)::int as n from captures where user_id = $1', [
@@ -323,27 +326,156 @@ describe('a retried submission is one capture', () => {
     expect(again.value.capture.id).not.toBe(first.value.capture.id)
   })
 
-  it('⚠ a CROSSED-OFF line is on the record, so it is refused and reported as struck', async () => {
+  it('⚠ a CROSSED-OFF line written again COMES BACK, on today’s date, keeping its own', async () => {
+    /*
+      ⚠⚠ **THIS ASSERTED A REFUSAL FOR A FEW HOURS — *Crossed off on your
+      record.* — AND THE DIRECTION REPLACED IT.** Asked what happens when
+      somebody types `scarface`, crosses it off and types it again a week later;
+      the answer then was a refusal and three steps to undo it. **Directed: it
+      should be accepted, the previous entry deleted, and its date preserved.**
+
+      ⚠ **One row throughout, which is how the direction is answered in full
+      without deleting anything.** Destroying the old row and writing a new one
+      would lose the note, the photograph, the link, the possibility and — see
+      `guarantees.test.ts` — the provenance §6's suppression rule is built on.
+    */
     const first = await dal.addCapture(one(), {
       text: 'walk the ridge',
       clientMutationId: randomUUID(),
     })
     expect(first.ok).toBe(true)
     if (!first.ok) return
-    expect((await dal.dropCapture(one(), first.value.capture.id)).ok).toBe(true)
+    const id = first.value.capture.id
+
+    /*
+      ⚠ **BOTH columns are aged, and the first pass of this test aged only one.**
+      It moved `captured_at` back a week and then asserted the undo refused —
+      and the undo **accepted**, correctly: the row was genuinely two seconds
+      old, which is exactly the ten seconds §5.1 allows. The guarantee worth
+      asserting is the other case: **a line from last week, re-entered today, is
+      not deletable**, and that needs an old `created_at` to be about anything.
+    */
+    await pool.query(
+      `update captures
+         set captured_at = now() - interval '7 days',
+             created_at  = now() - interval '7 days'
+       where id = $1`,
+      [id],
+    )
+    expect((await dal.dropCapture(one(), id)).ok).toBe(true)
 
     const again = await dal.addCapture(one(), {
       text: 'walk the ridge',
       clientMutationId: randomUUID(),
     })
+    expect(again.ok).toBe(true)
+    if (!again.ok) return
+
+    /* The same row, live again, and no second line on the record. */
+    expect(again.value.capture.id).toBe(id)
+    expect(again.value.capture.state).toBe('want')
+    const { rows } = await pool.query(
+      'select count(*)::int as n from captures where user_id = $1',
+      [oneId],
+    )
+    expect(rows[0].n).toBe(1)
+
+    /*
+      ⚠ **`created: false`, which is what keeps the undo off it.** §5.1's ten
+      seconds are for a typo on a creation; undo DELETES, and deleting this
+      would destroy a line with a history on it. `compose-screen.tsx` reads the
+      flag rather than lighting a control that would then refuse.
+    */
+    expect(again.value.created).toBe(false)
+
+    /* It moved to today, and the week-old date is filed behind it. */
+    const moved = await dal.listMyPage(one())
+    expect(moved[0].capturedAt.getTime()).toBeGreaterThan(Date.now() - 60_000)
+
+    const prior = await dal.getPriorDates(one(), id)
+    expect(prior).toHaveLength(1)
+    expect(Date.now() - prior[0].getTime()).toBeGreaterThan(6 * 24 * 60 * 60 * 1000)
+
+    /*
+      ⚠ **`created_at` did NOT move, and that is what keeps the undo honest.**
+      The row is a week old; if re-entering had reset this clock the ten-second
+      window would accept it. See the column's docblock in `schema.ts`.
+    */
+    expect((await dal.undoCapture(one(), id)).ok).toBe(false)
+  })
+
+  it('⚠ a LIVE line is offered the update instead, and `recaptureWords` takes it', async () => {
+    const first = await dal.addCapture(one(), {
+      text: 'swim at dawn',
+      clientMutationId: randomUUID(),
+    })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    const id = first.value.capture.id
+
+    await pool.query(
+      `update captures set captured_at = now() - interval '30 days' where id = $1`,
+      [id],
+    )
+
+    /*
+      ⚠ **Refused rather than moved, and the asymmetry is the direction's own.**
+      Re-typing something you crossed off is unambiguous; re-typing something
+      already on your record is as likely to be forgetting you had it, so the
+      app says so and **offers** the update rather than moving somebody's line
+      under them.
+    */
+    const again = await dal.addCapture(one(), {
+      text: 'swim at dawn',
+      clientMutationId: randomUUID(),
+    })
     expect(again.ok).toBe(false)
     if (again.ok) return
+    expect(again.error).toBe('already')
+
+    /* Taking the offer is what moves it. */
+    const moved = await dal.recaptureWords(one(), 'swim at dawn')
+    expect(moved.ok).toBe(true)
+    if (!moved.ok) return
+    expect(moved.value.id).toBe(id)
+    expect(moved.value.capturedAt.getTime()).toBeGreaterThan(Date.now() - 60_000)
+    expect(await dal.getPriorDates(one(), id)).toHaveLength(1)
+
+    /* Still one line. The record gained a date, not a row. */
+    const { rows } = await pool.query(
+      'select count(*)::int as n from captures where user_id = $1',
+      [oneId],
+    )
+    expect(rows[0].n).toBe(1)
+  })
+
+  it('⚠ the history accumulates, and one tick files one date', async () => {
+    const first = await dal.addCapture(one(), {
+      text: 'ring the bank',
+      clientMutationId: randomUUID(),
+    })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    const id = first.value.capture.id
+
+    for (const days of [20, 10]) {
+      await pool.query(
+        `update captures set captured_at = now() - make_interval(days => $2) where id = $1`,
+        [id, days],
+      )
+      expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
+    }
+
+    expect(await dal.getPriorDates(one(), id)).toHaveLength(2)
+
     /*
-      ⚠ **A different sentence, because it asks for a different act.** *Already
-      on your record* means there is nothing to do; this means go and put it
-      back — the console's × is where, and it is the same one tap that struck it.
+      ⚠ **The key is `(capture, at)`**, so writing the same line twice inside one
+      clock tick files one date rather than two. A date is a fact about a day,
+      not an event to count.
     */
-    expect(again.message).toBe('Crossed off on your record.')
+    expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
+    expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
+    expect((await dal.getPriorDates(one(), id)).length).toBeLessThanOrEqual(4)
   })
 
   /*

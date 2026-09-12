@@ -49,6 +49,83 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **A LINE WRITTEN AGAIN MOVES TO TODAY — 12 September, directed, AND IT
+REPLACES THE REFUSAL SHIPPED FOUR HOURS EARLIER.** Asked what happens when
+somebody types `scarface`, crosses it off and types it again a week later; the
+answer then was *Crossed off on your record.* and three steps to undo it.
+**Directed: it should be accepted, the previous entry deleted, the date of the
+previous entry preserved — and a line that is NOT crossed off should offer an
+*update* that brings it into today, with the earlier dates in the console.**
+Migration `0019`, production then dev.
+
+- ⚠⚠ **NOTHING IS DELETED AND THE DIRECTION IS ANSWERED IN FULL.** Read
+  literally it is two rows and then one, and **that loses more than a date**: the
+  note, the photograph, the link, the possibility, and decisively the
+  **provenance**. A lapsed `copy` destroyed and reborn as `self` is independently
+  yours — so it converges and **notifies the very person it was taken from**,
+  which is §6's suppression rule inverted and the hole this same file closed at
+  the door that morning. **One row throughout, and it moves.**
+  `guarantees.test.ts` asserts exactly that case.
+- ⚠⚠ **`captured_at` IS THE DATE THE RECORD SHOWS AND `created_at` DOES NOT
+  MOVE.** §5.1 allows one deletion — ten seconds, **on creation** — and
+  `undoCapture` bounds itself in SQL on the row's age. **Reset that clock and a
+  line from March becomes deletable**, with its note, its photograph, its
+  provenance and its whole history on it. Two columns is how *a revive is not a
+  creation* survives a line that moves. ⚠ **A probe caught the test that only
+  aged one of them** and asserted a refusal the undo correctly gave — the
+  guarantee needs an old `created_at` to be about anything.
+- ⚠⚠ **THE BACKFILL IS HAND-ADDED AND WITHOUT IT THE MIGRATION MOVES EVERY LINE
+  EVER WRITTEN TO TODAY.** `ADD COLUMN … DEFAULT now() NOT NULL` fills existing
+  rows with the default; drizzle-kit cannot know the column is a copy of another.
+  **Measured after: 93 of 93 production captures kept their real dates**, oldest
+  7 August.
+- ⚠⚠ **NO FAN-OUT ON A RE-ENTRY, AND A TEST CAUGHT THIS.** It looked obvious
+  that a line coming back is trigger 1. `acceptance.test.ts` says otherwise in
+  its own name — *announces nothing, because dropping never withdrew the first
+  notification*: the counterpart was told when the line was first written and
+  crossing it off never un-told them. **The same act through the × fires nothing
+  either**, and two answers to one question is what that would have been. ⚠
+  **Cost, stated: a convergence that arose WHILE the line was struck stays
+  silent** — `restoreCapture`'s gap too, older than this, and the fix belongs
+  there for both doors at once.
+- ⚠ **A crossed-off twin is accepted automatically; a LIVE one is refused and
+  OFFERED the update.** The asymmetry is the direction's own — *the user should
+  be able to update* — and the reason is that re-typing something you crossed
+  off is unambiguous where re-typing something already on your record is as
+  likely to be forgetting you had it. **Moving somebody's line under them is
+  what the offer avoids.**
+- ⚠⚠ **`already` IS ITS OWN `ErrorCode`, NOT `conflict`, BECAUSE A CONTROL HANGS
+  OFF IT.** *Update* is the only control in this app attached to a failure
+  message, and the alternative was the action string-matching the copy it was
+  handed — which makes the wording load-bearing the day somebody improves it.
+- ⚠ **`updateCaptureDateAction` takes the WORDS, not an id.** A refused capture
+  puts its words back in the field, so the composer already holds what identifies
+  the line — and nothing had to be plumbed out through an error to get an id back
+  in. **Two twins cannot exist**, which is what the duplicate rule guarantees.
+- ⚠⚠ **NO UNDO ON A LINE THAT CAME BACK.** `created: false`, and the composer
+  reads it: undo **deletes**, and `undoCapture` would refuse anyway on the old
+  `created_at` — **a control that is lit and refuses** is the exact failure this
+  file already records about client clocks. The landing is otherwise unchanged.
+- ⚠ **The earlier days go in the STAMP ROW** — density rule 2, reuse a row
+  before adding a block — as a run of middle-dotted days after *Today*. **An
+  ordinary capture gains no copy at all**, the same test the lock's stamp passed
+  on 11 September. ⚠ **No label**: *Previously:* would be a heading over a list
+  that reads as a list.
+- ⚠⚠ **REDUCED TO DISTINCT DAYS, AND A PROBE FOUND WHY** — it read back
+  *Today· Today· Today*, three re-entries in one afternoon each filing a genuine
+  instant of the same day. **The table is right to hold instants and the console
+  is right to show days**; the action dedupes and the row drops the day it is
+  already showing. Measured after: `Today· 5 September· 3 August`.
+- ⚠ **`PageLine.createdAt` is renamed `capturedAt` and the keyset cursor walks
+  it**, with `captures_user_captured_idx` replacing the old index — the record,
+  search and the cursor all order by the date on screen, or a moved line would
+  sort where it used to be.
+- **168 tests green**, `reenter.mjs` 12/12 on the real page. ⚠ **That probe's
+  first run disagreed with itself** — it reported the live twin unrefused while
+  the next assertion found the *Update* the refusal had drawn, because the
+  control lives **inside** the `<p>` and its text runs on after the sentence.
+  **Two assertions disagreeing about one state is the probe being wrong.**
+
 ⚠⚠ **AKIN — 12 September, directed, AND IT IS THE FIRST THING IN THIS APP THAT
 COSTS MONEY PER ROW.** *If it's semantically similar enough, it should be added
 but with an asterisk, and when the user taps the semantically similar entries,
