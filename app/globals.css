@@ -3026,86 +3026,24 @@
    * `--color-text` and not a `#fff`, so it re-grounds on the desk's charcoal
    * with everything else.
    */
-  /**
-   * ⚠ **FOUR LOBES, NOT ONE CIRCLE — 1 September, directed: *less regular, and
-   * diffuse but focused in the area of the logo*.** It shipped an hour earlier
-   * as a single `closest-side circle`, which is a light with no shape: a
-   * perfectly even falloff reads as a lens flare or a rendered vignette rather
-   * than as something behind the bar.
-   *
-   * ⚠ **The irregularity is the SUM of overlapping ellipses, not noise.** Four
-   * gradients at off-centre positions with different aspect ratios, layered in
-   * one `background`; where they overlap they compound toward the peak and where
-   * only one reaches, the edge is that one's alone — so the outline is uneven at
-   * every radius without a texture, a filter, an SVG or a second element. **The
-   * focus is the same mechanism**: the lobes are clustered on the mark, so the
-   * compounding happens there and the reach falls off unevenly around it.
-   *
-   * ⚠ **Every position and radius is a PERCENTAGE of the box**, and the box is
-   * derived from `--mark-column` — so the whole shape scales with the mark and
-   * with the desk's root ramp, and none of the four is a pixel that has to be
-   * re-picked. That is the same rule the single circle held; there are simply
-   * four of it now.
-   *
-   * ⚠ **The box is wider than it is tall**, because the thing it sits behind is
-   * a word. It was square when the light was a circle.
-   *
-   * ⚠ **The five alphas COMPOUND and the peak is not any one of them.** Alpha
-   * compositing multiplies what is left: 6%, 4%, 2.2%, 3.6% and 5% leave
-   * `1 − 0.94 × 0.96 × 0.978 × 0.964 × 0.95 = 0.192`, so the centre peaks near
-   * 19% of the ink where the old single lobe peaked at 7%. **Do not read one of
-   * these as the brightness** — raising one raises the core more than it raises
-   * its own edge, and the mask takes some of it back over the letters.
-   *
-   * ⚠ **The footprint was tightened the same day** — reach 1.5 → 1.15 of the
-   * band, the box 2.4 → 2.1 by 2 → 1.9 of it. At the first size the light spread
-   * most of the way across a handset, which is diffuse without being *focused in
-   * the area of the logo*, and the two halves of that instruction pull opposite
-   * ways: **the falloff is what makes it diffuse and the footprint is what makes
-   * it focused.** Measured behind the mark: 19.9 sRGB against 3.7 at the bar's
-   * far right.
-   */
-  --mark-glow-reach: calc(var(--mark-column) * 1.15);
-  --mark-glow-width: calc(var(--mark-glow-reach) * 2.1);
-  /**
-   * ⚠ **How far the light reaches up, and how far down — two terms, because it
-   * is not symmetric.** The lift is the exact distance from the bar's bottom
-   * edge to the status bar, so the light stops there by construction; see
-   * `mark-glow` for why that needs no `env()`. The drop is a fraction of the
-   * mark's band, like every other reach here.
-   */
-  /**
-   * ⚠ **The bleed above the status bar's lower edge — 1 September, directed
-   * *smudge up a bit*, twice.** Everything else had run out: the mask already
-   * zeroed 5px under that edge and the box ended on it, so **no lobe could reach
-   * higher whatever it was told to do** — the ceiling was the box, and raising a
-   * lobe into it only had the mask dim the lobe.
-   *
-   * ⚠ **Two hems, and it is the one number here chosen rather than derived.**
-   * There is nothing to derive it from: it is how far into a status bar a light
-   * may go before it is reading over the clock, which is a judgement. It is
-   * written in `--line-hem` so it at least scales with the type.
-   *
-   * ⚠ **What lands up there is the tail of a falloff, not the light.** The mask
-   * fades to nothing by 41px and is not solid until 55, so the 10px above the
-   * status bar's edge carry the faintest part of the smudge. **If it ever reads
-   * as covering the clock, this token is the thing to take to zero** — and at
-   * zero the geometry is exactly what it was before this line existed.
-   */
-  --mark-glow-bleed: calc(var(--line-hem) * 2);
-  --mark-glow-lift: calc(
-    var(--bar-air) + var(--bar-row) + var(--mark-glow-bleed)
-  );
-  --mark-glow-drop: var(--mark-column);
-  --mark-glow-a: color-mix(in srgb, var(--color-text) 5.8%, transparent);
-  --mark-glow-b: color-mix(in srgb, var(--color-text) 3.6%, transparent);
-  --mark-glow-c: color-mix(in srgb, var(--color-text) 3%, transparent);
-  --mark-glow-d: color-mix(in srgb, var(--color-text) 2.4%, transparent);
-  --mark-glow-e: color-mix(in srgb, var(--color-text) 3.8%, transparent);
-  --mark-glow-f: color-mix(in srgb, var(--color-text) 4.4%, transparent);
-  --mark-glow-g: color-mix(in srgb, var(--color-text) 2%, transparent);
-  --mark-glow-h: color-mix(in srgb, var(--color-text) 2.8%, transparent);
-  --mark-glow-i: color-mix(in srgb, var(--color-text) 2.4%, transparent);
+  /*
+    ⚠⚠ **THE GLOW BEHIND THE MARK IS DELETED — 12 September, directed: *get rid
+    of the lobes.*** Nine radial lobes under a two-gradient mask sat here, with
+    `--mark-glow-a` … `-i`, a reach, a width, a lift, a drop and a bleed. It was
+    built on 2 September and approved then; **this is a later direction and it
+    replaces that one.**
+
+    ⚠ **Removed, not switched off** — *How things get fixed*: reach for removing
+    the mechanism first. There is no token to raise, no opacity to restore and no
+    dormant utility to rediscover; `git log` has the whole of it, and the last
+    commit that carries it is the one before this line.
+
+    ⚠ **Nothing else read any of it.** The tokens were the utility's alone and
+    the utility had one caller, `components/bar.tsx`. `--mark-column` stays and
+    is untouched: it is the mark's band on the desk and `--record-measure`
+    derives from it.
+  */
+
 
   /**
    * **The narrowest measure the record will give up to protect the mark.**
@@ -7388,343 +7326,15 @@
  * the box it filters, so a full-bleed one is a viewport-sized filter and a tile
  * is 160x160 of it, repeated.
  */
-/**
- * **The glow behind the mark.** See `--mark-glow-reach` for why this is not the
- * light the `--row-light` tombstone forbids.
- *
- * ⚠ **`z-index: -1` is what puts it BEHIND THE LETTERS AND IN FRONT OF THE
- * GLASS**, and it is exact rather than approximate: a negative-z child paints
- * after its parent's own background and before the parent's inline content. The
- * bar's tint is that background and the mark is that inline content. At `0` or
- * `auto` it would paint over the letters — a positioned descendant outranks
- * inline text — and there is no third value that lands between the two.
- *
- * ⚠ **It is measured from the bar's BOTTOM edge, so it carries no
- * `env(safe-area-inset-top)`.** The row's centre is `--bar-air / 2 + --bar-row
- * / 2` above that edge whatever the notch is doing, where measuring down from
- * the top would have to restate the header's whole padding expression and drift
- * the day that changes. The `bottom` goes negative by construction — **that
- * overhang is the light coming out from under the bar.**
- *
- * ⚠ **Nothing clips it and nothing may.** The header has no `overflow`, so the
- * part below its box paints inside the bar's own stacking context and lands
- * over the record rather than under it. **Do not put `overflow: hidden` on the
- * bar** — it would cut the light off at exactly the edge it is meant to be
- * coming from.
- *
- * ⚠ **`pointer-events: none`.** It reaches a long way down over the record, and
- * a light that swallowed a tap on a line would be the gutter-and-scrim bug of
- * 30 August rebuilt somewhere new.
- */
-@utility mark-glow {
-  &::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    pointer-events: none;
-    /*
-      ⚠⚠ **THE TOP EDGE IS THE STATUS BAR'S, AND IT IS DERIVED WITHOUT AN
-      `env()` — 1 September.** Reported: it should not go so high as to cover the
-      area of the status bar. It did: the box was centred on the glyph row with
-      half its height above, which put light 23px past the top of the screen.
-
-      **The distance from the bar's bottom edge up to the status bar IS
-      `--bar-air + --bar-row`** — the header's padding-top is that inset plus
-      `--bar-air / 2`, so the inset cancels out of the difference. `--mark-glow-
-      lift` is that distance, and the box is `lift + drop` tall hung `drop` below
-      the bar. **The top edge therefore lands on the status bar's lower edge at
-      every inset, on a notch and without one, with no `env()` in the
-      expression** — and it follows the bar the day the bar's air or row changes.
-
-      ⚠ **The light is now ASYMMETRIC about the mark, and that is the point.**
-      Up it stops at the status bar; down it spills `--mark-glow-drop`. A glow
-      that emanates from under a bar was never symmetric — the first version was,
-      which is why it climbed.
-    */
-    left: calc(var(--mark-column) - var(--mark-glow-width) / 2);
-    bottom: calc(-1 * var(--mark-glow-drop));
-    /*
-      ⚠ **A TRANSLATION, NOT SIX MOVED LOBES — directed, *translate it north-west
-      a bit*.** Every lobe, the mask and the box travel together, so the shape
-      that was judged is the shape that moves; re-aiming six gradients and two
-      mask layers by hand would have produced a different smudge that happened to
-      sit further north-west.
-
-      ⚠ **A hem and a half west, a hem north**, so it scales with the type like
-      everything else here rather than being two pixel counts.
-
-      ⚠ **What bounds the north is the CLOCK, not the inset.** The status bar's
-      own ink measures y 18.3–31.0 on this handset — read off the user's
-      screenshots, `node_modules/.probe/toprows.mjs` — so the light may reach
-      into the lower part of that band without going anywhere near what is
-      written in it. **Measured after: the topmost readable row is 43.5, which
-      leaves 12.5px between the light and the clock's lower edge.** The strip
-      above the letters goes 14.59 → 19.88 sRGB against an unlit 3.24, and the
-      band eight pixels higher 4.4 → 8.92.
-
-      ⚠ **The clock's lower edge at 31 is the real ceiling, not the inset at
-      47** — that is what `--mark-glow-bleed` and this translation spend, and
-      there is about a hem of it left. **Anything further north is into the
-      clock**, and the answer then is to stop rather than to feather harder.
-    */
-    translate: calc(var(--line-hem) * -1.5) calc(var(--line-hem) * -1);
-    width: var(--mark-glow-width);
-    height: calc(var(--mark-glow-lift) + var(--mark-glow-drop));
-    /*
-      ⚠⚠ **REMIXED — 2 September, directed, and this is arrangement B of four
-      that were rendered on the real page.** The others were the arrangement this
-      replaces, one low and broad hugging the bar's edge, and one with twin cores
-      and a faint bridge between them; `node_modules/.probe/glowremix.mjs` draws
-      all four into a single image and is the way to ask this question again
-      without a round of guessing.
-
-      **It is a drift**: the core high and left of the mark, a second just under
-      the letters' middle, a long flat one sweeping down and right across the
-      bar's edge, a small one out at the right, and a wide faint one running off
-      the left of the screen. The tail sweeps out instead of pooling under the
-      mark, which is what separates it from the arrangement before.
-
-      ⚠⚠ **NINE LOBES WITH NINE FALLOFFS — 2 September, directed *make it less
-      regular*, for the third time.** The set before this closed every lobe at
-      `transparent 73%`, on the argument that the shape did not need that axis
-      and that a uniform stop is what was rendered and judged. **Both were true
-      and neither survives being asked for irregularity three times**: six
-      ellipses sharing one falloff read as one soft object however their centres
-      are placed, because the *rate* they die at is what the eye reads as their
-      edge. The stops run 66% to 82% now and are deliberately unrelated.
-
-      ⚠⚠ **IT READ AS HORIZONTAL, AND THE CAUSE WAS THE ARRANGEMENT RATHER THAN
-      THE SHAPES — 2 September, reported.** The lobes were all wider than tall
-      (2.4, 1.32, 4.2, 1.29, 2.0, 3.8, 3.2, 1.01, 2.4 in pixels, mean 2.4:1) and
-      **re-proportioning them changed nothing measurable** — the light's spread
-      went 1.76 to 1.76. What carried it was where the centres sat: their x
-      standard deviation was 44px against 19.4 in y, **2.3:1**. Spreading the
-      centres vertically and pulling the outermost ones in took the measured
-      spread 1.54 → **1.21**.
-
-      ⚠ **A percentage pair is still not an aspect ratio here** — the box is
-      208.86 × 144.5, so `40% 40%` is already 1.45:1 wider than tall. Read a
-      lobe in pixels before judging it. But the shapes were the second-order
-      term: **the set is as horizontal as its centres are.**
-
-      ⚠⚠ **AND THE FIRST TWO MEASUREMENTS OF THIS WERE THE PROBE MEASURING
-      ITSELF.** `glowspread.mjs` weighted every pixel by its excess over a flat
-      floor; the paper's grain runs 2–19, so a floor low enough to catch the
-      faint halo also admitted paper across the whole window — and what came
-      back was the **window's** aspect, 1.68:1, sitting almost exactly where the
-      readings were. It is a per-row baseline now, read off the unlit right-hand
-      side at the same height. **A flat floor cannot separate a faint light from
-      a textured ground**, and this is the second time on this page that a
-      threshold has measured the wrong thing: the other was the mark's own ink
-      being read as a flat cap.
-
-      ⚠ **Three of the nine are there to break the outline rather than to light
-      anything** — a small one tucked over the letters' right, a thin flat
-      sliver low and left, and the wide faint one below the bar. At 2–2.8% none
-      of them registers as a source; what they do is stop the boundary being
-      the union of five smooth curves.
-
-      ⚠⚠ **THE DROP IS A WHOLE BAND NOW, AND THAT IS THE BLEED BELOW THE BANNER
-      — directed, *have some faint bleed over in the area below the banner*.**
-      `--mark-glow-drop` goes 0.7 → 1.0 of `--mark-column`, so the box reaches
-      86.5px under the bar instead of 60.5, and the ninth lobe sits low in it at
-      2%. **Measured on the band between the bar's edge and the first line of the
-      record — y 98–118 reads 8.63 sRGB against 6.33 unlit at the same height.**
-      Faint is the whole of it: the record has to stay the brightest thing under
-      there.
-
-      ⚠ **The box grew DOWNWARD, so every lobe and both mask layers were
-      re-expressed again** — same absolute centres and radii, new percentages
-      against a box that went 118.5 → 144.5. The mask's stops are unchanged
-      because they are fractions of a radius that did not move in pixels. **This
-      is the third time the box has been resized and the lobes carried through
-      it; if it happens again, the arithmetic is (y − 37) / height and
-      radius / height.**
-
-      ⚠ **A SIXTH LOBE IS THE UPWARD SMUDGE — directed, *add a smudge
-      upwards*.** The five are a drift across the bar: their centres measure
-      (36.4, 67.8), (73.9, 76.1), (111.6, 91.5), (144.9, 82) and (11.3, 89.2)
-      against letters whose ink starts at 59.7, so **not one of them sits above
-      the letters** and what reached up there was falloff. The sixth is centred
-      at (59.3, 57.2) — above the letters' tops — so what is over the mark is a
-      lobe rather than an edge.
-
-      ⚠ **It has to be WIDER THAN THE WORD or it cannot be seen.** At 26% of the
-      box it was 54px across against letters that span 66, so almost all of it
-      was behind ink and the strip above the mark did not move: measured 49.5 →
-      47.5 at one column and nothing anywhere else. At 38% it is 79px and reads.
-      **The mark occupies the middle of this box, so any lobe narrower than the
-      word is mostly invisible by construction** — that is true of a seventh too.
-
-      **Measured, on the strip above the letters and clear of their ink:** y
-      48–58 across x 20–86 reads **14.59 sRGB against 3.24** at the same height
-      on the far right. Eight pixels higher, y 40–48, it is **4.4** — the smudge
-      is spent before the clock. `node_modules/.probe/glowabove.mjs`.
-
-      ⚠ **Its centre is at 19% of the box, which is just inside the mask's opaque
-      stop.** It is at full strength there and only its top feathers. **A lobe
-      placed higher does not go higher** — the mask takes the core instead of
-      the edge, which is the light being dimmed rather than raised, and it is
-      the mistake `--mark-glow-bleed` exists because of.
-
-      ⚠ **The fifth was added because the first four all sat right of and below
-      the mark's ink centre — 1 September, reported as *right and down
-      leaning*.** Their centres measure (65.6, 75.2), (101, 70.9), (82.3, 94.8)
-      and (42.6, 98) against ink whose centre is (53, 71): three of the four are
-      at or right of where the letters end, and every one of them is at or below
-      the letters' middle. **Measured before: the right column read 10.62 sRGB
-      against the left's 6.46, and the lower row 8.42 against the upper's 5.72.**
-
-      ⚠ **It is an ADDITION, not a re-aim.** The right and downward spill is
-      wanted — that is the light coming out from under the bar — so nothing was
-      moved and no alpha was changed. **Four things were changed at once in an
-      earlier pass and the result was reported worse with no way to tell which**;
-      one lobe at a time is the way this file gets tuned now.
-
-      ⚠ **Its centre sits just below the mask's opaque stop, deliberately.** At
-      `18%` it is at full opacity and only its top feathers into the mask's own
-      falloff; a few points higher and the mask takes the core instead of the
-      edge, which is the light being dimmed rather than shaped.
-
-      ⚠ **It is wide enough to be CLIPPED by the box, and that is the point.**
-      At 42% of the width it reaches to −55px where the box stops at −18, so the
-      cut happens **off the left of the screen** and what is on screen is the
-      inner part of something carrying on past the edge. A lobe that closed
-      inside the viewport would read as a second blob rather than as a smudge.
-      It was 30% wide first and measured almost nothing at the edge.
-
-      **Measured after, against the before above: the left column 6.46 → 7.88 and
-      the upper row 5.72 → 6.98, with the right and lower unchanged at 10.62 and
-      8.42** — which is what an addition rather than a re-aim looks like.
-      `node_modules/.probe/glowbalance.mjs`.
-
-      ⚠ **`--mark-glow-bleed` then moved those numbers again and it is the same
-      probe that says so** — the upper row 6.98 → 13.30 against a lower row still
-      at 8.44, so the light reads above the mark where it read below it. **The
-      lobe positions are identical through both**: the second change opened the
-      mask, it did not add mass.
-    */
-    background:
-    /*
-      ⚠⚠ **ALL NINE WERE RE-PLACED ON 7 SEPTEMBER FOR BRICOLAGE GROTESQUE, AND
-      THE REASON IS A SPLIT NOBODY HAD SEEN BEFORE.** The box is derived from
-      `--mark-column`, which is a **layout** quantity — the band the record
-      column must clear. The lobes are percentages of that box, so they had
-      always scaled with it. **A face swap breaks the coupling**: the band grew
-      **35%** on the advance ratio while the letters grew **7%** on the ink
-      ratio, so every lobe drifted outward and downward off the word it lights.
-
-      ⚠ **Measured rather than judged.** The letters sat at x 18.2–49.1% and y
-      22.0–37.3% of the old box; after the swap the same letters sit at x
-      15.7–45.4% and y 18.3–30.9%. Every centre and radius is the old value
-      mapped through that — x × 0.9612, y × 0.8235, anchored on the letters'
-      own start. **The arrangement that was approved is preserved; only its
-      frame moved.**
-
-      ⚠ **The `transparent` stops are untouched**, because they are fractions of
-      each lobe's own radius rather than of the box.
-
-      ⚠⚠ **THE MASK MOVED THE OTHER WAY, AND IT HAD TO.** Its job is the status
-      bar, not the word — `--mark-glow-lift` puts the box's top on the status
-      bar's lower edge at every inset, and the mask feathers that cut. So the
-      mask preserves **absolute distance from the box's top** where the lobes
-      preserve their relation to the letters: its terms are the old ones × the
-      box's own growth (0.745 across, 0.830 down). ⚠ **Without it the cut slid
-      3.7px down the box and took the sixth lobe's core** — that lobe sits just
-      below the mask's opaque stop by design, and a mask that moves without it
-      eats the one lobe that reaches above the letters.
-
-      ⚠ **The handset is what the two scale factors were taken from.** They
-      differ slightly on the desk (0.783 and 0.858), so the desk's light is a
-      fraction wider than an exact carry-over — which is the arrangement the
-      glow has always had, since percentages cannot hold px on two surfaces at
-      once. **Measured after: light stops at y 46.3 against a clock that ends at
-      31, so it clears by 15.3px where the serif's cleared by 12.5** — more
-      headroom, not less, and still uneven across x, which is what the three
-      outline-breaking lobes are for.
-
-      ⚠ **If the face changes again, this is the transform to re-run**, not a
-      set of numbers to nudge: measure the letters as a fraction of the box
-      before and after, and map. `node_modules/.probe/glowtop.mjs` reads the
-      ceiling off a screenshot and is the check that matters.
-    */
-      radial-gradient(27.9% 30.5% at 27% 15.8%, var(--mark-glow-a), transparent 71%),
-      radial-gradient(22.1% 33% at 40.5% 24.9%, var(--mark-glow-b), transparent 75%),
-      radial-gradient(32.7% 28% at 48.2% 34%, var(--mark-glow-c), transparent 79%),
-      radial-gradient(13.5% 25.5% at 57.8% 21.6%, var(--mark-glow-d), transparent 68%),
-      radial-gradient(26.9% 23.1% at 16.5% 28.2%, var(--mark-glow-e), transparent 73%),
-      radial-gradient(25% 31.3% at 34.7% 10.9%, var(--mark-glow-f), transparent 76%),
-      radial-gradient(31.7% 32.9% at 39.5% 60.3%, var(--mark-glow-g), transparent 82%),
-      radial-gradient(11.1% 19.4% at 45.3% 45.5%, var(--mark-glow-h), transparent 66%),
-      radial-gradient(16.3% 13.2% at 10.7% 38.9%, var(--mark-glow-i), transparent 70%);
-    /*
-      ⚠ **The box's top is a CUT, so it is masked rather than trusted.** A lobe
-      whose falloff still has alpha where the box ends draws a straight line
-      across the screen — the one thing a diffuse light must never have.
-
-      ⚠⚠ **TWO RADIAL LAYERS, BECAUSE A LINEAR RAMP REACHES FULL OPACITY AT ONE
-      `y` AND THAT IS ITSELF A LINE.** It was `transparent → #000` over the top
-      13%, and on a notched handset that put full opacity at 61px — **within a
-      pixel or two of the top of the letters** — so the light appeared to stop at
-      the height of the mark. Reported twice, in those words. **A mask edge that
-      is a constant `y` reads as a cap wherever it lands**; moving it up or down
-      only moves the cap, which is what the first two attempts did.
-
-      ⚠ **So the boundary varies with x instead.** Two ellipses centred low in the
-      box, unioned by `mask-composite`'s default `add`, reaching different
-      heights: the light bleeds up further under the middle of the mark than
-      under its ends, and the top of it is a lumpy curve with no straight
-      section anywhere.
-
-      ⚠ **The centres are BELOW the box, and they have to be.** The mask must be
-      opaque through the whole bottom of the box — that is the spill under the
-      bar — and zero within about 15px of the top. An ellipse centred *inside*
-      the box cannot do both: sized to fade that steeply at the top it also fades
-      out at the bottom, which is what the first attempt did (the light behind
-      the mark fell 14.4 sRGB to 7.5). Centred at 122% and 126% with radii of
-      120% and 118%, the rings are wide and near-flat where they cross the top
-      and the whole lower half sits inside the opaque stop.
-
-      ⚠ **Neither layer reaches the box's top, so the cut is never exposed.**
-      Their transparent stops land at 3.4% and 8.4% of the box — 41px and 47px
-      down the screen on a notched handset, against a box that now starts at 37.
-      **Check that when changing a stop**: a layer whose falloff survives to 0%
-      puts the straight line back, and it will be at the box's top rather than at
-      the letters.
-
-      ⚠ **The stops were reopened when `--mark-glow-bleed` raised the box's top
-      by 10px**, and they had to be: a percentage stop in a box that grew means a
-      different pixel. The lobes were re-expressed the same way — same absolute
-      centres and radii, new percentages — so **the only thing that moved was how
-      much of their upper falloff survives the mask.**
-
-      ⚠ **Measured, column by column, in the columns the letters do not occupy**
-      — the topmost lit row runs 54.5, 51.5, 50.5 to the left of the mark and
-      48.5, 49.5, 51, 53.5, 58.5, 78.5, 83.5, 95 to its right. **The light clears
-      the top of the letters at 59.7 by around ten pixels and there is no equal
-      pair anywhere in it** — and its highest point, 48.5, is still under the
-      status bar's lower edge at 47, so the bleed above that edge carries only
-      what falls below the eye's threshold.
-      `node_modules/.probe/glowtop.mjs`, which reads the boundary off a
-      screenshot; the threshold has to sit under the mark's own ink or it
-      measures the letters and reports a flat cap that is not there.
-    */
-    -webkit-mask-image:
-      radial-gradient(59.6% 79% at 26.8% 80.3%, #000 88.6%, transparent 98.8%),
-      radial-gradient(43.2% 79% at 52.2% 84.4%, #000 89.5%, transparent 99.7%);
-    mask-image:
-      radial-gradient(59.6% 79% at 26.8% 80.3%, #000 88.6%, transparent 98.8%),
-      radial-gradient(43.2% 79% at 52.2% 84.4%, #000 89.5%, transparent 99.7%);
-  }
-}
 
 /**
  * **The bar's ink leaves before the bar and arrives with it — 7 September.**
  *
- * ⚠ **The ink is the wordmark and the profile glyph, and NOTHING else** —
- * clarified when this shipped fading the glow as well. `mark-glow` is the
- * bar's own light and stays lit; it is a pseudo-element of the header, so it
- * travels off the top with the slab regardless. **The glass does not fade
+ * ⚠ **The ink is the wordmark and the profile glyph, and NOTHING else.** That
+ * was clarified when this shipped fading the bar's glow as well; **the glow was
+ * deleted on 12 September** — *get rid of the lobes* — so the exception it
+ * carved out no longer has a subject, and the rule is simply the two. **The
+ * glass does not fade
  * either**: on the record there is text under it, and glass that thinned while
  * it slid would un-blur those words mid-move.
  *
@@ -7853,10 +7463,12 @@
     than a focus, so if the record's bar reads sticky on a scroll, this is the
     line, and the answer is a prop rather than a smaller number.
 
-    ⚠ **The glow is still not faded by any of this.** `mark-glow` is on the
-    header itself, not in the row, so it slides under the clock at full
-    strength — deliberate since 7 September, and **the first suspect if the mark
-    still reads bright there.**
+    ⚠⚠ **THIS SAID THE GLOW IS STILL NOT FADED BY ANY OF THIS AND NAMED IT THE
+    FIRST SUSPECT IF THE MARK READS BRIGHT UNDER THE CLOCK. THERE IS NO GLOW —
+    12 September, directed: *get rid of the lobes.*** The header's light is
+    deleted outright rather than dimmed, so the exception is gone and **what
+    crosses the status bar is the ink alone**, which this delay already takes to
+    zero before the slab starts moving.
   */
   --recede-delay: var(--ink-out);
 

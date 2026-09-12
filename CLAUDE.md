@@ -244,6 +244,66 @@ handset** — black.
   style, never the class attribute**, and it **drives** the lock and the
   cross-off rather than seeding them, then puts the line back and proves the
   padlock returns. **168 tests green; every probe green.**
+- ⚠⚠ **THE BOX IS GONE AND SO IS THE DATE — 12 September, reported: *still looks
+  crap. And why do you have the date alongside any home page entry?*** Both
+  answered, and the first one is the third attempt at the same question.
+- ⚠⚠ **A DAY STAMP IS THE ARCHIVE'S FURNITURE.** It earns its place on `/record`,
+  where it organises everything ever written and is the only thing that does, and
+  on search, where a result from June is meaningless without its day. **Home is
+  neither**: it shows the newest end of the record beside a box you are about to
+  type in, *when* is the one question nobody is asking there, and the answer is
+  nearly always today. ⚠ **`TODAY` in tracked mono caps is the loudest thing the
+  record's type scale has**, spent on the least informative line on the screen —
+  density rule 2 at its clearest. `PageLines` takes a `stamps` prop; **the
+  grouping is untouched in the data and only the heading is withheld.**
+- ⚠⚠ **THE BAND'S BOX WAS WRONG TWICE AND THE FAULT WAS THE SHAPE, NOT THE
+  FILL.** It shipped as `--color-surface` — *grey*, and that is the console's
+  **desk** branch — then as a `border-rule` outline, and that was reported too.
+  **§11: *matte black, legible text… type is the entire design.* This app has no
+  static boxes.** Every box in it is a surface that floats over the record for a
+  moment — the console, the portal, the composer's card, which is a box because
+  you type into it. **A bordered rectangle in the flow is the one thing on the
+  page that is chrome for its own sake**, and it read as a settings panel in an
+  app whose identity is not having one.
+- ⚠ **Offering *a card like the console* as an option was the mistake upstream of
+  both attempts**: the console is not a card **in flow**, and that could have
+  been checked before two versions of it were looked at.
+- ⚠ **The separation is air, and the band parts itself typographically anyway** —
+  every row there carries a muted sentence under it and no row of the record
+  does, which is a bigger difference than a rule. **`--page-lead` × 1.6 below,
+  against `--page-lead` above**: a boundary has to read as a boundary rather than
+  as the next row's breathing. ⚠ **Compact — the capture and the sentence on one
+  line — was rendered and refused on evidence**: it truncated to *portal see…*,
+  and the thing you both wanted is the worst word on the screen to cut, which is
+  `portal.tsx`'s own argument for the sentence going underneath.
+- ⚠⚠ **AND THE GLOW BEHIND THE MARK IS DELETED — directed: *get rid of the
+  lobes.*** Nine radial lobes under a two-gradient mask, `--mark-glow-a` … `-i`
+  plus a reach, width, lift, drop and bleed, and about 400 lines of `globals.css`
+  arguing them. **Built and approved on 2 September; this is a later direction
+  and it replaces that one.**
+- ⚠ **Removed, not switched off** — *How things get fixed* reaches for removing
+  the mechanism first, so there is no token at zero and no dormant utility to
+  rediscover. ⚠ **Nothing else read any of it**: the tokens were the utility's
+  alone and the utility had one caller. **`--mark-column` stays** — it is the
+  mark's band on the desk and `--record-measure` derives from it.
+- ⚠⚠ **TWO DOCBLOCKS NAMED THE GLOW AS A LIVE EXCEPTION AND BOTH ARE CORRECTED
+  RATHER THAN LEFT.** `chrome-ink` carved the ink rule around it (*the ink is the
+  wordmark and the profile glyph, and NOTHING else*) and `chrome-ink-gone` called
+  it **the first suspect if the mark reads bright under the clock**. With no
+  glow, what crosses the status bar is the ink alone, which that delay already
+  takes to zero. **A comment describing a mechanism that is not there is worse
+  than no comment.**
+- ⚠⚠ **AND `chromeink.mjs` HAD AN ASSERTION THAT WOULD HAVE PASSED FOREVER
+  MEASURING NOTHING.** It read `getComputedStyle(bar, '::before').opacity` and
+  checked the glow did not fade with the ink — **with no pseudo-element that
+  still answers `1`.** Deleted with the read behind it. ⚠ **A vacuous assertion
+  is worse than a failing one, because it reads as coverage.** `glowremix.mjs`
+  and `glowspreadbefore.mjs` went too; `git log` has the whole of it.
+- **168 tests green**, and `homerecord.mjs` now asserts the **absence** of a
+  container — no ground, filter, border, radius or padding — which is the only
+  way a third one cannot quietly arrive. `chromeink.mjs` is 31/31 in Chromium
+  and fails only on a WebKit binary this machine does not have, as `bandink.mjs`
+  does; **pre-existing and environmental.**
 
 
 ⚠⚠ **`Lock` IS RED — 12 September, directed:** *put `lock` in an appropriate

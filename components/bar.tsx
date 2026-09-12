@@ -140,7 +140,7 @@ export function Bar({
         carry the whole argument. **`--recede` and `--ease-recede` here are the
         travel and are untouched.** ⚠ **`page-screen.tsx`'s bar gets this too.**
       */
-      className={`mark-glow chrome-ink fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] delay-[var(--recede-delay,0ms)] ${
+      className={`chrome-ink fixed inset-x-0 top-0 z-20 bg-[var(--glass-tint)] px-[var(--bar-gutter)] backdrop-blur-[var(--glass-blur)] pt-[calc(env(safe-area-inset-top)+var(--bar-air)/2)] pb-[calc(var(--bar-air)/2)] transition-[translate] duration-[var(--recede)] ease-[var(--ease-recede)] delay-[var(--recede-delay,0ms)] ${
         receded ? '-translate-y-full chrome-ink-gone' : ''
       }`}
     >

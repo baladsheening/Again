@@ -117,7 +117,7 @@ export default async function ComposePage() {
         its console down the same way.**
       */
       opportunity={<Opportunity lines={opportunities} />}
-      record={<PageLines lines={toPageLines(rows, stamp)} />}
+      record={<PageLines lines={toPageLines(rows, stamp)} stamps={false} />}
       /*
         ⚠ **Handed down, because the number belongs to the delete.**
         `undoCapture` bounds itself in SQL against `created_at`, and a second

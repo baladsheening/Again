@@ -47,61 +47,47 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
 
   return (
     /*
-      ⚠⚠ **A CARD — directed 12 September**, after the band and the record were
-      reported as running together. They do: a convergence line and a record line
-      are the same type at the same size, so the only thing parting them was
-      `TODAY` in tracked mono.
+      ⚠⚠ **SEPARATED FROM THE RECORD BY AIR — 12 September, directed**, after
+      the band and the record were reported as running together. They did: a
+      convergence line and a record line are the same type at the same size, and
+      the only thing parting them was `TODAY` in tracked mono — **which has since
+      gone too**, because a day stamp is the archive's furniture and home is not
+      the archive. See `PageLines`' `stamps` prop.
 
-      ⚠⚠ **THE SHAPE IS NOT A NEW ONE — THIS APP HAS ANSWERED *THIS IS NOT THE
-      RECORD* TWICE AND BOTH TIMES IT WAS A CARD.** The console is a card, the
-      portal is a card on a scrim, and the composer is a card. So the screen now
-      reads **[opportunities] · TODAY · your lines · [composer]** — the two cards
-      are the two things that are not your record, and the list between them is.
-      ⚠ **It also bounds a long band**, which a run of loose lines could not: five
-      convergences are one object you can see the end of rather than a list with
-      no bottom.
+      ⚠⚠ **NO BOX AT ALL, AND IT TOOK TWO WRONG ONES TO GET HERE.** It shipped
+      first as `--color-surface` — reported in one word, *grey* — which was
+      precisely **the console's DESK branch on a phone**: `console-card` is
+      `--glass-tint` over `blur(--glass-blur)` on a handset, measured
+      `rgba(0,0,0,0.38)` and `blur(18px)`, and `--color-surface` only arrives
+      above `--breakpoint-stack`. Then as a `border-rule` outline, and that was
+      reported too.
 
-      ⚠⚠ **AN OUTLINE, NOT A FILL — AND IT SHIPPED AS A GREY SLAB FIRST.**
-      Reported within the hour: *the console is grey. Why did you give it a
-      different aesthetic?* It was `--color-surface`, `#20201d`, and the mistake
-      was precise: **that is the console's DESK branch.** On a handset
-      `console-card` is `--glass-tint` over `blur(--glass-blur)` — measured,
-      `rgba(0,0,0,0.38)` and `blur(18px)` — and `--color-surface` only arrives
-      above `--breakpoint-stack` through `stack:`. The note quoted in support of
-      it (*its ground lifts toward `--color-surface` rather than sinking toward
-      the page*) is about that branch. **A phone got the desk's recipe, and an
-      opaque grey plane is a surface this app does not otherwise have.**
+      ⚠⚠ **THE REAL FAULT WAS THE SHAPE, NOT THE FILL. THIS APP HAS NO STATIC
+      BOXES.** §11: *matte black, legible text, known icons. Text-first. **Type
+      is the entire design.*** Every box in it is a surface that **floats over
+      the record** and exists for a moment — the console, the portal, the
+      composer's own card, which is a box because you type into it. **A bordered
+      rectangle sitting in the flow is the one thing on the page that is chrome
+      for its own sake**, and it read as a settings panel in an app whose
+      identity is the absence of one.
 
-      ⚠⚠ **AND GLASS CANNOT SIMPLY BE PUT BACK, WHICH IS WHY THIS IS A THIRD
-      THING.** The console and the composer read as objects because the record
-      passes under them at full strength; **this card is in flow with nothing
-      behind it but the page**, and 38% black over black is black — it would
-      vanish, and the separation it exists for with it. That is the 5 September
-      bug exactly: *the composer itself isn't especially visible.*
+      ⚠ **So the separation is air, and the band separates itself
+      typographically anyway:** every row here carries a muted sentence under it
+      and no row of the record does. That is a bigger difference than a rule, and
+      it costs nothing. **`--page-lead` × 1.6 below the last sentence** — more
+      than the lead above the band, because the gap has to read as a boundary
+      rather than as the next row's breathing.
 
-      ⚠ **So the boundary is drawn rather than filled: `border-rule`, the ink
-      this app already draws boundaries with** — the handle field in
-      `add-person.tsx` and the console's own footer button both wear it. **No new
-      plane, no new colour, and the page's ground runs straight through the
-      card.** ⚠ **No `backdrop-filter`**: a filter over the page's own ground
-      costs a compositor layer to blur nothing.
-
-      ⚠ **The radius and the padding are the two cards' own** — `1rem` and
-      `--page-lead`, which is what `portal-card` declares. ⚠ **Not the
-      `portal-card` utility itself**: that one is a flex child of a sheet and
-      carries `flex: 0 1 auto`, `min-height: 0` and its own `max-width` and
-      centring, all of which are about living inside a fixed positioner. **This
-      is a block in a column that already has the measure and the gutter.**
-
-      ⚠ **The air below it is the air above it** — `--page-lead` either way,
-      which is the same token `<main>` spends under the bar. One number for the
-      lead, so the card cannot sit closer to one neighbour than the other.
+      ⚠ **Glass was never available here and that has not changed**: this block
+      is in flow with nothing behind it but the page, and 38% black over black is
+      black. **The question was only ever how to part two lists, and the answer
+      turned out not to be a container.**
 
       ⚠ **It scrolls away with the record rather than pinning**, because the
       portal is *arrival*: it is read once and moved past. A pinned band would
       spend the top of every screen on something already seen.
     */
-    <ol className="border-rule mb-[var(--page-lead)] flex flex-col rounded-2xl border p-[var(--page-lead)]">
+    <ol className="mb-[calc(var(--page-lead)*1.6)] flex flex-col">
       {lines.map((line) => (
         <li key={line.id}>
           {/*

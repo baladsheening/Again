@@ -27,6 +27,7 @@ import { STATE_WORD } from '@/lib/vocabulary'
 export function PageLines({
   lines,
   className = '',
+  stamps = true,
 }: {
   lines: readonly PageLineView[]
   /**
@@ -36,11 +37,34 @@ export function PageLines({
    * lead would be a number two screens had to agree about.
    */
   className?: string
+  /**
+   * Whether to head each day's group with its date.
+   *
+   * ⚠⚠ **THE FRONT PAGE PASSES `false` — 12 September, reported: *why do you
+   * have the date alongside any home page entry?*** Because the list was lifted
+   * whole from the record, and **a day stamp is the ARCHIVE's furniture.** It
+   * earns its place on `/record`, where it organises everything you have ever
+   * written and is the only thing that does; and on search, where a result from
+   * June is meaningless without the day it was written. **Home is neither.** It
+   * shows the newest end of the record beside a box you are about to type in —
+   * *when* is the one question nobody is asking there, and the answer is nearly
+   * always *today* anyway.
+   *
+   * ⚠ **Density rule 2: cut anything the screen already says.** A stamp reading
+   * `TODAY` over the lines you wrote today is the clearest case of it on this
+   * screen, and it is set in tracked mono caps, which is the loudest thing the
+   * record's type scale has.
+   *
+   * ⚠ **The grouping itself is untouched** — the lines are still ordered and
+   * still stamped in the data; only the heading is withheld. **The record is one
+   * tap away and it has the dates.**
+   */
+  stamps?: boolean
 }) {
   return (
     <ol className={`flex flex-col ${className}`}>
       {lines.map((line, i) => {
-        const stamped = i === 0 || lines[i - 1].day !== line.day
+        const stamped = stamps && (i === 0 || lines[i - 1].day !== line.day)
         const crossedOff = line.state === 'dropped'
         const word = STATE_WORD[line.state]
         return (
