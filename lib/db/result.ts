@@ -15,18 +15,14 @@ export type ErrorCode =
   | 'conflict'
   | 'invalid'
   | 'rate_limited'
-  /**
-   * **This is already on your record** — 12 September, and it is deliberately
-   * not `conflict`.
-   *
-   * ⚠ **A code rather than a message, because a CONTROL hangs off it.** The
-   * composer offers *Update* on this one refusal and on no other, and the
-   * alternative was the action string-matching the copy it was handed —
-   * brittle, and it would make the wording load-bearing the day somebody
-   * improves it. `conflict` is what every other collision in the layer returns,
-   * so it cannot carry a meaning only one of them has.
-   */
-  | 'already'
+  /*
+     ⚠ **`already` stood here and is deleted — 12 September, directed.** It was
+     added that morning because a CONTROL hung off one refusal: the composer's
+     *Update*, on *Already on your record.* **The direction that made a live
+     twin re-enter itself removed the refusal**, so nothing returns the code and
+     nothing reads it. A member of a shared union that no caller can produce is
+     a branch every consumer has to ignore.
+  */
 
 export function ok<T>(value: T): Result<T, never> {
   return { ok: true, value }

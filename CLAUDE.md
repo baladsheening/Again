@@ -146,20 +146,24 @@ Migration `0019`, production then dev.
   **Cost, stated: a convergence that arose WHILE the line was struck stays
   silent** — `restoreCapture`'s gap too, older than this, and the fix belongs
   there for both doors at once.
-- ⚠ **A crossed-off twin is accepted automatically; a LIVE one is refused and
-  OFFERED the update.** The asymmetry is the direction's own — *the user should
-  be able to update* — and the reason is that re-typing something you crossed
-  off is unambiguous where re-typing something already on your record is as
-  likely to be forgetting you had it. **Moving somebody's line under them is
-  what the offer avoids.**
-- ⚠⚠ **`already` IS ITS OWN `ErrorCode`, NOT `conflict`, BECAUSE A CONTROL HANGS
-  OFF IT.** *Update* is the only control in this app attached to a failure
-  message, and the alternative was the action string-matching the copy it was
-  handed — which makes the wording load-bearing the day somebody improves it.
-- ⚠ **`updateCaptureDateAction` takes the WORDS, not an id.** A refused capture
-  puts its words back in the field, so the composer already holds what identifies
-  the line — and nothing had to be plumbed out through an error to get an id back
-  in. **Two twins cannot exist**, which is what the duplicate rule guarantees.
+- ⚠⚠ **ONE FLOW FOR BOTH, AND IT DELETED A CONTROL, AN ERROR CODE AND TWO
+  FUNCTIONS — directed:** *the same flow should apply when a user inputs an
+  entry that is the same as a previous entry even when not crossed out.* For an
+  afternoon the cases were asymmetric — a struck twin came back on its own and a
+  live one was refused with *Already on your record.* and an **Update** beside
+  it, on the reasoning that re-typing a live line is as likely to be forgetting
+  you had it. **The person typed the line, which is the same act either way**,
+  and an offer to do what they already asked for is a question with one answer.
+- ⚠ **What went with it:** `Update` in the composer, `updateCaptureDateAction`,
+  `recaptureWords`, and the `already` `ErrorCode` that existed only so a control
+  could hang off one message. **Removed rather than left stranded** — *How
+  things get fixed*'s order is to remove the mechanism, and an unreachable
+  control is the mechanism still there. ⚠ **`revive` is now the only difference
+  between the two cases**, and it is a lifecycle need rather than a branch in the
+  flow: a struck line has a status and a `resolved_at` to clear.
+- ⚠ **The whole signal is the field emptying**, which is what every ordinary
+  capture already does. A refusal put the words back; an acceptance clears them.
+  **No message, no control, no undo.**
 - ⚠⚠ **NO UNDO ON A LINE THAT CAME BACK.** `created: false`, and the composer
   reads it: undo **deletes**, and `undoCapture` would refuse anyway on the old
   `created_at` — **a control that is lit and refuses** is the exact failure this

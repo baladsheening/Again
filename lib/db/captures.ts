@@ -1395,22 +1395,33 @@ async function writeCapture(
 
         ⚠ **No `scheduleAkin` either.** The words normalise identically to what
         was already on the row — that is what found it — so the vector cannot
-        have moved, and the pairs are already written. `recaptureWords` says the
-        same at the other door.
-      */
-      if (twin.status === 'dropped') {
-        return ok({ capture: await reenter(tx, twin, text, true), created: false })
-      }
+        have moved, and the pairs are already written.
 
-      /*
-        ⚠ **A LIVE twin is still refused, and that asymmetry is the direction's
-        own.** Re-typing something you crossed off is unambiguous — you want it
-        back. Re-typing something already on your record is as likely to be
-        forgetting you had it, so the app says so and **offers** the update
-        rather than moving somebody's line under them: *the user should be able
-        to update the entry*, in those words. `recaptureWords` is the yes.
+        ⚠⚠ **A LIVE TWIN TAKES THE SAME PATH — directed, and it DELETED A
+        CONTROL, AN ERROR CODE AND TWO FUNCTIONS.** For an afternoon the two
+        cases were asymmetric: a crossed-off twin came back on its own and a
+        live one was refused with *Already on your record.* and an **Update**
+        beside it, on the reasoning that re-typing a live line is as likely to
+        be forgetting you had it. **Directed otherwise** — *the same flow should
+        apply when a user inputs an entry that is the same as a previous entry
+        even when not crossed out* — and it is the better answer: **the person
+        typed the line, which is the same act either way**, and an offer to do
+        what they already asked for is a question with one answer.
+
+        ⚠ **What went with it:** `Update` in the composer, `updateCaptureDateAction`,
+        `recaptureWords`, and the `already` code that existed only so a control
+        could hang off one message. **Removed rather than left stranded** —
+        *How things get fixed*'s order is to remove the mechanism, and a
+        no-longer-reachable control is the mechanism still there.
+
+        ⚠ **`revive` is the ONLY difference between the two**, and it is what
+        the lifecycle needs rather than a branch in the flow: a struck line has
+        a status and a `resolved_at` to clear, a live one does not.
       */
-      return err('already', 'Already on your record.')
+      return ok({
+        capture: await reenter(tx, twin, text, twin.status === 'dropped'),
+        created: false,
+      })
     }
 
     /* The existing row, not `excluded` — Postgres resolves an unqualified
@@ -2291,12 +2302,13 @@ const AKIN_LIMIT_READ = 8
  *
  * **One line, moved to today, with the date it had filed behind it.**
  *
- * ⚠⚠ **THE ONE PLACE A LINE MOVES, AND BOTH DOORS GO THROUGH IT.** A
- * crossed-off twin written again comes here from `writeCapture`; a live one
- * comes from `recaptureWords` when somebody takes the offer. **Two callers, one
- * description of what re-entering means** — written twice they would drift the
- * first time either was touched, and the drift would be silent: a date filed by
- * one path and not the other is a history with a hole nobody can see.
+ * ⚠⚠ **THE ONE PLACE A LINE MOVES.** Both cases come here from
+ * `writeCapture` — a crossed-off twin and a live one — and `revive` is the
+ * only thing that tells them apart. **It had two callers for an afternoon**:
+ * `recaptureWords` was the composer's *Update*, and the direction that made
+ * both cases one flow deleted it. ⚠ **If a second door is ever built, it comes
+ * through here** — a date filed by one path and not the other is a history with
+ * a hole nobody can see.
  *
  * ⚠ **`captured_at` moves and `created_at` does not.** See the column's own
  * docblock: the undo bounds itself on the row's age, and a line from March
@@ -2346,58 +2358,16 @@ async function reenter(
   return updated
 }
 
-/**
- * **Take the offer: bring this line into today** — 12 September, directed.
- *
- * *If an item isn't crossed when it's re-entered, the user should be able to
- * update the entry and bring it into today's date.*
- *
- * ⚠⚠ **IT TAKES THE WORDS, NOT AN ID, AND THAT IS WHAT KEEPS THE REFUSAL
- * SIMPLE.** The composer already holds the text — a refused capture puts its
- * words back in the field — so nothing has to be plumbed out through the error
- * to get an id back in. **There can only be one twin to find**, because the
- * duplicate rule above is what makes two impossible.
- *
- * ⚠ **The same normalised lookup, spelled the same way**, including the
- * `<> ''` guard: `???` normalises to nothing, and without it this would move
- * whichever punctuation-only line it found first.
- *
- * ⚠ **`'active'` only.** A crossed-off twin never reaches here — writing it
- * again brings it back on its own — and a settled one is history rather than a
- * line to move. The one case this serves is the one the composer refused.
- *
- * ⚠ **No fan-out.** Nothing about the pool changed: the line was active and it
- * is active. What moved is a date. ⚠ **No `scheduleAkin` either** — the words
- * normalise identically to what was already there, so the vector cannot have
- * changed. If a future edit path reaches this, that reasoning goes with it.
- */
-export async function recaptureWords(
-  sessionUser: SessionUser,
-  words: string,
-): Promise<Result<Capture>> {
-  const text = words.trim()
-  if (text === '') return err('invalid', 'Type something first.')
-  if (text.length > TEXT_MAX) return err('invalid', 'That is too long to capture.')
-
-  return db.transaction(async (tx) => {
-    const [twin] = await tx
-      .select({ id: captures.id, capturedAt: captures.capturedAt })
-      .from(captures)
-      .where(
-        and(
-          eq(captures.userId, sessionUser.id),
-          eq(captures.status, 'active'),
-          sql`${normalised(sql`${text}`)} <> ''`,
-          eq(captures.normalisedText, normalised(sql`${text}`)),
-        ),
-      )
-      .limit(1)
-
-    if (!twin) return err('not_found', 'That is not on your record.')
-
-    return ok(await reenter(tx, twin, text, false))
-  })
-}
+/*
+  ⚠⚠ **`recaptureWords` STOOD HERE AND IS DELETED — 12 September, directed.**
+  It was the yes to the composer's *Update*: find the one live twin of these
+  words and move it to today. **The direction removed the question it answered**
+  — *the same flow should apply … even when not crossed out* — so `writeCapture`
+  re-enters a live twin itself and there is nothing left to offer. ⚠ **The work
+  it did is `reenter`'s and always was**; what went is the second door to it,
+  along with `updateCaptureDateAction`, the composer's control, and the
+  `already` error code that existed so that control could hang off a message.
+*/
 
 /**
  * **The dates this line was written before today's**, newest first.

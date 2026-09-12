@@ -6,7 +6,6 @@ import { z } from 'zod'
 import {
   addCapture,
   getPriorDates,
-  recaptureWords,
   dropCapture,
   listMyPage,
   pageCursor,
@@ -104,29 +103,15 @@ export type CaptureInput = z.infer<typeof captureSchema>
  * one. A resolution may be offered afterwards; ignoring it leaves the capture
  * raw, permanently and legitimately.
  */
-/**
- * **What the composer gets back**, and it is `ActionResult` with one field
- * added to the failure.
- *
- * ⚠⚠ **`update: true` MARKS THE ONE REFUSAL THAT HAS AN ANSWER — 12
- * September.** *Already on your record.* is the only message in this app a
- * control hangs off: the composer draws **Update** beside it, which brings the
- * line into today. Every other failure is a sentence and nothing else.
- *
- * ⚠ **A field, not a parsed message.** The action could have string-matched the
- * copy it was handed; that makes the wording load-bearing the day somebody
- * improves it. The data layer's own `already` code is what this reads, added
- * to `ErrorCode` for the same reason.
- *
- * ⚠ **Local to this action rather than widening `ActionResult`.** One caller
- * needs it and a shared type that grows a field for one caller is a type
- * everything else has to ignore.
- */
-type CaptureResult =
-  | { ok: true; value: { id: string; createdAt: string; created: boolean } }
-  | { ok: false; message: string; update?: true }
-
-export async function captureAction(input: CaptureInput): Promise<CaptureResult> {
+/*
+  ⚠ **This returned a `CaptureResult` with `update?: true` on its failure for
+  an afternoon** — the one refusal in the app a control hung off. The direction
+  that made a live twin re-enter itself removed the refusal, so the field, the
+  local type and the `already` error code all went with it.
+*/
+export async function captureAction(
+  input: CaptureInput,
+): Promise<ActionResult<{ id: string; createdAt: string; created: boolean }>> {
   const sessionUser = await requireSessionUser()
 
   const parsed = captureSchema.safeParse(input)
@@ -143,11 +128,7 @@ export async function captureAction(input: CaptureInput): Promise<CaptureResult>
     sourceUrl: parsed.data.sourceUrl,
   })
 
-  if (!result.ok) {
-    return result.error === 'already'
-      ? { ok: false, message: result.message, update: true }
-      : { ok: false, message: result.message }
-  }
+  if (!result.ok) return { ok: false, message: result.message }
 
   return {
     ok: true,
@@ -698,45 +679,12 @@ export async function captureWithImageAction(
   return { ok: true, value: { id: result.value.capture.id, created: result.value.created } }
 }
 
-/**
- * **Bring a line that is already on the record into today** — 12 September,
- * directed, and it is the yes to the composer's *Update*.
- *
- * ⚠ **It takes the WORDS, not an id.** A refused capture puts its words back in
- * the field, so the composer already holds everything this needs — and nothing
- * has to be plumbed out through an error to get an id back in. `recaptureWords`
- * finds the one twin those words can have, which the duplicate rule is what
- * guarantees.
- *
- * ⚠ **Rate limited like a capture**, because it is one: it writes to the same
- * table on the same gesture, and an unlimited door beside a limited one is the
- * limited one being decorative.
- *
- * ⚠ **The new date comes back as the server's**, for `captureAction`'s own
- * reason: the record's day stamps are computed from this column, and a line
- * moved near midnight has to land under the day the next cold open will compute.
- */
-export async function updateCaptureDateAction(
-  words: string,
-): Promise<ActionResult<{ id: string; capturedAt: string }>> {
-  const sessionUser = await requireSessionUser()
-
-  const parsed = z.string().min(1).max(TEXT_MAX).safeParse(words)
-  if (!parsed.success) return { ok: false, message: 'Type something first.' }
-
-  for (const identifier of [sessionUser.id, clientIp(await headers())]) {
-    const limit = await rateLimit('entryCreate', identifier)
-    if (!limit.ok) return { ok: false, message: 'Slow down a moment.' }
-  }
-
-  const result = await recaptureWords(sessionUser, parsed.data)
-  if (!result.ok) return { ok: false, message: result.message }
-
-  return {
-    ok: true,
-    value: { id: result.value.id, capturedAt: result.value.capturedAt.toISOString() },
-  }
-}
+/*
+  ⚠ **`updateCaptureDateAction` stood here and is deleted — 12 September,
+  directed.** It was the yes to the composer's *Update*, and the direction that
+  made a live twin take the same flow as a crossed-off one removed the question
+  it answered. See `writeCapture`.
+*/
 
 /**
  * **The dates this line was written before today's** — the console's read.

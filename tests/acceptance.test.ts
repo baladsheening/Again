@@ -239,38 +239,39 @@ describe('a retried submission is one capture', () => {
     expect(rows[0].n).toBe(1)
   })
 
-  it('⚠ REFUSES the same words as a separate submission, and says where they are', async () => {
+  it('⚠ MOVES the line when the same words arrive as a separate submission', async () => {
     /*
-      ⚠⚠ **THIS ASSERTED `2` UNTIL 12 SEPTEMBER**, on the paragraph's other
-      half: *raw text is not deduplicated, because the same words can mean a
-      different thing on a different day.* **Directed otherwise** — *the app
-      shouldn't accept an entry if it's exactly the same as a previous entry,
-      instead alerting a user to the same previous entry.*
+      ⚠⚠ **THIS ASSERTION HAS BEEN THREE THINGS IN ONE DAY AND THE LAST IS THE
+      DIRECTION'S.** It asserted `2` rows — *raw text is not deduplicated,
+      because the same words can mean a different thing on a different day*. Then
+      a refusal — *the app shouldn't accept an entry if it's exactly the same as
+      a previous entry, instead alerting a user to the same previous entry.* Then
+      this: **the line the person already has moves to today**, because *the same
+      flow should apply … even when not crossed out.*
 
       ⚠ **The distinction from the case above survives and is the point of
       keeping both.** A retried submission carries the SAME mutation id and is
-      answered with the row that landed, `ok` and `created: false`; a second
-      submission carries a new one and is answered with a refusal. §10's
-      idempotency is not a duplicate check and this proves they are still two
-      things.
+      answered with the row that landed, **before the duplicate rule is even
+      reached**; a second submission carries a new one and re-enters the line,
+      which files a date. §10's idempotency is not a duplicate check and these
+      two cases are what prove they are still separate.
     */
     const first = await dal.addCapture(one(), {
       text: 'try pottery',
       clientMutationId: randomUUID(),
     })
     expect(first.ok).toBe(true)
+    if (!first.ok) return
 
     const second = await dal.addCapture(one(), {
       text: 'try pottery',
       clientMutationId: randomUUID(),
     })
-    expect(second.ok).toBe(false)
-    if (second.ok) return
-    /* ⚠ `already` and not `conflict` since 12 September: a control hangs off
-       this one refusal and no other, so it needed a code of its own rather
-       than the copy being matched. See `ErrorCode` in `lib/db/result.ts`. */
-    expect(second.error).toBe('already')
-    expect(second.message).toBe('Already on your record.')
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+
+    expect(second.value.capture.id).toBe(first.value.capture.id)
+    expect(second.value.created).toBe(false)
 
     const { rows } = await pool.query('select count(*)::int as n from captures where user_id = $1', [
       oneId,
@@ -281,17 +282,31 @@ describe('a retried submission is one capture', () => {
   it('⚠ the same WORDS, not the same string — normalised, and the empty one is exempt', async () => {
     /*
       ⚠ **`normalised_text` is the app's one definition of *the same words***, so
-      punctuation and spacing do not make a second capture. ⚠ **And `???`
-      normalises to nothing**, which is the guard `tests/words.test.ts` proves on
-      the convergence side: without it the second punctuation-only capture
-      anybody wrote would be refused as a duplicate of the first.
+      punctuation and spacing do not make a second capture — they move the first.
+      ⚠⚠ **AND THE WORDS ARE REPLACED BY THE ONES JUST TYPED**, which is §6's
+      rule that what somebody typed survives, arriving at the newer sentence: the
+      two normalise alike and may not be spelled alike, and what they wrote today
+      is what they meant today.
+
+      ⚠ **And `???` normalises to nothing**, which is the guard
+      `tests/words.test.ts` proves on the convergence side: without it the second
+      punctuation-only capture anybody wrote would be swallowed by the first.
     */
-    await dal.addCapture(one(), { text: 'Learn to sail', clientMutationId: randomUUID() })
+    const plain = await dal.addCapture(one(), {
+      text: 'Learn to sail',
+      clientMutationId: randomUUID(),
+    })
+    expect(plain.ok).toBe(true)
+    if (!plain.ok) return
+
     const loud = await dal.addCapture(one(), {
       text: '  LEARN   to  sail!! ',
       clientMutationId: randomUUID(),
     })
-    expect(loud.ok).toBe(false)
+    expect(loud.ok).toBe(true)
+    if (!loud.ok) return
+    expect(loud.value.capture.id).toBe(plain.value.capture.id)
+    expect(loud.value.capture.text).toBe('LEARN   to  sail!!')
 
     expect((await dal.addCapture(one(), { text: '???', clientMutationId: randomUUID() })).ok).toBe(
       true,
@@ -411,7 +426,19 @@ describe('a retried submission is one capture', () => {
     expect((await dal.undoCapture(one(), id)).ok).toBe(false)
   })
 
-  it('⚠ a LIVE line is offered the update instead, and `recaptureWords` takes it', async () => {
+  it('⚠ a LIVE line written again takes the SAME path, with no refusal in it', async () => {
+    /*
+      ⚠⚠ **THIS ASSERTED A REFUSAL AND AN OFFER FOR AN AFTERNOON.** The two
+      cases were asymmetric: a crossed-off twin came back on its own and a live
+      one was answered *Already on your record.* with an **Update** beside it,
+      on the reasoning that re-typing a live line is as likely to be forgetting
+      you had it. **Directed otherwise** — *the same flow should apply when a
+      user inputs an entry that is the same as a previous entry even when not
+      crossed out.* The person typed the line, which is the same act either way.
+
+      **`recaptureWords` and the control went with the refusal**, so this case
+      now runs through `addCapture` exactly as the struck one does.
+    */
     const first = await dal.addCapture(one(), {
       text: 'swim at dawn',
       clientMutationId: randomUUID(),
@@ -425,27 +452,18 @@ describe('a retried submission is one capture', () => {
       [id],
     )
 
-    /*
-      ⚠ **Refused rather than moved, and the asymmetry is the direction's own.**
-      Re-typing something you crossed off is unambiguous; re-typing something
-      already on your record is as likely to be forgetting you had it, so the
-      app says so and **offers** the update rather than moving somebody's line
-      under them.
-    */
     const again = await dal.addCapture(one(), {
       text: 'swim at dawn',
       clientMutationId: randomUUID(),
     })
-    expect(again.ok).toBe(false)
-    if (again.ok) return
-    expect(again.error).toBe('already')
+    expect(again.ok).toBe(true)
+    if (!again.ok) return
 
-    /* Taking the offer is what moves it. */
-    const moved = await dal.recaptureWords(one(), 'swim at dawn')
-    expect(moved.ok).toBe(true)
-    if (!moved.ok) return
-    expect(moved.value.id).toBe(id)
-    expect(moved.value.capturedAt.getTime()).toBeGreaterThan(Date.now() - 60_000)
+    expect(again.value.capture.id).toBe(id)
+    expect(again.value.created).toBe(false)
+    expect(again.value.capture.capturedAt.getTime()).toBeGreaterThan(Date.now() - 60_000)
+    /* It was never struck, so it is still live — `revive` is the only branch. */
+    expect(again.value.capture.state).toBe('want')
     expect((await dal.getPriorDates(one(), id))?.prior).toHaveLength(1)
 
     /* Still one line. The record gained a date, not a row. */
@@ -457,6 +475,15 @@ describe('a retried submission is one capture', () => {
   })
 
   it('⚠ the history accumulates, and one tick files one date', async () => {
+    /*
+      ⚠ **Through `addCapture`, because that is now the only door.** These lines
+      called `recaptureWords` until the direction made a live twin re-enter
+      itself; writing the same words is what moves a line, whatever state it is
+      in.
+    */
+    const again = () =>
+      dal.addCapture(one(), { text: 'ring the bank', clientMutationId: randomUUID() })
+
     const first = await dal.addCapture(one(), {
       text: 'ring the bank',
       clientMutationId: randomUUID(),
@@ -470,7 +497,7 @@ describe('a retried submission is one capture', () => {
         `update captures set captured_at = now() - make_interval(days => $2) where id = $1`,
         [id, days],
       )
-      expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
+      expect((await again()).ok).toBe(true)
     }
 
     expect((await dal.getPriorDates(one(), id))?.prior).toHaveLength(2)
@@ -480,8 +507,8 @@ describe('a retried submission is one capture', () => {
       clock tick files one date rather than two. A date is a fact about a day,
       not an event to count.
     */
-    expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
-    expect((await dal.recaptureWords(one(), 'ring the bank')).ok).toBe(true)
+    expect((await again()).ok).toBe(true)
+    expect((await again()).ok).toBe(true)
     expect((await dal.getPriorDates(one(), id))!.prior.length).toBeLessThanOrEqual(4)
   })
 
