@@ -1,5 +1,6 @@
 'use client'
 
+import type { EntryState } from '@/lib/domain'
 import type { PageLineView } from '@/lib/page-line'
 import { AskThem } from './ask-them'
 import { CrossOffGlyph, LinkGlyph, RewriteGlyph, SettleGlyph } from './glyphs'
@@ -94,6 +95,7 @@ import { CrossOffGlyph, LinkGlyph, RewriteGlyph, SettleGlyph } from './glyphs'
 export function Console({
   line,
   convergence,
+  akin,
   asking,
   crossedOff,
   onCrossOff,
@@ -122,6 +124,20 @@ export function Console({
    * silent*, and the interface must never explain an absence.
    */
   convergence: string | null
+  /**
+   * **The lines of your own that mean nearly this** — the asterisk's grouping,
+   * 12 September, directed.
+   *
+   * ⚠ **The convergence sentence's twin and its opposite in subject.** That one
+   * says somebody else wrote this too; this says you did. Both are reads behind
+   * the tap, both are `null`-ish while they are out, and both draw nothing at
+   * all when there is nothing to say (§6).
+   *
+   * ⚠ **Lines, not a sentence.** `portalSentence` has one author because a
+   * convergence is a claim with names and tenses in it; this is the person's own
+   * words handed back, and quoting them is the whole content.
+   */
+  akin: { id: string; text: string; state: EntryState }[]
   /** The *Again?* question is standing on this line. */
   asking: boolean
   crossedOff: boolean
@@ -269,15 +285,76 @@ export function Console({
             why it is a word in the run rather than a fourth glyph in the row
             below.
 
-            ⚠ **A crossed-off line keeps it.** The mark survives crossing off
-            because a resolution is not an erasure, and somebody who struck a
-            line can still want to say *we both saved this*.
+            ⚠⚠ **A CROSSED-OFF LINE NO LONGER HAS IT — 12 September, directed,
+            AND THIS BLOCK SAID THE OPPOSITE.** It read: *a crossed-off line
+            keeps it; the mark survives crossing off because a resolution is not
+            an erasure, and somebody who struck a line can still want to say we
+            both saved this.* The mark goes when a line is struck now, and
+            `askWhoElse` is gated on the mark — so `convergence` is `null` on a
+            struck line and `AskThem` goes with it. **Put the line back and both
+            return**; nothing was destroyed. See `converged` in
+            `lib/db/captures.ts`.
           */}
           {convergence !== null && (
             <p className="text-muted mt-3 text-[0.8125rem]">
               {convergence}
               <AskThem text={line.text} />
             </p>
+          )}
+
+          {/*
+            ─────────────────────────────────────────────────────────────────
+             The asterisk's grouping — 12 September, directed
+            ─────────────────────────────────────────────────────────────────
+
+            *When the user taps the semantically similar entries, they see a
+            grouping of them in the console.*
+
+            ⚠⚠ **IT HAS A LEAD-IN WHERE THE CONVERGENCE SENTENCE NEEDS NONE, AND
+            THAT IS DESIGN RULE 1 BEATING DESIGN RULE 2.** *Sam too.* explains
+            itself because it names somebody; a bare list of your own lines under
+            your own capture does not — it could as easily read as *these
+            converged* or *these are in the same collection*. Density rule 2 bans
+            **a heading over a list that reads as a list**, and this list does
+            not read as itself. **Three words, and they are the whole frame.**
+
+            ⚠ **The same register as the refusal at the door.** `writeCapture`
+            answers an exact duplicate with *Already on your record.*; this is
+            the near-duplicate's version of the same fact, so the two surfaces
+            say one thing in one voice.
+
+            ⚠ **The words are quoted, never run into a sentence frame.**
+            `ask-them.tsx` settled this: *you also wrote learn to sail and see
+            the sea* breaks on arbitrary text, and quoting is what makes it total
+            over anything somebody typed.
+
+            ⚠ **Not buttons, and that is a decision rather than an omission.**
+            Tapping one could open that line's console — but this card is
+            `position: fixed` on a handset and swapping its subject underneath a
+            reader is a second way to open a console, against design rule 5's
+            *one gesture means one thing*. **The record is one dismissal away**
+            and the line is on it. If this proves to be the thing people reach
+            for, the fix is that these navigate — not that they mutate the open
+            card.
+
+            ⚠ **Muted, at the convergence sentence's size**, for its reason: the
+            accent belongs to overlap state in the gutter, and this is neither a
+            control nor a convergence. **No count** — §5 refuses the portal one
+            and *3 like this* is that number with a different noun.
+
+            ⚠ **Struck lines are already gone from it**, filtered in `getAkin`
+            rather than here: a line with a rule through it is one you have
+            answered, which is the same rule the mark and the portal now follow.
+          */}
+          {akin.length > 0 && (
+            <div className="text-muted mt-3 text-[0.8125rem]">
+              You also wrote
+              <ul>
+                {akin.map((a) => (
+                  <li key={a.id}>“{a.text}”</li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {/*

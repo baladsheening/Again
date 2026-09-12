@@ -18,6 +18,7 @@ import { alias, type PgColumn } from 'drizzle-orm/pg-core'
 
 import { db } from './client'
 import {
+  captureAkin,
   captures,
   normalised,
   notificationMatchesLiveCapture,
@@ -32,6 +33,7 @@ import {
 import type { SessionUser } from './session'
 import { err, ok, type Result } from './result'
 import { runOverlap, type Subject } from '@/lib/overlap'
+import { scheduleAkin } from '@/lib/akin'
 import { DEFAULT_INTENT, specFor } from '@/lib/vocabulary'
 import {
   legacyState,
@@ -661,6 +663,33 @@ const converged = sql<boolean>`exists (
 const shared = sql<boolean>`${inArray(captures.visibility, SHARED_SCOPES)}`
 
 /**
+ * **Are there other lines of yours that mean nearly this** — the asterisk, 12
+ * September, directed.
+ *
+ * ⚠ **One indexed `exists`, the same shape as the mark above it and for the
+ * same reason.** This runs once per line of every page read, so what rides with
+ * the record is a bit the planner can stop at the first row. **The grouping is
+ * fetched when a console opens**, by `getAkin`, and only for a line whose bit is
+ * set — a record with nothing akin in it issues that read on no tap at all.
+ *
+ * ⚠⚠ **NOTHING HERE COMPUTES A DISTANCE.** `capture_akin` is written once, when
+ * a capture is embedded (`lib/akin.ts`); a vector comparison per line per read
+ * would be O(n²) on the one screen whose whole promise is that Return lands in
+ * under a frame.
+ *
+ * ⚠ **No owner term, and it does not need one.** A pair is only ever written
+ * between two captures of one person, and the row this correlates to is already
+ * the session's — `lib/akin.ts` scopes the write and every caller here filters
+ * `captures.userId`. Compare the mark, which correlates `notifications.user_id`
+ * because a notification names somebody else and a pair never does.
+ */
+const akin = sql<boolean>`exists (
+  select 1
+  from ${captureAkin}
+  where ${captureAkin.captureId} = ${captures.id}
+)`
+
+/**
  * One line of the page. Named columns, like everything shared here — a `select`
  * of the whole table is how `note` reaches a client the day somebody adds a
  * column, and this shape crosses into a Client Component.
@@ -724,6 +753,19 @@ export type PageLine = {
    * one column.
    */
   converged: boolean
+  /**
+   * **Whether other lines of yours mean nearly this** — the asterisk, 12
+   * September, directed.
+   *
+   * ⚠ **The mark's twin in shape and its opposite in subject.** The convergence
+   * mark says *somebody else wrote this too*; this says *you did*. One is about
+   * the world and one is about your own record, which is why they are two bits
+   * and not one, and why this one crosses no privacy boundary at all.
+   *
+   * ⚠ **Whether, never which**, on the mark's own cost argument: the lines are
+   * fetched when a console opens (`getAkin`), for the one line somebody tapped.
+   */
+  akin: boolean
   /**
    * **Whether this line is in the convergence pool** — the inverse of the lock.
    *
@@ -830,6 +872,7 @@ export async function listMyPage(
       sourceUrl: captures.sourceUrl,
       /* The mark — see `converged` above for why `read_at` is not in it. */
       converged,
+      akin,
       /* The lock — see `shared` above for why it is the scope and not `private`. */
       shared,
     })
@@ -919,6 +962,7 @@ export async function listMySettled(
         the case §5 says the mark exists for. One expression, three reads.
       */
       converged,
+      akin,
       /* The lock, on the same terms: one predicate, three reads. */
       shared,
     })
@@ -1020,6 +1064,7 @@ export async function searchMyCaptures(
         the case §5 says the mark exists for. One expression, three reads.
       */
       converged,
+      akin,
       /* The lock, on the same terms: one predicate, three reads. */
       shared,
     })
@@ -1442,6 +1487,13 @@ async function writeCapture(
     if (!inserted) return ok({ capture, created: false })
 
     await fireOverlap(tx, sessionUser, capture)
+    /*
+      ⚠ **After the fan-out and outside the transaction either way.**
+      `scheduleAkin` hangs the embedding off the end of the response — see
+      `lib/akin.ts` for why a third-party call may not sit in here, and
+      `lib/push.ts` for the same argument made first.
+    */
+    scheduleAkin(capture.id)
     return ok({ capture, created: true })
   })
 }
@@ -1778,6 +1830,15 @@ export async function setCaptureText(
       await fireOverlap(tx, sessionUser, updated)
     }
 
+    /*
+      ⚠ **Unconditional, where the fan-out above is gated on the normalised text
+      changing.** Punctuation does not change what a capture means to a
+      *matcher* — that is what the generated column is for — but it can change
+      what it means to a *model*, and a pair is cheap to rewrite where a
+      notification is not.
+    */
+    scheduleAkin(updated.id)
+
     return ok(updated)
   })
 }
@@ -2076,3 +2137,96 @@ export async function undoCapture(
   if (!deleted) return err('not_found', 'Too late to undo that.')
   return ok(null)
 }
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The grouping behind the asterisk — 12 September, directed
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *When the user taps the semantically similar entries, they see a grouping of
+ * them in the console.*
+ *
+ * **What is akin to ONE line**, nearest first, and that phrasing is the whole
+ * design: `capture_akin` holds pairs rather than a group id, so the group a
+ * person sees is always relative to the line they tapped and is different for
+ * each member of a loose cluster. See the table's docblock for why a group id
+ * would have been transitive, and why transitive is a claim nothing supports.
+ *
+ * ⚠⚠ **`captures.user_id = session` IS THE PRIVACY TERM AND IT IS ON THE ROWS
+ * BEING RETURNED, NOT ONLY ON THE ONE ASKED FOR.** The capture id arrives from
+ * a client. Without the term on the join, naming somebody else's capture id
+ * would return the lines akin to it — which is a door onto a stranger's record
+ * (§3). `getConvergence` records the same trap one function over; this one is
+ * worse, because what comes back is other people's *words* rather than a name.
+ *
+ * ⚠ **Ordered by distance and the number never leaves.** §7 bans a numeric
+ * score on screen and *0.18 similar* is that number with a decimal point in it.
+ * The order is what the distance is for.
+ *
+ * ⚠ **Bounded (§10), and the bound is the one `lib/akin.ts` wrote with.** A
+ * capture is akin to at most `AKIN_LIMIT` others because that is how many pairs
+ * were ever written; the limit here is the same fact said at the read end, so a
+ * raised limit on one side cannot silently truncate on the other.
+ *
+ * ⚠ **Crossed-off lines are excluded, on the mark's own rule — 12 September.**
+ * A line with a rule through it is one you have already answered, so it is
+ * neither flagged nor offered back. Both ends: a struck line's own asterisk is
+ * gone, and a struck line does not appear in somebody's grouping.
+ *
+ * Returns `[]` for a line with nothing akin, which is also what a capture id
+ * belonging to somebody else returns. **Silence is the correct rendering of
+ * nothing** (§6).
+ */
+export async function getAkin(
+  sessionUser: SessionUser,
+  captureId: string,
+): Promise<{ id: string; text: string; state: CaptureState }[]> {
+  const akinCapture = alias(captures, 'akin_capture')
+
+  const rows = await db
+    .select({
+      id: akinCapture.id,
+      text: akinCapture.text,
+      status: akinCapture.status,
+      verdict: akinCapture.verdict,
+    })
+    .from(captureAkin)
+    /* The line asked for: the session's own, and still on the record. */
+    .innerJoin(
+      captures,
+      and(
+        eq(captures.id, captureAkin.captureId),
+        eq(captures.id, captureId),
+        eq(captures.userId, sessionUser.id),
+        /* On the record and not struck: PAGE_STATUSES is active|dropped. */
+        eq(captures.status, 'active'),
+      ),
+    )
+    /* And the lines it is akin to, on exactly the same terms. */
+    .innerJoin(
+      akinCapture,
+      and(
+        eq(akinCapture.id, captureAkin.akinId),
+        eq(akinCapture.userId, sessionUser.id),
+        eq(akinCapture.status, 'active'),
+      ),
+    )
+    .orderBy(asc(captureAkin.distance))
+    .limit(AKIN_LIMIT_READ)
+
+  return rows.map(({ status, verdict, ...line }) => ({
+    ...line,
+    state: legacyState(status, verdict),
+  }))
+}
+
+/**
+ * The read end of `lib/akin.ts`'s `AKIN_LIMIT`.
+ *
+ * ⚠ **Written out rather than imported, and that is not duplication by
+ * accident.** `lib/akin.ts` is `server-only` and this module is too, but the
+ * constant means two different things at the two ends: there it is *how many
+ * pairs may be written*, here it is *how many a screen may draw*. They are
+ * equal today and a change to one is a decision about the other.
+ */
+const AKIN_LIMIT_READ = 8

@@ -205,6 +205,18 @@ function group(rows: Row[]): PortalLine[] {
           */
           converged: true,
           /*
+            ⚠ **NOT ASKED, RATHER THAN KNOWN FALSE — 12 September.** The
+            asterisk says *you wrote other lines that mean nearly this*, which is
+            a fact about the reader's own record; the portal answers *what
+            happened while I was away*. Joining `capture_akin` in front of every
+            portal row would buy a mark on the one surface that is not about the
+            record. **The cost, stated: a portal line never shows an asterisk
+            and its console never offers the grouping** — the same line on the
+            record does both. `askAkin` is gated on this bit, so what a reader
+            meets is an absence and not a wrong claim (§6).
+          */
+          akin: false,
+          /*
             ⚠ **True by construction, for the same reason.** A locked capture is
             out of the pool and cannot have produced the notification that put
             this row here — so asking the database would be asking it to confirm

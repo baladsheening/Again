@@ -28,6 +28,7 @@ import { Ask, Console } from './console'
 import { Foot, ToolStack } from './foot'
 import { Portal, type DeclinedRequest } from './portal'
 import {
+  akinAction,
   convergenceAction,
   emptyPortalLineAction,
   portalAction,
@@ -498,6 +499,18 @@ export function PageScreen({
   const [convergence, setConvergence] = useState<{ id: string; sentence: string } | null>(
     null,
   )
+  /**
+   * **The lines akin to the one whose console is open** — 12 September.
+   *
+   * ⚠ **Its own state and not a field on `convergence`.** The two reads are
+   * independent: a line can have kin and no convergence or the other way round,
+   * and either can still be out while the other has landed. One object would
+   * make the second to arrive overwrite the first.
+   */
+  const [akin, setAkin] = useState<{
+    id: string
+    lines: { id: string; text: string; state: EntryState }[]
+  } | null>(null)
   /**
    * ─────────────────────────────────────────────────────────────────────────
    *  The portal — Phase 2 step 3
@@ -1236,6 +1249,15 @@ export function PageScreen({
       */
       converged: false,
       /*
+        ⚠ **Nor can it arrive with an asterisk, and this one is a REAL gap
+        rather than an arithmetic certainty like the mark above.** The words may
+        well be akin to something already on the record — but the vector is
+        written in an `after()`, so it does not exist yet at the moment this
+        line is drawn. **`false` until the next re-seed**, which is the same
+        beat the mark arrives on. See `lib/akin.ts`.
+      */
+      akin: false,
+      /*
         ⚠ **A new capture is shareable, which is what the server writes** — see
         the note on `visibility` in `writeCapture`. The optimistic line has to
         agree with it or the row would draw a padlock for the second before the
@@ -1829,6 +1851,7 @@ export function PageScreen({
     setOpened(line.id)
     setAsking(null)
     askWhoElse(line)
+    askAkin(line)
     /* The keyboard follows liveness: gone the moment a saved line is opened. */
     input.current?.blur()
   }
@@ -1859,6 +1882,32 @@ export function PageScreen({
     void convergenceAction(line.id).then((result) => {
       if (!result.ok || result.value === null) return
       setConvergence({ id: line.id, sentence: result.value })
+    })
+  }
+
+  /**
+   * **The lines akin to this one**, fetched on the same tap — 12 September.
+   *
+   * ⚠ **Gated on the line's own bit, exactly as `askWhoElse` is.** The asterisk
+   * is the reason to read: a record with none in it issues nothing on any tap,
+   * and one with three issues a read on those three. The bit and the lines are
+   * one read apart deliberately — see `akin` in `lib/db/captures.ts`.
+   *
+   * ⚠ **Cleared first and not awaited**, for the console's own rule: the box
+   * opens now, from what the page already holds, and this arrives into a space
+   * that is already there.
+   *
+   * ⚠ **An empty result is left as an empty box**, not written back as `[]`
+   * under this line's id: both render as nothing, and the shorter path is the
+   * one that cannot leave a stale id behind. A failure says nothing and draws
+   * nothing (§6).
+   */
+  function askAkin(line: { id: string; akin: boolean }) {
+    setAkin(null)
+    if (line.id === '' || !line.akin) return
+    void akinAction(line.id).then((result) => {
+      if (!result.ok || result.value.length === 0) return
+      setAkin({ id: line.id, lines: result.value })
     })
   }
 
@@ -2738,6 +2787,13 @@ export function PageScreen({
                   else says so; in the portal, everything else says so.
                 */
                 convergence={null}
+                /*
+                  ⚠ **Empty here, and it follows `listMyPortal`'s own `akin:
+                  false`.** The portal does not ask whether a line has kin — that
+                  is a fact about the record and this surface is about arrival —
+                  so a console over it has nothing to show and says nothing (§6).
+                */
+                akin={[]}
                 asking={asking === line.id}
                 /*
                   ⚠ **Read off the line the portal holds, not off the record.**
@@ -3178,6 +3234,16 @@ export function PageScreen({
             */
             const notes = [
               line.converged && !crossedOff ? 'Also on someone else’s page.' : null,
+              /*
+                ⚠ **The asterisk said in words**, on the mark's rule: it is a
+                drawn character and nothing else on the row carries it, so a
+                reader who cannot see it would meet a line the app is treating
+                as special with no way to know. *What the screen shows, the
+                label says.* ⚠ **It does not quote the other lines** — those are
+                a read behind the tap, the same arrangement the mark has with
+                its sentence.
+              */
+              line.akin && !crossedOff ? 'Nearly the same as another of yours.' : null,
               line.shared ? null : 'Locked.',
             ].filter((n) => n !== null)
 
@@ -3472,6 +3538,56 @@ export function PageScreen({
                 )}
 
                 {/*
+                  ─────────────────────────────────────────────────────────────
+                   The asterisk — 12 September, directed
+                  ─────────────────────────────────────────────────────────────
+
+                  *If it's semantically similar enough, it should be added but
+                  with an asterisk.*
+
+                  ⚠⚠ **A FOOTNOTE MARK, IN THE YEAR'S OWN SLOT, AND THAT IS WHY
+                  IT COSTS THE ROW NOTHING.** Density rule 2: reuse a row before
+                  adding a block, and this row already ends in a small muted
+                  character — a year, or the offer's `?`. **An asterisk is
+                  literally the punctuation for *there is more about this
+                  elsewhere*,** which is exactly what it says, so it needs no
+                  glyph and no new vocabulary.
+
+                  ⚠⚠ **NOT IN THE GUTTER, WHICH BELONGS TO THE CONVERGENCE
+                  MARK.** §11 gives `--color-accent` to overlap state and gives
+                  it that column; a second thing in it would make the one place
+                  on the record that means *somebody else wants this too* mean
+                  two things. **This is `--color-muted`** — brass means a
+                  control, the accent means a convergence, and a footnote is
+                  neither.
+
+                  ⚠ **It can sit beside a year or a `?`.** Unlike those two it
+                  is not exclusive with anything: a resolved line can have akin
+                  lines. `ms-1` rather than `ms-2` so the pair reads as one tail
+                  rather than two marks.
+
+                  ⚠ **`quiet`, like the year**, so tapping it picks the line —
+                  the whole row opens the console, which is where the grouping
+                  is. Design rule 5: **a tap on a row opens that row.** It is
+                  deliberately NOT its own control; see `console.tsx` for what
+                  is behind it. The label carries it for a reader who cannot see
+                  a one-character mark — `notes`, above.
+
+                  ⚠ **Struck lines draw none**, on the mark's own rule and in
+                  the same expression: a line with a rule through it is one you
+                  have already answered.
+                */}
+                {line.akin && !crossedOff && (
+                  <span
+                    {...quiet}
+                    aria-hidden
+                    className="text-muted ms-1 shrink-0 text-[0.8125rem] leading-none"
+                  >
+                    *
+                  </span>
+                )}
+
+                {/*
                   ⚠ **The standing question, as one character in the year's own
                   slot.** No glyph, no colour and no new vocabulary: a resolved
                   line carries a year there and an offered one carries a `?`,
@@ -3750,6 +3866,15 @@ export function PageScreen({
                     convergence={
                       convergence?.id === line.id ? convergence.sentence : null
                     }
+                    /*
+                      ⚠ **Checked against its own line for the same reason**, and
+                      it is a separate piece of state rather than a field on
+                      `convergence`: the two reads are independent, either can be
+                      out while the other has landed, and a line can have one
+                      without the other. **`[]` until it arrives**, which draws
+                      nothing — see `askAkin`.
+                    */
+                    akin={akin?.id === line.id ? akin.lines : []}
                     asking={asking === line.id}
                     crossedOff={crossedOff}
                     /*

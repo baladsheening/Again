@@ -3,6 +3,7 @@
 import { z } from 'zod'
 
 import {
+  getAkin,
   getConvergence,
   listMyPortal,
   listMyRequests,
@@ -14,6 +15,7 @@ import {
 import { dayStamper } from '@/lib/day'
 import { toPageLines, type PageLineView } from '@/lib/page-line'
 import { viewerTimeZone } from '@/lib/region'
+import type { EntryState } from '@/lib/domain'
 import type { ActionResult } from './entries'
 
 /**
@@ -197,4 +199,34 @@ export async function convergenceAction(
   if (!parsed.success) return { ok: false, message: 'Unknown line.' }
 
   return { ok: true, value: await getConvergence(sessionUser, parsed.data) }
+}
+
+/**
+ * **The lines that mean nearly the same as this one** — the asterisk's grouping,
+ * 12 September, directed.
+ *
+ * ⚠ **The console's read, not the record's.** `PageLine.akin` rides every line
+ * and says only *whether*; this is called when a console opens, for the one line
+ * somebody tapped, and it is the same arrangement the convergence sentence above
+ * already has — a record with no asterisks in it issues this on no tap at all.
+ *
+ * ⚠ **The id comes from a client and `getAkin` is what makes that safe.** It
+ * filters the session against the owner of the line asked for **and** of every
+ * line returned; without the second, naming somebody else's capture id would
+ * hand back the words akin to it. Validated as a uuid here for the same reason
+ * `convergenceAction` does: a malformed id is a question, not an error to draw.
+ *
+ * ⚠ **An empty array is the answer for a line with nothing akin**, and also for
+ * an id belonging to somebody else. Silence is the correct rendering of nothing
+ * (§6) — there is no empty state to draw.
+ */
+export async function akinAction(
+  captureId: string,
+): Promise<ActionResult<{ id: string; text: string; state: EntryState }[]>> {
+  const sessionUser = await requireSessionUser()
+
+  const parsed = z.string().uuid().safeParse(captureId)
+  if (!parsed.success) return { ok: false, message: 'Unknown line.' }
+
+  return { ok: true, value: await getAkin(sessionUser, parsed.data) }
 }

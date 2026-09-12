@@ -127,6 +127,13 @@
       "when": 1788687361249,
       "tag": "0017_curly_peter_quill",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789205819575,
+      "tag": "0018_dusty_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

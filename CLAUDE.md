@@ -49,6 +49,91 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
+⚠⚠ **AKIN — 12 September, directed, AND IT IS THE FIRST THING IN THIS APP THAT
+COSTS MONEY PER ROW.** *If it's semantically similar enough, it should be added
+but with an asterisk, and when the user taps the semantically similar entries,
+they see a grouping of them in the console.* **Semantic** is the word, and it
+rules out everything this repository can do for free — so the three candidates
+were put to the user with their costs, and **embeddings via `after()` was
+chosen**. Migration `0018`, applied to production then dev.
+
+- ⚠⚠ **ANTHROPIC HAS NO EMBEDDINGS ENDPOINT.** Their own documentation says so
+  and points at **Voyage AI**, which is why a Claude-shaped app calls somebody
+  else's API. `voyage-4-lite`, 1024 wide, one POST over HTTP — **no package**,
+  because the endpoint is one JSON body and a wrapper is a dependency to keep up
+  to date for nothing. ⚠ **No `input_type`**: that parameter picks query against
+  document for asymmetric retrieval, and two captures are the same kind of thing.
+- ⚠⚠ **`VOYAGE_API_KEY` IS OPTIONAL AND PRODUCTION IS DARK UNTIL IT IS SET** —
+  the VAPID keys' precedent exactly. With no key nothing is embedded, no pair is
+  written, no asterisk is drawn, and **no screen says anything is missing** (§6).
+  ⚠ **Adding the key turns it on for captures written from then on**; rows
+  already in the record have no vector and stay ungrouped until something
+  re-embeds them.
+- ⚠⚠ **THE "WORKER" IS `after()` AGAIN, AND THE ARGUMENT IS `lib/push.ts`'S
+  TWICE.** A third-party call inside the capture's transaction puts Voyage's
+  latency in front of the four-second promise, and a Voyage outage would roll
+  back somebody's line. **The capture is committed before this runs** — what is
+  at risk is an asterisk. ⚠ **`db`, never the caller's `tx`**: holding a
+  transaction open across a network call to another company is what destroys a
+  pool.
+- ⚠⚠ **PAIRS, NEVER A GROUP ID, AND THAT IS THE WHOLE SHAPE.** A `group_id` is
+  single-link clustering: *learn to sail* → *sailing lessons* → *lessons in
+  French* land in one group **nobody chose**. This file already bans that on the
+  convergence side — *never transitive*. **A pair is a fact about two lines**, so
+  the grouping is always *what is akin to THE LINE YOU TAPPED* and is different
+  for each member of a loose cluster. ⚠ **Both directions stored**, so the read
+  is `capture_id = $1` and not a two-legged `or` no index serves.
+- ⚠⚠ **WRITTEN ONCE AT EMBED TIME, NEVER COMPUTED AT READ TIME.** A distance
+  against every other capture for every line of the record is O(n²) per page read
+  on the one screen whose promise is that Return lands in under a frame. The bit
+  is one indexed `exists` — the mark's own shape — and the grouping behind the
+  tap is one indexed lookup.
+- ⚠⚠ **`AKIN_DISTANCE` 0.35 IS A STARTING POINT AND HAS NOT BEEN MEASURED,
+  BECAUSE MEASURING IT NEEDS THE KEY.** Said plainly rather than dressed up.
+  `scripts/akin-threshold.mjs` prints the distance for ten pairs — five that
+  should group and five that must not — and **that** is how the number gets
+  chosen. ⚠ **What makes a threshold admissible here at all is that it is about
+  YOUR OWN RECORD**: the banned rule is *a cosine threshold at match time*,
+  which is the app making a social claim about a third party. Nothing in
+  `capture_akin` crosses between people.
+- ⚠⚠ **THE OWNER TERM IN `lib/akin.ts` IS THE PRIVACY OF THE WHOLE FEATURE**, and
+  it must never be read as an optimisation: without it the table would say *your
+  line is like a stranger's*. ⚠ **And `getAkin` puts the session on BOTH ends of
+  the join** — the capture id arrives from a client, so a join without the second
+  term is a door onto a stranger's *words*. `tests/akin.test.ts` writes the
+  forbidden pair by hand and asserts the read refuses it.
+- ⚠ **`lib/akin.ts` joins `lib/overlap.ts` and `lib/push.ts` in the lint
+  exemption** — same shape by a different route: inside an `after()` there is no
+  session left to take, so a `lib/db/` home would mean a function whose first
+  argument is not a `SessionUser`. ⚠ **`lib/embed.ts` is deliberately NOT
+  exempt**: the width check that made it import the schema moved to `lib/akin.ts`,
+  beside the insert it protects. **A module that needs the boundary relaxed only
+  to read a constant does not need the boundary relaxed.**
+- ⚠ **The asterisk is a footnote mark in the YEAR's slot**, not a second thing in
+  the gutter — §11 gives that column and `--color-accent` to overlap state.
+  `--color-muted`, `ms-1`, `quiet` so tapping it picks the line. **Measured: a
+  marked row is 34px and so is an unmarked one** — design rule 3, one object has
+  one height.
+- ⚠ **The console's grouping HAS a three-word lead-in where the convergence
+  sentence needs none**, and that is design rule 1 beating rule 2: *Sam too.*
+  explains itself by naming somebody; a bare list of your own lines does not.
+  **The words are quoted**, `ask-them.tsx`'s rule — a sentence frame breaks on
+  arbitrary text. ⚠ **Not buttons**: swapping a fixed card's subject under a
+  reader is a second way to open a console (design rule 5). ⚠ **No count.**
+- ⚠ **The portal asks for none of it** — `akin: false` there is *not asked*
+  rather than *known false*, because the portal is arrival and this is a fact
+  about the record. Stated cost: a portal line never shows an asterisk.
+- ⚠ **A struck line is neither marked nor listed**, both ends, on the same rule
+  the mark took that day.
+- **166 tests green** (`tests/akin.test.ts`, 5 — ⚠ **with vectors written BY
+  HAND**: driving Voyage would make the suite cost money and depend on somebody
+  else's uptime to go green; what is Voyage's job is producing numbers and what
+  is ours is everything after them) and `node_modules/.probe/akin.mjs` 10/10 on
+  the real page. ⚠ **That probe first failed on its own bug** — it measured
+  `li` heights, and an `<li>` carries the day stamp above its first line, so it
+  reported 58.3 against 34 and called it a regression. **`.page-row` is the
+  object design rule 3 is about.**
+
 ⚠⚠ **THE SAME WORDS TWICE IS NOT TWO CAPTURES — 12 September, directed, AND IT
 REVERSES `writeCapture`'S OWN DOCBLOCK.** *Maybe the app shouldn't accept an
 entry if it's exactly the same as a previous entry, instead alerting a user to

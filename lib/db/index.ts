@@ -103,6 +103,7 @@ export {
   setCaptureText,
   setCaptureVisibility,
   undoCapture,
+  getAkin,
   toCaptureCard,
   pageCursor,
   parsePageCursor,

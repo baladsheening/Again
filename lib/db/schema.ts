@@ -8,12 +8,24 @@ import {
   jsonb,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
   unique,
   uuid,
+  vector,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
+
+/**
+ * **The width of a capture's meaning, and it is the model's.**
+ *
+ * `voyage-4-lite` emits 1024 by default. It is here rather than in
+ * `lib/embed.ts` because the column type carries it: changing the model to one
+ * of a different width is a migration, not a constant, and this is the one
+ * place both halves can read the same number.
+ */
+export const EMBEDDING_DIMENSIONS = 1024
 
 /**
  * Domain unions live in `@/lib/domain` — they are vocabulary (§4), not schema,
@@ -722,6 +734,29 @@ export const captures = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    /**
+     * **What these words mean, as 1024 numbers** — 12 September, directed.
+     *
+     * Written by `lib/embed.ts` in an `after()`, never in the capture's
+     * transaction: the four-second promise is the product's one measured
+     * quality and this is a third-party HTTP call. See `lib/akin.ts`.
+     *
+     * ⚠ **Nullable, and null is the ordinary case for every row written before
+     * this existed and for every row written while there is no API key.** The
+     * app is whole without it and simply groups nothing — the same shape as the
+     * VAPID keys, which keep push dark rather than breaking the build.
+     *
+     * ⚠ **1024, the model's default.** `voyage-4-lite` also emits 256, 512 and
+     * 2048 by Matryoshka truncation; a narrower vector would have to be
+     * re-normalised by hand, and 4KB a row against a record of a few hundred
+     * lines is not a size worth the arithmetic. ⚠ **The dimension is in the
+     * column type**, so changing the model to one of a different width is a
+     * migration and cannot happen by editing a constant.
+     *
+     * ⚠ **The vector is never read by a page.** Similarity is computed once,
+     * when a capture is embedded, and what the reads see is `capture_akin`.
+     */
+    embedding: vector('embedding', { dimensions: EMBEDDING_DIMENSIONS }),
   },
   (t) => [
     /*
@@ -786,6 +821,80 @@ export const captures = pgTable(
       'captures_verdict_shape',
       sql`${t.verdict} is null or ${t.status} = 'completed'`,
     ),
+  ],
+)
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Akin — two of your own lines that mean nearly the same thing, 12 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Directed:** *if it's semantically similar enough, it should be added but
+ * with an asterisk, and when the user taps the semantically similar entries,
+ * they see a grouping of them in the console.*
+ *
+ * ⚠⚠ **PAIRS, NOT A GROUP ID, AND THAT IS THE WHOLE SHAPE OF IT.** A `group_id`
+ * would have been one column and is single-link clustering: *learn to sail* is
+ * akin to *sailing lessons*, *sailing lessons* to *lessons in French*, and the
+ * three end up in one group **nobody chose**. CLAUDE.md already bans exactly
+ * this on the convergence side — *never transitive* — and the reasoning is the
+ * same one sentence later: a group you can walk out of is a claim the app is
+ * making that nothing in it supports. **A pair is a fact about two lines**, so
+ * the grouping the console draws is always *what is akin to THE LINE YOU
+ * TAPPED*, and it is different for each member of the same loose cluster. That
+ * is the true answer and it happens to be the cheap one.
+ *
+ * ⚠⚠ **WRITTEN ONCE, WHEN A CAPTURE IS EMBEDDED — NEVER COMPUTED AT READ
+ * TIME.** The alternative is a distance against every other capture of the
+ * user's for every line of the record: O(n²) per page read on the one screen
+ * whose whole promise is that Return lands in under a frame. Here the bit on a
+ * line is one indexed `exists` — the same shape the mark already has — and the
+ * grouping behind the tap is one indexed lookup. See `lib/akin.ts`.
+ *
+ * ⚠ **BOTH DIRECTIONS ARE STORED.** Akin-ness is symmetric and a single row
+ * would make every read a two-legged `or`, which no index serves. Two rows per
+ * pair, written together, so `capture_id = $1` is the whole query.
+ *
+ * ⚠ **No user column, deliberately.** A pair can only ever be between two
+ * captures of one person — `lib/akin.ts` never looks outside the owner — and a
+ * denormalised owner here would be a second place that could disagree with
+ * `captures.user_id` about whose line this is. The reads join to `captures` and
+ * filter on the session there, which is where §3 says the filter goes.
+ *
+ * ⚠ **It is about YOUR OWN record and nobody else's, which is what makes a
+ * threshold legal here at all.** CLAUDE.md forbids *a cosine threshold at match
+ * time* because a tuned number would be deciding a social claim about a third
+ * party. Nothing in this table crosses between people: it says *these two
+ * things you wrote are nearly the same thing*, to the person who wrote both.
+ */
+export const captureAkin = pgTable(
+  'capture_akin',
+  {
+    captureId: uuid('capture_id')
+      .notNull()
+      .references(() => captures.id, { onDelete: 'cascade' }),
+    akinId: uuid('akin_id')
+      .notNull()
+      .references(() => captures.id, { onDelete: 'cascade' }),
+    /**
+     * Cosine distance at the moment the pair was written, `0` identical and `2`
+     * opposite. **Kept for ordering and for judging the threshold**, never
+     * shown: §7 bans a numeric score on screen, and *0.18 similar* is that
+     * banned number wearing a decimal point.
+     */
+    distance: real('distance').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.captureId, t.akinId] }),
+    /*
+      ⚠ **A line is never akin to itself**, which is a constraint rather than a
+      care taken in `lib/akin.ts`: the nearest neighbour of a vector is always
+      itself, so this is the one mistake the query shape actively invites.
+    */
+    check('capture_akin_not_self', sql`${t.captureId} <> ${t.akinId}`),
+    /* The console's read: everything akin to one line, nearest first. */
+    index('capture_akin_capture_idx').on(t.captureId, t.distance),
   ],
 )
 

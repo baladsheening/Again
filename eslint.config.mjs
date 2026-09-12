@@ -122,11 +122,34 @@ const eslintConfig = defineConfig([
       `removePushSubscription` are ordinary session-filtered functions in
       `lib/db/push.ts`, where they belong. It is only the read that had to move.
     */
+    /*
+      ⚠⚠ **`lib/akin.ts` IS THE THIRD, AND IT IS THE SAME SHAPE ARRIVING BY A
+      DIFFERENT ROUTE — 12 September.** It runs inside an `after()`, where the
+      request has already flushed and **there is no session left to take**. Its
+      subject is a capture id and the owner is read off that row, so a `lib/db/`
+      home would mean a function in that layer whose first argument is not a
+      `SessionUser` — the one shape §3 forbids, whether the reason is *somebody
+      else* or *nobody at all*.
+
+      ⚠ **Its blast radius is one owner's own rows.** Everything it selects is
+      filtered by the `user_id` it read off the capture it was given, and the
+      pairs it writes can only ever join two captures of that person. ⚠ **The
+      READ is an ordinary session-filtered function** — `getAkin` lives in
+      `lib/db/captures.ts` with the session term on both ends of the join, which
+      is where the privacy actually has to be enforced.
+
+      ⚠ **`lib/embed.ts` is deliberately NOT here.** It touches no table and
+      knows nothing about the database; the width check that used to make it
+      import `schema.ts` moved into `lib/akin.ts`, beside the insert it
+      protects. **A module that only needs the boundary relaxed to read a
+      constant does not need the boundary relaxed.**
+    */
     ignores: [
       'lib/db/**',
       'lib/auth.ts',
       'lib/overlap.ts',
       'lib/push.ts',
+      'lib/akin.ts',
       'drizzle.config.ts',
       'scripts/**',
       'tests/**',

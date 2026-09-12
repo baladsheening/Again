@@ -70,6 +70,24 @@ const schema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
 
+  /**
+   * **Voyage AI, for the akin grouping** — 12 September, directed.
+   *
+   * ⚠ **Optional, on the VAPID keys' own precedent and for the same reason.**
+   * The app has to be whole without it: with no key nothing is embedded, no
+   * pair is written, no asterisk is drawn, and no screen says anything is
+   * missing. **Adding the key turns the feature on for captures written from
+   * then on**; the rows already in the record have no vector and stay
+   * ungrouped until something re-embeds them.
+   *
+   * ⚠ **No `NEXT_PUBLIC_` prefix, ever.** It is a billable credential and
+   * everything it does happens in an `after()` on the server. §10: provider
+   * credentials remain server-side only.
+   *
+   * See `lib/embed.ts`, which is the only reader.
+   */
+  VOYAGE_API_KEY: z.string().optional(),
+
   UPSTASH_REDIS_REST_URL: z.string().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 })

@@ -69,6 +69,18 @@ export type PageLineView = {
    */
   converged: boolean
   /**
+   * **Whether other lines of yours mean nearly this** — the asterisk, 12
+   * September, directed.
+   *
+   * ⚠ **The mark's twin in shape and its opposite in subject.** The convergence
+   * mark says somebody else wrote this too; this says you did. See `akin` in
+   * `lib/db/captures.ts`, and `getAkin` for the lines themselves.
+   *
+   * ⚠ **False on a portal line, where it is NOT ASKED rather than known false**
+   * — see `listMyPortal`.
+   */
+  akin: boolean
+  /**
    * **Whether this line is in the convergence pool** — the inverse of the lock.
    *
    * ⚠ **`true` is the ordinary case**, since captures are written shareable.
@@ -93,6 +105,7 @@ type Stampable = {
   hasImage?: boolean
   sourceUrl?: string | null
   converged?: boolean
+  akin?: boolean
   shared?: boolean
 }
 
@@ -133,6 +146,8 @@ export function toPageLines(
         line that keeps quiet about something the console can still show.
       */
       converged: row.converged ?? false,
+      /* `?? false` for the mark's reason exactly: no asterisk is the safe default. */
+      akin: row.akin ?? false,
       /*
         ⚠ **`?? true`, unlike the two above, and the asymmetry is deliberate.**
         A capture is written shareable, so the ordinary case is `true` and the
