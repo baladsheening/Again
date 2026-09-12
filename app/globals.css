@@ -4381,44 +4381,62 @@
 }
 
 /**
- * The app's name, in the mark's face, wherever it is a word in a sentence —
- * 12 September, directed: *wherever is 'juce', it should be in the font used
- * for the logo.*
+ * The app's name, in the mark's face and the mark's case, wherever it is a
+ * word in a sentence — 12 September, directed twice: *wherever is 'juce', it
+ * should be in the font used for the logo*, and then *make all instances
+ * capitalised, except user-made entries.*
  *
- * The mark already holds four places — the bar, the two auth posters and the
- * icon's initial — and every one of them is set in `--font-mark-face` through
- * `wordmark` or `zine-command`. **Two places were not**: the error screen's
- * *This is a bug in Juce* and the push offer's *Juce can tell you when this
- * happens*, both of which sat in the body face because they are prose and
- * nothing said otherwise.
+ * The mark already held four places — the bar, the two auth posters and the
+ * icon's initial — and every one of them is `--font-mark-face` in capitals
+ * through `wordmark` or `zine-command`. **Two were not**, and both are prose:
+ * the error screen's *This is a bug in JUCE* and the push offer's *JUCE can
+ * tell you when this happens*.
+ *
+ * ⚠⚠ **THE EXCEPTION IS THE WHOLE SECOND HALF OF THE DIRECTION AND IT IS FREE
+ * HERE: nothing a person wrote is ever transformed.** A capture is rendered by
+ * `page-line`, which declares no `text-transform` and never will — *what
+ * somebody typed survives* is §6's rule, and a case change is an edit. This
+ * utility is applied by hand, to the four letters of a name the app is saying
+ * about itself, and reaches nothing else.
  *
  * ⚠ **A utility, not a class string at each call site.** `wordmark`'s own note
  * is the rule — *one declaration, not four JSX strings* — and the name will
- * appear in a third sentence one day. It is also the thing a rename has to
- * find: the DOM text stays the name **spelled as a word**, so `<title>`, prose
- * and the accessible name all read as a word whatever this is doing to it.
+ * appear in a third sentence one day.
  *
- * ⚠⚠ **NOT `wordmark`, AND THAT IS THE WHOLE REASON THIS EXISTS.** That
- * utility carries the fence — `--wordmark-line`, and `wordmark-trim`'s two
+ * ⚠⚠ **THE DOM STILL SPELLS IT AS A WORD, AND THE CAPITALS ARE CSS.** That is
+ * `wordmark`'s rule and the week's most expensive lesson: the lock's `UNLOCK`
+ * is uppercased in the stylesheet, so `innerText` returns the shouting where
+ * `textContent` returns the word, and two probes read the wrong one and
+ * reported the app as having no capitals at all. **Assert the case through
+ * `textTransform`**, and keep `<title>`, prose and the accessible name reading
+ * as a word whatever this is doing to them. ⚠ **The three metadata strings are
+ * the deliberate exception** — see `metadata.title` in `app/layout.tsx`: no CSS
+ * reaches a tab title or a home-screen label, so the case has to be in the
+ * string there.
+ *
+ * ⚠⚠ **NOT `wordmark`, AND THAT IS THE WHOLE REASON A SECOND UTILITY EXISTS.**
+ * That one carries the fence — `--wordmark-line`, and `wordmark-trim`'s two
  * negative margins — all of it measured for **the mark set in its own box at
  * its own size**. Inline, the line box belongs to the paragraph, so a trim
- * measured against a 32px mark would subtract from a 13px sentence and pull
- * the line off its leading. **The face is shared; the box is not.**
+ * measured against a 32px mark would subtract from a 13px sentence and pull the
+ * line off its leading. **The face and the case are shared; the box is not.**
  *
- * ⚠ **Nor `zine-command`**, which is the same face and looks like the answer:
- * it uppercases, sets `line-height: 0.86` and tracks −0.015em. That is a
- * poster treatment for a word that is the whole screen, and a sentence is not
- * a mark.
+ * ⚠ **Nor `zine-command`**, which is the same face in the same case and looks
+ * like the answer: it also sets `line-height: 0.86` and tracks −0.015em. That
+ * is a poster treatment for a word that is the whole screen, and a sentence is
+ * not a poster.
  *
  * ⚠⚠ **NO SIZE CORRECTION, AND IT IS MEASURED RATHER THAN HOPED FOR.** The
- * two faces have **the same x-height** — 0.53 of the type size in both
- * Schibsted Grotesk 400 and Bricolage Grotesque 800 — so the name sits on the
- * run's own x-line at the paragraph's own size with nothing declared. What
- * differs is the cap (0.66 against 0.705, so the `J` is a little shorter than
- * the sentence's own capitals) and the advance, 2.1741 against 2.2393 per 1px,
- * so the word sets **2.9% narrower**. Both are small enough to leave. ⚠ **If
- * the interface face ever moves, this is the pair to re-measure** — an
- * x-height that agreed here is not a property of either face alone.
+ * reading that matters is the one the screen shows — **capitals against the
+ * sentence's own capitals** — and the mark's cap is **0.66 of the type size
+ * against the body face's 0.705, so the name sets 6.4% shorter than the `T` it
+ * follows in *This is a bug in JUCE*.** That is the direction a correction
+ * would have gone anyway: inline capitals read larger than the lower case
+ * around them, and this face gives back a little of it for nothing. ⚠ **The
+ * x-heights agree exactly — 0.53 both** — which is the number that says the two
+ * faces are the same size before the transform, and it is why there is no
+ * `font-size` in this rule. ⚠ **Both are pairwise readings**: move the
+ * interface face and neither survives on its own.
  *
  * ⚠⚠ **THE FACE HAS ONE CUT AND IT IS 800, SO THE WEIGHT IS NOT A CHOICE.**
  * `layout.tsx` loads Bricolage Grotesque at `weight: '800'` and nothing else;
@@ -4428,19 +4446,36 @@
  * moves the mark and the name together. **A lighter name inline is a second
  * font file, not a declaration.**
  *
- * ⚠ **What it costs, stated: the name reads heavier than the sentence around
- * it**, because the only cut of the mark's face is a black one. That is the
- * name being the name — the alternative is the brand face at a weight the
- * brand does not use.
+ * ⚠ **The tracking is the mark's own `--wordmark-track`, and in capitals it is
+ * not optional** — `wordmark` argues it out: caps are drawn expecting air and
+ * set solid they read as a wall. One token, so the two can never disagree about
+ * how the name is spaced.
  *
- * **Measured by `node_modules/.probe/namemark.mjs`** — 9 assertions: both
- * faces, the utility as the sheet compiled it, the x-heights agreeing, the
- * cap and the advance, and the five weights measuring identical, which is the
- * one cut said as evidence rather than as a claim.
+ * ⚠ **What it costs, stated: the name reads heavier than the sentence around
+ * it**, because the only cut of the mark's face is a black one, and capitals
+ * are louder again. That is the name being the name — the alternative is the
+ * brand face at a weight and a case the brand does not use.
+ *
+ * **Measured by `node_modules/.probe/namemark.mjs`** — 13 assertions: both
+ * faces, the utility as the sheet compiled it, the DOM spelling the word while
+ * the render shouts it, the end margin cancelling the tracking, the cap
+ * comparison, the x-heights agreeing, and the five weights measuring identical,
+ * which is the one cut said as evidence rather than as a claim.
  */
 @utility name-mark {
   font-family: var(--font-mark);
   font-weight: var(--wordmark-weight);
+  text-transform: uppercase;
+  letter-spacing: var(--wordmark-track);
+  /*
+    ⚠ **CSS puts the letter-space after the LAST letter too**, which `wordmark`
+    records as trailing air nobody sees — because every placement of the mark is
+    start-aligned. **Inline it is seen**: the error screen's next character is a
+    comma, and 0.08em of air in front of it reads as a typing mistake. The
+    margin takes back exactly what the tracking added, in the same `em`, so the
+    two can never disagree about the size they are measured at.
+  */
+  margin-inline-end: calc(var(--wordmark-track) * -1);
 }
 
 /**

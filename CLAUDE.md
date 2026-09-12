@@ -49,52 +49,77 @@ a document in an active folder gets opened.
   left is not code**: §6's beta in one named high-density community, and the
   three funding parameters in `consumer-product-strategy.md` §10.
 
-⚠⚠ **THE NAME IS ALWAYS IN THE MARK'S FACE — 12 September, directed:**
-*wherever is 'juce', it should be in the font used for the logo.* Four places
-already were — the bar, the two auth posters, the icon's initial. **Two were
-not**, and both are prose: the error screen's *This is a bug in Juce* and the
-push offer's *Juce can tell you when this happens*. `name-mark` is the one
-declaration, and it is two properties.
+⚠⚠ **THE NAME IS ALWAYS IN THE MARK'S FACE AND THE MARK'S CASE — 12 September,
+directed twice within the hour:** *wherever is 'juce', it should be in the font
+used for the logo*, and then *make all instances capitalised, except user-made
+entries.* Four places already had both — the bar, the two auth posters, the
+icon's initial. **Two had neither**, and both are prose: the error screen's
+*This is a bug in JUCE* and the push offer's *JUCE can tell you when this
+happens*. `name-mark` is the one declaration.
 
+- ⚠⚠ **THE EXCEPTION IS THE SECOND HALF OF THE DIRECTION AND IT COSTS NOTHING
+  TO HONOUR: nothing a person wrote is ever transformed.** `page-line` declares
+  no `text-transform` and never will — *what somebody typed survives* is §6's
+  rule and a change of case is an edit. The utility is applied **by hand, to
+  four letters the app is saying about itself**, and reaches nothing else. ⚠ **A
+  blanket uppercase on the interface was the other reading of the direction and
+  was put to the user rather than guessed at** — it would have reversed the
+  lock's rule from the same morning, where `Lock` stays sentence-case chrome
+  precisely so `UNLOCK` can be loud.
+- ⚠⚠ **THE DOM STILL SPELLS IT AS A WORD AND THE CAPITALS ARE CSS**, which is
+  `wordmark`'s rule and the week's most expensive lesson: `UNLOCK` is uppercased
+  in the stylesheet, so `innerText` returns the shouting where `textContent`
+  returns the word, and two probes read the wrong one. **The probe asserts both
+  ends** — `textContent` `Juce`, `innerText` `JUCE`.
+- ⚠⚠ **THREE STRINGS ARE THE DELIBERATE EXCEPTION AND THEY ARE CAPITALS IN THE
+  SOURCE.** `metadata.title`, `appleWebApp.title` and the manifest's
+  `name`/`short_name` are drawn by the operating system — a tab, a task
+  switcher, the label under a home-screen icon — and **no stylesheet reaches
+  any of them**, so the case cannot come from a transform. ⚠ **The record's
+  `sr-only` heading is NOT capitalised**: it is never seen, so capitals buy
+  nothing there and risk a screen reader spelling the word out. **Capitals
+  where the name is seen; the word spelled as a word where it is only heard.**
 - ⚠⚠ **NOT `wordmark`, AND THAT IS THE WHOLE REASON A SECOND UTILITY EXISTS.**
   That one carries the fence — `--wordmark-line` and `wordmark-trim`'s two
   negative margins — **measured for the mark set in its own box at its own
-  size**. Inline, the line box belongs to the paragraph, so a trim sized
-  against a 32px mark would subtract from a 13px sentence and pull the line off
-  its leading. **The face is shared; the box is not.** ⚠ **Nor `zine-command`**,
-  which is the same face and looks like the answer: it uppercases, sets
-  `line-height: 0.86` and tracks −0.015em. A sentence is not a poster.
-- ⚠⚠ **NO SIZE CORRECTION, AND IT IS MEASURED RATHER THAN HOPED FOR.** The two
-  faces have **the same x-height — 0.53 of the type size** in both Schibsted
-  Grotesk 400 and Bricolage Grotesque 800, so the name sits on the run's own
-  x-line at the paragraph's own size with nothing declared. The cap is shorter
-  (0.66 against 0.705) and the word sets **2.9% narrower** (2.1740 against
-  2.2393 per 1px) — both small enough to leave. ⚠ **An x-height that agreed
-  here is not a property of either face alone**: move the interface face and
-  this pair wants re-measuring.
+  size**. Inline, the line box belongs to the paragraph, so a trim sized against
+  a 32px mark would subtract from a 13px sentence and pull the line off its
+  leading. **The face and the case are shared; the box is not.** ⚠ **Nor
+  `zine-command`**, the same face in the same case, which also sets
+  `line-height: 0.86` and tracks −0.015em: a sentence is not a poster.
+- ⚠⚠ **NO SIZE CORRECTION, AND THE MEASUREMENT THAT MATTERS CHANGED WHEN THE
+  CASE DID.** The sentence-case build was licensed by the two faces having **the
+  same x-height — 0.53 both**; in capitals the reading the screen shows is
+  **the cap against the sentence's own capitals, and the mark's is 0.66 against
+  the body face's 0.705 — 6.4% shorter than the `T` it follows.** That is the
+  direction a correction would have gone anyway, because inline capitals read
+  larger than the lower case around them. The x-height stays in the probe as
+  the number that says the two faces are one size. ⚠ **Both are pairwise
+  readings**: move the interface face and neither survives alone.
 - ⚠⚠ **THE FACE HAS ONE CUT AND IT IS 800, SO THE WEIGHT IS NOT A CHOICE.**
   `layout.tsx` loads Bricolage at `weight: '800'` and nothing else; asking for
   400 renders the same file. **Five weights measuring an identical advance is
-  the evidence**, and it is in the probe so it cannot be mistaken later for a
-  broken reading. The declaration reads `--wordmark-weight`, so a second cut
-  would move the mark and the name together. ⚠ **A lighter name inline is a
-  second font file, not a declaration.**
+  the evidence**, and it is in the probe so it cannot later be mistaken for a
+  broken reading. ⚠ **A lighter name inline is a second font file, not a
+  declaration.**
+- ⚠ **The tracking is `--wordmark-track`, and the END MARGIN takes it back.**
+  `wordmark` records that CSS puts the letter-space after the last letter too,
+  and calls it trailing air nobody sees **because every placement of the mark is
+  start-aligned**. Inline it is seen: the next character on the error screen is
+  a comma, and 0.08em in front of one reads as a typing mistake.
+  `margin-inline-end: calc(var(--wordmark-track) * -1)` — the same token, so the
+  two can never disagree.
 - ⚠ **What it costs, stated: the name reads heavier than the sentence around
-  it**, because the only cut of the mark's face is a black one. That is the
-  name being the name — the alternative is the brand face at a weight the brand
-  does not use.
-- ⚠ **The three places left are not misses.** `metadata.title`, the manifest's
-  `name`/`short_name` and the record's `sr-only` heading are drawn by the
-  operating system or by nothing; **there is no font to set.** ⚠ **The icon IS
-  a miss and is untouched here**: `app/apple-icon.tsx` draws the mark's initial
-  in Satori's own bundled face, because `ImageResponse` needs real font bytes
-  to use another and that means committing a TTF. Its docblock has called
-  itself a placeholder since it was written. **Named, not fixed.**
-- **Measured by `node_modules/.probe/namemark.mjs`** — 9 assertions, including
-  the utility as the sheet compiled it, because a Tailwind `@utility` that
-  nothing references is never emitted and a screenshot of that failure looks
-  exactly like the body face. **168 tests green**, typecheck, lint and build
-  clean.
+  it**, because the only cut is a black one and capitals are louder again. That
+  is the name being the name. ⚠ **The icon is the one place still in a foreign
+  face and is untouched**: `app/apple-icon.tsx` draws the initial in Satori's
+  bundled face, because `ImageResponse` needs real font bytes and that means
+  committing a TTF. Its docblock has called itself a placeholder since it was
+  written. **Named, not fixed.**
+- **Measured by `node_modules/.probe/namemark.mjs`** — 13 assertions, including
+  the utility as the sheet compiled it, because a Tailwind `@utility` nothing
+  references is never emitted and a screenshot of that failure looks exactly
+  like the body face. **168 tests green**, typecheck, lint and build clean.
 
 ⚠⚠ **THE LOCK STANDS ON THE TRAY'S SIGHT LINE AND SAYS THE STATE ITSELF — 12
 September, directed.** *The lock/unlock button should be vertically optically

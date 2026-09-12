@@ -52,8 +52,14 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Juce',
-    short_name: 'Juce',
+    /*
+      ⚠ **Capitals in the string, for the reason `app/layout.tsx` gives at
+      `metadata.title`:** no CSS reaches an install prompt or the label under a
+      home-screen icon, so the case cannot come from a `text-transform` the way
+      it does on every surface this app draws itself.
+    */
+    name: 'JUCE',
+    short_name: 'JUCE',
     /* The tagline, the same string `app/layout.tsx` sets as the description. */
     description: 'things to try. things to try again.',
     start_url: '/',

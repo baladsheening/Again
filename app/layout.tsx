@@ -202,7 +202,22 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Juce',
+  /*
+    ⚠⚠ **CAPITALS IN THE STRING, AND THIS IS ONE OF THE THREE PLACES THAT IS
+    RIGHT — 12 September, directed:** the name reads as the mark does, wherever
+    it is seen. Everywhere a browser draws it the capitals come from CSS and the
+    DOM keeps the word **spelled as a word** — `wordmark`'s own rule, and the
+    `innerText` lesson from the same week. **No CSS reaches a tab title, a task
+    switcher or a home-screen label**, so the string is the only place the case
+    can be set. The other two are `appleWebApp.title` below and the manifest's
+    `name`/`short_name`.
+
+    ⚠ **The record's `sr-only` heading is deliberately NOT capitalised.** It is
+    never seen, so capitals there buy nothing and risk a screen reader spelling
+    the word out. **Capitals where the name is seen; the word spelled as a word
+    where it is only heard.**
+  */
+  title: 'JUCE',
   /*
     The tagline, and it is the tagline that lives here rather than a description
     written for this slot — see `app/sign-in/page.tsx`, where the same line sits
@@ -233,7 +248,9 @@ export const metadata: Metadata = {
   */
   appleWebApp: {
     capable: true,
-    title: 'Juce',
+    /* The label under the home-screen icon. Capitals for the reason
+       `metadata.title` gives above: no stylesheet reaches it. */
+    title: 'JUCE',
     /*
       ⚠⚠ **`black-translucent` IS GONE — 8 September, AND THE PARAGRAPH THAT USED
       TO SIT HERE WAS FALSIFIED BY ITS OWN PROMISE.** It read: *the web view
