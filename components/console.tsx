@@ -124,7 +124,13 @@ export function Console({
    * briefly `null` while it is out. Both render the same — §6: *silence stays
    * silent*, and the interface must never explain an absence.
    */
-  convergence: string | null
+  /**
+   * ⚠ **The sentence AND the people in it — 13 September.** It was a bare
+   * string; the control inside the sentence names the same people now, in a
+   * different grammar, and deriving a list from English is not a thing to do
+   * twice a screen. See `PortalLine.names`.
+   */
+  convergence: { sentence: string; names: string[] } | null
   /**
    * **The lines of your own that mean nearly this** — the asterisk's grouping,
    * 12 September, directed.
@@ -465,8 +471,8 @@ export function Console({
           */}
           {convergence !== null && (
             <p className="text-muted mt-3 text-[0.8125rem]">
-              {convergence}
-              <AskThem text={line.text} />
+              {convergence.sentence}
+              <AskThem text={line.text} names={convergence.names} />
             </p>
           )}
 

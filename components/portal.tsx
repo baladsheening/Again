@@ -515,7 +515,7 @@ export function Portal({
               */}
               <p className="text-muted mb-2.5 text-[0.8125rem]">
                 {line.sentence}
-                <AskThem text={line.text} />
+                <AskThem text={line.text} names={line.names} />
               </p>
 
               {/*

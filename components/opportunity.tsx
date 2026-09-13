@@ -112,7 +112,7 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
           */}
           <p className="text-muted mb-2.5 text-[0.8125rem] last:mb-0">
             {line.sentence}
-            <AskThem text={line.text} />
+            <AskThem text={line.text} names={line.names} />
           </p>
         </li>
       ))}

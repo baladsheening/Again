@@ -15,6 +15,7 @@ import {
 import { notifications } from '@/lib/db/schema'
 import { after } from 'next/server'
 import { deliver } from '@/lib/push'
+import { listNames } from '@/lib/vocabulary'
 
 /**
  * §6. All of it, in one module, called from the capture mutations. It is the
@@ -790,19 +791,14 @@ export function portalSentence(
   }
 }
 
-/**
- * *Sam*, *Sam and Ali*, *Sam, Ali and Jo*.
- *
- * ⚠ **An Oxford-less serial comma and a final *and*, with no `Intl.ListFormat`.**
- * That API is locale-aware and this copy is not — the sentences around it are
- * written in English and would have to be translated as sentences, so a
- * conjunction that localised on its own would be the one word in the line
- * agreeing with a locale the rest of it ignores.
- */
-function listNames(names: readonly string[]): string {
-  if (names.length <= 1) return names[0] ?? 'Someone'
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
-}
+/*
+  ⚠⚠ **`listNames` LIVES IN `lib/vocabulary.ts` SINCE 13 SEPTEMBER AND MUST NOT
+  COME BACK HERE.** It was private to this file until the control inside the
+  sentence started naming the same people — *Message Omari and Ali* — and a
+  client component cannot import a `server-only` module. **Two copies of the
+  joining rule would disagree the first time three people converged on one
+  line**, in one place only, with nothing to say so. See the docblock there.
+*/
 
 /**
  * The two lines given verbatim in the brief are `convergence` and the

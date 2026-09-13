@@ -37,6 +37,8 @@ import type { ActionResult } from './entries'
 /** A portal row, as the client gets it: a line of the record, and the sentence. */
 export type PortalLineView = PageLineView & {
   sentence: string
+  /** The same people the sentence names, unjoined — see `PortalLine.names`. */
+  names: string[]
   notificationIds: string[]
 }
 
@@ -123,6 +125,7 @@ export async function portalAction(): Promise<ActionResult<PortalView>> {
       lines: lines.map((line, i) => ({
         ...line,
         sentence: rows[i].sentence,
+        names: rows[i].names,
         notificationIds: rows[i].notificationIds,
       })),
     },
@@ -192,7 +195,7 @@ export async function emptyPortalLineAction(
  */
 export async function convergenceAction(
   captureId: string,
-): Promise<ActionResult<string | null>> {
+): Promise<ActionResult<{ sentence: string; names: string[] } | null>> {
   const sessionUser = await requireSessionUser()
 
   const parsed = z.string().uuid().safeParse(captureId)

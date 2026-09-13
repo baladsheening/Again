@@ -497,9 +497,11 @@ export function PageScreen({
    * room for a sentence it might not get would be explaining an absence, which
    * §6 forbids.
    */
-  const [convergence, setConvergence] = useState<{ id: string; sentence: string } | null>(
-    null,
-  )
+  const [convergence, setConvergence] = useState<{
+    id: string
+    sentence: string
+    names: string[]
+  } | null>(null)
   /**
    * **The lines akin to the one whose console is open** — 12 September.
    *
@@ -1891,7 +1893,7 @@ export function PageScreen({
     if (line.id === '' || !line.converged) return
     void convergenceAction(line.id).then((result) => {
       if (!result.ok || result.value === null) return
-      setConvergence({ id: line.id, sentence: result.value })
+      setConvergence({ id: line.id, ...result.value })
     })
   }
 
@@ -3937,7 +3939,9 @@ export function PageScreen({
                       it arrives, which draws nothing — see `askWhoElse`.
                     */
                     convergence={
-                      convergence?.id === line.id ? convergence.sentence : null
+                      convergence?.id === line.id
+                        ? { sentence: convergence.sentence, names: convergence.names }
+                        : null
                     }
                     /*
                       ⚠ **Checked against its own line for the same reason**, and

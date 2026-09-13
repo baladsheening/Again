@@ -248,6 +248,36 @@ export function askDraft(text: string): string {
 }
 
 /**
+ * *Sam*, *Sam and Ali*, *Sam, Ali and Jo*.
+ *
+ * ⚠⚠ **IT MOVED HERE FROM `lib/overlap.ts` ON 13 SEPTEMBER AND THAT IS THE
+ * WHOLE POINT OF THE MOVE.** It used to be private to `portalSentence`, which
+ * is `server-only`; the control that sits **inside** that sentence now names
+ * the same people — *Message Omari and Ali* — and a client component cannot
+ * import `lib/overlap.ts`. **A second copy of the joining rule is how *Sam, Ali
+ * and Jo* becomes *Sam, Ali, Jo* in one of the two places**, and nobody would
+ * notice until three people converged on one line. One author, read from both
+ * sides of the boundary — the same argument that put {@link askDraft} here
+ * rather than beside `portalSentence`.
+ *
+ * ⚠ **An Oxford-less serial comma and a final *and*, with no `Intl.ListFormat`.**
+ * That API is locale-aware and this copy is not — the sentences around it are
+ * written in English and would have to be translated as sentences, so a
+ * conjunction that localised on its own would be the one word in the line
+ * agreeing with a locale the rest of it ignores.
+ *
+ * ⚠ **The empty case is *Someone*, and it is load bearing on both sides.** A
+ * notification whose payload lost its `counterpartName` still has to produce a
+ * sentence and still has to produce a label; `coalesce(… , 'Someone')` in the
+ * two reads is the same defence stated in SQL, and this is the one that catches
+ * an empty array rather than a null column.
+ */
+export function listNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? 'Someone'
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+}
+
+/**
  * **What a mutual connection actually does**, said once.
  *
  * ⚠⚠ **THE ONE DISCLOSURE THIS PRODUCT CANNOT LEAVE TO A GESTURE.** Amendment

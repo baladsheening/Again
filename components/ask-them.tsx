@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { haptic } from '@/lib/haptics'
-import { askDraft } from '@/lib/vocabulary'
+import { askDraft, listNames } from '@/lib/vocabulary'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -28,10 +28,15 @@ import { askDraft } from '@/lib/vocabulary'
  * contact data at all. **The person picks the recipient in their own app**, and
  * that is a feature rather than a shortfall — see amendment F in the view.
  *
- * ⚠ **So it does not know who it is messaging, and does not need to.** The
- * counterpart is named in the sentence above this control; the recipient is
- * chosen in the sheet. Plumbing an identity through to pre-address it would buy
- * nothing the person is not already about to do with their thumb.
+ * ⚠⚠ **IT KNOWS WHO IT IS ABOUT AND STILL NOT WHERE IT IS GOING — corrected 13
+ * September.** This said *it does not know who it is messaging, and does not
+ * need to*, on the argument that the sentence above already names them. **The
+ * label names them now** (see the block by the button), so the names cross as a
+ * prop — but **nothing about the mechanism moved**: the recipient is still
+ * chosen in the system sheet, Again still holds no phone number, and no contacts
+ * permission is asked for or wanted. ⚠ **Do not read the names as an address.**
+ * Pre-addressing the message is the one thing this control must never learn to
+ * do, and it is a different capability from knowing a display name.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  What it degrades to
@@ -53,9 +58,12 @@ import { askDraft } from '@/lib/vocabulary'
  * STATE AND NO EFFECT TO SET IT.** The first draft read `navigator.share` in a
  * `useEffect` and kept the answer in state, and the lint rule against setting
  * state synchronously in an effect was right to refuse it — but the real fault
- * was upstream: **the label is *Ask them* either way**, so the capability
- * decides only what the handler does, and a handler runs in the browser by
- * definition. There is no server/client divergence to guard against because
+ * was upstream: **the label reads the same either way** — *Message Omari*
+ * whether the sheet exists or not — so the capability decides only what the
+ * handler does, and a handler runs in the browser by definition. ⚠ **That is
+ * still true after 13 September**: the names come from the server as a prop, so
+ * the markup is identical on both sides of hydration. There is no
+ * server/client divergence to guard against because
  * nothing about the markup depends on the answer. **Do not reintroduce a
  * `canShare` flag to "avoid checking twice"** — checking is a property lookup,
  * and the flag costs a render pass plus a hydration hazard to save it.
@@ -72,17 +80,27 @@ import { askDraft } from '@/lib/vocabulary'
  * own line, this acts on the overlap; and that row is a measured sight line
  * (`traysightline.mjs`) that a conditional fourth glyph would move.
  *
- * ⚠ **`Ask them`, two words, a state and a verb.** Design rule 1: the sentence
- * above says the state (*Sam too.*), this says the verb. **Not `Share`**, which
- * names the mechanism rather than the act, and not `Message`, which is a noun
- * before it is a verb. It stays *them* for one name or five — `portalSentence`
- * names everybody and this control addresses whoever the reader chooses.
+ * ⚠⚠ **`Message Omari` — and this paragraph argued for the opposite until 13
+ * September.** It read: *`Ask them`, two words, a state and a verb… not
+ * `Message`, which is a noun before it is a verb. It stays* them *for one name
+ * or five.* **Directed otherwise, after the control was used on a handset**, and
+ * the direction was right on the thing the old argument missed: a verb that is
+ * also a noun is a smaller problem than a pronoun for somebody you chose by
+ * name. *Them* is how you refer to strangers.
+ *
+ * ⚠ **Still not `Share`**, which names the mechanism rather than the act — that
+ * half of the old argument survives intact and is the reason the word is not
+ * the obvious one.
+ *
+ * ⚠ **It grows with the names — *Message Omari and Ali*** — where the old label
+ * was fixed at two words. `listNames` is the one author of that joining, shared
+ * with `portalSentence`, so the button and the sentence cannot disagree.
  *
  * ⚠ **`--color-chrome`, because it is a control.** §11 gives the accent to
  * overlap *state* and it is already spent on the mark in the gutter; a second
  * tenant beside it would be the same thing said twice.
  */
-export function AskThem({ text }: { text: string }) {
+export function AskThem({ text, names }: { text: string; names: readonly string[] }) {
   /*
     ⚠ **Three states and the third is the fallback's receipt.** A clipboard copy
     is invisible — nothing opens, nothing moves — so a control that did it
@@ -143,14 +161,48 @@ export function AskThem({ text }: { text: string }) {
     }
   }
 
+  /*
+    ⚠⚠ **IT NAMES THEM — 13 September, directed:** *instead of ask them, have
+    `message [name of person(s) you matched with]`.* **`Ask them` was distancing
+    in two ways at once:** *them* is a third-person pronoun for somebody the
+    reader deliberately added, and *ask* frames a proposal as a request. **The
+    label now says who and says what the tap does**, which is design rule 1 —
+    *will a reader understand what this does* — answered with a name rather than
+    a pronoun.
+
+    ⚠⚠ **THIS REVERSES THE 11 SEPTEMBER NOTE THAT THE CONTROL DOES NOT KNOW WHO
+    IT IS MESSAGING.** That note said the counterpart is named in the sentence
+    above and the control therefore needs no name of its own — true of the
+    mechanism, which still picks its recipient in the system sheet and still
+    asks for no contacts permission, and **wrong about the label**. The names
+    cross as a prop; nothing about the share call changed.
+
+    ⚠ **Stated cost: the name is on screen twice** — *Omari too. Message Omari*
+    — which is density rule 2's *cut anything the screen already says*. **It is
+    accepted deliberately**, on rule 1 beating rule 2: the sentence states a
+    fact and the button states an act, and a button that borrows its object from
+    the sentence beside it is the `Add them back?` failure in reverse. If it
+    reads badly at three names, the lever is the SENTENCE — it is the half that
+    can lose the list without losing its meaning.
+
+    ⚠ **`listNames` and never a local join.** It is `lib/vocabulary.ts`'s, and
+    `portalSentence` reads the same function on the server — so *Omari and Ali*
+    cannot come out two ways in one line of text.
+  */
+  const who = listNames(names)
+
   return (
     <button
       type="button"
       onClick={ask}
-      aria-label={copied ? 'Message copied' : 'Ask them about this'}
+      /*
+        ⚠ **The label without the truncation the screen may apply**, and it says
+        *message* rather than *ask* for the reason the visible word does.
+      */
+      aria-label={copied ? 'Message copied' : `Message ${who} about this`}
       className="text-chrome tap-target ms-2 transition-opacity hover:opacity-80"
     >
-      {copied ? 'Copied' : 'Ask them'}
+      {copied ? 'Copied' : `Message ${who}`}
     </button>
   )
 }

@@ -225,7 +225,7 @@ describe('convergence on words (Amendment 4)', () => {
     expect(portal[0].sentence).toContain(B)
 
     const line = await lineOn(adaId, A, 'learn to sail')
-    expect(await dal.getConvergence(viewer(adaId, A), line!.id)).toContain(B)
+    expect((await dal.getConvergence(viewer(adaId, A), line!.id))?.sentence).toContain(B)
 
     /*
       ⚠⚠ **THE DOOR, AND THIS IS THE ASSERTION THAT WAS MISSING — 11 September.**

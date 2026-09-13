@@ -200,9 +200,11 @@ describe('the mark (Phase 2 step 4)', () => {
     await converge({ id: adaId, handle: A }, { id: cyId, handle: C })
 
     const line = await lineOn(adaId, A, 'ada remembers the convergence film')
-    const sentence = await dal.getConvergence(viewer(adaId, A), line!.id)
+    const convergence = await dal.getConvergence(viewer(adaId, A), line!.id)
 
-    expect(sentence).not.toBeNull()
+    expect(convergence).not.toBeNull()
+    const sentence = convergence!.sentence
+
     expect(sentence).toContain(B)
     expect(sentence).toContain(C)
     /* §5: name everyone. A count is an engagement metric with another name. */
@@ -210,6 +212,18 @@ describe('the mark (Phase 2 step 4)', () => {
     expect(sentence).not.toMatch(/other/i)
     /* Both still want it, so the tense is "… too." — §5's first row. */
     expect(sentence).toMatch(/too\.$/)
+
+    /*
+      ⚠⚠ **THE NAMES AND THE SENTENCE ARE THE SAME PEOPLE — 13 September**, when
+      the control inside the sentence became *Message Omari and Ali*. Two
+      renderings of one fact is exactly the shape that drifts, so this pins them
+      to each other rather than pinning the list to a literal: **whoever the
+      sentence names, the label must name**, and nobody else.
+    */
+    expect(convergence!.names).toContain(B)
+    expect(convergence!.names).toContain(C)
+    expect(convergence!.names).toHaveLength(2)
+    for (const name of convergence!.names) expect(sentence).toContain(name)
   })
 
   it('⚠ SURVIVES THE PORTAL EMPTYING — the portal is arrival, the mark is memory', async () => {
@@ -232,7 +246,7 @@ describe('the mark (Phase 2 step 4)', () => {
     */
     const line = await lineOn(adaId, A, 'ada remembers the convergence film')
     expect(line?.converged).toBe(true)
-    expect(await dal.getConvergence(viewer(adaId, A), line!.id)).toContain(B)
+    expect((await dal.getConvergence(viewer(adaId, A), line!.id))?.sentence).toContain(B)
 
     /* And the door is dark, because the portal is what empties. */
     expect((await dal.portalWaiting(viewer(adaId, A))).lines).toBe(false)
@@ -278,7 +292,7 @@ describe('the mark (Phase 2 step 4)', () => {
     )
     const back = await lineOn(adaId, A, 'ada remembers the convergence film')
     expect(back?.converged).toBe(true)
-    expect(await dal.getConvergence(viewer(adaId, A), back!.id)).toContain(B)
+    expect((await dal.getConvergence(viewer(adaId, A), back!.id))?.sentence).toContain(B)
 
     /*
       And settled: the tray's read carries the same expression, which is why the
@@ -442,7 +456,7 @@ describe('the lock, and what is in the pool (31 August)', () => {
     const line = await lineOn(adaId, A, 'ada locked this one')
     expect(line?.shared).toBe(true)
     expect(line?.converged).toBe(true)
-    expect(await dal.getConvergence(viewer(adaId, A), mine)).toContain(B)
+    expect((await dal.getConvergence(viewer(adaId, A), mine))?.sentence).toContain(B)
   })
 
   it('a line that already converged KEEPS ITS MARK after it is locked', async () => {

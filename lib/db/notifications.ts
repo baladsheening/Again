@@ -61,6 +61,23 @@ export type PortalLine = PageLine & {
    */
   sentence: string
   /**
+   * **The same people, unjoined** — 13 September, directed: *instead of ask
+   * them, have `message [name of person(s) you matched with]`.*
+   *
+   * ⚠⚠ **THE NAMES AND NOT A SECOND SENTENCE.** {@link PortalLine.sentence} is
+   * already written because the copy is `lib/overlap.ts`'s; the control inside
+   * it needs the same people in a different grammar — *Message Omari and Ali*
+   * against *Omari and Ali too.* — and **a second server-composed string would
+   * be a second thing to keep in step.** What crosses is the list; `listNames`
+   * in `lib/vocabulary.ts` is the one author of how it reads, on both sides of
+   * the boundary.
+   *
+   * ⚠ **Distinct, and in the order they first appear**, which is the order the
+   * sentence says them in — the rows are read oldest-first for exactly that
+   * reason. A name that converged twice on one line is one person.
+   */
+  names: string[]
+  /**
    * The rows this line stands for, so opening it can empty them.
    *
    * ⚠ **Ids and not a count.** §5: *never a count* — the portal has no number in
@@ -224,6 +241,7 @@ function group(rows: Row[]): PortalLine[] {
           */
           shared: true,
           sentence: '',
+          names: [],
           notificationIds: [],
         },
         names: new Map(),
@@ -237,6 +255,7 @@ function group(rows: Row[]): PortalLine[] {
   return [...byCapture.values()].map(({ line, names }) => ({
     ...line,
     sentence: say(names),
+    names: everyone(names),
   }))
 }
 
@@ -265,6 +284,27 @@ function say(clauses: Clauses): string {
       return portalSentence(kind as NotificationKind, [...people], holder === 'true')
     })
     .join(' ')
+}
+
+/**
+ * **Everyone named across every clause, once each** — the control's half of
+ * {@link say}, 13 September.
+ *
+ * ⚠ **Flattened across clauses, where `say` keeps them apart.** The two sides of
+ * a `guide` say opposite things and so get separate clauses — but *Message* does
+ * not care which sentence somebody is in, only that they are a person to write
+ * to. **The same human in two clauses is one recipient**, which the `Set` is
+ * what enforces.
+ *
+ * ⚠ **Insertion order, so the label and the sentence name people in the same
+ * order.** Both reads are ordered oldest-first for that reason; a `Set` in
+ * JavaScript preserves it, and sorting here would make the two disagree on a
+ * line with three names.
+ */
+function everyone(clauses: Clauses): string[] {
+  const seen = new Set<string>()
+  for (const people of clauses.values()) for (const name of people) seen.add(name)
+  return [...seen]
 }
 
 /**
@@ -300,7 +340,7 @@ function say(clauses: Clauses): string {
 export async function getConvergence(
   sessionUser: SessionUser,
   captureId: string,
-): Promise<string | null> {
+): Promise<{ sentence: string; names: string[] } | null> {
   const rows = await db
     .select({
       kind: notifications.kind,
@@ -342,7 +382,13 @@ export async function getConvergence(
 
   const clauses: Clauses = new Map()
   for (const row of rows) clause(clauses, row.kind, row.guideHolder, row.counterpartName)
-  return say(clauses)
+  /*
+    ⚠ **Both, from one pass** — 13 September. The sentence and the control's
+    names are the same people in two grammars, and deriving the second from the
+    first would mean parsing English back into a list. See `PortalLine.names`,
+    which carries the identical pair to the portal's own surfaces.
+  */
+  return { sentence: say(clauses), names: everyone(clauses) }
 }
 
 /**
