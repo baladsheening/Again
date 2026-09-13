@@ -17,6 +17,61 @@ someone's opinion.
 
 ---
 
+## The resolution row — specified 13 September, deferred on data
+
+**Directed:** *under the match line have a horizontally scrollable row of
+details regarding potential resolutions to the match, so stuff like availability
+dates/ranges, images/thumbnails of clips that can be watched like trailers, or
+whatever that would help the friends organise the day out.* **Clarified the same
+day:** *the row is basically a way for expanding experience. If it's a real
+world experience between friends, the row populates with items that may be
+different to matches between strangers on a mere thought, as opposed to a
+listing/record of a movie of interest.*
+
+**It is not the rail Amendment 10 banned.** That exclusion names *a global or
+random browse rail, image-only tiles, and the opening count*, and permits
+discovery back the moment every item carries *a bounded, sourced, actionably
+explained reason*. A row scoped to one capture that two named people both wrote
+is bounded and explained by construction. **Do not refuse this on sight by
+citing the rail.**
+
+### Why it is not built
+
+The data does not exist. Availability dates and ranges are `offers` and
+`occurrences` — **Phase 5**, behind an approved location launch contract. A
+thumbnail or a trailer needs a resolved possibility, and almost nothing
+resolves: `possibility_id` is null on very nearly every capture in production,
+so the row would be empty for essentially every convergence on screen — and an
+empty rail draws nothing, not a message and not a skeleton. **This is the first
+concrete product argument for Phase 4, the emergent catalogue.**
+
+### The design constraint, which is the part worth keeping
+
+The contents vary along two axes — what the thing is, and what the relationship
+is. **That is a slot solved as a taxonomy, and this repository already has a
+tombstone for one.** `possibilities.qualifier` exists because the front-page
+brief derived a single line from `kind` — year for a film, author for a paper,
+locality for a place — and the resolution was: **one field, written where the
+row is ingested by whoever knows what it means, and the surface prints it.**
+
+So when it is built:
+
+- **The component branches on nothing.** It renders items that each carry their
+  own words, their own optional image and their own action. The difference
+  between *a trailer*, *three Saturdays in October* and *a workshop four streets
+  away* is decided at ingest.
+- ⚠ **The day the surface reads `kind` to decide what to draw, the taxonomy has
+  won and the fourth kind is a rewrite.**
+- **The strangers case is Phase 6**, not a variation on this row. It is gated
+  behind adult eligibility, two-sided reveal, block, report, unmatch and
+  moderation, and it reuses the row rather than defining it.
+
+**What would change this:** Phase 4 producing possibilities that are not films,
+and Phase 5 producing offers and occurrences against them. Until both, there is
+nothing to put in the row for the captures people actually write.
+
+---
+
 ## An internal messaging system — decided 13 September, deferred
 
 **Directed, after the first real convergence was acted on from a handset:** *at

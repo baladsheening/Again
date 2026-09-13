@@ -200,7 +200,16 @@ export function AskThem({ text, names }: { text: string; names: readonly string[
         *message* rather than *ask* for the reason the visible word does.
       */
       aria-label={copied ? 'Message copied' : `Message ${who} about this`}
-      className="text-chrome tap-target ms-2 transition-opacity hover:opacity-80"
+      /*
+        ⚠ **`shrink-0` since 13 September, and it is inert on two of the three
+        surfaces.** In the portal and the console this sits inside a `<p>`, where
+        flex properties mean nothing; on the front page it is a flex child beside
+        a truncating capture, and without it the browser would take width from
+        the button first. **A truncated control — *Message Om…* — is the one
+        thing on that row a reader cannot reconstruct from context**, where a
+        truncated capture is still the line they wrote.
+      */
+      className="text-chrome tap-target ms-2 shrink-0 transition-opacity hover:opacity-80"
     >
       {copied ? 'Copied' : `Message ${who}`}
     </button>
