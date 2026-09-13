@@ -6732,6 +6732,147 @@
   background-color: color-mix(in srgb, var(--color-text) 4%, transparent);
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A control that looks like one — 13 September, directed
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *Make `Message [name]` noticeably smaller and make it obviously a touchable
+ * button somehow.*
+ *
+ * ⚠⚠ **THIS IS THE FIRST BORDERED CONTROL IN THE APP AND `ask-them.tsx`
+ * ARGUED AGAINST ONE.** That file says *a bordered control is a block and
+ * cannot sit inside a line of words* — **still true, and the precondition
+ * changed under it**: on the front page the control is no longer inside a
+ * sentence, it is a flex child of `page-row` beside a truncating capture. **A
+ * block in a row is a block in its right place.** ⚠ **It is opt-in for exactly
+ * that reason** — the portal and the console still run it in the sentence, and
+ * must not get this.
+ *
+ * ⚠⚠ **A HAIRLINE, NEVER A FILL, AND THAT IS THE THIRD TIME THIS WEEK.** Two
+ * grey filled boxes were reported on this screen — *grey*, *still looks crap* —
+ * and the diagnosis was the shape, not the value. **A button escapes that
+ * finding rather than repeating it**: §11 bans boxes that are chrome for their
+ * own sake, and a thing you press is the one box that is not decoration. **The
+ * fill stays absent anyway**, because the outline alone is enough to read as
+ * pressable and the ground behind it is already doing work.
+ *
+ * ⚠ **The border is `--color-chrome` held back to 40%.** At full strength it is
+ * `--color-text` — the ink — and a box drawn in the ink is louder than the
+ * capture it sits beside, which inverts the row. **The WORD stays full
+ * `--color-chrome`**, so what is bright is the label and what is quiet is the
+ * fence around it.
+ *
+ * ⚠⚠ **SMALLER IS `--text-micro`, THE FLOOR, AND IT IS A DELIBERATE SPEND.**
+ * `page-row` sets `--text-line` (18px on a handset); the direction said
+ * *noticeably* smaller, and 13px against 18 is the difference between two body
+ * sizes rather than between a line and its furniture. 11px is the caption tier
+ * and `globals.css` goes no lower — **anything below it is a new token and a
+ * decision about the floor.**
+ *
+ * ⚠ **The hit area is untouched at 44px.** `tap-target`'s `::after` is
+ * absolutely positioned and takes its `min-width`/`min-height` from
+ * `--tap-floor` regardless of how small the box it hangs on becomes. **Shrinking
+ * the visual control does not shrink the thumb**, which is the whole reason that
+ * utility draws with a pseudo-element instead of with padding.
+ *
+ * ⚠ **`line-height: 1`, so the pill's height is its padding and nothing else.**
+ * Inheriting `--leading-line` (28px) would make a 11px word sit in a 28px box
+ * and push `page-row` off the 34px every other line measures — design rule 3
+ * broken by a control, which is exactly what the `::after` arrangement exists to
+ * prevent.
+ */
+@utility control-chip {
+  font-size: var(--text-micro);
+  line-height: 1;
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-chrome) 40%, transparent);
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The heading catches the light — 13 September, directed
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * *Give `Matches!` a colour or an effect like a glistening effect that pulls
+ * people to it.*
+ *
+ * ⚠⚠ **THE COLOUR IS `--color-accent` AND NO RULE HAD TO BEND FOR IT.** §11:
+ * *amber marks overlap state and nothing else.* **This heading IS overlap
+ * state** — it is the word over the list of convergences, naming the same fact
+ * the mark in the gutter draws. So the scarcest token in the palette is not
+ * being borrowed here; it is being used for its one declared meaning, on the
+ * one screen where the thing it means is the point. ⚠ **A new colour was the
+ * other reading and is refused**: a second amber would make both stop meaning
+ * anything, which is the argument `--color-accept` already survived twice.
+ *
+ * ⚠⚠ **THE SHEEN IS A MOVING GRADIENT CLIPPED TO THE TEXT, NOT A GLOW BEHIND
+ * IT — AND THE DIFFERENCE IS A TOMBSTONE.** Nine radial lobes under a
+ * two-gradient mask were built behind the wordmark on 2 September, approved,
+ * and **deleted by direction on 12 September** — *get rid of the lobes* — with
+ * about 400 lines of `globals.css` arguing them. **That was light spilling onto
+ * the page around a glyph.** This is the letterforms themselves lightening as a
+ * band crosses them: nothing is drawn outside the text box, there is no second
+ * element, no mask, no token ladder, and `--mark-column` is not involved. ⚠ **Do
+ * not answer a request for shine by putting a glow back on the page.**
+ *
+ * ⚠ **`background-clip: text` with a transparent fill**, so the animated thing
+ * is a paint on the glyphs and composites on the GPU. The base colour is the
+ * accent at both ends of the ramp and only the middle stop lifts toward the
+ * ink, so **at every frame the word is still amber** — a sweep that passed
+ * through white would read as a highlight effect rather than as the word
+ * catching light.
+ *
+ * ⚠ **6 seconds, and the band is 20% of a 300% canvas.** The sweep is
+ * therefore brief and the pause between them long: a shimmer with a short
+ * period is a loading state, and this is a heading over content that has
+ * already arrived. ⚠ **`will-change` is deliberately absent** — one short text
+ * run does not need a promoted layer, and the property costs memory on every
+ * paint whether the animation is running or not.
+ *
+ * ⚠⚠ **IT STOPS DEAD UNDER `prefers-reduced-motion`, AND THE GLOBAL BLOCK DOES
+ * NOT COVER THIS.** That block cuts every `transition-duration` to 0.01ms;
+ * **an `animation` is not a transition** and would keep running. The guard here
+ * is explicit, and it restores a flat `color` rather than leaving the clipped
+ * gradient frozen mid-sweep — a paused sheen is a word with a lighter patch in
+ * the middle of it for ever.
+ */
+@utility sheen {
+  color: var(--color-accent);
+
+  @media (prefers-reduced-motion: no-preference) {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-accent) 40%,
+      color-mix(in srgb, var(--color-accent) 45%, var(--color-text)) 50%,
+      var(--color-accent) 60%
+    );
+    background-size: 300% 100%;
+    background-position: 100% 0;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: sheen-sweep 6s ease-in-out infinite;
+  }
+}
+
+@keyframes sheen-sweep {
+  /*
+    ⚠ **The hold is most of the keyframe list, not a `delay`.** An
+    `animation-delay` fires once and then every later cycle runs back to back;
+    the pause has to be inside the cycle for it to repeat. 0→55% is the sweep and
+    55→100% is the rest.
+  */
+  0% {
+    background-position: 100% 0;
+  }
+  55%,
+  100% {
+    background-position: 0 0;
+  }
+}
+
 @keyframes console-rise {
   from {
     opacity: 0;

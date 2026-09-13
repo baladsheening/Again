@@ -59,6 +59,17 @@ import type { PortalLineView } from '@/app/actions/portal'
  * that the record cannot say, so it is the informative case the rule was
  * holding the volume for.
  *
+ * ⚠⚠ **`sheen` REPLACES `text-muted` — 13 September, directed:** *give
+ * `Matches!` a colour or an effect like a glistening effect that pulls people
+ * to it.* **The colour is `--color-accent` and no rule bent for it**: §11 gives
+ * that token to overlap *state* and nothing else, and this heading IS overlap
+ * state — the word over the list of convergences, naming what the mark in the
+ * gutter draws. ⚠ **The sheen is a gradient clipped to the letterforms, never a
+ * glow behind them**, which is the distinction the 12 September deletion of the
+ * mark's lobes turns on. See the utility in `globals.css`; it stops dead under
+ * `prefers-reduced-motion`, which the global block does not cover because an
+ * animation is not a transition.
+ *
  * ⚠ **The word is `Matches!` in the DOM and the capitals are CSS** —
  * `wordmark`'s rule, and the week's most expensive lesson: `innerText` returns
  * the shouting where `textContent` returns the word. **Do not write it
@@ -175,7 +186,7 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
         meets the list first should be told what the list is — the one thing the
         rows no longer say for themselves.
       */}
-      <h2 id="matches-heading" className="stamp text-muted mb-1.5">
+      <h2 id="matches-heading" className="stamp sheen mb-1.5">
         Matches!
       </h2>
       <ol aria-labelledby="matches-heading" className="flex flex-col">
@@ -194,7 +205,7 @@ export function Opportunity({ lines }: { lines: readonly PortalLineView[] }) {
             */}
             <div className="page-row">
               <span className="min-w-0 flex-1 truncate">{line.text}</span>
-              <AskThem text={line.text} names={line.names} />
+              <AskThem text={line.text} names={line.names} chip />
             </div>
           </li>
         ))}

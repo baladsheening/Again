@@ -100,7 +100,24 @@ import { askDraft, listNames } from '@/lib/vocabulary'
  * overlap *state* and it is already spent on the mark in the gutter; a second
  * tenant beside it would be the same thing said twice.
  */
-export function AskThem({ text, names }: { text: string; names: readonly string[] }) {
+export function AskThem({
+  text,
+  names,
+  chip = false,
+}: {
+  text: string
+  names: readonly string[]
+  /**
+   * ⚠ **Draw it as a bordered control rather than a word in a sentence.**
+   * Directed 13 September — *make it obviously a touchable button somehow* —
+   * and **opt-in because the two things are true on different surfaces**: on the
+   * front page this is a flex child of `page-row` and a block is correct there;
+   * in the portal and the console it runs inside a `<p>` beside the convergence
+   * sentence, where a bordered box cannot sit in a line of words. **Default
+   * false, so the surfaces that did not ask keep what they had.**
+   */
+  chip?: boolean
+}) {
   /*
     ⚠ **Three states and the third is the fallback's receipt.** A clipboard copy
     is invisible — nothing opens, nothing moves — so a control that did it
@@ -209,7 +226,9 @@ export function AskThem({ text, names }: { text: string; names: readonly string[
         thing on that row a reader cannot reconstruct from context**, where a
         truncated capture is still the line they wrote.
       */
-      className="text-chrome tap-target ms-2 shrink-0 transition-opacity hover:opacity-80"
+      className={`text-chrome tap-target ms-2 shrink-0 transition-opacity hover:opacity-80 ${
+        chip ? 'control-chip' : ''
+      }`}
     >
       {copied ? 'Copied' : `Message ${who}`}
     </button>
