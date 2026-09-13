@@ -17,6 +17,63 @@ someone's opinion.
 
 ---
 
+## An internal messaging system — decided 13 September, deferred
+
+**Directed, after the first real convergence was acted on from a handset:** *at
+some point, we have to have an internal messaging system. we can leave for later
+but we definitely need it.* Said after tapping the share control and finding the
+handoff *way too clunky*.
+
+**This contradicts `product-truth.md`**, which says *Again builds no chat,
+calendar, RSVP or payment — it hands over the sentence and gets out of the way*,
+and which wins over every other document in the repository. It is also adjacent
+to a Release 1 exclusion — *group chat, scheduling, calendars, and RSVPs*.
+**Recorded here rather than acted on**, because reversing the one-page truth is
+an amendment to that document and not a ticket.
+
+**The concern was put and the direction was reaffirmed.** For the record, so
+that whoever builds it knows what they are accepting rather than rediscovering
+it:
+
+- **An inbox is a place people have to remember to check**, and the conversation
+  being started already lives in WhatsApp or Messages. A message in a fifth app
+  is one that gets read late or not at all. This is the substantive risk and it
+  is a product risk, not an engineering one.
+- **It drags the Phase 6 safety surface forward.** Blocking, reporting,
+  moderation, abuse handling — §"Phase 6" lists them as prerequisites for
+  *stranger* contact, and an in-app channel between mutuals needs most of the
+  same machinery the first time somebody uses it badly.
+- **It is the largest single unbuilt thing that would sit inside the free
+  loop**, which `consumer-product-strategy.md` §9 says is never paid for.
+
+**What the clunkiness actually is, measured rather than assumed.** The app knows
+the convergence is with a named person and then hands over a generic system
+sheet in which the reader must find that person themselves. **It holds the
+information and cannot use it.** Two cheaper things address part of that and
+should be done first, because they change what the beta measures:
+
+1. **Name the person on the control** — done 13 September, `Message Omari`
+   rather than `Ask them`. See `components/ask-them.tsx`.
+2. **Rewrite the draft.** It reads *We both saved "X". Want to?* — *saved* is
+   the app's internal verb leaking into somebody's text message, and *Want to?*
+   asks about desire, which the convergence has already answered. **Open.**
+3. **Let the app remember it made the introduction**, so a line can later say
+   *you messaged Omari about this* — closing the loop without owning the
+   conversation, and giving §6's overlap-to-conversation rate something to count.
+
+**What would change this:** the beta. If real people tap the control, leave the
+app, and the conversation does not happen, that is the evidence that overturns
+the anti-goal properly — and it is exactly what §6 says the beta is for. If they
+tap it and the conversation *does* happen, an inbox is a large build that
+replaces something already working.
+
+⚠ **Do not start it before the beta has run.** Not because the direction is in
+doubt — it has been given and reaffirmed — but because the beta is the only
+thing that can size it, and because building a messaging system is the fastest
+way to stop shipping everything else.
+
+---
+
 ## The re-direction — 22 August
 
 The product moved from a film-first diary to intent capture and convergence.
