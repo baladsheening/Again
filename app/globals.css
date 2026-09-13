@@ -6673,6 +6673,57 @@
   touch-action: pan-y;
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A faint surface for the one line that is not about a line — 13 September
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * **Directed**, after the push offer was read on a handset: *put the Turn on
+ * line in a surface inside the console.* It is the only thing in the portal
+ * that is **the app talking about itself** rather than a convergence — and it
+ * was saying so with nothing but a slightly larger gap, in the same muted
+ * 0.8125rem as the sentences above it. It read as one more of them.
+ *
+ * ⚠⚠ **NO `backdrop-filter`, AND THAT IS THE ONE DETAIL THAT IS NOT OPTIONAL.**
+ * 5 September: *a backdrop filter filters what is behind it including the outer
+ * one's result — a glass card inside a glass box is not the console.*
+ * `portal-card` already declares `blur(var(--glass-blur))`, so a filter here
+ * would filter the blur rather than the record. **This is a tint on the lens,
+ * never a second lens** — byte for byte the arrangement the composer's card
+ * arrived at on 12 September.
+ *
+ * ⚠ **IT LIFTS TOWARD THE INK, NEVER SINKS TOWARD THE PAGE.** `console-card`'s
+ * own argument — *a floating card has no borrowed edge* — and here it is also
+ * arithmetic: the card is `--glass-tint`, 38% black, over a record that is
+ * black, so a darker inner surface is black on black. **The 12 September band
+ * failed exactly this way twice** before the fault was identified as the shape
+ * rather than the fill.
+ *
+ * ⚠ **8%, against the desk's own surface ratio of 10.5%.** `--color-bg`'s desk
+ * block derives its card surface as *the ink at 10.5%* and its hairline as *the
+ * ink at 17.5%*; this sits under both **because it is nested inside a surface
+ * rather than sitting on the page**, and because the direction was *subtle*. ⚠
+ * **A `color-mix` of `--color-text` and not a hex**, so it follows the palette
+ * the way `--color-muted` and `--glass-tint` already do.
+ *
+ * ⚠ **The radius steps down from the card's `1rem`.** A nested box wearing its
+ * parent's radius reads as a sticker laid on top rather than a recess cut into
+ * it. True concentricity would be `1rem − --page-lead`, which is negative — so
+ * the honest answer is *smaller*, and 0.75rem is one step.
+ *
+ * ⚠⚠ **THIS IS NOT THE BOX THE HOME BAND WAS REFUSED.** That one sat **in the
+ * flow of the page with nothing behind it**, which is why §11's *this app has
+ * no static boxes* killed it — twice. The portal is already a surface that
+ * floats over the record for a moment; this is a tint inside it, and it goes
+ * when the portal does. ⚠ **Do not reach for it in flow** — on the record, on
+ * home, or anywhere a thing is not already floating.
+ */
+@utility quiet-surface {
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background-color: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
 @keyframes console-rise {
   from {
     opacity: 0;
