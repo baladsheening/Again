@@ -155,15 +155,7 @@ export function TurnOnPush() {
   }
 
   return (
-    /*
-      ⚠ **`quiet-surface` since 13 September, directed.** This is the one line
-      in the portal that is not about a line — the app speaking about itself —
-      and under the convergence sentences it was the same muted 0.8125rem as
-      they are, separated by a gap alone. The surface is what says *different
-      kind of thing*. See the utility for why it carries no filter of its own
-      and why it lifts rather than sinks.
-    */
-    <p className="quiet-surface text-muted mt-4 text-[0.8125rem]">
+    <p className="text-muted mt-4 text-[0.8125rem]">
       {/*
         ⚠ **The state and the verb, as two things** — design rule 1, the same
         division the lock makes in the console. The sentence says what will
